@@ -1,5 +1,7 @@
 package com.dot.gallery.feature_node.domain.util
 
+import com.dot.gallery.feature_node.domain.model.Media
+
 sealed class MediaOrder(val orderType: OrderType) {
     class Label(orderType: OrderType): MediaOrder(orderType)
     class Date(orderType: OrderType): MediaOrder(orderType)
@@ -8,6 +10,24 @@ sealed class MediaOrder(val orderType: OrderType) {
         return when(this) {
             is Date -> Date(orderType)
             is Label -> Label(orderType)
+        }
+    }
+
+    fun sortMedia(media: List<Media>): List<Media> {
+        return when (orderType) {
+            OrderType.Ascending -> {
+                when (this) {
+                    is Date -> media.sortedBy { it.timestamp }
+                    is Label -> media.sortedBy { it.label.lowercase() }
+                }
+            }
+
+            OrderType.Descending -> {
+                when (this) {
+                    is Date -> media.sortedByDescending { it.timestamp }
+                    is Label -> media.sortedByDescending { it.label.lowercase() }
+                }
+            }
         }
     }
 }

@@ -2,6 +2,7 @@ plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
     id 'kotlin-kapt'
+    id 'kotlin-parcelize'
     id 'dagger.hilt.android.plugin'
 }
 
@@ -54,6 +55,7 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.0")
     implementation 'androidx.navigation:navigation-runtime-ktx:2.5.3'
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.6.0")
 
     // Compose
     implementation("androidx.activity:activity-compose:1.6.1")
@@ -84,6 +86,7 @@ dependencies {
 
     // Coil
     implementation("io.coil-kt:coil-compose:2.2.2")
+    implementation("io.coil-kt:coil-video:2.2.2")
 
     // compose-collapsing-toolbar
     implementation("me.onebone:toolbar-compose:2.3.5")

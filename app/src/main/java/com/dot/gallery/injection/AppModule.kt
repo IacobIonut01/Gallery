@@ -1,8 +1,9 @@
 package com.dot.gallery.injection
 
+import android.content.ContentResolver
 import android.content.Context
-import com.dot.gallery.feature_node.data.data_source.MediaDao
-import com.dot.gallery.feature_node.data.data_source.MediaDaoImpl
+import com.dot.gallery.feature_node.data.data_source.MediaParser
+import com.dot.gallery.feature_node.data.data_source.MediaParserImpl
 import com.dot.gallery.feature_node.data.repository.MediaRepositoryImpl
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.domain.use_case.AddMediaUseCase
@@ -24,14 +25,20 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideMediaDao(@ApplicationContext context: Context): MediaDao {
-        return MediaDaoImpl(context)
+    fun provideMediaDao(@ApplicationContext context: Context): MediaParser {
+        return MediaParserImpl(context)
     }
 
     @Provides
     @Singleton
-    fun provideMediaRepository(mediaDao: MediaDao): MediaRepository {
-        return MediaRepositoryImpl(mediaDao)
+    fun provideContentResolver(@ApplicationContext context: Context): ContentResolver {
+        return context.contentResolver
+    }
+
+    @Provides
+    @Singleton
+    fun provideMediaRepository(mediaParser: MediaParser): MediaRepository {
+        return MediaRepositoryImpl(mediaParser)
     }
 
     @Provides

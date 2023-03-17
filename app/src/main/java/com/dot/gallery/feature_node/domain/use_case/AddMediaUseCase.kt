@@ -13,7 +13,7 @@ class AddMediaUseCase(
         if (media.path.isBlank())
             throw InvalidMediaException("${media.label} cannot be validated!")
         repository.insertMedia(media) { path, uri ->
-
+            /* TODO */
         }
     }
 }
