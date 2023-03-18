@@ -16,7 +16,7 @@ fun ContentResolver.getImages(mediaOrder: MediaOrder): List<Media> {
         OrderType.Ascending -> "ASC"
         OrderType.Descending -> "DESC"
     }
-    val imageQuery = MediaQuery.PhotoQuery.copy(
+    val imageQuery = MediaQuery.PhotoQuery().copy(
         sortOrder = "$sortBy $sortType"
     )
     return getMediaByType(imageQuery)

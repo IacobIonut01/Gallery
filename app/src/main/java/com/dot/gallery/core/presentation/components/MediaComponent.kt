@@ -2,6 +2,7 @@ package com.dot.gallery.core.presentation.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,8 +23,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
+import coil.request.ImageRequest
+import coil.size.Size
 import com.dot.gallery.core.presentation.components.util.advancedShadow
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.ui.theme.Dimens
@@ -39,6 +43,11 @@ fun MediaComponent(
         modifier = Modifier
             .aspectRatio(1f)
             .padding(1.dp)
+            .border(
+                width = .2.dp,
+                color = MaterialTheme.colorScheme.outlineVariant,
+                shape = Shapes.small
+            )
             .clip(Shapes.small)
             .background(
                 color = MaterialTheme.colorScheme.surface,
@@ -47,7 +56,7 @@ fun MediaComponent(
                 onItemClick(media)
             },
     ) {
-        MediaImage(media = media, model = File(media.path))
+        MediaImage(media = media)
         if (media.duration != null) {
             VideoDurationHeader(media = media)
         }
@@ -55,7 +64,7 @@ fun MediaComponent(
 }
 
 @Composable
-private fun BoxScope.VideoDurationHeader(media: Media) {
+fun BoxScope.VideoDurationHeader(media: Media) {
     Row(
         modifier = Modifier
             .align(Alignment.TopEnd)
@@ -96,12 +105,15 @@ private fun BoxScope.VideoDurationHeader(media: Media) {
  * @param model -> Data source to display the image
  */
 @Composable
-private fun MediaImage(media: Media, model: Any?) {
+fun MediaImage(media: Media) {
     SubcomposeAsyncImage(
         modifier = Modifier
             .aspectRatio(1f)
             .size(Dimens.Photo()),
-        model = model,
+        model = ImageRequest.Builder(LocalContext.current)
+            .data(File(media.path))
+            .size(200)
+            .build(),
         contentDescription = media.label,
         contentScale = ContentScale.Crop,
         onError = {

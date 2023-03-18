@@ -11,7 +11,7 @@ sealed class MediaQuery(
     var sortOrder: String? = null
 ) {
 
-    object PhotoQuery : MediaQuery(
+    class PhotoQuery : MediaQuery(
         uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
         projection = arrayOf(
             MediaStore.Images.Media._ID,
@@ -22,7 +22,7 @@ sealed class MediaQuery(
         )
     )
 
-    object VideoQuery : MediaQuery(
+    class VideoQuery : MediaQuery(
         uri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
         projection = arrayOf(
             MediaStore.Video.Media._ID,

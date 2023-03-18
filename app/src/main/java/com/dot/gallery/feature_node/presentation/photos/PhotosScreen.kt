@@ -13,6 +13,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -31,18 +32,18 @@ import com.dot.gallery.ui.theme.Dimens
 @Composable
 fun PhotosScreen(
     navController: NavController,
-    topPadding: Dp,
+    paddingValues: PaddingValues,
     viewModel: PhotosViewModel = hiltViewModel()
 ) {
-    val state by rememberSaveable {
+    val state by remember {
         viewModel.photoState
     }
     LazyVerticalGrid(
         modifier = Modifier.fillMaxSize(),
         columns = GridCells.Adaptive(Dimens.Photo()),
         contentPadding = PaddingValues(
-            top = topPadding + 88.dp,
-            bottom = 16.dp
+            top = paddingValues.calculateTopPadding() + 88.dp,
+            bottom = paddingValues.calculateBottomPadding() + 16.dp
         ),
         content = {
             val list = state.media.groupBy {

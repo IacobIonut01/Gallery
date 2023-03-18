@@ -27,11 +27,14 @@ data class Media(
     }
 }
 
+@Parcelize
 data class Album(
     val id: Long = 0,
     val label: String,
-    val path: String,
+    val pathToThumbnail: String,
+    val timestamp: Long,
+    var count: Long = 0,
     val selected: Boolean = false
-)
+) : Parcelable
 
 class InvalidMediaException(message: String) : Exception(message)

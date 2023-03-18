@@ -21,6 +21,7 @@ import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.ui.theme.GalleryTheme
 import dagger.hilt.android.AndroidEntryPoint
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {

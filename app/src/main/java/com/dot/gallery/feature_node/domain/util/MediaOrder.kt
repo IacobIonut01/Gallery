@@ -1,5 +1,6 @@
 package com.dot.gallery.feature_node.domain.util
 
+import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.Media
 
 sealed class MediaOrder(val orderType: OrderType) {
@@ -26,6 +27,24 @@ sealed class MediaOrder(val orderType: OrderType) {
                 when (this) {
                     is Date -> media.sortedByDescending { it.timestamp }
                     is Label -> media.sortedByDescending { it.label.lowercase() }
+                }
+            }
+        }
+    }
+
+    fun sortAlbums(albums: List<Album>): List<Album> {
+        return when (orderType) {
+            OrderType.Ascending -> {
+                when (this) {
+                    is Date -> albums.sortedBy { it.timestamp }
+                    is Label -> albums.sortedBy { it.label.lowercase() }
+                }
+            }
+
+            OrderType.Descending -> {
+                when (this) {
+                    is Date -> albums.sortedByDescending { it.timestamp }
+                    is Label -> albums.sortedByDescending { it.label.lowercase() }
                 }
             }
         }

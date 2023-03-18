@@ -16,7 +16,7 @@ fun ContentResolver.getVideos(mediaOrder: MediaOrder): List<Media> {
         OrderType.Ascending -> "ASC"
         OrderType.Descending -> "DESC"
     }
-    val videoQuery = MediaQuery.VideoQuery.copy(
+    val videoQuery = MediaQuery.VideoQuery().copy(
         sortOrder = "$sortBy $sortType"
     )
     return getMediaByType(videoQuery)

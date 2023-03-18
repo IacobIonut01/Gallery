@@ -7,7 +7,9 @@ import android.media.MediaScannerConnection
 import android.provider.MediaStore
 import com.dot.gallery.core.Resource
 import com.dot.gallery.feature_node.data.data_types.findMedia
+import com.dot.gallery.feature_node.data.data_types.getAlbums
 import com.dot.gallery.feature_node.data.data_types.getMedia
+import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.util.MediaOrder
 import com.dot.gallery.feature_node.domain.util.OrderType
@@ -21,10 +23,20 @@ class MediaParserImpl @Inject constructor(
 
     private val contentResolver by lazy { context.contentResolver }
 
-    override fun getMedia(): Flow<Resource<List<Media>>> = flow {
+    override suspend fun getMedia(): Flow<Resource<List<Media>>> = flow {
         try {
             emit(Resource.Loading())
             val media = contentResolver.getMedia(mediaOrder = MediaOrder.Date(OrderType.Descending))
+            emit(Resource.Success(data = media))
+        } catch (e: Exception) {
+            emit(Resource.Error(message = e.localizedMessage ?: "An error occurred"))
+        }
+    }
+
+    override suspend fun getAlbum(): Flow<Resource<List<Album>>> = flow {
+        try {
+            emit(Resource.Loading())
+            val media = contentResolver.getAlbums(mediaOrder = MediaOrder.Date(OrderType.Descending))
             emit(Resource.Success(data = media))
         } catch (e: Exception) {
             emit(Resource.Error(message = e.localizedMessage ?: "An error occurred"))
@@ -40,11 +52,11 @@ class MediaParserImpl @Inject constructor(
 
     @SuppressLint("Range")
     override suspend fun getMediaById(mediaId: Long): Media? {
-        val imageObject = MediaQuery.PhotoQuery.copy(
+        val imageObject = MediaQuery.PhotoQuery().copy(
             selection = "${MediaStore.Images.Media._ID} = ?",
             selectionArgs = arrayOf(mediaId.toString())
         )
-        val videoObject = MediaQuery.VideoQuery.copy(
+        val videoObject = MediaQuery.VideoQuery().copy(
             selection = "${MediaStore.Video.Media._ID} = ?",
             selectionArgs = arrayOf(mediaId.toString())
         )
@@ -55,11 +67,11 @@ class MediaParserImpl @Inject constructor(
         try {
             emit(Resource.Loading())
             val queries = arrayListOf(
-                MediaQuery.PhotoQuery.copy(
+                MediaQuery.PhotoQuery().copy(
                     selection = "${MediaStore.Images.Media.BUCKET_ID} = ?",
                     selectionArgs = arrayOf(albumId.toString())
                 ),
-                MediaQuery.VideoQuery.copy(
+                MediaQuery.VideoQuery().copy(
                     selection = "${MediaStore.Video.Media.BUCKET_ID} = ?",
                     selectionArgs = arrayOf(albumId.toString())
                 )

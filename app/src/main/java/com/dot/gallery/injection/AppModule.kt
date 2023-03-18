@@ -8,6 +8,7 @@ import com.dot.gallery.feature_node.data.repository.MediaRepositoryImpl
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.domain.use_case.AddMediaUseCase
 import com.dot.gallery.feature_node.domain.use_case.DeleteMediaUseCase
+import com.dot.gallery.feature_node.domain.use_case.GetAlbumsUseCase
 import com.dot.gallery.feature_node.domain.use_case.GetMediaUseCase
 import com.dot.gallery.feature_node.domain.use_case.GetMediaByAlbumUseCase
 import com.dot.gallery.feature_node.domain.use_case.GetMediaByIdUseCase
@@ -30,7 +31,6 @@ object AppModule {
     }
 
     @Provides
-    @Singleton
     fun provideContentResolver(@ApplicationContext context: Context): ContentResolver {
         return context.contentResolver
     }
@@ -47,6 +47,7 @@ object AppModule {
         return MediaUseCases(
             addMediaUseCase = AddMediaUseCase(repository),
             deleteMediaUseCase = DeleteMediaUseCase(repository),
+            getAlbumsUseCase = GetAlbumsUseCase(repository),
             getMediaUseCase = GetMediaUseCase(repository),
             getMediaByAlbumUseCase = GetMediaByAlbumUseCase(repository),
             getMediaByIdUseCase = GetMediaByIdUseCase(repository)

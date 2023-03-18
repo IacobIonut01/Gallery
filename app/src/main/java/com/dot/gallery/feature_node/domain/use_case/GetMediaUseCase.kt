@@ -10,6 +10,6 @@ class GetMediaUseCase @Inject constructor(
     private val repository: MediaRepository
 ) {
 
-    operator fun invoke(): Flow<Resource<List<Media>>> = repository.getMedia()
+    suspend operator fun invoke(): Flow<Resource<List<Media>>> = repository.getMedia()
 
 }
