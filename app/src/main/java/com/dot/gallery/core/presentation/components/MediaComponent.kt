@@ -1,5 +1,6 @@
 package com.dot.gallery.core.presentation.components
 
+import android.graphics.drawable.Drawable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -23,11 +24,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import coil.compose.SubcomposeAsyncImage
-import coil.request.ImageRequest
-import coil.size.Size
+import com.bumptech.glide.RequestBuilder
+import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.bumptech.glide.integration.compose.GlideImage
 import com.dot.gallery.core.presentation.components.util.advancedShadow
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.ui.theme.Dimens
@@ -37,6 +37,7 @@ import java.io.File
 @Composable
 fun MediaComponent(
     media: Media,
+    preloadRequestBuilder: RequestBuilder<Drawable>,
     onItemClick: (Media) -> Unit,
 ) {
     Box(
@@ -56,7 +57,7 @@ fun MediaComponent(
                 onItemClick(media)
             },
     ) {
-        MediaImage(media = media)
+        MediaImage(media = media, preloadRequestBuilder)
         if (media.duration != null) {
             VideoDurationHeader(media = media)
         }
@@ -104,20 +105,17 @@ fun BoxScope.VideoDurationHeader(media: Media) {
 /**
  * @param model -> Data source to display the image
  */
+@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
-fun MediaImage(media: Media) {
-    SubcomposeAsyncImage(
+fun MediaImage(media: Media, preloadRequestBuilder: RequestBuilder<Drawable>) {
+    GlideImage(
         modifier = Modifier
             .aspectRatio(1f)
             .size(Dimens.Photo()),
-        model = ImageRequest.Builder(LocalContext.current)
-            .data(File(media.path))
-            .size(200)
-            .build(),
+        model = File(media.path),
         contentDescription = media.label,
         contentScale = ContentScale.Crop,
-        onError = {
-            it.result.throwable.printStackTrace()
-        }
-    )
+    ) {
+        it.thumbnail(preloadRequestBuilder)
+    }
 }

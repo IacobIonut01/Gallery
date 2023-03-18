@@ -1,5 +1,6 @@
 package com.dot.gallery.feature_node.presentation.photos
 
+import android.graphics.drawable.Drawable
 import android.util.Log
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -7,23 +8,25 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.bumptech.glide.RequestBuilder
+import com.bumptech.glide.integration.compose.rememberGlidePreloadingData
+import com.bumptech.glide.signature.MediaStoreSignature
 import com.dot.gallery.R
 import com.dot.gallery.core.presentation.components.MediaComponent
 import com.dot.gallery.core.presentation.components.util.header
+import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.feature_node.presentation.util.getDate
 import com.dot.gallery.feature_node.presentation.util.updateDate
@@ -38,6 +41,7 @@ fun PhotosScreen(
     val state by remember {
         viewModel.photoState
     }
+
     LazyVerticalGrid(
         modifier = Modifier.fillMaxSize(),
         columns = GridCells.Adaptive(Dimens.Photo()),
@@ -60,8 +64,17 @@ fun PhotosScreen(
                             .fillMaxWidth()
                     )
                 }
-                items(data) { media ->
-                    MediaComponent(media = media) {
+                items(data.size) { index ->
+                    val preloadingData = rememberGlidePreloadingData(
+                        numberOfItemsToPreload = data.size / 4,
+                        data = data,
+                        preloadImageSize = Size(50f, 50f)
+                    ) { item: Media, requestBuilder: RequestBuilder<Drawable> ->
+                        requestBuilder.load(item.uri)
+                            .signature(MediaStoreSignature(null, item.timestamp, 0))
+                    }
+                    val (media, preloadRequestBuilder) = preloadingData[index]
+                    MediaComponent(media = media, preloadRequestBuilder) {
                         navController.navigate(Screen.MediaScreen.route + "?mediaId=${media.id}")
                     }
                 }

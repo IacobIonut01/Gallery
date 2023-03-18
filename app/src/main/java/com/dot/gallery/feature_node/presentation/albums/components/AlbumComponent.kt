@@ -1,5 +1,6 @@
 package com.dot.gallery.feature_node.presentation.albums.components
 
+import android.graphics.drawable.Drawable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -15,7 +16,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import coil.compose.SubcomposeAsyncImage
+import com.bumptech.glide.RequestBuilder
+import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.bumptech.glide.integration.compose.GlideImage
+import com.bumptech.glide.integration.compose.PreloadRequestBuilderTransform
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.ui.theme.Dimens
 import com.dot.gallery.ui.theme.Shapes
@@ -24,6 +28,7 @@ import java.io.File
 @Composable
 fun AlbumComponent(
     album: Album,
+    preloadRequestBuilder: RequestBuilder<Drawable>,
     onItemClick: (Album) -> Unit,
 ) {
     Box(
@@ -33,8 +38,8 @@ fun AlbumComponent(
             )
             .padding(horizontal = 8.dp),
     ) {
-        Column{
-            AlbumImage(album = album, onItemClick)
+        Column {
+            AlbumImage(album = album, preloadRequestBuilder, onItemClick)
             Text(
                 modifier = Modifier
                     .padding(top = 12.dp)
@@ -54,9 +59,10 @@ fun AlbumComponent(
     }
 }
 
+@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
-fun AlbumImage(album: Album, onItemClick: (Album) -> Unit) {
-    SubcomposeAsyncImage(
+fun AlbumImage(album: Album, preloadRequestBuilder: RequestBuilder<Drawable>, onItemClick: (Album) -> Unit) {
+    GlideImage(
         modifier = Modifier
             .aspectRatio(1f)
             .size(Dimens.Album())
@@ -72,8 +78,7 @@ fun AlbumImage(album: Album, onItemClick: (Album) -> Unit) {
         model = File(album.pathToThumbnail),
         contentDescription = album.label,
         contentScale = ContentScale.Crop,
-        onError = {
-            it.result.throwable.printStackTrace()
-        }
-    )
+    ) {
+        it.thumbnail(preloadRequestBuilder)
+    }
 }

@@ -2,6 +2,7 @@ package com.dot.gallery.feature_node.domain.model
 
 import android.net.Uri
 import android.os.Parcelable
+import com.bumptech.glide.load.Key
 import kotlinx.parcelize.Parcelize
 import java.util.concurrent.TimeUnit
 

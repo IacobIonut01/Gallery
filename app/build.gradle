@@ -84,9 +84,10 @@ dependencies {
     // Kotlin Extensions and Coroutines support for Room
     implementation("androidx.room:room-ktx:2.5.0")
 
-    // Coil
-    implementation("io.coil-kt:coil-compose:2.2.2")
-    implementation("io.coil-kt:coil-video:2.2.2")
+    // Glide
+    implementation("com.github.bumptech.glide:glide:4.15.1")
+    implementation("com.github.bumptech.glide:compose:1.0.0-alpha.3")
+    kapt("com.github.bumptech.glide:compiler:4.15.1")
 
     // compose-collapsing-toolbar
     implementation("me.onebone:toolbar-compose:2.3.5")
