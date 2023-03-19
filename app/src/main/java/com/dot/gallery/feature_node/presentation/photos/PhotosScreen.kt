@@ -83,18 +83,15 @@ fun PhotosScreen(
             )
         ) {
             val list = state.media.groupBy {
-                DateExt(
-                    timestamp = it.timestamp,
-                    format = it.timestamp.getDate(
-                        stringToday = stringToday,
-                        stringYesterday = stringYesterday
-                    )
+                it.timestamp.getDate(
+                    stringToday = stringToday,
+                    stringYesterday = stringYesterday
                 )
             }
             list.forEach { (date, data) ->
                 header {
                     Text(
-                        text = date.format.toString(),
+                        text = date,
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier

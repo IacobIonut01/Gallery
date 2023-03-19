@@ -42,16 +42,3 @@ fun Long.getDate(
         }
     }
 }
-
-data class DateExt(
-    var format: CharSequence,
-    val timestamp: Long
-) {
-    override fun equals(other: Any?): Boolean {
-        return format == (other as DateExt).format
-    }
-
-    override fun hashCode(): Int {
-        return format.hashCode()
-    }
-}
