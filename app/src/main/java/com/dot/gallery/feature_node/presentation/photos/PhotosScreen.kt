@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -17,6 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.res.stringResource
@@ -31,9 +33,9 @@ import com.dot.gallery.R
 import com.dot.gallery.core.presentation.components.MediaComponent
 import com.dot.gallery.core.presentation.components.util.header
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.presentation.util.DateExt
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.feature_node.presentation.util.getDate
-import com.dot.gallery.feature_node.presentation.util.updateDate
 import com.dot.gallery.ui.theme.Dimens
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
@@ -65,35 +67,47 @@ fun PhotosScreen(
             }
         }
     } else {
-    val state by remember {
-        viewModel.photoState
-    }
-
-    LazyVerticalGrid(
-        modifier = Modifier.fillMaxSize(),
-        columns = GridCells.Adaptive(Dimens.Photo()),
-        contentPadding = PaddingValues(
-            top = paddingValues.calculateTopPadding() + 88.dp,
-            bottom = paddingValues.calculateBottomPadding() + 16.dp
-        ),
-        content = {
+        val state by remember {
+            viewModel.photoState
+        }
+        val stringToday = stringResource(id = R.string.header_today)
+        val stringYesterday = stringResource(id = R.string.header_yesterday)
+        val gridState = rememberLazyGridState()
+        LazyVerticalGrid(
+            state = gridState,
+            modifier = Modifier.fillMaxSize(),
+            columns = GridCells.Adaptive(Dimens.Photo()),
+            contentPadding = PaddingValues(
+                top = paddingValues.calculateTopPadding() + 88.dp,
+                bottom = paddingValues.calculateBottomPadding() + 16.dp
+            )
+        ) {
             val list = state.media.groupBy {
-                it.timestamp.getDate()
+                DateExt(
+                    timestamp = it.timestamp,
+                    format = it.timestamp.getDate(
+                        stringToday = stringToday,
+                        stringYesterday = stringYesterday
+                    )
+                )
             }
             list.forEach { (date, data) ->
                 header {
                     Text(
-                        text = updateDate(date, stringResource(id = R.string.header_today)),
-                        style = MaterialTheme.typography.labelLarge,
+                        text = date.format.toString(),
+                        style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier
-                            .padding(all = 16.dp)
+                            .padding(
+                                horizontal = 16.dp,
+                                vertical = 24.dp
+                            )
                             .fillMaxWidth()
                     )
                 }
                 items(data.size) { index ->
                     val preloadingData = rememberGlidePreloadingData(
-                        numberOfItemsToPreload = data.size / 4,
+                        numberOfItemsToPreload = 20,
                         data = data,
                         preloadImageSize = Size(50f, 50f)
                     ) { item: Media, requestBuilder: RequestBuilder<Drawable> ->
@@ -106,31 +120,29 @@ fun PhotosScreen(
                     }
                 }
             }
-
         }
-    )
-    if (state.media.isEmpty()) {
-        Text(
-            text = "Is Empty",
-            modifier = Modifier
-                .fillMaxSize()
-        )
+        if (state.media.isEmpty()) {
+            Text(
+                text = "Is Empty",
+                modifier = Modifier
+                    .fillMaxSize()
+            )
             viewModel.viewModelScope.launch {
                 viewModel.getMedia()
             }
-    }
-    if (state.isLoading) {
-        CircularProgressIndicator(
-            modifier = Modifier.fillMaxSize()
-        )
-    }
-    if (state.error.isNotEmpty()) {
-        Text(
-            text = "An error occured",
-            modifier = Modifier
-                .fillMaxSize()
-        )
-        Log.e("MediaError", state.error)
+        }
+        if (state.isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+        if (state.error.isNotEmpty()) {
+            Text(
+                text = "An error occured",
+                modifier = Modifier
+                    .fillMaxSize()
+            )
+            Log.e("MediaError", state.error)
         }
     }
 }

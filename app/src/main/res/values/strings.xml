@@ -4,4 +4,5 @@
     <string name="nav_albums">Albums</string>
     <string name="searchbar_title"><![CDATA[Search photos & videos]]></string>
     <string name="header_today">Today</string>
+    <string name="header_yesterday">Yesterday</string>
 </resources>

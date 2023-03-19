@@ -10,5 +10,7 @@ object Constants {
     /**
      * Date format used in media groups
      */
-    const val DEFAULT_DATE_FORMAT = "EEE, MMM d yyyy"
+    const val WEEKLY_DATE_FORMAT = "EEEE"
+    const val DEFAULT_DATE_FORMAT = "EEE, MMMM d"
+    const val EXTENDED_DATE_FORMAT = "EEE, MMM d, yyyy"
 }
