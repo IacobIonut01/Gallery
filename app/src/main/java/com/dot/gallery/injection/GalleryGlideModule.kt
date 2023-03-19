@@ -15,7 +15,7 @@ class GalleryGlideModule : AppGlideModule() {
             .setMemoryCacheScreens(4f)
             .build()
         builder.setIsActiveResourceRetentionAllowed(true)
-        //builder.setDiskCache(InternalCacheDiskCacheFactory(context));
-        //builder.setMemoryCache(LruResourceCache(calculator.memoryCacheSize.toLong()))
+        builder.setDiskCache(InternalCacheDiskCacheFactory(context));
+        builder.setMemoryCache(LruResourceCache(calculator.memoryCacheSize.toLong()))
     }
 }
