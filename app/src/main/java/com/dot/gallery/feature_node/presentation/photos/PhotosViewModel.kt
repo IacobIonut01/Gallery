@@ -37,7 +37,7 @@ class PhotosViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    private suspend fun getMedia() {
+    suspend fun getMedia() {
         mediaUseCases.getMediaUseCase().onEach { result ->
             when (result) {
                 is Resource.Error -> {

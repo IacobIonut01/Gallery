@@ -1,13 +1,16 @@
 package com.dot.gallery.feature_node.presentation.photos
 
+import android.Manifest
 import android.graphics.drawable.Drawable
 import android.util.Log
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -19,6 +22,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.integration.compose.rememberGlidePreloadingData
@@ -31,13 +35,36 @@ import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.feature_node.presentation.util.getDate
 import com.dot.gallery.feature_node.presentation.util.updateDate
 import com.dot.gallery.ui.theme.Dimens
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun PhotosScreen(
     navController: NavController,
     paddingValues: PaddingValues,
     viewModel: PhotosViewModel = hiltViewModel()
 ) {
+    val mediaPermissions = rememberMultiplePermissionsState(
+        listOf(
+            Manifest.permission.READ_MEDIA_IMAGES,
+            Manifest.permission.READ_MEDIA_VIDEO
+        )
+    )
+    if (!mediaPermissions.allPermissionsGranted) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Button(
+                onClick = { mediaPermissions.launchMultiplePermissionRequest() }
+            ) {
+                Text(text = "Request permissions")
+            }
+        }
+    } else {
     val state by remember {
         viewModel.photoState
     }
@@ -88,6 +115,9 @@ fun PhotosScreen(
             modifier = Modifier
                 .fillMaxSize()
         )
+            viewModel.viewModelScope.launch {
+                viewModel.getMedia()
+            }
     }
     if (state.isLoading) {
         CircularProgressIndicator(
@@ -101,5 +131,6 @@ fun PhotosScreen(
                 .fillMaxSize()
         )
         Log.e("MediaError", state.error)
+        }
     }
 }
