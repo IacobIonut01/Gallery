@@ -2,6 +2,7 @@ package com.dot.gallery.feature_node.data.data_types
 
 import android.content.ContentResolver
 import android.net.Uri
+import android.os.Build
 import android.provider.MediaStore
 import com.dot.gallery.feature_node.data.data_source.MediaQuery
 import com.dot.gallery.feature_node.domain.model.Media
@@ -20,6 +21,7 @@ fun ContentResolver.getMediaByType(mediaQuery: MediaQuery): List<Media> {
                 val path: String?
                 val title: String?
                 val albumID: Long
+                var albumLabel: String
                 val timestamp: Long
                 val duration: String?
                 if (isVideo) {
@@ -30,6 +32,11 @@ fun ContentResolver.getMediaByType(mediaQuery: MediaQuery): List<Media> {
                         cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DISPLAY_NAME))
                     albumID =
                         cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.BUCKET_ID))
+                    albumLabel = try {
+                        cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.BUCKET_DISPLAY_NAME))
+                    } catch (e: Exception) {
+                        Build.MODEL
+                    }
                     timestamp =
                         cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATE_MODIFIED))
                     duration =
@@ -42,6 +49,11 @@ fun ContentResolver.getMediaByType(mediaQuery: MediaQuery): List<Media> {
                         cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME))
                     albumID =
                         cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_ID))
+                    albumLabel = try {
+                        cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_DISPLAY_NAME))
+                    } catch (e: Exception) {
+                        Build.MODEL
+                    }
                     timestamp =
                         cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_MODIFIED))
                     duration = null
@@ -54,6 +66,7 @@ fun ContentResolver.getMediaByType(mediaQuery: MediaQuery): List<Media> {
                             uri = Uri.fromFile(File(path)),
                             path = path,
                             albumID = albumID,
+                            albumLabel = albumLabel,
                             timestamp = timestamp,
                             duration = duration
                         )

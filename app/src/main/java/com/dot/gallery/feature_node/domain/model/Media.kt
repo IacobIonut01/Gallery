@@ -13,6 +13,7 @@ data class Media(
     val uri: Uri,
     val path: String,
     val albumID: Long,
+    val albumLabel: String,
     val timestamp: Long,
     val duration: String? = null,
     var selected: Boolean = false

@@ -18,6 +18,7 @@ sealed class MediaQuery(
             MediaStore.Images.Media.DATA,
             MediaStore.Images.Media.DISPLAY_NAME,
             MediaStore.Images.Media.BUCKET_ID,
+            MediaStore.Images.Media.BUCKET_DISPLAY_NAME,
             MediaStore.Images.Media.DATE_MODIFIED
         )
     )
@@ -30,6 +31,7 @@ sealed class MediaQuery(
             MediaStore.Video.Media.DISPLAY_NAME,
             MediaStore.Video.Media.BUCKET_ID,
             MediaStore.Video.Media.DATE_MODIFIED,
+            MediaStore.Video.Media.BUCKET_DISPLAY_NAME,
             MediaStore.Video.Media.DURATION
         )
     )

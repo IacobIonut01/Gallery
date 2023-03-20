@@ -1,6 +1,7 @@
 package com.dot.gallery.feature_node.data.data_types
 
 import android.content.ContentResolver
+import android.os.Build
 import android.provider.MediaStore
 import com.dot.gallery.feature_node.data.data_source.MediaQuery
 import com.dot.gallery.feature_node.domain.model.Album
@@ -35,13 +36,16 @@ fun ContentResolver.getAlbums(mediaOrder: MediaOrder): List<Album> {
         while (!it.isAfterLast) {
             try {
                 val id = it.getLong(it.getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_ID))
-                val label =
+                val label: String? = try {
                     it.getString(it.getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_DISPLAY_NAME))
+                } catch (e: Exception) {
+                    Build.MODEL
+                }
                 val thumbnailPath =
                     it.getString(it.getColumnIndexOrThrow(MediaStore.Images.Media.DATA))
                 val thumbnailDate =
                     it.getLong(it.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_MODIFIED))
-                val album = Album(id, label, thumbnailPath, thumbnailDate, count = 1)
+                val album = Album(id, label ?: Build.MODEL, thumbnailPath, thumbnailDate, count = 1)
                 val currentAlbum = albums.find { albm -> albm.id == id }
                 if (currentAlbum == null)
                     albums.add(album)
@@ -67,13 +71,16 @@ fun ContentResolver.getAlbums(mediaOrder: MediaOrder): List<Album> {
         while (!it.isAfterLast) {
             try {
                 val id = it.getLong(it.getColumnIndexOrThrow(MediaStore.Video.Media.BUCKET_ID))
-                val label =
+                val label = try {
                     it.getString(it.getColumnIndexOrThrow(MediaStore.Video.Media.BUCKET_DISPLAY_NAME))
+                } catch (e: Exception) {
+                    "Internal Storage"
+                }
                 val thumbnailPath =
                     it.getString(it.getColumnIndexOrThrow(MediaStore.Video.Media.DATA))
                 val thumbnailDate =
                     it.getLong(it.getColumnIndexOrThrow(MediaStore.Video.Media.DATE_MODIFIED))
-                val album = Album(id, label, thumbnailPath, thumbnailDate, count = 1)
+                val album = Album(id, label ?: Build.MODEL, thumbnailPath, thumbnailDate, count = 1)
                 val currentAlbum = albums.find { albm -> albm.id == id }
                 if (currentAlbum == null)
                     albums.add(album)

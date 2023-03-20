@@ -67,6 +67,7 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.29.2-rc")
     implementation("com.google.accompanist:accompanist-permissions:0.29.2-rc")
+    implementation("com.github.re-ovo:ZoomableComposeImage:1.0.3")
 
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
@@ -89,6 +90,10 @@ dependencies {
     implementation("com.github.bumptech.glide:glide:4.15.1")
     implementation("com.github.bumptech.glide:compose:1.0.0-alpha.3")
     kapt("com.github.bumptech.glide:compiler:4.15.1")
+
+    // Exo Player
+    implementation 'androidx.media3:media3-exoplayer:1.0.0-rc02'
+    implementation 'androidx.media3:media3-ui:1.0.0-rc02'
 
     // compose-collapsing-toolbar
     implementation("me.onebone:toolbar-compose:2.3.5")

@@ -16,6 +16,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -31,14 +32,15 @@ import com.bumptech.glide.integration.compose.rememberGlidePreloadingData
 import com.bumptech.glide.signature.MediaStoreSignature
 import com.dot.gallery.R
 import com.dot.gallery.core.presentation.components.MediaComponent
+import com.dot.gallery.core.presentation.components.Toolbar
 import com.dot.gallery.core.presentation.components.util.header
 import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.presentation.util.DateExt
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.feature_node.presentation.util.getDate
 import com.dot.gallery.ui.theme.Dimens
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -46,7 +48,9 @@ import kotlinx.coroutines.launch
 fun PhotosScreen(
     navController: NavController,
     paddingValues: PaddingValues,
-    viewModel: PhotosViewModel = hiltViewModel()
+    albumId: Long = -1L,
+    albumName: String = stringResource(id = R.string.app_name),
+    viewModel: PhotosViewModel = hiltViewModel(),
 ) {
     val mediaPermissions = rememberMultiplePermissionsState(
         listOf(
@@ -67,6 +71,9 @@ fun PhotosScreen(
             }
         }
     } else {
+        LaunchedEffect(albumId) {
+            viewModel.albumId = albumId
+        }
         val state by remember {
             viewModel.photoState
         }
@@ -78,10 +85,16 @@ fun PhotosScreen(
             modifier = Modifier.fillMaxSize(),
             columns = GridCells.Adaptive(Dimens.Photo()),
             contentPadding = PaddingValues(
-                top = paddingValues.calculateTopPadding() + 88.dp,
+                top = paddingValues.calculateTopPadding(),
                 bottom = paddingValues.calculateBottomPadding() + 16.dp
             )
         ) {
+            header {
+                Toolbar(
+                    navController = navController,
+                    text = albumName
+                )
+            }
             val list = state.media.groupBy {
                 it.timestamp.getDate(
                     stringToday = stringToday,
@@ -104,7 +117,6 @@ fun PhotosScreen(
                 }
                 items(data.size) { index ->
                     val preloadingData = rememberGlidePreloadingData(
-                        numberOfItemsToPreload = 20,
                         data = data,
                         preloadImageSize = Size(50f, 50f)
                     ) { item: Media, requestBuilder: RequestBuilder<Drawable> ->
@@ -113,7 +125,7 @@ fun PhotosScreen(
                     }
                     val (media, preloadRequestBuilder) = preloadingData[index]
                     MediaComponent(media = media, preloadRequestBuilder) {
-                        navController.navigate(Screen.MediaScreen.route + "?mediaId=${media.id}")
+                        navController.navigate(Screen.MediaViewScreen.route + "?mediaId=${media.id}&albumId=${albumId}")
                     }
                 }
             }
@@ -125,7 +137,7 @@ fun PhotosScreen(
                     .fillMaxSize()
             )
             viewModel.viewModelScope.launch {
-                viewModel.getMedia()
+                viewModel.getMedia(albumId)
             }
         }
         if (state.isLoading) {

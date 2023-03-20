@@ -25,9 +25,17 @@ class PhotosViewModel @Inject constructor(
 
     val photoState = mutableStateOf(MediaState())
 
+    var albumId: Long = -1L
+        set(value) {
+            viewModelScope.launch {
+                getMedia(value)
+            }
+            field = value
+        }
+
     init {
         viewModelScope.launch {
-            getMedia()
+            getMedia(albumId)
         }
         contentResolver
             .observeUri(MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
@@ -37,31 +45,56 @@ class PhotosViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    suspend fun getMedia() {
-        mediaUseCases.getMediaUseCase().onEach { result ->
-            when (result) {
-                is Resource.Error -> {
-                    photoState.value = MediaState(
-                        error = result.message ?: "An error occurred"
-                    )
-                }
+    suspend fun getMedia(albumId: Long = -1L) {
+        if (albumId != -1L) {
+            mediaUseCases.getMediaByAlbumUseCase(albumId).onEach { result ->
+                when (result) {
+                    is Resource.Error -> {
+                        photoState.value = MediaState(
+                            error = result.message ?: "An error occurred"
+                        )
+                    }
 
-                is Resource.Loading -> {
-                    photoState.value = MediaState(
-                        isLoading = true
-                    )
-                }
+                    is Resource.Loading -> {
+                        photoState.value = MediaState(
+                            isLoading = true
+                        )
+                    }
 
-                is Resource.Success -> {
-                    photoState.value = MediaState(
-                        media = result.data ?: emptyList()
-                    )
+                    is Resource.Success -> {
+                        photoState.value = MediaState(
+                            media = result.data ?: emptyList()
+                        )
+                    }
+
                 }
-            }
-        }.launchIn(viewModelScope)
+            }.launchIn(viewModelScope)
+        } else {
+            mediaUseCases.getMediaUseCase().onEach { result ->
+                when (result) {
+                    is Resource.Error -> {
+                        photoState.value = MediaState(
+                            error = result.message ?: "An error occurred"
+                        )
+                    }
+
+                    is Resource.Loading -> {
+                        photoState.value = MediaState(
+                            isLoading = true
+                        )
+                    }
+
+                    is Resource.Success -> {
+                        photoState.value = MediaState(
+                            media = result.data ?: emptyList()
+                        )
+                    }
+                }
+            }.launchIn(viewModelScope)
+        }
     }
 
     private fun ContentResolver.observeUri(uri: Uri) = contentFlowObserver(uri).map {
-        getMedia()
+        getMedia(albumId)
     }
 }
