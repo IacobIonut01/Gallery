@@ -108,6 +108,7 @@ fun MediaPreviewComponent(
     media: Media,
     scrollEnabled: MutableState<Boolean>,
     playWhenReady: Boolean,
+    preloadRequestBuilder: RequestBuilder<Drawable>,
 ) {
     Box(
         modifier = Modifier
@@ -123,7 +124,8 @@ fun MediaPreviewComponent(
                 modifier = Modifier
                     .fillMaxSize(),
                 media = media,
-                scrollEnabled = scrollEnabled
+                scrollEnabled = scrollEnabled,
+                preloadRequestBuilder = preloadRequestBuilder,
             )
         }
     }
@@ -154,7 +156,7 @@ fun VideoPlayer(
     }
 
     exoPlayer.playWhenReady = playWhenReady
-    exoPlayer.videoScalingMode = C.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING
+    exoPlayer.videoScalingMode = C.VIDEO_SCALING_MODE_SCALE_TO_FIT
     exoPlayer.repeatMode = Player.REPEAT_MODE_ONE
 
     DisposableEffect(
@@ -168,7 +170,7 @@ fun VideoPlayer(
         }, factory = {
             PlayerView(context).apply {
                 //hideController()
-                resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIXED_WIDTH
 
                 player = exoPlayer
                 layoutParams = FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
@@ -192,6 +194,7 @@ fun ZoomablePagerImage(
     maxScale: Float = 5f,
     contentScale: ContentScale = ContentScale.FillWidth,
     isRotation: Boolean = false,
+    preloadRequestBuilder: RequestBuilder<Drawable>,
 ) {
     var targetScale by remember { mutableStateOf(1f) }
     val scale = animateFloatAsState(targetValue = maxOf(minScale, minOf(maxScale, targetScale)))
@@ -267,7 +270,9 @@ fun ZoomablePagerImage(
             model = File(media.path),
             contentDescription = media.label,
             contentScale = contentScale,
-        )
+        ) {
+            it.thumbnail(preloadRequestBuilder)
+        }
     }
 }
 
