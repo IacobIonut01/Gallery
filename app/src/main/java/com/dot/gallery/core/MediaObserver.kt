@@ -27,3 +27,22 @@ fun ContentResolver.contentFlowObserver(uri: Uri) = callbackFlow {
         unregisterContentObserver(observer)
     }
 }
+
+fun ContentResolver.contentFlowObserver(uris: Array<Uri>) = callbackFlow {
+    val observer = object : ContentObserver(null) {
+        override fun onChange(selfChange: Boolean, uri: Uri?) {
+            trySend(selfChange)
+        }
+
+        override fun onChange(selfChange: Boolean) {
+            onChange(selfChange, null)
+        }
+    }
+    for (uri in uris)
+        registerContentObserver(uri, true, observer)
+    // trigger first.
+    trySend(false)
+    awaitClose {
+        unregisterContentObserver(observer)
+    }
+}

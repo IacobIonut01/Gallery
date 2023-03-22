@@ -6,8 +6,8 @@ import android.provider.MediaStore
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.dot.gallery.core.Resource
 import com.dot.gallery.core.MediaState
+import com.dot.gallery.core.Resource
 import com.dot.gallery.core.contentFlowObserver
 import com.dot.gallery.feature_node.domain.use_case.MediaUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -38,11 +38,12 @@ class PhotosViewModel @Inject constructor(
             getMedia(albumId)
         }
         contentResolver
-            .observeUri(MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-            .launchIn(viewModelScope)
-        contentResolver
-            .observeUri(MediaStore.Video.Media.EXTERNAL_CONTENT_URI)
-            .launchIn(viewModelScope)
+            .observeUri(
+                arrayOf(
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                    MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+                )
+            ).launchIn(viewModelScope)
     }
 
     suspend fun getMedia(albumId: Long = -1L) {
@@ -94,7 +95,7 @@ class PhotosViewModel @Inject constructor(
         }
     }
 
-    private fun ContentResolver.observeUri(uri: Uri) = contentFlowObserver(uri).map {
+    private fun ContentResolver.observeUri(uri: Array<Uri>) = contentFlowObserver(uri).map {
         getMedia(albumId)
     }
 }

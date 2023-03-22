@@ -30,11 +30,12 @@ class AlbumsViewModel @Inject constructor(
             getAlbums()
         }
         contentResolver
-            .observeUri(MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-            .launchIn(viewModelScope)
-        contentResolver
-            .observeUri(MediaStore.Video.Media.EXTERNAL_CONTENT_URI)
-            .launchIn(viewModelScope)
+            .observeUri(
+                arrayOf(
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                    MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+                )
+            ).launchIn(viewModelScope)
     }
 
     private suspend fun getAlbums() {
@@ -61,7 +62,7 @@ class AlbumsViewModel @Inject constructor(
         }.launchIn(viewModelScope)
     }
 
-    private fun ContentResolver.observeUri(uri: Uri) = contentFlowObserver(uri).map {
+    private fun ContentResolver.observeUri(uri: Array<Uri>) = contentFlowObserver(uri).map {
         getAlbums()
     }
 }

@@ -5,10 +5,8 @@ import android.content.ContentUris
 import android.database.Cursor
 import android.net.Uri
 import android.provider.MediaStore
-import android.util.Log
 import com.dot.gallery.feature_node.data.data_source.MediaQuery
 import com.dot.gallery.feature_node.domain.model.Media
-import java.io.File
 
 fun ContentResolver.getCursor(
     mediaQuery: MediaQuery

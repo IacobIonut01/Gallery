@@ -74,7 +74,7 @@ fun ContentResolver.getAlbums(mediaOrder: MediaOrder): List<Album> {
                 val label = try {
                     it.getString(it.getColumnIndexOrThrow(MediaStore.Video.Media.BUCKET_DISPLAY_NAME))
                 } catch (e: Exception) {
-                    "Internal Storage"
+                    Build.MODEL
                 }
                 val thumbnailPath =
                     it.getString(it.getColumnIndexOrThrow(MediaStore.Video.Media.DATA))

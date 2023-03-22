@@ -10,11 +10,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.calculatePan
 import androidx.compose.foundation.gestures.calculateRotation
 import androidx.compose.foundation.gestures.calculateZoom
-import androidx.compose.foundation.gestures.forEachGesture
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,7 +35,6 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,7 +48,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.C
@@ -65,6 +63,7 @@ import androidx.media3.ui.PlayerView
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
+import com.bumptech.glide.request.target.Target
 import com.dot.gallery.core.presentation.components.util.advancedShadow
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.ui.theme.Dimens
@@ -82,7 +81,6 @@ fun MediaComponent(
     Box(
         modifier = Modifier
             .aspectRatio(1f)
-            .padding(1.dp)
             .border(
                 width = .2.dp,
                 color = MaterialTheme.colorScheme.outlineVariant,
@@ -109,6 +107,7 @@ fun MediaPreviewComponent(
     scrollEnabled: MutableState<Boolean>,
     playWhenReady: Boolean,
     preloadRequestBuilder: RequestBuilder<Drawable>,
+    onItemClick: () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -118,27 +117,32 @@ fun MediaPreviewComponent(
             ),
     ) {
         if (media.duration != null) {
-            VideoPlayer(media, playWhenReady)
+            VideoPlayer(
+                media = media,
+                playWhenReady = playWhenReady,
+                onItemClick = onItemClick
+            )
         } else {
             ZoomablePagerImage(
-                modifier = Modifier
-                    .fillMaxSize(),
+                modifier = Modifier.fillMaxSize(),
                 media = media,
                 scrollEnabled = scrollEnabled,
                 preloadRequestBuilder = preloadRequestBuilder,
+                onItemClick = onItemClick
             )
         }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 fun VideoPlayer(
     media: Media,
-    playWhenReady: Boolean
+    playWhenReady: Boolean,
+    onItemClick: () -> Unit
 ) {
     val context = LocalContext.current
-    val lifecycleOwner = rememberUpdatedState(LocalLifecycleOwner.current)
 
     val exoPlayer = remember(context) {
         ExoPlayer.Builder(context)
@@ -160,14 +164,22 @@ fun VideoPlayer(
     exoPlayer.repeatMode = Player.REPEAT_MODE_ONE
 
     DisposableEffect(
-        AndroidView(modifier = Modifier.clickable {
-            if (exoPlayer.isPlaying) {
-                exoPlayer.pause()
-            } else {
-                exoPlayer.play()
-            }
+        AndroidView(modifier = Modifier
+            .clickable {
+                if (exoPlayer.isPlaying) {
+                    exoPlayer.pause()
+                } else {
+                    exoPlayer.play()
+                }
 
-        }, factory = {
+            }
+            .combinedClickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = {
+                    onItemClick()
+                },
+            ), factory = {
             PlayerView(context).apply {
                 //hideController()
                 resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIXED_WIDTH
@@ -191,10 +203,11 @@ fun ZoomablePagerImage(
     media: Media,
     scrollEnabled: MutableState<Boolean>,
     minScale: Float = 1f,
-    maxScale: Float = 5f,
-    contentScale: ContentScale = ContentScale.FillWidth,
+    maxScale: Float = 10f,
+    contentScale: ContentScale = ContentScale.Fit,
     isRotation: Boolean = false,
     preloadRequestBuilder: RequestBuilder<Drawable>,
+    onItemClick: () -> Unit
 ) {
     var targetScale by remember { mutableStateOf(1f) }
     val scale = animateFloatAsState(targetValue = maxOf(minScale, minOf(maxScale, targetScale)))
@@ -210,7 +223,9 @@ fun ZoomablePagerImage(
             .combinedClickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
-                onClick = { },
+                onClick = {
+                    onItemClick()
+                },
                 onDoubleClick = {
                     if (targetScale >= 2f) {
                         targetScale = 1f
@@ -221,36 +236,34 @@ fun ZoomablePagerImage(
                 },
             )
             .pointerInput(Unit) {
-                forEachGesture {
-                    awaitPointerEventScope {
-                        awaitFirstDown()
-                        do {
-                            val event = awaitPointerEvent()
-                            val zoom = event.calculateZoom()
-                            targetScale *= zoom
-                            val offset = event.calculatePan()
-                            if (targetScale <= 1) {
-                                offsetX = 1f
-                                offsetY = 1f
-                                targetScale = 1f
-                                scrollEnabled.value = true
-                            } else {
-                                offsetX += offset.x
-                                offsetY += offset.y
-                                if (zoom > 1) {
-                                    scrollEnabled.value = false
-                                    rotationState += event.calculateRotation()
-                                }
-                                val imageWidth = screenWidthPx * scale.value
-                                val borderReached = imageWidth - screenWidthPx - 2 * abs(offsetX)
-                                scrollEnabled.value = borderReached <= 0
-                                if (borderReached < 0) {
-                                    offsetX = ((imageWidth - screenWidthPx) / 2f).withSign(offsetX)
-                                    if (offset.x != 0f) offsetY -= offset.y
-                                }
+                awaitEachGesture {
+                    awaitFirstDown()
+                    do {
+                        val event = awaitPointerEvent()
+                        val zoom = event.calculateZoom()
+                        targetScale *= zoom
+                        val offset = event.calculatePan()
+                        if (targetScale <= 1) {
+                            offsetX = 1f
+                            offsetY = 1f
+                            targetScale = 1f
+                            scrollEnabled.value = true
+                        } else {
+                            offsetX += offset.x
+                            offsetY += offset.y
+                            if (zoom > 1) {
+                                scrollEnabled.value = false
+                                rotationState += event.calculateRotation()
                             }
-                        } while (event.changes.any { it.pressed })
-                    }
+                            val imageWidth = screenWidthPx * scale.value
+                            val borderReached = imageWidth - screenWidthPx - 2 * abs(offsetX)
+                            scrollEnabled.value = borderReached <= 0
+                            if (borderReached < 0) {
+                                offsetX = ((imageWidth - screenWidthPx) / 2f).withSign(offsetX)
+                                if (offset.x != 0f) offsetY -= offset.y
+                            }
+                        }
+                    } while (event.changes.any { it.pressed })
                 }
             }
 
@@ -271,7 +284,7 @@ fun ZoomablePagerImage(
             contentDescription = media.label,
             contentScale = contentScale,
         ) {
-            it.thumbnail(preloadRequestBuilder)
+            it.override(Target.SIZE_ORIGINAL).thumbnail(preloadRequestBuilder)
         }
     }
 }

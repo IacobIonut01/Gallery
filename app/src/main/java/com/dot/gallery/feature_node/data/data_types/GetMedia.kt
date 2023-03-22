@@ -72,7 +72,7 @@ fun ContentResolver.getMediaByType(mediaQuery: MediaQuery): List<Media> {
                         )
                     )
                 }
-            } catch(e: Exception) {
+            } catch (e: Exception) {
                 cursor.close()
                 e.printStackTrace()
             }

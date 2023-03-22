@@ -19,7 +19,6 @@ import androidx.compose.ui.unit.dp
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
-import com.bumptech.glide.integration.compose.PreloadRequestBuilderTransform
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.ui.theme.Dimens
 import com.dot.gallery.ui.theme.Shapes
@@ -61,7 +60,11 @@ fun AlbumComponent(
 
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
-fun AlbumImage(album: Album, preloadRequestBuilder: RequestBuilder<Drawable>, onItemClick: (Album) -> Unit) {
+fun AlbumImage(
+    album: Album,
+    preloadRequestBuilder: RequestBuilder<Drawable>,
+    onItemClick: (Album) -> Unit
+) {
     GlideImage(
         modifier = Modifier
             .aspectRatio(1f)

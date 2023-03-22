@@ -2,6 +2,9 @@ package com.dot.gallery.core.presentation.components
 
 import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
@@ -9,7 +12,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -30,17 +35,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.dot.gallery.R
+import com.dot.gallery.core.Constants
+import com.dot.gallery.core.Constants.Animation.enterAnimation
+import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.feature_node.presentation.util.BottomNavItem
 import com.dot.gallery.feature_node.presentation.util.Screen
 
@@ -104,26 +115,33 @@ fun Toolbar(
     navController: NavController,
     modifier: Modifier = Modifier,
     text: String,
+    subtitle: String? = null
 ) {
-    Row(
+    Column(
         modifier = modifier
-            .padding(horizontal = 16.dp, vertical = 16.dp)
-            .padding(top = 96.dp, bottom = 16.dp)
+            .padding(horizontal = 16.dp)
+            .padding(bottom = 16.dp, top = 12.dp)
             .fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Start
+        horizontalAlignment = Alignment.Start
     ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
+        var showBackButton = remember { false }
+
         navBackStackEntry?.destination?.route?.let {
-            val showBackButton = it.contains(Screen.AlbumViewScreen.route)
-            AnimatedVisibility(visible = showBackButton) {
+            showBackButton = it.contains(Screen.AlbumViewScreen.route)
+        }
+        Column(modifier = Modifier.height(48.dp)) {
+            AnimatedVisibility(
+                visible = showBackButton,
+                enter = enterAnimation,
+                exit = exitAnimation
+            ) {
                 Image(
                     imageVector = Icons.Outlined.ArrowBack,
                     colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface),
                     contentDescription = "Go back",
                     modifier = Modifier
-                        .height(48.dp)
-                        .padding(end = 16.dp)
+                        .fillMaxHeight()
                         .clickable {
                             navController.navigateUp()
                         }
@@ -131,9 +149,20 @@ fun Toolbar(
             }
         }
         Text(
+            modifier = Modifier
+                .padding(top = 56.dp),
             text = text,
             style = MaterialTheme.typography.displaySmall,
         )
+        if (!subtitle.isNullOrEmpty()) {
+            Text(
+                modifier = Modifier
+                    .padding(top = 8.dp),
+                text = subtitle.uppercase(),
+                style = MaterialTheme.typography.titleSmall,
+                fontFamily = FontFamily.Monospace
+            )
+        }
     }
 }
 
@@ -162,7 +191,23 @@ fun BottomAppBar(
                             indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
                             selectedIconColor = MaterialTheme.colorScheme.onSecondaryContainer,
                         ),
-                        onClick = { navController.navigate(item.route) },
+                        onClick = {
+                            if (!selected) {
+                                navController.navigate(item.route) {
+                                    // Pop up to the start destination of the graph to
+                                    // avoid building up a large stack of destinations
+                                    // on the back stack as users select items
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    // Avoid multiple copies of the same destination when
+                                    // reselecting the same item
+                                    launchSingleTop = true
+                                    // Restore state when reselecting a previously selected item
+                                    restoreState = true
+                                }
+                            }
+                        },
                         label = {
                             Text(
                                 modifier = Modifier

@@ -3,6 +3,7 @@ package com.dot.gallery.feature_node.presentation.photos
 import android.Manifest
 import android.graphics.drawable.Drawable
 import android.util.Log
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -37,10 +38,11 @@ import com.dot.gallery.core.presentation.components.util.header
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.feature_node.presentation.util.getDate
+import com.dot.gallery.feature_node.presentation.util.getDateExt
+import com.dot.gallery.feature_node.presentation.util.getDateHeader
 import com.dot.gallery.ui.theme.Dimens
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -80,6 +82,23 @@ fun PhotosScreen(
         val stringToday = stringResource(id = R.string.header_today)
         val stringYesterday = stringResource(id = R.string.header_yesterday)
         val gridState = rememberLazyGridState()
+        val sortedAscendingMedia = remember {
+            state.media.sortedBy { it.timestamp }
+        }
+        val startDate = remember {
+            try {
+                sortedAscendingMedia.first().timestamp.getDateExt()
+            } catch (e: NoSuchElementException) {
+                null
+            }
+        }
+        val endDate = remember {
+            try {
+                sortedAscendingMedia.last().timestamp.getDateExt()
+            } catch (e: NoSuchElementException) {
+                null
+            }
+        }
         LazyVerticalGrid(
             state = gridState,
             modifier = Modifier.fillMaxSize(),
@@ -87,12 +106,18 @@ fun PhotosScreen(
             contentPadding = PaddingValues(
                 top = paddingValues.calculateTopPadding(),
                 bottom = paddingValues.calculateBottomPadding() + 16.dp
-            )
+            ),
+            horizontalArrangement = Arrangement.spacedBy(2.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             header {
                 Toolbar(
                     navController = navController,
-                    text = albumName
+                    text = albumName,
+                    subtitle = if (albumId != -1L && startDate != null && endDate != null) getDateHeader(
+                        startDate,
+                        endDate
+                    ) else null
                 )
             }
             val list = state.media.groupBy {
