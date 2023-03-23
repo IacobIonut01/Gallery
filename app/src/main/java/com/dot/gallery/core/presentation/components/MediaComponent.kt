@@ -63,6 +63,7 @@ import androidx.media3.ui.PlayerView
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.target.Target
 import com.dot.gallery.core.presentation.components.util.advancedShadow
 import com.dot.gallery.feature_node.domain.model.Media
@@ -342,5 +343,6 @@ fun MediaImage(media: Media, preloadRequestBuilder: RequestBuilder<Drawable>) {
         contentScale = ContentScale.Crop,
     ) {
         it.thumbnail(preloadRequestBuilder)
+            .diskCacheStrategy(DiskCacheStrategy.ALL)
     }
 }
