@@ -1,5 +1,7 @@
 package com.dot.gallery.core.presentation.components
 
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.IntentSenderRequest
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
@@ -23,6 +25,7 @@ fun NavigationComp(
     navController: NavHostController,
     paddingValues: PaddingValues,
     bottomBarState: MutableState<Boolean>,
+    deleteResultLauncher: ActivityResultLauncher<IntentSenderRequest>,
     systemBarFollowThemeState: MutableState<Boolean>
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -115,7 +118,8 @@ fun NavigationComp(
                     navController = navController,
                     paddingValues = paddingValues,
                     mediaId = mediaId,
-                    albumId = albumId
+                    albumId = albumId,
+                    deleteResultLauncher = deleteResultLauncher
                 )
             }
         }

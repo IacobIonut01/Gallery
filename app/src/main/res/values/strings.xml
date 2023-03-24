@@ -5,4 +5,6 @@
     <string name="searchbar_title"><![CDATA[Search photos & videos]]></string>
     <string name="header_today">Today</string>
     <string name="header_yesterday">Yesterday</string>
+    <string name="share_media">Share</string>
+    <string name="request_permissions">Request permissions</string>
 </resources>

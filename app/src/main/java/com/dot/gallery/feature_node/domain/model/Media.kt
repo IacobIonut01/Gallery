@@ -1,9 +1,34 @@
 package com.dot.gallery.feature_node.domain.model
 
 import android.net.Uri
+import android.os.Parcel
 import android.os.Parcelable
+import com.dot.gallery.feature_node.presentation.util.getDate
 import kotlinx.parcelize.Parcelize
 import java.util.concurrent.TimeUnit
+
+@Parcelize
+sealed class MediaItem : Parcelable {
+    abstract val key: String
+
+    data class Header(
+        override val key: String,
+        val text: String,
+    ) : MediaItem()
+
+    sealed class MediaViewItem : MediaItem() {
+
+        abstract val media: Media
+
+        @Parcelize
+        data class Loaded(
+            override val key: String,
+            override val media: Media,
+        ) : MediaViewItem()
+    }
+}
+val Any.isHeaderKey: Boolean
+    get() = this is String && this.startsWith("header")
 
 @Parcelize
 data class Media(
@@ -14,6 +39,8 @@ data class Media(
     val albumID: Long,
     val albumLabel: String,
     val timestamp: Long,
+    val mimeType: String,
+    val orientation: Int,
     val duration: String? = null,
     var selected: Boolean = false
 ) : Parcelable {

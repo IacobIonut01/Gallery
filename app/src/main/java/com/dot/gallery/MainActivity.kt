@@ -1,8 +1,15 @@
 package com.dot.gallery
 
+import android.app.PendingIntent.getActivity
+import android.media.MediaScannerConnection
+import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
@@ -46,6 +53,17 @@ class MainActivity : ComponentActivity() {
             ),
         )
 
+        val deleteResultLauncher: ActivityResultLauncher<IntentSenderRequest> =
+            registerForActivityResult(
+                ActivityResultContracts.StartIntentSenderForResult()
+            ) {
+                MediaScannerConnection.scanFile(
+                    this,
+                    arrayOf(Environment.getExternalStorageDirectory().toString()),
+                    null
+                ) { _: String?, _: Uri? -> }
+            }
+
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
             GalleryTheme {
@@ -71,6 +89,7 @@ class MainActivity : ComponentActivity() {
                             navController = navController,
                             paddingValues = paddingValues,
                             bottomBarState = bottomBarState,
+                            deleteResultLauncher = deleteResultLauncher,
                             systemBarFollowThemeState = systemBarFollowThemeState
                         )
                         /*

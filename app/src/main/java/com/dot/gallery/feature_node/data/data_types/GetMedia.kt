@@ -23,6 +23,8 @@ fun ContentResolver.getMediaByType(mediaQuery: MediaQuery): List<Media> {
                 val albumID: Long
                 var albumLabel: String
                 val timestamp: Long
+                val orientation: Int
+                val mimeType: String
                 val duration: String?
                 if (isVideo) {
                     id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Video.Media._ID))
@@ -41,6 +43,10 @@ fun ContentResolver.getMediaByType(mediaQuery: MediaQuery): List<Media> {
                         cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATE_MODIFIED))
                     duration =
                         cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DURATION))
+                    orientation =
+                        cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.ORIENTATION))
+                    mimeType =
+                        cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.MIME_TYPE))
                 } else {
                     id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID))
                     path =
@@ -56,6 +62,10 @@ fun ContentResolver.getMediaByType(mediaQuery: MediaQuery): List<Media> {
                     }
                     timestamp =
                         cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_MODIFIED))
+                    orientation =
+                        cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Images.Media.ORIENTATION))
+                    mimeType =
+                        cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Images.Media.MIME_TYPE))
                     duration = null
                 }
                 if (path != null && title != null) {
@@ -68,7 +78,9 @@ fun ContentResolver.getMediaByType(mediaQuery: MediaQuery): List<Media> {
                             albumID = albumID,
                             albumLabel = albumLabel,
                             timestamp = timestamp,
-                            duration = duration
+                            duration = duration,
+                            orientation = orientation,
+                            mimeType = mimeType
                         )
                     )
                 }

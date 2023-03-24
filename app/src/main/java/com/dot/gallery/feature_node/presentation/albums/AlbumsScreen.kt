@@ -3,24 +3,28 @@ package com.dot.gallery.feature_node.presentation.albums
 import android.graphics.drawable.Drawable
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.integration.compose.rememberGlidePreloadingData
 import com.bumptech.glide.signature.MediaStoreSignature
@@ -32,6 +36,7 @@ import com.dot.gallery.feature_node.presentation.albums.components.AlbumComponen
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.ui.theme.Dimens
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlbumsScreen(
     navController: NavController,
@@ -48,50 +53,62 @@ fun AlbumsScreen(
         requestBuilder.load(item.pathToThumbnail)
             .signature(MediaStoreSignature(null, item.timestamp, 0))
     }
-    LazyVerticalGrid(
-        modifier = Modifier
-            .fillMaxSize(),
-        columns = GridCells.Adaptive(Dimens.Album()),
-        contentPadding = PaddingValues(
-            top = paddingValues.calculateTopPadding(),
-            bottom = paddingValues.calculateBottomPadding() + 16.dp
-        ),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        content = {
-            header {
-                Toolbar(
-                    navController = navController,
-                    text = stringResource(id = R.string.nav_albums)
-                )
-            }
-            items(state.albums.size) { index ->
-                val (album, preloadRequestBuilder) = preloadingData[index]
-                AlbumComponent(album = album, preloadRequestBuilder) {
-                    navController.navigate(Screen.AlbumViewScreen.route + "?albumId=${album.id}&albumName=${album.label}")
+    val scrollBehavior =
+        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+
+    Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        topBar = {
+            LargeTopAppBar(
+                title = {
+                    Column {
+                        Text(
+                            text = stringResource(id = R.string.nav_albums),
+                        )
+                    }
+                },
+                scrollBehavior = scrollBehavior
+            )
+        }
+    ) {
+        LazyVerticalGrid(
+            modifier = Modifier
+                .fillMaxSize(),
+            columns = GridCells.Adaptive(Dimens.Album()),
+            contentPadding = PaddingValues(
+                top = it.calculateTopPadding(),
+                bottom = paddingValues.calculateBottomPadding() + 16.dp
+            ),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            content = {
+                items(state.albums.size) { index ->
+                    val (album, preloadRequestBuilder) = preloadingData[index]
+                    AlbumComponent(album = album, preloadRequestBuilder) {
+                        navController.navigate(Screen.AlbumViewScreen.route + "?albumId=${album.id}&albumName=${album.label}")
+                    }
                 }
             }
-
+        )
+        if (state.albums.isEmpty()) {
+            Text(
+                text = "Is Empty",
+                modifier = Modifier
+                    .fillMaxSize()
+            )
         }
-    )
-    if (state.albums.isEmpty()) {
-        Text(
-            text = "Is Empty",
-            modifier = Modifier
-                .fillMaxSize()
-        )
-    }
-    if (state.isLoading) {
-        CircularProgressIndicator(
-            modifier = Modifier.fillMaxSize()
-        )
-    }
-    if (state.error.isNotEmpty()) {
-        Text(
-            text = "An error occured",
-            modifier = Modifier
-                .fillMaxSize()
-        )
-        Log.e("MediaError", state.error)
+        if (state.isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+        if (state.error.isNotEmpty()) {
+            Text(
+                text = "An error occured",
+                modifier = Modifier
+                    .fillMaxSize()
+            )
+            Log.e("MediaError", state.error)
+        }
     }
 }

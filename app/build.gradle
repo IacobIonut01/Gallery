@@ -106,9 +106,6 @@ dependencies {
     implementation 'androidx.media3:media3-exoplayer:1.0.0-rc02'
     implementation 'androidx.media3:media3-ui:1.0.0-rc02'
 
-    // compose-collapsing-toolbar
-    implementation("me.onebone:toolbar-compose:2.3.5")
-
     // Tests
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")

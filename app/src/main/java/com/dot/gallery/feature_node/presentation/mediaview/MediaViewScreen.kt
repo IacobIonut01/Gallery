@@ -2,42 +2,30 @@ package com.dot.gallery.feature_node.presentation.mediaview
 
 import android.app.Activity
 import android.graphics.drawable.Drawable
-import androidx.compose.animation.AnimatedVisibility
+import androidx.activity.ComponentActivity
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerDefaults
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ArrowBack
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -47,15 +35,15 @@ import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.integration.compose.rememberGlidePreloadingData
 import com.bumptech.glide.request.target.Target
 import com.bumptech.glide.signature.MediaStoreSignature
-import com.dot.gallery.core.Constants.Animation.enterAnimation
-import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.Constants.DEFAULT_LOW_VELOCITY_SWIPE_DURATION
-import com.dot.gallery.core.Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION
 import com.dot.gallery.core.presentation.components.MediaPreviewComponent
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewAppBar
+import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewBottomBar
 import com.dot.gallery.feature_node.presentation.photos.PhotosViewModel
 import com.dot.gallery.feature_node.presentation.util.getDate
-import com.dot.gallery.ui.theme.Black40P
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -64,8 +52,10 @@ fun MediaViewScreen(
     paddingValues: PaddingValues,
     mediaId: Long,
     albumId: Long = -1L,
+    deleteResultLauncher: ActivityResultLauncher<IntentSenderRequest>,
     viewModel: PhotosViewModel = hiltViewModel()
 ) {
+    val runtimeMediaId = remember { mutableStateOf(mediaId) }
     val state by remember {
         viewModel.photoState
     }
@@ -76,6 +66,7 @@ fun MediaViewScreen(
     currentDate.value = state.media[pagerState.currentPage].timestamp.getDate(
         "MMMM d, yyyy\nh:mm a"
     )
+    val currentMedia = remember { mutableStateOf<Media?>(null) }
 
     val showUI = remember { mutableStateOf(true) }
     val window = (LocalContext.current as Activity).window
@@ -89,13 +80,21 @@ fun MediaViewScreen(
     }
 
 
+    val lastIndex = remember { mutableStateOf(-1) }
+
     LaunchedEffect(albumId) {
         viewModel.albumId = albumId
-        val index = viewModel.photoState.value.media.indexOfFirst { it.id == mediaId }
+    }
+
+    LaunchedEffect(state.media) {
+        if (lastIndex.value != -1)
+            runtimeMediaId.value = state.media[lastIndex.value].id
+        val index = state.media.indexOfFirst { it.id == runtimeMediaId.value }
         pagerState.scrollToPage(index)
         currentDate.value = state.media[index].timestamp.getDate(
             "MMMM d, yyyy\nh:mm a"
         )
+        currentMedia.value = state.media[index]
     }
 
     Box(
@@ -138,43 +137,21 @@ fun MediaViewScreen(
                 showUIListener()
             }
         }
-        AnimatedVisibility(
-            visible = showUI.value,
-            enter = enterAnimation(DEFAULT_TOP_BAR_ANIMATION_DURATION),
-            exit = exitAnimation(DEFAULT_TOP_BAR_ANIMATION_DURATION)
+        MediaViewAppBar(
+            showUI = showUI,
+            currentDate = currentDate,
+            paddingValues = paddingValues,
+            navController = navController
+        )
+
+        MediaViewBottomBar(
+            showUI = showUI,
+            paddingValues = paddingValues,
+            currentMedia = currentMedia,
+            currentIndex = pagerState.currentPage,
+            deleteResultLauncher = deleteResultLauncher,
         ) {
-            Row(
-                modifier = Modifier
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(Black40P, Color.Transparent)
-                        )
-                    )
-                    .padding(top = paddingValues.calculateTopPadding())
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Image(
-                    imageVector = Icons.Outlined.ArrowBack,
-                    colorFilter = ColorFilter.tint(Color.White),
-                    contentDescription = "Go back",
-                    modifier = Modifier
-                        .height(48.dp)
-                        .clickable {
-                            navController.navigateUp()
-                        }
-                )
-                Text(
-                    text = currentDate.value.uppercase(),
-                    modifier = Modifier,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontFamily = FontFamily.Monospace,
-                    color = Color.White,
-                    textAlign = TextAlign.End
-                )
-            }
+            lastIndex.value = it
         }
     }
 

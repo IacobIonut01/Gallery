@@ -9,7 +9,9 @@ import androidx.lifecycle.viewModelScope
 import com.dot.gallery.core.MediaState
 import com.dot.gallery.core.Resource
 import com.dot.gallery.core.contentFlowObserver
+import com.dot.gallery.feature_node.domain.model.MediaItem
 import com.dot.gallery.feature_node.domain.use_case.MediaUseCases
+import com.dot.gallery.feature_node.presentation.util.getDate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
