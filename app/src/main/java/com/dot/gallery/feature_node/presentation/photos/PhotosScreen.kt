@@ -29,6 +29,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -163,14 +164,22 @@ fun PhotosScreen(
             items
         }
 
+        /**
+         * Remember last known header item
+         */
+        val stickyHeaderLastItem = remember {
+            mutableStateOf<String?>(null)
+        }
+
         val stickyHeaderItem by remember(state.media) {
             derivedStateOf {
                 val firstIndex = gridState.layoutInfo.visibleItemsInfo.firstOrNull()?.index
-                val item = firstIndex?.let(state.media::getOrNull)
-                item?.timestamp?.getDate(
-                    stringToday = stringToday,
-                    stringYesterday = stringYesterday
-                )
+                val item = firstIndex?.let(mappedData::getOrNull)
+                stickyHeaderLastItem.apply {
+                    if (item != null && item is MediaItem.Header) {
+                        value = item.key.replace("header_", "")
+                    }
+                }.value
             }
         }
 
@@ -210,7 +219,6 @@ fun PhotosScreen(
             StickyHeaderGrid(
                 modifier = Modifier.fillMaxSize(),
                 lazyState = gridState,
-                paddingValues = it,
                 headerMatcher = { item -> item.key.isHeaderKey },
                 stickyHeader = {
                     stickyHeaderItem?.let {
@@ -222,9 +230,9 @@ fun PhotosScreen(
                                 .background(
                                     Brush.verticalGradient(
                                         listOf(
-                                            MaterialTheme.colorScheme.surface.copy(
-                                                alpha = 0.4f
-                                            ), Color.Transparent
+                                            // 3.dp is the elevation the LargeTopAppBar use
+                                            MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
+                                            Color.Transparent
                                         )
                                     )
                                 )
