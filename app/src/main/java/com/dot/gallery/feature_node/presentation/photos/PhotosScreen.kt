@@ -112,7 +112,7 @@ fun PhotosScreen(
         val preloadingData = rememberGlidePreloadingData(
             data = state.media,
             numberOfItemsToPreload = sqrt(state.media.size.toDouble()).roundToInt(),
-            preloadImageSize = Size(50f, 50f)
+            preloadImageSize = Size(100f, 100f)
         ) { media: Media, requestBuilder: RequestBuilder<Drawable> ->
             requestBuilder.load(media.uri)
                 .signature(

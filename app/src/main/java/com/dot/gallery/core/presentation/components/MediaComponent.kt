@@ -353,7 +353,6 @@ fun MediaImage(media: Media, preloadRequestBuilder: RequestBuilder<Drawable>) {
     ) {
         it.thumbnail(preloadRequestBuilder)
             .signature(MediaStoreSignature(media.mimeType, media.timestamp, media.orientation))
-            .sizeMultiplier(0.8f)
             .priority(Priority.LOW)
     }
 }
