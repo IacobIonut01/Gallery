@@ -25,7 +25,6 @@ import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -38,22 +37,22 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.core.Constants
 import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.presentation.util.deleteImage
-import com.dot.gallery.feature_node.presentation.util.shareImage
+import com.dot.gallery.feature_node.presentation.util.shareMedia
+import com.dot.gallery.feature_node.presentation.util.trashImages
 import com.dot.gallery.ui.theme.Black40P
 
 @Composable
 fun BoxScope.MediaViewBottomBar(
-    showUI: MutableState<Boolean>,
+    showUI: Boolean,
     paddingValues: PaddingValues,
-    currentMedia: MutableState<Media?>,
+    currentMedia: Media?,
     currentIndex: Int,
-    deleteResultLauncher: ActivityResultLauncher<IntentSenderRequest>,
+    result: ActivityResultLauncher<IntentSenderRequest>,
     onDeleteMedia: (Int) -> Unit,
 ) {
     val context = LocalContext.current
     AnimatedVisibility(
-        visible = showUI.value,
+        visible = showUI,
         enter = Constants.Animation.enterAnimation(Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION),
         exit = Constants.Animation.exitAnimation(Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION),
         modifier = Modifier
@@ -81,7 +80,7 @@ fun BoxScope.MediaViewBottomBar(
                 imageVector = Icons.Outlined.Share,
                 title = "Share"
             ) {
-                context.shareImage(media = it)
+                context.shareMedia(media = it)
             }
             Spacer(modifier = Modifier.size(8.dp))
             // Favourite Component
@@ -99,7 +98,7 @@ fun BoxScope.MediaViewBottomBar(
                 imageVector = Icons.Outlined.DeleteOutline,
                 title = "Trash"
             ) {
-                context.deleteImage(deleteResultLauncher = deleteResultLauncher, arrayListOf(it))
+                context.trashImages(result = result, arrayListOf(it))
                 onDeleteMedia.invoke(currentIndex)
             }
             Spacer(modifier = Modifier.size(8.dp))
@@ -117,7 +116,7 @@ fun BoxScope.MediaViewBottomBar(
 
 @Composable
 private fun BottomBarColumn(
-    currentMedia: MutableState<Media?>,
+    currentMedia: Media?,
     imageVector: ImageVector,
     title: String,
     onItemClick: (Media) -> Unit
@@ -128,7 +127,7 @@ private fun BottomBarColumn(
             .width(90.dp)
             .padding(top = 12.dp, bottom = 16.dp)
             .clickable {
-                currentMedia.value?.let {
+                currentMedia?.let {
                     onItemClick.invoke(it)
                 }
             },

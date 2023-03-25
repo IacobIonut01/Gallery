@@ -3,12 +3,10 @@ package com.dot.gallery.core.presentation.components
 import android.graphics.drawable.Drawable
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.FrameLayout
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -26,15 +24,16 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.PlayCircle
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.RectangleShape
@@ -53,7 +53,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.C
@@ -70,22 +69,27 @@ import com.bumptech.glide.Priority
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
-import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.target.Target
 import com.bumptech.glide.signature.MediaStoreSignature
+import com.dot.gallery.core.Constants.Animation
 import com.dot.gallery.core.presentation.components.util.advancedShadow
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.ui.theme.Black40P
 import com.dot.gallery.ui.theme.Dimens
 import com.dot.gallery.ui.theme.Shapes
 import java.io.File
 import kotlin.math.abs
 import kotlin.math.withSign
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MediaComponent(
     media: Media,
+    selectionState: MutableState<Boolean>,
     preloadRequestBuilder: RequestBuilder<Drawable>,
     onItemClick: (Media) -> Unit,
+    onItemLongClick: (Media) -> Unit,
+    isSelected: Boolean,
 ) {
     Box(
         modifier = Modifier
@@ -99,14 +103,17 @@ fun MediaComponent(
             .background(
                 color = MaterialTheme.colorScheme.surfaceVariant,
             )
-            .clickable {
-                onItemClick(media)
-            },
+            .combinedClickable(
+                onClick = { onItemClick(media) },
+                onLongClick = { onItemLongClick(media) },
+            ),
     ) {
-        MediaImage(media = media, preloadRequestBuilder)
-        if (media.duration != null) {
-            VideoDurationHeader(media = media)
-        }
+        MediaImage(
+            media = media,
+            preloadRequestBuilder = preloadRequestBuilder,
+            selectionState = selectionState,
+            isSelected = isSelected,
+        )
     }
 }
 
@@ -300,9 +307,9 @@ fun ZoomablePagerImage(
 }
 
 @Composable
-fun BoxScope.VideoDurationHeader(media: Media) {
+fun BoxScope.VideoDurationHeader(modifier: Modifier = Modifier, media: Media) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .align(Alignment.TopEnd)
             .padding(all = 8.dp),
         horizontalArrangement = Arrangement.End,
@@ -337,22 +344,60 @@ fun BoxScope.VideoDurationHeader(media: Media) {
     }
 }
 
-/**
- * @param model -> Data source to display the image
- */
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
-fun MediaImage(media: Media, preloadRequestBuilder: RequestBuilder<Drawable>) {
-    GlideImage(
+fun MediaImage(
+    media: Media,
+    preloadRequestBuilder: RequestBuilder<Drawable>,
+    selectionState: MutableState<Boolean>,
+    isSelected: Boolean
+) {
+    val selectedSize = if (isSelected) 12.dp else 0.dp
+    val scale = if (isSelected) 0.5f else 1f
+    val selectedShape = if (isSelected) Shapes.large else Shapes.extraSmall
+    Box(
         modifier = Modifier
             .aspectRatio(1f)
-            .size(Dimens.Photo()),
-        model = File(media.path),
-        contentDescription = media.label,
-        contentScale = ContentScale.Crop,
+            .size(Dimens.Photo())
     ) {
-        it.thumbnail(preloadRequestBuilder)
-            .signature(MediaStoreSignature(media.mimeType, media.timestamp, media.orientation))
-            .priority(Priority.LOW)
+        GlideImage(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(selectedSize)
+                .clip(selectedShape),
+            model = File(media.path),
+            contentDescription = media.label,
+            contentScale = ContentScale.Crop,
+        ) {
+            it.thumbnail(preloadRequestBuilder)
+                .signature(MediaStoreSignature(media.mimeType, media.timestamp, media.orientation))
+                .priority(Priority.HIGH)
+        }
+        if (media.duration != null) {
+            VideoDurationHeader(
+                modifier = Modifier
+                    .padding(selectedSize / 2)
+                    .scale(scale),
+                media = media
+            )
+        }
+
+        AnimatedVisibility(
+            visible = selectionState.value,
+            enter = Animation.enterAnimation,
+            exit = Animation.exitAnimation
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Brush.verticalGradient(listOf(Black40P, Color.Transparent)))
+            ) {
+                Checkbox(
+                    modifier = Modifier.padding(8.dp),
+                    checked = isSelected,
+                    onCheckedChange = null
+                )
+            }
+        }
     }
 }

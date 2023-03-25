@@ -15,7 +15,6 @@ import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -30,13 +29,13 @@ import com.dot.gallery.ui.theme.Black40P
 
 @Composable
 fun MediaViewAppBar(
-    showUI: MutableState<Boolean>,
-    currentDate: MutableState<String>,
+    showUI: Boolean,
+    currentDate: String,
     paddingValues: PaddingValues,
     navController: NavController
 ) {
     AnimatedVisibility(
-        visible = showUI.value,
+        visible = showUI,
         enter = Constants.Animation.enterAnimation(Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION),
         exit = Constants.Animation.exitAnimation(Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION)
     ) {
@@ -64,7 +63,7 @@ fun MediaViewAppBar(
                     }
             )
             Text(
-                text = currentDate.value.uppercase(),
+                text = currentDate.uppercase(),
                 modifier = Modifier,
                 style = MaterialTheme.typography.titleSmall,
                 fontFamily = FontFamily.Monospace,

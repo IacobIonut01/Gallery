@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -108,6 +109,7 @@ fun AlbumsScreen(
     ) {
         LazyVerticalGrid(
             modifier = Modifier
+                .padding(horizontal = 8.dp)
                 .fillMaxSize(),
             columns = GridCells.Adaptive(Dimens.Album()),
             contentPadding = PaddingValues(

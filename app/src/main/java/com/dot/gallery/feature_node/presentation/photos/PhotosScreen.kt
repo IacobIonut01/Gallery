@@ -1,13 +1,19 @@
 package com.dot.gallery.feature_node.presentation.photos
 
 import android.Manifest
+import android.app.Activity
 import android.graphics.drawable.Drawable
 import android.util.Log
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -18,6 +24,8 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.outlined.DeleteOutline
+import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -31,26 +39,30 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.integration.compose.rememberGlidePreloadingData
 import com.bumptech.glide.signature.MediaStoreSignature
 import com.dot.gallery.R
+import com.dot.gallery.core.Constants.Animation.enterAnimation
+import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.presentation.components.MediaComponent
 import com.dot.gallery.core.presentation.components.util.StickyHeaderGrid
 import com.dot.gallery.feature_node.domain.model.Media
@@ -61,6 +73,8 @@ import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.feature_node.presentation.util.getDate
 import com.dot.gallery.feature_node.presentation.util.getDateExt
 import com.dot.gallery.feature_node.presentation.util.getDateHeader
+import com.dot.gallery.feature_node.presentation.util.shareMedia
+import com.dot.gallery.feature_node.presentation.util.trashImages
 import com.dot.gallery.ui.theme.Dimens
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
@@ -68,7 +82,9 @@ import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
-@OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
+@OptIn(
+    ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class
+)
 @Composable
 fun PhotosScreen(
     navController: NavController,
@@ -77,6 +93,7 @@ fun PhotosScreen(
     albumName: String = stringResource(id = R.string.app_name),
     viewModel: PhotosViewModel = hiltViewModel(),
 ) {
+    /** FIRST START ONLY BLOCK **/
     val firstStart = remember {
         mutableStateOf(true)
     }
@@ -84,6 +101,17 @@ fun PhotosScreen(
         viewModel.albumId = albumId
         firstStart.value = false
     }
+    /** ************ **/
+
+    /** STRING BLOCK **/
+    val stringToday = stringResource(id = R.string.header_today)
+    val stringYesterday = stringResource(id = R.string.header_yesterday)
+    val requestPermission = stringResource(R.string.request_permissions)
+    val shareMedia = stringResource(id = R.string.share_media)
+    val trashMedia = stringResource(R.string.trash)
+    /** ************ **/
+
+    /** Permission Handling BLOCK **/
     val mediaPermissions = rememberMultiplePermissionsState(
         listOf(
             Manifest.permission.READ_MEDIA_IMAGES,
@@ -92,23 +120,29 @@ fun PhotosScreen(
     )
     if (!mediaPermissions.allPermissionsGranted) {
         Box(
-            modifier = Modifier
-                .fillMaxSize(),
+            modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
             Button(
                 onClick = { mediaPermissions.launchMultiplePermissionRequest() }
-            ) {
-                Text(text = stringResource(R.string.request_permissions))
-            }
+            ) { Text(text = requestPermission) }
         }
-    } else {
-        val gridState = rememberLazyGridState()
+    }
+    /** ************ **/
+    else {
+        val scope = rememberCoroutineScope()
+        val context = LocalContext.current
         val scrollBehavior =
             TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
-        val state by remember {
-            viewModel.photoState
-        }
+
+        /** STATES BLOCK **/
+        val gridState = rememberLazyGridState()
+        val state by remember { viewModel.photoState }
+        val selectionState = remember { viewModel.multiSelectState }
+        val selectedMedia = remember { viewModel.selectedPhotoState }
+        /** ************ **/
+
+        /** Glide Preloading **/
         val preloadingData = rememberGlidePreloadingData(
             data = state.media,
             numberOfItemsToPreload = sqrt(state.media.size.toDouble()).roundToInt(),
@@ -123,46 +157,56 @@ fun PhotosScreen(
                     )
                 )
         }
+        /** ************ **/
 
-        val sortedAscendingMedia = remember {
-            state.media.sortedBy { it.timestamp }
-        }
-        val startDate = remember {
-            try {
-                sortedAscendingMedia.first().timestamp.getDateExt()
-            } catch (e: NoSuchElementException) {
-                null
-            }
-        }
-        val endDate = remember {
-            try {
-                sortedAscendingMedia.last().timestamp.getDateExt()
-            } catch (e: NoSuchElementException) {
-                null
-            }
-        }
-        val subtitle = remember {
-            if (albumId != -1L && startDate != null && endDate != null) getDateHeader(
-                startDate, endDate
-            ) else null
-        }
-        val stringToday = stringResource(id = R.string.header_today)
-        val stringYesterday = stringResource(id = R.string.header_yesterday)
-        val mappedData = remember {
-            val items = ArrayList<MediaItem>()
-            state.media.groupBy {
-                it.timestamp.getDate(
-                    stringToday = stringToday,
-                    stringYesterday = stringYesterday
-                )
-            }.forEach { (date, data) ->
-                items.add(MediaItem.Header("header_$date", date))
-                for (media in data) {
-                    items.add(MediaItem.MediaViewItem.Loaded("media_${media.id}", media))
+        /** Selection state handling **/
+        val result = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.StartIntentSenderForResult(),
+            onResult = {
+                if (it.resultCode == Activity.RESULT_OK) {
+                    selectionState.value = false
+                    selectedMedia.clear()
                 }
             }
-            items
+        )
+
+        BackHandler(enabled = selectionState.value) {
+            selectionState.value = false
+            selectedMedia.clear()
         }
+        /** ************  **/
+
+        /**
+         * This block requires recomputing on state change
+         * avoid 'remember'
+         */
+        val sortedAscendingMedia = state.media.sortedBy { it.timestamp }
+        val startDate = try {
+            sortedAscendingMedia.first().timestamp.getDateExt()
+        } catch (e: NoSuchElementException) {
+            null
+        }
+        val endDate = try {
+            sortedAscendingMedia.last().timestamp.getDateExt()
+        } catch (e: NoSuchElementException) {
+            null
+        }
+        val subtitle = if (albumId != -1L && startDate != null && endDate != null) getDateHeader(
+            startDate, endDate
+        ) else null
+        val mappedData = ArrayList<MediaItem>()
+        state.media.groupBy {
+            it.timestamp.getDate(
+                stringToday = stringToday,
+                stringYesterday = stringYesterday
+            )
+        }.forEach { (date, data) ->
+            mappedData.add(MediaItem.Header("header_$date", date))
+            for (media in data) {
+                mappedData.add(MediaItem.MediaViewItem.Loaded("media_${media.id}", media))
+            }
+        }
+        /** ************ **/
 
         /**
          * Remember last known header item
@@ -189,9 +233,14 @@ fun PhotosScreen(
                 LargeTopAppBar(
                     title = {
                         Column {
+                            val toolbarTitle = if (selectionState.value) stringResource(
+                                R.string.selected_s,
+                                selectedMedia.size
+                            ) else albumName
                             Text(
-                                text = albumName,
+                                text = toolbarTitle
                             )
+
                             if (!subtitle.isNullOrEmpty()) {
                                 Text(
                                     modifier = Modifier,
@@ -209,6 +258,36 @@ fun PhotosScreen(
                                     imageVector = Icons.Default.ArrowBack,
                                     contentDescription = "Back"
                                 )
+                            }
+                        }
+                    },
+                    actions = {
+                        AnimatedVisibility(
+                            visible = selectionState.value,
+                            enter = enterAnimation,
+                            exit = exitAnimation
+                        ) {
+                            Row {
+                                IconButton(
+                                    onClick = {
+                                        scope.launch { context.shareMedia(selectedMedia) }
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Share,
+                                        contentDescription = shareMedia
+                                    )
+                                }
+                                IconButton(
+                                    onClick = {
+                                        scope.launch { context.trashImages(result, selectedMedia) }
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.DeleteOutline,
+                                        contentDescription = trashMedia
+                                    )
+                                }
                             }
                         }
                     },
@@ -258,90 +337,47 @@ fun PhotosScreen(
                         key = { it.key },
                         span = { item ->
                             GridItemSpan(if (item.key.isHeaderKey) maxLineSpan else 1)
-                        },
-                        itemContent = { item ->
-                            when (item) {
-                                is MediaItem.Header -> StickyHeader(date = item.text)
-                                is MediaItem.MediaViewItem -> {
-                                    val (media, preloadRequestBuilder) = preloadingData[state.media.indexOf(
-                                        item.media
-                                    )]
-                                    MediaComponent(media = media, preloadRequestBuilder) {
-                                        navController.navigate(Screen.MediaViewScreen.route + "?mediaId=${media.id}&albumId=${albumId}")
+                        }
+                    ) { item ->
+                        when (item) {
+                            is MediaItem.Header -> StickyHeader(date = item.text)
+                            is MediaItem.MediaViewItem -> {
+                                val (media, preloadRequestBuilder) = preloadingData[state.media.indexOf(
+                                    item.media
+                                )]
+                                MediaComponent(
+                                    media = media,
+                                    selectionState = selectionState,
+                                    isSelected = selectedMedia.find { it.id == media.id } != null,
+                                    preloadRequestBuilder = preloadRequestBuilder,
+                                    onItemLongClick = {
+                                        viewModel.toggleSelection(state.media.indexOf(it))
+                                    },
+                                    onItemClick = {
+                                        if (selectionState.value) {
+                                            viewModel.toggleSelection(state.media.indexOf(it))
+                                        } else {
+                                            navController.navigate(
+                                                Screen.MediaViewScreen.route +
+                                                        "?mediaId=${it.id}&albumId=${albumId}"
+                                            )
+                                        }
                                     }
-                                }
+                                )
                             }
                         }
-                    )
-                }
-            }
-        }
-        /*
-        LazyVerticalGrid(
-            state = gridState,
-            modifier = Modifier.fillMaxSize(),
-            columns = GridCells.Adaptive(Dimens.Photo()),
-            contentPadding = PaddingValues(
-                top = paddingValues.calculateTopPadding(),
-                bottom = paddingValues.calculateBottomPadding() + 16.dp
-            ),
-            horizontalArrangement = Arrangement.spacedBy(1.dp),
-            verticalArrangement = Arrangement.spacedBy(1.dp)
-        ) {
-            header {
-                Toolbar(
-                    navController = navController,
-                    text = albumName,
-                    subtitle = if (albumId != -1L && startDate != null && endDate != null) getDateHeader(
-                        startDate,
-                        endDate
-                    ) else null
-                )
-            }
-            groupedMedia.forEach { (date, data) ->
-                header {
-                    Text(
-                        text = date,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier
-                            .padding(
-                                horizontal = 16.dp,
-                                vertical = 24.dp
-                            )
-                            .fillMaxWidth()
-                    )
-                }
-                items(data.size) { index ->
-                    val preloadingData = rememberGlidePreloadingData(
-                        data = data,
-                        numberOfItemsToPreload = sqrt(data.size.toDouble()).roundToInt(),
-                        preloadImageSize = Size(50f, 50f)
-                    ) { item: Media, requestBuilder: RequestBuilder<Drawable> ->
-                        requestBuilder.load(item.uri)
-                            .signature(
-                                MediaStoreSignature(
-                                    item.mimeType,
-                                    item.timestamp,
-                                    item.orientation
-                                )
-                            )
-                    }
-                    val (media, preloadRequestBuilder) = preloadingData[index]
-                    MediaComponent(media = media, preloadRequestBuilder) {
-                        navController.navigate(Screen.MediaViewScreen.route + "?mediaId=${media.id}&albumId=${albumId}")
                     }
                 }
             }
         }
-         */
+        /** Error State Handling Block **/
         if (state.media.isEmpty()) {
             Text(
                 text = "Is Empty",
                 modifier = Modifier
                     .fillMaxSize()
             )
-            viewModel.viewModelScope.launch {
+            LaunchedEffect(true) {
                 viewModel.getMedia(albumId)
             }
         }
@@ -352,11 +388,12 @@ fun PhotosScreen(
         }
         if (state.error.isNotEmpty()) {
             Text(
-                text = "An error occured",
+                text = "An error occurred",
                 modifier = Modifier
                     .fillMaxSize()
             )
             Log.e("MediaError", state.error)
         }
+        /** ************ **/
     }
 }

@@ -2,9 +2,7 @@ package com.dot.gallery.feature_node.presentation.mediaview
 
 import android.app.Activity
 import android.graphics.drawable.Drawable
-import androidx.activity.ComponentActivity
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.IntentSenderRequest
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
@@ -21,7 +19,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -42,8 +40,6 @@ import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewA
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewBottomBar
 import com.dot.gallery.feature_node.presentation.photos.PhotosViewModel
 import com.dot.gallery.feature_node.presentation.util.getDate
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -52,9 +48,12 @@ fun MediaViewScreen(
     paddingValues: PaddingValues,
     mediaId: Long,
     albumId: Long = -1L,
-    deleteResultLauncher: ActivityResultLauncher<IntentSenderRequest>,
     viewModel: PhotosViewModel = hiltViewModel()
 ) {
+    LaunchedEffect(albumId) {
+        viewModel.albumId = albumId
+    }
+
     val runtimeMediaId = remember { mutableStateOf(mediaId) }
     val state by remember {
         viewModel.photoState
@@ -62,11 +61,12 @@ fun MediaViewScreen(
     val pagerState = rememberPagerState()
     val scrollEnabled = remember { mutableStateOf(true) }
 
-    val currentDate = remember { mutableStateOf("") }
-    currentDate.value = state.media[pagerState.currentPage].timestamp.getDate(
-        "MMMM d, yyyy\nh:mm a"
-    )
-    val currentMedia = remember { mutableStateOf<Media?>(null) }
+    val currentDate = remember {
+        mutableStateOf(
+            state.media[pagerState.currentPage].timestamp.getDate("MMMM d, yyyy\nh:mm a")
+        )
+    }
+    val currentMedia = remember { mutableStateOf(state.media[pagerState.currentPage]) }
 
     val showUI = remember { mutableStateOf(true) }
     val window = (LocalContext.current as Activity).window
@@ -79,11 +79,22 @@ fun MediaViewScreen(
             windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
     }
 
-
+    val result = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartIntentSenderForResult(),
+        onResult = {}
+    )
     val lastIndex = remember { mutableStateOf(-1) }
 
-    LaunchedEffect(albumId) {
-        viewModel.albumId = albumId
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.currentPage }.collect { page ->
+            // do your stuff with selected page
+            if (lastIndex.value != -1)
+                runtimeMediaId.value = state.media[lastIndex.value].id
+            currentDate.value = state.media[page].timestamp.getDate(
+                "MMMM d, yyyy\nh:mm a"
+            )
+            currentMedia.value = state.media[page]
+        }
     }
 
     LaunchedEffect(state.media) {
@@ -138,18 +149,18 @@ fun MediaViewScreen(
             }
         }
         MediaViewAppBar(
-            showUI = showUI,
-            currentDate = currentDate,
+            showUI = showUI.value,
+            currentDate = currentDate.value,
             paddingValues = paddingValues,
             navController = navController
         )
 
         MediaViewBottomBar(
-            showUI = showUI,
+            showUI = showUI.value,
             paddingValues = paddingValues,
-            currentMedia = currentMedia,
+            currentMedia = currentMedia.value,
             currentIndex = pagerState.currentPage,
-            deleteResultLauncher = deleteResultLauncher,
+            result = result,
         ) {
             lastIndex.value = it
         }

@@ -3,12 +3,14 @@ package com.dot.gallery.feature_node.presentation.photos
 import android.content.ContentResolver
 import android.net.Uri
 import android.provider.MediaStore
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dot.gallery.core.MediaState
 import com.dot.gallery.core.Resource
 import com.dot.gallery.core.contentFlowObserver
+import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaItem
 import com.dot.gallery.feature_node.domain.use_case.MediaUseCases
 import com.dot.gallery.feature_node.presentation.util.getDate
@@ -25,7 +27,9 @@ class PhotosViewModel @Inject constructor(
     contentResolver: ContentResolver,
 ) : ViewModel() {
 
+    val multiSelectState = mutableStateOf(false)
     val photoState = mutableStateOf(MediaState())
+    val selectedPhotoState = mutableStateListOf<Media>()
 
     var albumId: Long = -1L
         set(value) {
@@ -46,6 +50,28 @@ class PhotosViewModel @Inject constructor(
                     MediaStore.Video.Media.EXTERNAL_CONTENT_URI
                 )
             ).launchIn(viewModelScope)
+    }
+
+    fun toggleSelection(index: Int) {
+        val item = photoState.value.media[index]
+        val isSelected = item.selected
+
+        photoState.value = photoState.value.copy(
+            media = photoState.value.media.apply {
+                get(index).selected = !isSelected
+            }
+        )
+        val selectedPhoto = selectedPhotoState.find { it.id == item.id }
+        if (selectedPhoto != null) {
+            if (!isSelected) {
+                selectedPhotoState[selectedPhotoState.indexOf(selectedPhoto)] = selectedPhoto.copy(
+                    selected = true
+                )
+            } else selectedPhotoState.remove(selectedPhoto)
+        } else {
+            selectedPhotoState.add(item.copy(selected = !isSelected))
+        }
+        multiSelectState.value = selectedPhotoState.isNotEmpty()
     }
 
     suspend fun getMedia(albumId: Long = -1L) {

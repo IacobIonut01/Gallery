@@ -12,4 +12,6 @@
     <string name="filter_nameAZ">Name (A-Z)</string>
     <string name="filter_nameZA">Name (Z-A)</string>
     <string name="filter_old">Old</string>
+    <string name="selected_s">Selected %s</string>
+    <string name="trash">Trash</string>
 </resources>

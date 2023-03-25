@@ -175,8 +175,8 @@ fun BottomAppBar(
 ) {
     AnimatedVisibility(
         visible = bottomBarState.value,
-        enter = slideInVertically(initialOffsetY = { it }),
-        exit = slideOutVertically(targetOffsetY = { it }),
+        enter = enterAnimation(100),
+        exit = exitAnimation(100),
         content = {
             NavigationBar(
                 containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
