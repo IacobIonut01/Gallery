@@ -32,11 +32,11 @@ class MediaRepositoryImpl(
         }
     }
 
-    override suspend fun getAlbums(): Flow<Resource<List<Album>>> = flow {
+    override suspend fun getAlbums(mediaOrder: MediaOrder): Flow<Resource<List<Album>>> = flow {
         try {
             emit(Resource.Loading())
             val media =
-                contentResolver.getAlbums(mediaOrder = MediaOrder.Date(OrderType.Descending))
+                contentResolver.getAlbums(mediaOrder = mediaOrder)
             emit(Resource.Success(data = media))
         } catch (e: Exception) {
             emit(Resource.Error(message = e.localizedMessage ?: "An error occurred"))

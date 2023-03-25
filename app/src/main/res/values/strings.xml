@@ -7,4 +7,9 @@
     <string name="header_yesterday">Yesterday</string>
     <string name="share_media">Share</string>
     <string name="request_permissions">Request permissions</string>
+    <string name="filter">Filter</string>
+    <string name="filter_recent">Recent</string>
+    <string name="filter_nameAZ">Name (A-Z)</string>
+    <string name="filter_nameZA">Name (Z-A)</string>
+    <string name="filter_old">Old</string>
 </resources>

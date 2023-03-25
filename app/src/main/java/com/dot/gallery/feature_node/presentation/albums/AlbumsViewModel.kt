@@ -10,6 +10,8 @@ import com.dot.gallery.core.AlbumState
 import com.dot.gallery.core.Resource
 import com.dot.gallery.core.contentFlowObserver
 import com.dot.gallery.feature_node.domain.use_case.MediaUseCases
+import com.dot.gallery.feature_node.domain.util.MediaOrder
+import com.dot.gallery.feature_node.domain.util.OrderType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -38,8 +40,14 @@ class AlbumsViewModel @Inject constructor(
             ).launchIn(viewModelScope)
     }
 
-    private suspend fun getAlbums() {
-        mediaUseCases.getAlbumsUseCase().onEach { result ->
+    fun updateOrder(mediaOrder: MediaOrder) {
+        viewModelScope.launch {
+            getAlbums(mediaOrder)
+        }
+    }
+
+    private suspend fun getAlbums(mediaOrder: MediaOrder = MediaOrder.Date(OrderType.Descending)) {
+        mediaUseCases.getAlbumsUseCase(mediaOrder).onEach { result ->
             when (result) {
                 is Resource.Error -> {
                     albumsState.value = AlbumState(
