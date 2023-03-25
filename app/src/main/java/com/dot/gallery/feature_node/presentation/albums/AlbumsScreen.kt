@@ -29,8 +29,6 @@ import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.integration.compose.rememberGlidePreloadingData
 import com.bumptech.glide.signature.MediaStoreSignature
 import com.dot.gallery.R
-import com.dot.gallery.core.presentation.components.Toolbar
-import com.dot.gallery.core.presentation.components.util.header
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumComponent
 import com.dot.gallery.feature_node.presentation.util.Screen
