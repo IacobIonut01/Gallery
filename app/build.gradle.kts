@@ -102,8 +102,8 @@ dependencies {
     kapt("com.github.bumptech.glide:compiler:4.15.1")
 
     // Exo Player
-    implementation("androidx.media3:media3-exoplayer:1.0.0-rc02")
-    implementation("androidx.media3:media3-ui:1.0.0-rc02")
+    implementation("androidx.media3:media3-exoplayer:1.0.0")
+    implementation("androidx.media3:media3-ui:1.0.0")
 
     // Tests
     testImplementation("junit:junit:4.13.2")

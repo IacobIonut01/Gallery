@@ -4,6 +4,7 @@ import android.text.format.DateFormat
 import com.dot.gallery.core.Constants
 import java.util.Calendar
 import java.util.Locale
+import java.util.concurrent.TimeUnit
 
 fun Long.getDateExt(): DateExt {
     val mediaDate = Calendar.getInstance(Locale.US)
@@ -73,6 +74,21 @@ fun Long.getDate(
                 } else DateFormat.format(format, mediaDate).toString()
             }
         }
+    }
+}
+
+fun Long.formatMinSec(): String {
+    return if (this == 0L) {
+        "00:00"
+    } else {
+        String.format(
+            "%02d:%02d",
+            TimeUnit.MILLISECONDS.toMinutes(this),
+            TimeUnit.MILLISECONDS.toSeconds(this) -
+                    TimeUnit.MINUTES.toSeconds(
+                        TimeUnit.MILLISECONDS.toMinutes(this)
+                    )
+        )
     }
 }
 

@@ -4,6 +4,7 @@ import android.app.Activity
 import android.graphics.drawable.Drawable
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -28,13 +29,18 @@ import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.media3.exoplayer.ExoPlayer
 import androidx.navigation.NavController
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.integration.compose.rememberGlidePreloadingData
 import com.bumptech.glide.request.target.Target
 import com.bumptech.glide.signature.MediaStoreSignature
+import com.dot.gallery.core.Constants
+import com.dot.gallery.core.Constants.Animation.enterAnimation
+import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.Constants.DEFAULT_LOW_VELOCITY_SWIPE_DURATION
 import com.dot.gallery.core.presentation.components.MediaPreviewComponent
+import com.dot.gallery.core.presentation.components.VideoPlayerController
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewAppBar
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewBottomBar
@@ -107,7 +113,6 @@ fun MediaViewScreen(
         )
         currentMedia.value = state.media[index]
     }
-
     Box(
         modifier = Modifier
             .background(Color.Black)
@@ -142,10 +147,27 @@ fun MediaViewScreen(
                 media = media,
                 scrollEnabled = scrollEnabled,
                 playWhenReady = index == pagerState.currentPage,
-                preloadRequestBuilder = preloadRequestBuilder
-            ) {
-                showUI.value = !showUI.value
-                showUIListener()
+                preloadRequestBuilder = preloadRequestBuilder,
+                onItemClick = {
+                    showUI.value = !showUI.value
+                    showUIListener()
+                }
+            ) { player: ExoPlayer, currentTime: Long, totalTime: Long, buffer: Int, playToggle: () -> Unit ->
+                AnimatedVisibility(
+                    visible = showUI.value,
+                    enter = enterAnimation(Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION),
+                    exit = exitAnimation(Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    VideoPlayerController(
+                        paddingValues = paddingValues,
+                        player = player,
+                        currentTime = currentTime,
+                        totalTime = totalTime,
+                        buffer = buffer,
+                        playToggle = playToggle
+                    )
+                }
             }
         }
         MediaViewAppBar(

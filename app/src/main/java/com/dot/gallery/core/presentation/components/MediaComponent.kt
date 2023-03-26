@@ -9,7 +9,6 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -20,6 +19,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -27,10 +27,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PauseCircleFilled
+import androidx.compose.material.icons.filled.PlayCircleFilled
 import androidx.compose.material.icons.rounded.PlayCircle
-import androidx.compose.material3.Checkbox
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -53,6 +59,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.C
@@ -71,9 +80,11 @@ import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.bumptech.glide.request.target.Target
 import com.bumptech.glide.signature.MediaStoreSignature
+import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Animation
 import com.dot.gallery.core.presentation.components.util.advancedShadow
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.presentation.util.formatMinSec
 import com.dot.gallery.ui.theme.Black40P
 import com.dot.gallery.ui.theme.Dimens
 import com.dot.gallery.ui.theme.Shapes
@@ -123,7 +134,8 @@ fun MediaPreviewComponent(
     scrollEnabled: MutableState<Boolean>,
     playWhenReady: Boolean,
     preloadRequestBuilder: RequestBuilder<Drawable>,
-    onItemClick: () -> Unit
+    onItemClick: () -> Unit,
+    videoController: @Composable (ExoPlayer, Long, Long, Int, () -> Unit) -> Unit,
 ) {
     Box(
         modifier = Modifier
@@ -136,6 +148,7 @@ fun MediaPreviewComponent(
             VideoPlayer(
                 media = media,
                 playWhenReady = playWhenReady,
+                videoController = videoController,
                 onItemClick = onItemClick
             )
         } else {
@@ -157,8 +170,17 @@ fun MediaPreviewComponent(
 fun VideoPlayer(
     media: Media,
     playWhenReady: Boolean,
+    videoController: @Composable (ExoPlayer, Long, Long, Int, () -> Unit) -> Unit,
     onItemClick: () -> Unit
 ) {
+
+    var totalDuration by remember { mutableStateOf(0L) }
+
+    var currentTime by remember { mutableStateOf(0L) }
+
+    var bufferedPercentage by remember { mutableStateOf(0) }
+
+    var isPlaying by remember { mutableStateOf(true) }
     val context = LocalContext.current
 
     val exoPlayer = remember(context) {
@@ -177,19 +199,13 @@ fun VideoPlayer(
     }
 
     exoPlayer.playWhenReady = playWhenReady
+    if (playWhenReady)
+        exoPlayer.playWhenReady = isPlaying
     exoPlayer.videoScalingMode = C.VIDEO_SCALING_MODE_SCALE_TO_FIT
     exoPlayer.repeatMode = Player.REPEAT_MODE_ONE
 
     DisposableEffect(
         AndroidView(modifier = Modifier
-            .clickable {
-                if (exoPlayer.isPlaying) {
-                    exoPlayer.pause()
-                } else {
-                    exoPlayer.play()
-                }
-
-            }
             .combinedClickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
@@ -198,7 +214,7 @@ fun VideoPlayer(
                 },
             ), factory = {
             PlayerView(context).apply {
-                //hideController()
+                useController = false
                 resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIXED_WIDTH
 
                 player = exoPlayer
@@ -206,8 +222,118 @@ fun VideoPlayer(
             }
         })
     ) {
+        val listener =
+            object : Player.Listener {
+                override fun onEvents(player: Player, events: Player.Events) {
+                    super.onEvents(player, events)
+                    totalDuration = player.duration.coerceAtLeast(0L)
+                    currentTime = player.currentPosition.coerceAtLeast(0L)
+                    bufferedPercentage = player.bufferedPercentage
+                    isPlaying = player.isPlaying
+                }
+            }
+
+        exoPlayer.addListener(listener)
         onDispose {
+            exoPlayer.removeListener(listener)
             exoPlayer.release()
+        }
+    }
+    videoController(exoPlayer, currentTime, totalDuration, bufferedPercentage) {
+        isPlaying = !isPlaying
+    }
+}
+
+@Composable
+fun VideoPlayerController(
+    paddingValues: PaddingValues,
+    player: ExoPlayer,
+    currentTime: Long,
+    totalTime: Long,
+    buffer: Int,
+    playToggle: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.4f))
+    ) {
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(horizontal = 16.dp)
+                .padding(bottom = paddingValues.calculateBottomPadding() + 72.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            Text(
+                modifier = Modifier.width(52.dp),
+                text = currentTime.formatMinSec(),
+                fontWeight = FontWeight.Medium,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White,
+                textAlign = TextAlign.Center
+            )
+            Box(Modifier.weight(1f)) {
+                Slider(
+                    modifier = Modifier.fillMaxWidth(),
+                    value = buffer.toFloat(),
+                    enabled = false,
+                    onValueChange = {},
+                    valueRange = 0f..100f,
+                    colors =
+                    SliderDefaults.colors(
+                        disabledThumbColor = Color.Transparent,
+                        disabledInactiveTrackColor = Color.DarkGray.copy(alpha = 0.4f),
+                        disabledActiveTrackColor = Color.Gray
+                    )
+                )
+                Slider(
+                    modifier = Modifier.fillMaxWidth(),
+                    value = currentTime.toFloat(),
+                    onValueChange = { player.seekTo(it.toLong()) },
+                    valueRange = 0f..totalTime.toFloat(),
+                    colors =
+                    SliderDefaults.colors(
+                        thumbColor = Color.White,
+                        activeTrackColor = Color.White,
+                        activeTickColor = Color.White,
+                        inactiveTrackColor = Color.Transparent
+                    )
+                )
+            }
+            Text(
+                modifier = Modifier.width(52.dp),
+                text = totalTime.formatMinSec(),
+                fontWeight = FontWeight.Medium,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White,
+                textAlign = TextAlign.Center
+            )
+        }
+
+        IconButton(
+            onClick = { playToggle.invoke() },
+            modifier = Modifier
+                .align(Alignment.Center)
+                .size(64.dp)
+        ) {
+            if (player.isPlaying) {
+                Image(
+                    modifier = Modifier.fillMaxSize(),
+                    imageVector = Icons.Filled.PauseCircleFilled,
+                    contentDescription = stringResource(R.string.pause_video),
+                    colorFilter = ColorFilter.tint(Color.White)
+                )
+            } else {
+                Image(
+                    modifier = Modifier.fillMaxSize(),
+                    imageVector = Icons.Filled.PlayCircleFilled,
+                    contentDescription = stringResource(R.string.play_video),
+                    colorFilter = ColorFilter.tint(Color.White)
+                )
+            }
         }
     }
 }
@@ -392,10 +518,10 @@ fun MediaImage(
                     .fillMaxWidth()
                     .background(Brush.verticalGradient(listOf(Black40P, Color.Transparent)))
             ) {
-                Checkbox(
+                RadioButton(
                     modifier = Modifier.padding(8.dp),
-                    checked = isSelected,
-                    onCheckedChange = null
+                    selected = isSelected,
+                    onClick = null
                 )
             }
         }

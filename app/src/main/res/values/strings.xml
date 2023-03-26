@@ -14,4 +14,6 @@
     <string name="filter_old">Old</string>
     <string name="selected_s">Selected %s</string>
     <string name="trash">Trash</string>
+    <string name="pause_video">Pause video</string>
+    <string name="play_video">Play video</string>
 </resources>
