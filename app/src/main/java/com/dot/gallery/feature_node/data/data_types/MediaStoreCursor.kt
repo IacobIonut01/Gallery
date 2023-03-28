@@ -4,6 +4,7 @@ import android.content.ContentResolver
 import android.content.ContentUris
 import android.database.Cursor
 import android.net.Uri
+import android.os.Bundle
 import android.provider.MediaStore
 import com.dot.gallery.feature_node.data.data_source.MediaQuery
 import com.dot.gallery.feature_node.domain.model.Media
@@ -20,7 +21,18 @@ fun ContentResolver.getCursor(
     )
 }
 
-fun ContentResolver.getMediaDeleteUri(media: Media): Uri? {
+/**
+ * only uri and projection will be used from MediaQuery
+ */
+fun ContentResolver.getCursor(
+    mediaQuery: MediaQuery,
+    queryArgs: Bundle,
+): Cursor? {
+    return query(mediaQuery.uri, mediaQuery.projection, queryArgs, null)
+}
+
+
+fun ContentResolver.getMediaUri(media: Media): Uri? {
     val mediaQuery = if (media.duration == null) {
         MediaQuery.PhotoQuery().copy(
             projection = arrayOf(MediaStore.Images.Media._ID),
@@ -34,8 +46,10 @@ fun ContentResolver.getMediaDeleteUri(media: Media): Uri? {
             selectionArgs = arrayOf(media.path)
         )
     }
-
-    val cursor = getCursor(mediaQuery)
+    val bundle = Bundle().apply {
+        putInt(MediaStore.QUERY_ARG_MATCH_TRASHED, MediaStore.MATCH_ONLY)
+    }
+    val cursor = if (media.trashed == 1) getCursor(mediaQuery, bundle) else getCursor(mediaQuery)
     val uri = if (cursor != null && cursor.moveToFirst()) {
         ContentUris.withAppendedId(
             mediaQuery.uri,

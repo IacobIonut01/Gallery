@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.PauseCircleFilled
 import androidx.compose.material.icons.filled.PlayCircleFilled
 import androidx.compose.material.icons.rounded.PlayCircle
@@ -78,6 +79,7 @@ import com.bumptech.glide.Priority
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
+import com.bumptech.glide.load.DecodeFormat
 import com.bumptech.glide.request.target.Target
 import com.bumptech.glide.signature.MediaStoreSignature
 import com.dot.gallery.R
@@ -426,8 +428,11 @@ fun ZoomablePagerImage(
             model = File(media.path),
             contentDescription = media.label,
             contentScale = contentScale,
-        ) {
-            it.override(Target.SIZE_ORIGINAL).thumbnail(preloadRequestBuilder)
+        ) { request ->
+            request
+                .centerCrop()
+                .dontTransform()
+                .thumbnail(preloadRequestBuilder)
         }
     }
 }
@@ -505,6 +510,19 @@ fun MediaImage(
                     .padding(selectedSize / 2)
                     .scale(scale),
                 media = media
+            )
+        }
+        if (media.favorite == 1) {
+            Image(
+                modifier = Modifier
+                    .padding(selectedSize / 2)
+                    .scale(scale)
+                    .align(Alignment.BottomEnd)
+                    .padding(8.dp)
+                    .size(16.dp),
+                imageVector = Icons.Filled.Favorite,
+                colorFilter = ColorFilter.tint(Color.Red),
+                contentDescription = null
             )
         }
 

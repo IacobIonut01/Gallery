@@ -9,6 +9,8 @@ import com.dot.gallery.feature_node.data.data_source.MediaQuery
 import com.dot.gallery.feature_node.data.data_types.findMedia
 import com.dot.gallery.feature_node.data.data_types.getAlbums
 import com.dot.gallery.feature_node.data.data_types.getMedia
+import com.dot.gallery.feature_node.data.data_types.getMediaFavorite
+import com.dot.gallery.feature_node.data.data_types.getMediaTrashed
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
@@ -26,6 +28,26 @@ class MediaRepositoryImpl(
         try {
             emit(Resource.Loading())
             val media = contentResolver.getMedia(mediaOrder = MediaOrder.Date(OrderType.Descending))
+            emit(Resource.Success(data = media))
+        } catch (e: Exception) {
+            emit(Resource.Error(message = e.localizedMessage ?: "An error occurred"))
+        }
+    }
+
+    override suspend fun getFavorites(mediaOrder: MediaOrder): Flow<Resource<List<Media>>> = flow {
+        try {
+            emit(Resource.Loading())
+            val media = contentResolver.getMediaFavorite(mediaOrder = mediaOrder)
+            emit(Resource.Success(data = media))
+        } catch (e: Exception) {
+            emit(Resource.Error(message = e.localizedMessage ?: "An error occurred"))
+        }
+    }
+
+    override suspend fun getTrashed(mediaOrder: MediaOrder): Flow<Resource<List<Media>>> = flow {
+        try {
+            emit(Resource.Loading())
+            val media = contentResolver.getMediaTrashed(mediaOrder = mediaOrder)
             emit(Resource.Success(data = media))
         } catch (e: Exception) {
             emit(Resource.Error(message = e.localizedMessage ?: "An error occurred"))
@@ -81,13 +103,5 @@ class MediaRepositoryImpl(
         } catch (e: Exception) {
             emit(Resource.Error(message = e.localizedMessage ?: "An error occurred"))
         }
-    }
-
-    override suspend fun deleteMedia(mediaId: Long) {
-
-    }
-
-    override suspend fun deleteMedia(media: Media) {
-
     }
 }

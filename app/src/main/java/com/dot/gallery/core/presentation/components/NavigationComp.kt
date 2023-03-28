@@ -11,8 +11,12 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.dot.gallery.core.Constants
 import com.dot.gallery.feature_node.presentation.albums.AlbumsScreen
+import com.dot.gallery.feature_node.presentation.library.LibraryScreen
+import com.dot.gallery.feature_node.presentation.library.favorites.FavoriteScreen
+import com.dot.gallery.feature_node.presentation.library.trashed.TrashedGridScreen
 import com.dot.gallery.feature_node.presentation.mediaview.MediaViewScreen
 import com.dot.gallery.feature_node.presentation.photos.PhotosScreen
+import com.dot.gallery.feature_node.presentation.util.BottomNavItem
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
@@ -23,12 +27,12 @@ fun NavigationComp(
     navController: NavHostController,
     paddingValues: PaddingValues,
     bottomBarState: MutableState<Boolean>,
-    systemBarFollowThemeState: MutableState<Boolean>
+    systemBarFollowThemeState: MutableState<Boolean>,
+    bottomNavEntries: List<BottomNavItem>
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     navBackStackEntry?.destination?.route?.let {
-        bottomBarState.value =
-            !(it.contains(Screen.MediaViewScreen.route) || it.contains(Screen.AlbumViewScreen.route))
+        bottomBarState.value = bottomNavEntries.firstOrNull { item -> item.route == it } != null
         systemBarFollowThemeState.value = !it.contains(Screen.MediaViewScreen.route)
     }
     AnimatedNavHost(
@@ -43,6 +47,42 @@ fun NavigationComp(
             popExitTransition = { Constants.Animation.navigateUpAnimation }
         ) {
             PhotosScreen(
+                navController = navController,
+                paddingValues = paddingValues
+            )
+        }
+        composable(
+            route = Screen.TrashedScreen.route,
+            enterTransition = { Constants.Animation.navigateInAnimation },
+            exitTransition = { Constants.Animation.navigateUpAnimation },
+            popEnterTransition = { Constants.Animation.navigateInAnimation },
+            popExitTransition = { Constants.Animation.navigateUpAnimation }
+        ) {
+            TrashedGridScreen(
+                navController = navController,
+                paddingValues = paddingValues
+            )
+        }
+        composable(
+            route = Screen.FavoriteScreen.route,
+            enterTransition = { Constants.Animation.navigateInAnimation },
+            exitTransition = { Constants.Animation.navigateUpAnimation },
+            popEnterTransition = { Constants.Animation.navigateInAnimation },
+            popExitTransition = { Constants.Animation.navigateUpAnimation }
+        ) {
+            FavoriteScreen(
+                navController = navController,
+                paddingValues = paddingValues
+            )
+        }
+        composable(
+            route = Screen.LibraryScreen.route,
+            enterTransition = { Constants.Animation.navigateInAnimation },
+            exitTransition = { Constants.Animation.navigateUpAnimation },
+            popEnterTransition = { Constants.Animation.navigateInAnimation },
+            popExitTransition = { Constants.Animation.navigateUpAnimation }
+        ) {
+            LibraryScreen(
                 navController = navController,
                 paddingValues = paddingValues
             )
@@ -116,6 +156,35 @@ fun NavigationComp(
                     paddingValues = paddingValues,
                     mediaId = mediaId,
                     albumId = albumId
+                )
+            }
+        }
+        composable(
+            route = Screen.MediaViewScreen.route +
+                    "?mediaId={mediaId}&target={target}",
+            enterTransition = { Constants.Animation.navigateInAnimation },
+            exitTransition = { Constants.Animation.navigateUpAnimation },
+            popEnterTransition = { Constants.Animation.navigateInAnimation },
+            popExitTransition = { Constants.Animation.navigateUpAnimation },
+            arguments = listOf(
+                navArgument(name = "mediaId") {
+                    type = NavType.LongType
+                    defaultValue = -1
+                },
+                navArgument(name = "target") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                }
+            )
+        ) {
+            it.arguments?.let { args ->
+                val mediaId = args.getLong("mediaId")
+                val target = args.getString("target")
+                MediaViewScreen(
+                    navController = navController,
+                    paddingValues = paddingValues,
+                    mediaId = mediaId,
+                    target = target,
                 )
             }
         }

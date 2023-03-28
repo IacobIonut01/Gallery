@@ -3,7 +3,6 @@ package com.dot.gallery.feature_node.presentation.photos
 import android.Manifest
 import android.app.Activity
 import android.graphics.drawable.Drawable
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -25,9 +24,9 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.outlined.DeleteOutline
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -39,7 +38,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -63,6 +61,8 @@ import com.bumptech.glide.signature.MediaStoreSignature
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
+import com.dot.gallery.core.presentation.components.EmptyMedia
+import com.dot.gallery.core.presentation.components.Error
 import com.dot.gallery.core.presentation.components.MediaComponent
 import com.dot.gallery.core.presentation.components.util.StickyHeaderGrid
 import com.dot.gallery.feature_node.domain.model.Media
@@ -74,7 +74,8 @@ import com.dot.gallery.feature_node.presentation.util.getDate
 import com.dot.gallery.feature_node.presentation.util.getDateExt
 import com.dot.gallery.feature_node.presentation.util.getDateHeader
 import com.dot.gallery.feature_node.presentation.util.shareMedia
-import com.dot.gallery.feature_node.presentation.util.trashImages
+import com.dot.gallery.feature_node.presentation.util.toggleFavorite
+import com.dot.gallery.feature_node.presentation.util.trashMedia
 import com.dot.gallery.ui.theme.Dimens
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
@@ -240,7 +241,6 @@ fun PhotosScreen(
                             Text(
                                 text = toolbarTitle
                             )
-
                             if (!subtitle.isNullOrEmpty()) {
                                 Text(
                                     modifier = Modifier,
@@ -270,7 +270,11 @@ fun PhotosScreen(
                             Row {
                                 IconButton(
                                     onClick = {
-                                        scope.launch { context.shareMedia(selectedMedia) }
+                                        scope.launch {
+                                            context.shareMedia(selectedMedia)
+                                            selectionState.value = false
+                                            selectedMedia.clear()
+                                        }
                                     }
                                 ) {
                                     Icon(
@@ -280,7 +284,21 @@ fun PhotosScreen(
                                 }
                                 IconButton(
                                     onClick = {
-                                        scope.launch { context.trashImages(result, selectedMedia) }
+                                        scope.launch {
+                                            context.toggleFavorite(selectedMedia)
+                                            selectionState.value = false
+                                            selectedMedia.clear()
+                                        }
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.FavoriteBorder,
+                                        contentDescription = trashMedia
+                                    )
+                                }
+                                IconButton(
+                                    onClick = {
+                                        scope.launch { context.trashMedia(result, selectedMedia) }
                                     }
                                 ) {
                                     Icon(
@@ -372,27 +390,10 @@ fun PhotosScreen(
         }
         /** Error State Handling Block **/
         if (state.media.isEmpty()) {
-            Text(
-                text = "Is Empty",
-                modifier = Modifier
-                    .fillMaxSize()
-            )
-            LaunchedEffect(true) {
-                viewModel.getMedia(albumId)
-            }
-        }
-        if (state.isLoading) {
-            CircularProgressIndicator(
-                modifier = Modifier.fillMaxSize()
-            )
+            EmptyMedia(modifier = Modifier.fillMaxSize())
         }
         if (state.error.isNotEmpty()) {
-            Text(
-                text = "An error occurred",
-                modifier = Modifier
-                    .fillMaxSize()
-            )
-            Log.e("MediaError", state.error)
+            Error(errorMessage = state.error)
         }
         /** ************ **/
     }

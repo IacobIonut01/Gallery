@@ -42,6 +42,7 @@ import com.dot.gallery.core.Constants.DEFAULT_LOW_VELOCITY_SWIPE_DURATION
 import com.dot.gallery.core.presentation.components.MediaPreviewComponent
 import com.dot.gallery.core.presentation.components.VideoPlayerController
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.presentation.library.trashed.components.TrashedViewBottomBar
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewAppBar
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewBottomBar
 import com.dot.gallery.feature_node.presentation.photos.PhotosViewModel
@@ -54,10 +55,14 @@ fun MediaViewScreen(
     paddingValues: PaddingValues,
     mediaId: Long,
     albumId: Long = -1L,
+    target: String? = null,
     viewModel: PhotosViewModel = hiltViewModel()
 ) {
     LaunchedEffect(albumId) {
         viewModel.albumId = albumId
+    }
+    LaunchedEffect(target) {
+        viewModel.target = target
     }
 
     val runtimeMediaId = remember { mutableStateOf(mediaId) }
@@ -104,14 +109,18 @@ fun MediaViewScreen(
     }
 
     LaunchedEffect(state.media) {
-        if (lastIndex.value != -1)
-            runtimeMediaId.value = state.media[lastIndex.value].id
-        val index = state.media.indexOfFirst { it.id == runtimeMediaId.value }
-        pagerState.scrollToPage(index)
-        currentDate.value = state.media[index].timestamp.getDate(
-            "MMMM d, yyyy\nh:mm a"
-        )
-        currentMedia.value = state.media[index]
+        if (state.media.isEmpty()) {
+            navController.navigateUp()
+        } else {
+            if (lastIndex.value != -1)
+                runtimeMediaId.value = state.media[lastIndex.value].id
+            val index = state.media.indexOfFirst { it.id == runtimeMediaId.value }
+            pagerState.scrollToPage(index)
+            currentDate.value = state.media[index].timestamp.getDate(
+                "MMMM d, yyyy\nh:mm a"
+            )
+            currentMedia.value = state.media[index]
+        }
     }
     Box(
         modifier = Modifier
@@ -176,15 +185,26 @@ fun MediaViewScreen(
             paddingValues = paddingValues,
             navController = navController
         )
-
-        MediaViewBottomBar(
-            showUI = showUI.value,
-            paddingValues = paddingValues,
-            currentMedia = currentMedia.value,
-            currentIndex = pagerState.currentPage,
-            result = result,
-        ) {
-            lastIndex.value = it
+        if (target == "trash") {
+            TrashedViewBottomBar(
+                showUI = showUI.value,
+                paddingValues = paddingValues,
+                currentMedia = currentMedia.value,
+                currentIndex = pagerState.currentPage,
+                result = result,
+            ) {
+                lastIndex.value = it
+            }
+        } else {
+            MediaViewBottomBar(
+                showUI = showUI.value,
+                paddingValues = paddingValues,
+                currentMedia = currentMedia.value,
+                currentIndex = pagerState.currentPage,
+                result = result,
+            ) {
+                lastIndex.value = it
+            }
         }
     }
 

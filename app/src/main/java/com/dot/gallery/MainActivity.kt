@@ -1,6 +1,10 @@
 package com.dot.gallery
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -9,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Photo
 import androidx.compose.material.icons.outlined.PhotoAlbum
+import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.mutableStateOf
@@ -24,6 +29,7 @@ import com.dot.gallery.ui.theme.GalleryTheme
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import dagger.hilt.android.AndroidEntryPoint
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @AndroidEntryPoint
@@ -44,6 +50,12 @@ class MainActivity : ComponentActivity() {
                 route = Screen.AlbumsScreen.route,
                 icon = Icons.Outlined.PhotoAlbum,
             ),
+            /*
+            BottomNavItem(
+                name = getString(R.string.nav_library),
+                route = Screen.LibraryScreen.route,
+                icon = Icons.Outlined.PhotoLibrary,
+            ),*/
         )
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -71,11 +83,23 @@ class MainActivity : ComponentActivity() {
                             navController = navController,
                             paddingValues = paddingValues,
                             bottomBarState = bottomBarState,
-                            systemBarFollowThemeState = systemBarFollowThemeState
+                            systemBarFollowThemeState = systemBarFollowThemeState,
+                            bottomNavEntries = bottomNavItems
                         )
                     }
                 )
             }
+        }
+        requestPermission()
+    }
+
+    private fun requestPermission() {
+        if (!Environment.isExternalStorageManager()) {
+            val intent = Intent()
+            intent.action = Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION
+            val uri = Uri.fromParts("package", this.packageName, null)
+            intent.data = uri
+            startActivity(intent)
         }
     }
 }

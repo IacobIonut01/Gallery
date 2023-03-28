@@ -17,7 +17,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Info
@@ -25,20 +27,29 @@ import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.dot.gallery.R
 import com.dot.gallery.core.Constants
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.presentation.util.shareMedia
-import com.dot.gallery.feature_node.presentation.util.trashImages
+import com.dot.gallery.feature_node.presentation.util.toggleFavorite
+import com.dot.gallery.feature_node.presentation.util.trashMedia
 import com.dot.gallery.ui.theme.Black40P
 
 @Composable
@@ -51,6 +62,18 @@ fun BoxScope.MediaViewBottomBar(
     onDeleteMedia: (Int) -> Unit,
 ) {
     val context = LocalContext.current
+    var favoriteIcon by remember {
+        mutableStateOf(
+            if (currentMedia != null && currentMedia.favorite == 1)
+                Icons.Filled.Favorite
+            else Icons.Outlined.FavoriteBorder
+        )
+    }
+
+    LaunchedEffect(currentMedia) {
+        favoriteIcon = if (currentMedia != null && currentMedia.favorite == 1)
+            Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder
+    }
     AnimatedVisibility(
         visible = showUI,
         enter = Constants.Animation.enterAnimation(Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION),
@@ -72,41 +95,40 @@ fun BoxScope.MediaViewBottomBar(
                 )
                 .align(Alignment.BottomCenter),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
+            horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
             // Share Component
             BottomBarColumn(
                 currentMedia = currentMedia,
                 imageVector = Icons.Outlined.Share,
-                title = "Share"
+                title = stringResource(R.string.share)
             ) {
                 context.shareMedia(media = it)
             }
-            Spacer(modifier = Modifier.size(8.dp))
-            // Favourite Component
+            // Favorite Component
             BottomBarColumn(
                 currentMedia = currentMedia,
-                imageVector = Icons.Outlined.FavoriteBorder,
-                title = "Favourite"
+                imageVector = favoriteIcon,
+                title = stringResource(id = R.string.favorites)
             ) {
-                // TODO
+                if (context.toggleFavorite(media = it) > 0) {
+                    favoriteIcon = Icons.Filled.Favorite
+                }
             }
-            Spacer(modifier = Modifier.size(8.dp))
             // Trash Component
             BottomBarColumn(
                 currentMedia = currentMedia,
                 imageVector = Icons.Outlined.DeleteOutline,
-                title = "Trash"
+                title = stringResource(id = R.string.trash)
             ) {
-                context.trashImages(result = result, arrayListOf(it))
+                context.trashMedia(result = result, arrayListOf(it))
                 onDeleteMedia.invoke(currentIndex)
             }
-            Spacer(modifier = Modifier.size(8.dp))
             // Info Component
             BottomBarColumn(
                 currentMedia = currentMedia,
                 imageVector = Icons.Outlined.Info,
-                title = "Info"
+                title = stringResource(R.string.info)
             ) {
                 // TODO
             }
@@ -115,7 +137,7 @@ fun BoxScope.MediaViewBottomBar(
 }
 
 @Composable
-private fun BottomBarColumn(
+fun BottomBarColumn(
     currentMedia: Media?,
     imageVector: ImageVector,
     title: String,
@@ -123,14 +145,15 @@ private fun BottomBarColumn(
 ) {
     Column(
         modifier = Modifier
+            .clip(RoundedCornerShape(12.dp))
             .height(80.dp)
             .width(90.dp)
-            .padding(top = 12.dp, bottom = 16.dp)
             .clickable {
                 currentMedia?.let {
                     onItemClick.invoke(it)
                 }
-            },
+            }
+            .padding(top = 12.dp, bottom = 16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {

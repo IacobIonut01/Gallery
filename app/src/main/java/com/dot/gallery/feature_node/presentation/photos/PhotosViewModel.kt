@@ -11,9 +11,7 @@ import com.dot.gallery.core.MediaState
 import com.dot.gallery.core.Resource
 import com.dot.gallery.core.contentFlowObserver
 import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.model.MediaItem
 import com.dot.gallery.feature_node.domain.use_case.MediaUseCases
-import com.dot.gallery.feature_node.presentation.util.getDate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -34,14 +32,21 @@ class PhotosViewModel @Inject constructor(
     var albumId: Long = -1L
         set(value) {
             viewModelScope.launch {
-                getMedia(value)
+                getMedia(albumId = value)
+            }
+            field = value
+        }
+    var target: String? = null
+        set(value) {
+            viewModelScope.launch {
+                getMedia(target = value)
             }
             field = value
         }
 
     init {
         viewModelScope.launch {
-            getMedia(albumId)
+            getMedia(albumId = albumId, target = target)
         }
         contentResolver
             .observeUri(
@@ -74,7 +79,7 @@ class PhotosViewModel @Inject constructor(
         multiSelectState.value = selectedPhotoState.isNotEmpty()
     }
 
-    suspend fun getMedia(albumId: Long = -1L) {
+    private suspend fun getMedia(albumId: Long = -1L, target: String? = null) {
         if (albumId != -1L) {
             mediaUseCases.getMediaByAlbumUseCase(albumId).onEach { result ->
                 when (result) {
@@ -98,7 +103,58 @@ class PhotosViewModel @Inject constructor(
 
                 }
             }.launchIn(viewModelScope)
-        } else {
+        } else if (!target.isNullOrEmpty()) {
+            when (target) {
+                "favorites" -> {
+                    mediaUseCases.getMediaFavoriteUseCase().onEach { result ->
+                        when (result) {
+                            is Resource.Error -> {
+                                photoState.value = MediaState(
+                                    error = result.message ?: "An error occurred"
+                                )
+                            }
+
+                            is Resource.Loading -> {
+                                photoState.value = MediaState(
+                                    isLoading = true
+                                )
+                            }
+
+                            is Resource.Success -> {
+                                photoState.value = MediaState(
+                                    media = result.data ?: emptyList()
+                                )
+                            }
+
+                        }
+                    }.launchIn(viewModelScope)
+                }
+                "trash" -> {
+                    mediaUseCases.getMediaTrashedUseCase().onEach { result ->
+                        when (result) {
+                            is Resource.Error -> {
+                                photoState.value = MediaState(
+                                    error = result.message ?: "An error occurred"
+                                )
+                            }
+
+                            is Resource.Loading -> {
+                                photoState.value = MediaState(
+                                    isLoading = true
+                                )
+                            }
+
+                            is Resource.Success -> {
+                                photoState.value = MediaState(
+                                    media = result.data ?: emptyList()
+                                )
+                            }
+
+                        }
+                    }.launchIn(viewModelScope)
+                }
+            }
+        } else{
             mediaUseCases.getMediaUseCase().onEach { result ->
                 when (result) {
                     is Resource.Error -> {
@@ -124,6 +180,6 @@ class PhotosViewModel @Inject constructor(
     }
 
     private fun ContentResolver.observeUri(uri: Array<Uri>) = contentFlowObserver(uri).map {
-        getMedia(albumId)
+        getMedia(albumId = albumId, target = target)
     }
 }

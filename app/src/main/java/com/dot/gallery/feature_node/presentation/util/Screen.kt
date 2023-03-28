@@ -6,4 +6,9 @@ sealed class Screen(val route: String) {
 
     object AlbumViewScreen : Screen("album_view_screen")
     object MediaViewScreen : Screen("media_screen")
+
+    object LibraryScreen : Screen("library_screen")
+
+    object TrashedScreen : Screen("trashed_screen")
+    object FavoriteScreen : Screen("favorite_screen")
 }

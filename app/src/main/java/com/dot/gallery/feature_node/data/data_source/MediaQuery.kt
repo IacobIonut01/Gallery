@@ -21,7 +21,9 @@ sealed class MediaQuery(
             MediaStore.Images.Media.BUCKET_DISPLAY_NAME,
             MediaStore.Images.Media.DATE_MODIFIED,
             MediaStore.Images.Media.MIME_TYPE,
-            MediaStore.Images.Media.ORIENTATION
+            MediaStore.Images.Media.ORIENTATION,
+            MediaStore.Images.Media.IS_FAVORITE,
+            MediaStore.Images.Media.IS_TRASHED
         )
     )
 
@@ -36,7 +38,9 @@ sealed class MediaQuery(
             MediaStore.Video.Media.BUCKET_DISPLAY_NAME,
             MediaStore.Video.Media.DURATION,
             MediaStore.Video.Media.MIME_TYPE,
-            MediaStore.Video.Media.ORIENTATION
+            MediaStore.Video.Media.ORIENTATION,
+            MediaStore.Video.Media.IS_FAVORITE,
+            MediaStore.Video.Media.IS_TRASHED
         )
     )
 

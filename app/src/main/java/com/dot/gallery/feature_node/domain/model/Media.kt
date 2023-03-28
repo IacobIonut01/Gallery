@@ -77,6 +77,8 @@ data class Media(
     val timestamp: Long,
     val mimeType: String,
     val orientation: Int,
+    val favorite: Int,
+    val trashed: Int,
     val duration: String? = null,
     var selected: Boolean = false
 ) : Parcelable {
@@ -100,6 +102,8 @@ data class Media(
         source.readLong(),
         source.readString()!!,
         source.readInt(),
+        source.readInt(),
+        source.readInt(),
         source.readString(),
         1 == source.readInt()
     )
@@ -116,6 +120,8 @@ data class Media(
         writeLong(timestamp)
         writeString(mimeType)
         writeInt(orientation)
+        writeInt(favorite)
+        writeInt(trashed)
         writeString(duration)
         writeInt((if (selected) 1 else 0))
     }

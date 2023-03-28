@@ -56,61 +56,6 @@ import com.dot.gallery.feature_node.presentation.util.BottomNavItem
 import com.dot.gallery.feature_node.presentation.util.Screen
 
 @Composable
-fun AppBar(
-    context: Context,
-    menuClick: () -> Unit,
-    searchClick: () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .padding(horizontal = 16.dp)
-            .statusBarsPadding()
-            .padding(top = 16.dp)
-            .background(Color.Transparent)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp)
-                .clip(RoundedCornerShape(28.dp))
-                .background(color = MaterialTheme.colorScheme.surfaceColorAtElevation(4.dp)),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                modifier = Modifier
-                    .padding(horizontal = 16.dp)
-                    .clickable {
-                        menuClick.invoke()
-                    },
-                imageVector = Icons.Outlined.Menu,
-                contentDescription = "Menu"
-            )
-
-            Text(
-                modifier = Modifier
-                    .weight(1f),
-                text = context.getString(R.string.searchbar_title),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.titleMedium
-            )
-
-            Icon(
-                modifier = Modifier
-                    .padding(horizontal = 16.dp)
-                    .clickable {
-                        searchClick.invoke()
-                    },
-                imageVector = Icons.Outlined.Search,
-                contentDescription = "Search"
-            )
-
-        }
-
-    }
-}
-
-@Composable
 fun Toolbar(
     navController: NavController,
     modifier: Modifier = Modifier,
