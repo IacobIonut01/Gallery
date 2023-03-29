@@ -9,17 +9,31 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Photo
 import androidx.compose.material.icons.outlined.PhotoAlbum
-import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
+import androidx.compose.material3.NavigationRailItemDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.surfaceColorAtElevation
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.dot.gallery.core.presentation.components.BottomAppBar
 import com.dot.gallery.core.presentation.components.NavigationComp
@@ -35,7 +49,7 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    @OptIn(ExperimentalAnimationApi::class)
+    @OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -60,6 +74,8 @@ class MainActivity : ComponentActivity() {
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
+            val windowSizeClass = calculateWindowSizeClass(this)
+            val useNavRail = windowSizeClass.widthSizeClass > WindowWidthSizeClass.Compact
             GalleryTheme {
                 val navController = rememberAnimatedNavController()
                 val backStackEntry = navController.currentBackStackEntryAsState()
@@ -70,22 +86,75 @@ class MainActivity : ComponentActivity() {
                     systemBarFollowThemeState.value && !isSystemInDarkTheme()
                 Scaffold(
                     bottomBar = {
-                        BottomAppBar(
-                            bottomNavItems = bottomNavItems,
-                            backStackEntry = backStackEntry,
-                            navController = navController,
-                            bottomBarState = bottomBarState
-                        )
+                        if (!useNavRail) {
+                            BottomAppBar(
+                                bottomNavItems = bottomNavItems,
+                                backStackEntry = backStackEntry,
+                                navController = navController,
+                                bottomBarState = bottomBarState
+                            )
+                        }
                     },
                     modifier = Modifier.fillMaxSize(),
                     content = { paddingValues ->
-                        NavigationComp(
-                            navController = navController,
-                            paddingValues = paddingValues,
-                            bottomBarState = bottomBarState,
-                            systemBarFollowThemeState = systemBarFollowThemeState,
-                            bottomNavEntries = bottomNavItems
-                        )
+                        Row {
+                            if (useNavRail && bottomBarState.value) {
+                                NavigationRail(
+                                    containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
+                                ) {
+                                    bottomNavItems.forEach { item ->
+                                        val selected =
+                                            item.route == backStackEntry.value?.destination?.route
+                                        NavigationRailItem(
+                                            selected = selected,
+                                            colors = NavigationRailItemDefaults.colors(
+                                                indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
+                                                selectedIconColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                                            ),
+                                            onClick = {
+                                                if (!selected) {
+                                                    navController.navigate(item.route) {
+                                                        // Pop up to the start destination of the graph to
+                                                        // avoid building up a large stack of destinations
+                                                        // on the back stack as users select items
+                                                        popUpTo(navController.graph.findStartDestination().id) {
+                                                            saveState = true
+                                                        }
+                                                        // Avoid multiple copies of the same destination when
+                                                        // reselecting the same item
+                                                        launchSingleTop = true
+                                                        // Restore state when reselecting a previously selected item
+                                                        restoreState = true
+                                                    }
+                                                }
+                                            },
+                                            label = {
+                                                Text(
+                                                    modifier = Modifier
+                                                        .height(16.dp),
+                                                    text = item.name,
+                                                    fontWeight = FontWeight.Medium,
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                )
+                                            },
+                                            icon = {
+                                                Icon(
+                                                    imageVector = item.icon,
+                                                    contentDescription = "${item.name} Icon",
+                                                )
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                            NavigationComp(
+                                navController = navController,
+                                paddingValues = paddingValues,
+                                bottomBarState = bottomBarState,
+                                systemBarFollowThemeState = systemBarFollowThemeState,
+                                bottomNavEntries = bottomNavItems
+                            )
+                        }
                     }
                 )
             }

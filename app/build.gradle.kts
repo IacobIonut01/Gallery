@@ -75,6 +75,7 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.material3:material3-window-size-class")
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.29.2-rc")
     implementation("com.google.accompanist:accompanist-permissions:0.29.2-rc")
     implementation("com.google.accompanist:accompanist-navigation-animation:0.29.2-rc")
