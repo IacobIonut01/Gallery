@@ -64,7 +64,7 @@ class TrashedViewModel @Inject constructor(
         multiSelectState.value = selectedPhotoState.isNotEmpty()
     }
 
-    suspend fun getMedia() {
+    private suspend fun getMedia() {
         mediaUseCases.getMediaTrashedUseCase().onEach { result ->
             when (result) {
                 is Resource.Error -> {
@@ -80,9 +80,11 @@ class TrashedViewModel @Inject constructor(
                 }
 
                 is Resource.Success -> {
-                    photoState.value = MediaState(
-                        media = result.data ?: emptyList()
-                    )
+                    if (photoState.value.media != result.data) {
+                        photoState.value = MediaState(
+                            media = result.data ?: emptyList()
+                        )
+                    }
                 }
             }
         }.launchIn(viewModelScope)

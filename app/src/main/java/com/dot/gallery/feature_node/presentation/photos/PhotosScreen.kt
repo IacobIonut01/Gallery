@@ -38,6 +38,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -94,15 +95,9 @@ fun PhotosScreen(
     albumName: String = stringResource(id = R.string.app_name),
     viewModel: PhotosViewModel = hiltViewModel(),
 ) {
-    /** FIRST START ONLY BLOCK **/
-    val firstStart = remember {
-        mutableStateOf(true)
-    }
-    if (firstStart.value) {
+    LaunchedEffect(albumId) {
         viewModel.albumId = albumId
-        firstStart.value = false
     }
-    /** ************ **/
 
     /** STRING BLOCK **/
     val stringToday = stringResource(id = R.string.header_today)

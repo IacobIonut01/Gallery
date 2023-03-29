@@ -1,7 +1,6 @@
 package com.dot.gallery.feature_node.presentation.mediaview
 
 import android.app.Activity
-import android.graphics.drawable.Drawable
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -22,26 +21,21 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.navigation.NavController
-import com.bumptech.glide.RequestBuilder
-import com.bumptech.glide.integration.compose.rememberGlidePreloadingData
-import com.bumptech.glide.request.target.Target
-import com.bumptech.glide.signature.MediaStoreSignature
 import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.Constants.DEFAULT_LOW_VELOCITY_SWIPE_DURATION
+import com.dot.gallery.core.Constants.HEADER_DATE_FORMAT
+import com.dot.gallery.core.Constants.Target.TARGET_TRASH
 import com.dot.gallery.core.presentation.components.MediaPreviewComponent
 import com.dot.gallery.core.presentation.components.VideoPlayerController
-import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.presentation.library.trashed.components.TrashedViewBottomBar
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewAppBar
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewBottomBar
@@ -56,7 +50,7 @@ fun MediaViewScreen(
     mediaId: Long,
     albumId: Long = -1L,
     target: String? = null,
-    viewModel: PhotosViewModel = hiltViewModel()
+    viewModel: PhotosViewModel
 ) {
     LaunchedEffect(albumId) {
         viewModel.albumId = albumId
@@ -69,25 +63,25 @@ fun MediaViewScreen(
     val state by remember {
         viewModel.photoState
     }
-    val pagerState = rememberPagerState()
+    val pagerState = rememberPagerState(initialPage = state.media.indexOfFirst { it.id == mediaId })
     val scrollEnabled = remember { mutableStateOf(true) }
 
-    val currentDate = remember {
-        mutableStateOf(
-            state.media[pagerState.currentPage].timestamp.getDate("MMMM d, yyyy\nh:mm a")
-        )
-    }
+    val currentDate = remember { mutableStateOf("") }
     val currentMedia = remember { mutableStateOf(state.media[pagerState.currentPage]) }
 
     val showUI = remember { mutableStateOf(true) }
-    val window = (LocalContext.current as Activity).window
+    val context = LocalContext.current
+    val window = remember { (context as Activity).window }
     val windowInsetsController =
-        WindowCompat.getInsetsController(window, window.decorView)
-    val showUIListener: () -> Unit = {
-        if (showUI.value)
-            windowInsetsController.show(WindowInsetsCompat.Type.systemBars())
-        else
-            windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
+        remember { WindowCompat.getInsetsController(window, window.decorView) }
+
+    val showUIListener: () -> Unit = remember {
+        {
+            if (showUI.value)
+                windowInsetsController.show(WindowInsetsCompat.Type.systemBars())
+            else
+                windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
+        }
     }
 
     val result = rememberLauncherForActivityResult(
@@ -95,16 +89,18 @@ fun MediaViewScreen(
         onResult = {}
     )
     val lastIndex = remember { mutableStateOf(-1) }
+    val updateContent: (Int) -> Unit = remember {
+        { page ->
+            if (lastIndex.value != -1)
+                runtimeMediaId.value = state.media[lastIndex.value].id
+            currentDate.value = state.media[page].timestamp.getDate(HEADER_DATE_FORMAT)
+            currentMedia.value = state.media[page]
+        }
+    }
 
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }.collect { page ->
-            // do your stuff with selected page
-            if (lastIndex.value != -1)
-                runtimeMediaId.value = state.media[lastIndex.value].id
-            currentDate.value = state.media[page].timestamp.getDate(
-                "MMMM d, yyyy\nh:mm a"
-            )
-            currentMedia.value = state.media[page]
+            updateContent(page)
         }
     }
 
@@ -112,14 +108,7 @@ fun MediaViewScreen(
         if (state.media.isEmpty()) {
             navController.navigateUp()
         } else {
-            if (lastIndex.value != -1)
-                runtimeMediaId.value = state.media[lastIndex.value].id
-            val index = state.media.indexOfFirst { it.id == runtimeMediaId.value }
-            pagerState.scrollToPage(index)
-            currentDate.value = state.media[index].timestamp.getDate(
-                "MMMM d, yyyy\nh:mm a"
-            )
-            currentMedia.value = state.media[index]
+            updateContent(state.media.indexOfFirst { it.id == runtimeMediaId.value })
         }
     }
     Box(
@@ -143,20 +132,10 @@ fun MediaViewScreen(
                 .background(Color.Black)
                 .fillMaxSize()
         ) { index ->
-            val preloadingData = rememberGlidePreloadingData(
-                data = state.media,
-                preloadImageSize = Size(200f, 200f)
-            ) { item: Media, requestBuilder: RequestBuilder<Drawable> ->
-                requestBuilder.load(item.uri)
-                    .override(Target.SIZE_ORIGINAL)
-                    .signature(MediaStoreSignature(null, item.timestamp, 0))
-            }
-            val (media, preloadRequestBuilder) = preloadingData[index]
             MediaPreviewComponent(
-                media = media,
+                media = state.media[index],
                 scrollEnabled = scrollEnabled,
                 playWhenReady = index == pagerState.currentPage,
-                preloadRequestBuilder = preloadRequestBuilder,
                 onItemClick = {
                     showUI.value = !showUI.value
                     showUIListener()
@@ -185,7 +164,7 @@ fun MediaViewScreen(
             paddingValues = paddingValues,
             navController = navController
         )
-        if (target == "trash") {
+        if (target == TARGET_TRASH) {
             TrashedViewBottomBar(
                 showUI = showUI.value,
                 paddingValues = paddingValues,

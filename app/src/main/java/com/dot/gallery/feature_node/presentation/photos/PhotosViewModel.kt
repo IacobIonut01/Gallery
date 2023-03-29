@@ -3,10 +3,15 @@ package com.dot.gallery.feature_node.presentation.photos
 import android.content.ContentResolver
 import android.net.Uri
 import android.provider.MediaStore
+import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dot.gallery.core.Constants
+import com.dot.gallery.core.Constants.Target.TARGET_FAVORITES
+import com.dot.gallery.core.Constants.Target.TARGET_TRASH
 import com.dot.gallery.core.MediaState
 import com.dot.gallery.core.Resource
 import com.dot.gallery.core.contentFlowObserver
@@ -31,15 +36,19 @@ class PhotosViewModel @Inject constructor(
 
     var albumId: Long = -1L
         set(value) {
-            viewModelScope.launch {
-                getMedia(albumId = value)
+            if (value != -1L && value != albumId) {
+                viewModelScope.launch {
+                    getMedia(albumId = value)
+                }
             }
             field = value
         }
     var target: String? = null
         set(value) {
-            viewModelScope.launch {
-                getMedia(target = value)
+            if (!value.isNullOrEmpty() && value != target) {
+                viewModelScope.launch {
+                    getMedia(target = value)
+                }
             }
             field = value
         }
@@ -80,103 +89,43 @@ class PhotosViewModel @Inject constructor(
     }
 
     private suspend fun getMedia(albumId: Long = -1L, target: String? = null) {
-        if (albumId != -1L) {
-            mediaUseCases.getMediaByAlbumUseCase(albumId).onEach { result ->
-                when (result) {
-                    is Resource.Error -> {
-                        photoState.value = MediaState(
-                            error = result.message ?: "An error occurred"
-                        )
-                    }
-
-                    is Resource.Loading -> {
-                        photoState.value = MediaState(
-                            isLoading = true
-                        )
-                    }
-
-                    is Resource.Success -> {
-                        photoState.value = MediaState(
-                            media = result.data ?: emptyList()
-                        )
-                    }
-
-                }
-            }.launchIn(viewModelScope)
+        val flow = if (albumId != -1L) {
+            mediaUseCases.getMediaByAlbumUseCase(albumId)
         } else if (!target.isNullOrEmpty()) {
             when (target) {
-                "favorites" -> {
-                    mediaUseCases.getMediaFavoriteUseCase().onEach { result ->
-                        when (result) {
-                            is Resource.Error -> {
-                                photoState.value = MediaState(
-                                    error = result.message ?: "An error occurred"
-                                )
-                            }
-
-                            is Resource.Loading -> {
-                                photoState.value = MediaState(
-                                    isLoading = true
-                                )
-                            }
-
-                            is Resource.Success -> {
-                                photoState.value = MediaState(
-                                    media = result.data ?: emptyList()
-                                )
-                            }
-
-                        }
-                    }.launchIn(viewModelScope)
-                }
-                "trash" -> {
-                    mediaUseCases.getMediaTrashedUseCase().onEach { result ->
-                        when (result) {
-                            is Resource.Error -> {
-                                photoState.value = MediaState(
-                                    error = result.message ?: "An error occurred"
-                                )
-                            }
-
-                            is Resource.Loading -> {
-                                photoState.value = MediaState(
-                                    isLoading = true
-                                )
-                            }
-
-                            is Resource.Success -> {
-                                photoState.value = MediaState(
-                                    media = result.data ?: emptyList()
-                                )
-                            }
-
-                        }
-                    }.launchIn(viewModelScope)
-                }
+                TARGET_FAVORITES -> mediaUseCases.getMediaFavoriteUseCase()
+                TARGET_TRASH -> mediaUseCases.getMediaTrashedUseCase()
+                else -> mediaUseCases.getMediaUseCase()
             }
-        } else{
-            mediaUseCases.getMediaUseCase().onEach { result ->
-                when (result) {
-                    is Resource.Error -> {
-                        photoState.value = MediaState(
-                            error = result.message ?: "An error occurred"
-                        )
-                    }
+        } else {
+            mediaUseCases.getMediaUseCase()
+        }
+        flow.onEach { result ->
+            when (result) {
+                is Resource.Error -> {
+                    photoState.value = MediaState(
+                        error = result.message ?: "An error occurred"
+                    )
+                }
 
-                    is Resource.Loading -> {
-                        photoState.value = MediaState(
-                            isLoading = true
-                        )
-                    }
+                is Resource.Loading -> {
+                    photoState.value = MediaState(
+                        isLoading = true
+                    )
+                }
 
-                    is Resource.Success -> {
+                is Resource.Success -> {
+                    /**
+                     * Update state only if needed
+                     */
+                    if (photoState.value.media != result.data) {
                         photoState.value = MediaState(
                             media = result.data ?: emptyList()
                         )
                     }
                 }
-            }.launchIn(viewModelScope)
-        }
+            }
+        }.launchIn(viewModelScope)
     }
 
     private fun ContentResolver.observeUri(uri: Array<Uri>) = contentFlowObserver(uri).map {

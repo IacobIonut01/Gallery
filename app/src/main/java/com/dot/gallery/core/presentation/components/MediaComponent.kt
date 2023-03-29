@@ -79,8 +79,6 @@ import com.bumptech.glide.Priority
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
-import com.bumptech.glide.load.DecodeFormat
-import com.bumptech.glide.request.target.Target
 import com.bumptech.glide.signature.MediaStoreSignature
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Animation
@@ -135,7 +133,6 @@ fun MediaPreviewComponent(
     media: Media,
     scrollEnabled: MutableState<Boolean>,
     playWhenReady: Boolean,
-    preloadRequestBuilder: RequestBuilder<Drawable>,
     onItemClick: () -> Unit,
     videoController: @Composable (ExoPlayer, Long, Long, Int, () -> Unit) -> Unit,
 ) {
@@ -158,7 +155,6 @@ fun MediaPreviewComponent(
                 modifier = Modifier.fillMaxSize(),
                 media = media,
                 scrollEnabled = scrollEnabled,
-                preloadRequestBuilder = preloadRequestBuilder,
                 onItemClick = onItemClick
             )
         }
@@ -349,9 +345,7 @@ fun ZoomablePagerImage(
     scrollEnabled: MutableState<Boolean>,
     minScale: Float = 1f,
     maxScale: Float = 10f,
-    contentScale: ContentScale = ContentScale.Fit,
     isRotation: Boolean = false,
-    preloadRequestBuilder: RequestBuilder<Drawable>,
     onItemClick: () -> Unit
 ) {
     var targetScale by remember { mutableStateOf(1f) }
@@ -426,13 +420,9 @@ fun ZoomablePagerImage(
                     this.translationY = offsetY
                 },
             model = File(media.path),
-            contentDescription = media.label,
-            contentScale = contentScale,
+            contentDescription = media.label
         ) { request ->
-            request
-                .centerCrop()
-                .dontTransform()
-                .thumbnail(preloadRequestBuilder)
+            request.centerCrop().dontTransform()
         }
     }
 }

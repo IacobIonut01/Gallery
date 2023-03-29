@@ -80,9 +80,11 @@ class FavoriteViewModel @Inject constructor(
                 }
 
                 is Resource.Success -> {
-                    photoState.value = MediaState(
-                        media = result.data ?: emptyList()
-                    )
+                    if (photoState.value.media != result.data) {
+                        photoState.value = MediaState(
+                            media = result.data ?: emptyList()
+                        )
+                    }
                 }
             }
         }.launchIn(viewModelScope)

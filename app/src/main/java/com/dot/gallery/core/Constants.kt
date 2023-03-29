@@ -19,6 +19,7 @@ object Constants {
     const val WEEKLY_DATE_FORMAT = "EEEE"
     const val DEFAULT_DATE_FORMAT = "EEE, MMMM d"
     const val EXTENDED_DATE_FORMAT = "EEE, MMM d, yyyy"
+    const val HEADER_DATE_FORMAT = "MMMM d, yyyy\n" + "h:mm a"
 
     /**
      * Value in ms
@@ -53,5 +54,10 @@ object Constants {
         fun exitAnimation(durationMillis: Int): ExitTransition =
             fadeOut(tween(durationMillis))
 
+    }
+
+    object Target {
+        const val TARGET_FAVORITES = "favorites"
+        const val TARGET_TRASH = "trash"
     }
 }

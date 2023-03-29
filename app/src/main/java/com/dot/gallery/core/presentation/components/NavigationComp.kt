@@ -5,11 +5,15 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.dot.gallery.core.Constants
+import com.dot.gallery.core.Constants.Target.TARGET_FAVORITES
+import com.dot.gallery.core.Constants.Target.TARGET_TRASH
 import com.dot.gallery.feature_node.presentation.albums.AlbumsScreen
 import com.dot.gallery.feature_node.presentation.library.LibraryScreen
 import com.dot.gallery.feature_node.presentation.library.favorites.FavoriteScreen
@@ -147,17 +151,21 @@ fun NavigationComp(
                     defaultValue = -1
                 }
             )
-        ) {
-            it.arguments?.let { args ->
-                val mediaId = args.getLong("mediaId")
-                val albumId = args.getLong("albumId")
-                MediaViewScreen(
-                    navController = navController,
-                    paddingValues = paddingValues,
-                    mediaId = mediaId,
-                    albumId = albumId
-                )
+        ) { backStackEntry ->
+            val mediaId: Long = backStackEntry.arguments?.getLong("mediaId") ?: -1
+            val albumId: Long = backStackEntry.arguments?.getLong("albumId") ?: -1
+            val entryName =
+                if (albumId == -1L) Screen.PhotosScreen.route else Screen.AlbumViewScreen.route
+            val parentEntry = remember(backStackEntry) {
+                navController.getBackStackEntry(entryName)
             }
+            MediaViewScreen(
+                navController = navController,
+                paddingValues = paddingValues,
+                mediaId = mediaId,
+                albumId = albumId,
+                viewModel = hiltViewModel(parentEntry)
+            )
         }
         composable(
             route = Screen.MediaViewScreen.route +
@@ -176,17 +184,24 @@ fun NavigationComp(
                     defaultValue = ""
                 }
             )
-        ) {
-            it.arguments?.let { args ->
-                val mediaId = args.getLong("mediaId")
-                val target = args.getString("target")
-                MediaViewScreen(
-                    navController = navController,
-                    paddingValues = paddingValues,
-                    mediaId = mediaId,
-                    target = target,
-                )
+        ) { backStackEntry ->
+            val mediaId: Long = backStackEntry.arguments?.getLong("mediaId") ?: -1
+            val target: String? = backStackEntry.arguments?.getString("target")
+            val entryName = when (target) {
+                TARGET_FAVORITES -> Screen.FavoriteScreen.route
+                TARGET_TRASH -> Screen.TrashedScreen.route
+                else -> Screen.PhotosScreen.route
             }
+            val parentEntry = remember(backStackEntry) {
+                navController.getBackStackEntry(entryName)
+            }
+            MediaViewScreen(
+                navController = navController,
+                paddingValues = paddingValues,
+                mediaId = mediaId,
+                target = target,
+                viewModel = hiltViewModel(parentEntry)
+            )
         }
     }
 }

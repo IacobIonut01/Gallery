@@ -62,9 +62,11 @@ class AlbumsViewModel @Inject constructor(
                 }
 
                 is Resource.Success -> {
-                    albumsState.value = AlbumState(
-                        albums = result.data ?: emptyList()
-                    )
+                    if (albumsState.value.albums != result.data) {
+                        albumsState.value = AlbumState(
+                            albums = result.data ?: emptyList()
+                        )
+                    }
                 }
             }
         }.launchIn(viewModelScope)
