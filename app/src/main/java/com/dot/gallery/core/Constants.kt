@@ -28,7 +28,7 @@ object Constants {
     /**
      * Smooth enough at 600ms
      */
-    const val DEFAULT_NAVIGATION_ANIMATION_DURATION = 600
+    const val DEFAULT_NAVIGATION_ANIMATION_DURATION = 400
 
     /**
      * Syncs with status bar fade in/out
