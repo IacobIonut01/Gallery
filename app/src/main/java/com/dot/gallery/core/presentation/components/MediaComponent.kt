@@ -1,5 +1,6 @@
 package com.dot.gallery.core.presentation.components
 
+import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.FrameLayout
@@ -79,6 +80,8 @@ import com.bumptech.glide.Priority
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
+import com.bumptech.glide.load.Transformation
+import com.bumptech.glide.load.resource.bitmap.DownsampleStrategy
 import com.bumptech.glide.signature.MediaStoreSignature
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Animation
@@ -422,7 +425,7 @@ fun ZoomablePagerImage(
             model = File(media.path),
             contentDescription = media.label
         ) { request ->
-            request.centerCrop().dontTransform()
+            request.fitCenter().encodeQuality(100)
         }
     }
 }
