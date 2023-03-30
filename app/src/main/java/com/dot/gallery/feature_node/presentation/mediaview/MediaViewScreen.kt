@@ -34,8 +34,8 @@ import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.Constants.DEFAULT_LOW_VELOCITY_SWIPE_DURATION
 import com.dot.gallery.core.Constants.HEADER_DATE_FORMAT
 import com.dot.gallery.core.Constants.Target.TARGET_TRASH
-import com.dot.gallery.core.presentation.components.MediaPreviewComponent
-import com.dot.gallery.core.presentation.components.VideoPlayerController
+import com.dot.gallery.core.presentation.components.media.MediaPreviewComponent
+import com.dot.gallery.core.presentation.components.media.VideoPlayerController
 import com.dot.gallery.feature_node.presentation.library.trashed.components.TrashedViewBottomBar
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewAppBar
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewBottomBar
