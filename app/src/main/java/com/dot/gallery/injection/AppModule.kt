@@ -7,6 +7,7 @@ import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.domain.use_case.AddMediaUseCase
 import com.dot.gallery.feature_node.domain.use_case.GetAlbumsUseCase
 import com.dot.gallery.feature_node.domain.use_case.GetMediaByAlbumUseCase
+import com.dot.gallery.feature_node.domain.use_case.GetMediaByUriUseCase
 import com.dot.gallery.feature_node.domain.use_case.GetMediaFavoriteUseCase
 import com.dot.gallery.feature_node.domain.use_case.GetMediaTrashedUseCase
 import com.dot.gallery.feature_node.domain.use_case.GetMediaUseCase
@@ -42,7 +43,8 @@ object AppModule {
             getMediaUseCase = GetMediaUseCase(repository),
             getMediaByAlbumUseCase = GetMediaByAlbumUseCase(repository),
             getMediaFavoriteUseCase = GetMediaFavoriteUseCase(repository),
-            getMediaTrashedUseCase = GetMediaTrashedUseCase(repository)
+            getMediaTrashedUseCase = GetMediaTrashedUseCase(repository),
+            getMediaByUriUseCase = GetMediaByUriUseCase(repository)
         )
     }
 }

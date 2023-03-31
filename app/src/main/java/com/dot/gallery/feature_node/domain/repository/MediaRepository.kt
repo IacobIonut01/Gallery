@@ -23,4 +23,6 @@ interface MediaRepository {
 
     fun getMediaByAlbumId(albumId: Long): Flow<Resource<List<Media>>>
 
+    fun getMediaByUri(uriAsString: String): Flow<Resource<List<Media>>>
+
 }

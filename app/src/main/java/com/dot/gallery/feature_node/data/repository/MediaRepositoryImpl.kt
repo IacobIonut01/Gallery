@@ -3,12 +3,14 @@ package com.dot.gallery.feature_node.data.repository
 import android.annotation.SuppressLint
 import android.content.Context
 import android.media.MediaScannerConnection
+import android.net.Uri
 import android.provider.MediaStore
 import com.dot.gallery.core.Resource
 import com.dot.gallery.feature_node.data.data_source.MediaQuery
 import com.dot.gallery.feature_node.data.data_types.findMedia
 import com.dot.gallery.feature_node.data.data_types.getAlbums
 import com.dot.gallery.feature_node.data.data_types.getMedia
+import com.dot.gallery.feature_node.data.data_types.getMediaByUri
 import com.dot.gallery.feature_node.data.data_types.getMediaFavorite
 import com.dot.gallery.feature_node.data.data_types.getMediaTrashed
 import com.dot.gallery.feature_node.domain.model.Album
@@ -100,6 +102,20 @@ class MediaRepositoryImpl(
             )
             val media = contentResolver.getMedia(queries)
             emit(Resource.Success(data = media))
+        } catch (e: Exception) {
+            emit(Resource.Error(message = e.localizedMessage ?: "An error occurred"))
+        }
+    }
+
+    override fun getMediaByUri(uriAsString: String): Flow<Resource<List<Media>>> = flow {
+        try {
+            emit(Resource.Loading())
+            val media = contentResolver.getMediaByUri(Uri.parse(uriAsString))
+            if (media == null) {
+                emit(Resource.Error(message = "Media could not be opened"))
+            } else {
+                emit(Resource.Success(data = listOf(media)))
+            }
         } catch (e: Exception) {
             emit(Resource.Error(message = e.localizedMessage ?: "An error occurred"))
         }

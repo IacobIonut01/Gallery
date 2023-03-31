@@ -6,5 +6,6 @@ data class MediaUseCases(
     val getMediaUseCase: GetMediaUseCase,
     val getMediaByAlbumUseCase: GetMediaByAlbumUseCase,
     val getMediaFavoriteUseCase: GetMediaFavoriteUseCase,
-    val getMediaTrashedUseCase: GetMediaTrashedUseCase
+    val getMediaTrashedUseCase: GetMediaTrashedUseCase,
+    val getMediaByUriUseCase: GetMediaByUriUseCase
 )
