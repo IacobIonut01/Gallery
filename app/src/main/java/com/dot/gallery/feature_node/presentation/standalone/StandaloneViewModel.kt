@@ -3,11 +3,9 @@ package com.dot.gallery.feature_node.presentation.standalone
 import android.content.ContentResolver
 import android.net.Uri
 import android.provider.MediaStore
-import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.dot.gallery.core.Constants
 import com.dot.gallery.core.MediaState
 import com.dot.gallery.core.Resource
 import com.dot.gallery.core.contentFlowObserver
@@ -66,7 +64,6 @@ class StandaloneViewModel @Inject constructor(
                     }
 
                     is Resource.Success -> {
-                        Log.d(Constants.TAG, result.data.toString())
                         if (photoState.value.media != result.data) {
                             photoState.value = MediaState(
                                 media = result.data ?: emptyList()

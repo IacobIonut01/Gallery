@@ -10,7 +10,7 @@ import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.dot.gallery.feature_node.presentation.standalone.StandaloneMediaViewScreen
 import com.dot.gallery.feature_node.presentation.standalone.StandaloneViewModel
-import com.dot.gallery.feature_node.presentation.util.FileUtils
+import com.dot.gallery.feature_node.presentation.util.uriToPath
 import com.dot.gallery.ui.theme.GalleryTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -20,13 +20,12 @@ class StandaloneActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val uriPath: String? = intent.data?.let { FileUtils(this).getPath(it) }
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
             GalleryTheme(darkTheme = true) {
                 Scaffold { paddingValues ->
                     val viewModel = hiltViewModel<StandaloneViewModel>()
-                    StandaloneMediaViewScreen(paddingValues, uriPath, viewModel)
+                    StandaloneMediaViewScreen(paddingValues, uriToPath(intent.data), viewModel)
                 }
                 BackHandler {
                     finish()

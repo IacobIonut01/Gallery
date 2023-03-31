@@ -3,6 +3,8 @@ package com.dot.gallery.feature_node.presentation.util
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
+import android.database.Cursor
+import android.net.Uri
 import android.provider.MediaStore
 import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
@@ -12,6 +14,20 @@ import androidx.core.content.FileProvider
 import com.dot.gallery.feature_node.data.data_types.getMediaUri
 import com.dot.gallery.feature_node.domain.model.Media
 import java.io.File
+
+fun Context.uriToPath(uri: Uri?): String? {
+    if (uri == null) return null
+    val proj = arrayOf(MediaStore.MediaColumns.DATA)
+    var path: String? = null
+    val cursor: Cursor? = contentResolver.query(uri, proj, null, null, null)
+    if (cursor != null && cursor.count != 0) {
+        val columnIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA)
+        cursor.moveToFirst()
+        path = cursor.getString(columnIndex)
+    }
+    cursor?.close()
+    return path ?: FileUtils(this).getPath(uri)
+}
 
 fun Context.shareMedia(media: Media) {
     ShareCompat
