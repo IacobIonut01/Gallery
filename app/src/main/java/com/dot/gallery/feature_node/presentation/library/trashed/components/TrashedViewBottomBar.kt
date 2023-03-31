@@ -14,8 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.DeleteOutline
-import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.outlined.Restore
 import androidx.compose.material.icons.outlined.RestoreFromTrash
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment

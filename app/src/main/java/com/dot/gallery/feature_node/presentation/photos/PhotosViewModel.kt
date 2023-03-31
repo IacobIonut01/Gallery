@@ -3,13 +3,10 @@ package com.dot.gallery.feature_node.presentation.photos
 import android.content.ContentResolver
 import android.net.Uri
 import android.provider.MediaStore
-import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Constants.Target.TARGET_FAVORITES
 import com.dot.gallery.core.Constants.Target.TARGET_TRASH
 import com.dot.gallery.core.MediaState

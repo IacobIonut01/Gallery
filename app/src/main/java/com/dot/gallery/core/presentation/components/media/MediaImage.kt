@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -31,7 +32,6 @@ import com.bumptech.glide.integration.compose.GlideImage
 import com.bumptech.glide.signature.MediaStoreSignature
 import com.dot.gallery.core.Constants.Animation
 import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.ui.theme.Black40P
 import com.dot.gallery.ui.theme.Dimens
 import com.dot.gallery.ui.theme.Shapes
 import java.io.File
@@ -95,7 +95,15 @@ fun MediaImage(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Brush.verticalGradient(listOf(Black40P, Color.Transparent)))
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(
+                                if (isSelected) MaterialTheme.colorScheme.surface.copy(alpha = 0.4f)
+                                else Color.Transparent,
+                                Color.Transparent
+                            )
+                        )
+                    )
             ) {
                 RadioButton(
                     modifier = Modifier.padding(8.dp),
