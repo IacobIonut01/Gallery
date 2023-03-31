@@ -1,12 +1,14 @@
 package com.dot.gallery.feature_node.data.repository
 
 import android.annotation.SuppressLint
+import android.content.ContentResolver
 import android.content.Context
 import android.media.MediaScannerConnection
 import android.net.Uri
+import android.os.Bundle
 import android.provider.MediaStore
 import com.dot.gallery.core.Resource
-import com.dot.gallery.feature_node.data.data_source.MediaQuery
+import com.dot.gallery.feature_node.data.data_source.Query
 import com.dot.gallery.feature_node.data.data_types.findMedia
 import com.dot.gallery.feature_node.data.data_types.getAlbums
 import com.dot.gallery.feature_node.data.data_types.getMedia
@@ -76,31 +78,37 @@ class MediaRepositoryImpl(
 
     @SuppressLint("Range")
     override suspend fun getMediaById(mediaId: Long): Media? {
-        val imageObject = MediaQuery.PhotoQuery().copy(
-            selection = "${MediaStore.Images.Media._ID} = ?",
-            selectionArgs = arrayOf(mediaId.toString())
+        val query = Query.MediaQuery().copy(
+            bundle = Bundle().apply {
+                putString(
+                    ContentResolver.QUERY_ARG_SQL_SELECTION,
+                    MediaStore.MediaColumns._ID + "= ?"
+                )
+                putStringArray(
+                    ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS,
+                    arrayOf(mediaId.toString())
+                )
+            }
         )
-        val videoObject = MediaQuery.VideoQuery().copy(
-            selection = "${MediaStore.Video.Media._ID} = ?",
-            selectionArgs = arrayOf(mediaId.toString())
-        )
-        return contentResolver.findMedia(arrayListOf(imageObject, videoObject))
+        return contentResolver.findMedia(query)
     }
 
     override fun getMediaByAlbumId(albumId: Long): Flow<Resource<List<Media>>> = flow {
         try {
             emit(Resource.Loading())
-            val queries = arrayListOf(
-                MediaQuery.PhotoQuery().copy(
-                    selection = "${MediaStore.Images.Media.BUCKET_ID} = ?",
-                    selectionArgs = arrayOf(albumId.toString())
-                ),
-                MediaQuery.VideoQuery().copy(
-                    selection = "${MediaStore.Video.Media.BUCKET_ID} = ?",
-                    selectionArgs = arrayOf(albumId.toString())
-                )
+            val query = Query.MediaQuery().copy(
+                bundle = Bundle().apply {
+                    putString(
+                        ContentResolver.QUERY_ARG_SQL_SELECTION,
+                        MediaStore.MediaColumns.BUCKET_ID + "= ?"
+                    )
+                    putStringArray(
+                        ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS,
+                        arrayOf(albumId.toString())
+                    )
+                }
             )
-            val media = contentResolver.getMedia(queries)
+            val media = contentResolver.getMedia(query)
             emit(Resource.Success(data = media))
         } catch (e: Exception) {
             emit(Resource.Error(message = e.localizedMessage ?: "An error occurred"))

@@ -33,7 +33,7 @@ fun Context.shareMedia(media: Media) {
     ShareCompat
         .IntentBuilder(this)
         .setType(if (media.duration != null) "video/*" else "image/*")
-        .addStream(FileProvider.getUriForFile(this, "$packageName.provider", File(media.path)))
+        .addStream(FileProvider.getUriForFile(this, "$packageName.media_provider", File(media.path)))
         .startChooser()
 }
 
@@ -60,14 +60,10 @@ fun Context.shareMedia(mediaList: List<Media>) {
 
 fun Context.toggleFavorite(media: Media): Int {
     val value = media.favorite == 0
-    val selection =
-        "${if (media.duration == null) MediaStore.Images.Media._ID else MediaStore.Video.Media._ID} = ?"
+    val selection = MediaStore.MediaColumns._ID
     val selectionArgs = arrayOf(media.id.toString())
     val favoriteToggle = ContentValues().apply {
-        put(
-            if (media.duration == null) MediaStore.Images.Media.IS_FAVORITE else MediaStore.Video.Media.IS_FAVORITE,
-            if (value) "1" else "0"
-        )
+        put(MediaStore.MediaColumns.IS_FAVORITE, if (value) "1" else "0")
     }
     return try {
         contentResolver.getMediaUri(media)
@@ -81,14 +77,10 @@ fun Context.toggleFavorite(media: Media): Int {
 fun Context.toggleFavorite(mediaList: List<Media>) {
     for (media in mediaList) {
         val value = media.favorite == 0
-        val selection =
-            "${if (media.duration == null) MediaStore.Images.Media._ID else MediaStore.Video.Media._ID} = ?"
+        val selection = "${MediaStore.MediaColumns._ID} = ?"
         val selectionArgs = arrayOf(media.id.toString())
         val favoriteToggle = ContentValues().apply {
-            put(
-                if (media.duration == null) MediaStore.Images.Media.IS_FAVORITE else MediaStore.Video.Media.IS_FAVORITE,
-                if (value) "1" else "0"
-            )
+            put(MediaStore.MediaColumns.IS_FAVORITE, if (value) "1" else "0")
         }
         try {
             contentResolver.getMediaUri(media)

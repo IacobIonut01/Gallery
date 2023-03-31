@@ -55,7 +55,7 @@
 
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="com.dot.gallery.provider"
+            android:authorities="com.dot.gallery.media_provider"
             android:enabled="true"
             android:grantUriPermissions="true"
             android:exported="false">
