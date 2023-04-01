@@ -50,7 +50,7 @@ fun Context.shareMedia(mediaList: List<Media>) {
         shareCompat.addStream(
             FileProvider.getUriForFile(
                 this,
-                "$packageName.provider",
+                "$packageName.media_provider",
                 File(it.path)
             )
         )
