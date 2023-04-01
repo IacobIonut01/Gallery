@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.icons.Icons
@@ -33,7 +34,7 @@ fun Error(
     val clipboardManager: ClipboardManager = LocalClipboardManager.current
     val toastBuilder = Toast.makeText(LocalContext.current, errorMessage, Toast.LENGTH_SHORT)
     Column(
-        modifier = modifier,
+        modifier = modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
