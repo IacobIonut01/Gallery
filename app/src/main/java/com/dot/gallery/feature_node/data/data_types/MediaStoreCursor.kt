@@ -38,10 +38,18 @@ fun ContentResolver.query(
 fun ContentResolver.getMediaUri(media: Media): Uri? {
     val mediaQuery = MediaQuery().copy(
         bundle = Bundle().apply {
-            putInt(
-                MediaStore.QUERY_ARG_MATCH_TRASHED,
-                MediaStore.MATCH_ONLY
-            )
+            if (media.trashed == 1) {
+                putInt(
+                    MediaStore.QUERY_ARG_MATCH_TRASHED,
+                    MediaStore.MATCH_ONLY
+                )
+            }
+            if (media.favorite == 1) {
+                putInt(
+                    MediaStore.QUERY_ARG_MATCH_FAVORITE,
+                    MediaStore.MATCH_ONLY
+                )
+            }
             putString(
                 ContentResolver.QUERY_ARG_SQL_SELECTION,
                 MediaStore.MediaColumns.DATA + "= ?"
