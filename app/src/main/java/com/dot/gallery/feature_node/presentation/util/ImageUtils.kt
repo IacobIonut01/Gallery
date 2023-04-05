@@ -13,6 +13,7 @@ import androidx.core.app.ShareCompat
 import androidx.core.content.FileProvider
 import androidx.core.net.toFile
 import androidx.exifinterface.media.ExifInterface
+import com.dot.gallery.core.Constants
 import com.dot.gallery.feature_node.data.data_types.getMediaUri
 import com.dot.gallery.feature_node.domain.model.Media
 import java.io.File
@@ -42,7 +43,7 @@ fun Context.shareMedia(media: Media) {
     ShareCompat
         .IntentBuilder(this)
         .setType(if (media.duration != null) "video/*" else "image/*")
-        .addStream(FileProvider.getUriForFile(this, "$packageName.media_provider", File(media.path)))
+        .addStream(FileProvider.getUriForFile(this, Constants.AUTHORITY, File(media.path)))
         .startChooser()
 }
 
@@ -58,9 +59,7 @@ fun Context.shareMedia(mediaList: List<Media>) {
     mediaList.forEach {
         shareCompat.addStream(
             FileProvider.getUriForFile(
-                this,
-                "$packageName.media_provider",
-                File(it.path)
+                this, Constants.AUTHORITY, File(it.path)
             )
         )
     }

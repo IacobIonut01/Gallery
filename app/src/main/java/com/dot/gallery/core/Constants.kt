@@ -8,6 +8,8 @@ import androidx.compose.animation.fadeOut
 
 object Constants {
 
+    const val AUTHORITY = "com.dot.gallery.media_provider"
+
     /**
      * Default logging tag
      */
