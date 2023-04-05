@@ -85,18 +85,7 @@ fun Context.toggleFavorite(media: Media): Int {
 
 fun Context.toggleFavorite(mediaList: List<Media>) {
     for (media in mediaList) {
-        val value = media.favorite == 0
-        val selection = "${MediaStore.MediaColumns._ID} = ?"
-        val selectionArgs = arrayOf(media.id.toString())
-        val favoriteToggle = ContentValues().apply {
-            put(MediaStore.MediaColumns.IS_FAVORITE, if (value) "1" else "0")
-        }
-        try {
-            contentResolver.getMediaUri(media)
-                ?.let { contentResolver.update(it, favoriteToggle, selection, selectionArgs) }
-        } catch (e: NullPointerException) {
-            Log.d("Gallery", "Failed to update ${media.path}")
-        }
+        toggleFavorite(media)
     }
 }
 
