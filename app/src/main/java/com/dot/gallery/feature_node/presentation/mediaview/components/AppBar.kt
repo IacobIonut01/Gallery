@@ -32,7 +32,7 @@ fun MediaViewAppBar(
     showUI: Boolean,
     currentDate: String,
     paddingValues: PaddingValues,
-    navController: NavController
+    onGoBack: () -> Unit,
 ) {
     AnimatedVisibility(
         visible = showUI,
@@ -58,9 +58,7 @@ fun MediaViewAppBar(
                 contentDescription = "Go back",
                 modifier = Modifier
                     .height(48.dp)
-                    .clickable {
-                        navController.navigateUp()
-                    }
+                    .clickable(onClick = onGoBack)
             )
             Text(
                 text = currentDate.uppercase(),

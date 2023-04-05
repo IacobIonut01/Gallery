@@ -31,8 +31,8 @@ import com.dot.gallery.core.Constants.DEFAULT_LOW_VELOCITY_SWIPE_DURATION
 import com.dot.gallery.core.Constants.HEADER_DATE_FORMAT
 import com.dot.gallery.core.presentation.components.media.MediaPreviewComponent
 import com.dot.gallery.core.presentation.components.media.VideoPlayerController
-import com.dot.gallery.feature_node.presentation.standalone.components.StandaloneMediaViewAppBar
-import com.dot.gallery.feature_node.presentation.standalone.components.StandaloneMediaViewBottomBar
+import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewAppBar
+import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewBottomBar
 import com.dot.gallery.feature_node.presentation.util.getDate
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -120,12 +120,15 @@ fun StandaloneMediaViewScreen(
                 }
             }
         }
-        StandaloneMediaViewAppBar(
+        MediaViewAppBar(
             showUI = showUI.value,
             currentDate = currentDate.value,
             paddingValues = paddingValues
-        )
-        StandaloneMediaViewBottomBar(
+        ) {
+            (context as Activity).finish()
+        }
+        MediaViewBottomBar(
+            showDeleteButton = false,
             showUI = showUI.value,
             paddingValues = paddingValues,
             currentMedia = state.media.firstOrNull()

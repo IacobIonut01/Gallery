@@ -161,9 +161,10 @@ fun MediaViewScreen(
         MediaViewAppBar(
             showUI = showUI.value,
             currentDate = currentDate.value,
-            paddingValues = paddingValues,
-            navController = navController
-        )
+            paddingValues = paddingValues
+        ) {
+            navController.navigateUp()
+        }
         if (target == TARGET_TRASH) {
             TrashedViewBottomBar(
                 showUI = showUI.value,

@@ -33,4 +33,12 @@
     <string name="remove_selected">Remove selected</string>
     <string name="remove_all">Remove all</string>
     <string name="empty_favorites_title">You have no favorites</string>
+    <string name="label">Label</string>
+    <string name="path">Path</string>
+    <string name="date">Date</string>
+    <string name="iso">" • ISO"</string>
+    <string name="kb">KB</string>
+    <string name="mb">MB</string>
+    <string name="gb">GB</string>
+    <string name="metadata">Metadata</string>
 </resources>

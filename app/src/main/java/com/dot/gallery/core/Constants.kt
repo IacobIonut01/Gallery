@@ -20,6 +20,7 @@ object Constants {
     const val DEFAULT_DATE_FORMAT = "EEE, MMMM d"
     const val EXTENDED_DATE_FORMAT = "EEE, MMM d, yyyy"
     const val HEADER_DATE_FORMAT = "MMMM d, yyyy\n" + "h:mm a"
+    const val EXIF_DATE_FORMAT = "MMMM d, yyyy • h:mm a"
 
     /**
      * Value in ms

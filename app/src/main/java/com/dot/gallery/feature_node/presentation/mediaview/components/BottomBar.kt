@@ -1,5 +1,6 @@
 package com.dot.gallery.feature_node.presentation.mediaview.components
 
+import androidx.activity.compose.BackHandler
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import androidx.compose.animation.AnimatedVisibility
@@ -17,20 +18,27 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,15 +59,18 @@ import com.dot.gallery.feature_node.presentation.util.shareMedia
 import com.dot.gallery.feature_node.presentation.util.toggleFavorite
 import com.dot.gallery.feature_node.presentation.util.trashMedia
 import com.dot.gallery.ui.theme.Black40P
+import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BoxScope.MediaViewBottomBar(
+    showDeleteButton: Boolean = true,
     showUI: Boolean,
     paddingValues: PaddingValues,
     currentMedia: Media?,
-    currentIndex: Int,
-    result: ActivityResultLauncher<IntentSenderRequest>,
-    onDeleteMedia: (Int) -> Unit,
+    currentIndex: Int = 0,
+    result: ActivityResultLauncher<IntentSenderRequest>? = null,
+    onDeleteMedia: ((Int) -> Unit)? = null,
 ) {
     val context = LocalContext.current
     var favoriteIcon by remember {
@@ -69,10 +80,20 @@ fun BoxScope.MediaViewBottomBar(
             else Icons.Outlined.FavoriteBorder
         )
     }
+    val scope = rememberCoroutineScope()
+    val scrollState = rememberScrollState()
+    var openBottomSheet by rememberSaveable { mutableStateOf(false) }
+    val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     LaunchedEffect(currentMedia) {
         favoriteIcon = if (currentMedia != null && currentMedia.favorite == 1)
             Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder
+    }
+    BackHandler(enabled = bottomSheetState.isVisible) {
+        openBottomSheet = false
+        scope.launch {
+            bottomSheetState.hide()
+        }
     }
     AnimatedVisibility(
         visible = showUI,
@@ -115,22 +136,52 @@ fun BoxScope.MediaViewBottomBar(
                     favoriteIcon = Icons.Filled.Favorite
                 }
             }
-            // Trash Component
-            BottomBarColumn(
-                currentMedia = currentMedia,
-                imageVector = Icons.Outlined.DeleteOutline,
-                title = stringResource(id = R.string.trash)
-            ) {
-                context.trashMedia(result = result, arrayListOf(it))
-                onDeleteMedia.invoke(currentIndex)
+            if (showDeleteButton) {
+                // Trash Component
+                BottomBarColumn(
+                    currentMedia = currentMedia,
+                    imageVector = Icons.Outlined.DeleteOutline,
+                    title = stringResource(id = R.string.trash)
+                ) {
+                    result?.let { result ->
+                        context.trashMedia(result = result, arrayListOf(it))
+                        onDeleteMedia?.invoke(currentIndex)
+                    }
+                }
             }
             // Info Component
-            BottomBarColumn(
-                currentMedia = currentMedia,
-                imageVector = Icons.Outlined.Info,
-                title = stringResource(R.string.info)
+            if (currentMedia != null) {
+                BottomBarColumn(
+                    currentMedia = currentMedia,
+                    imageVector = Icons.Outlined.Info,
+                    title = stringResource(R.string.info)
+                ) {
+                    openBottomSheet = true
+                }
+            }
+        }
+    }
+    if (currentMedia != null) {
+        val metadataList = remember(currentMedia) { currentMedia.retrieveMetadata(context) }
+        if (openBottomSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { openBottomSheet = false },
+                sheetState = bottomSheetState,
             ) {
-                // TODO
+                Column(
+                    modifier = Modifier
+                        .verticalScroll(scrollState)
+                        .padding(horizontal = 16.dp)
+                        .padding(bottom = paddingValues.calculateBottomPadding() + 24.dp)
+                ) {
+                    for (metadata in metadataList) {
+                        MediaInfoRow(
+                            label = metadata.label,
+                            content = metadata.content,
+                            icon = metadata.icon
+                        )
+                    }
+                }
             }
         }
     }

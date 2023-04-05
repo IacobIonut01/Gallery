@@ -11,9 +11,18 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import androidx.core.app.ShareCompat
 import androidx.core.content.FileProvider
+import androidx.core.net.toFile
+import androidx.exifinterface.media.ExifInterface
 import com.dot.gallery.feature_node.data.data_types.getMediaUri
 import com.dot.gallery.feature_node.domain.model.Media
 import java.io.File
+import java.io.IOException
+import kotlin.jvm.Throws
+
+@Throws(IOException::class)
+fun Uri.getExifInterface(): ExifInterface {
+    return ExifInterface(toFile())
+}
 
 fun Context.uriToPath(uri: Uri?): String? {
     if (uri == null) return null
