@@ -240,7 +240,7 @@ fun PhotosScreen(
                                 Text(
                                     modifier = Modifier,
                                     text = subtitle.uppercase(),
-                                    style = MaterialTheme.typography.titleSmall,
+                                    style = MaterialTheme.typography.labelSmall,
                                     fontFamily = FontFamily.Monospace
                                 )
                             }
