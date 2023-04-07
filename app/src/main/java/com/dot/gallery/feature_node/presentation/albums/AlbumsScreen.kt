@@ -1,7 +1,6 @@
 package com.dot.gallery.feature_node.presentation.albums
 
 import android.graphics.drawable.Drawable
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -19,7 +18,6 @@ import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeTopAppBar
@@ -44,6 +42,8 @@ import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.integration.compose.rememberGlidePreloadingData
 import com.bumptech.glide.signature.MediaStoreSignature
 import com.dot.gallery.R
+import com.dot.gallery.core.presentation.components.EmptyMedia
+import com.dot.gallery.core.presentation.components.Error
 import com.dot.gallery.core.presentation.components.FilterButton
 import com.dot.gallery.core.presentation.components.FilterOption
 import com.dot.gallery.feature_node.domain.model.Album
@@ -191,25 +191,13 @@ fun AlbumsScreen(
                 }
             }
         )
+        /** Error State Handling Block **/
         if (state.albums.isEmpty()) {
-            Text(
-                text = "Is Empty",
-                modifier = Modifier
-                    .fillMaxSize()
-            )
-        }
-        if (state.isLoading) {
-            CircularProgressIndicator(
-                modifier = Modifier.fillMaxSize()
-            )
+            EmptyMedia(modifier = Modifier.fillMaxSize())
         }
         if (state.error.isNotEmpty()) {
-            Text(
-                text = "An error occured\n${state.error}",
-                modifier = Modifier
-                    .fillMaxSize()
-            )
-            Log.e("MediaError", state.error)
+            Error(errorMessage = state.error)
         }
+        /** ************ **/
     }
 }
