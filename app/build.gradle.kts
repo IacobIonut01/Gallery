@@ -102,6 +102,9 @@ dependencies {
     implementation("com.github.bumptech.glide:compose:1.0.0-alpha.3")
     kapt("com.github.bumptech.glide:compiler:4.15.1")
 
+    // SVG Support for Glide
+    implementation("com.github.qoqa:glide-svg:4.0.2")
+
     // Exo Player
     implementation("androidx.media3:media3-exoplayer:1.0.0")
     implementation("androidx.media3:media3-ui:1.0.0")

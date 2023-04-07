@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
@@ -29,6 +30,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
+import com.dot.gallery.R
 import com.dot.gallery.feature_node.domain.model.Media
 import java.io.File
 import kotlin.math.abs
@@ -104,6 +106,8 @@ fun ZoomablePagerImage(
             }
 
     ) {
+        val colorFilter: ColorFilter? =
+            if (media.path.endsWith(".svg")) ColorFilter.tint(Color.White) else null
         GlideImage(
             modifier = Modifier
                 .align(Alignment.Center)
@@ -117,9 +121,13 @@ fun ZoomablePagerImage(
                     this.translationY = offsetY
                 },
             model = File(media.path),
+            colorFilter = colorFilter,
             contentDescription = media.label
         ) { request ->
-            request.fitCenter().encodeQuality(100)
+            request
+                .fitCenter()
+                .encodeQuality(100)
+                .error(R.drawable.ic_error)
         }
     }
 }
