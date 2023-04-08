@@ -27,18 +27,34 @@ android {
     }
 
     buildTypes {
-        named("release") {
+        getByName("release") {
             isMinifyEnabled = true
             isShrinkResources = true
             setProguardFiles(listOf(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"))
             signingConfig = signingConfigs.getByName("debug")
         }
-        register("staging") {
+        create("staging") {
             initWith(getByName("release"))
             isMinifyEnabled = false
             isShrinkResources = false
         }
     }
+    flavorDimensions += "version"
+
+    productFlavors {
+        create("system") {
+            dimension = "version"
+        }
+        create("compat") {
+            dimension = "version"
+        }
+    }
+
+    sourceSets {
+        getByName("system").java.setSrcDirs(listOf("src/common/java", "src/system/java"))
+        getByName("compat").java.setSrcDirs(listOf("src/common/java", "src/compat/java"))
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
