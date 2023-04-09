@@ -1,7 +1,10 @@
 package com.dot.gallery.feature_node.presentation.library.favorites
 
+import android.app.Activity
 import android.graphics.drawable.Drawable
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -33,7 +36,6 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -42,7 +44,6 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.integration.compose.rememberGlidePreloadingData
@@ -55,11 +56,11 @@ import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaItem
 import com.dot.gallery.feature_node.domain.model.isHeaderKey
 import com.dot.gallery.feature_node.presentation.library.favorites.components.EmptyFavorites
+import com.dot.gallery.feature_node.presentation.MediaViewModel
 import com.dot.gallery.feature_node.presentation.photos.components.StickyHeader
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.feature_node.presentation.util.getDate
 import com.dot.gallery.ui.theme.Dimens
-import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
@@ -71,7 +72,7 @@ fun FavoriteScreen(
     navController: NavController,
     paddingValues: PaddingValues,
     albumName: String = stringResource(id = R.string.favorites),
-    viewModel: FavoriteViewModel = hiltViewModel(),
+    viewModel: MediaViewModel,
 ) {
 
     /** STRING BLOCK **/
@@ -81,8 +82,6 @@ fun FavoriteScreen(
     val removeSelectedTitle = stringResource(R.string.remove_selected)
 
     /** ************ **/
-
-    val scope = rememberCoroutineScope()
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
@@ -111,6 +110,17 @@ fun FavoriteScreen(
     /** ************ **/
 
     /** Selection state handling **/
+    val clearSelection = {
+        selectionState.value = false
+        selectedMedia.clear()
+    }
+
+    val result = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartIntentSenderForResult(),
+        onResult = {
+            if (it.resultCode == Activity.RESULT_OK) clearSelection()
+        }
+    )
     BackHandler(enabled = selectionState.value) {
         selectionState.value = false
         selectedMedia.clear()
@@ -190,12 +200,11 @@ fun FavoriteScreen(
                     if (state.media.isNotEmpty()) {
                         TextButton(
                             onClick = {
-                                scope.launch {
-                                    viewModel.handler.toggleFavorite(selectedMedia.ifEmpty { state.media })
-                                    if (selectedMedia.size == state.media.size) {
-                                        navController.navigateUp()
-                                    }
-                                }
+                                viewModel.toggleFavorite(
+                                    result,
+                                    selectedMedia.ifEmpty { state.media },
+                                    false
+                                )
                             }
                         ) {
                             Text(

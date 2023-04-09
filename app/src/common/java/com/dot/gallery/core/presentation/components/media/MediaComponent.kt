@@ -7,6 +7,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.lazy.grid.LazyGridItemScope
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -19,7 +20,7 @@ import com.dot.gallery.ui.theme.Shapes
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun MediaComponent(
+fun LazyGridItemScope.MediaComponent(
     media: Media,
     selectionState: MutableState<Boolean>,
     preloadRequestBuilder: RequestBuilder<Drawable>,
@@ -39,6 +40,7 @@ fun MediaComponent(
             .background(
                 color = MaterialTheme.colorScheme.surfaceVariant,
             )
+            .animateItemPlacement()
             .combinedClickable(
                 onClick = { onItemClick(media) },
                 onLongClick = { onItemLongClick(media) },

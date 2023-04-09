@@ -9,9 +9,12 @@ import javax.inject.Inject
 class MediaHandleUseCase @Inject constructor(
     private val repository: MediaRepository
 ) {
-    suspend fun toggleFavorite(media: Media): Int = repository.toggleFavorite(media)
 
-    suspend fun toggleFavorite(mediaList: List<Media>) = repository.toggleFavorite(mediaList)
+    suspend fun toggleFavorite(
+        result: ActivityResultLauncher<IntentSenderRequest>,
+        mediaList: List<Media>,
+        favorite: Boolean = true
+    ) = repository.toggleFavorite(result, mediaList, favorite)
 
     suspend fun trashMedia(
         result: ActivityResultLauncher<IntentSenderRequest>,

@@ -1,6 +1,7 @@
 package com.dot.gallery.feature_node.presentation.albums
 
 import android.graphics.drawable.Drawable
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -42,10 +43,12 @@ import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.integration.compose.rememberGlidePreloadingData
 import com.bumptech.glide.signature.MediaStoreSignature
 import com.dot.gallery.R
+import com.dot.gallery.core.Constants
 import com.dot.gallery.core.presentation.components.EmptyMedia
 import com.dot.gallery.core.presentation.components.Error
 import com.dot.gallery.core.presentation.components.FilterButton
 import com.dot.gallery.core.presentation.components.FilterOption
+import com.dot.gallery.core.presentation.components.LoadingMedia
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.util.MediaOrder
 import com.dot.gallery.feature_node.domain.util.OrderType
@@ -192,11 +195,20 @@ fun AlbumsScreen(
             }
         )
         /** Error State Handling Block **/
-        if (state.albums.isEmpty()) {
-            EmptyMedia(modifier = Modifier.fillMaxSize())
+        AnimatedVisibility(
+            visible = state.isLoading,
+            enter = Constants.Animation.enterAnimation,
+            exit = Constants.Animation.exitAnimation,
+        ) {
+            LoadingMedia(modifier = Modifier.fillMaxSize())
         }
-        if (state.error.isNotEmpty()) {
-            Error(errorMessage = state.error)
+        if (!state.isLoading) {
+            if (state.albums.isEmpty()) {
+                EmptyMedia(modifier = Modifier.fillMaxSize())
+            }
+            if (state.error.isNotEmpty()) {
+                Error(errorMessage = state.error)
+            }
         }
         /** ************ **/
     }

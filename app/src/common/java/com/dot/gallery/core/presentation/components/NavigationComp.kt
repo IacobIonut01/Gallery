@@ -6,11 +6,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
+import com.dot.gallery.R
 import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Constants.Target.TARGET_FAVORITES
 import com.dot.gallery.core.Constants.Target.TARGET_TRASH
@@ -20,6 +22,7 @@ import com.dot.gallery.feature_node.presentation.library.favorites.FavoriteScree
 import com.dot.gallery.feature_node.presentation.library.trashed.TrashedGridScreen
 import com.dot.gallery.feature_node.presentation.mediaview.MediaViewScreen
 import com.dot.gallery.feature_node.presentation.photos.PhotosScreen
+import com.dot.gallery.feature_node.presentation.MediaViewModel
 import com.dot.gallery.feature_node.presentation.util.BottomNavItem
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.google.accompanist.navigation.animation.AnimatedNavHost
@@ -52,7 +55,8 @@ fun NavigationComp(
         ) {
             PhotosScreen(
                 navController = navController,
-                paddingValues = paddingValues
+                paddingValues = paddingValues,
+                viewModel = hiltViewModel<MediaViewModel>().apply(MediaViewModel::launchInPhotosScreen)
             )
         }
         composable(
@@ -64,7 +68,8 @@ fun NavigationComp(
         ) {
             TrashedGridScreen(
                 navController = navController,
-                paddingValues = paddingValues
+                paddingValues = paddingValues,
+                viewModel = hiltViewModel<MediaViewModel>().apply { target = TARGET_TRASH }
             )
         }
         composable(
@@ -76,7 +81,8 @@ fun NavigationComp(
         ) {
             FavoriteScreen(
                 navController = navController,
-                paddingValues = paddingValues
+                paddingValues = paddingValues,
+                viewModel = hiltViewModel<MediaViewModel>().apply { target = TARGET_FAVORITES }
             )
         }
         composable(
@@ -100,7 +106,8 @@ fun NavigationComp(
         ) {
             AlbumsScreen(
                 navController = navController,
-                paddingValues = paddingValues
+                paddingValues = paddingValues,
+                viewModel = hiltViewModel()
             )
         }
         composable(
@@ -120,19 +127,17 @@ fun NavigationComp(
                     defaultValue = ""
                 }
             )
-        ) {
-            it.arguments?.let { args ->
-                val albumId = args.getLong("albumId")
-                val albumName = args.getString("albumName")
-                if (albumId != -1L && !albumName.isNullOrEmpty()) {
-                    PhotosScreen(
-                        navController = navController,
-                        paddingValues = paddingValues,
-                        albumId = albumId,
-                        albumName = albumName,
-                    )
-                }
-            }
+        ) { backStackEntry ->
+            val argumentAlbumName = backStackEntry.arguments?.getString("albumName") ?: stringResource(id = R.string.app_name)
+            val argumentAlbumId = backStackEntry.arguments?.getLong("albumId") ?: -1
+            val viewModel: MediaViewModel = hiltViewModel<MediaViewModel>().apply { albumId = argumentAlbumId }
+            PhotosScreen(
+                navController = navController,
+                paddingValues = paddingValues,
+                albumId = argumentAlbumId,
+                albumName = argumentAlbumName,
+                viewModel = viewModel
+            )
         }
         composable(
             route = Screen.MediaViewScreen.route +
@@ -163,7 +168,6 @@ fun NavigationComp(
                 navController = navController,
                 paddingValues = paddingValues,
                 mediaId = mediaId,
-                albumId = albumId,
                 viewModel = hiltViewModel(parentEntry)
             )
         }

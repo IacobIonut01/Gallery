@@ -11,7 +11,7 @@ android {
 
     defaultConfig {
         applicationId = "com.dot.gallery"
-        minSdk = 33
+        minSdk = 32
         targetSdk = 33
         versionCode = 1
         versionName = "1.0"

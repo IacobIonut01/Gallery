@@ -41,7 +41,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -58,7 +57,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.integration.compose.rememberGlidePreloadingData
@@ -68,11 +66,13 @@ import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.presentation.components.EmptyMedia
 import com.dot.gallery.core.presentation.components.Error
+import com.dot.gallery.core.presentation.components.LoadingMedia
 import com.dot.gallery.core.presentation.components.media.MediaComponent
 import com.dot.gallery.core.presentation.components.util.StickyHeaderGrid
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaItem
 import com.dot.gallery.feature_node.domain.model.isHeaderKey
+import com.dot.gallery.feature_node.presentation.MediaViewModel
 import com.dot.gallery.feature_node.presentation.photos.components.StickyHeader
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.feature_node.presentation.util.getDate
@@ -95,11 +95,8 @@ fun PhotosScreen(
     paddingValues: PaddingValues,
     albumId: Long = -1L,
     albumName: String = stringResource(id = R.string.app_name),
-    viewModel: PhotosViewModel = hiltViewModel(),
+    viewModel: MediaViewModel,
 ) {
-    LaunchedEffect(albumId) {
-        viewModel.albumId = albumId
-    }
 
     /** STRING BLOCK **/
     val stringToday = stringResource(id = R.string.header_today)
@@ -252,16 +249,13 @@ fun PhotosScreen(
                         }
                     },
                     navigationIcon = {
-                        if (albumId != -1L && !selectionState.value) {
-                            IconButton(onClick = navController::navigateUp) {
-                                Icon(
-                                    imageVector = Icons.Default.ArrowBack,
-                                    contentDescription = "Back"
-                                )
-                            }
-                        }
-                        if (selectionState.value) {
-                            IconButton(onClick = clearSelection) {
+                        val onClick: () -> Unit =
+                            if (albumId != -1L && !selectionState.value)
+                                navController::navigateUp
+                            else
+                                clearSelection
+                        if (albumId != -1L || selectionState.value) {
+                            IconButton(onClick = onClick) {
                                 Icon(
                                     imageVector = Icons.Default.ArrowBack,
                                     contentDescription = "Back"
@@ -292,11 +286,7 @@ fun PhotosScreen(
                                 }
                                 IconButton(
                                     onClick = {
-                                        scope.launch {
-                                            handler.toggleFavorite(selectedMedia)
-                                            selectionState.value = false
-                                            selectedMedia.clear()
-                                        }
+                                        scope.launch { handler.toggleFavorite(result, selectedMedia) }
                                     }
                                 ) {
                                     Icon(
@@ -429,6 +419,9 @@ fun PhotosScreen(
             }
         }
         /** Error State Handling Block **/
+        if (state.isLoading) {
+            LoadingMedia(modifier = Modifier.fillMaxSize())
+        }
         if (state.media.isEmpty()) {
             EmptyMedia(modifier = Modifier.fillMaxSize())
         }

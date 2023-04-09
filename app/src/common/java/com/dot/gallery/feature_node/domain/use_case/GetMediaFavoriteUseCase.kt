@@ -12,7 +12,7 @@ class GetMediaFavoriteUseCase @Inject constructor(
     private val repository: MediaRepository
 ) {
 
-    suspend operator fun invoke(
+    operator fun invoke(
         mediaOrder: MediaOrder = MediaOrder.Date(OrderType.Descending)
     ): Flow<Resource<List<Media>>> = repository.getFavorites(mediaOrder)
 

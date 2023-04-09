@@ -132,9 +132,9 @@ fun BoxScope.MediaViewBottomBar(
                 imageVector = favoriteIcon,
                 title = stringResource(id = R.string.favorites)
             ) {
-                scope.launch {
-                    if (handler.toggleFavorite(media = it) > 0) {
-                        favoriteIcon = Icons.Filled.Favorite
+                result?.let { result ->
+                    scope.launch {
+                        handler.toggleFavorite(result = result, arrayListOf(it), it.favorite != 1)
                     }
                 }
             }

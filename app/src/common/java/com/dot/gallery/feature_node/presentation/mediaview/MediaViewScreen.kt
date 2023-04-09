@@ -36,10 +36,11 @@ import com.dot.gallery.core.Constants.HEADER_DATE_FORMAT
 import com.dot.gallery.core.Constants.Target.TARGET_TRASH
 import com.dot.gallery.core.presentation.components.media.MediaPreviewComponent
 import com.dot.gallery.core.presentation.components.media.VideoPlayerController
+import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.presentation.library.trashed.components.TrashedViewBottomBar
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewAppBar
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewBottomBar
-import com.dot.gallery.feature_node.presentation.photos.PhotosViewModel
+import com.dot.gallery.feature_node.presentation.MediaViewModel
 import com.dot.gallery.feature_node.presentation.util.getDate
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -48,26 +49,19 @@ fun MediaViewScreen(
     navController: NavController,
     paddingValues: PaddingValues,
     mediaId: Long,
-    albumId: Long = -1L,
     target: String? = null,
-    viewModel: PhotosViewModel
+    viewModel: MediaViewModel
 ) {
-    LaunchedEffect(albumId) {
-        viewModel.albumId = albumId
-    }
-    LaunchedEffect(target) {
-        viewModel.target = target
-    }
-
     val runtimeMediaId = remember { mutableStateOf(mediaId) }
     val state by remember {
         viewModel.photoState
     }
-    val pagerState = rememberPagerState(initialPage = state.media.indexOfFirst { it.id == mediaId })
+    val initialPage = remember { state.media.indexOfFirst { it.id == mediaId } }
+    val pagerState = rememberPagerState(initialPage = if (initialPage == -1) 0 else initialPage)
     val scrollEnabled = remember { mutableStateOf(true) }
 
     val currentDate = remember { mutableStateOf("") }
-    val currentMedia = remember { mutableStateOf(state.media[pagerState.currentPage]) }
+    val currentMedia = remember { mutableStateOf<Media?>(null) }
 
     val showUI = remember { mutableStateOf(true) }
     val context = LocalContext.current
@@ -91,10 +85,13 @@ fun MediaViewScreen(
     val lastIndex = remember { mutableStateOf(-1) }
     val updateContent: (Int) -> Unit = remember {
         { page ->
-            if (lastIndex.value != -1)
-                runtimeMediaId.value = state.media[lastIndex.value].id
-            currentDate.value = state.media[page].timestamp.getDate(HEADER_DATE_FORMAT)
-            currentMedia.value = state.media[page]
+            if (state.media.isNotEmpty()) {
+                val index = if (page == -1) 0 else page
+                if (lastIndex.value != -1)
+                    runtimeMediaId.value = state.media[lastIndex.value].id
+                currentDate.value = state.media[index].timestamp.getDate(HEADER_DATE_FORMAT)
+                currentMedia.value = state.media[index]
+            }
         }
     }
 

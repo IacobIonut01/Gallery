@@ -8,54 +8,59 @@ import com.dot.gallery.feature_node.data.data_source.Query
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.util.MediaOrder
 import com.dot.gallery.feature_node.domain.util.OrderType
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
-fun ContentResolver.getAlbums(mediaOrder: MediaOrder = MediaOrder.Date(OrderType.Descending)): List<Album> {
-    val albums = ArrayList<Album>()
-    val albumQuery = Query.AlbumQuery().copy(
-        bundle = Bundle().apply {
-            putInt(
-                ContentResolver.QUERY_ARG_SORT_DIRECTION,
-                ContentResolver.QUERY_SORT_DIRECTION_DESCENDING
-            )
-            putStringArray(
-                ContentResolver.QUERY_ARG_SORT_COLUMNS,
-                arrayOf(MediaStore.MediaColumns.DATE_MODIFIED)
-            )
-        },
-    )
-    with(query(albumQuery)) {
-        moveToFirst()
-        while (!isAfterLast) {
-            try {
-                val id = getLong(getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_ID))
-                val label: String? = try {
-                    getString(getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_DISPLAY_NAME))
-                } catch (e: Exception) {
-                    Build.MODEL
-                }
-                val thumbnailPath =
-                    getString(getColumnIndexOrThrow(MediaStore.Images.Media.DATA))
-                val thumbnailDate =
-                    getLong(getColumnIndexOrThrow(MediaStore.Images.Media.DATE_MODIFIED))
-                val album = Album(id, label ?: Build.MODEL, thumbnailPath, thumbnailDate, count = 1)
-                val currentAlbum = albums.find { albm -> albm.id == id }
-                if (currentAlbum == null)
-                    albums.add(album)
-                else {
-                    val i = albums.indexOf(currentAlbum)
-                    albums[i].count++
-                    if (albums[i].timestamp <= thumbnailDate) {
-                        album.count = albums[i].count
-                        albums[i] = album
+suspend fun ContentResolver.getAlbums(mediaOrder: MediaOrder = MediaOrder.Date(OrderType.Descending)): List<Album> {
+    return withContext(Dispatchers.Default) {
+        val albums = ArrayList<Album>()
+        val albumQuery = Query.AlbumQuery().copy(
+            bundle = Bundle().apply {
+                putInt(
+                    ContentResolver.QUERY_ARG_SORT_DIRECTION,
+                    ContentResolver.QUERY_SORT_DIRECTION_DESCENDING
+                )
+                putStringArray(
+                    ContentResolver.QUERY_ARG_SORT_COLUMNS,
+                    arrayOf(MediaStore.MediaColumns.DATE_MODIFIED)
+                )
+            },
+        )
+        with(query(albumQuery)) {
+            moveToFirst()
+            while (!isAfterLast) {
+                try {
+                    val id = getLong(getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_ID))
+                    val label: String? = try {
+                        getString(getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_DISPLAY_NAME))
+                    } catch (e: Exception) {
+                        Build.MODEL
                     }
-                }
+                    val thumbnailPath =
+                        getString(getColumnIndexOrThrow(MediaStore.Images.Media.DATA))
+                    val thumbnailDate =
+                        getLong(getColumnIndexOrThrow(MediaStore.Images.Media.DATE_MODIFIED))
+                    val album =
+                        Album(id, label ?: Build.MODEL, thumbnailPath, thumbnailDate, count = 1)
+                    val currentAlbum = albums.find { albm -> albm.id == id }
+                    if (currentAlbum == null)
+                        albums.add(album)
+                    else {
+                        val i = albums.indexOf(currentAlbum)
+                        albums[i].count++
+                        if (albums[i].timestamp <= thumbnailDate) {
+                            album.count = albums[i].count
+                            albums[i] = album
+                        }
+                    }
 
-            } catch (e: Exception) {
-                e.printStackTrace()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+                moveToNext()
             }
-            moveToNext()
+            close()
         }
-        close()
+        return@withContext mediaOrder.sortAlbums(albums)
     }
-    return mediaOrder.sortAlbums(albums)
 }

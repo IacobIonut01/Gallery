@@ -44,4 +44,5 @@
     <string name="select_all">Select all</string>
     <string name="unselect_all">Unselect all</string>
     <string name="drop_down_cd">Drop down</string>
+    <string name="cancel">Cancel</string>
 </resources>

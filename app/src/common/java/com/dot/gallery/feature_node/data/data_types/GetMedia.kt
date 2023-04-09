@@ -5,28 +5,34 @@ import com.dot.gallery.feature_node.data.data_source.Query
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.util.MediaOrder
 import com.dot.gallery.feature_node.domain.util.OrderType
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
-fun ContentResolver.getMedia(
+suspend fun ContentResolver.getMedia(
     mediaQuery: Query = Query.MediaQuery(),
     mediaOrder: MediaOrder = MediaOrder.Date(OrderType.Descending)
 ): List<Media> {
-    val media = ArrayList<Media>()
-    with(query(mediaQuery)) {
-        moveToFirst()
-        while (!isAfterLast) {
-            try {
-                media.add(getMediaFromCursor())
-            } catch (e: Exception) {
-                e.printStackTrace()
+    return withContext(Dispatchers.Default) {
+        val media = ArrayList<Media>()
+        with(query(mediaQuery)) {
+            moveToFirst()
+            while (!isAfterLast) {
+                try {
+                    media.add(getMediaFromCursor())
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+                moveToNext()
             }
-            moveToNext()
+            close()
         }
-        close()
+        return@withContext mediaOrder.sortMedia(media)
     }
-    return mediaOrder.sortMedia(media)
 }
 
-fun ContentResolver.findMedia(mediaQuery: Query): Media? {
-    val mediaList = getMedia(mediaQuery)
-    return if (mediaList.isEmpty()) null else mediaList.first()
+suspend fun ContentResolver.findMedia(mediaQuery: Query): Media? {
+    return withContext(Dispatchers.Default) {
+        val mediaList = getMedia(mediaQuery)
+        return@withContext if (mediaList.isEmpty()) null else mediaList.first()
+    }
 }

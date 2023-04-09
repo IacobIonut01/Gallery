@@ -21,23 +21,12 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AlbumsViewModel @Inject constructor(
-    private val mediaUseCases: MediaUseCases,
-    contentResolver: ContentResolver,
+    private val mediaUseCases: MediaUseCases
 ) : ViewModel() {
 
     val albumsState = mutableStateOf(AlbumState())
-
     init {
-        viewModelScope.launch {
-            getAlbums()
-        }
-        contentResolver
-            .observeUri(
-                arrayOf(
-                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                    MediaStore.Video.Media.EXTERNAL_CONTENT_URI
-                )
-            ).launchIn(viewModelScope)
+        getAlbums()
     }
 
     fun updateOrder(mediaOrder: MediaOrder) {
@@ -46,7 +35,7 @@ class AlbumsViewModel @Inject constructor(
         }
     }
 
-    private suspend fun getAlbums(mediaOrder: MediaOrder = MediaOrder.Date(OrderType.Descending)) {
+    private fun getAlbums(mediaOrder: MediaOrder = MediaOrder.Date(OrderType.Descending)) {
         mediaUseCases.getAlbumsUseCase(mediaOrder).onEach { result ->
             when (result) {
                 is Resource.Error -> {
@@ -72,7 +61,4 @@ class AlbumsViewModel @Inject constructor(
         }.launchIn(viewModelScope)
     }
 
-    private fun ContentResolver.observeUri(uri: Array<Uri>) = contentFlowObserver(uri).map {
-        getAlbums()
-    }
 }

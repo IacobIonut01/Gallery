@@ -10,24 +10,6 @@ import kotlinx.coroutines.flow.callbackFlow
  * Register an observer class that gets callbacks when data identified by a given content URI
  * changes.
  */
-fun ContentResolver.contentFlowObserver(uri: Uri) = callbackFlow {
-    val observer = object : ContentObserver(null) {
-        override fun onChange(selfChange: Boolean, uri: Uri?) {
-            trySend(selfChange)
-        }
-
-        override fun onChange(selfChange: Boolean) {
-            onChange(selfChange, null)
-        }
-    }
-    registerContentObserver(uri, true, observer)
-    // trigger first.
-    trySend(false)
-    awaitClose {
-        unregisterContentObserver(observer)
-    }
-}
-
 fun ContentResolver.contentFlowObserver(uris: Array<Uri>) = callbackFlow {
     val observer = object : ContentObserver(null) {
         override fun onChange(selfChange: Boolean, uri: Uri?) {
