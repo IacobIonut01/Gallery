@@ -22,5 +22,5 @@ jobs:
       run: ./gradlew assembleCompatRelease
     - uses: actions/upload-artifact@v3
       with:
-        name: app-debug.apk
+        name: Gallery-compat.apk
         path: app/compat/release/app-compat-release.apk
