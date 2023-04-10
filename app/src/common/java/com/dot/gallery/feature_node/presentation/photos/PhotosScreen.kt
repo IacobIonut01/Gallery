@@ -8,6 +8,7 @@ package com.dot.gallery.feature_node.presentation.photos
 import android.Manifest
 import android.app.Activity
 import android.graphics.drawable.Drawable
+import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -46,11 +47,13 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -113,19 +116,36 @@ fun PhotosScreen(
 
     /** Permission Handling BLOCK **/
     val mediaPermissions = rememberMultiplePermissionsState(
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         listOf(
             Manifest.permission.READ_MEDIA_IMAGES,
             Manifest.permission.READ_MEDIA_VIDEO
         )
+        } else {
+            listOf(
+                Manifest.permission.READ_EXTERNAL_STORAGE
     )
+        }
+    )
+    /** Trigger viewModel launch after permission is granted */
+    var firstStart by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(mediaPermissions) {
+        if (firstStart) {
+            firstStart = false
+            viewModel.launchInPhotosScreen()
+        }
+        if (!mediaPermissions.allPermissionsGranted){
+            firstStart = true
+        }
+    }
     if (!mediaPermissions.allPermissionsGranted) {
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Button(
-                onClick = { mediaPermissions.launchMultiplePermissionRequest() }
-            ) { Text(text = requestPermission) }
+            Button(onClick = mediaPermissions::launchMultiplePermissionRequest) {
+                Text(text = requestPermission)
+            }
         }
     }
     /** ************ **/

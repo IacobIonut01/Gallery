@@ -26,7 +26,8 @@
         android:largeHeap="true"
         android:hardwareAccelerated="true"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Gallery">
+        android:theme="@style/Theme.Gallery"
+        tools:targetApi="33">
         <activity
             android:name=".MainActivity"
             android:exported="true"
