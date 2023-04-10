@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: 2023 IacobIacob01
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package com.dot.gallery.core
 
 sealed class Resource<T>(var data: T? = null, val message: String? = null) {
