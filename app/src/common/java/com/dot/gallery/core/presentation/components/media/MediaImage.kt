@@ -6,6 +6,7 @@
 package com.dot.gallery.core.presentation.components.media
 
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -39,7 +40,6 @@ import com.dot.gallery.core.Constants.Animation
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.ui.theme.Dimens
 import com.dot.gallery.ui.theme.Shapes
-import java.io.File
 
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
@@ -62,7 +62,7 @@ fun MediaImage(
                 .fillMaxSize()
                 .padding(selectedSize)
                 .clip(selectedShape),
-            model = File(media.path),
+            model = media.uri,
             contentDescription = media.label,
             contentScale = ContentScale.Crop,
         ) {

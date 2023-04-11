@@ -121,7 +121,7 @@ fun Media.retrieveMetadata(context: Context): List<InfoRow> {
         )
     }
     try {
-        val exifMetadata = ExifMetadata(uri.getExifInterface())
+        val exifMetadata = ExifMetadata(getExifInterface(context = context, uri = uri))
         infoList.apply {
             exifMetadata.modelName?.let {
                 val focalLength = exifMetadata.focalLength

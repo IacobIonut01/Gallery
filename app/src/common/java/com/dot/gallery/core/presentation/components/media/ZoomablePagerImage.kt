@@ -37,7 +37,6 @@ import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.dot.gallery.R
 import com.dot.gallery.feature_node.domain.model.Media
-import java.io.File
 import kotlin.math.abs
 import kotlin.math.withSign
 
@@ -125,7 +124,7 @@ fun ZoomablePagerImage(
                     this.translationX = offsetX
                     this.translationY = offsetY
                 },
-            model = File(media.path),
+            model = media.uri,
             colorFilter = colorFilter,
             contentDescription = media.label
         ) { request ->

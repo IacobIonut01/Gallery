@@ -7,9 +7,10 @@ package com.dot.gallery
 
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Environment
-import android.provider.Settings
+import android.provider.MediaStore
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -20,7 +21,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Photo
 import androidx.compose.material.icons.outlined.PhotoAlbum
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationRail
@@ -48,9 +48,8 @@ import com.dot.gallery.ui.theme.GalleryTheme
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import dagger.hilt.android.AndroidEntryPoint
+import android.provider.Settings as AndroidSettings
 
-
-@OptIn(ExperimentalMaterial3Api::class)
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
@@ -168,12 +167,14 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun requestPermission() {
-        if (!Environment.isExternalStorageManager()) {
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.S) {
+            if (!MediaStore.canManageMedia(this)) {
             val intent = Intent()
-            intent.action = Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION
+                intent.action = AndroidSettings.ACTION_REQUEST_MANAGE_MEDIA
             val uri = Uri.fromParts("package", this.packageName, null)
             intent.data = uri
             startActivity(intent)
+            }
         }
     }
 }

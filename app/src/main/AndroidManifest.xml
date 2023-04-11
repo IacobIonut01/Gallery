@@ -2,17 +2,30 @@
 <manifest xmlns:tools="http://schemas.android.com/tools"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!--
+        Requested to post notifications regarding media operations activity
+        TMP: Removed
+    -->
+    <!--<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />-->
+
+    <!-- Required to access images for SDK 33+ -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+
+    <!-- Required to access videos for SDK 33+ -->
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+
+    <!-- Required to access media for SDK < 33 -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
+
     <!--
-        Required for trash management
-        TODO: Find a way to avoid using this permission (MANAGE_MEDIA does not give access to trashed media)
+        (OPTIONAL)
+        Requested to bypass another user confirmation requested by
+        ScopedStorage when the user wants to trash, delete or add/remove favorites media
+        TODO: Add UI regarding this choice
     -->
-    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
-        tools:ignore="ScopedStorage" />
+    <uses-permission android:name="android.permission.MANAGE_MEDIA"
+        tools:ignore="ProtectedPermissions" />
 
     <application
         android:name=".GalleryApp"

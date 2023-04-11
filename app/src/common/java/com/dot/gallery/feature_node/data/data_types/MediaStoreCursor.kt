@@ -18,8 +18,6 @@ import com.dot.gallery.feature_node.data.data_source.Query.MediaQuery
 import com.dot.gallery.feature_node.domain.model.Media
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.File
-import kotlin.jvm.Throws
 
 suspend fun ContentResolver.query(
     mediaQuery: Query
@@ -118,10 +116,18 @@ fun Cursor.getMediaFromCursor(): Media {
         getInt(getColumnIndexOrThrow(MediaStore.MediaColumns.IS_FAVORITE))
     val isTrashed: Int =
         getInt(getColumnIndexOrThrow(MediaStore.MediaColumns.IS_TRASHED))
+    val contentUri = if (duration == null)
+        MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+    else
+        MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+    val uri = ContentUris.withAppendedId(
+        contentUri,
+        getLong(getColumnIndexOrThrow(MediaStore.MediaColumns._ID))
+    )
     return Media(
         id = id,
         label = title,
-        uri = Uri.fromFile(File(path)),
+        uri = uri,
         path = path,
         albumID = albumID,
         albumLabel = albumLabel,
