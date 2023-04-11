@@ -42,7 +42,7 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideMediaUseCases(repository: MediaRepository): MediaUseCases {
+    fun provideMediaUseCases(repository: MediaRepository, settings: Settings): MediaUseCases {
         return MediaUseCases(
             addMediaUseCase = AddMediaUseCase(repository),
             getAlbumsUseCase = GetAlbumsUseCase(repository),
@@ -51,7 +51,7 @@ object AppModule {
             getMediaFavoriteUseCase = GetMediaFavoriteUseCase(repository),
             getMediaTrashedUseCase = GetMediaTrashedUseCase(repository),
             getMediaByUriUseCase = GetMediaByUriUseCase(repository),
-            mediaHandleUseCase = MediaHandleUseCase(repository)
+            mediaHandleUseCase = MediaHandleUseCase(repository, settings)
         )
     }
 }
