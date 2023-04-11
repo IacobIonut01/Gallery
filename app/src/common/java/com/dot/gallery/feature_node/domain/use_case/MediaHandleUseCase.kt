@@ -7,12 +7,15 @@ package com.dot.gallery.feature_node.domain.use_case
 
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
+import com.dot.gallery.core.Settings
+import com.dot.gallery.core.Settings.Companion.Misc.ENABLE_TRASH
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import javax.inject.Inject
 
 class MediaHandleUseCase @Inject constructor(
-    private val repository: MediaRepository
+    private val repository: MediaRepository,
+    private val settings: Settings
 ) {
 
     suspend fun toggleFavorite(
@@ -25,7 +28,17 @@ class MediaHandleUseCase @Inject constructor(
         result: ActivityResultLauncher<IntentSenderRequest>,
         mediaList: List<Media>,
         trash: Boolean = true
-    ) = repository.trashMedia(result, mediaList, trash)
+    ) {
+        /**
+         * Trash media only if user enabled the Trash Can
+         * Or if user wants to remove existing items from the trash
+         * */
+        if (settings.getBoolean(ENABLE_TRASH, true) || !trash)
+            repository.trashMedia(result, mediaList, trash)
+        else {
+            repository.deleteMedia(result, mediaList)
+        }
+    }
 
     suspend fun deleteMedia(
         result: ActivityResultLauncher<IntentSenderRequest>,

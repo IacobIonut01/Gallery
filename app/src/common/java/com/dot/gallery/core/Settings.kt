@@ -47,6 +47,7 @@ class Settings(context: Context) {
 
         object Misc {
             const val USER_CHOICE_MEDIA_MANAGER = "use_media_manager"
+            const val ENABLE_TRASH = "enable_trashcan"
         }
 
         private const val PREFERENCE_NAME = "settings"
