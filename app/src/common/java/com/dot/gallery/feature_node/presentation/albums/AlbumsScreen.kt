@@ -33,6 +33,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -49,6 +50,7 @@ import com.bumptech.glide.integration.compose.rememberGlidePreloadingData
 import com.bumptech.glide.signature.MediaStoreSignature
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants
+import com.dot.gallery.core.Settings
 import com.dot.gallery.core.presentation.components.EmptyMedia
 import com.dot.gallery.core.presentation.components.Error
 import com.dot.gallery.core.presentation.components.FilterButton
@@ -66,7 +68,8 @@ import com.dot.gallery.ui.theme.Dimens
 fun AlbumsScreen(
     navController: NavController,
     paddingValues: PaddingValues,
-    viewModel: AlbumsViewModel = hiltViewModel()
+    viewModel: AlbumsViewModel = hiltViewModel(),
+    settings: Settings,
 ) {
     val state by rememberSaveable {
         viewModel.albumsState
@@ -86,30 +89,50 @@ fun AlbumsScreen(
     val filterNameAZ = stringResource(R.string.filter_nameAZ)
     val filterNameZA = stringResource(R.string.filter_nameZA)
 
+    val albumSortSetting: Int = rememberSaveable {
+        settings.getInt(Settings.Companion.Album.LAST_SORT, 0)
+    }
+
     val filterOptions = remember {
-        arrayOf(
-            FilterOption(
-                title = filterRecent,
-                mediaOrder = MediaOrder.Date(OrderType.Descending),
-                onClick = { viewModel.updateOrder(it) },
-                selected = true
-            ),
-            FilterOption(
-                title = filterOld,
-                mediaOrder = MediaOrder.Date(OrderType.Ascending),
-                onClick = { viewModel.updateOrder(it) }
-            ),
-            FilterOption(
-                title = filterNameAZ,
-                mediaOrder = MediaOrder.Label(OrderType.Ascending),
-                onClick = { viewModel.updateOrder(it) }
-            ),
-            FilterOption(
-                title = filterNameZA,
-                mediaOrder = MediaOrder.Label(OrderType.Descending),
-                onClick = { viewModel.updateOrder(it) }
+        ArrayList<FilterOption>().apply {
+            add(
+                FilterOption(
+                    title = filterRecent,
+                    mediaOrder = MediaOrder.Date(OrderType.Descending),
+                    onClick = { viewModel.updateOrder(it) },
+                    selected = albumSortSetting == 0
+                )
             )
-        )
+            add(
+                FilterOption(
+                    title = filterOld,
+                    mediaOrder = MediaOrder.Date(OrderType.Ascending),
+                    onClick = { viewModel.updateOrder(it) },
+                    selected = albumSortSetting == 1
+                )
+            )
+            add(
+                FilterOption(
+                    title = filterNameAZ,
+                    mediaOrder = MediaOrder.Label(OrderType.Ascending),
+                    onClick = { viewModel.updateOrder(it) },
+                    selected = albumSortSetting == 2
+                )
+            )
+            add(
+                FilterOption(
+                    title = filterNameZA,
+                    mediaOrder = MediaOrder.Label(OrderType.Descending),
+                    onClick = { viewModel.updateOrder(it) },
+                    selected = albumSortSetting == 3
+                )
+            )
+        }
+    }
+
+    LaunchedEffect(state.albums) {
+        val filterOption = filterOptions.first { it.selected }
+        filterOption.onClick(filterOption.mediaOrder)
     }
 
     Scaffold(
@@ -189,7 +212,7 @@ fun AlbumsScreen(
                 item(
                     span = { GridItemSpan(maxLineSpan) }
                 ) {
-                    FilterButton(filterOptions = filterOptions)
+                    FilterButton(filterOptions = filterOptions.toTypedArray(), settings = settings)
                 }
                 items(state.albums.size) { index ->
                     val (album, preloadRequestBuilder) = preloadingData[index]

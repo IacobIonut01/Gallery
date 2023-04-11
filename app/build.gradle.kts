@@ -90,8 +90,8 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material:material-icons-extended")
-    implementation("androidx.compose.material3:material3:1.1.0-beta01")
-    implementation("androidx.compose.material3:material3-window-size-class:1.1.0-beta01")
+    implementation("androidx.compose.material3:material3:1.1.0-beta02")
+    implementation("androidx.compose.material3:material3-window-size-class:1.1.0-beta02")
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.29.2-rc")
     implementation("com.google.accompanist:accompanist-permissions:0.29.2-rc")
     implementation("com.google.accompanist:accompanist-navigation-animation:0.29.2-rc")
@@ -127,6 +127,9 @@ dependencies {
 
     // Exifinterface
     implementation("androidx.exifinterface:exifinterface:1.3.6")
+
+    // Encrypted SharedPreferences
+    implementation("androidx.security:security-crypto:1.1.0-alpha05")
 
     // Tests
     testImplementation("junit:junit:4.13.2")

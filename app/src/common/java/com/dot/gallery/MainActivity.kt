@@ -40,6 +40,8 @@ import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.dot.gallery.core.Settings
+import com.dot.gallery.core.Settings.Companion.Misc
 import com.dot.gallery.core.presentation.components.BottomAppBar
 import com.dot.gallery.core.presentation.components.NavigationComp
 import com.dot.gallery.feature_node.presentation.util.BottomNavItem
@@ -48,10 +50,14 @@ import com.dot.gallery.ui.theme.GalleryTheme
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import android.provider.Settings as AndroidSettings
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var settings: Settings
 
     @OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -156,7 +162,8 @@ class MainActivity : ComponentActivity() {
                                 paddingValues = paddingValues,
                                 bottomBarState = bottomBarState,
                                 systemBarFollowThemeState = systemBarFollowThemeState,
-                                bottomNavEntries = bottomNavItems
+                                bottomNavEntries = bottomNavItems,
+                                settings = settings,
                             )
                         }
                     }
@@ -168,12 +175,17 @@ class MainActivity : ComponentActivity() {
 
     private fun requestPermission() {
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.S) {
-            if (!MediaStore.canManageMedia(this)) {
-            val intent = Intent()
+            if (!MediaStore.canManageMedia(this) &&
+                /** Don't ask every launch,
+                 * user might want tot use an extra confirmation dialog for dangerous actions
+                 **/
+                !settings.getBoolean(Misc.USER_CHOICE_MEDIA_MANAGER)) {
+                val intent = Intent()
                 intent.action = AndroidSettings.ACTION_REQUEST_MANAGE_MEDIA
-            val uri = Uri.fromParts("package", this.packageName, null)
-            intent.data = uri
-            startActivity(intent)
+                val uri = Uri.fromParts("package", this.packageName, null)
+                intent.data = uri
+                startActivity(intent)
+                settings.apply { it.putBoolean(Misc.USER_CHOICE_MEDIA_MANAGER, true) }
             }
         }
     }

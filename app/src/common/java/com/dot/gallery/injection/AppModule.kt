@@ -7,6 +7,7 @@ package com.dot.gallery.injection
 
 import android.content.ContentResolver
 import android.content.Context
+import com.dot.gallery.core.Settings
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.domain.use_case.AddMediaUseCase
 import com.dot.gallery.feature_node.domain.use_case.GetAlbumsUseCase
@@ -31,6 +32,12 @@ object AppModule {
     @Provides
     fun provideContentResolver(@ApplicationContext context: Context): ContentResolver {
         return context.contentResolver
+    }
+
+    @Provides
+    @Singleton
+    fun provideSettings(@ApplicationContext context: Context): Settings {
+        return Settings(context)
     }
 
     @Provides
