@@ -19,6 +19,7 @@ import androidx.compose.foundation.pager.PagerDefaults
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -107,7 +108,7 @@ fun StandaloneMediaViewScreen(
                     showUI.value = !showUI.value
                     showUIListener()
                 }
-            ) { player: ExoPlayer, currentTime: Long, totalTime: Long, buffer: Int, playToggle: () -> Unit ->
+            ) { player: ExoPlayer, currentTime: MutableState<Long>, totalTime: Long, buffer: Int, playToggle: () -> Unit ->
                 AnimatedVisibility(
                     visible = showUI.value,
                     enter = enterAnimation(Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION),

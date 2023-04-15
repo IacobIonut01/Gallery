@@ -12,6 +12,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,12 +39,12 @@ import com.dot.gallery.feature_node.domain.model.Media
 fun VideoPlayer(
     media: Media,
     playWhenReady: Boolean,
-    videoController: @Composable (ExoPlayer, Long, Long, Int, () -> Unit) -> Unit,
+    videoController: @Composable (ExoPlayer, MutableState<Long>, Long, Int, () -> Unit) -> Unit,
     onItemClick: () -> Unit
 ) {
 
     var totalDuration by remember { mutableStateOf(0L) }
-    var currentTime by remember { mutableStateOf(0L) }
+    val currentTime = remember { mutableStateOf(0L) }
     var bufferedPercentage by remember { mutableStateOf(0) }
     var isPlaying by remember { mutableStateOf(true) }
     val context = LocalContext.current
@@ -92,7 +93,7 @@ fun VideoPlayer(
                 override fun onEvents(player: Player, events: Player.Events) {
                     super.onEvents(player, events)
                     totalDuration = player.duration.coerceAtLeast(0L)
-                    currentTime = player.currentPosition.coerceAtLeast(0L)
+                    currentTime.value = player.currentPosition.coerceAtLeast(0L)
                     bufferedPercentage = player.bufferedPercentage
                     isPlaying = player.isPlaying
                 }

@@ -21,7 +21,7 @@ fun MediaPreviewComponent(
     scrollEnabled: MutableState<Boolean>,
     playWhenReady: Boolean,
     onItemClick: () -> Unit,
-    videoController: @Composable (ExoPlayer, Long, Long, Int, () -> Unit) -> Unit,
+    videoController: @Composable (ExoPlayer, MutableState<Long>, Long, Int, () -> Unit) -> Unit,
 ) {
     Box(
         modifier = Modifier

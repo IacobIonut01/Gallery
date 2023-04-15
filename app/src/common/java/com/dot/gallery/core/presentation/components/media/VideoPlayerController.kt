@@ -25,6 +25,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,7 +42,7 @@ import com.dot.gallery.feature_node.presentation.util.formatMinSec
 fun VideoPlayerController(
     paddingValues: PaddingValues,
     player: ExoPlayer,
-    currentTime: Long,
+    currentTime: MutableState<Long>,
     totalTime: Long,
     buffer: Int,
     playToggle: () -> Unit
@@ -62,7 +63,7 @@ fun VideoPlayerController(
         ) {
             Text(
                 modifier = Modifier.width(52.dp),
-                text = currentTime.formatMinSec(),
+                text = currentTime.value.formatMinSec(),
                 fontWeight = FontWeight.Medium,
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.White,
@@ -84,7 +85,7 @@ fun VideoPlayerController(
                 )
                 Slider(
                     modifier = Modifier.fillMaxWidth(),
-                    value = currentTime.toFloat(),
+                    value = currentTime.value.toFloat(),
                     onValueChange = { player.seekTo(it.toLong()) },
                     valueRange = 0f..totalTime.toFloat(),
                     colors =
