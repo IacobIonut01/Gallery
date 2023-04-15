@@ -29,6 +29,7 @@ import com.dot.gallery.feature_node.presentation.library.trashed.TrashedGridScre
 import com.dot.gallery.feature_node.presentation.mediaview.MediaViewScreen
 import com.dot.gallery.feature_node.presentation.photos.PhotosScreen
 import com.dot.gallery.feature_node.presentation.MediaViewModel
+import com.dot.gallery.feature_node.presentation.settings.SettingsScreen
 import com.dot.gallery.feature_node.presentation.util.BottomNavItem
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.google.accompanist.navigation.animation.AnimatedNavHost
@@ -213,6 +214,17 @@ fun NavigationComp(
                 mediaId = mediaId,
                 target = target,
                 viewModel = hiltViewModel(parentEntry)
+            )
+        }
+        composable(
+            route = Screen.SettingsScreen.route,
+            enterTransition = { Constants.Animation.navigateInAnimation },
+            exitTransition = { Constants.Animation.navigateUpAnimation },
+            popEnterTransition = { Constants.Animation.navigateInAnimation },
+            popExitTransition = { Constants.Animation.navigateUpAnimation },
+        ) {
+            SettingsScreen(
+                navController = navController
             )
         }
     }

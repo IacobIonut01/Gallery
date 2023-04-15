@@ -283,7 +283,7 @@ fun PhotosScreen(
                             IconButton(onClick = onClick) {
                                 Icon(
                                     imageVector = Icons.Default.ArrowBack,
-                                    contentDescription = "Back"
+                                    contentDescription = stringResource(R.string.back_cd)
                                 )
                             }
                         }
@@ -360,6 +360,9 @@ fun PhotosScreen(
                                     expandedDropDown = false
                                 },
                             )
+                            DropdownMenuItem(
+                                text = { Text(text = stringResource(R.string.settings_title)) },
+                                onClick = { navController.navigate(Screen.SettingsScreen.route) })
                         }
                     },
                     scrollBehavior = scrollBehavior

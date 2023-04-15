@@ -9,7 +9,6 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.Environment
 import android.provider.MediaStore
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -41,7 +40,6 @@ import androidx.core.view.WindowCompat
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.dot.gallery.core.Settings
-import com.dot.gallery.core.Settings.Companion.Misc
 import com.dot.gallery.core.presentation.components.BottomAppBar
 import com.dot.gallery.core.presentation.components.NavigationComp
 import com.dot.gallery.feature_node.presentation.util.BottomNavItem
@@ -179,13 +177,14 @@ class MainActivity : ComponentActivity() {
                 /** Don't ask every launch,
                  * user might want tot use an extra confirmation dialog for dangerous actions
                  **/
-                !settings.getBoolean(Misc.USER_CHOICE_MEDIA_MANAGER)) {
+                !settings.useMediaManager
+            ) {
                 val intent = Intent()
                 intent.action = AndroidSettings.ACTION_REQUEST_MANAGE_MEDIA
                 val uri = Uri.fromParts("package", this.packageName, null)
                 intent.data = uri
                 startActivity(intent)
-                settings.apply { it.putBoolean(Misc.USER_CHOICE_MEDIA_MANAGER, true) }
+                settings.useMediaManager = true
             }
         }
     }

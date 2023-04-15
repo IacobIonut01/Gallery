@@ -16,4 +16,6 @@ sealed class Screen(val route: String) {
 
     object TrashedScreen : Screen("trashed_screen")
     object FavoriteScreen : Screen("favorite_screen")
+
+    object SettingsScreen : Screen("settings_screen")
 }

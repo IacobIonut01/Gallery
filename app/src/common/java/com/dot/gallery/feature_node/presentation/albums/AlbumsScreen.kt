@@ -89,9 +89,7 @@ fun AlbumsScreen(
     val filterNameAZ = stringResource(R.string.filter_nameAZ)
     val filterNameZA = stringResource(R.string.filter_nameZA)
 
-    val albumSortSetting: Int = rememberSaveable {
-        settings.getInt(Settings.Companion.Album.LAST_SORT, 0)
-    }
+    val albumSortSetting: Int = rememberSaveable { settings.albumLastSort }
 
     val filterOptions = remember {
         ArrayList<FilterOption>().apply {

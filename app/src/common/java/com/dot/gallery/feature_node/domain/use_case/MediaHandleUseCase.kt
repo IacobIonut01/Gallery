@@ -8,7 +8,6 @@ package com.dot.gallery.feature_node.domain.use_case
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import com.dot.gallery.core.Settings
-import com.dot.gallery.core.Settings.Companion.Misc.ENABLE_TRASH
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import javax.inject.Inject
@@ -33,7 +32,7 @@ class MediaHandleUseCase @Inject constructor(
          * Trash media only if user enabled the Trash Can
          * Or if user wants to remove existing items from the trash
          * */
-        if (settings.getBoolean(ENABLE_TRASH, true) || !trash)
+        if (settings.trashCanEnabled || !trash)
             repository.trashMedia(result, mediaList, trash)
         else {
             repository.deleteMedia(result, mediaList)

@@ -74,7 +74,7 @@ fun FilterButton(
                             if (it.selected) selectedFilter = it.title
                         }
                         filter.onClick(filter.mediaOrder)
-                        settings.apply { it.putInt(Settings.Companion.Album.LAST_SORT, filterOptions.indexOf(filter)) }
+                        settings.albumLastSort = filterOptions.indexOf(filter)
                     },
                     trailingIcon = {
                         if (filter.selected)

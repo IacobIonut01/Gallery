@@ -192,7 +192,7 @@ fun TrashedGridScreen(
                     IconButton(onClick = { navController.navigateUp() }) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.back_cd)
                         )
                     }
                 },
