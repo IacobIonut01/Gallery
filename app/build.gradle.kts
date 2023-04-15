@@ -5,6 +5,11 @@ plugins {
     id("dagger.hilt.android.plugin")
 }
 
+val versionMajor = 1
+val versionMinor = 0
+val versionPatch = 2
+val versionBuild = 0
+
 android {
     namespace = "com.dot.gallery"
     compileSdk = 33
@@ -13,8 +18,8 @@ android {
         applicationId = "com.dot.gallery"
         minSdk = 30
         targetSdk = 33
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = versionMajor * 10000 + versionMinor * 1000 + versionPatch * 100 + versionBuild
+        versionName = "${versionMajor}.${versionMinor}.${versionPatch}"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
