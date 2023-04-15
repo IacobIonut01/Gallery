@@ -52,7 +52,9 @@ fun ZoomablePagerImage(
     onItemClick: () -> Unit
 ) {
     var targetScale by remember { mutableStateOf(1f) }
-    val scale = animateFloatAsState(targetValue = maxOf(minScale, minOf(maxScale, targetScale)))
+    val scale = animateFloatAsState(targetValue = maxOf(minScale, minOf(maxScale, targetScale)),
+        label = "Image Scale"
+    )
     var rotationState by remember { mutableStateOf(1f) }
     var offsetX by remember { mutableStateOf(1f) }
     var offsetY by remember { mutableStateOf(1f) }
