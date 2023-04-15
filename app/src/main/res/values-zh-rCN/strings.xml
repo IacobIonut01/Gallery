@@ -28,7 +28,7 @@
     <string name="trash_restore">恢复</string>
     <string name="trash_empty">清空</string>
     <string name="trash_delete">删除</string>
-    <string name="nav_library">Library</string>
+    <string name="nav_library">图书馆</string>
     <string name="share">分享</string>
     <string name="info">详情</string>
     <string name="remove_selected">移除选中</string>
@@ -44,9 +44,9 @@
     <string name="metadata">元数据</string>
     <string name="select_all">全选</string>
     <string name="unselect_all">全不选</string>
-    <string name="drop_down_cd">Drop down</string>
+    <string name="drop_down_cd">下拉式</string>
     <string name="cancel">取消</string>
-    <string name="back_cd">Back</string>
+    <string name="back_cd">溯源</string>
     <string name="settings_title">设置</string>
     <string name="reset_settings">重置设置</string>
     <string name="settings_general">常规</string>
