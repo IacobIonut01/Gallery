@@ -15,7 +15,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 suspend fun ContentResolver.getMediaByUri(uri: Uri): Media? {
-    return withContext(Dispatchers.Default) {
+    return withContext(Dispatchers.IO) {
         var media: Media? = null
         val mediaQuery = MediaQuery().copy(
             bundle = Bundle().apply {

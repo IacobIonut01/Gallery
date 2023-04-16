@@ -17,7 +17,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 suspend fun ContentResolver.getAlbums(mediaOrder: MediaOrder = MediaOrder.Date(OrderType.Descending)): List<Album> {
-    return withContext(Dispatchers.Default) {
+    return withContext(Dispatchers.IO) {
         val albums = ArrayList<Album>()
         val albumQuery = Query.AlbumQuery().copy(
             bundle = Bundle().apply {

@@ -18,7 +18,7 @@ import kotlinx.coroutines.withContext
 suspend fun ContentResolver.getMediaFavorite(
     mediaOrder: MediaOrder = MediaOrder.Date(OrderType.Descending)
 ): List<Media> {
-    return withContext(Dispatchers.Default) {
+    return withContext(Dispatchers.IO) {
         val mediaQuery = MediaQuery().copy(
             bundle = Bundle().apply {
                 putInt(MediaStore.QUERY_ARG_MATCH_FAVORITE, MediaStore.MATCH_ONLY)

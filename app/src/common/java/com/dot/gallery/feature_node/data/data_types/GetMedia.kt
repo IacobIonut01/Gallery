@@ -17,7 +17,7 @@ suspend fun ContentResolver.getMedia(
     mediaQuery: Query = Query.MediaQuery(),
     mediaOrder: MediaOrder = MediaOrder.Date(OrderType.Descending)
 ): List<Media> {
-    return withContext(Dispatchers.Default) {
+    return withContext(Dispatchers.IO) {
         val media = ArrayList<Media>()
         with(query(mediaQuery)) {
             moveToFirst()
@@ -36,7 +36,7 @@ suspend fun ContentResolver.getMedia(
 }
 
 suspend fun ContentResolver.findMedia(mediaQuery: Query): Media? {
-    return withContext(Dispatchers.Default) {
+    return withContext(Dispatchers.IO) {
         val mediaList = getMedia(mediaQuery)
         return@withContext if (mediaList.isEmpty()) null else mediaList.first()
     }
