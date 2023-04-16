@@ -17,10 +17,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 suspend fun ContentResolver.getAlbums(mediaOrder: MediaOrder = MediaOrder.Date(OrderType.Descending)): List<Album> {
-    return withContext(Dispatchers.Default) {
+    return withContext(Dispatchers.IO) {
         val albums = ArrayList<Album>()
         val albumQuery = Query.AlbumQuery().copy(
             bundle = Bundle().apply {
+                putInt(
+                    MediaStore.QUERY_ARG_MATCH_TRASHED,
+                    MediaStore.MATCH_EXCLUDE
+                )
                 putInt(
                     ContentResolver.QUERY_ARG_SORT_DIRECTION,
                     ContentResolver.QUERY_SORT_DIRECTION_DESCENDING
@@ -35,16 +39,16 @@ suspend fun ContentResolver.getAlbums(mediaOrder: MediaOrder = MediaOrder.Date(O
             moveToFirst()
             while (!isAfterLast) {
                 try {
-                    val id = getLong(getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_ID))
+                    val id = getLong(getColumnIndexOrThrow(MediaStore.MediaColumns.BUCKET_ID))
                     val label: String? = try {
-                        getString(getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_DISPLAY_NAME))
+                        getString(getColumnIndexOrThrow(MediaStore.MediaColumns.BUCKET_DISPLAY_NAME))
                     } catch (e: Exception) {
                         Build.MODEL
                     }
                     val thumbnailPath =
-                        getString(getColumnIndexOrThrow(MediaStore.Images.Media.DATA))
+                        getString(getColumnIndexOrThrow(MediaStore.MediaColumns.DATA))
                     val thumbnailDate =
-                        getLong(getColumnIndexOrThrow(MediaStore.Images.Media.DATE_MODIFIED))
+                        getLong(getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_MODIFIED))
                     val album =
                         Album(id, label ?: Build.MODEL, thumbnailPath, thumbnailDate, count = 1)
                     val currentAlbum = albums.find { albm -> albm.id == id }

@@ -10,8 +10,10 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Row
@@ -37,17 +39,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.dot.gallery.core.Settings
+import com.dot.gallery.core.contentFlowObserver
 import com.dot.gallery.core.presentation.components.BottomAppBar
 import com.dot.gallery.core.presentation.components.NavigationComp
+import com.dot.gallery.feature_node.data.data_source.MediaDatabase
+import com.dot.gallery.feature_node.data.data_types.getAlbums
+import com.dot.gallery.feature_node.data.data_types.getMedia
+import com.dot.gallery.feature_node.data.repository.MediaRepositoryImpl
 import com.dot.gallery.feature_node.presentation.util.BottomNavItem
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.ui.theme.GalleryTheme
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
 import android.provider.Settings as AndroidSettings
 
@@ -56,6 +66,8 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var settings: Settings
+
+    private val viewModel: MainViewModel by viewModels()
 
     @OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -169,6 +181,7 @@ class MainActivity : ComponentActivity() {
             }
         }
         requestPermission()
+        viewModel.observer()
     }
 
     private fun requestPermission() {

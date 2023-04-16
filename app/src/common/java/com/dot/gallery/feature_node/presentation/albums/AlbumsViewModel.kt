@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dot.gallery.core.AlbumState
+import com.dot.gallery.core.MediaState
 import com.dot.gallery.core.Resource
 import com.dot.gallery.feature_node.domain.use_case.MediaUseCases
 import com.dot.gallery.feature_node.domain.util.MediaOrder
@@ -37,28 +38,8 @@ class AlbumsViewModel @Inject constructor(
     }
 
     private fun getAlbums(mediaOrder: MediaOrder = MediaOrder.Date(OrderType.Descending)) {
-        mediaUseCases.getAlbumsUseCase(mediaOrder).onEach { result ->
-            when (result) {
-                is Resource.Error -> {
-                    albumsState.value = AlbumState(
-                        error = result.message ?: "An error occurred"
-                    )
-                }
-
-                is Resource.Loading -> {
-                    albumsState.value = AlbumState(
-                        isLoading = true
-                    )
-                }
-
-                is Resource.Success -> {
-                    if (albumsState.value.albums != result.data) {
-                        albumsState.value = AlbumState(
-                            albums = result.data ?: emptyList()
-                        )
-                    }
-                }
-            }
+        mediaUseCases.getAlbumsUseCase(mediaOrder).onEach {
+            albumsState.value = AlbumState(albums = it)
         }.launchIn(viewModelScope)
     }
 

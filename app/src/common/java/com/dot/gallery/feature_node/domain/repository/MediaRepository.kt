@@ -16,21 +16,21 @@ import kotlinx.coroutines.flow.Flow
 
 interface MediaRepository {
 
-    fun getMedia(): Flow<Resource<List<Media>>>
+    fun getMedia(): Flow<List<Media>>
 
-    fun getFavorites(mediaOrder: MediaOrder): Flow<Resource<List<Media>>>
+    fun getFavorites(mediaOrder: MediaOrder): Flow<List<Media>>
 
-    fun getTrashed(mediaOrder: MediaOrder): Flow<Resource<List<Media>>>
+    fun getTrashed(mediaOrder: MediaOrder): Flow<List<Media>>
 
-    fun getAlbums(mediaOrder: MediaOrder): Flow<Resource<List<Album>>>
+    fun getAlbums(mediaOrder: MediaOrder): Flow<List<Album>>
 
-    suspend fun insertMedia(media: Media, callback: MediaScannerConnection.OnScanCompletedListener)
+    suspend fun insertMedia(media: Media)
 
     suspend fun getMediaById(mediaId: Long): Media?
 
-    fun getMediaByAlbumId(albumId: Long): Flow<Resource<List<Media>>>
+    fun getMediaByAlbumId(albumId: Long): Flow<List<Media>>
 
-    fun getMediaByUri(uriAsString: String): Flow<Resource<List<Media>>>
+    fun getMediaByUri(uriAsString: String): Flow<List<Media>>
 
     suspend fun toggleFavorite(
         result: ActivityResultLauncher<IntentSenderRequest>,

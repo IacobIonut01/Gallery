@@ -40,28 +40,8 @@ class StandaloneViewModel @Inject constructor(
 
     private fun getMedia(standaloneUri: String? = null) {
         if (standaloneUri != null) {
-            mediaUseCases.getMediaByUriUseCase(standaloneUri).onEach { result ->
-                when (result) {
-                    is Resource.Error -> {
-                        photoState.value = MediaState(
-                            error = result.message ?: "An error occurred"
-                        )
-                    }
-
-                    is Resource.Loading -> {
-                        photoState.value = MediaState(
-                            isLoading = true
-                        )
-                    }
-
-                    is Resource.Success -> {
-                        if (photoState.value.media != result.data) {
-                            photoState.value = MediaState(
-                                media = result.data ?: emptyList()
-                            )
-                        }
-                    }
-                }
+            mediaUseCases.getMediaByUriUseCase(standaloneUri).onEach {
+                photoState.value = MediaState(media = it)
             }.launchIn(viewModelScope)
         }
     }

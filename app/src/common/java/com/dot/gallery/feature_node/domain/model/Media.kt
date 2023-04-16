@@ -8,6 +8,11 @@ package com.dot.gallery.feature_node.domain.model
 import android.net.Uri
 import android.os.Parcel
 import android.os.Parcelable
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+import androidx.room.TypeConverter
+import androidx.room.TypeConverters
+import com.dot.gallery.core.Converters
 import java.util.concurrent.TimeUnit
 
 sealed class MediaItem {
@@ -72,7 +77,9 @@ sealed class MediaItem {
 val Any.isHeaderKey: Boolean
     get() = this is String && this.startsWith("header")
 
+@Entity(tableName = "media_table")
 data class Media(
+    @PrimaryKey(autoGenerate = false)
     val id: Long = 0,
     val label: String,
     val uri: Uri,
@@ -140,8 +147,9 @@ data class Media(
     }
 }
 
-
+@Entity(tableName = "album_table")
 data class Album(
+    @PrimaryKey(autoGenerate = false)
     val id: Long = 0,
     val label: String,
     val pathToThumbnail: String,

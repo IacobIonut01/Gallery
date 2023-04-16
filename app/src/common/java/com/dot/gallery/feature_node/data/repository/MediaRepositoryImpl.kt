@@ -12,7 +12,6 @@ import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
-import com.dot.gallery.core.Resource
 import com.dot.gallery.core.contentFlowObserver
 import com.dot.gallery.feature_node.data.data_source.Query
 import com.dot.gallery.feature_node.data.data_types.findMedia
@@ -37,23 +36,22 @@ abstract class MediaRepositoryImpl(
     /**
      * TODO: Add media reordering
      */
-    override fun getMedia(): Flow<Resource<List<Media>>> =
+    override fun getMedia(): Flow<List<Media>> =
         contentResolver.retrieveMedia { it.getMedia(mediaOrder = DEFAULT_ORDER) }
 
-    override fun getFavorites(mediaOrder: MediaOrder): Flow<Resource<List<Media>>> =
+    override fun getFavorites(mediaOrder: MediaOrder): Flow<List<Media>> =
         contentResolver.retrieveMedia { it.getMediaFavorite(mediaOrder = mediaOrder) }
 
-    override fun getTrashed(mediaOrder: MediaOrder): Flow<Resource<List<Media>>> =
+    override fun getTrashed(mediaOrder: MediaOrder): Flow<List<Media>> =
         contentResolver.retrieveMedia { it.getMediaTrashed(mediaOrder = mediaOrder) }
 
-    override fun getAlbums(mediaOrder: MediaOrder): Flow<Resource<List<Album>>> =
+    override fun getAlbums(mediaOrder: MediaOrder): Flow<List<Album>> =
         contentResolver.retrieveAlbums { it.getAlbums(mediaOrder = mediaOrder) }
 
     override suspend fun insertMedia(
-        media: Media,
-        callback: MediaScannerConnection.OnScanCompletedListener
+        media: Media
     ) {
-        MediaScannerConnection.scanFile(context, arrayOf(media.path), null, callback)
+        MediaScannerConnection.scanFile(context, arrayOf(media.path), null, null)
     }
 
     @SuppressLint("Range")
@@ -73,7 +71,7 @@ abstract class MediaRepositoryImpl(
         return contentResolver.findMedia(query)
     }
 
-    override fun getMediaByAlbumId(albumId: Long): Flow<Resource<List<Media>>> =
+    override fun getMediaByAlbumId(albumId: Long): Flow<List<Media>> =
         contentResolver.retrieveMedia {
             val query = Query.MediaQuery().copy(
                 bundle = Bundle().apply {
@@ -91,48 +89,32 @@ abstract class MediaRepositoryImpl(
             it.getMedia(query)
         }
 
-    override fun getMediaByUri(uriAsString: String): Flow<Resource<List<Media>>> =
+    override fun getMediaByUri(uriAsString: String): Flow<List<Media>> =
         contentResolver.retrieveMediaAsResource {
-            val media = it.getMediaByUri(Uri.parse(uriAsString))
-            /** return@retrieveMediaAsResource */
-            if (media == null) {
-                Resource.Error(message = "Media could not be opened")
-            } else {
-                Resource.Success(data = listOf(media))
-            }
+            val item = it.getMediaByUri(Uri.parse(uriAsString))
+            item?.let { media -> listOf(media) } ?: emptyList()
         }
 
     companion object {
         private val DEFAULT_ORDER = MediaOrder.Date(OrderType.Descending)
-        private val URIs = arrayOf(
+        val URIs = arrayOf(
             MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
             MediaStore.Video.Media.EXTERNAL_CONTENT_URI
         )
 
-        private fun ContentResolver.retrieveMediaAsResource(dataBody: suspend (ContentResolver) -> Resource<List<Media>>) =
+        fun ContentResolver.retrieveMediaAsResource(dataBody: suspend (ContentResolver) -> List<Media>) =
             contentFlowObserver(URIs).map {
-                try {
-                    dataBody.invoke(this)
-                } catch (e: Exception) {
-                    Resource.Error(message = e.localizedMessage ?: "An error occurred")
-                }
+                dataBody.invoke(this)
             }
 
-        private fun ContentResolver.retrieveMedia(dataBody: suspend (ContentResolver) -> List<Media>) =
+        fun ContentResolver.retrieveMedia(dataBody: suspend (ContentResolver) -> List<Media>) =
             contentFlowObserver(URIs).map {
-                try {
-                    Resource.Success(data = dataBody.invoke(this))
-                } catch (e: Exception) {
-                    Resource.Error(message = e.localizedMessage ?: "An error occurred")
-                }
+                dataBody.invoke(this)
             }
-        private fun ContentResolver.retrieveAlbums(dataBody: suspend (ContentResolver) -> List<Album>) =
+
+        fun ContentResolver.retrieveAlbums(dataBody: suspend (ContentResolver) -> List<Album>) =
             contentFlowObserver(URIs).map {
-                try {
-                    Resource.Success(data = dataBody.invoke(this))
-                } catch (e: Exception) {
-                    Resource.Error(message = e.localizedMessage ?: "An error occurred")
-                }
+                dataBody.invoke(this)
             }
     }
 }

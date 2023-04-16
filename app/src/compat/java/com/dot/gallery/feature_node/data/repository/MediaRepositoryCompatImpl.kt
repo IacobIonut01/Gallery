@@ -10,12 +10,16 @@ import android.content.Intent
 import android.provider.MediaStore
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
+import com.dot.gallery.feature_node.data.data_source.AlbumDao
+import com.dot.gallery.feature_node.data.data_source.MediaDao
 import com.dot.gallery.feature_node.data.data_types.getMediaUri
 import com.dot.gallery.feature_node.domain.model.Media
 
 class MediaRepositoryCompatImpl(
-    private val context: Context
-) : MediaRepositoryImpl(context) {
+    private val context: Context,
+    mediaDao: MediaDao,
+    albumDao: AlbumDao
+) : LocalMediaRepositoryImpl(context, mediaDao, albumDao) {
     private val contentResolver by lazy { context.contentResolver }
 
     override suspend fun toggleFavorite(
@@ -42,6 +46,7 @@ class MediaRepositoryCompatImpl(
         mediaList: List<Media>,
         trash: Boolean
     ) {
+        super.trashMedia(result, mediaList, trash)
         val intentSender = MediaStore.createTrashRequest(
             contentResolver,
             mediaList.map {
@@ -60,6 +65,7 @@ class MediaRepositoryCompatImpl(
         result: ActivityResultLauncher<IntentSenderRequest>,
         mediaList: List<Media>
     ) {
+        super.deleteMedia(result, mediaList)
         val intentSender = MediaStore.createDeleteRequest(
             contentResolver,
             mediaList.map {

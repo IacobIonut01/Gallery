@@ -3,6 +3,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.google.devtools.ksp")
     id("dagger.hilt.android.plugin")
+    id("kotlin-kapt")
 }
 
 val versionMajor = 1
@@ -109,15 +110,15 @@ dependencies {
     // Dagger - Hilt
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0-alpha01")
     implementation("com.google.dagger:hilt-android:2.45")
-    ksp("com.google.dagger:hilt-android-compiler:2.45")
-    ksp("androidx.hilt:hilt-compiler:1.0.0")
+    kapt("com.google.dagger:hilt-android-compiler:2.45")
+    kapt("androidx.hilt:hilt-compiler:1.0.0")
 
     // Room
     implementation("androidx.room:room-runtime:2.6.0-alpha01")
     ksp("androidx.room:room-compiler:2.6.0-alpha01")
 
     // Kotlin Extensions and Coroutines support for Room
-    implementation("androidx.room:room-ktx:2.5.1")
+    implementation("androidx.room:room-ktx:2.6.0-alpha01")
 
     // Glide
     implementation("com.github.bumptech.glide:glide:4.15.1")

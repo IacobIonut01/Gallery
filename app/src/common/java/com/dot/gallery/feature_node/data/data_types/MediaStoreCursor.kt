@@ -22,7 +22,7 @@ import kotlinx.coroutines.withContext
 suspend fun ContentResolver.query(
     mediaQuery: Query
 ): Cursor {
-    return withContext(Dispatchers.Default) {
+    return withContext(Dispatchers.IO) {
         return@withContext MergeCursor(
             arrayOf(
                 query(

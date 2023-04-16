@@ -6,6 +6,7 @@
 package com.dot.gallery.injection
 
 import android.content.Context
+import com.dot.gallery.feature_node.data.data_source.MediaDatabase
 import com.dot.gallery.feature_node.data.repository.MediaRepositoryCompatImpl
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import dagger.Module
@@ -21,8 +22,8 @@ object RepositoryModule {
 
     @Provides
     @Singleton
-    fun provideMediaRepository(@ApplicationContext context: Context): MediaRepository {
-        return MediaRepositoryCompatImpl(context)
+    fun provideMediaRepository(@ApplicationContext context: Context, database: MediaDatabase): MediaRepository {
+        return MediaRepositoryCompatImpl(context, database.getMediaDao(), database.getAlbumDao())
     }
 
 }

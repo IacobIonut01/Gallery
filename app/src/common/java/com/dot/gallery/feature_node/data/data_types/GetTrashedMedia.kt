@@ -18,7 +18,7 @@ import kotlinx.coroutines.withContext
 suspend fun ContentResolver.getMediaTrashed(
     mediaOrder: MediaOrder = MediaOrder.Date(OrderType.Descending)
 ): List<Media> {
-    return withContext(Dispatchers.Default) {
+    return withContext(Dispatchers.IO) {
         val mediaQuery = MediaQuery().copy(
             bundle = Bundle().apply {
                 putInt(MediaStore.QUERY_ARG_MATCH_TRASHED, MediaStore.MATCH_ONLY)

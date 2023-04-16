@@ -5,9 +5,12 @@
 
 package com.dot.gallery.injection
 
+import android.app.Application
 import android.content.ContentResolver
 import android.content.Context
+import androidx.room.Room
 import com.dot.gallery.core.Settings
+import com.dot.gallery.feature_node.data.data_source.MediaDatabase
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.domain.use_case.AddMediaUseCase
 import com.dot.gallery.feature_node.domain.use_case.GetAlbumsUseCase
@@ -38,6 +41,18 @@ object AppModule {
     @Singleton
     fun provideSettings(@ApplicationContext context: Context): Settings {
         return Settings(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideMediaDatabase(app: Application): MediaDatabase {
+        return Room.databaseBuilder(
+            app,
+            MediaDatabase::class.java,
+            MediaDatabase.DATABASE
+        )
+            .allowMainThreadQueries()
+            .build()
     }
 
     @Provides
