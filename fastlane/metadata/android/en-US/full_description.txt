@@ -1,0 +1,1 @@
+<p><i>Gallery for Android</i> is a light-weight Media Gallery app for Android made with Jetpack Compose. It supports albums, favorites and more. It also features an integrated video player.</p>
