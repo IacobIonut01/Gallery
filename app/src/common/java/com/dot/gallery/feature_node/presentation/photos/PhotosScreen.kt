@@ -29,6 +29,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.MoreVert
@@ -64,7 +65,9 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.integration.compose.rememberGlidePreloadingData
@@ -261,14 +264,18 @@ fun PhotosScreen(
                                 selectedMedia.size
                             ) else albumName
                             Text(
-                                text = toolbarTitle
+                                text = toolbarTitle,
+                                overflow = TextOverflow.Ellipsis,
+                                maxLines = 1
                             )
                             if (!subtitle.isNullOrEmpty()) {
                                 Text(
                                     modifier = Modifier,
                                     text = subtitle.uppercase(),
                                     style = MaterialTheme.typography.labelSmall,
-                                    fontFamily = FontFamily.Monospace
+                                    fontFamily = FontFamily.Monospace,
+                                    overflow = TextOverflow.Ellipsis,
+                                    maxLines = 1
                                 )
                             }
                         }
@@ -279,10 +286,14 @@ fun PhotosScreen(
                                 navController::navigateUp
                             else
                                 clearSelection
+                        val icon = if (albumId != -1L && !selectionState.value)
+                                Icons.Default.ArrowBack
+                            else
+                                Icons.Default.Close
                         if (albumId != -1L || selectionState.value) {
                             IconButton(onClick = onClick) {
                                 Icon(
-                                    imageVector = Icons.Default.ArrowBack,
+                                    imageVector = icon,
                                     contentDescription = stringResource(R.string.back_cd)
                                 )
                             }
@@ -360,9 +371,43 @@ fun PhotosScreen(
                                     expandedDropDown = false
                                 },
                             )
+                            if (albumId != -1L) {
+                                DropdownMenuItem(
+                                    text = { Text(text = stringResource(R.string.move_album_to_trash)) },
+                                    onClick = {
+                                        viewModel.viewModelScope.launch {
+                                            viewModel.handler.trashMedia(
+                                                result = result,
+                                                mediaList = state.media,
+                                                trash = true
+                                            )
+                                            navController.navigateUp()
+                                        }
+                                        expandedDropDown = false
+                                    },
+                                )
+                            }
+                            DropdownMenuItem(
+                                text = { Text(text = stringResource(R.string.favorites)) },
+                                onClick = {
+                                    navController.navigate(Screen.FavoriteScreen.route)
+                                    expandedDropDown = false
+                                },
+                            )
+                            DropdownMenuItem(
+                                text = { Text(text = stringResource(R.string.trash)) },
+                                onClick = {
+                                    navController.navigate(Screen.TrashedScreen.route)
+                                    expandedDropDown = false
+                                },
+                            )
                             DropdownMenuItem(
                                 text = { Text(text = stringResource(R.string.settings_title)) },
-                                onClick = { navController.navigate(Screen.SettingsScreen.route) })
+                                onClick = {
+                                    navController.navigate(Screen.SettingsScreen.route)
+                                    expandedDropDown = false
+                                }
+                            )
                         }
                     },
                     scrollBehavior = scrollBehavior
