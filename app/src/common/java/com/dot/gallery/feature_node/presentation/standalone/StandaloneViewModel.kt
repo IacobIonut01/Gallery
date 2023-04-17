@@ -13,7 +13,7 @@ import com.dot.gallery.core.Resource
 import com.dot.gallery.feature_node.domain.use_case.MediaUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -40,28 +40,12 @@ class StandaloneViewModel @Inject constructor(
 
     private fun getMedia(standaloneUri: String? = null) {
         if (standaloneUri != null) {
-            mediaUseCases.getMediaByUriUseCase(standaloneUri).onEach { result ->
-                when (result) {
-                    is Resource.Error -> {
-                        photoState.value = MediaState(
-                            error = result.message ?: "An error occurred"
-                        )
-                    }
-
-                    is Resource.Loading -> {
-                        photoState.value = MediaState(
-                            isLoading = true
-                        )
-                    }
-
-                    is Resource.Success -> {
-                        if (photoState.value.media != result.data) {
-                            photoState.value = MediaState(
-                                media = result.data ?: emptyList()
-                            )
-                        }
-                    }
-                }
+            mediaUseCases.getMediaByUriUseCase(standaloneUri).map { result ->
+                photoState.value = MediaState(
+                    error = if (result is Resource.Error) result.message ?: "An error occurred" else "",
+                    isLoading = result is Resource.Loading,
+                    media = result.data ?: emptyList()
+                )
             }.launchIn(viewModelScope)
         }
     }

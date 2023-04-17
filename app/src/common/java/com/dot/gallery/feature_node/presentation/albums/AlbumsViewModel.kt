@@ -15,7 +15,7 @@ import com.dot.gallery.feature_node.domain.util.MediaOrder
 import com.dot.gallery.feature_node.domain.util.OrderType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -37,28 +37,12 @@ class AlbumsViewModel @Inject constructor(
     }
 
     private fun getAlbums(mediaOrder: MediaOrder = MediaOrder.Date(OrderType.Descending)) {
-        mediaUseCases.getAlbumsUseCase(mediaOrder).onEach { result ->
-            when (result) {
-                is Resource.Error -> {
-                    albumsState.value = AlbumState(
-                        error = result.message ?: "An error occurred"
-                    )
-                }
-
-                is Resource.Loading -> {
-                    albumsState.value = AlbumState(
-                        isLoading = true
-                    )
-                }
-
-                is Resource.Success -> {
-                    if (albumsState.value.albums != result.data) {
-                        albumsState.value = AlbumState(
-                            albums = result.data ?: emptyList()
-                        )
-                    }
-                }
-            }
+        mediaUseCases.getAlbumsUseCase(mediaOrder).map { result ->
+            albumsState.value = AlbumState(
+                error = if (result is Resource.Error) result.message ?: "An error occurred" else "",
+                isLoading = result is Resource.Loading,
+                albums = result.data ?: emptyList()
+            )
         }.launchIn(viewModelScope)
     }
 
