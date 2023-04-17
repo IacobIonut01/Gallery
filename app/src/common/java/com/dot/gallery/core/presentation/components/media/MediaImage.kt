@@ -6,8 +6,9 @@
 package com.dot.gallery.core.presentation.components.media
 
 import android.graphics.drawable.Drawable
-import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -16,12 +17,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,11 +38,11 @@ import com.bumptech.glide.Priority
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade
 import com.bumptech.glide.signature.MediaStoreSignature
 import com.dot.gallery.core.Constants.Animation
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.ui.theme.Dimens
-import com.dot.gallery.ui.theme.Shapes
 
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
@@ -47,13 +50,20 @@ fun MediaImage(
     media: Media,
     preloadRequestBuilder: RequestBuilder<Drawable>,
     selectionState: MutableState<Boolean>,
-    isSelected: Boolean
+    isSelected: MutableState<Boolean>,
+    modifier: Modifier = Modifier
 ) {
-    val selectedSize = if (isSelected) 12.dp else 0.dp
-    val scale = if (isSelected) 0.5f else 1f
-    val selectedShape = if (isSelected) Shapes.large else Shapes.extraSmall
+    val selectedSize by animateDpAsState(
+        if (isSelected.value) 12.dp else 0.dp
+    )
+    val scale by animateFloatAsState(
+        if (isSelected.value) 0.5f else 1f
+    )
+    val selectedShapeSize by animateDpAsState(
+        if (isSelected.value) 16.dp else 0.dp
+    )
     Box(
-        modifier = Modifier
+        modifier = modifier
             .aspectRatio(1f)
             .size(Dimens.Photo())
     ) {
@@ -61,16 +71,24 @@ fun MediaImage(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(selectedSize)
-                .clip(selectedShape),
+                .clip(RoundedCornerShape(selectedShapeSize)),
             model = media.uri,
             contentDescription = media.label,
             contentScale = ContentScale.Crop,
         ) {
             it.thumbnail(preloadRequestBuilder)
                 .signature(MediaStoreSignature(media.mimeType, media.timestamp, media.orientation))
+                .transition(withCrossFade())
+                .override(400)
                 .priority(Priority.HIGH)
         }
-        if (media.duration != null) {
+
+        AnimatedVisibility(
+            visible = media.duration != null,
+            enter = Animation.enterAnimation,
+            exit = Animation.exitAnimation,
+            modifier = Modifier.fillMaxWidth()
+        ) {
             VideoDurationHeader(
                 modifier = Modifier
                     .padding(selectedSize / 2)
@@ -109,7 +127,7 @@ fun MediaImage(
                     .background(
                         Brush.verticalGradient(
                             listOf(
-                                if (isSelected) MaterialTheme.colorScheme.surface.copy(alpha = 0.4f)
+                                if (isSelected.value) MaterialTheme.colorScheme.surface.copy(alpha = 0.4f)
                                 else Color.Transparent,
                                 Color.Transparent
                             )
@@ -118,7 +136,7 @@ fun MediaImage(
             ) {
                 RadioButton(
                     modifier = Modifier.padding(8.dp),
-                    selected = isSelected,
+                    selected = isSelected.value,
                     onClick = null
                 )
             }

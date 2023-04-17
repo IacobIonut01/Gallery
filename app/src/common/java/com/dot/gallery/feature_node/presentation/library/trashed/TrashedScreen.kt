@@ -60,8 +60,8 @@ import com.dot.gallery.core.presentation.components.util.StickyHeaderGrid
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaItem
 import com.dot.gallery.feature_node.domain.model.isHeaderKey
-import com.dot.gallery.feature_node.presentation.library.trashed.components.EmptyTrash
 import com.dot.gallery.feature_node.presentation.MediaViewModel
+import com.dot.gallery.feature_node.presentation.library.trashed.components.EmptyTrash
 import com.dot.gallery.feature_node.presentation.photos.components.StickyHeader
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.feature_node.presentation.util.getDate
@@ -300,7 +300,7 @@ fun TrashedGridScreen(
                             MediaComponent(
                                 media = media,
                                 selectionState = selectionState,
-                                isSelected = selectedMedia.find { it.id == media.id } != null,
+                                isSelected = mutableStateOf(selectedMedia.find { it.id == media.id } != null),
                                 preloadRequestBuilder = preloadRequestBuilder,
                                 onItemLongClick = {
                                     viewModel.toggleSelection(state.media.indexOf(it))

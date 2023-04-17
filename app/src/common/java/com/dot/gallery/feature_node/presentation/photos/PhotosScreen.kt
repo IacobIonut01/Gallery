@@ -424,7 +424,7 @@ fun PhotosScreen(
                                 MediaComponent(
                                     media = media,
                                     selectionState = selectionState,
-                                    isSelected = selectedMedia.find { it.id == media.id } != null,
+                                    isSelected = mutableStateOf(selectedMedia.find { it.id == media.id } != null),
                                     preloadRequestBuilder = preloadRequestBuilder,
                                     onItemLongClick = {
                                         viewModel.toggleSelection(state.media.indexOf(it))

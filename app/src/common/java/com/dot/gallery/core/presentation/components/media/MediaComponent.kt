@@ -10,8 +10,6 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.lazy.grid.LazyGridItemScope
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -31,11 +29,14 @@ fun LazyGridItemScope.MediaComponent(
     preloadRequestBuilder: RequestBuilder<Drawable>,
     onItemClick: (Media) -> Unit,
     onItemLongClick: (Media) -> Unit,
-    isSelected: Boolean,
+    isSelected: MutableState<Boolean>,
 ) {
-    Box(
+    MediaImage(
+        media = media,
+        preloadRequestBuilder = preloadRequestBuilder,
+        selectionState = selectionState,
+        isSelected = isSelected,
         modifier = Modifier
-            .aspectRatio(1f)
             .border(
                 width = .2.dp,
                 color = MaterialTheme.colorScheme.outlineVariant,
@@ -49,13 +50,6 @@ fun LazyGridItemScope.MediaComponent(
             .combinedClickable(
                 onClick = { onItemClick(media) },
                 onLongClick = { onItemLongClick(media) },
-            ),
-    ) {
-        MediaImage(
-            media = media,
-            preloadRequestBuilder = preloadRequestBuilder,
-            selectionState = selectionState,
-            isSelected = isSelected,
-        )
-    }
+            )
+    )
 }
