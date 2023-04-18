@@ -5,17 +5,22 @@
 
 package com.dot.gallery.injection
 
+import android.app.Application
 import android.content.ContentResolver
 import android.content.Context
+import androidx.room.Room
 import com.dot.gallery.core.Settings
+import com.dot.gallery.feature_node.data.data_source.InternalDatabase
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.domain.use_case.AddMediaUseCase
+import com.dot.gallery.feature_node.domain.use_case.DeletePinnedAlbumUseCase
 import com.dot.gallery.feature_node.domain.use_case.GetAlbumsUseCase
 import com.dot.gallery.feature_node.domain.use_case.GetMediaByAlbumUseCase
 import com.dot.gallery.feature_node.domain.use_case.GetMediaByUriUseCase
 import com.dot.gallery.feature_node.domain.use_case.GetMediaFavoriteUseCase
 import com.dot.gallery.feature_node.domain.use_case.GetMediaTrashedUseCase
 import com.dot.gallery.feature_node.domain.use_case.GetMediaUseCase
+import com.dot.gallery.feature_node.domain.use_case.InsertPinnedAlbumUseCase
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.domain.use_case.MediaUseCases
 import dagger.Module
@@ -42,6 +47,14 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun provideDatabase(app: Application): InternalDatabase {
+        return Room.databaseBuilder(app, InternalDatabase::class.java, InternalDatabase.NAME)
+            .allowMainThreadQueries()
+            .build()
+    }
+
+    @Provides
+    @Singleton
     fun provideMediaUseCases(repository: MediaRepository, settings: Settings): MediaUseCases {
         return MediaUseCases(
             addMediaUseCase = AddMediaUseCase(repository),
@@ -51,7 +64,9 @@ object AppModule {
             getMediaFavoriteUseCase = GetMediaFavoriteUseCase(repository),
             getMediaTrashedUseCase = GetMediaTrashedUseCase(repository),
             getMediaByUriUseCase = GetMediaByUriUseCase(repository),
-            mediaHandleUseCase = MediaHandleUseCase(repository, settings)
+            mediaHandleUseCase = MediaHandleUseCase(repository, settings),
+            insertPinnedAlbumUseCase = InsertPinnedAlbumUseCase(repository),
+            deletePinnedAlbumUseCase = DeletePinnedAlbumUseCase(repository)
         )
     }
 }

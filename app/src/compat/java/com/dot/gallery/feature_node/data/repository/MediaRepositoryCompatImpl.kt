@@ -10,12 +10,14 @@ import android.content.Intent
 import android.provider.MediaStore
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
+import com.dot.gallery.feature_node.data.data_source.InternalDatabase
 import com.dot.gallery.feature_node.data.data_types.getMediaUri
 import com.dot.gallery.feature_node.domain.model.Media
 
 class MediaRepositoryCompatImpl(
-    private val context: Context
-) : MediaRepositoryImpl(context) {
+    private val context: Context,
+    database: InternalDatabase
+) : MediaRepositoryImpl(context, database) {
     private val contentResolver by lazy { context.contentResolver }
 
     override suspend fun toggleFavorite(

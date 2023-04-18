@@ -101,8 +101,7 @@ fun NavigationComp(
             popExitTransition = { Constants.Animation.navigateUpAnimation }
         ) {
             LibraryScreen(
-                navController = navController,
-                paddingValues = paddingValues
+                navController = navController
             )
         }
         composable(

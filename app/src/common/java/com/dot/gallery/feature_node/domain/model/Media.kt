@@ -3,11 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+@file:Suppress("DEPRECATION")
+
 package com.dot.gallery.feature_node.domain.model
 
 import android.net.Uri
 import android.os.Parcel
 import android.os.Parcelable
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import java.util.concurrent.TimeUnit
 
 sealed class MediaItem {
@@ -147,7 +151,8 @@ data class Album(
     val pathToThumbnail: String,
     val timestamp: Long,
     var count: Long = 0,
-    val selected: Boolean = false
+    val selected: Boolean = false,
+    val isPinned: Boolean = false,
 ) : Parcelable {
     constructor(source: Parcel) : this(
     source.readLong(),
@@ -155,7 +160,8 @@ data class Album(
     source.readString()!!,
     source.readLong(),
     source.readLong(),
-    1 == source.readInt()
+    source.readBoolean(),
+    source.readBoolean()
     )
 
     override fun describeContents() = 0
@@ -166,7 +172,8 @@ data class Album(
         writeString(pathToThumbnail)
         writeLong(timestamp)
         writeLong(count)
-        writeInt((if (selected) 1 else 0))
+        writeBoolean(selected)
+        writeBoolean(isPinned)
     }
 
     companion object {
@@ -177,5 +184,11 @@ data class Album(
         }
     }
 }
+
+@Entity(tableName = "pinned_table")
+data class PinnedAlbum(
+    @PrimaryKey(autoGenerate = false)
+    val id: Long
+)
 
 class InvalidMediaException(message: String) : Exception(message)

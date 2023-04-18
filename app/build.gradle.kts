@@ -25,6 +25,11 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments["room.schemaLocation"] = "$projectDir/schemas"
+            }
+        }
     }
 
     lintOptions {
@@ -113,11 +118,11 @@ dependencies {
     kapt("androidx.hilt:hilt-compiler:1.0.0")
 
     // Room
-    implementation("androidx.room:room-runtime:2.5.0")
-    kapt("androidx.room:room-compiler:2.5.0")
+    implementation("androidx.room:room-runtime:2.5.1")
+    kapt("androidx.room:room-compiler:2.5.1")
 
     // Kotlin Extensions and Coroutines support for Room
-    implementation("androidx.room:room-ktx:2.5.0")
+    implementation("androidx.room:room-ktx:2.5.1")
 
     // Glide
     implementation("com.github.bumptech.glide:glide:4.15.1")

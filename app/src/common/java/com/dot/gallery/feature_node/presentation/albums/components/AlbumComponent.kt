@@ -6,24 +6,31 @@
 package com.dot.gallery.feature_node.presentation.albums.components
 
 import android.graphics.drawable.Drawable
-import androidx.compose.foundation.background
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
+import com.dot.gallery.R
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.ui.theme.Dimens
 import com.dot.gallery.ui.theme.Shapes
@@ -34,41 +41,54 @@ fun AlbumComponent(
     album: Album,
     preloadRequestBuilder: RequestBuilder<Drawable>,
     onItemClick: (Album) -> Unit,
+    onTogglePinClick: (Album) -> Unit
 ) {
-    Box(
-        modifier = Modifier
-            .background(
-                color = MaterialTheme.colorScheme.surface,
-            )
-            .padding(horizontal = 8.dp),
+    val showDropDown = remember { mutableStateOf(false) }
+    val pinTitle =
+        if (album.isPinned) stringResource(R.string.unpin) else stringResource(R.string.pin)
+    Column(
+        modifier = Modifier.padding(horizontal = 8.dp),
     ) {
-        Column {
-            AlbumImage(album = album, preloadRequestBuilder, onItemClick)
-            Text(
-                modifier = Modifier
-                    .padding(top = 12.dp)
-                    .padding(horizontal = 16.dp),
-                text = album.label,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            Text(
-                modifier = Modifier
-                    .padding(top = 2.dp, bottom = 16.dp)
-                    .padding(horizontal = 16.dp),
-                text = "${album.count} ${if (album.count == 1.toLong()) "item" else "items"}",
-                style = MaterialTheme.typography.labelMedium
+        AlbumImage(album = album, preloadRequestBuilder, onItemClick) {
+            showDropDown.value = !showDropDown.value
+        }
+        Text(
+            modifier = Modifier
+                .padding(top = 12.dp)
+                .padding(horizontal = 16.dp),
+            text = album.label,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        Text(
+            modifier = Modifier
+                .padding(top = 2.dp, bottom = 16.dp)
+                .padding(horizontal = 16.dp),
+            text = pluralStringResource(id = R.plurals.item_count, count = album.count.toInt(), album.count),
+            style = MaterialTheme.typography.labelMedium
+        )
+        DropdownMenu(
+            expanded = showDropDown.value,
+            offset = DpOffset(16.dp, (-64).dp),
+            onDismissRequest = { showDropDown.value = false }) {
+            DropdownMenuItem(
+                text = { Text(text = pinTitle) },
+                onClick = {
+                    onTogglePinClick(album)
+                    showDropDown.value = false
+                }
             )
         }
     }
 }
 
-@OptIn(ExperimentalGlideComposeApi::class)
+@OptIn(ExperimentalGlideComposeApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun AlbumImage(
     album: Album,
     preloadRequestBuilder: RequestBuilder<Drawable>,
-    onItemClick: (Album) -> Unit
+    onItemClick: (Album) -> Unit,
+    onItemLongClick: (Album) -> Unit
 ) {
     GlideImage(
         modifier = Modifier
@@ -80,9 +100,10 @@ fun AlbumImage(
                 shape = Shapes.large
             )
             .clip(Shapes.large)
-            .clickable {
-                onItemClick(album)
-            },
+            .combinedClickable(
+                onClick = { onItemClick(album) },
+                onLongClick = { onItemLongClick(album) }
+            ),
         model = File(album.pathToThumbnail),
         contentDescription = album.label,
         contentScale = ContentScale.Crop,

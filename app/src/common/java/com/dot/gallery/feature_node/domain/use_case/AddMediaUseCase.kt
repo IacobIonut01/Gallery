@@ -17,8 +17,9 @@ class AddMediaUseCase(
     suspend operator fun invoke(media: Media) {
         if (media.path.isBlank())
             throw InvalidMediaException("${media.label} cannot be validated!")
+        /*TODO
         repository.insertMedia(media) { path, uri ->
-            /* TODO */
         }
+         */
     }
 }

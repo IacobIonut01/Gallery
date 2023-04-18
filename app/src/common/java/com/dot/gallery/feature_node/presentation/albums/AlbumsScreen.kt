@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -74,9 +76,19 @@ fun AlbumsScreen(
     val state by rememberSaveable {
         viewModel.albumsState
     }
-    val preloadingData = rememberGlidePreloadingData(
+    val pinnedState by rememberSaveable {
+        viewModel.pinnedAlbumState
+    }
+    val preloadingDataNonPinned = rememberGlidePreloadingData(
         data = state.albums,
-        preloadImageSize = Size(50f, 50f)
+        preloadImageSize = Size(200f, 200f)
+    ) { item: Album, requestBuilder: RequestBuilder<Drawable> ->
+        requestBuilder.load(item.pathToThumbnail)
+            .signature(MediaStoreSignature(null, item.timestamp, 0))
+    }
+    val preloadingDataPinned = rememberGlidePreloadingData(
+        data = pinnedState.albums,
+        preloadImageSize = Size(200f, 200f)
     ) { item: Album, requestBuilder: RequestBuilder<Drawable> ->
         requestBuilder.load(item.pathToThumbnail)
             .signature(MediaStoreSignature(null, item.timestamp, 0))
@@ -128,6 +140,13 @@ fun AlbumsScreen(
         }
     }
 
+    val onAlbumClick: (Album) -> Unit = { album ->
+        navController.navigate(Screen.AlbumViewScreen.route + "?albumId=${album.id}&albumName=${album.label}")
+    }
+    val onAlbumLongClick: (Album) -> Unit = { album ->
+        viewModel.toggleAlbumPin(album, !album.isPinned)
+    }
+
     LaunchedEffect(state.albums) {
         val filterOption = filterOptions.first { it.selected }
         filterOption.onClick(filterOption.mediaOrder)
@@ -158,68 +177,99 @@ fun AlbumsScreen(
                 bottom = paddingValues.calculateBottomPadding() + 16.dp
             ),
             verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            content = {
-                item(
-                    span = { GridItemSpan(maxLineSpan) }
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            item(
+                span = { GridItemSpan(maxLineSpan) }
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 8.dp, vertical = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                    Button(
+                        modifier = Modifier.weight(1f),
+                        onClick = {
+                            navController.navigate(Screen.TrashedScreen.route)
+                        },
+                        colors = ButtonDefaults.filledTonalButtonColors()
                     ) {
-                        Button(
-                            modifier = Modifier.weight(1f),
-                            onClick = {
-                                navController.navigate(Screen.TrashedScreen.route)
-                            },
-                            colors = ButtonDefaults.filledTonalButtonColors()
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.DeleteOutline,
-                                contentDescription = stringResource(id = R.string.trash)
-                            )
-                            Spacer(modifier = Modifier.size(8.dp))
-                            Text(
-                                text = stringResource(id = R.string.trash)
-                            )
-                        }
-                        Spacer(modifier = Modifier.size(16.dp))
-                        Button(
-                            modifier = Modifier.weight(1f),
-                            onClick = {
-                                navController.navigate(Screen.FavoriteScreen.route)
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.tertiary,
-                                contentColor = MaterialTheme.colorScheme.onTertiary
-                            )
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.FavoriteBorder,
-                                contentDescription = stringResource(id = R.string.favorites)
-                            )
-                            Spacer(modifier = Modifier.size(8.dp))
-                            Text(
-                                text = stringResource(id = R.string.favorites)
-                            )
-                        }
+                        Icon(
+                            imageVector = Icons.Outlined.DeleteOutline,
+                            contentDescription = stringResource(id = R.string.trash)
+                        )
+                        Spacer(modifier = Modifier.size(8.dp))
+                        Text(
+                            text = stringResource(id = R.string.trash)
+                        )
                     }
-                }
-                item(
-                    span = { GridItemSpan(maxLineSpan) }
-                ) {
-                    FilterButton(filterOptions = filterOptions.toTypedArray(), settings = settings)
-                }
-                items(state.albums.size) { index ->
-                    val (album, preloadRequestBuilder) = preloadingData[index]
-                    AlbumComponent(album = album, preloadRequestBuilder) {
-                        navController.navigate(Screen.AlbumViewScreen.route + "?albumId=${album.id}&albumName=${album.label}")
+                    Spacer(modifier = Modifier.size(16.dp))
+                    Button(
+                        modifier = Modifier.weight(1f),
+                        onClick = {
+                            navController.navigate(Screen.FavoriteScreen.route)
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.tertiary,
+                            contentColor = MaterialTheme.colorScheme.onTertiary
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.FavoriteBorder,
+                            contentDescription = stringResource(id = R.string.favorites)
+                        )
+                        Spacer(modifier = Modifier.size(8.dp))
+                        Text(
+                            text = stringResource(id = R.string.favorites)
+                        )
                     }
                 }
             }
-        )
+            if (pinnedState.albums.isNotEmpty()) {
+                item(
+                    span = { GridItemSpan(maxLineSpan) }
+                ) {
+                    Column {
+                        Text(
+                            modifier = Modifier
+                                .padding(horizontal = 8.dp)
+                                .padding(bottom = 24.dp),
+                            text = stringResource(R.string.pinned_albums_title),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        LazyRow(
+                            modifier = Modifier.wrapContentHeight(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(pinnedState.albums.size) { index ->
+                                val (album, preloadRequestBuilder) = preloadingDataPinned[index]
+                                AlbumComponent(
+                                    album = album,
+                                    preloadRequestBuilder = preloadRequestBuilder,
+                                    onItemClick = onAlbumClick,
+                                    onTogglePinClick = onAlbumLongClick
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            item(
+                span = { GridItemSpan(maxLineSpan) }
+            ) {
+                FilterButton(filterOptions = filterOptions.toTypedArray(), settings = settings)
+            }
+            items(state.albums.size) { index ->
+                val (album, preloadRequestBuilder) = preloadingDataNonPinned[index]
+                AlbumComponent(
+                    album = album,
+                    preloadRequestBuilder = preloadRequestBuilder,
+                    onItemClick = onAlbumClick,
+                    onTogglePinClick = onAlbumLongClick
+                )
+            }
+        }
         /** Error State Handling Block **/
         AnimatedVisibility(
             visible = state.isLoading,
@@ -229,11 +279,10 @@ fun AlbumsScreen(
             LoadingMedia(modifier = Modifier.fillMaxSize())
         }
         if (!state.isLoading) {
-            if (state.albums.isEmpty()) {
-                EmptyMedia(modifier = Modifier.fillMaxSize())
-            }
             if (state.error.isNotEmpty()) {
                 Error(errorMessage = state.error)
+            } else if (state.albums.isEmpty()) {
+                EmptyMedia(modifier = Modifier.fillMaxSize())
             }
         }
         /** ************ **/

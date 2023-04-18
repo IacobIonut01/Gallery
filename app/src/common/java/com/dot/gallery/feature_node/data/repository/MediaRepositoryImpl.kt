@@ -14,6 +14,7 @@ import android.os.Bundle
 import android.provider.MediaStore
 import com.dot.gallery.core.Resource
 import com.dot.gallery.core.contentFlowObserver
+import com.dot.gallery.feature_node.data.data_source.InternalDatabase
 import com.dot.gallery.feature_node.data.data_source.Query
 import com.dot.gallery.feature_node.data.data_types.findMedia
 import com.dot.gallery.feature_node.data.data_types.getAlbums
@@ -23,6 +24,7 @@ import com.dot.gallery.feature_node.data.data_types.getMediaFavorite
 import com.dot.gallery.feature_node.data.data_types.getMediaTrashed
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.model.PinnedAlbum
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.domain.util.MediaOrder
 import com.dot.gallery.feature_node.domain.util.OrderType
@@ -30,7 +32,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 abstract class MediaRepositoryImpl(
-    private val context: Context
+    private val context: Context,
+    private val database: InternalDatabase
 ) : MediaRepository {
     private val contentResolver by lazy { context.contentResolver }
 
@@ -47,7 +50,19 @@ abstract class MediaRepositoryImpl(
         contentResolver.retrieveMedia { it.getMediaTrashed(mediaOrder = mediaOrder) }
 
     override fun getAlbums(mediaOrder: MediaOrder): Flow<Resource<List<Album>>> =
-        contentResolver.retrieveAlbums { it.getAlbums(mediaOrder = mediaOrder) }
+        contentResolver.retrieveAlbums {
+            it.getAlbums(mediaOrder = mediaOrder).toMutableList().apply {
+                replaceAll { album ->
+                    album.copy(isPinned = database.getPinnedDao().albumIsPinned(album.id))
+                }
+            }
+        }
+
+    override suspend fun insertPinnedAlbum(pinnedAlbum: PinnedAlbum) =
+        database.getPinnedDao().insertPinnedAlbum(pinnedAlbum)
+
+    override suspend fun removePinnedAlbum(pinnedAlbum: PinnedAlbum) =
+        database.getPinnedDao().removePinnedAlbum(pinnedAlbum)
 
     override suspend fun insertMedia(
         media: Media,
@@ -126,6 +141,7 @@ abstract class MediaRepositoryImpl(
                     Resource.Error(message = e.localizedMessage ?: "An error occurred")
                 }
             }
+
         private fun ContentResolver.retrieveAlbums(dataBody: suspend (ContentResolver) -> List<Album>) =
             contentFlowObserver(URIs).map {
                 try {
