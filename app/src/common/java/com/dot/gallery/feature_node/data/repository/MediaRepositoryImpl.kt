@@ -113,7 +113,19 @@ abstract class MediaRepositoryImpl(
             if (media == null) {
                 Resource.Error(message = "Media could not be opened")
             } else {
-                Resource.Success(data = listOf(media))
+                val query = Query.MediaQuery().copy(
+                    bundle = Bundle().apply {
+                        putString(
+                            ContentResolver.QUERY_ARG_SQL_SELECTION,
+                            MediaStore.MediaColumns.BUCKET_ID + "= ?"
+                        )
+                        putStringArray(
+                            ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS,
+                            arrayOf(media.albumID.toString())
+                        )
+                    }
+                )
+                Resource.Success(data = it.getMedia(query))
             }
         }
 
