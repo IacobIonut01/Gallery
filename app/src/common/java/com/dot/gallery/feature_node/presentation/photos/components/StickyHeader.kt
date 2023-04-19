@@ -11,21 +11,31 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 @Composable
 fun StickyHeader(
-    date: String
+    date: String,
+    showAsBig: Boolean = false
 ) {
+    val smallModifier = Modifier
+        .padding(
+            horizontal = 16.dp,
+            vertical = 24.dp
+        )
+        .fillMaxWidth()
+    val bigModifier = Modifier
+        .padding(horizontal = 16.dp)
+        .padding(top = 80.dp)
+    val bigTextStyle = MaterialTheme.typography.headlineMedium.copy(
+        fontWeight = FontWeight.Bold
+    )
+    val smallTextStyle = MaterialTheme.typography.titleMedium
     Text(
         text = date,
-        style = MaterialTheme.typography.titleMedium,
+        style = if (showAsBig) bigTextStyle else smallTextStyle,
         color = MaterialTheme.colorScheme.onSurface,
-        modifier = Modifier
-            .padding(
-                horizontal = 16.dp,
-                vertical = 24.dp
-            )
-            .fillMaxWidth()
+        modifier = if (showAsBig) bigModifier else smallModifier
     )
 }

@@ -89,6 +89,7 @@ import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.feature_node.presentation.util.getDate
 import com.dot.gallery.feature_node.presentation.util.getDateExt
 import com.dot.gallery.feature_node.presentation.util.getDateHeader
+import com.dot.gallery.feature_node.presentation.util.getMonth
 import com.dot.gallery.feature_node.presentation.util.shareMedia
 import com.dot.gallery.ui.theme.Dimens
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -220,12 +221,18 @@ fun PhotosScreen(
             startDate, endDate
         ) else null
         val mappedData = ArrayList<MediaItem>()
+        val monthHeaderList = ArrayList<String>()
         state.media.groupBy {
             it.timestamp.getDate(
                 stringToday = stringToday,
                 stringYesterday = stringYesterday
             )
         }.forEach { (date, data) ->
+            val month = getMonth(date)
+            if (month.isNotEmpty() && !monthHeaderList.contains(month)) {
+                monthHeaderList.add(month)
+                mappedData.add(MediaItem.Header("header_big_$month", month))
+            }
             mappedData.add(MediaItem.Header("header_$date", date))
             for (media in data) {
                 mappedData.add(MediaItem.MediaViewItem.Loaded("media_${media.id}", media))
@@ -462,7 +469,7 @@ fun PhotosScreen(
                         }
                     ) { item ->
                         when (item) {
-                            is MediaItem.Header -> StickyHeader(date = item.text)
+                            is MediaItem.Header -> StickyHeader(date = item.text, item.key.contains("big"))
                             is MediaItem.MediaViewItem -> {
                                 val (media, preloadRequestBuilder) = preloadingData[state.media.indexOf(
                                     item.media

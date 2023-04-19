@@ -7,6 +7,8 @@ package com.dot.gallery.feature_node.presentation.util
 
 import android.text.format.DateFormat
 import com.dot.gallery.core.Constants
+import java.text.ParseException
+import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 import java.util.concurrent.TimeUnit
@@ -31,6 +33,24 @@ fun getDateHeader(startDate: DateExt, endDate: DateExt): String {
             "${startDate.month} ${startDate.day} - ${endDate.month} ${endDate.day}, ${startDate.year}"
     } else {
         "${startDate.month} ${startDate.day}, ${startDate.year} - ${endDate.month} ${endDate.day}, ${endDate.year}"
+    }
+}
+
+fun getMonth(date: String): String {
+    return try {
+        val dateFormatExtended = SimpleDateFormat(Constants.EXTENDED_DATE_FORMAT, Locale.US).parse(date)
+        val cal = Calendar.getInstance(Locale.US).apply { timeInMillis = dateFormatExtended!!.time }
+        val month = cal.getDisplayName(Calendar.MONTH, Calendar.LONG_FORMAT, Locale.US)!!
+        val year = cal.get(Calendar.YEAR)
+        "$month $year"
+    } catch (e: ParseException) {
+        try {
+            val dateFormat = SimpleDateFormat(Constants.DEFAULT_DATE_FORMAT, Locale.US).parse(date)
+            val cal = Calendar.getInstance(Locale.US).apply { timeInMillis = dateFormat!!.time }
+            cal.getDisplayName(Calendar.MONTH, Calendar.LONG_FORMAT, Locale.US)!!
+        } catch (e: ParseException) {
+            ""
+        }
     }
 }
 
