@@ -129,13 +129,14 @@ fun PhotosScreen(
                 Manifest.permission.READ_EXTERNAL_STORAGE
     )
         }
-    )
+    ) {
+        viewModel.launchInPhotosScreen()
+    }
     /** Trigger viewModel launch after permission is granted */
     var firstStart by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(mediaPermissions) {
         if (firstStart) {
             firstStart = false
-            viewModel.launchInPhotosScreen()
         }
         if (!mediaPermissions.allPermissionsGranted){
             firstStart = true
