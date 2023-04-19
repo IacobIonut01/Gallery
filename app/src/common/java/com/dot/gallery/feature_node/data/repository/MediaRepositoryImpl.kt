@@ -21,6 +21,7 @@ import com.dot.gallery.feature_node.data.data_types.getAlbums
 import com.dot.gallery.feature_node.data.data_types.getMedia
 import com.dot.gallery.feature_node.data.data_types.getMediaByUri
 import com.dot.gallery.feature_node.data.data_types.getMediaFavorite
+import com.dot.gallery.feature_node.data.data_types.getMediaListByUris
 import com.dot.gallery.feature_node.data.data_types.getMediaTrashed
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.Media
@@ -106,7 +107,7 @@ abstract class MediaRepositoryImpl(
             it.getMedia(query)
         }
 
-    override fun getMediaByUri(uriAsString: String): Flow<Resource<List<Media>>> =
+    override fun getMediaByUri(uriAsString: String, isSecure: Boolean): Flow<Resource<List<Media>>> =
         contentResolver.retrieveMediaAsResource {
             val media = it.getMediaByUri(Uri.parse(uriAsString))
             /** return@retrieveMediaAsResource */
@@ -125,7 +126,17 @@ abstract class MediaRepositoryImpl(
                         )
                     }
                 )
-                Resource.Success(data = it.getMedia(query))
+                Resource.Success(data = if (isSecure) listOf(media) else it.getMedia(query))
+            }
+        }
+
+    override fun getMediaListByUris(listOfUris: List<Uri>): Flow<Resource<List<Media>>> =
+        contentResolver.retrieveMediaAsResource {
+            val mediaList = it.getMediaListByUris(listOfUris)
+            if (mediaList.isEmpty()) {
+                Resource.Error(message = "Media could not be opened")
+            } else {
+                Resource.Success(data = mediaList)
             }
         }
 

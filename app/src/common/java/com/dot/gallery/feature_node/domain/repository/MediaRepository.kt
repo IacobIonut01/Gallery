@@ -6,6 +6,7 @@
 package com.dot.gallery.feature_node.domain.repository
 
 import android.media.MediaScannerConnection
+import android.net.Uri
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import com.dot.gallery.core.Resource
@@ -35,7 +36,9 @@ interface MediaRepository {
 
     fun getMediaByAlbumId(albumId: Long): Flow<Resource<List<Media>>>
 
-    fun getMediaByUri(uriAsString: String): Flow<Resource<List<Media>>>
+    fun getMediaByUri(uriAsString: String, isSecure: Boolean): Flow<Resource<List<Media>>>
+
+    fun getMediaListByUris(listOfUris: List<Uri>): Flow<Resource<List<Media>>>
 
     suspend fun toggleFavorite(
         result: ActivityResultLauncher<IntentSenderRequest>,

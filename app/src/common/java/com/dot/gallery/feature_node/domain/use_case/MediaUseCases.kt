@@ -13,6 +13,7 @@ data class MediaUseCases(
     val getMediaFavoriteUseCase: GetMediaFavoriteUseCase,
     val getMediaTrashedUseCase: GetMediaTrashedUseCase,
     val getMediaByUriUseCase: GetMediaByUriUseCase,
+    val getMediaListByUrisUseCase: GetMediaListByUrisUseCase,
     val mediaHandleUseCase: MediaHandleUseCase,
     val insertPinnedAlbumUseCase: InsertPinnedAlbumUseCase,
     val deletePinnedAlbumUseCase: DeletePinnedAlbumUseCase

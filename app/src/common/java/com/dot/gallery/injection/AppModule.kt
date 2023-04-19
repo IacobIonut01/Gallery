@@ -18,6 +18,7 @@ import com.dot.gallery.feature_node.domain.use_case.GetAlbumsUseCase
 import com.dot.gallery.feature_node.domain.use_case.GetMediaByAlbumUseCase
 import com.dot.gallery.feature_node.domain.use_case.GetMediaByUriUseCase
 import com.dot.gallery.feature_node.domain.use_case.GetMediaFavoriteUseCase
+import com.dot.gallery.feature_node.domain.use_case.GetMediaListByUrisUseCase
 import com.dot.gallery.feature_node.domain.use_case.GetMediaTrashedUseCase
 import com.dot.gallery.feature_node.domain.use_case.GetMediaUseCase
 import com.dot.gallery.feature_node.domain.use_case.InsertPinnedAlbumUseCase
@@ -64,6 +65,7 @@ object AppModule {
             getMediaFavoriteUseCase = GetMediaFavoriteUseCase(repository),
             getMediaTrashedUseCase = GetMediaTrashedUseCase(repository),
             getMediaByUriUseCase = GetMediaByUriUseCase(repository),
+            getMediaListByUrisUseCase = GetMediaListByUrisUseCase(repository),
             mediaHandleUseCase = MediaHandleUseCase(repository, settings),
             insertPinnedAlbumUseCase = InsertPinnedAlbumUseCase(repository),
             deletePinnedAlbumUseCase = DeletePinnedAlbumUseCase(repository)

@@ -5,6 +5,7 @@
 
 package com.dot.gallery.feature_node.presentation.standalone
 
+import android.net.Uri
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -34,19 +35,40 @@ class StandaloneViewModel @Inject constructor(
             field = value
         }
 
+    var clipDataUriList: List<Uri> = emptyList()
+        set(value) {
+            if (value.isNotEmpty() && value != clipDataUriList) {
+                viewModelScope.launch {
+                    getMedia(standaloneUri, clipDataUriList)
+                }
+            }
+            field = value
+        }
+
     init {
-        getMedia(standaloneUri = standaloneUri)
+        getMedia()
     }
 
-    private fun getMedia(standaloneUri: String? = null) {
+    private fun getMedia(standaloneUri: String? = null, clipDataUriList: List<Uri> = emptyList()) {
         if (standaloneUri != null) {
-            mediaUseCases.getMediaByUriUseCase(standaloneUri).map { result ->
+            mediaUseCases.getMediaByUriUseCase(standaloneUri, clipDataUriList.isNotEmpty()).map { result ->
                 photoState.value = MediaState(
-                    error = if (result is Resource.Error) result.message ?: "An error occurred" else "",
+                    error = if (result is Resource.Error) result.message
+                        ?: "An error occurred" else "",
                     isLoading = result is Resource.Loading,
                     media = result.data ?: emptyList()
                 )
             }.launchIn(viewModelScope)
+            if (clipDataUriList.isNotEmpty()) {
+                mediaUseCases.getMediaListByUrisUseCase(clipDataUriList).map { result ->
+                    val data = result.data
+                    if (data != null) {
+                        photoState.value = photoState.value.copy(
+                            media = photoState.value.media.toMutableList().apply { addAll(data) }
+                        )
+                    }
+                }.launchIn(viewModelScope)
+            }
         }
     }
 

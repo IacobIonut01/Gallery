@@ -47,3 +47,36 @@ suspend fun ContentResolver.getMediaByUri(uri: Uri): Media? {
         return@withContext media
     }
 }
+
+suspend fun ContentResolver.getMediaListByUris(list: List<Uri>): List<Media> {
+    return withContext(Dispatchers.IO) {
+        val mediaList = ArrayList<Media>()
+        val mediaQuery = MediaQuery().copy(
+            bundle = Bundle().apply {
+                putString(
+                    ContentResolver.QUERY_ARG_SQL_SELECTION,
+                    MediaStore.MediaColumns.DATA + "=?"
+                )
+                putStringArray(
+                    ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS,
+                    list.map { it.toString() }.toTypedArray()
+                )
+            }
+        )
+        with(query(mediaQuery)) {
+            moveToFirst()
+            while (!isAfterLast) {
+                try {
+                    mediaList.add(getMediaFromCursor())
+                    break
+                } catch (e: Exception) {
+                    close()
+                    e.printStackTrace()
+                }
+            }
+            moveToNext()
+            close()
+        }
+        mediaList
+    }
+}

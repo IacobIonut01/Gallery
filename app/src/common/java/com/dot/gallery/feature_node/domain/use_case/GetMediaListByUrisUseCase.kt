@@ -5,19 +5,19 @@
 
 package com.dot.gallery.feature_node.domain.use_case
 
+import android.net.Uri
 import com.dot.gallery.core.Resource
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import kotlinx.coroutines.flow.Flow
 
-class GetMediaByUriUseCase(
+class GetMediaListByUrisUseCase(
     private val repository: MediaRepository
 ) {
     operator fun invoke(
-        uriAsString: String,
-        isSecure: Boolean = false
+        listOfUris: List<Uri>
     ): Flow<Resource<List<Media>>> {
-        return repository.getMediaByUri(uriAsString, isSecure)
+        return repository.getMediaListByUris(listOfUris)
     }
 
 }
