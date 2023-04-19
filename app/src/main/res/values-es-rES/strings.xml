@@ -1,29 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Gallery</string>
-    <string name="nav_photos">Photos</string>
-    <string name="nav_albums">Albums</string>
-    <string name="searchbar_title"><![CDATA[Search photos & videos]]></string>
-    <string name="header_today">Today</string>
-    <string name="header_yesterday">Yesterday</string>
-    <string name="share_media">Share</string>
-    <string name="request_permissions">Request permissions</string>
-    <string name="filter">Filter</string>
-    <string name="filter_recent">Recent</string>
-    <string name="filter_nameAZ">Name (A-Z)</string>
-    <string name="filter_nameZA">Name (Z-A)</string>
+    <string name="app_name">Galería</string>
+    <string name="nav_photos">Fotos</string>
+    <string name="nav_albums">Álbumes</string>
+    <string name="searchbar_title"><![CDATA[Buscar fotos y vídeos]]></string>
+    <string name="header_today">Hoy</string>
+    <string name="header_yesterday">Ayer</string>
+    <string name="share_media">Compartir</string>
+    <string name="request_permissions">Solicitar permisos</string>
+    <string name="filter">Filtrar</string>
+    <string name="filter_recent">Reciente</string>
+    <string name="filter_nameAZ">Por nombre (A-Z)</string>
+    <string name="filter_nameZA">Por nombre (Z-A)</string>
     <string name="filter_old">Old</string>
     <string name="selected_s">Selected %s</string>
-    <string name="trash">Trash</string>
-    <string name="pause_video">Pause video</string>
-    <string name="play_video">Play video</string>
-    <string name="favorites">Favorites</string>
-    <string name="no_media_title">Seems empty here</string>
-    <string name="no_media_cd">No media found</string>
+    <string name="trash">Papelera</string>
+    <string name="pause_video">Pausar vídeo</string>
+    <string name="play_video">Reproducir vídeo</string>
+    <string name="favorites">Favoritos</string>
+    <string name="no_media_title">Parece que no hay nada</string>
+    <string name="no_media_cd">No se ha encontrado ningún archivo</string>
     <string name="empty_trash_title">Squeaky Clean</string>
-    <string name="empty_trash_cd">Trash is empty</string>
-    <string name="error_title">Something went wrong :(</string>
-    <string name="error_cd">An error occurred</string>
+    <string name="empty_trash_cd">La papelera está vacía</string>
+    <string name="error_title">Algo salió mal :(</string>
+    <string name="error_cd">Se ha producido un error</string>
     <string name="copy_error">Copy error</string>
     <string name="trash_restore">Restore</string>
     <string name="trash_empty">Empty</string>
@@ -54,4 +54,12 @@
     <string name="settings_trash_summary">Store deleted media for 30 days.\nDeleting media will result in a permanent loss if disabled.</string>
     <string name="settings_about_app_title">About Gallery</string>
     <string name="settings_about_app_summary">Version %s</string>
+    <string name="move_album_to_trash">Move album to trash</string>
+    <string name="pinned_albums_title">Pinned Albums</string>
+    <string name="unpin">Unpin</string>
+    <string name="pin">Pin</string>
+    <plurals name="item_count">
+        <item quantity="one">%s item</item>
+        <item quantity="other">%s items</item>
+    </plurals>
 </resources>
