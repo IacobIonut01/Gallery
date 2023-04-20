@@ -1,1 +1,33 @@
-<p><i>Gallery for Android</i> is a light-weight Media Gallery app for Android made with Jetpack Compose. It supports albums, favorites and more. It also features an integrated video player.</p>
+<p><strong>Gallery&nbsp;</strong>for Android is a light-weight Media Gallery app for Android made with Jetpack Compose. It supports albums, favorites and more. It also features an integrated video player.</p>
+
+<p>&nbsp;</p>
+
+<p><strong>Features</strong></p>
+
+<ul>
+	<li>Media Timeline screen where you can see all the photos videos
+	<ul>
+		<li>The Timeline screen is visible from the Main screen and inside each album</li>
+		<li>Media is separated in groups by date</li>
+	</ul>
+	</li>
+	<li>Multi-Select photos and videos to perform batch operations like
+	<ul>
+		<li>Mark as favorite</li>
+		<li>Move to trash</li>
+		<li>Share</li>
+	</ul>
+	</li>
+	<li>Sort and Pin Albums
+	<ul>
+		<li>Sort&nbsp; by Date, Label</li>
+		<li>Pin on top most loved albums</li>
+	</ul>
+	</li>
+	<li>Quickly Access all the Favorites&nbsp;</li>
+	<li>Manage the Trashed Items from a single screen</li>
+	<li>Custom Video Player powered by <em>Media3 ExoPlayer</em></li>
+	<li>Modern <strong>Material 3</strong> Design Guidelines powered by <strong>Jetpack Compose</strong></li>
+	<li><strong><u>Open Source</u></strong></li>
+	<li>Active Development</li>
+</ul>

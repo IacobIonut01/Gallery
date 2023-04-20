@@ -1,0 +1,14 @@
+<p><strong>What&#39;s Changed</strong></p>
+
+<ul>
+	<li>Added Settings Screen</li>
+	<li>Added Translations for&nbsp;English, Chinese-Simplified, Galician, Romanian, Spanish and Turkish</li>
+	<li>Bug Fixes</li>
+	<li>Improved App Bar</li>
+	<li>Added support for launching Gallery from Camera app</li>
+	<li>Added Album pinning feature</li>
+	<li>Animate <strong>Photos&nbsp;</strong>Screen</li>
+	<li>Improve media grouping in <strong>Photos&nbsp;</strong>Screen</li>
+</ul>
+
+<p>**Full Changelog**: <a href="https://github.com/IacobIonut01/Gallery/releases/tag/v1.0.2">Github</a></p>
