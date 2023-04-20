@@ -1,0 +1,55 @@
+//
+// Copyright (C) 2022 The LineageOS Project
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+
+android_app {
+    name: "Gallery",
+
+    srcs: ["src/main/java/**/*.kt"],
+    resource_dirs: ["src/main/res"],
+    manifest: "src/main/AndroidManifest.xml",
+
+    sdk_version: "current",
+    product_specific: true,
+
+    static_libs: [
+        // DO NOT EDIT THIS SECTION MANUALLY
+        "Gallery_androidx.compose.ui_ui-tooling",
+        "Gallery_androidx.compose.ui_ui-test-manifest",
+        "Gallery_androidx.core_core-ktx",
+        "Gallery_androidx.appcompat_appcompat",
+        "Gallery_androidx.lifecycle_lifecycle-runtime-ktx",
+        "Gallery_androidx.navigation_navigation-runtime-ktx",
+        "Gallery_androidx.lifecycle_lifecycle-livedata-ktx",
+        "Gallery_androidx.activity_activity-compose",
+        // SKIPPED "Gallery_androidx.compose_compose-bom"
+        "Gallery_androidx.compose.ui_ui",
+        "Gallery_androidx.compose.ui_ui-graphics",
+        "Gallery_androidx.compose.ui_ui-tooling-preview",
+        "Gallery_androidx.compose.material_material-icons-extended",
+        "Gallery_androidx.compose.material3_material3",
+        "Gallery_androidx.compose.material3_material3-window-size-class",
+        "Gallery_com.google.accompanist_accompanist-systemuicontroller",
+        "Gallery_com.google.accompanist_accompanist-permissions",
+        "Gallery_com.google.accompanist_accompanist-navigation-animation",
+        "kotlinx-coroutines-core",
+        "kotlinx-coroutines-android",
+        "Gallery_androidx.hilt_hilt-navigation-compose",
+        "Gallery_com.google.dagger_hilt-android",
+        "Gallery_androidx.room_room-runtime",
+        "Gallery_androidx.room_room-ktx",
+        "Gallery_com.github.bumptech.glide_glide",
+        "Gallery_com.github.bumptech.glide_compose",
+        "Gallery_com.github.qoqa_glide-svg",
+        "Gallery_androidx.media3_media3-exoplayer",
+        "Gallery_androidx.media3_media3-ui",
+        "Gallery_androidx.exifinterface_exifinterface",
+        "Gallery_androidx.security_security-crypto",
+    ],
+
+    optimize: {
+        proguard_flags_files: ["proguard-rules.pro"],
+    },
+}
