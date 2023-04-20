@@ -3,6 +3,10 @@
 [![Crowdin](https://badges.crowdin.net/gallery-compose/localized.svg)](https://crowdin.com/project/gallery-compose)
 [![IzzyOnDroid](https://img.shields.io/endpoint?url=https://apt.izzysoft.de/fdroid/api/v1/shield/com.dot.gallery)](https://apt.izzysoft.de/packages/com.dot.gallery/)
 
+### Support the Project
+PayPal: [Here](https://www.paypal.me/iacobionut01)
+Revolut: [Here](revolut.me/somaldoaca)
+
 ![](./screenshots/preview.png)
 
 ## Main Screen
