@@ -112,8 +112,6 @@ fun ZoomablePagerImage(
             }
 
     ) {
-        val colorFilter: ColorFilter? =
-            if (media.path.endsWith(".svg")) ColorFilter.tint(Color.White) else null
         GlideImage(
             modifier = Modifier
                 .align(Alignment.Center)
@@ -127,7 +125,6 @@ fun ZoomablePagerImage(
                     this.translationY = offsetY
                 },
             model = media.uri,
-            colorFilter = colorFilter,
             contentDescription = media.label
         ) { request ->
             request
