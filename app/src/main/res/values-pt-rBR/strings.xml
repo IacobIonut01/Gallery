@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Gallery</string>
+    <string name="app_name">Galeria</string>
     <string name="nav_photos">Photos</string>
     <string name="nav_albums">Albums</string>
     <string name="searchbar_title"><![CDATA[Search photos & videos]]></string>
@@ -54,4 +54,12 @@
     <string name="settings_trash_summary">Store deleted media for 30 days.\nDeleting media will result in a permanent loss if disabled.</string>
     <string name="settings_about_app_title">About Gallery</string>
     <string name="settings_about_app_summary">Version %s</string>
+    <string name="move_album_to_trash">Move album to trash</string>
+    <string name="pinned_albums_title">Pinned Albums</string>
+    <string name="unpin">Unpin</string>
+    <string name="pin">Pin</string>
+    <plurals name="item_count">
+        <item quantity="one">%s item</item>
+        <item quantity="other">%s items</item>
+    </plurals>
 </resources>

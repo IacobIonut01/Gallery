@@ -54,4 +54,11 @@
     <string name="settings_trash_summary">删除的图片和视频 30 天内将暂存在此处。\n如果禁用，删除操作将无法撤回。</string>
     <string name="settings_about_app_title">关于图库</string>
     <string name="settings_about_app_summary">版本 %s</string>
+    <string name="move_album_to_trash">Move album to trash</string>
+    <string name="pinned_albums_title">Pinned Albums</string>
+    <string name="unpin">Unpin</string>
+    <string name="pin">Pin</string>
+    <plurals name="item_count">
+        <item quantity="other">%s items</item>
+    </plurals>
 </resources>
