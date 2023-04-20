@@ -20,7 +20,7 @@
     <string name="favorites">Favoritos</string>
     <string name="no_media_title">Parece que no hay nada</string>
     <string name="no_media_cd">No se ha encontrado ningún archivo</string>
-    <string name="empty_trash_title">Completamente limpia</string>
+    <string name="empty_trash_title">Completamente limpio</string>
     <string name="empty_trash_cd">La papelera está vacía</string>
     <string name="error_title">Algo salió mal :(</string>
     <string name="error_cd">Se ha producido un error</string>
