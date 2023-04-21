@@ -59,7 +59,7 @@
     <string name="unpin">Sabitlemeyi kaldır</string>
     <string name="pin">Sabitle</string>
     <plurals name="item_count">
-        <item quantity="one">%s item</item>
-        <item quantity="other">%s items</item>
+        <item quantity="one">%s öğe</item>
+        <item quantity="other">%s öğe</item>
     </plurals>
 </resources>
