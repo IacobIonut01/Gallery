@@ -22,7 +22,7 @@
     <string name="no_media_cd">No media found</string>
     <string name="empty_trash_title">Squeaky Clean</string>
     <string name="empty_trash_cd">Il cestino è vuoto</string>
-    <string name="error_title">Something went wrong :(</string>
+    <string name="error_title">Qualcosa è andato storto :(</string>
     <string name="error_cd">Si è verificato un errore</string>
     <string name="copy_error">Copy error</string>
     <string name="trash_restore">Ripristina</string>
@@ -42,8 +42,8 @@
     <string name="mb">MB</string>
     <string name="gb">GB</string>
     <string name="metadata">Metadati</string>
-    <string name="select_all">Select all</string>
-    <string name="unselect_all">Unselect all</string>
+    <string name="select_all">Seleziona tutto</string>
+    <string name="unselect_all">Deseleziona tutto</string>
     <string name="drop_down_cd">Drop down</string>
     <string name="cancel">Annulla</string>
     <string name="back_cd">Back</string>
@@ -54,7 +54,7 @@
     <string name="settings_trash_summary">Store deleted media for 30 days.\nDeleting media will result in a permanent loss if disabled.</string>
     <string name="settings_about_app_title">About Gallery</string>
     <string name="settings_about_app_summary">Versione %s</string>
-    <string name="move_album_to_trash">Move album to trash</string>
+    <string name="move_album_to_trash">Sposta l\'album nel cestino</string>
     <string name="pinned_albums_title">Pinned Albums</string>
     <string name="unpin">Unpin</string>
     <string name="pin">Pin</string>
