@@ -18,6 +18,10 @@ jobs:
         java-version: 17
     - name: Make Gradle executable
       run: chmod +x ./gradlew
+    - name: Load Maps Token
+      env: 
+        MAPS_TOKEN: $
+      run: echo MAPS_TOKEN=\"$MAPS_TOKEN\" > ./api.properties
     - name: Build Compat Release APK
       run: ./gradlew assembleCompatRelease
     - uses: actions/upload-artifact@v3
