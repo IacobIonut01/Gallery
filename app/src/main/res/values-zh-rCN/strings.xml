@@ -59,6 +59,8 @@
     <string name="unpin">取消置顶</string>
     <string name="pin">置顶</string>
     <string name="nav_timeline">Timeline</string>
+    <string name="location">Location</string>
+    <string name="location_cd">Media Location</string>
     <plurals name="item_count">
         <item quantity="other">%s 个项目</item>
     </plurals>
