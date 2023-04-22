@@ -47,7 +47,9 @@ object Constants {
      */
     const val DEFAULT_TOP_BAR_ANIMATION_DURATION = 1000
 
-    private val PERMISSION_COMMON = listOf<String>()
+    private val PERMISSION_COMMON = listOf(
+        Manifest.permission.ACCESS_MEDIA_LOCATION
+    )
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private val PERMISSION_T = PERMISSION_COMMON.toMutableList().apply {
