@@ -5,6 +5,8 @@
 
 package com.dot.gallery.feature_node.presentation.util
 
+import android.os.Parcel
+import android.os.Parcelable
 import android.text.format.DateFormat
 import com.dot.gallery.core.Constants
 import java.text.ParseException
@@ -117,4 +119,32 @@ fun Long.formatMinSec(): String {
     }
 }
 
-data class DateExt(val month: String, val day: Int, val year: Int)
+data class DateExt(val month: String, val day: Int, val year: Int): Parcelable {
+    constructor(parcel: Parcel) : this(
+        parcel.readString().toString(),
+        parcel.readInt(),
+        parcel.readInt()
+    ) {
+    }
+
+    override fun writeToParcel(parcel: Parcel, flags: Int) {
+        parcel.writeString(month)
+        parcel.writeInt(day)
+        parcel.writeInt(year)
+    }
+
+    override fun describeContents(): Int {
+        return 0
+    }
+
+    companion object CREATOR : Parcelable.Creator<DateExt> {
+        override fun createFromParcel(parcel: Parcel): DateExt {
+            return DateExt(parcel)
+        }
+
+        override fun newArray(size: Int): Array<DateExt?> {
+            return arrayOfNulls(size)
+        }
+    }
+
+}

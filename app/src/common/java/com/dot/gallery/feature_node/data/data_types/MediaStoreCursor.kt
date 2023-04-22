@@ -42,50 +42,6 @@ suspend fun ContentResolver.query(
     }
 }
 
-suspend fun ContentResolver.getMediaUri(media: Media): Uri? {
-    return withContext(Dispatchers.IO) {
-        val mediaQuery = MediaQuery().copy(
-            bundle = Bundle().apply {
-                if (media.trashed == 1) {
-                    putInt(
-                        MediaStore.QUERY_ARG_MATCH_TRASHED,
-                        MediaStore.MATCH_ONLY
-                    )
-                }
-                if (media.favorite == 1) {
-                    putInt(
-                        MediaStore.QUERY_ARG_MATCH_FAVORITE,
-                        MediaStore.MATCH_ONLY
-                    )
-                }
-                putString(
-                    ContentResolver.QUERY_ARG_SQL_SELECTION,
-                    MediaStore.MediaColumns.DATA + "= ?"
-                )
-                putStringArray(
-                    ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS,
-                    arrayOf(media.path)
-                )
-            }
-        )
-        val cursor = query(mediaQuery)
-        val uri = if (cursor.moveToFirst()) {
-            val isImage =
-                cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.MIME_TYPE))
-                    .contains("image/")
-            val contentUri =
-                if (isImage) MediaStore.Images.Media.EXTERNAL_CONTENT_URI else MediaStore.Video.Media.EXTERNAL_CONTENT_URI
-            ContentUris.withAppendedId(
-                contentUri,
-                cursor.getLong(cursor.getColumnIndexOrThrow(mediaQuery.projection.first()))
-            )
-        } else null
-        cursor.close()
-        return@withContext uri
-    }
-}
-
-
 @Throws(Exception::class)
 fun Cursor.getMediaFromCursor(): Media {
     val id: Long =

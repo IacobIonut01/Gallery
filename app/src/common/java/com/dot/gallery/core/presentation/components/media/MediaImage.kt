@@ -25,6 +25,7 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,7 +35,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import com.bumptech.glide.Priority
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
@@ -50,9 +50,15 @@ fun MediaImage(
     media: Media,
     preloadRequestBuilder: RequestBuilder<Drawable>,
     selectionState: MutableState<Boolean>,
+    selectedMedia: SnapshotStateList<Media>,
     isSelected: MutableState<Boolean>,
     modifier: Modifier = Modifier
 ) {
+    if (!selectionState.value) {
+        isSelected.value = false
+    } else {
+        isSelected.value = selectedMedia.find { it.id == media.id } != null
+    }
     val selectedSize by animateDpAsState(
         if (isSelected.value) 12.dp else 0.dp
     )
@@ -79,8 +85,6 @@ fun MediaImage(
             it.thumbnail(preloadRequestBuilder)
                 .signature(MediaStoreSignature(media.mimeType, media.timestamp, media.orientation))
                 .transition(withCrossFade())
-                .override(400)
-                .priority(Priority.HIGH)
         }
 
         AnimatedVisibility(

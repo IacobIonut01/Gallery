@@ -271,19 +271,10 @@ fun AlbumsScreen(
             }
         }
         /** Error State Handling Block **/
-        AnimatedVisibility(
-            visible = state.isLoading,
-            enter = Constants.Animation.enterAnimation,
-            exit = Constants.Animation.exitAnimation,
-        ) {
-            LoadingMedia(modifier = Modifier.fillMaxSize())
-        }
-        if (!state.isLoading) {
-            if (state.error.isNotEmpty()) {
-                Error(errorMessage = state.error)
-            } else if (state.albums.isEmpty()) {
-                EmptyMedia(modifier = Modifier.fillMaxSize())
-            }
+        if (state.error.isNotEmpty()) {
+            Error(errorMessage = state.error)
+        } else if (state.albums.isEmpty()) {
+            EmptyMedia(modifier = Modifier.fillMaxSize())
         }
         /** ************ **/
     }

@@ -27,7 +27,7 @@ import com.dot.gallery.feature_node.presentation.library.LibraryScreen
 import com.dot.gallery.feature_node.presentation.library.favorites.FavoriteScreen
 import com.dot.gallery.feature_node.presentation.library.trashed.TrashedGridScreen
 import com.dot.gallery.feature_node.presentation.mediaview.MediaViewScreen
-import com.dot.gallery.feature_node.presentation.photos.PhotosScreen
+import com.dot.gallery.feature_node.presentation.timeline.TimelineScreen
 import com.dot.gallery.feature_node.presentation.MediaViewModel
 import com.dot.gallery.feature_node.presentation.settings.SettingsScreen
 import com.dot.gallery.feature_node.presentation.util.BottomNavItem
@@ -52,16 +52,16 @@ fun NavigationComp(
     }
     AnimatedNavHost(
         navController = navController,
-        startDestination = Screen.PhotosScreen.route
+        startDestination = Screen.TimelineScreen.route
     ) {
         composable(
-            route = Screen.PhotosScreen.route,
+            route = Screen.TimelineScreen.route,
             enterTransition = { Constants.Animation.navigateInAnimation },
             exitTransition = { Constants.Animation.navigateUpAnimation },
             popEnterTransition = { Constants.Animation.navigateInAnimation },
             popExitTransition = { Constants.Animation.navigateUpAnimation }
         ) {
-            PhotosScreen(
+            TimelineScreen(
                 navController = navController,
                 paddingValues = paddingValues,
                 viewModel = hiltViewModel<MediaViewModel>().apply(MediaViewModel::launchInPhotosScreen)
@@ -139,7 +139,7 @@ fun NavigationComp(
             val argumentAlbumName = backStackEntry.arguments?.getString("albumName") ?: stringResource(id = R.string.app_name)
             val argumentAlbumId = backStackEntry.arguments?.getLong("albumId") ?: -1
             val viewModel: MediaViewModel = hiltViewModel<MediaViewModel>().apply { albumId = argumentAlbumId }
-            PhotosScreen(
+            TimelineScreen(
                 navController = navController,
                 paddingValues = paddingValues,
                 albumId = argumentAlbumId,
@@ -168,7 +168,7 @@ fun NavigationComp(
             val mediaId: Long = backStackEntry.arguments?.getLong("mediaId") ?: -1
             val albumId: Long = backStackEntry.arguments?.getLong("albumId") ?: -1
             val entryName =
-                if (albumId == -1L) Screen.PhotosScreen.route else Screen.AlbumViewScreen.route
+                if (albumId == -1L) Screen.TimelineScreen.route else Screen.AlbumViewScreen.route
             val parentEntry = remember(backStackEntry) {
                 navController.getBackStackEntry(entryName)
             }
@@ -202,7 +202,7 @@ fun NavigationComp(
             val entryName = when (target) {
                 TARGET_FAVORITES -> Screen.FavoriteScreen.route
                 TARGET_TRASH -> Screen.TrashedScreen.route
-                else -> Screen.PhotosScreen.route
+                else -> Screen.TimelineScreen.route
             }
             val parentEntry = remember(backStackEntry) {
                 navController.getBackStackEntry(entryName)

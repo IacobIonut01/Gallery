@@ -10,8 +10,8 @@ import android.content.Intent
 import android.provider.MediaStore
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
+import androidx.core.app.ActivityOptionsCompat
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
-import com.dot.gallery.feature_node.data.data_types.getMediaUri
 import com.dot.gallery.feature_node.domain.model.Media
 
 class MediaRepositoryCompatImpl(
@@ -25,15 +25,8 @@ class MediaRepositoryCompatImpl(
         mediaList: List<Media>,
         favorite: Boolean
     ) {
-        val intentSender = MediaStore.createFavoriteRequest(
-            contentResolver,
-            mediaList.map {
-                contentResolver.getMediaUri(it)
-            },
-            favorite
-        )
+        val intentSender = MediaStore.createFavoriteRequest(contentResolver, mediaList.map { it.uri }, favorite).intentSender
         val senderRequest: IntentSenderRequest = IntentSenderRequest.Builder(intentSender)
-            .setFillInIntent(null)
             .setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION, 0)
             .build()
         result.launch(senderRequest)
@@ -44,31 +37,19 @@ class MediaRepositoryCompatImpl(
         mediaList: List<Media>,
         trash: Boolean
     ) {
-        val intentSender = MediaStore.createTrashRequest(
-            contentResolver,
-            mediaList.map {
-                contentResolver.getMediaUri(it)
-            },
-            trash
-        ).intentSender
+        val intentSender = MediaStore.createTrashRequest(contentResolver, mediaList.map { it.uri }, trash).intentSender
         val senderRequest: IntentSenderRequest = IntentSenderRequest.Builder(intentSender)
-            .setFillInIntent(null)
             .setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION, 0)
             .build()
-        result.launch(senderRequest)
+        result.launch(senderRequest, ActivityOptionsCompat.makeTaskLaunchBehind())
     }
 
     override suspend fun deleteMedia(
         result: ActivityResultLauncher<IntentSenderRequest>,
         mediaList: List<Media>
     ) {
-        val intentSender = MediaStore.createDeleteRequest(
-            contentResolver,
-            mediaList.map {
-                contentResolver.getMediaUri(it)
-            }).intentSender
+        val intentSender = MediaStore.createDeleteRequest(contentResolver, mediaList.map { it.uri }).intentSender
         val senderRequest: IntentSenderRequest = IntentSenderRequest.Builder(intentSender)
-            .setFillInIntent(null)
             .setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION, 0)
             .build()
         result.launch(senderRequest)

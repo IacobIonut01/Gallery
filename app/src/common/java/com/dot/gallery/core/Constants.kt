@@ -5,6 +5,9 @@
 
 package com.dot.gallery.core
 
+import android.Manifest
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
@@ -35,14 +38,39 @@ object Constants {
     const val DEFAULT_LOW_VELOCITY_SWIPE_DURATION = 150
 
     /**
-     * Smooth enough at 600ms
+     * Smooth enough at 300ms
      */
-    const val DEFAULT_NAVIGATION_ANIMATION_DURATION = 400
+    const val DEFAULT_NAVIGATION_ANIMATION_DURATION = 300
 
     /**
      * Syncs with status bar fade in/out
      */
     const val DEFAULT_TOP_BAR_ANIMATION_DURATION = 1000
+
+    private val PERMISSION_COMMON = listOf<String>()
+
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    private val PERMISSION_T = PERMISSION_COMMON.toMutableList().apply {
+        addAll(
+            listOf(
+                Manifest.permission.READ_MEDIA_IMAGES,
+                Manifest.permission.READ_MEDIA_VIDEO
+            )
+        )
+    }
+
+    private val PERMISSION_OLD =
+        PERMISSION_COMMON.toMutableList().apply {
+            addAll(
+                listOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+            )
+        }
+
+    val PERMISSIONS = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        PERMISSION_T
+    } else {
+        PERMISSION_OLD
+    }
 
 
     /**

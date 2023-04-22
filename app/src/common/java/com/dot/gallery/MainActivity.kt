@@ -63,8 +63,8 @@ class MainActivity : ComponentActivity() {
 
         val bottomNavItems = listOf(
             BottomNavItem(
-                name = getString(R.string.nav_photos),
-                route = Screen.PhotosScreen.route,
+                name = getString(R.string.nav_timeline),
+                route = Screen.TimelineScreen.route,
                 icon = Icons.Outlined.Photo,
             ),
             BottomNavItem(

@@ -13,7 +13,11 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.lazy.grid.LazyGridItemScope
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
@@ -26,15 +30,17 @@ import com.dot.gallery.ui.theme.Shapes
 fun LazyGridItemScope.MediaComponent(
     media: Media,
     selectionState: MutableState<Boolean>,
+    selectedMedia: SnapshotStateList<Media>,
     preloadRequestBuilder: RequestBuilder<Drawable>,
     onItemClick: (Media) -> Unit,
     onItemLongClick: (Media) -> Unit,
-    isSelected: MutableState<Boolean>,
 ) {
+    val isSelected = remember { mutableStateOf(false) }
     MediaImage(
         media = media,
         preloadRequestBuilder = preloadRequestBuilder,
         selectionState = selectionState,
+        selectedMedia = selectedMedia,
         isSelected = isSelected,
         modifier = Modifier
             .border(
@@ -48,8 +54,18 @@ fun LazyGridItemScope.MediaComponent(
             )
             .animateItemPlacement()
             .combinedClickable(
-                onClick = { onItemClick(media) },
-                onLongClick = { onItemLongClick(media) },
+                onClick = {
+                    onItemClick(media)
+                    if (selectionState.value) {
+                        isSelected.value = !isSelected.value
+                    }
+                },
+                onLongClick = {
+                    onItemLongClick(media)
+                    if (selectionState.value) {
+                        isSelected.value = !isSelected.value
+                    }
+                },
             )
     )
 }

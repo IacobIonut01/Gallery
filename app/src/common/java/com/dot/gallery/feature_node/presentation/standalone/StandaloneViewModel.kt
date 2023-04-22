@@ -55,7 +55,6 @@ class StandaloneViewModel @Inject constructor(
                 photoState.value = MediaState(
                     error = if (result is Resource.Error) result.message
                         ?: "An error occurred" else "",
-                    isLoading = result is Resource.Loading,
                     media = result.data ?: emptyList()
                 )
             }.launchIn(viewModelScope)

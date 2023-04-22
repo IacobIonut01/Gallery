@@ -78,17 +78,8 @@ class AlbumsViewModel @Inject constructor(
             // Create a copy of the result Data and remove pinned Albums
             val albumData = ArrayList(data).apply { removeAll(pinnedData.toSet()) }
             val error = if (result is Resource.Error) result.message ?: "An error occurred" else ""
-            val isLoading = result is Resource.Loading
-            albumsState.value = AlbumState(
-                error = error,
-                isLoading = isLoading,
-                albums = albumData
-            )
-            pinnedAlbumState.value = AlbumState(
-                error = error,
-                isLoading = isLoading,
-                albums = pinnedData
-            )
+            albumsState.value = AlbumState(error = error, albums = albumData)
+            pinnedAlbumState.value = AlbumState(error = error, albums = pinnedData)
         }.launchIn(viewModelScope)
     }
 

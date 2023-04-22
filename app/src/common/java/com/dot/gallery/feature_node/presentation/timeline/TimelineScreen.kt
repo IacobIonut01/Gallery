@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package com.dot.gallery.feature_node.presentation.library.favorites
+package com.dot.gallery.feature_node.presentation.timeline
 
 import android.app.Activity
 import androidx.activity.result.ActivityResultLauncher
@@ -17,30 +17,42 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
 import com.dot.gallery.R
+import com.dot.gallery.core.presentation.components.EmptyMedia
 import com.dot.gallery.feature_node.presentation.MediaScreen
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.presentation.MediaViewModel
-import com.dot.gallery.feature_node.presentation.library.favorites.components.EmptyFavorites
-import com.dot.gallery.feature_node.presentation.library.favorites.components.FavoriteNavActions
+import com.dot.gallery.feature_node.presentation.timeline.components.TimelineNavActions
 
 @Composable
-fun FavoriteScreen(
+fun TimelineScreen(
     navController: NavController,
     paddingValues: PaddingValues,
-    albumName: String = stringResource(id = R.string.favorites),
+    albumId: Long = -1L,
+    albumName: String = stringResource(R.string.app_name),
     viewModel: MediaViewModel,
 ) = MediaScreen(
     navController = navController,
     paddingValues = paddingValues,
+    albumId = albumId,
     albumName = albumName,
     viewModel = viewModel,
-    NavActions = { _: MutableState<Boolean>,
+    showMonthlyHeader = true,
+    alwaysGoBack = false,
+    NavActions = {
+                   expandedDropDown: MutableState<Boolean>,
                    selectedMedia: SnapshotStateList<Media>,
                    selectionState: MutableState<Boolean>,
                    result: ActivityResultLauncher<IntentSenderRequest> ->
-        FavoriteNavActions(viewModel, selectedMedia, selectionState, result)
+        TimelineNavActions(
+            viewModel,
+            expandedDropDown,
+            selectedMedia,
+            selectionState,
+            navController,
+            result
+        )
     },
-    EmptyComponent = { EmptyFavorites(Modifier.fillMaxSize()) },
+    EmptyComponent = { EmptyMedia(Modifier.fillMaxSize()) },
     onActivityResult = { selectedMedia, selectionState, result ->
         if (result.resultCode == Activity.RESULT_OK) {
             selectedMedia.clear()
