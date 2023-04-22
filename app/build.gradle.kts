@@ -88,13 +88,23 @@ android {
 
 dependencies {
     val bom = "2023.04.01"
+    val lifecycleVersion = "2.6.1"
+    val material3Version = "1.1.0-beta02"
+    val accompanistVersion = "0.31.0-alpha"
+    val kotlinCoroutinesVersion = "1.6.4"
+    val hiltVersion = "2.45"
+    val roomVersion = "2.5.1"
+    val glideVersion = "4.15.1"
+    val media3Version = "1.0.0"
 
     // Core
     implementation("androidx.core:core-ktx:1.10.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.1")
     implementation("androidx.navigation:navigation-runtime-ktx:2.5.3")
-    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.6.1")
+
+    // Core - Lifecycle
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:$lifecycleVersion")
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:$lifecycleVersion")
 
     // Compose
     implementation("androidx.activity:activity-compose:1.7.0")
@@ -103,46 +113,50 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material:material-icons-extended")
-    implementation("androidx.compose.material3:material3:1.1.0-beta02")
-    implementation("androidx.compose.material3:material3-window-size-class:1.1.0-beta02")
-    implementation("com.google.accompanist:accompanist-systemuicontroller:0.29.2-rc")
-    implementation("com.google.accompanist:accompanist-permissions:0.29.2-rc")
-    implementation("com.google.accompanist:accompanist-navigation-animation:0.29.2-rc")
 
-    // Coroutines
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
+    // Compose - Material3
+    implementation("androidx.compose.material3:material3:$material3Version")
+    implementation("androidx.compose.material3:material3-window-size-class:$material3Version")
+
+    // Compose - Accompanists
+    implementation("com.google.accompanist:accompanist-systemuicontroller:$accompanistVersion")
+    implementation("com.google.accompanist:accompanist-permissions:$accompanistVersion")
+    implementation("com.google.accompanist:accompanist-navigation-animation:$accompanistVersion")
+
+    // Kotlin - Coroutines
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinCoroutinesVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:$kotlinCoroutinesVersion")
 
     // Dagger - Hilt
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0-alpha01")
-    implementation("com.google.dagger:hilt-android:2.45")
-    kapt("com.google.dagger:hilt-android-compiler:2.45")
+    implementation("com.google.dagger:hilt-android:$hiltVersion")
+    kapt("com.google.dagger:hilt-android-compiler:$hiltVersion")
     kapt("androidx.hilt:hilt-compiler:1.0.0")
 
     // Room
-    implementation("androidx.room:room-runtime:2.5.1")
-    kapt("androidx.room:room-compiler:2.5.1")
+    implementation("androidx.room:room-runtime:$roomVersion")
+    kapt("androidx.room:room-compiler:$roomVersion")
 
     // Kotlin Extensions and Coroutines support for Room
-    implementation("androidx.room:room-ktx:2.5.1")
+    implementation("androidx.room:room-ktx:$roomVersion")
 
     // Glide
-    implementation("com.github.bumptech.glide:glide:4.15.1")
+    implementation("com.github.bumptech.glide:glide:$glideVersion")
     implementation("com.github.bumptech.glide:compose:1.0.0-alpha.3")
-    kapt("com.github.bumptech.glide:compiler:4.15.1")
+    kapt("com.github.bumptech.glide:compiler:$glideVersion")
 
     // SVG Support for Glide
     implementation("com.github.qoqa:glide-svg:4.0.2")
 
     // Exo Player
-    implementation("androidx.media3:media3-exoplayer:1.0.0")
-    implementation("androidx.media3:media3-ui:1.0.0")
+    implementation("androidx.media3:media3-exoplayer:$media3Version")
+    implementation("androidx.media3:media3-ui:$media3Version")
 
     // Exifinterface
     implementation("androidx.exifinterface:exifinterface:1.3.6")
 
     // Encrypted SharedPreferences
-    implementation("androidx.security:security-crypto:1.1.0-alpha05")
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
 
     // Tests
     testImplementation("junit:junit:4.13.2")
