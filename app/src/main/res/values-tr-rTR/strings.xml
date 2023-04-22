@@ -59,6 +59,8 @@
     <string name="unpin">Sabitlemeyi kaldır</string>
     <string name="pin">Sabitle</string>
     <string name="nav_timeline">Timeline</string>
+    <string name="location">Location</string>
+    <string name="location_cd">Media Location</string>
     <plurals name="item_count">
         <item quantity="one">%s öğe</item>
         <item quantity="other">%s öğe</item>
