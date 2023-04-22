@@ -1,5 +1,4 @@
 import java.io.FileInputStream
-import java.io.FileNotFoundException
 import java.util.Properties
 
 plugins {
@@ -11,8 +10,8 @@ plugins {
 
 val versionMajor = 1
 val versionMinor = 0
-val versionPatch = 2
-val versionBuild = 16
+val versionPatch = 3
+val versionBuild = 7
 
 android {
     namespace = "com.dot.gallery"
