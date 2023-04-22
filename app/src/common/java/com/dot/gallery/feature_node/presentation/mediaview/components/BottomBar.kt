@@ -84,6 +84,7 @@ import com.dot.gallery.feature_node.presentation.util.ExifMetadata
 import com.dot.gallery.feature_node.presentation.util.MapBoxURL
 import com.dot.gallery.feature_node.presentation.util.getDate
 import com.dot.gallery.feature_node.presentation.util.getExifInterface
+import com.dot.gallery.feature_node.presentation.util.isInternetAvailable
 import com.dot.gallery.feature_node.presentation.util.launchMap
 import com.dot.gallery.feature_node.presentation.util.shareMedia
 import com.dot.gallery.ui.theme.Black40P
@@ -287,7 +288,6 @@ fun BoxScope.MediaViewBottomBar(
                     if (exifMetadata.gpsLatLong != null) {
                         val lat = exifMetadata.gpsLatLong[0]
                         val long = exifMetadata.gpsLatLong[1]
-                        Log.d(Constants.TAG, exifMetadata.gpsLatLong.toString())
                         ListItem(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -310,38 +310,42 @@ fun BoxScope.MediaViewBottomBar(
                                     contentDescription = stringResource(R.string.location_cd)
                                 )
                             },
-                            overlineContent = {},
+                            overlineContent = if (context.isInternetAvailable()) { {} } else null,
                             supportingContent = {
-                                Row(
-                                    modifier = Modifier
-                                        .padding(top = 8.dp)
-                                        .fillMaxWidth()
-                                ) {
-                                    GlideImage(
-                                        model = MapBoxURL(
-                                            latitude = lat,
-                                            longitude = long,
-                                            darkTheme = isSystemInDarkTheme()
-                                        ),
-                                        contentScale = ContentScale.FillWidth,
-                                        contentDescription = "Location Map",
+                                if (context.isInternetAvailable()) {
+                                    Row(
                                         modifier = Modifier
-                                            .size(width = 247.5.dp, height = 165.dp)
-                                            .clip(Shapes.large)
-                                            .border(
-                                                width = 0.5.dp,
-                                                color = MaterialTheme.colorScheme.outline,
-                                                Shapes.large
-                                            )
-                                    )
-                                    Image(
-                                        imageVector = Icons.Outlined.OpenInNew,
-                                        contentDescription = null,
-                                        modifier = Modifier
-                                            .size(24.dp)
-                                            .padding(start = 32.dp),
-                                        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
-                                    )
+                                            .padding(top = 8.dp)
+                                            .fillMaxWidth()
+                                    ) {
+                                        GlideImage(
+                                            model = MapBoxURL(
+                                                latitude = lat,
+                                                longitude = long,
+                                                darkTheme = isSystemInDarkTheme()
+                                            ),
+                                            contentScale = ContentScale.FillWidth,
+                                            contentDescription = stringResource(R.string.location_map_cd),
+                                            modifier = Modifier
+                                                .size(width = 247.5.dp, height = 165.dp)
+                                                .clip(Shapes.large)
+                                                .border(
+                                                    width = 0.5.dp,
+                                                    color = MaterialTheme.colorScheme.outline,
+                                                    Shapes.large
+                                                )
+                                        )
+                                        Image(
+                                            imageVector = Icons.Outlined.OpenInNew,
+                                            contentDescription = null,
+                                            modifier = Modifier
+                                                .size(24.dp)
+                                                .padding(start = 32.dp),
+                                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
+                                        )
+                                    }
+                                } else {
+                                    Text(text = stringResource(R.string.no_internet))
                                 }
                             }
                         )
