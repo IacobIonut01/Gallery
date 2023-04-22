@@ -59,6 +59,8 @@
     <string name="unpin">Defixați</string>
     <string name="pin">Fixați</string>
     <string name="nav_timeline">Cronologie</string>
+    <string name="location">Location</string>
+    <string name="location_cd">Media Location</string>
     <plurals name="item_count">
         <item quantity="one">%s articol</item>
         <item quantity="few">%s items</item>
