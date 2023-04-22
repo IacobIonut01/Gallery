@@ -61,6 +61,8 @@
     <string name="nav_timeline">Timeline</string>
     <string name="location">Location</string>
     <string name="location_cd">Media Location</string>
+    <string name="no_internet">Internet is not available</string>
+    <string name="location_map_cd">Location Map</string>
     <plurals name="item_count">
         <item quantity="one">%s öğe</item>
         <item quantity="other">%s öğe</item>
