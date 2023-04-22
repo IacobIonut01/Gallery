@@ -81,7 +81,7 @@ fun VideoPlayer(
             ), factory = {
             PlayerView(context).apply {
                 useController = false
-                resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIXED_WIDTH
+                resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
 
                 player = exoPlayer
                 layoutParams = FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
