@@ -59,6 +59,8 @@
     <string name="unpin">Unpin</string>
     <string name="pin">Pin</string>
     <string name="nav_timeline">Timeline</string>
+    <string name="location">Location</string>
+    <string name="location_cd">Media Location</string>
     <plurals name="item_count">
         <item quantity="one">%s item</item>
         <item quantity="other">%s items</item>
