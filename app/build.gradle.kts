@@ -1,3 +1,7 @@
+import java.io.FileInputStream
+import java.io.FileNotFoundException
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -37,11 +41,15 @@ android {
     }
 
     buildTypes {
+        getByName("debug") {
+            buildConfigField("String", "MAPS_TOKEN", getApiKey())
+        }
         getByName("release") {
             isMinifyEnabled = true
             isShrinkResources = true
             setProguardFiles(listOf(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"))
             signingConfig = signingConfigs.getByName("debug")
+            buildConfigField("String", "MAPS_TOKEN", getApiKey())
         }
         create("staging") {
             initWith(getByName("release"))
@@ -79,7 +87,7 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = "1.4.2"
     }
-    packagingOptions {
+    packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
@@ -89,7 +97,7 @@ android {
 dependencies {
     val bom = "2023.04.01"
     val lifecycleVersion = "2.6.1"
-    val material3Version = "1.1.0-beta02"
+    val material3Version = "1.1.0-rc01"
     val accompanistVersion = "0.31.0-alpha"
     val kotlinCoroutinesVersion = "1.6.4"
     val hiltVersion = "2.45"
@@ -166,4 +174,16 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+}
+
+fun getApiKey(): String {
+    val fl = rootProject.file("api.properties")
+
+    return try {
+        val properties = Properties()
+        properties.load(FileInputStream(fl))
+        properties.getProperty("MAPS_TOKEN")
+    } catch (e: Exception) {
+        "DEBUG"
+    }
 }

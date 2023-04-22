@@ -14,6 +14,12 @@
     <!-- Required to access videos for SDK 33+ -->
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
 
+    <!-- Required to access GPS Data of Media -->
+    <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION" />
+
+    <!-- Required to download Map Preview for Media -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <!-- Required to access media for SDK < 33 -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />

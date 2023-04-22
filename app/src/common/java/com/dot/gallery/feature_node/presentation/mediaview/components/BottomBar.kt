@@ -5,19 +5,28 @@
 
 package com.dot.gallery.feature_node.presentation.mediaview.components
 
+import android.provider.MediaStore
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -31,10 +40,16 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -52,20 +67,33 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.bumptech.glide.integration.compose.GlideImage
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants
+import com.dot.gallery.core.Constants.EXIF_DATE_FORMAT
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
+import com.dot.gallery.feature_node.presentation.util.ExifMetadata
+import com.dot.gallery.feature_node.presentation.util.MapBoxURL
+import com.dot.gallery.feature_node.presentation.util.getDate
+import com.dot.gallery.feature_node.presentation.util.getExifInterface
+import com.dot.gallery.feature_node.presentation.util.launchMap
 import com.dot.gallery.feature_node.presentation.util.shareMedia
 import com.dot.gallery.ui.theme.Black40P
+import com.dot.gallery.ui.theme.Shapes
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(
+    ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class,
+    ExperimentalGlideComposeApi::class
+)
 @Composable
 fun BoxScope.MediaViewBottomBar(
     showDeleteButton: Boolean = true,
@@ -86,19 +114,12 @@ fun BoxScope.MediaViewBottomBar(
         )
     }
     val scope = rememberCoroutineScope()
-    val scrollState = rememberScrollState()
     var openBottomSheet by rememberSaveable { mutableStateOf(false) }
     val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     LaunchedEffect(currentMedia) {
         favoriteIcon = if (currentMedia != null && currentMedia.favorite == 1)
             Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder
-    }
-    BackHandler(enabled = bottomSheetState.isVisible) {
-        openBottomSheet = false
-        scope.launch {
-            bottomSheetState.hide()
-        }
     }
     AnimatedVisibility(
         visible = showUI,
@@ -172,23 +193,172 @@ fun BoxScope.MediaViewBottomBar(
     }
     if (currentMedia != null) {
         val metadataList = remember(currentMedia) { currentMedia.retrieveMetadata(context) }
+        val exifMetadata = remember(currentMedia) {
+            ExifMetadata(
+                getExifInterface(
+                    context = context,
+                    uri = MediaStore.setRequireOriginal(currentMedia.uri)
+                )
+            )
+        }
         if (openBottomSheet) {
             ModalBottomSheet(
-                onDismissRequest = { openBottomSheet = false },
-                shape = RoundedCornerShape(32.dp),
-                modifier = Modifier.padding(horizontal = 8.dp),
-                sheetState = bottomSheetState
+                onDismissRequest = {
+                    openBottomSheet = false
+                    scope.launch {
+                        bottomSheetState.hide()
+                    }
+                },
+                modifier = Modifier
+                    .absoluteOffset(y = paddingValues.calculateBottomPadding()),
+                sheetState = bottomSheetState,
+                dragHandle = {
+                    Surface(
+                        modifier = Modifier
+                            .padding(vertical = 11.dp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                        shape = MaterialTheme.shapes.extraLarge
+                    ) {
+                        Box(Modifier.size(width = 32.dp, height = 4.dp))
+                    }
+                }
             ) {
-                Column(
-                    modifier = Modifier
-                        .verticalScroll(scrollState)
-                ) {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    Row(
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                    ) {
+                        // Share Component
+                        BottomBarColumn(
+                            currentMedia = currentMedia,
+                            imageVector = Icons.Outlined.Share,
+                            followTheme = true,
+                            title = stringResource(R.string.share)
+                        ) {
+                            context.shareMedia(media = it)
+                        }
+                        // Favorite Component
+                        BottomBarColumn(
+                            currentMedia = currentMedia,
+                            imageVector = favoriteIcon,
+                            followTheme = true,
+                            title = stringResource(id = R.string.favorites)
+                        ) {
+                            result?.let { result ->
+                                scope.launch {
+                                    handler.toggleFavorite(
+                                        result = result,
+                                        arrayListOf(it),
+                                        it.favorite != 1
+                                    )
+                                }
+                            }
+                        }
+                        if (showDeleteButton) {
+                            // Trash Component
+                            BottomBarColumn(
+                                currentMedia = currentMedia,
+                                imageVector = Icons.Outlined.DeleteOutline,
+                                followTheme = true,
+                                title = stringResource(id = R.string.trash)
+                            ) {
+                                result?.let { result ->
+                                    scope.launch {
+                                        handler.trashMedia(result = result, arrayListOf(it))
+                                        onDeleteMedia?.invoke(currentIndex)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Divider(
+                        modifier = Modifier
+                            .padding(horizontal = 24.dp, vertical = 8.dp)
+                    )
+                    Text(
+                        text = currentMedia.timestamp.getDate(EXIF_DATE_FORMAT),
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
+                    )
+                    if (exifMetadata.gpsLatLong != null) {
+                        val lat = exifMetadata.gpsLatLong[0]
+                        val long = exifMetadata.gpsLatLong[1]
+                        Log.d(Constants.TAG, exifMetadata.gpsLatLong.toString())
+                        ListItem(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 8.dp)
+                                .clip(Shapes.medium)
+                                .combinedClickable(
+                                    onClick = {
+                                        context.launchMap(lat, long)
+                                    }
+                                ),
+                            headlineContent = {
+                                Text(
+                                    text = stringResource(R.string.location),
+                                    fontWeight = FontWeight.Medium
+                                )
+                            },
+                            leadingContent = {
+                                Icon(
+                                    imageVector = Icons.Outlined.LocationOn,
+                                    contentDescription = stringResource(R.string.location_cd)
+                                )
+                            },
+                            overlineContent = {},
+                            supportingContent = {
+                                Row(
+                                    modifier = Modifier
+                                        .padding(top = 8.dp)
+                                        .fillMaxWidth()
+                                ) {
+                                    GlideImage(
+                                        model = MapBoxURL(
+                                            latitude = lat,
+                                            longitude = long,
+                                            darkTheme = isSystemInDarkTheme()
+                                        ),
+                                        contentScale = ContentScale.FillWidth,
+                                        contentDescription = "Location Map",
+                                        modifier = Modifier
+                                            .size(width = 247.5.dp, height = 165.dp)
+                                            .clip(Shapes.large)
+                                            .border(
+                                                width = 0.5.dp,
+                                                color = MaterialTheme.colorScheme.outline,
+                                                Shapes.large
+                                            )
+                                    )
+                                    Image(
+                                        imageVector = Icons.Outlined.OpenInNew,
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .size(24.dp)
+                                            .padding(start = 32.dp),
+                                        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
+                                    )
+                                }
+                            }
+                        )
+                    }
                     for (metadata in metadataList) {
                         MediaInfoRow(
                             label = metadata.label,
                             content = metadata.content,
                             icon = metadata.icon
                         )
+                    }
+                    Spacer(modifier = Modifier.height(paddingValues.calculateBottomPadding()))
+                }
+                BackHandler {
+                    openBottomSheet = false
+                    scope.launch {
+                        bottomSheetState.hide()
                     }
                 }
             }
@@ -201,8 +371,10 @@ fun BottomBarColumn(
     currentMedia: Media?,
     imageVector: ImageVector,
     title: String,
+    followTheme: Boolean = false,
     onItemClick: (Media) -> Unit
 ) {
+    val tintColor = if (followTheme) MaterialTheme.colorScheme.onSurface else Color.White
     Column(
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
@@ -219,7 +391,7 @@ fun BottomBarColumn(
     ) {
         Image(
             imageVector = imageVector,
-            colorFilter = ColorFilter.tint(Color.White),
+            colorFilter = ColorFilter.tint(tintColor),
             contentDescription = title,
             modifier = Modifier
                 .height(32.dp)
@@ -230,7 +402,7 @@ fun BottomBarColumn(
             modifier = Modifier,
             fontWeight = FontWeight.Medium,
             style = MaterialTheme.typography.bodyMedium,
-            color = Color.White,
+            color = tintColor,
             textAlign = TextAlign.Center
         )
     }

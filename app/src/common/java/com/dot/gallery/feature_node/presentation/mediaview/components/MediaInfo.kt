@@ -10,6 +10,7 @@ import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Camera
 import androidx.compose.material.icons.outlined.DateRange
@@ -27,7 +28,9 @@ import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.EXIF_DATE_FORMAT
 import com.dot.gallery.core.Constants.TAG
@@ -56,6 +59,7 @@ fun MediaInfoRow(
     ListItem(
         modifier = modifier
             .fillMaxWidth()
+            .padding(horizontal = 8.dp)
             .clip(Shapes.medium)
             .combinedClickable(
                 onClick = { onClick?.let { it() } },
@@ -66,16 +70,14 @@ fun MediaInfoRow(
                     }
                 }
             ),
-        overlineContent = {
-            Text(text = label)
-        },
         headlineContent = {
             Text(
-                text = content,
-                fontFamily = FontFamily.Monospace,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
+                text = label,
+                fontWeight = FontWeight.Medium
             )
+        },
+        supportingContent = {
+            Text(text = content)
         },
         leadingContent = {
             Icon(
