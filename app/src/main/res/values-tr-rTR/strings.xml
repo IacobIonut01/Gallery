@@ -58,6 +58,7 @@
     <string name="pinned_albums_title">Sabitlenmiş Albümler</string>
     <string name="unpin">Sabitlemeyi kaldır</string>
     <string name="pin">Sabitle</string>
+    <string name="nav_timeline">Timeline</string>
     <plurals name="item_count">
         <item quantity="one">%s öğe</item>
         <item quantity="other">%s öğe</item>
