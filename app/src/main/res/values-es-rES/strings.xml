@@ -58,6 +58,7 @@
     <string name="pinned_albums_title">Álbumes fijados</string>
     <string name="unpin">Desfijar</string>
     <string name="pin">Fijar</string>
+    <string name="nav_timeline">Timeline</string>
     <plurals name="item_count">
         <item quantity="one">%s Ítem</item>
         <item quantity="other">%s Ítems</item>
