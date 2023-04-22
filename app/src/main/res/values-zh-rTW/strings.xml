@@ -58,6 +58,7 @@
     <string name="pinned_albums_title">固定相簿</string>
     <string name="unpin">取消固定</string>
     <string name="pin">固定</string>
+    <string name="nav_timeline">Timeline</string>
     <plurals name="item_count">
         <item quantity="other">%s 個項目</item>
     </plurals>
