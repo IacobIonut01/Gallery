@@ -58,8 +58,13 @@
     <string name="pinned_albums_title">Sabitlenmiş Albümler</string>
     <string name="unpin">Sabitlemeyi kaldır</string>
     <string name="pin">Sabitle</string>
+    <string name="nav_timeline">Timeline</string>
+    <string name="location">Location</string>
+    <string name="location_cd">Media Location</string>
+    <string name="no_internet">Internet is not available</string>
+    <string name="location_map_cd">Location Map</string>
     <plurals name="item_count">
-        <item quantity="one">%s item</item>
-        <item quantity="other">%s items</item>
+        <item quantity="one">%s öğe</item>
+        <item quantity="other">%s öğe</item>
     </plurals>
 </resources>

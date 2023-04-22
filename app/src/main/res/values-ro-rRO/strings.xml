@@ -54,13 +54,18 @@
     <string name="settings_trash_summary">Stocați mediile șterse timp de 30 de zile.\nȘtergerea suporturilor va duce la o pierdere permanentă dacă este dezactivată.</string>
     <string name="settings_about_app_title">Despre Galerie</string>
     <string name="settings_about_app_summary">Versiunea %s</string>
-    <string name="move_album_to_trash">Move album to trash</string>
-    <string name="pinned_albums_title">Pinned Albums</string>
-    <string name="unpin">Unpin</string>
-    <string name="pin">Pin</string>
+    <string name="move_album_to_trash">Mutați albumul la coșul de gunoi</string>
+    <string name="pinned_albums_title">Albume fixate</string>
+    <string name="unpin">Defixați</string>
+    <string name="pin">Fixați</string>
+    <string name="nav_timeline">Cronologie</string>
+    <string name="location">Location</string>
+    <string name="location_cd">Media Location</string>
+    <string name="no_internet">Internet is not available</string>
+    <string name="location_map_cd">Location Map</string>
     <plurals name="item_count">
-        <item quantity="one">%s item</item>
+        <item quantity="one">%s articol</item>
         <item quantity="few">%s items</item>
-        <item quantity="other">%s items</item>
+        <item quantity="other">%s articole</item>
     </plurals>
 </resources>

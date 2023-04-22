@@ -58,6 +58,11 @@
     <string name="pinned_albums_title">Pinned Albums</string>
     <string name="unpin">Unpin</string>
     <string name="pin">Pin</string>
+    <string name="nav_timeline">Timeline</string>
+    <string name="location">Location</string>
+    <string name="location_cd">Media Location</string>
+    <string name="no_internet">Internet is not available</string>
+    <string name="location_map_cd">Location Map</string>
     <plurals name="item_count">
         <item quantity="one">%s item</item>
         <item quantity="two">%s items</item>
