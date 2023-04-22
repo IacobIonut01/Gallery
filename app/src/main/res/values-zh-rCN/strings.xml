@@ -51,14 +51,14 @@
     <string name="reset_settings">重置设置</string>
     <string name="settings_general">常规</string>
     <string name="settings_trash_title">使用回收站</string>
-    <string name="settings_trash_summary">删除的图片和视频 30 天内将暂存在此处。\n如果禁用，删除操作将无法撤回。</string>
+    <string name="settings_trash_summary">删除的图片和视频 30 天内将暂存在回收站中。\n如果禁用，删除操作将无法撤回。</string>
     <string name="settings_about_app_title">关于图库</string>
     <string name="settings_about_app_summary">版本 %s</string>
-    <string name="move_album_to_trash">Move album to trash</string>
-    <string name="pinned_albums_title">Pinned Albums</string>
-    <string name="unpin">Unpin</string>
-    <string name="pin">Pin</string>
+    <string name="move_album_to_trash">将相册移至回收站</string>
+    <string name="pinned_albums_title">置顶的相册</string>
+    <string name="unpin">取消置顶</string>
+    <string name="pin">置顶</string>
     <plurals name="item_count">
-        <item quantity="other">%s items</item>
+        <item quantity="other">%s 个项目</item>
     </plurals>
 </resources>
