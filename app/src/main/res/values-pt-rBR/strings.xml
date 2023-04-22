@@ -58,6 +58,7 @@
     <string name="pinned_albums_title">Pinned Albums</string>
     <string name="unpin">Unpin</string>
     <string name="pin">Pin</string>
+    <string name="nav_timeline">Timeline</string>
     <plurals name="item_count">
         <item quantity="one">%s item</item>
         <item quantity="other">%s items</item>
