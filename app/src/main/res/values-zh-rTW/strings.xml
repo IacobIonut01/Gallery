@@ -58,11 +58,11 @@
     <string name="pinned_albums_title">固定相簿</string>
     <string name="unpin">取消固定</string>
     <string name="pin">固定</string>
-    <string name="nav_timeline">Timeline</string>
-    <string name="location">Location</string>
-    <string name="location_cd">Media Location</string>
-    <string name="no_internet">Internet is not available</string>
-    <string name="location_map_cd">Location Map</string>
+    <string name="nav_timeline">時間軸</string>
+    <string name="location">位置</string>
+    <string name="location_cd">媒體位置</string>
+    <string name="no_internet">網路不可用</string>
+    <string name="location_map_cd">位置地圖</string>
     <plurals name="item_count">
         <item quantity="other">%s 個項目</item>
     </plurals>
