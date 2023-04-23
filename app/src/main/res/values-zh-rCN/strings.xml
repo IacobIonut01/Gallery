@@ -58,10 +58,10 @@
     <string name="pinned_albums_title">置顶的相册</string>
     <string name="unpin">取消置顶</string>
     <string name="pin">置顶</string>
-    <string name="nav_timeline">Timeline</string>
-    <string name="location">Location</string>
+    <string name="nav_timeline">时间轴</string>
+    <string name="location">地点</string>
     <string name="location_cd">Media Location</string>
-    <string name="no_internet">Internet is not available</string>
+    <string name="no_internet">无互联网</string>
     <string name="location_map_cd">Location Map</string>
     <plurals name="item_count">
         <item quantity="other">%s 个项目</item>
