@@ -45,6 +45,20 @@ class Settings(context: Context) {
             .putBoolean(Misc.ENABLE_TRASH, value)
             .apply()
 
+    var diskCacheSize: Long
+        get() = sharedPreferences.getLong(Glide.DISK_CACHE_SIZE, 150)
+        set(value) = sharedPreferences
+            .edit()
+            .putLong(Glide.DISK_CACHE_SIZE, value)
+            .apply()
+
+    var cachedScreenCount: Float
+        get() = sharedPreferences.getFloat(Glide.CACHED_SCREEN_COUNT, 8f)
+        set(value) = sharedPreferences
+            .edit()
+            .putFloat(Glide.CACHED_SCREEN_COUNT, value)
+            .apply()
+
     fun resetToDefaults() {
         albumLastSort = 0
         useMediaManager = false
@@ -53,6 +67,11 @@ class Settings(context: Context) {
 
     object Album {
         const val LAST_SORT = "album_last_sort"
+    }
+
+    object Glide {
+        const val DISK_CACHE_SIZE = "disk_cache_size"
+        const val CACHED_SCREEN_COUNT = "cached_screen_count"
     }
 
     object Misc {
