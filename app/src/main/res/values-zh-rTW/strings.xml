@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">相簿</string>
-    <string name="nav_photos">圖片</string>
     <string name="nav_albums">相簿</string>
     <string name="searchbar_title"><![CDATA[搜尋照片和影片]]></string>
     <string name="header_today">今天</string>
@@ -28,7 +27,6 @@
     <string name="trash_restore">還原</string>
     <string name="trash_empty">清空</string>
     <string name="trash_delete">刪除</string>
-    <string name="nav_library">檔案庫</string>
     <string name="share">分享</string>
     <string name="info">詳細資訊</string>
     <string name="remove_selected">移除已選取項目</string>
@@ -45,7 +43,6 @@
     <string name="select_all">選擇全部</string>
     <string name="unselect_all">取消全選</string>
     <string name="drop_down_cd">下拉選單</string>
-    <string name="cancel">取消</string>
     <string name="back_cd">返回</string>
     <string name="settings_title">設定</string>
     <string name="reset_settings">重設設定</string>
@@ -61,7 +58,6 @@
     <string name="nav_timeline">時間軸</string>
     <string name="location">位置</string>
     <string name="location_cd">媒體位置</string>
-    <string name="no_internet">網路不可用</string>
     <string name="location_map_cd">位置地圖</string>
     <plurals name="item_count">
         <item quantity="other">%s 個項目</item>
