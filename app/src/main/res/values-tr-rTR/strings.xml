@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Galeri</string>
-    <string name="nav_photos">Fotoğraflar</string>
     <string name="nav_albums">Albümler</string>
     <string name="searchbar_title"><![CDATA[Fotoğraf ve videoları arayın]]></string>
     <string name="header_today">Bugün</string>
@@ -28,7 +27,6 @@
     <string name="trash_restore">Geri yükle</string>
     <string name="trash_empty">Boş</string>
     <string name="trash_delete">Sil</string>
-    <string name="nav_library">Kütüphane</string>
     <string name="share">Paylaş</string>
     <string name="info">Bilgi</string>
     <string name="remove_selected">Remove selected</string>
@@ -45,7 +43,6 @@
     <string name="select_all">Tümünü seç</string>
     <string name="unselect_all">Tümünün seçimini kaldır</string>
     <string name="drop_down_cd">Drop down</string>
-    <string name="cancel">İptal et</string>
     <string name="back_cd">Geri</string>
     <string name="settings_title">Ayarlar</string>
     <string name="reset_settings">Ayarları Sıfırla</string>
@@ -61,7 +58,6 @@
     <string name="nav_timeline">Zaman Çizelgesi</string>
     <string name="location">Konum</string>
     <string name="location_cd">Medya Konumu</string>
-    <string name="no_internet">İnternet mevcut değil</string>
     <string name="location_map_cd">Konum Haritası</string>
     <plurals name="item_count">
         <item quantity="one">%s öğe</item>
