@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Галерея</string>
-    <string name="nav_photos">Фото</string>
     <string name="nav_albums">Альбоми</string>
     <string name="searchbar_title"><![CDATA[Пошук фото та відео]]></string>
     <string name="header_today">Сьогодні</string>
@@ -28,7 +27,6 @@
     <string name="trash_restore">Відновити</string>
     <string name="trash_empty">Пусто</string>
     <string name="trash_delete">Видалити</string>
-    <string name="nav_library">Бібліотека</string>
     <string name="share">Поділитися</string>
     <string name="info">Детально</string>
     <string name="remove_selected">Видалити вибране</string>
@@ -45,7 +43,6 @@
     <string name="select_all">Select all</string>
     <string name="unselect_all">Unselect all</string>
     <string name="drop_down_cd">Drop down</string>
-    <string name="cancel">Cancel</string>
     <string name="back_cd">Back</string>
     <string name="settings_title">Settings</string>
     <string name="reset_settings">Reset Settings</string>
@@ -61,7 +58,6 @@
     <string name="nav_timeline">Timeline</string>
     <string name="location">Location</string>
     <string name="location_cd">Media Location</string>
-    <string name="no_internet">Internet is not available</string>
     <string name="location_map_cd">Location Map</string>
     <plurals name="item_count">
         <item quantity="one">%s item</item>
