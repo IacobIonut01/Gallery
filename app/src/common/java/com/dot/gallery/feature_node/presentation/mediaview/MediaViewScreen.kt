@@ -6,6 +6,7 @@
 package com.dot.gallery.feature_node.presentation.mediaview
 
 import android.app.Activity
+import android.graphics.drawable.Drawable
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -27,6 +28,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -34,6 +36,9 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.navigation.NavController
+import com.bumptech.glide.RequestBuilder
+import com.bumptech.glide.integration.compose.rememberGlidePreloadingData
+import com.bumptech.glide.signature.MediaStoreSignature
 import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
@@ -74,6 +79,17 @@ fun MediaViewScreen(
     val window = remember { (context as Activity).window }
     val windowInsetsController =
         remember { WindowCompat.getInsetsController(window, window.decorView) }
+
+    /** Glide Preloading **/
+    val preloadingData = rememberGlidePreloadingData(
+        data = state.media,
+        preloadImageSize = Size(512f, 384f)
+    ) { media: Media, requestBuilder: RequestBuilder<Drawable> ->
+        requestBuilder
+            .signature(MediaStoreSignature(media.mimeType, media.timestamp, media.orientation))
+            .load(media.uri)
+    }
+    /** ************ **/
 
     val showUIListener: () -> Unit = remember {
         {
@@ -135,9 +151,11 @@ fun MediaViewScreen(
                 .background(Color.Black)
                 .fillMaxSize()
         ) { index ->
+            val (media, preloadRequestBuilder) = preloadingData[index]
             MediaPreviewComponent(
-                media = state.media[index],
+                media = media,
                 scrollEnabled = scrollEnabled,
+                preloadRequestBuilder = preloadRequestBuilder,
                 playWhenReady = index == pagerState.currentPage,
                 onItemClick = {
                     showUI.value = !showUI.value

@@ -39,7 +39,6 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -218,8 +217,12 @@ fun MediaScreen(
 
         val stickyHeaderItem by remember(state.media) {
             derivedStateOf {
-                val firstIndex = gridState.layoutInfo.visibleItemsInfo.firstOrNull()?.index
-                val item = firstIndex?.let(mappedData::getOrNull)
+                var firstIndex = gridState.layoutInfo.visibleItemsInfo.firstOrNull()?.index
+                var item = firstIndex?.let(mappedData::getOrNull)
+                if (item != null && item.key.contains("big")) {
+                    firstIndex = firstIndex!! + 1
+                    item = firstIndex.let(mappedData::getOrNull)
+                }
                 stickyHeaderLastItem.apply {
                     if (item != null && item is MediaItem.Header) {
                         value = item.key.replace("header_", "")

@@ -59,6 +59,13 @@ class Settings(context: Context) {
             .putFloat(Glide.CACHED_SCREEN_COUNT, value)
             .apply()
 
+    var maxImageSize: Int
+        get() = sharedPreferences.getInt(Glide.MAX_IMAGE_SIZE, Constants.MAX_IMAGE_SIZE)
+        set(value) = sharedPreferences
+            .edit()
+            .putInt(Glide.MAX_IMAGE_SIZE, value)
+            .apply()
+
     fun resetToDefaults() {
         albumLastSort = 0
         useMediaManager = false
@@ -72,6 +79,7 @@ class Settings(context: Context) {
     object Glide {
         const val DISK_CACHE_SIZE = "disk_cache_size"
         const val CACHED_SCREEN_COUNT = "cached_screen_count"
+        const val MAX_IMAGE_SIZE = "max_image_size"
     }
 
     object Misc {

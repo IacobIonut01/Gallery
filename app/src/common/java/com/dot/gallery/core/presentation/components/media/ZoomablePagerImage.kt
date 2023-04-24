@@ -5,6 +5,7 @@
 
 package com.dot.gallery.core.presentation.components.media
 
+import android.graphics.drawable.Drawable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -16,6 +17,7 @@ import androidx.compose.foundation.gestures.calculateRotation
 import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -29,13 +31,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
-import com.bumptech.glide.request.target.Target
+import com.bumptech.glide.load.resource.bitmap.DownsampleStrategy
 import com.dot.gallery.R
+import com.dot.gallery.core.Settings
 import com.dot.gallery.feature_node.domain.model.Media
 import kotlin.math.abs
 import kotlin.math.withSign
@@ -46,13 +52,16 @@ fun ZoomablePagerImage(
     modifier: Modifier = Modifier,
     media: Media,
     scrollEnabled: MutableState<Boolean>,
+    preloadRequestBuilder: RequestBuilder<Drawable>,
     minScale: Float = 1f,
     maxScale: Float = 10f,
     isRotation: Boolean = false,
     onItemClick: () -> Unit
 ) {
+    val maxImageSize = Settings(LocalContext.current).maxImageSize
     var targetScale by remember { mutableStateOf(1f) }
-    val scale = animateFloatAsState(targetValue = maxOf(minScale, minOf(maxScale, targetScale)),
+    val scale = animateFloatAsState(
+        targetValue = maxOf(minScale, minOf(maxScale, targetScale)),
         label = "Image Scale"
     )
     var rotationState by remember { mutableStateOf(1f) }
@@ -115,6 +124,7 @@ fun ZoomablePagerImage(
         GlideImage(
             modifier = Modifier
                 .align(Alignment.Center)
+                .fillMaxSize()
                 .graphicsLayer {
                     this.scaleX = scale.value
                     this.scaleY = scale.value
@@ -125,12 +135,15 @@ fun ZoomablePagerImage(
                     this.translationY = offsetY
                 },
             model = media.uri,
+            contentScale = ContentScale.Fit,
             contentDescription = media.label
         ) { request ->
             request
-                .fitCenter()
+                .thumbnail(preloadRequestBuilder)
+                .dontTransform()
                 .encodeQuality(100)
-                .override(Target.SIZE_ORIGINAL)
+                .downsample(DownsampleStrategy.AT_MOST)
+                .override(maxImageSize)
                 .error(R.drawable.ic_error)
         }
     }
