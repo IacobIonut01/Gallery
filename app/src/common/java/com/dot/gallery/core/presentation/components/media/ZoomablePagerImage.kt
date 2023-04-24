@@ -26,7 +26,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
@@ -35,6 +34,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
+import com.bumptech.glide.request.target.Target
 import com.dot.gallery.R
 import com.dot.gallery.feature_node.domain.model.Media
 import kotlin.math.abs
@@ -130,6 +130,7 @@ fun ZoomablePagerImage(
             request
                 .fitCenter()
                 .encodeQuality(100)
+                .override(Target.SIZE_ORIGINAL)
                 .error(R.drawable.ic_error)
         }
     }
