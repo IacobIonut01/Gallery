@@ -5,6 +5,7 @@
 
 package com.dot.gallery.core.presentation.components.util
 
+import androidx.compose.animation.core.animateIntOffsetAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -15,8 +16,11 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import kotlin.math.roundToInt
 
 @Composable
 fun StickyHeaderGrid(
@@ -26,6 +30,7 @@ fun StickyHeaderGrid(
     stickyHeader: @Composable () -> Unit,
     content: @Composable () -> Unit,
 ) {
+    val context = LocalContext.current
     val headerOffset by remember(remember { derivedStateOf { lazyState.layoutInfo } }) {
         derivedStateOf {
             val layoutInfo = lazyState.layoutInfo
@@ -43,13 +48,19 @@ fun StickyHeaderGrid(
             }
         }
     }
+    val toolbarOffset = remember {
+        (64 * context.resources.displayMetrics.density).roundToInt()
+    }
+    val offsetAnimation by animateIntOffsetAsState(
+        IntOffset(x = 0, y = headerOffset + toolbarOffset)
+    )
 
     Box(modifier = modifier) {
         content()
         Box(
             modifier = Modifier
                 .statusBarsPadding()
-                .offset { IntOffset(x = 0, y = headerOffset + 64.dp.roundToPx()) }
+                .offset { offsetAnimation }
         ) {
             stickyHeader()
         }
