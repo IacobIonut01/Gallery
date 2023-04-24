@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Галерея</string>
-    <string name="nav_photos">Фотографии</string>
     <string name="nav_albums">Альбомы</string>
     <string name="searchbar_title"><![CDATA[Поиск фотографий и видео]]></string>
     <string name="header_today">Сегодня</string>
@@ -28,7 +27,6 @@
     <string name="trash_restore">Восстановить</string>
     <string name="trash_empty">Пусто</string>
     <string name="trash_delete">Удалить</string>
-    <string name="nav_library">Библиотека</string>
     <string name="share">Поделиться</string>
     <string name="info">Информация</string>
     <string name="remove_selected">Удалить выбранные</string>
@@ -45,7 +43,6 @@
     <string name="select_all">Выбрать все</string>
     <string name="unselect_all">Отменить выбор</string>
     <string name="drop_down_cd">Провалиться</string>
-    <string name="cancel">Отменить</string>
     <string name="back_cd">Назад</string>
     <string name="settings_title">Параметры</string>
     <string name="reset_settings">Сброс параметров</string>
@@ -61,7 +58,6 @@
     <string name="nav_timeline">Шкала времени</string>
     <string name="location">Местоположение</string>
     <string name="location_cd">Местоположение медиа файла</string>
-    <string name="no_internet">Интернет недоступен</string>
     <string name="location_map_cd">Карта</string>
     <plurals name="item_count">
         <item quantity="one">%sпункт</item>
