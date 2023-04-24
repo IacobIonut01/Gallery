@@ -41,6 +41,7 @@ import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.Constants.DEFAULT_LOW_VELOCITY_SWIPE_DURATION
 import com.dot.gallery.core.Constants.HEADER_DATE_FORMAT
+import com.dot.gallery.core.Settings
 import com.dot.gallery.core.presentation.components.media.MediaPreviewComponent
 import com.dot.gallery.core.presentation.components.media.VideoPlayerController
 import com.dot.gallery.feature_node.domain.model.Media
@@ -52,6 +53,7 @@ import com.dot.gallery.feature_node.presentation.util.getDate
 @Composable
 fun StandaloneMediaViewScreen(
     paddingValues: PaddingValues,
+    settings: Settings,
     viewModel: StandaloneViewModel
 ) {
     val state by rememberSaveable {
@@ -64,6 +66,7 @@ fun StandaloneMediaViewScreen(
 
     val showUI = remember { mutableStateOf(true) }
     val context = LocalContext.current
+    val maxImageSize = remember { settings.maxImageSize }
     val window = remember { (context as Activity).window }
     val windowInsetsController =
         remember { WindowCompat.getInsetsController(window, window.decorView) }
@@ -118,6 +121,7 @@ fun StandaloneMediaViewScreen(
             MediaPreviewComponent(
                 media = media,
                 scrollEnabled = scrollEnabled,
+                maxImageSize = maxImageSize,
                 preloadRequestBuilder = preloadRequestBuilder,
                 playWhenReady = index == pagerState.currentPage,
                 onItemClick = {

@@ -55,10 +55,10 @@ fun ZoomablePagerImage(
     preloadRequestBuilder: RequestBuilder<Drawable>,
     minScale: Float = 1f,
     maxScale: Float = 10f,
+    maxImageSize: Int,
     isRotation: Boolean = false,
     onItemClick: () -> Unit
 ) {
-    val maxImageSize = Settings(LocalContext.current).maxImageSize
     var targetScale by remember { mutableStateOf(1f) }
     val scale = animateFloatAsState(
         targetValue = maxOf(minScale, minOf(maxScale, targetScale)),

@@ -21,6 +21,7 @@ import com.dot.gallery.feature_node.domain.model.Media
 fun MediaPreviewComponent(
     media: Media,
     scrollEnabled: MutableState<Boolean>,
+    maxImageSize: Int,
     preloadRequestBuilder: RequestBuilder<Drawable>,
     playWhenReady: Boolean,
     onItemClick: () -> Unit,
@@ -45,6 +46,7 @@ fun MediaPreviewComponent(
                 modifier = Modifier.fillMaxSize(),
                 media = media,
                 scrollEnabled = scrollEnabled,
+                maxImageSize = maxImageSize,
                 preloadRequestBuilder = preloadRequestBuilder,
                 onItemClick = onItemClick
             )

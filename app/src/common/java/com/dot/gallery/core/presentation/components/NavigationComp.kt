@@ -176,6 +176,7 @@ fun NavigationComp(
                 navController = navController,
                 paddingValues = paddingValues,
                 mediaId = mediaId,
+                settings = settings,
                 viewModel = hiltViewModel(parentEntry)
             )
         }
@@ -212,6 +213,7 @@ fun NavigationComp(
                 paddingValues = paddingValues,
                 mediaId = mediaId,
                 target = target,
+                settings = settings,
                 viewModel = hiltViewModel(parentEntry)
             )
         }

@@ -45,6 +45,7 @@ import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.Constants.DEFAULT_LOW_VELOCITY_SWIPE_DURATION
 import com.dot.gallery.core.Constants.HEADER_DATE_FORMAT
 import com.dot.gallery.core.Constants.Target.TARGET_TRASH
+import com.dot.gallery.core.Settings
 import com.dot.gallery.core.presentation.components.media.MediaPreviewComponent
 import com.dot.gallery.core.presentation.components.media.VideoPlayerController
 import com.dot.gallery.feature_node.domain.model.Media
@@ -61,6 +62,7 @@ fun MediaViewScreen(
     paddingValues: PaddingValues,
     mediaId: Long,
     target: String? = null,
+    settings: Settings,
     viewModel: MediaViewModel
 ) {
     val runtimeMediaId = remember { mutableStateOf(mediaId) }
@@ -76,6 +78,7 @@ fun MediaViewScreen(
 
     val showUI = remember { mutableStateOf(true) }
     val context = LocalContext.current
+    val maxImageSize = remember { settings.maxImageSize }
     val window = remember { (context as Activity).window }
     val windowInsetsController =
         remember { WindowCompat.getInsetsController(window, window.decorView) }
@@ -155,6 +158,7 @@ fun MediaViewScreen(
             MediaPreviewComponent(
                 media = media,
                 scrollEnabled = scrollEnabled,
+                maxImageSize = maxImageSize,
                 preloadRequestBuilder = preloadRequestBuilder,
                 playWhenReady = index == pagerState.currentPage,
                 onItemClick = {
