@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Galerie</string>
-    <string name="nav_photos">Fotografii</string>
     <string name="nav_albums">Albume</string>
     <string name="searchbar_title"><![CDATA[Căutați fotografii și videoclipuri]]></string>
     <string name="header_today">Astăzi</string>
@@ -28,7 +27,6 @@
     <string name="trash_restore">Restaurați</string>
     <string name="trash_empty">Golește</string>
     <string name="trash_delete">Ștergeți</string>
-    <string name="nav_library">Bibliotecă</string>
     <string name="share">Distribuie</string>
     <string name="info">Informații</string>
     <string name="remove_selected">Eliminați selectate</string>
@@ -45,7 +43,6 @@
     <string name="select_all">Selectați toate</string>
     <string name="unselect_all">Deselectați toate</string>
     <string name="drop_down_cd">Coborâre</string>
-    <string name="cancel">Anulează</string>
     <string name="back_cd">Înapoi</string>
     <string name="settings_title">Setări</string>
     <string name="reset_settings">Resetare setări</string>
@@ -61,7 +58,6 @@
     <string name="nav_timeline">Cronologie</string>
     <string name="location">Location</string>
     <string name="location_cd">Media Location</string>
-    <string name="no_internet">Internet is not available</string>
     <string name="location_map_cd">Location Map</string>
     <plurals name="item_count">
         <item quantity="one">%s articol</item>

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">图库</string>
-    <string name="nav_photos">照片</string>
     <string name="nav_albums">相册</string>
     <string name="searchbar_title"><![CDATA[搜索图片和视频]]></string>
     <string name="header_today">今天</string>
@@ -28,7 +27,6 @@
     <string name="trash_restore">恢复</string>
     <string name="trash_empty">清空</string>
     <string name="trash_delete">删除</string>
-    <string name="nav_library">图书馆</string>
     <string name="share">分享</string>
     <string name="info">详情</string>
     <string name="remove_selected">移除选中</string>
@@ -45,7 +43,6 @@
     <string name="select_all">全选</string>
     <string name="unselect_all">全不选</string>
     <string name="drop_down_cd">下拉式</string>
-    <string name="cancel">取消</string>
     <string name="back_cd">溯源</string>
     <string name="settings_title">设置</string>
     <string name="reset_settings">重置设置</string>
@@ -61,7 +58,6 @@
     <string name="nav_timeline">Timeline</string>
     <string name="location">Location</string>
     <string name="location_cd">Media Location</string>
-    <string name="no_internet">Internet is not available</string>
     <string name="location_map_cd">Location Map</string>
     <plurals name="item_count">
         <item quantity="other">%s 个项目</item>

@@ -345,7 +345,7 @@ fun BoxScope.MediaViewBottomBar(
                                         )
                                     }
                                 } else {
-                                    Text(text = stringResource(R.string.no_internet))
+                                    Text(text = "$lat, $long")
                                 }
                             }
                         )

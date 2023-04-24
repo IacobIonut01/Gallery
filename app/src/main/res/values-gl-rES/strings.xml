@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Galería</string>
-    <string name="nav_photos">Fotos</string>
     <string name="nav_albums">Álbums</string>
     <string name="searchbar_title"><![CDATA[Buscar fotos e vídeos]]></string>
     <string name="header_today">Hoxe</string>
@@ -28,7 +27,6 @@
     <string name="trash_restore">Restaurar</string>
     <string name="trash_empty">Baleirar</string>
     <string name="trash_delete">Eliminar</string>
-    <string name="nav_library">Biblioteca</string>
     <string name="share">Compartir</string>
     <string name="info">Información</string>
     <string name="remove_selected">Eliminar seleccionados</string>
@@ -45,7 +43,6 @@
     <string name="select_all">Seleccionar todo</string>
     <string name="unselect_all">Deseleccionar todo</string>
     <string name="drop_down_cd">Despregable</string>
-    <string name="cancel">Cancelar</string>
     <string name="back_cd">Atrás</string>
     <string name="settings_title">Axustes</string>
     <string name="reset_settings">Restablecer axustes</string>
@@ -61,7 +58,6 @@
     <string name="nav_timeline">Timeline</string>
     <string name="location">Location</string>
     <string name="location_cd">Media Location</string>
-    <string name="no_internet">Internet is not available</string>
     <string name="location_map_cd">Location Map</string>
     <plurals name="item_count">
         <item quantity="one">%s Ítem</item>
