@@ -56,12 +56,12 @@
     <string name="unpin">Defixați</string>
     <string name="pin">Fixați</string>
     <string name="nav_timeline">Cronologie</string>
-    <string name="location">Location</string>
-    <string name="location_cd">Media Location</string>
-    <string name="location_map_cd">Location Map</string>
+    <string name="location">Locație</string>
+    <string name="location_cd">Locație media</string>
+    <string name="location_map_cd">Harta de amplasare</string>
     <plurals name="item_count">
         <item quantity="one">%s articol</item>
-        <item quantity="few">%s items</item>
+        <item quantity="few">%s articole</item>
         <item quantity="other">%s articole</item>
     </plurals>
 </resources>
