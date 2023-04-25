@@ -31,9 +31,9 @@
     <string name="info">Informazioni</string>
     <string name="remove_selected">Remove selected</string>
     <string name="remove_all">Remove all</string>
-    <string name="empty_favorites_title">You have no favorites</string>
-    <string name="label">Label</string>
-    <string name="path">Path</string>
+    <string name="empty_favorites_title">Non hai preferiti</string>
+    <string name="label">Etichetta</string>
+    <string name="path">Percorso</string>
     <string name="date">Data</string>
     <string name="iso">" • ISO"</string>
     <string name="kb">KB</string>
@@ -46,10 +46,10 @@
     <string name="back_cd">Back</string>
     <string name="settings_title">Impostazioni</string>
     <string name="reset_settings">Ripristina impostazioni</string>
-    <string name="settings_general">General</string>
-    <string name="settings_trash_title">Use trash can</string>
+    <string name="settings_general">Generali</string>
+    <string name="settings_trash_title">Utilizza il cestino</string>
     <string name="settings_trash_summary">Store deleted media for 30 days.\nDeleting media will result in a permanent loss if disabled.</string>
-    <string name="settings_about_app_title">About Gallery</string>
+    <string name="settings_about_app_title">Informazioni su Galleria</string>
     <string name="settings_about_app_summary">Versione %s</string>
     <string name="move_album_to_trash">Sposta l\'album nel cestino</string>
     <string name="pinned_albums_title">Pinned Albums</string>
