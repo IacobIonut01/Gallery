@@ -43,11 +43,10 @@ fun MediaPreviewComponent(
             )
         } else {
             ZoomablePagerImage(
-                modifier = Modifier.fillMaxSize(),
                 media = media,
                 scrollEnabled = scrollEnabled,
-                maxImageSize = maxImageSize,
                 preloadRequestBuilder = preloadRequestBuilder,
+                maxImageSize = maxImageSize,
                 onItemClick = onItemClick
             )
         }

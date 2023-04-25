@@ -165,6 +165,9 @@ dependencies {
     // Encrypted SharedPreferences
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
 
+    // Compose-Extended-Gestures
+    implementation("com.github.SmartToolFactory:Compose-Extended-Gestures:3.0.0")
+
     // Tests
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
