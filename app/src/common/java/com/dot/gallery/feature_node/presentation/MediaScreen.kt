@@ -34,11 +34,13 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -130,8 +132,8 @@ fun MediaScreen(
         /** STATES BLOCK **/
         val gridState = rememberLazyGridState()
         val state by remember { viewModel.photoState }
-        val selectionState = remember { viewModel.multiSelectState }
-        val selectedMedia = remember { viewModel.selectedPhotoState }
+        val selectionState = viewModel.multiSelectState
+        val selectedMedia = viewModel.selectedPhotoState
         /** ************ **/
 
         /** Glide Preloading **/
@@ -153,7 +155,7 @@ fun MediaScreen(
             }
         }
 
-        BackHandler(enabled = selectionState.value) { clearSelection() }
+        BackHandler(enabled = selectionState.value, onBack = clearSelection)
         /** ************  **/
 
         /**
@@ -198,10 +200,10 @@ fun MediaScreen(
                     val month = getMonth(date)
                     if (month.isNotEmpty() && !monthHeaderList.contains(month)) {
                         monthHeaderList.add(month)
-                        mappedData.add(MediaItem.Header("header_big_$month", month))
+                        mappedData.add(MediaItem.Header("header_big_$month", month, data))
                     }
                 }
-                mappedData.add(MediaItem.Header("header_$date", date))
+                mappedData.add(MediaItem.Header("header_$date", date, data))
                 for (media in data) {
                     mappedData.add(MediaItem.MediaViewItem.Loaded("media_${media.id}", media))
                 }
@@ -333,10 +335,33 @@ fun MediaScreen(
                         }
                     ) { item ->
                         when (item) {
-                            is MediaItem.Header -> StickyHeader(
-                                date = item.text,
-                                item.key.contains("big")
-                            )
+                            is MediaItem.Header -> {
+                                val isChecked = rememberSaveable { mutableStateOf(false) }
+                                LaunchedEffect(selectionState.value) {
+                                    // Uncheck if selectionState is set to false
+                                    isChecked.value = isChecked.value && selectionState.value
+                                }
+                                LaunchedEffect(selectedMedia.size) {
+                                    // Partial check of media items should not check the header
+                                    isChecked.value = selectedMedia.containsAll(item.data)
+                                }
+                                StickyHeader(
+                                    date = item.text,
+                                    showAsBig = item.key.contains("big"),
+                                    isCheckVisible = selectionState,
+                                    isChecked = isChecked
+                                ) {
+                                    isChecked.value = !isChecked.value
+                                    if (isChecked.value) {
+                                        val toAdd = item.data.toMutableList().apply {
+                                            // Avoid media from being added twice to selection
+                                            removeIf { selectedMedia.contains(it) }
+                                        }
+                                        selectedMedia.addAll(toAdd)
+                                    } else selectedMedia.removeAll(item.data)
+                                    selectionState.value = selectedMedia.size != 0
+                                }
+                            }
 
                             is MediaItem.MediaViewItem -> {
                                 val (media, preloadRequestBuilder) = preloadingData[state.media.indexOf(
