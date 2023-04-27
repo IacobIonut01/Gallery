@@ -52,12 +52,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.integration.compose.rememberGlidePreloadingData
 import com.bumptech.glide.signature.MediaStoreSignature
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.PERMISSIONS
+import com.dot.gallery.core.MediaState
 import com.dot.gallery.core.presentation.components.Error
 import com.dot.gallery.core.presentation.components.NavigationActions
 import com.dot.gallery.core.presentation.components.NavigationButton
@@ -82,26 +82,23 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 )
 @Composable
 fun MediaScreen(
-    navController: NavController,
     paddingValues: PaddingValues,
     albumId: Long = -1L,
+    target: String? = null,
     albumName: String,
-    viewModel: MediaViewModel,
+    retrieveMedia: (() -> Unit)? = null,
+    mediaState: MutableState<MediaState>,
+    selectionState: MutableState<Boolean>,
+    selectedMedia: SnapshotStateList<Media>,
+    toggleSelection: (Int) -> Unit,
     showMonthlyHeader: Boolean = false,
     alwaysGoBack: Boolean = true,
-    NavActions: @Composable RowScope.(
-        expandedDropDown: MutableState<Boolean>,
-        selectedMedia: SnapshotStateList<Media>,
-        selectionState: MutableState<Boolean>,
-        result: ActivityResultLauncher<IntentSenderRequest>
-    ) -> Unit,
+    NavActions: @Composable (RowScope.(expandedDropDown: MutableState<Boolean>, result: ActivityResultLauncher<IntentSenderRequest>) -> Unit),
     EmptyComponent: @Composable () -> Unit,
-    OverGrid: (@Composable () -> Unit)? = null,
-    onActivityResult: (
-        selectedMedia: SnapshotStateList<Media>,
-        selectionState: MutableState<Boolean>,
-        result: ActivityResult
-    ) -> Unit
+    OverGrid: @Composable (() -> Unit)? = null,
+    navigate: (route: String) -> Unit,
+    navigateUp: () -> Unit,
+    onActivityResult: (result: ActivityResult) -> Unit,
 ) {
 
     /** STRING BLOCK **/
@@ -112,8 +109,8 @@ fun MediaScreen(
 
     /** Permission Handling BLOCK **/
     val mediaPermissions =
-        rememberMultiplePermissionsState(PERMISSIONS) { viewModel.launchInPhotosScreen() }
-    /** Trigger viewModel launch after permission is granted */
+        rememberMultiplePermissionsState(PERMISSIONS) { retrieveMedia?.invoke() }
+    /** Trigger retrieveMedia after permission is granted */
     if (!mediaPermissions.allPermissionsGranted) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -131,9 +128,7 @@ fun MediaScreen(
 
         /** STATES BLOCK **/
         val gridState = rememberLazyGridState()
-        val state by remember { viewModel.photoState }
-        val selectionState = viewModel.multiSelectState
-        val selectedMedia = viewModel.selectedPhotoState
+        val state by mediaState
         /** ************ **/
 
         /** Glide Preloading **/
@@ -263,7 +258,7 @@ fun MediaScreen(
                     navigationIcon = {
                         NavigationButton(
                             albumId = albumId,
-                            navController = navController,
+                            navigateUp = navigateUp,
                             clearSelection = clearSelection,
                             selectionState = selectionState,
                             alwaysGoBack = alwaysGoBack,
@@ -271,8 +266,6 @@ fun MediaScreen(
                     },
                     actions = {
                         NavigationActions(
-                            selectedMedia = selectedMedia,
-                            selectionState = selectionState,
                             actions = NavActions,
                             onActivityResult = onActivityResult
                         )
@@ -373,18 +366,16 @@ fun MediaScreen(
                                     selectedMedia = selectedMedia,
                                     preloadRequestBuilder = preloadRequestBuilder,
                                     onItemLongClick = {
-                                        viewModel.toggleSelection(state.media.indexOf(it))
+                                        toggleSelection(state.media.indexOf(it))
                                     },
                                     onItemClick = {
                                         if (selectionState.value) {
-                                            viewModel.toggleSelection(state.media.indexOf(it))
+                                            toggleSelection(state.media.indexOf(it))
                                         } else {
-                                            val albumRoute = "albumId=${viewModel.albumId}"
-                                            val targetRoute = "target=${viewModel.target}"
-                                            val param = if (viewModel.target != null) targetRoute else albumRoute
-                                            navController.navigate(
-                                                Screen.MediaViewScreen.route + "?mediaId=${it.id}&$param"
-                                            )
+                                            val albumRoute = "albumId=$albumId"
+                                            val targetRoute = "target=$target"
+                                            val param = if (target != null) targetRoute else albumRoute
+                                            navigate(Screen.MediaViewScreen.route + "?mediaId=${it.id}&$param")
                                         }
                                     }
                                 )

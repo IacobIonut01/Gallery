@@ -6,7 +6,6 @@
 package com.dot.gallery.feature_node.presentation.settings
 
 import android.content.Context
-import androidx.lifecycle.ViewModel
 import com.dot.gallery.BuildConfig
 import com.dot.gallery.R
 import com.dot.gallery.core.Settings
@@ -14,13 +13,14 @@ import com.dot.gallery.core.SettingsEntity
 import com.dot.gallery.core.SettingsType.Default
 import com.dot.gallery.core.SettingsType.Header
 import com.dot.gallery.core.SettingsType.Switch
+import com.dot.gallery.feature_node.presentation.ChanneledViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     val settings: Settings
-) : ViewModel() {
+) : ChanneledViewModel() {
 
     fun settingsList(context: Context): List<SettingsEntity> =
         listOf(

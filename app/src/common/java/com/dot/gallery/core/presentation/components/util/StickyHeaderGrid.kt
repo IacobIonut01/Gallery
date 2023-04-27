@@ -16,7 +16,6 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -29,7 +28,6 @@ fun StickyHeaderGrid(
     stickyHeader: @Composable () -> Unit,
     content: @Composable () -> Unit,
 ) {
-    val context = LocalContext.current
     val headerOffset by remember(remember { derivedStateOf { lazyState.layoutInfo } }) {
         derivedStateOf {
             val layoutInfo = lazyState.layoutInfo

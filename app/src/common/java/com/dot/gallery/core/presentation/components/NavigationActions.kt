@@ -10,35 +10,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.snapshots.SnapshotStateList
-import com.dot.gallery.feature_node.domain.model.Media
 
 @Composable
 fun RowScope.NavigationActions(
-    selectedMedia: SnapshotStateList<Media>,
-    selectionState: MutableState<Boolean>,
-    actions: @Composable (RowScope.(
-        expandedDropDown: MutableState<Boolean>,
-        selectedMedia: SnapshotStateList<Media>,
-        selectionState: MutableState<Boolean>,
-        result: ActivityResultLauncher<IntentSenderRequest>
-    ) -> Unit),
-    onActivityResult: (
-        selectedMedia: SnapshotStateList<Media>,
-        selectionState: MutableState<Boolean>,
-        result: ActivityResult
-    ) -> Unit
+    actions: @Composable() (RowScope.(expandedDropDown: MutableState<Boolean>, result: ActivityResultLauncher<IntentSenderRequest>) -> Unit),
+    onActivityResult: (result: ActivityResult) -> Unit
 ) {
     val expandedDropDown = rememberSaveable { mutableStateOf(false) }
     val result = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartIntentSenderForResult(),
         onResult = {
-            onActivityResult(
-                selectedMedia,
-                selectionState,
-                it
-            )
+            onActivityResult(it)
         }
     )
-    actions(expandedDropDown, selectedMedia, selectionState, result)
+    actions(expandedDropDown, result)
 }

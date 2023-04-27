@@ -6,7 +6,6 @@
 package com.dot.gallery.feature_node.presentation.mediaview.components
 
 import android.provider.MediaStore
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest

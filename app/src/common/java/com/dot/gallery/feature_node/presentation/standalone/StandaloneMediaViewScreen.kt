@@ -24,7 +24,6 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -40,10 +39,12 @@ import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.Constants.DEFAULT_LOW_VELOCITY_SWIPE_DURATION
 import com.dot.gallery.core.Constants.HEADER_DATE_FORMAT
+import com.dot.gallery.core.MediaState
 import com.dot.gallery.core.Settings
 import com.dot.gallery.core.presentation.components.media.MediaPreviewComponent
 import com.dot.gallery.core.presentation.components.media.VideoPlayerController
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewAppBar
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewBottomBar
 import com.dot.gallery.feature_node.presentation.util.getDate
@@ -54,11 +55,10 @@ import com.dot.gallery.feature_node.presentation.util.toggleSystemBars
 fun StandaloneMediaViewScreen(
     paddingValues: PaddingValues,
     settings: Settings,
-    viewModel: StandaloneViewModel
+    mediaState: MutableState<MediaState>,
+    handler: MediaHandleUseCase
 ) {
-    val state by rememberSaveable {
-        viewModel.photoState
-    }
+    val state by mediaState
     val pagerState = rememberPagerState()
     val scrollEnabled = remember { mutableStateOf(true) }
 
@@ -145,7 +145,7 @@ fun StandaloneMediaViewScreen(
         )
         MediaViewBottomBar(
             showDeleteButton = false,
-            handler = viewModel.handler,
+            handler = handler,
             showUI = showUI.value,
             paddingValues = paddingValues,
             currentMedia = state.media.firstOrNull()

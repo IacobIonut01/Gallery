@@ -15,36 +15,44 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.navigation.NavController
 import com.dot.gallery.R
-import com.dot.gallery.feature_node.presentation.MediaScreen
+import com.dot.gallery.core.Constants.Target.TARGET_TRASH
+import com.dot.gallery.core.MediaState
 import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.presentation.MediaViewModel
+import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
+import com.dot.gallery.feature_node.presentation.MediaScreen
 import com.dot.gallery.feature_node.presentation.library.trashed.components.EmptyTrash
 import com.dot.gallery.feature_node.presentation.library.trashed.components.TrashedNavActions
 
 @Composable
 fun TrashedGridScreen(
-    navController: NavController,
     paddingValues: PaddingValues,
     albumName: String = stringResource(id = R.string.trash),
-    viewModel: MediaViewModel,
+    handler: MediaHandleUseCase,
+    mediaState: MutableState<MediaState>,
+    selectionState: MutableState<Boolean>,
+    selectedMedia: SnapshotStateList<Media>,
+    toggleSelection: (Int) -> Unit,
+    navigate: (route: String) -> Unit,
+    navigateUp: () -> Unit
 ) = MediaScreen(
-    navController = navController,
     paddingValues = paddingValues,
     albumName = albumName,
-    viewModel = viewModel,
+    target = TARGET_TRASH,
+    mediaState = mediaState,
+    selectionState = selectionState,
+    selectedMedia = selectedMedia,
+    toggleSelection = toggleSelection,
     NavActions = { _: MutableState<Boolean>,
-                   selectedMedia: SnapshotStateList<Media>,
-                   selectionState: MutableState<Boolean>,
                    result: ActivityResultLauncher<IntentSenderRequest> ->
-        TrashedNavActions(viewModel, selectedMedia, selectionState, result)
+        TrashedNavActions(handler, mediaState, selectedMedia, selectionState, result)
     },
     EmptyComponent = { EmptyTrash(Modifier.fillMaxSize()) },
-    onActivityResult = { selectedMedia, selectionState, result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            selectedMedia.clear()
-            selectionState.value = false
-        }
+    navigate = navigate,
+    navigateUp = navigateUp
+) { result ->
+    if (result.resultCode == Activity.RESULT_OK) {
+        selectedMedia.clear()
+        selectionState.value = false
     }
-)
+}

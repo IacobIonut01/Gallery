@@ -34,7 +34,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.navigation.NavController
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.integration.compose.rememberGlidePreloadingData
 import com.bumptech.glide.signature.MediaStoreSignature
@@ -44,31 +43,31 @@ import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.Constants.DEFAULT_LOW_VELOCITY_SWIPE_DURATION
 import com.dot.gallery.core.Constants.HEADER_DATE_FORMAT
 import com.dot.gallery.core.Constants.Target.TARGET_TRASH
+import com.dot.gallery.core.MediaState
 import com.dot.gallery.core.Settings
 import com.dot.gallery.core.presentation.components.media.MediaPreviewComponent
 import com.dot.gallery.core.presentation.components.media.VideoPlayerController
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.library.trashed.components.TrashedViewBottomBar
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewAppBar
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewBottomBar
-import com.dot.gallery.feature_node.presentation.MediaViewModel
 import com.dot.gallery.feature_node.presentation.util.getDate
 import com.dot.gallery.feature_node.presentation.util.toggleSystemBars
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MediaViewScreen(
-    navController: NavController,
+    navigateUp: () -> Unit,
     paddingValues: PaddingValues,
     mediaId: Long,
     target: String? = null,
     settings: Settings,
-    viewModel: MediaViewModel
+    mediaState: MutableState<MediaState>,
+    handler: MediaHandleUseCase
 ) {
     val runtimeMediaId = remember { mutableStateOf(mediaId) }
-    val state by remember {
-        viewModel.photoState
-    }
+    val state by mediaState
     val initialPage = remember { state.media.indexOfFirst { it.id == mediaId } }
     val pagerState = rememberPagerState(initialPage = if (initialPage == -1) 0 else initialPage)
     val scrollEnabled = remember { mutableStateOf(true) }
@@ -118,7 +117,7 @@ fun MediaViewScreen(
 
     LaunchedEffect(state.media) {
         if (state.media.isEmpty()) {
-            navController.navigateUp()
+            navigateUp()
         } else {
             updateContent(state.media.indexOfFirst { it.id == runtimeMediaId.value })
         }
@@ -176,13 +175,12 @@ fun MediaViewScreen(
         MediaViewAppBar(
             showUI = showUI.value,
             currentDate = currentDate.value,
-            paddingValues = paddingValues
-        ) {
-            navController.navigateUp()
-        }
+            paddingValues = paddingValues,
+            onGoBack = navigateUp
+        )
         if (target == TARGET_TRASH) {
             TrashedViewBottomBar(
-                handler = viewModel.handler,
+                handler = handler,
                 showUI = showUI.value,
                 paddingValues = paddingValues,
                 currentMedia = currentMedia.value,
@@ -193,7 +191,7 @@ fun MediaViewScreen(
             }
         } else {
             MediaViewBottomBar(
-                handler = viewModel.handler,
+                handler = handler,
                 showUI = showUI.value,
                 paddingValues = paddingValues,
                 currentMedia = currentMedia.value,

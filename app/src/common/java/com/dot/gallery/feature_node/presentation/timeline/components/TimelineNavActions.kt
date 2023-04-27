@@ -18,36 +18,37 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.viewModelScope
-import androidx.navigation.NavController
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants
+import com.dot.gallery.core.MediaState
 import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.presentation.MediaViewModel
+import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.feature_node.presentation.util.shareMedia
 import kotlinx.coroutines.launch
 
 @Composable
 fun RowScope.TimelineNavActions(
-    viewModel: MediaViewModel,
+    albumId: Long,
+    handler: MediaHandleUseCase,
     expandedDropDown: MutableState<Boolean>,
+    mediaState: MutableState<MediaState>,
     selectedMedia: SnapshotStateList<Media>,
     selectionState: MutableState<Boolean>,
-    navController: NavController,
+    navigate: (route: String) -> Unit,
+    navigateUp: () -> Unit,
     result: ActivityResultLauncher<IntentSenderRequest>
 ) {
     val shareMedia = stringResource(id = R.string.share_media)
     val trashMedia = stringResource(R.string.trash)
     val context = LocalContext.current
-    val state by remember { viewModel.photoState }
-    val albumId = remember { viewModel.albumId }
-    val scope = viewModel.viewModelScope
+    val state by mediaState
+    val scope = rememberCoroutineScope()
     AnimatedVisibility(
         visible = selectionState.value,
         enter = Constants.Animation.enterAnimation,
@@ -71,7 +72,7 @@ fun RowScope.TimelineNavActions(
             IconButton(
                 onClick = {
                     scope.launch {
-                        viewModel.handler.toggleFavorite(
+                        handler.toggleFavorite(
                             result,
                             selectedMedia
                         )
@@ -86,7 +87,7 @@ fun RowScope.TimelineNavActions(
             IconButton(
                 onClick = {
                     scope.launch {
-                        viewModel.handler.trashMedia(
+                        handler.trashMedia(
                             result,
                             selectedMedia
                         )
@@ -134,12 +135,12 @@ fun RowScope.TimelineNavActions(
                 text = { Text(text = stringResource(R.string.move_album_to_trash)) },
                 onClick = {
                     scope.launch {
-                        viewModel.handler.trashMedia(
+                        handler.trashMedia(
                             result = result,
                             mediaList = state.media,
                             trash = true
                         )
-                        navController.navigateUp()
+                        navigateUp()
                     }
                     expandedDropDown.value = false
                 },
@@ -148,21 +149,21 @@ fun RowScope.TimelineNavActions(
         DropdownMenuItem(
             text = { Text(text = stringResource(R.string.favorites)) },
             onClick = {
-                navController.navigate(Screen.FavoriteScreen.route)
+                navigate(Screen.FavoriteScreen.route)
                 expandedDropDown.value = false
             },
         )
         DropdownMenuItem(
             text = { Text(text = stringResource(R.string.trash)) },
             onClick = {
-                navController.navigate(Screen.TrashedScreen.route)
+                navigate(Screen.TrashedScreen.route)
                 expandedDropDown.value = false
             },
         )
         DropdownMenuItem(
             text = { Text(text = stringResource(R.string.settings_title)) },
             onClick = {
-                navController.navigate(Screen.SettingsScreen.route)
+                navigate(Screen.SettingsScreen.route)
                 expandedDropDown.value = false
             }
         )

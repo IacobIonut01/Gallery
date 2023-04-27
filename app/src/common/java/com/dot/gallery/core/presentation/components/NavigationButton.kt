@@ -14,13 +14,13 @@ import com.dot.gallery.R
 @Composable
 fun NavigationButton(
     albumId: Long,
-    navController: NavController,
+    navigateUp: () -> Unit,
     clearSelection: () -> Unit,
     selectionState: MutableState<Boolean>,
     alwaysGoBack: Boolean,
 ) {
     val onClick: () -> Unit =
-        if (albumId != -1L && !selectionState.value || alwaysGoBack) navController::navigateUp
+        if (albumId != -1L && !selectionState.value || alwaysGoBack) navigateUp
         else clearSelection
     val icon = if (albumId != -1L && !selectionState.value || alwaysGoBack) Icons.Default.ArrowBack
     else Icons.Default.Close

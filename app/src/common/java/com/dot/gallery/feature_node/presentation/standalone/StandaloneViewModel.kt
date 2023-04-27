@@ -7,11 +7,11 @@ package com.dot.gallery.feature_node.presentation.standalone
 
 import android.net.Uri
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dot.gallery.core.MediaState
 import com.dot.gallery.core.Resource
 import com.dot.gallery.feature_node.domain.use_case.MediaUseCases
+import com.dot.gallery.feature_node.presentation.ChanneledViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -21,7 +21,7 @@ import javax.inject.Inject
 @HiltViewModel
 class StandaloneViewModel @Inject constructor(
     private val mediaUseCases: MediaUseCases
-) : ViewModel() {
+) : ChanneledViewModel() {
 
     val photoState = mutableStateOf(MediaState())
     val handler = mediaUseCases.mediaHandleUseCase

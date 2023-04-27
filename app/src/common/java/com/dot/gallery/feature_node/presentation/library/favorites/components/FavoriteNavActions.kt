@@ -8,16 +8,16 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.res.stringResource
 import com.dot.gallery.R
+import com.dot.gallery.core.MediaState
 import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.presentation.MediaViewModel
 
 @Composable
 fun FavoriteNavActions(
-    viewModel: MediaViewModel,
+    toggleFavorite: (ActivityResultLauncher<IntentSenderRequest>, List<Media>, Boolean) -> Unit,
+    mediaState: MutableState<MediaState>,
     selectedMedia: SnapshotStateList<Media>,
     selectionState: MutableState<Boolean>,
     result: ActivityResultLauncher<IntentSenderRequest>
@@ -25,15 +25,11 @@ fun FavoriteNavActions(
     val removeAllTitle = stringResource(R.string.remove_all)
     val removeSelectedTitle = stringResource(R.string.remove_selected)
     val title = if (selectionState.value) removeSelectedTitle else removeAllTitle
-    val state by remember { viewModel.photoState }
+    val state by mediaState
     if (state.media.isNotEmpty()) {
         TextButton(
             onClick = {
-                viewModel.toggleFavorite(
-                    result,
-                    selectedMedia.ifEmpty { state.media },
-                    false
-                )
+                toggleFavorite(result, selectedMedia.ifEmpty { state.media }, false)
             }
         ) {
             Text(

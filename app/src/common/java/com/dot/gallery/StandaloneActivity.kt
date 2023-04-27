@@ -49,7 +49,12 @@ class StandaloneActivity : ComponentActivity() {
                         standaloneUri = uriToPath(intent.data)
                         clipDataUriList = clipDataUris
                     }
-                    StandaloneMediaViewScreen(paddingValues, settings, viewModel)
+                    StandaloneMediaViewScreen(
+                        paddingValues = paddingValues,
+                        settings = settings,
+                        mediaState = viewModel.photoState,
+                        handler = viewModel.handler
+                    )
                 }
                 BackHandler {
                     finish()

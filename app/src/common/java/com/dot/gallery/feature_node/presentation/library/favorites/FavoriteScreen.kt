@@ -15,36 +15,43 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.navigation.NavController
 import com.dot.gallery.R
-import com.dot.gallery.feature_node.presentation.MediaScreen
+import com.dot.gallery.core.Constants.Target.TARGET_FAVORITES
+import com.dot.gallery.core.MediaState
 import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.presentation.MediaViewModel
+import com.dot.gallery.feature_node.presentation.MediaScreen
 import com.dot.gallery.feature_node.presentation.library.favorites.components.EmptyFavorites
 import com.dot.gallery.feature_node.presentation.library.favorites.components.FavoriteNavActions
 
 @Composable
 fun FavoriteScreen(
-    navController: NavController,
     paddingValues: PaddingValues,
     albumName: String = stringResource(id = R.string.favorites),
-    viewModel: MediaViewModel,
+    mediaState: MutableState<MediaState>,
+    selectionState: MutableState<Boolean>,
+    selectedMedia: SnapshotStateList<Media>,
+    toggleFavorite: (ActivityResultLauncher<IntentSenderRequest>, List<Media>, Boolean) -> Unit,
+    toggleSelection: (Int) -> Unit,
+    navigate: (route: String) -> Unit,
+    navigateUp: () -> Unit
 ) = MediaScreen(
-    navController = navController,
     paddingValues = paddingValues,
     albumName = albumName,
-    viewModel = viewModel,
+    target = TARGET_FAVORITES,
+    mediaState = mediaState,
+    selectionState = selectionState,
+    selectedMedia = selectedMedia,
+    toggleSelection = toggleSelection,
     NavActions = { _: MutableState<Boolean>,
-                   selectedMedia: SnapshotStateList<Media>,
-                   selectionState: MutableState<Boolean>,
                    result: ActivityResultLauncher<IntentSenderRequest> ->
-        FavoriteNavActions(viewModel, selectedMedia, selectionState, result)
+        FavoriteNavActions(toggleFavorite, mediaState, selectedMedia, selectionState, result)
     },
     EmptyComponent = { EmptyFavorites(Modifier.fillMaxSize()) },
-    onActivityResult = { selectedMedia, selectionState, result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            selectedMedia.clear()
-            selectionState.value = false
-        }
+    navigate = navigate,
+    navigateUp = navigateUp
+) { result ->
+    if (result.resultCode == Activity.RESULT_OK) {
+        selectedMedia.clear()
+        selectionState.value = false
     }
-)
+}

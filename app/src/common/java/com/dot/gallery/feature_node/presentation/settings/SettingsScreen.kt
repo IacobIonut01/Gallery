@@ -38,7 +38,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
 import com.dot.gallery.R
 import com.dot.gallery.core.SettingsEntity
 import com.dot.gallery.core.SettingsType.*
@@ -46,7 +45,7 @@ import com.dot.gallery.core.SettingsType.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    navController: NavController,
+    navigateUp: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -66,7 +65,7 @@ fun SettingsScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = navController::navigateUp) {
+                    IconButton(onClick = navigateUp) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = stringResource(R.string.back_cd)
@@ -94,7 +93,7 @@ fun SettingsScreen(
                             onClick = {
                                 viewModel.settings.resetToDefaults()
                                 expandedDropDown = false
-                                navController.navigateUp()
+                                navigateUp()
                             },
                         )
                     }
