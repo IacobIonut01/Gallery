@@ -59,6 +59,14 @@
     <string name="location">Konum</string>
     <string name="location_cd">Medya Konumu</string>
     <string name="location_map_cd">Konum Haritası</string>
+    <string name="app_dev">by %s</string>
+    <string name="app_dev_name">IacobIonut01</string>
+    <string name="donate">Donate</string>
+    <string name="github">Github</string>
+    <string name="donate_button_cd">Donate Button</string>
+    <string name="github_button_cd">Github Button</string>
+    <string name="donate_url">https://www.paypal.com/paypalme/iacobionut01</string>
+    <string name="github_url">https://github.com/IacobIonut01/Gallery</string>
     <plurals name="item_count">
         <item quantity="one">%s öğe</item>
         <item quantity="other">%s öğe</item>
