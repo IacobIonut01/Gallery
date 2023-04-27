@@ -31,7 +31,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.media3.exoplayer.ExoPlayer
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.integration.compose.rememberGlidePreloadingData
@@ -48,6 +47,7 @@ import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewAppBar
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewBottomBar
 import com.dot.gallery.feature_node.presentation.util.getDate
+import com.dot.gallery.feature_node.presentation.util.toggleSystemBars
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -67,7 +67,7 @@ fun StandaloneMediaViewScreen(
     val showUI = remember { mutableStateOf(true) }
     val context = LocalContext.current
     val maxImageSize = remember { settings.maxImageSize }
-    val window = remember { (context as Activity).window }
+    val window = with(LocalContext.current as Activity) { return@with window }
     val windowInsetsController =
         remember { WindowCompat.getInsetsController(window, window.decorView) }
 
@@ -81,15 +81,6 @@ fun StandaloneMediaViewScreen(
             .load(media.uri)
     }
     /** ************ **/
-
-    val showUIListener: () -> Unit = remember {
-        {
-            if (showUI.value)
-                windowInsetsController.show(WindowInsetsCompat.Type.systemBars())
-            else
-                windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
-        }
-    }
 
     LaunchedEffect(state.media) {
         state.media.firstOrNull()?.let {
@@ -126,7 +117,7 @@ fun StandaloneMediaViewScreen(
                 playWhenReady = index == pagerState.currentPage,
                 onItemClick = {
                     showUI.value = !showUI.value
-                    showUIListener()
+                    windowInsetsController.toggleSystemBars(showUI.value)
                 }
             ) { player: ExoPlayer, currentTime: MutableState<Long>, totalTime: Long, buffer: Int, playToggle: () -> Unit ->
                 AnimatedVisibility(
@@ -149,10 +140,9 @@ fun StandaloneMediaViewScreen(
         MediaViewAppBar(
             showUI = showUI.value,
             currentDate = currentDate.value,
-            paddingValues = paddingValues
-        ) {
-            (context as Activity).finish()
-        }
+            paddingValues = paddingValues,
+            onGoBack = (context as Activity)::finish
+        )
         MediaViewBottomBar(
             showDeleteButton = false,
             handler = viewModel.handler,
