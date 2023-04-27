@@ -41,6 +41,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.dot.gallery.R
 import com.dot.gallery.core.SettingsEntity
 import com.dot.gallery.core.SettingsType.*
+import com.dot.gallery.feature_node.presentation.settings.components.SettingsAppHeader
+import com.dot.gallery.feature_node.presentation.settings.components.SettingsItem
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -107,56 +109,11 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
+            item { SettingsAppHeader() }
             items(
                 items = settingsList,
                 key = { it.title + it.type.toString() }
-            ) { item ->
-                var checked by remember {
-                    mutableStateOf(item.isChecked ?: false)
-                }
-                val icon: @Composable () -> Unit = {
-                    Icon(
-                        imageVector = item.icon!!,
-                        contentDescription = null
-                    )
-                }
-                val summary: @Composable () -> Unit = {
-                    Text(text = item.summary!!)
-                }
-                val switch: @Composable () -> Unit = {
-                    Switch(checked = checked, onCheckedChange = null)
-                }
-                if (item.type == Header) {
-                    Text(
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
-                            .padding(top = 8.dp),
-                        text = item.title,
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                } else {
-                    ListItem(
-                        headlineContent = {
-                            Text(text = item.title)
-                        },
-                        supportingContent = if (!item.summary.isNullOrEmpty()) summary else null,
-                        trailingContent = if (item.type == Switch) switch else null,
-                        leadingContent = if (item.icon != null) icon else null,
-                        modifier = Modifier
-                            .clickable(
-                                onClick = {
-                                    if (item.type == Switch) {
-                                        item.onCheck?.let {
-                                            checked = !checked
-                                            it(checked)
-                                        }
-                                    } else item.onClick
-                                }
-                            )
-                    )
-                }
-            }
+            ) { SettingsItem(it) }
         }
     }
 

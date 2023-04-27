@@ -92,9 +92,16 @@ class Settings(context: Context) {
 }
 
 sealed class SettingsType {
-    object Switch: SettingsType()
-    object Header: SettingsType()
-    object Default: SettingsType()
+    object Switch : SettingsType()
+    object Header : SettingsType()
+    object Default : SettingsType()
+}
+
+sealed class Position {
+    object Top : Position()
+    object Middle : Position()
+    object Bottom : Position()
+    object Alone : Position()
 }
 
 data class SettingsEntity(
@@ -105,5 +112,8 @@ data class SettingsEntity(
     val enabled: Boolean = true,
     val isChecked: Boolean? = null,
     val onCheck: ((Boolean) -> Unit)? = null,
-    val onClick: (() -> Unit)? = null
-)
+    val onClick: (() -> Unit)? = null,
+    val screenPosition: Position = Position.Alone
+) {
+    val isHeader = type == SettingsType.Header
+}
