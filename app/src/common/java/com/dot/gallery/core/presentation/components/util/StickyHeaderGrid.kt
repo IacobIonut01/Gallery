@@ -17,10 +17,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import kotlin.math.roundToInt
 
 @Composable
 fun StickyHeaderGrid(
@@ -48,9 +47,7 @@ fun StickyHeaderGrid(
             }
         }
     }
-    val toolbarOffset = remember {
-        (64 * context.resources.displayMetrics.density).roundToInt()
-    }
+    val toolbarOffset = with(LocalDensity.current) { return@with 64.dp.roundToPx() }
     val offsetAnimation by animateIntOffsetAsState(
         IntOffset(x = 0, y = headerOffset + toolbarOffset)
     )
