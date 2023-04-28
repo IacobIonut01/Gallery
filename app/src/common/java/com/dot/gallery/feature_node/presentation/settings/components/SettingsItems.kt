@@ -154,7 +154,7 @@ fun SettingsItem(
         else -> null
     }
     val clickableModifier =
-        if (item.type != SettingsType.Seek || !item.isHeader)
+        if (item.type != SettingsType.Seek && !item.isHeader)
             Modifier.clickable {
                 if (item.type == SettingsType.Switch) {
                     item.onCheck?.let {
