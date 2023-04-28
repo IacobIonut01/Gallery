@@ -32,7 +32,7 @@
     <string name="remove_selected">Ausgewählte entfernen</string>
     <string name="remove_all">Alle entfernen</string>
     <string name="empty_favorites_title">Sie haben keine Favoriten</string>
-    <string name="label">Label</string>
+    <string name="label">Dateiname</string>
     <string name="path">Pfad</string>
     <string name="date">Datum</string>
     <string name="iso">" • ISO"</string>
@@ -73,7 +73,7 @@
     <string name="settings_cached_screen_summary">Wie viele Bildschirme mit Medien im Speicher gespeichert sind</string>
     <string name="settings_disk_cache_summary">Wie viel Speicherplatz für die dauerhafte Zwischenspeicherung verwendet werden kann</string>
     <plurals name="item_count">
-        <item quantity="one">%s Artikel</item>
-        <item quantity="other">%s Artikel</item>
+        <item quantity="one">%s Datei</item>
+        <item quantity="other">%s Dateien</item>
     </plurals>
 </resources>
