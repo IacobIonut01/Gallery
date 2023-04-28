@@ -63,7 +63,6 @@ fun StickyHeader(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
                     onLongClick = {
-                        isCheckVisible.value = !isCheckVisible.value
                         onChecked()
                     },
                     onClick = {

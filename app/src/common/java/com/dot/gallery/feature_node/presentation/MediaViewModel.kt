@@ -66,7 +66,7 @@ open class MediaViewModel @Inject constructor(
 
     fun toggleSelection(index: Int) {
         val item = photoState.value.media[index]
-        val isSelected = item.selected
+        val isSelected = item.selected || selectedPhotoState.find { it.id == item.id } != null
 
         photoState.value = photoState.value.copy(
             media = photoState.value.media.apply {

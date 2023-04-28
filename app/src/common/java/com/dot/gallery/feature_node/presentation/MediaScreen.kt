@@ -352,7 +352,7 @@ fun MediaScreen(
                                         }
                                         selectedMedia.addAll(toAdd)
                                     } else selectedMedia.removeAll(item.data)
-                                    selectionState.value = selectedMedia.size != 0
+                                    selectionState.value = selectedMedia.isNotEmpty()
                                 }
                             }
 
