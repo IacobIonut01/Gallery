@@ -92,6 +92,7 @@ class Settings(context: Context) {
 }
 
 sealed class SettingsType {
+    object Seek : SettingsType()
     object Switch : SettingsType()
     object Header : SettingsType()
     object Default : SettingsType()
@@ -113,6 +114,13 @@ data class SettingsEntity(
     val isChecked: Boolean? = null,
     val onCheck: ((Boolean) -> Unit)? = null,
     val onClick: (() -> Unit)? = null,
+    val minValue: Float? = null,
+    val currentValue: Float? = null,
+    val maxValue: Float? = null,
+    val step: Int = 1,
+    val valueMultiplier: Int = 1,
+    val seekSuffix: String? = null,
+    val onSeek: ((Float) -> Unit)? = null,
     val screenPosition: Position = Position.Alone
 ) {
     val isHeader = type == SettingsType.Header

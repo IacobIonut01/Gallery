@@ -6,6 +6,7 @@
 package com.dot.gallery.feature_node.presentation.settings
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -107,7 +108,7 @@ fun SettingsScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
+                .padding(top = padding.calculateTopPadding())
         ) {
             item { SettingsAppHeader() }
             items(
