@@ -20,10 +20,12 @@ sealed class MediaItem {
     data class Header(
         override val key: String,
         val text: String,
+        val data: List<Media>
     ) : MediaItem(), Parcelable {
         constructor(source: Parcel) : this(
             source.readString()!!,
-            source.readString()!!
+            source.readString()!!,
+            source.readParcelableList(ArrayList<Media>(), ClassLoader.getSystemClassLoader())
         )
 
         override fun describeContents() = 0

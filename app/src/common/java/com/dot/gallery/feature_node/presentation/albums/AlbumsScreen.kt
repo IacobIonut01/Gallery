@@ -6,7 +6,6 @@
 package com.dot.gallery.feature_node.presentation.albums
 
 import android.graphics.drawable.Drawable
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -46,18 +45,15 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.integration.compose.rememberGlidePreloadingData
 import com.bumptech.glide.signature.MediaStoreSignature
 import com.dot.gallery.R
-import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Settings
 import com.dot.gallery.core.presentation.components.EmptyMedia
 import com.dot.gallery.core.presentation.components.Error
 import com.dot.gallery.core.presentation.components.FilterButton
 import com.dot.gallery.core.presentation.components.FilterOption
-import com.dot.gallery.core.presentation.components.LoadingMedia
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.util.MediaOrder
 import com.dot.gallery.feature_node.domain.util.OrderType
@@ -68,7 +64,7 @@ import com.dot.gallery.ui.theme.Dimens
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlbumsScreen(
-    navController: NavController,
+    navigate: (route: String) -> Unit,
     paddingValues: PaddingValues,
     viewModel: AlbumsViewModel = hiltViewModel(),
     settings: Settings,
@@ -141,7 +137,7 @@ fun AlbumsScreen(
     }
 
     val onAlbumClick: (Album) -> Unit = { album ->
-        navController.navigate(Screen.AlbumViewScreen.route + "?albumId=${album.id}&albumName=${album.label}")
+        navigate(Screen.AlbumViewScreen.route + "?albumId=${album.id}&albumName=${album.label}")
     }
     val onAlbumLongClick: (Album) -> Unit = { album ->
         viewModel.toggleAlbumPin(album, !album.isPinned)
@@ -191,7 +187,7 @@ fun AlbumsScreen(
                     Button(
                         modifier = Modifier.weight(1f),
                         onClick = {
-                            navController.navigate(Screen.TrashedScreen.route)
+                            navigate(Screen.TrashedScreen.route)
                         },
                         colors = ButtonDefaults.filledTonalButtonColors()
                     ) {
@@ -208,7 +204,7 @@ fun AlbumsScreen(
                     Button(
                         modifier = Modifier.weight(1f),
                         onClick = {
-                            navController.navigate(Screen.FavoriteScreen.route)
+                            navigate(Screen.FavoriteScreen.route)
                         },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.tertiary,

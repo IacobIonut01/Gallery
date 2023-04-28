@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">Gallery</string>
-    <string name="nav_photos">Photos</string>
     <string name="nav_albums">Albums</string>
     <string name="searchbar_title"><![CDATA[Search photos & videos]]></string>
     <string name="header_today">Today</string>
@@ -27,7 +26,6 @@
     <string name="trash_restore">Restore</string>
     <string name="trash_empty">Empty</string>
     <string name="trash_delete">Delete</string>
-    <string name="nav_library">Library</string>
     <string name="share">Share</string>
     <string name="info">Info</string>
     <string name="remove_selected">Remove selected</string>
@@ -44,7 +42,6 @@
     <string name="select_all">Select all</string>
     <string name="unselect_all">Unselect all</string>
     <string name="drop_down_cd">Drop down</string>
-    <string name="cancel">Cancel</string>
     <string name="back_cd">Back</string>
     <string name="settings_title">Settings</string>
     <string name="reset_settings">Reset Settings</string>
@@ -61,8 +58,20 @@
     <string name="location">Location</string>
     <string name="location_cd">Media Location</string>
     <string name="media_location" translatable="false">@string/location_cd</string>
-    <string name="no_internet">Internet is not available</string>
     <string name="location_map_cd">Location Map</string>
+    <string name="app_dev">by %s</string>
+    <string name="app_dev_name">IacobIonut01</string>
+    <string name="donate">Donate</string>
+    <string name="github">Github</string>
+    <string name="donate_button_cd">Donate Button</string>
+    <string name="github_button_cd">Github Button</string>
+    <string name="donate_url">https://www.paypal.com/paypalme/iacobionut01</string>
+    <string name="github_url">https://github.com/IacobIonut01/Gallery</string>
+    <string name="settings_cache">Cache</string>
+    <string name="settings_disk_cache_title">Disk cache size</string>
+    <string name="settings_cached_screen_title">Cached screen count</string>
+    <string name="settings_cached_screen_summary">How many screens of media are stored in the memory</string>
+    <string name="settings_disk_cache_summary">How much storage space can be used for persistent caching</string>
     <plurals name="item_count">
         <item quantity="one">%s item</item>
         <item quantity="other">%s items</item>

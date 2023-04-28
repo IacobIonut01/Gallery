@@ -9,7 +9,6 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dot.gallery.core.Constants.Target.TARGET_FAVORITES
 import com.dot.gallery.core.Constants.Target.TARGET_TRASH
@@ -26,7 +25,7 @@ import javax.inject.Inject
 @HiltViewModel
 open class MediaViewModel @Inject constructor(
     private val mediaUseCases: MediaUseCases
-) : ViewModel() {
+) : ChanneledViewModel() {
 
     val multiSelectState = mutableStateOf(false)
     var photoState = mutableStateOf(MediaState())
@@ -67,7 +66,7 @@ open class MediaViewModel @Inject constructor(
 
     fun toggleSelection(index: Int) {
         val item = photoState.value.media[index]
-        val isSelected = item.selected
+        val isSelected = item.selected || selectedPhotoState.find { it.id == item.id } != null
 
         photoState.value = photoState.value.copy(
             media = photoState.value.media.apply {

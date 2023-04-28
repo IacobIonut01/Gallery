@@ -34,6 +34,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -51,12 +52,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.integration.compose.rememberGlidePreloadingData
 import com.bumptech.glide.signature.MediaStoreSignature
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.PERMISSIONS
+import com.dot.gallery.core.MediaState
 import com.dot.gallery.core.presentation.components.Error
 import com.dot.gallery.core.presentation.components.NavigationActions
 import com.dot.gallery.core.presentation.components.NavigationButton
@@ -81,26 +82,23 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 )
 @Composable
 fun MediaScreen(
-    navController: NavController,
     paddingValues: PaddingValues,
     albumId: Long = -1L,
+    target: String? = null,
     albumName: String,
-    viewModel: MediaViewModel,
+    retrieveMedia: (() -> Unit)? = null,
+    mediaState: MutableState<MediaState>,
+    selectionState: MutableState<Boolean>,
+    selectedMedia: SnapshotStateList<Media>,
+    toggleSelection: (Int) -> Unit,
     showMonthlyHeader: Boolean = false,
     alwaysGoBack: Boolean = true,
-    NavActions: @Composable RowScope.(
-        expandedDropDown: MutableState<Boolean>,
-        selectedMedia: SnapshotStateList<Media>,
-        selectionState: MutableState<Boolean>,
-        result: ActivityResultLauncher<IntentSenderRequest>
-    ) -> Unit,
+    NavActions: @Composable (RowScope.(expandedDropDown: MutableState<Boolean>, result: ActivityResultLauncher<IntentSenderRequest>) -> Unit),
     EmptyComponent: @Composable () -> Unit,
-    OverGrid: (@Composable () -> Unit)? = null,
-    onActivityResult: (
-        selectedMedia: SnapshotStateList<Media>,
-        selectionState: MutableState<Boolean>,
-        result: ActivityResult
-    ) -> Unit
+    OverGrid: @Composable (() -> Unit)? = null,
+    navigate: (route: String) -> Unit,
+    navigateUp: () -> Unit,
+    onActivityResult: (result: ActivityResult) -> Unit,
 ) {
 
     /** STRING BLOCK **/
@@ -111,8 +109,8 @@ fun MediaScreen(
 
     /** Permission Handling BLOCK **/
     val mediaPermissions =
-        rememberMultiplePermissionsState(PERMISSIONS) { viewModel.launchInPhotosScreen() }
-    /** Trigger viewModel launch after permission is granted */
+        rememberMultiplePermissionsState(PERMISSIONS) { retrieveMedia?.invoke() }
+    /** Trigger retrieveMedia after permission is granted */
     if (!mediaPermissions.allPermissionsGranted) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -130,9 +128,7 @@ fun MediaScreen(
 
         /** STATES BLOCK **/
         val gridState = rememberLazyGridState()
-        val state by remember { viewModel.photoState }
-        val selectionState = remember { viewModel.multiSelectState }
-        val selectedMedia = remember { viewModel.selectedPhotoState }
+        val state by mediaState
         /** ************ **/
 
         /** Glide Preloading **/
@@ -154,7 +150,7 @@ fun MediaScreen(
             }
         }
 
-        BackHandler(enabled = selectionState.value) { clearSelection() }
+        BackHandler(enabled = selectionState.value, onBack = clearSelection)
         /** ************  **/
 
         /**
@@ -199,10 +195,10 @@ fun MediaScreen(
                     val month = getMonth(date)
                     if (month.isNotEmpty() && !monthHeaderList.contains(month)) {
                         monthHeaderList.add(month)
-                        mappedData.add(MediaItem.Header("header_big_$month", month))
+                        mappedData.add(MediaItem.Header("header_big_$month", month, data))
                     }
                 }
-                mappedData.add(MediaItem.Header("header_$date", date))
+                mappedData.add(MediaItem.Header("header_$date", date, data))
                 for (media in data) {
                     mappedData.add(MediaItem.MediaViewItem.Loaded("media_${media.id}", media))
                 }
@@ -218,8 +214,12 @@ fun MediaScreen(
 
         val stickyHeaderItem by remember(state.media) {
             derivedStateOf {
-                val firstIndex = gridState.layoutInfo.visibleItemsInfo.firstOrNull()?.index
-                val item = firstIndex?.let(mappedData::getOrNull)
+                var firstIndex = gridState.layoutInfo.visibleItemsInfo.firstOrNull()?.index
+                var item = firstIndex?.let(mappedData::getOrNull)
+                if (item != null && item.key.contains("big")) {
+                    firstIndex = firstIndex!! + 1
+                    item = firstIndex.let(mappedData::getOrNull)
+                }
                 stickyHeaderLastItem.apply {
                     if (item != null && item is MediaItem.Header) {
                         value = item.key.replace("header_", "")
@@ -258,7 +258,7 @@ fun MediaScreen(
                     navigationIcon = {
                         NavigationButton(
                             albumId = albumId,
-                            navController = navController,
+                            navigateUp = navigateUp,
                             clearSelection = clearSelection,
                             selectionState = selectionState,
                             alwaysGoBack = alwaysGoBack,
@@ -266,8 +266,6 @@ fun MediaScreen(
                     },
                     actions = {
                         NavigationActions(
-                            selectedMedia = selectedMedia,
-                            selectionState = selectionState,
                             actions = NavActions,
                             onActivityResult = onActivityResult
                         )
@@ -330,10 +328,33 @@ fun MediaScreen(
                         }
                     ) { item ->
                         when (item) {
-                            is MediaItem.Header -> StickyHeader(
-                                date = item.text,
-                                item.key.contains("big")
-                            )
+                            is MediaItem.Header -> {
+                                val isChecked = rememberSaveable { mutableStateOf(false) }
+                                LaunchedEffect(selectionState.value) {
+                                    // Uncheck if selectionState is set to false
+                                    isChecked.value = isChecked.value && selectionState.value
+                                }
+                                LaunchedEffect(selectedMedia.size) {
+                                    // Partial check of media items should not check the header
+                                    isChecked.value = selectedMedia.containsAll(item.data)
+                                }
+                                StickyHeader(
+                                    date = item.text,
+                                    showAsBig = item.key.contains("big"),
+                                    isCheckVisible = selectionState,
+                                    isChecked = isChecked
+                                ) {
+                                    isChecked.value = !isChecked.value
+                                    if (isChecked.value) {
+                                        val toAdd = item.data.toMutableList().apply {
+                                            // Avoid media from being added twice to selection
+                                            removeIf { selectedMedia.contains(it) }
+                                        }
+                                        selectedMedia.addAll(toAdd)
+                                    } else selectedMedia.removeAll(item.data)
+                                    selectionState.value = selectedMedia.isNotEmpty()
+                                }
+                            }
 
                             is MediaItem.MediaViewItem -> {
                                 val (media, preloadRequestBuilder) = preloadingData[state.media.indexOf(
@@ -345,18 +366,16 @@ fun MediaScreen(
                                     selectedMedia = selectedMedia,
                                     preloadRequestBuilder = preloadRequestBuilder,
                                     onItemLongClick = {
-                                        viewModel.toggleSelection(state.media.indexOf(it))
+                                        toggleSelection(state.media.indexOf(it))
                                     },
                                     onItemClick = {
                                         if (selectionState.value) {
-                                            viewModel.toggleSelection(state.media.indexOf(it))
+                                            toggleSelection(state.media.indexOf(it))
                                         } else {
-                                            val albumRoute = "albumId=${viewModel.albumId}"
-                                            val targetRoute = "target=${viewModel.target}"
-                                            val param = if (viewModel.target != null) targetRoute else albumRoute
-                                            navController.navigate(
-                                                Screen.MediaViewScreen.route + "?mediaId=${it.id}&$param"
-                                            )
+                                            val albumRoute = "albumId=$albumId"
+                                            val targetRoute = "target=$target"
+                                            val param = if (target != null) targetRoute else albumRoute
+                                            navigate(Screen.MediaViewScreen.route + "?mediaId=${it.id}&$param")
                                         }
                                     }
                                 )

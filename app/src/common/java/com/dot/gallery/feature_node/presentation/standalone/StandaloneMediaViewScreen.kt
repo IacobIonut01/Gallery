@@ -6,6 +6,7 @@
 package com.dot.gallery.feature_node.presentation.standalone
 
 import android.app.Activity
+import android.graphics.drawable.Drawable
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
@@ -23,34 +24,41 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.media3.exoplayer.ExoPlayer
+import com.bumptech.glide.RequestBuilder
+import com.bumptech.glide.integration.compose.rememberGlidePreloadingData
+import com.bumptech.glide.signature.MediaStoreSignature
 import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.Constants.DEFAULT_LOW_VELOCITY_SWIPE_DURATION
 import com.dot.gallery.core.Constants.HEADER_DATE_FORMAT
+import com.dot.gallery.core.MediaState
+import com.dot.gallery.core.Settings
 import com.dot.gallery.core.presentation.components.media.MediaPreviewComponent
 import com.dot.gallery.core.presentation.components.media.VideoPlayerController
+import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewAppBar
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewBottomBar
 import com.dot.gallery.feature_node.presentation.util.getDate
+import com.dot.gallery.feature_node.presentation.util.toggleSystemBars
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun StandaloneMediaViewScreen(
     paddingValues: PaddingValues,
-    viewModel: StandaloneViewModel
+    settings: Settings,
+    mediaState: MutableState<MediaState>,
+    handler: MediaHandleUseCase
 ) {
-    val state by rememberSaveable {
-        viewModel.photoState
-    }
+    val state by mediaState
     val pagerState = rememberPagerState()
     val scrollEnabled = remember { mutableStateOf(true) }
 
@@ -58,18 +66,21 @@ fun StandaloneMediaViewScreen(
 
     val showUI = remember { mutableStateOf(true) }
     val context = LocalContext.current
-    val window = remember { (context as Activity).window }
+    val maxImageSize = remember { settings.maxImageSize }
+    val window = with(LocalContext.current as Activity) { return@with window }
     val windowInsetsController =
         remember { WindowCompat.getInsetsController(window, window.decorView) }
 
-    val showUIListener: () -> Unit = remember {
-        {
-            if (showUI.value)
-                windowInsetsController.show(WindowInsetsCompat.Type.systemBars())
-            else
-                windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
-        }
+    /** Glide Preloading **/
+    val preloadingData = rememberGlidePreloadingData(
+        data = state.media,
+        preloadImageSize = Size(512f, 384f)
+    ) { media: Media, requestBuilder: RequestBuilder<Drawable> ->
+        requestBuilder
+            .signature(MediaStoreSignature(media.mimeType, media.timestamp, media.orientation))
+            .load(media.uri)
     }
+    /** ************ **/
 
     LaunchedEffect(state.media) {
         state.media.firstOrNull()?.let {
@@ -97,13 +108,16 @@ fun StandaloneMediaViewScreen(
                 .background(Color.Black)
                 .fillMaxSize()
         ) { index ->
+            val (media, preloadRequestBuilder) = preloadingData[index]
             MediaPreviewComponent(
-                media = state.media[index],
+                media = media,
                 scrollEnabled = scrollEnabled,
+                maxImageSize = maxImageSize,
+                preloadRequestBuilder = preloadRequestBuilder,
                 playWhenReady = index == pagerState.currentPage,
                 onItemClick = {
                     showUI.value = !showUI.value
-                    showUIListener()
+                    windowInsetsController.toggleSystemBars(showUI.value)
                 }
             ) { player: ExoPlayer, currentTime: MutableState<Long>, totalTime: Long, buffer: Int, playToggle: () -> Unit ->
                 AnimatedVisibility(
@@ -126,13 +140,12 @@ fun StandaloneMediaViewScreen(
         MediaViewAppBar(
             showUI = showUI.value,
             currentDate = currentDate.value,
-            paddingValues = paddingValues
-        ) {
-            (context as Activity).finish()
-        }
+            paddingValues = paddingValues,
+            onGoBack = (context as Activity)::finish
+        )
         MediaViewBottomBar(
             showDeleteButton = false,
-            handler = viewModel.handler,
+            handler = handler,
             showUI = showUI.value,
             paddingValues = paddingValues,
             currentMedia = state.media.firstOrNull()

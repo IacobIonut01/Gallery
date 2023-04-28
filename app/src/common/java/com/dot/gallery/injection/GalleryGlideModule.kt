@@ -16,28 +16,30 @@ import com.bumptech.glide.load.engine.cache.LruResourceCache
 import com.bumptech.glide.load.engine.cache.MemorySizeCalculator
 import com.bumptech.glide.module.AppGlideModule
 import com.bumptech.glide.request.RequestOptions
+import com.dot.gallery.core.Settings
 
 @GlideModule
 class GalleryGlideModule : AppGlideModule() {
     override fun applyOptions(context: Context, builder: GlideBuilder) {
+        val settings = Settings(context)
+        val diskCacheSize = settings.diskCacheSize
+        val screenCount = settings.cachedScreenCount
+
         builder.setDefaultRequestOptions(
-            RequestOptions()
-                .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
-                .format(DecodeFormat.PREFER_ARGB_8888)
+            RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL)
         )
         val memoryCalculator = MemorySizeCalculator.Builder(context)
-            .setMemoryCacheScreens(8f)
+            .setMemoryCacheScreens(screenCount)
             .build()
         builder.setMemoryCache(LruResourceCache(memoryCalculator.memoryCacheSize.toLong()))
-        builder.setIsActiveResourceRetentionAllowed(true)
         builder.setDiskCache(
             DiskLruCacheFactory(
                 "${context.cacheDir}/image_cache",
-                100 * 1024 * 1024
+                diskCacheSize * 1024 * 1024
             )
         )
         val bitmapCalculator = MemorySizeCalculator.Builder(context)
-            .setBitmapPoolScreens(4f)
+            .setBitmapPoolScreens(screenCount)
             .build()
         builder.setBitmapPool(LruBitmapPool(bitmapCalculator.bitmapPoolSize.toLong()))
     }

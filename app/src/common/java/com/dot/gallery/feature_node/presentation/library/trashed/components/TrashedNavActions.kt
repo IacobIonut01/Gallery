@@ -8,29 +8,30 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.viewModelScope
 import com.dot.gallery.R
+import com.dot.gallery.core.MediaState
 import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.presentation.MediaViewModel
+import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import kotlinx.coroutines.launch
 
 @Composable
 fun TrashedNavActions(
-    viewModel: MediaViewModel,
+    handler: MediaHandleUseCase,
+    mediaState: MutableState<MediaState>,
     selectedMedia: SnapshotStateList<Media>,
     selectionState: MutableState<Boolean>,
     result: ActivityResultLauncher<IntentSenderRequest>
 ) {
-    val state by remember { viewModel.photoState }
-    val scope = viewModel.viewModelScope
+    val state by mediaState
+    val scope = rememberCoroutineScope()
     if (state.media.isNotEmpty()) {
         TextButton(
             onClick = {
                 scope.launch {
-                    viewModel.handler.trashMedia(
+                    handler.trashMedia(
                         result,
                         selectedMedia.ifEmpty { state.media },
                         false
@@ -47,7 +48,7 @@ fun TrashedNavActions(
             TextButton(
                 onClick = {
                     scope.launch {
-                        viewModel.handler.deleteMedia(result, selectedMedia)
+                        handler.deleteMedia(result, selectedMedia)
                     }
                 }
             ) {
@@ -60,7 +61,7 @@ fun TrashedNavActions(
             TextButton(
                 onClick = {
                     scope.launch {
-                        viewModel.handler.deleteMedia(result, state.media)
+                        handler.deleteMedia(result, state.media)
                     }
                 }
             ) {

@@ -6,6 +6,7 @@
 package com.dot.gallery.feature_node.presentation.settings
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -38,15 +39,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
 import com.dot.gallery.R
 import com.dot.gallery.core.SettingsEntity
 import com.dot.gallery.core.SettingsType.*
+import com.dot.gallery.feature_node.presentation.settings.components.SettingsAppHeader
+import com.dot.gallery.feature_node.presentation.settings.components.SettingsItem
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    navController: NavController,
+    navigateUp: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -66,7 +68,7 @@ fun SettingsScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = navController::navigateUp) {
+                    IconButton(onClick = navigateUp) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = stringResource(R.string.back_cd)
@@ -94,7 +96,7 @@ fun SettingsScreen(
                             onClick = {
                                 viewModel.settings.resetToDefaults()
                                 expandedDropDown = false
-                                navController.navigateUp()
+                                navigateUp()
                             },
                         )
                     }
@@ -106,58 +108,13 @@ fun SettingsScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
+                .padding(top = padding.calculateTopPadding())
         ) {
+            item { SettingsAppHeader() }
             items(
                 items = settingsList,
                 key = { it.title + it.type.toString() }
-            ) { item ->
-                var checked by remember {
-                    mutableStateOf(item.isChecked ?: false)
-                }
-                val icon: @Composable () -> Unit = {
-                    Icon(
-                        imageVector = item.icon!!,
-                        contentDescription = null
-                    )
-                }
-                val summary: @Composable () -> Unit = {
-                    Text(text = item.summary!!)
-                }
-                val switch: @Composable () -> Unit = {
-                    Switch(checked = checked, onCheckedChange = null)
-                }
-                if (item.type == Header) {
-                    Text(
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
-                            .padding(top = 8.dp),
-                        text = item.title,
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                } else {
-                    ListItem(
-                        headlineContent = {
-                            Text(text = item.title)
-                        },
-                        supportingContent = if (!item.summary.isNullOrEmpty()) summary else null,
-                        trailingContent = if (item.type == Switch) switch else null,
-                        leadingContent = if (item.icon != null) icon else null,
-                        modifier = Modifier
-                            .clickable(
-                                onClick = {
-                                    if (item.type == Switch) {
-                                        item.onCheck?.let {
-                                            checked = !checked
-                                            it(checked)
-                                        }
-                                    } else item.onClick
-                                }
-                            )
-                    )
-                }
-            }
+            ) { SettingsItem(it) }
         }
     }
 

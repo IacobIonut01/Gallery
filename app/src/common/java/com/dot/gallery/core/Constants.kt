@@ -47,6 +47,12 @@ object Constants {
      */
     const val DEFAULT_TOP_BAR_ANIMATION_DURATION = 1000
 
+    /**
+     * MAX Image Size in Media Preview
+     * Android LIMIT: 4096x4096 [16MP]
+     */
+    const val MAX_IMAGE_SIZE = 4096
+
     private val PERMISSION_COMMON = listOf(
         Manifest.permission.ACCESS_MEDIA_LOCATION
     )

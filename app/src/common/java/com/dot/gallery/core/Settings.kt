@@ -45,6 +45,27 @@ class Settings(context: Context) {
             .putBoolean(Misc.ENABLE_TRASH, value)
             .apply()
 
+    var diskCacheSize: Long
+        get() = sharedPreferences.getLong(Glide.DISK_CACHE_SIZE, 150)
+        set(value) = sharedPreferences
+            .edit()
+            .putLong(Glide.DISK_CACHE_SIZE, value)
+            .apply()
+
+    var cachedScreenCount: Float
+        get() = sharedPreferences.getFloat(Glide.CACHED_SCREEN_COUNT, 8f)
+        set(value) = sharedPreferences
+            .edit()
+            .putFloat(Glide.CACHED_SCREEN_COUNT, value)
+            .apply()
+
+    var maxImageSize: Int
+        get() = sharedPreferences.getInt(Glide.MAX_IMAGE_SIZE, Constants.MAX_IMAGE_SIZE)
+        set(value) = sharedPreferences
+            .edit()
+            .putInt(Glide.MAX_IMAGE_SIZE, value)
+            .apply()
+
     fun resetToDefaults() {
         albumLastSort = 0
         useMediaManager = false
@@ -53,6 +74,12 @@ class Settings(context: Context) {
 
     object Album {
         const val LAST_SORT = "album_last_sort"
+    }
+
+    object Glide {
+        const val DISK_CACHE_SIZE = "disk_cache_size"
+        const val CACHED_SCREEN_COUNT = "cached_screen_count"
+        const val MAX_IMAGE_SIZE = "max_image_size"
     }
 
     object Misc {
@@ -65,9 +92,17 @@ class Settings(context: Context) {
 }
 
 sealed class SettingsType {
-    object Switch: SettingsType()
-    object Header: SettingsType()
-    object Default: SettingsType()
+    object Seek : SettingsType()
+    object Switch : SettingsType()
+    object Header : SettingsType()
+    object Default : SettingsType()
+}
+
+sealed class Position {
+    object Top : Position()
+    object Middle : Position()
+    object Bottom : Position()
+    object Alone : Position()
 }
 
 data class SettingsEntity(
@@ -78,5 +113,15 @@ data class SettingsEntity(
     val enabled: Boolean = true,
     val isChecked: Boolean? = null,
     val onCheck: ((Boolean) -> Unit)? = null,
-    val onClick: (() -> Unit)? = null
-)
+    val onClick: (() -> Unit)? = null,
+    val minValue: Float? = null,
+    val currentValue: Float? = null,
+    val maxValue: Float? = null,
+    val step: Int = 1,
+    val valueMultiplier: Int = 1,
+    val seekSuffix: String? = null,
+    val onSeek: ((Float) -> Unit)? = null,
+    val screenPosition: Position = Position.Alone
+) {
+    val isHeader = type == SettingsType.Header
+}
