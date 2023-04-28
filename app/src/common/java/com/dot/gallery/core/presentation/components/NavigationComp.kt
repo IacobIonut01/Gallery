@@ -24,6 +24,7 @@ import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Constants.Target.TARGET_FAVORITES
 import com.dot.gallery.core.Constants.Target.TARGET_TRASH
 import com.dot.gallery.core.Settings
+import com.dot.gallery.feature_node.presentation.ChanneledViewModel
 import com.dot.gallery.feature_node.presentation.MediaViewModel
 import com.dot.gallery.feature_node.presentation.albums.AlbumsScreen
 import com.dot.gallery.feature_node.presentation.albums.AlbumsViewModel
@@ -54,6 +55,10 @@ fun NavigationComp(
         bottomBarState.value = bottomNavEntries.firstOrNull { item -> item.route == it } != null
         systemBarFollowThemeState.value = !it.contains(Screen.MediaViewScreen.route)
     }
+    val navPipe = hiltViewModel<ChanneledViewModel>()
+    navPipe
+        .initWithNav(navController)
+        .collectAsStateWithLifecycle(LocalLifecycleOwner.current)
     AnimatedNavHost(
         navController = navController,
         startDestination = Screen.TimelineScreen.route
@@ -67,9 +72,6 @@ fun NavigationComp(
         ) {
             val viewModel =
                 hiltViewModel<MediaViewModel>().apply(MediaViewModel::launchInPhotosScreen)
-            viewModel
-                .initWithNav(navController)
-                .collectAsStateWithLifecycle(LocalLifecycleOwner.current)
 
             TimelineScreen(
                 paddingValues = paddingValues,
@@ -79,8 +81,8 @@ fun NavigationComp(
                 selectionState = viewModel.multiSelectState,
                 selectedMedia = viewModel.selectedPhotoState,
                 toggleSelection = viewModel::toggleSelection,
-                navigate = viewModel::navigate,
-                navigateUp = viewModel::navigateUp
+                navigate = navPipe::navigate,
+                navigateUp = navPipe::navigateUp
             )
         }
         composable(
@@ -91,9 +93,6 @@ fun NavigationComp(
             popExitTransition = { Constants.Animation.navigateUpAnimation }
         ) {
             val viewModel = hiltViewModel<MediaViewModel>().apply { target = TARGET_TRASH }
-            viewModel
-                .initWithNav(navController)
-                .collectAsStateWithLifecycle(LocalLifecycleOwner.current)
             TrashedGridScreen(
                 paddingValues = paddingValues,
                 mediaState = viewModel.photoState,
@@ -101,8 +100,8 @@ fun NavigationComp(
                 selectedMedia = viewModel.selectedPhotoState,
                 handler = viewModel.handler,
                 toggleSelection = viewModel::toggleSelection,
-                navigate = viewModel::navigate,
-                navigateUp = viewModel::navigateUp
+                navigate = navPipe::navigate,
+                navigateUp = navPipe::navigateUp
             )
         }
         composable(
@@ -113,9 +112,6 @@ fun NavigationComp(
             popExitTransition = { Constants.Animation.navigateUpAnimation }
         ) {
             val viewModel = hiltViewModel<MediaViewModel>().apply { target = TARGET_FAVORITES }
-            viewModel
-                .initWithNav(navController)
-                .collectAsStateWithLifecycle(LocalLifecycleOwner.current)
             FavoriteScreen(
                 paddingValues = paddingValues,
                 mediaState = viewModel.photoState,
@@ -123,8 +119,8 @@ fun NavigationComp(
                 selectedMedia = viewModel.selectedPhotoState,
                 toggleFavorite = viewModel::toggleFavorite,
                 toggleSelection = viewModel::toggleSelection,
-                navigate = viewModel::navigate,
-                navigateUp = viewModel::navigateUp
+                navigate = navPipe::navigate,
+                navigateUp = navPipe::navigateUp
             )
         }
         composable(
@@ -146,11 +142,8 @@ fun NavigationComp(
             popExitTransition = { Constants.Animation.navigateUpAnimation }
         ) {
             val viewModel = hiltViewModel<AlbumsViewModel>()
-            viewModel
-                .initWithNav(navController)
-                .collectAsStateWithLifecycle(LocalLifecycleOwner.current)
             AlbumsScreen(
-                navigate = viewModel::navigate,
+                navigate = navPipe::navigate,
                 paddingValues = paddingValues,
                 viewModel = viewModel,
                 settings = settings
@@ -180,9 +173,6 @@ fun NavigationComp(
             val viewModel: MediaViewModel = hiltViewModel<MediaViewModel>().apply {
                 albumId = argumentAlbumId
             }
-            viewModel
-                .initWithNav(navController)
-                .collectAsStateWithLifecycle(LocalLifecycleOwner.current)
             TimelineScreen(
                 paddingValues = paddingValues,
                 albumId = argumentAlbumId,
@@ -192,8 +182,8 @@ fun NavigationComp(
                 selectionState = viewModel.multiSelectState,
                 selectedMedia = viewModel.selectedPhotoState,
                 toggleSelection = viewModel::toggleSelection,
-                navigate = viewModel::navigate,
-                navigateUp = viewModel::navigateUp
+                navigate = navPipe::navigate,
+                navigateUp = navPipe::navigateUp
             )
         }
         composable(
@@ -222,16 +212,13 @@ fun NavigationComp(
                 navController.getBackStackEntry(entryName)
             }
             val viewModel = hiltViewModel<MediaViewModel>(parentEntry)
-            viewModel
-                .initWithNav(navController)
-                .collectAsStateWithLifecycle(LocalLifecycleOwner.current)
             MediaViewScreen(
                 paddingValues = paddingValues,
                 mediaId = mediaId,
                 settings = settings,
                 mediaState = viewModel.photoState,
                 handler = viewModel.handler,
-                navigateUp = viewModel::navigateUp
+                navigateUp = navPipe::navigateUp
             )
         }
         composable(
@@ -263,9 +250,6 @@ fun NavigationComp(
                 navController.getBackStackEntry(entryName)
             }
             val viewModel = hiltViewModel<MediaViewModel>(parentEntry)
-            viewModel
-                .initWithNav(navController)
-                .collectAsStateWithLifecycle(LocalLifecycleOwner.current)
             MediaViewScreen(
                 paddingValues = paddingValues,
                 mediaId = mediaId,
@@ -273,7 +257,7 @@ fun NavigationComp(
                 settings = settings,
                 mediaState = viewModel.photoState,
                 handler = viewModel.handler,
-                navigateUp = viewModel::navigateUp
+                navigateUp = navPipe::navigateUp
             )
         }
         composable(
@@ -284,10 +268,10 @@ fun NavigationComp(
             popExitTransition = { Constants.Animation.navigateUpAnimation },
         ) {
             val viewModel = hiltViewModel<SettingsViewModel>()
-            viewModel
-                .initWithNav(navController)
-                .collectAsStateWithLifecycle(LocalLifecycleOwner.current)
-            SettingsScreen(navigateUp = viewModel::navigateUp)
+            SettingsScreen(
+                navigateUp = navPipe::navigateUp,
+                viewModel = viewModel
+            )
         }
     }
 }

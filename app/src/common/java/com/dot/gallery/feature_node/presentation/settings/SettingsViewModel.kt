@@ -6,12 +6,12 @@
 package com.dot.gallery.feature_node.presentation.settings
 
 import android.content.Context
+import androidx.lifecycle.ViewModel
 import com.dot.gallery.R
 import com.dot.gallery.core.Position
 import com.dot.gallery.core.Settings
 import com.dot.gallery.core.SettingsEntity
 import com.dot.gallery.core.SettingsType.*
-import com.dot.gallery.feature_node.presentation.ChanneledViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlin.math.roundToLong
@@ -19,7 +19,7 @@ import kotlin.math.roundToLong
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     val settings: Settings
-) : ChanneledViewModel() {
+) : ViewModel() {
 
     fun settingsList(context: Context): List<SettingsEntity> =
         listOf(

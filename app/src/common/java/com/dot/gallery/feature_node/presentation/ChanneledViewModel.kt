@@ -3,12 +3,15 @@ package com.dot.gallery.feature_node.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-open class ChanneledViewModel : ViewModel() {
+@HiltViewModel
+class ChanneledViewModel @Inject constructor() : ViewModel() {
 
     sealed class Event {
         data class NavigationRouteEvent(val route: String): Event()
