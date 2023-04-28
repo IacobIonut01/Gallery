@@ -138,10 +138,7 @@ fun MediaViewScreen(
                     durationMillis = DEFAULT_LOW_VELOCITY_SWIPE_DURATION
                 )
             ),
-            pageSpacing = 16.dp,
-            modifier = Modifier
-                .background(Color.Black)
-                .fillMaxSize()
+            pageSpacing = 16.dp
         ) { index ->
             val (media, preloadRequestBuilder) = preloadingData[index]
             MediaPreviewComponent(
