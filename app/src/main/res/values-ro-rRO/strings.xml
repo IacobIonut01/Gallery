@@ -67,6 +67,11 @@
     <string name="github_button_cd">Github Button</string>
     <string name="donate_url">https://www.paypal.com/paypalme/iacobionut01</string>
     <string name="github_url">https://github.com/IacobIonut01/Gallery</string>
+    <string name="settings_cache">Cache</string>
+    <string name="settings_disk_cache_title">Disk cache size</string>
+    <string name="settings_cached_screen_title">Cached screen count</string>
+    <string name="settings_cached_screen_summary">How many screens of media are stored in the memory</string>
+    <string name="settings_disk_cache_summary">How much storage space can be used for persistent caching</string>
     <plurals name="item_count">
         <item quantity="one">%s articol</item>
         <item quantity="few">%s articole</item>
