@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.util.archivesName
 import java.io.FileInputStream
 import java.util.Properties
 
@@ -33,6 +34,7 @@ android {
                 arguments["room.schemaLocation"] = "$projectDir/schemas"
             }
         }
+        archivesName.set("Gallery-$versionName")
     }
 
     lintOptions {
