@@ -79,20 +79,22 @@ import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Constants.EXIF_DATE_FORMAT
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
+import com.dot.gallery.feature_node.presentation.util.ConnectionState
 import com.dot.gallery.feature_node.presentation.util.ExifMetadata
 import com.dot.gallery.feature_node.presentation.util.MapBoxURL
+import com.dot.gallery.feature_node.presentation.util.connectivityState
 import com.dot.gallery.feature_node.presentation.util.getDate
 import com.dot.gallery.feature_node.presentation.util.getExifInterface
-import com.dot.gallery.feature_node.presentation.util.isInternetAvailable
 import com.dot.gallery.feature_node.presentation.util.launchMap
 import com.dot.gallery.feature_node.presentation.util.shareMedia
 import com.dot.gallery.ui.theme.Black40P
 import com.dot.gallery.ui.theme.Shapes
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 
 @OptIn(
     ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class,
-    ExperimentalGlideComposeApi::class
+    ExperimentalGlideComposeApi::class, ExperimentalCoroutinesApi::class
 )
 @Composable
 fun BoxScope.MediaViewBottomBar(
@@ -287,6 +289,8 @@ fun BoxScope.MediaViewBottomBar(
                     if (exifMetadata.gpsLatLong != null) {
                         val lat = exifMetadata.gpsLatLong[0]
                         val long = exifMetadata.gpsLatLong[1]
+                        val connection by connectivityState()
+                        val isConnected = connection == ConnectionState.Available
                         ListItem(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -309,9 +313,9 @@ fun BoxScope.MediaViewBottomBar(
                                     contentDescription = stringResource(R.string.location_cd)
                                 )
                             },
-                            overlineContent = if (context.isInternetAvailable()) { {} } else null,
+                            overlineContent = if (isConnected) { {} } else null,
                             supportingContent = {
-                                if (context.isInternetAvailable()) {
+                                if (isConnected) {
                                     Row(
                                         modifier = Modifier
                                             .padding(top = 8.dp)
