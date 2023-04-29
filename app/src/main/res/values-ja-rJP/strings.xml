@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Gallery</string>
-    <string name="nav_albums">Albums</string>
-    <string name="searchbar_title"><![CDATA[Search photos & videos]]></string>
-    <string name="header_today">Today</string>
-    <string name="header_yesterday">Yesterday</string>
-    <string name="share_media">Share</string>
-    <string name="request_permissions">Request permissions</string>
-    <string name="filter">Filter</string>
-    <string name="filter_recent">Recent</string>
-    <string name="filter_nameAZ">Name (A-Z)</string>
-    <string name="filter_nameZA">Name (Z-A)</string>
-    <string name="filter_old">Old</string>
+    <string name="app_name">ギャラリー</string>
+    <string name="nav_albums">アルバム</string>
+    <string name="searchbar_title"><![CDATA[写真と動画を検索]]></string>
+    <string name="header_today">今日</string>
+    <string name="header_yesterday">昨日</string>
+    <string name="share_media">共有</string>
+    <string name="request_permissions">リクエストを許可</string>
+    <string name="filter">フィルター</string>
+    <string name="filter_recent">最近</string>
+    <string name="filter_nameAZ">名前順（AからZ）</string>
+    <string name="filter_nameZA">名前順（ZからA）</string>
+    <string name="filter_old">昔</string>
     <string name="selected_s">Selected %s</string>
     <string name="trash">Trash</string>
     <string name="pause_video">Pause video</string>
