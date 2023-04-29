@@ -84,6 +84,7 @@ fun MediaImage(
         ) {
             it.thumbnail(preloadRequestBuilder)
                 .signature(MediaStoreSignature(media.mimeType, media.timestamp, media.orientation))
+                .override(600, 600)
                 .transition(withCrossFade())
         }
 
