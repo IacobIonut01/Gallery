@@ -5,10 +5,16 @@
 package com.dot.gallery.feature_node.presentation.util
 
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.view.HapticFeedbackConstants
 import android.view.View
 import android.view.accessibility.AccessibilityManager
+import com.dot.gallery.R
+import com.dot.gallery.feature_node.domain.model.Media
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 fun View.vibrate() = reallyPerformHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
 fun View.vibrateStrong() = reallyPerformHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
@@ -40,3 +46,14 @@ private fun Context.isTouchExplorationEnabled(): Boolean {
     val accessibilityManager = getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager?
     return accessibilityManager?.isTouchExplorationEnabled ?: false
 }
+
+suspend fun Context.launchUseAsIntent(media: Media) =
+    withContext(Dispatchers.Default) {
+        val intent = Intent(Intent.ACTION_ATTACH_DATA).apply {
+            addCategory(Intent.CATEGORY_DEFAULT)
+            setDataAndType(media.uri, media.mimeType)
+            putExtra("mimeType", media.mimeType)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        startActivity(Intent.createChooser(intent, getString(R.string.set_as)))
+    }

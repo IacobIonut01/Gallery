@@ -86,6 +86,7 @@ import com.dot.gallery.feature_node.presentation.util.connectivityState
 import com.dot.gallery.feature_node.presentation.util.getDate
 import com.dot.gallery.feature_node.presentation.util.getExifInterface
 import com.dot.gallery.feature_node.presentation.util.launchMap
+import com.dot.gallery.feature_node.presentation.util.launchUseAsIntent
 import com.dot.gallery.feature_node.presentation.util.shareMedia
 import com.dot.gallery.ui.theme.Black40P
 import com.dot.gallery.ui.theme.Shapes
@@ -259,6 +260,15 @@ fun BoxScope.MediaViewBottomBar(
                                     )
                                 }
                             }
+                        }
+                        // Use as
+                        BottomBarColumn(
+                            currentMedia = currentMedia,
+                            imageVector = Icons.Outlined.OpenInNew,
+                            followTheme = true,
+                            title = stringResource(R.string.use_as)
+                        ) {
+                            scope.launch { context.launchUseAsIntent(it) }
                         }
                         if (showDeleteButton) {
                             // Trash Component

@@ -72,6 +72,8 @@
     <string name="settings_cached_screen_title">Cached screen count</string>
     <string name="settings_cached_screen_summary">How many screens of media are stored in the memory</string>
     <string name="settings_disk_cache_summary">How much storage space can be used for persistent caching</string>
+    <string name="use_as">Use as</string>
+    <string name="set_as">"Set as: "</string>
     <plurals name="item_count">
         <item quantity="one">%s item</item>
         <item quantity="other">%s items</item>
