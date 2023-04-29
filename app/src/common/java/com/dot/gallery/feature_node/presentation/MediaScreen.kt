@@ -48,6 +48,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
@@ -73,6 +74,7 @@ import com.dot.gallery.feature_node.presentation.util.getDate
 import com.dot.gallery.feature_node.presentation.util.getDateExt
 import com.dot.gallery.feature_node.presentation.util.getDateHeader
 import com.dot.gallery.feature_node.presentation.util.getMonth
+import com.dot.gallery.feature_node.presentation.util.vibrate
 import com.dot.gallery.ui.theme.Dimens
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
@@ -360,16 +362,19 @@ fun MediaScreen(
                                 val (media, preloadRequestBuilder) = preloadingData[state.media.indexOf(
                                     item.media
                                 )]
+                                val view = LocalView.current
                                 MediaComponent(
                                     media = media,
                                     selectionState = selectionState,
                                     selectedMedia = selectedMedia,
                                     preloadRequestBuilder = preloadRequestBuilder,
                                     onItemLongClick = {
+                                        view.vibrate()
                                         toggleSelection(state.media.indexOf(it))
                                     },
                                     onItemClick = {
                                         if (selectionState.value) {
+                                            view.vibrate()
                                             toggleSelection(state.media.indexOf(it))
                                         } else {
                                             val albumRoute = "albumId=$albumId"
