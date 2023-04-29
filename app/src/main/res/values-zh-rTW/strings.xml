@@ -59,7 +59,7 @@
     <string name="location">位置</string>
     <string name="location_cd">媒體位置</string>
     <string name="location_map_cd">位置地圖</string>
-    <string name="app_dev">by %s</string>
+    <string name="app_dev">由 %s 提供</string>
     <string name="app_dev_name">IacobIonut01</string>
     <string name="donate">Donate</string>
     <string name="github">Github</string>
@@ -71,7 +71,7 @@
     <string name="settings_disk_cache_title">Disk cache size</string>
     <string name="settings_cached_screen_title">Cached screen count</string>
     <string name="settings_cached_screen_summary">How many screens of media are stored in the memory</string>
-    <string name="settings_disk_cache_summary">How much storage space can be used for persistent caching</string>
+    <string name="settings_disk_cache_summary">可用於永久快取的儲存空間大小</string>
     <plurals name="item_count">
         <item quantity="other">%s 個項目</item>
     </plurals>
