@@ -18,7 +18,7 @@
     <string name="play_video">プレイ動画</string>
     <string name="favorites">お気に入り</string>
     <string name="no_media_title">ここは空いています</string>
-    <string name="no_media_cd">No media found</string>
+    <string name="no_media_cd">メディアは見つかりませんでした</string>
     <string name="empty_trash_title">Squeaky Clean</string>
     <string name="empty_trash_cd">Trash is empty</string>
     <string name="error_title">Something went wrong :(</string>
