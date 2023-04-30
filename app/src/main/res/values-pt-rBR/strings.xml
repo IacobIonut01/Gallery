@@ -68,12 +68,12 @@
     <string name="donate_url">https://www.paypal.com/paypalme/iacobionut01</string>
     <string name="github_url">https://github.com/IacobIonut01/Gallery</string>
     <string name="settings_cache">Cache</string>
-    <string name="settings_disk_cache_title">Disk cache size</string>
-    <string name="settings_cached_screen_title">Cached screen count</string>
-    <string name="settings_cached_screen_summary">How many screens of media are stored in the memory</string>
-    <string name="settings_disk_cache_summary">How much storage space can be used for persistent caching</string>
+    <string name="settings_disk_cache_title">Tamanho do cache do disco</string>
+    <string name="settings_cached_screen_title">Contagem de tela em cache</string>
+    <string name="settings_cached_screen_summary">Quantas telas de mídia estão armazenadas na memória</string>
+    <string name="settings_disk_cache_summary">Quanto espaço de armazenamento pode ser usado para cache persistente</string>
     <plurals name="item_count">
-        <item quantity="one">%s item</item>
-        <item quantity="other">%s items</item>
+        <item quantity="one">%s ítem</item>
+        <item quantity="other">%s ítens</item>
     </plurals>
 </resources>
