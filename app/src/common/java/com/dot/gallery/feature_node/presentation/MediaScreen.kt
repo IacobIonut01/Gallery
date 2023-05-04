@@ -325,6 +325,7 @@ fun MediaScreen(
                     items(
                         items = mappedData,
                         key = { it.key },
+                        contentType = { it.key.startsWith("media_") },
                         span = { item ->
                             GridItemSpan(if (item.key.isHeaderKey) maxLineSpan else 1)
                         }
