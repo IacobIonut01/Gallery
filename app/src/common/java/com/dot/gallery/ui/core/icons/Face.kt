@@ -18,7 +18,7 @@ val Icons.Face: ImageVector
         }
         _face = Builder(name = "Face", defaultWidth = 139.0.dp, defaultHeight = 139.0.dp,
                 viewportWidth = 139.0f, viewportHeight = 139.0f).apply {
-            path(fill = SolidColor(Color(0xFFD5E3FF)), stroke = null, strokeLineWidth = 0.0f,
+            path(fill = SolidColor(Color(0xFF000000)), stroke = null, strokeLineWidth = 0.0f,
                     strokeLineCap = Butt, strokeLineJoin = Miter, strokeLineMiter = 4.0f,
                     pathFillType = NonZero) {
                 moveTo(64.887f, 137.975f)

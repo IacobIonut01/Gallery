@@ -44,8 +44,8 @@ fun TrashedGridScreen(
     selectedMedia = selectedMedia,
     toggleSelection = toggleSelection,
     NavActions = { _: MutableState<Boolean>,
-                   result: ActivityResultLauncher<IntentSenderRequest> ->
-        TrashedNavActions(handler, mediaState, selectedMedia, selectionState, result)
+                   _: ActivityResultLauncher<IntentSenderRequest> ->
+        TrashedNavActions(handler, mediaState, selectedMedia, selectionState)
     },
     EmptyComponent = { EmptyTrash(Modifier.fillMaxSize()) },
     navigate = navigate,
