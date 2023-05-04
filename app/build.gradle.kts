@@ -44,6 +44,10 @@ android {
     buildTypes {
         getByName("debug") {
             buildConfigField("String", "MAPS_TOKEN", getApiKey())
+            applicationIdSuffix = ".debug"
+            manifestPlaceholders["appName"] = "Gallery Debug"
+            versionNameSuffix = "-debug"
+            manifestPlaceholders["appProvider"] = "com.dot.gallery.debug.media_provider"
         }
         getByName("release") {
             isMinifyEnabled = true
@@ -51,11 +55,17 @@ android {
             setProguardFiles(listOf(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"))
             signingConfig = signingConfigs.getByName("debug")
             buildConfigField("String", "MAPS_TOKEN", getApiKey())
+            manifestPlaceholders["appName"] = "Gallery"
+            manifestPlaceholders["appProvider"] = "com.dot.gallery.media_provider"
         }
         create("staging") {
             initWith(getByName("release"))
             isMinifyEnabled = false
             isShrinkResources = false
+            applicationIdSuffix = ".staging"
+            versionNameSuffix = "-staging"
+            manifestPlaceholders["appName"] = "Gallery Staging"
+            manifestPlaceholders["appProvider"] = "com.dot.gallery.staging.media_provider"
         }
     }
     flavorDimensions += "version"
