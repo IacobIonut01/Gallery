@@ -77,6 +77,7 @@ private fun networkCallback(callback: (ConnectionState) -> Unit): ConnectivityMa
     }
 }
 
+@Suppress("DEPRECATION")
 private fun getCurrentConnectivityState(
     connectivityManager: ConnectivityManager
 ): ConnectionState {
