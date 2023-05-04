@@ -108,7 +108,7 @@ class MainActivity : ComponentActivity() {
                         Row {
                             if (useNavRail && bottomBarState.value) {
                                 NavigationRail(
-                                    containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
+                                    containerColor = MaterialTheme.colorScheme.surface
                                 ) {
                                     bottomNavItems.forEach { item ->
                                         val selected =
