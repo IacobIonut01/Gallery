@@ -74,12 +74,8 @@ fun AlbumsScreen(
     paddingValues: PaddingValues,
     viewModel: AlbumsViewModel = hiltViewModel(),
 ) {
-    val state by rememberSaveable {
-        viewModel.albumsState
-    }
-    val pinnedState by rememberSaveable {
-        viewModel.pinnedAlbumState
-    }
+    val state by viewModel.albumsState
+    val pinnedState by viewModel.pinnedAlbumState
     val preloadingDataNonPinned = rememberGlidePreloadingData(
         data = state.albums,
         preloadImageSize = Size(200f, 200f)
