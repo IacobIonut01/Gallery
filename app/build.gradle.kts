@@ -7,6 +7,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("kotlin-kapt")
     id("dagger.hilt.android.plugin")
+    id("androidx.baselineprofile")
 }
 
 val versionMajor = 1
@@ -106,6 +107,8 @@ android {
 }
 
 dependencies {
+    implementation("androidx.profileinstaller:profileinstaller:1.3.1")
+    "baselineProfile"(project(mapOf("path" to ":baselineprofile")))
     val bom = "2023.04.01"
     val lifecycleVersion = "2.6.1"
     val material3Version = "1.1.0-rc01"
