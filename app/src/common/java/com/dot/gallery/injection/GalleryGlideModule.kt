@@ -17,13 +17,16 @@ import com.bumptech.glide.load.engine.cache.MemorySizeCalculator
 import com.bumptech.glide.module.AppGlideModule
 import com.bumptech.glide.request.RequestOptions
 import com.dot.gallery.core.Settings
+import com.dot.gallery.core.Settings.Glide.getCachedScreenCount
+import com.dot.gallery.core.Settings.Glide.getDiskCacheSize
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 
 @GlideModule
 class GalleryGlideModule : AppGlideModule() {
     override fun applyOptions(context: Context, builder: GlideBuilder) {
-        val settings = Settings(context)
-        val diskCacheSize = settings.diskCacheSize
-        val screenCount = settings.cachedScreenCount
+        val diskCacheSize = runBlocking { getDiskCacheSize(context).first() }
+        val screenCount = runBlocking {  getCachedScreenCount(context).first() }
 
         builder.setDefaultRequestOptions(
             RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL)

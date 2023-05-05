@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -32,28 +31,31 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.core.Position
 import com.dot.gallery.core.SettingsEntity
+import com.dot.gallery.core.SettingsEntity.Header
+import com.dot.gallery.core.SettingsEntity.Preference
+import com.dot.gallery.core.SettingsEntity.SeekPreference
+import com.dot.gallery.core.SettingsEntity.SwitchPreference
 import com.dot.gallery.core.SettingsType
 import com.dot.gallery.ui.theme.GalleryTheme
 import kotlin.math.roundToLong
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsItem(
     item: SettingsEntity
 ) {
-    var checked by remember {
+    var checked by remember(item.isChecked) {
         mutableStateOf(item.isChecked ?: false)
     }
     val icon: @Composable () -> Unit = {
         require(item.icon != null) { "Icon at this stage cannot be null" }
         Icon(
-            imageVector = item.icon,
+            imageVector = item.icon!!,
             contentDescription = null
         )
     }
     val summary: @Composable () -> Unit = {
         require(!item.summary.isNullOrEmpty()) { "Summary at this stage cannot be null or empty" }
-        Text(text = item.summary)
+        Text(text = item.summary!!)
     }
     val switch: @Composable () -> Unit = {
         Switch(checked = checked, onCheckedChange = null)
@@ -64,7 +66,7 @@ fun SettingsItem(
         else
             MaterialTheme.colorScheme.onSurface
 
-    val shape = remember {
+    val shape = remember(item.screenPosition) {
         when (item.screenPosition) {
             Position.Alone -> RoundedCornerShape(24.dp)
             Position.Bottom -> RoundedCornerShape(
@@ -134,9 +136,9 @@ fun SettingsItem(
         Slider(
             value = currentSeekValue!!,
             onValueChange = { currentSeekValue = it },
-            valueRange = item.minValue..item.maxValue,
+            valueRange = item.minValue!!..item.maxValue!!,
             onValueChangeFinished = {
-                item.onSeek.invoke(currentSeekValue!! * item.valueMultiplier)
+                item.onSeek!!.invoke(currentSeekValue!! * item.valueMultiplier)
             },
             steps = item.step
         )
@@ -196,29 +198,27 @@ fun SettingsItemGroupPreview() =
             modifier = Modifier.wrapContentHeight()
         ) {
             SettingsItem(
-                item = SettingsEntity(
+                item = Preference(
                     title = "Preview Alone Title",
                     summary = "Preview Summary"
                 )
             )
             SettingsItem(
-                item = SettingsEntity(
-                    title = "Preview Header Title",
-                    type = SettingsType.Header
+                item = Header(
+                    title = "Preview Header Title"
                 )
             )
             SettingsItem(
-                item = SettingsEntity(
+                item = Preference(
                     title = "Preview Top Title",
                     summary = "Preview Summary",
                     screenPosition = Position.Top
                 )
             )
             SettingsItem(
-                item = SettingsEntity(
+                item = SeekPreference(
                     title = "Preview Middle Title",
                     summary = "Preview Summary",
-                    type = SettingsType.Seek,
                     currentValue = 330f,
                     minValue = 1f,
                     maxValue = 350f,
@@ -229,15 +229,14 @@ fun SettingsItemGroupPreview() =
                 )
             )
             SettingsItem(
-                item = SettingsEntity(
+                item = SwitchPreference(
                     title = "Preview Middle Title",
                     summary = "Preview Summary",
-                    type = SettingsType.Switch,
                     screenPosition = Position.Middle
                 )
             )
             SettingsItem(
-                item = SettingsEntity(
+                item = Preference(
                     title = "Preview Bottom Title",
                     summary = "Preview Summary",
                     screenPosition = Position.Bottom

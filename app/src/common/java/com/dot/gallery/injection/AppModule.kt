@@ -42,12 +42,6 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideSettings(@ApplicationContext context: Context): Settings {
-        return Settings(context)
-    }
-
-    @Provides
-    @Singleton
     fun provideDatabase(app: Application): InternalDatabase {
         return Room.databaseBuilder(app, InternalDatabase::class.java, InternalDatabase.NAME)
             .allowMainThreadQueries()
@@ -56,7 +50,7 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideMediaUseCases(repository: MediaRepository, settings: Settings): MediaUseCases {
+    fun provideMediaUseCases(repository: MediaRepository, @ApplicationContext context: Context): MediaUseCases {
         return MediaUseCases(
             addMediaUseCase = AddMediaUseCase(repository),
             getAlbumsUseCase = GetAlbumsUseCase(repository),
@@ -66,7 +60,7 @@ object AppModule {
             getMediaTrashedUseCase = GetMediaTrashedUseCase(repository),
             getMediaByUriUseCase = GetMediaByUriUseCase(repository),
             getMediaListByUrisUseCase = GetMediaListByUrisUseCase(repository),
-            mediaHandleUseCase = MediaHandleUseCase(repository, settings),
+            mediaHandleUseCase = MediaHandleUseCase(repository, context),
             insertPinnedAlbumUseCase = InsertPinnedAlbumUseCase(repository),
             deletePinnedAlbumUseCase = DeletePinnedAlbumUseCase(repository)
         )

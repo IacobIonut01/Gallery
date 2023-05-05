@@ -23,7 +23,6 @@ import com.dot.gallery.R
 import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Constants.Target.TARGET_FAVORITES
 import com.dot.gallery.core.Constants.Target.TARGET_TRASH
-import com.dot.gallery.core.Settings
 import com.dot.gallery.feature_node.presentation.ChanneledViewModel
 import com.dot.gallery.feature_node.presentation.MediaViewModel
 import com.dot.gallery.feature_node.presentation.albums.AlbumsScreen
@@ -47,8 +46,7 @@ fun NavigationComp(
     paddingValues: PaddingValues,
     bottomBarState: MutableState<Boolean>,
     systemBarFollowThemeState: MutableState<Boolean>,
-    bottomNavEntries: List<BottomNavItem>,
-    settings: Settings
+    bottomNavEntries: List<BottomNavItem>
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     navBackStackEntry?.destination?.route?.let {
@@ -145,8 +143,7 @@ fun NavigationComp(
             AlbumsScreen(
                 navigate = navPipe::navigate,
                 paddingValues = paddingValues,
-                viewModel = viewModel,
-                settings = settings
+                viewModel = viewModel
             )
         }
         composable(
@@ -215,7 +212,6 @@ fun NavigationComp(
             MediaViewScreen(
                 paddingValues = paddingValues,
                 mediaId = mediaId,
-                settings = settings,
                 mediaState = viewModel.photoState,
                 handler = viewModel.handler,
                 navigateUp = navPipe::navigateUp
@@ -254,7 +250,6 @@ fun NavigationComp(
                 paddingValues = paddingValues,
                 mediaId = mediaId,
                 target = target,
-                settings = settings,
                 mediaState = viewModel.photoState,
                 handler = viewModel.handler,
                 navigateUp = navPipe::navigateUp

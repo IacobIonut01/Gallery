@@ -44,7 +44,7 @@ import com.dot.gallery.core.Constants.DEFAULT_LOW_VELOCITY_SWIPE_DURATION
 import com.dot.gallery.core.Constants.HEADER_DATE_FORMAT
 import com.dot.gallery.core.Constants.Target.TARGET_TRASH
 import com.dot.gallery.core.MediaState
-import com.dot.gallery.core.Settings
+import com.dot.gallery.core.Settings.Glide.rememberMaxImageSize
 import com.dot.gallery.core.presentation.components.media.MediaPreviewComponent
 import com.dot.gallery.core.presentation.components.media.VideoPlayerController
 import com.dot.gallery.feature_node.domain.model.Media
@@ -62,7 +62,6 @@ fun MediaViewScreen(
     paddingValues: PaddingValues,
     mediaId: Long,
     target: String? = null,
-    settings: Settings,
     mediaState: MutableState<MediaState>,
     handler: MediaHandleUseCase
 ) {
@@ -76,7 +75,7 @@ fun MediaViewScreen(
     val currentMedia = remember { mutableStateOf<Media?>(null) }
 
     val showUI = remember { mutableStateOf(true) }
-    val maxImageSize = remember { settings.maxImageSize }
+    val maxImageSize by rememberMaxImageSize()
     val window = with(LocalContext.current as Activity) { return@with window }
     val windowInsetsController =
         remember { WindowCompat.getInsetsController(window, window.decorView) }

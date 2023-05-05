@@ -16,7 +16,6 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Photo
 import androidx.compose.material.icons.outlined.PhotoAlbum
@@ -27,19 +26,20 @@ import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.NavigationRailItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.dot.gallery.core.Settings
+import com.dot.gallery.core.Settings.Misc.rememberIsMediaManager
 import com.dot.gallery.core.presentation.components.BottomAppBar
 import com.dot.gallery.core.presentation.components.NavigationComp
 import com.dot.gallery.feature_node.presentation.util.BottomNavItem
@@ -48,14 +48,10 @@ import com.dot.gallery.ui.theme.GalleryTheme
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 import android.provider.Settings as AndroidSettings
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-
-    @Inject
-    lateinit var settings: Settings
 
     @OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -138,8 +134,6 @@ class MainActivity : ComponentActivity() {
                                             },
                                             label = {
                                                 Text(
-                                                    modifier = Modifier
-                                                        .height(16.dp),
                                                     text = item.name,
                                                     fontWeight = FontWeight.Medium,
                                                     style = MaterialTheme.typography.bodyMedium,
@@ -160,31 +154,32 @@ class MainActivity : ComponentActivity() {
                                 paddingValues = paddingValues,
                                 bottomBarState = bottomBarState,
                                 systemBarFollowThemeState = systemBarFollowThemeState,
-                                bottomNavEntries = bottomNavItems,
-                                settings = settings,
+                                bottomNavEntries = bottomNavItems
                             )
                         }
                     }
                 )
+                RequestPermission()
             }
         }
-        requestPermission()
     }
 
-    private fun requestPermission() {
+    @Composable
+    private fun RequestPermission() {
+        var useMediaManager by rememberIsMediaManager()
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.S) {
             if (!MediaStore.canManageMedia(this) &&
                 /** Don't ask every launch,
                  * user might want tot use an extra confirmation dialog for dangerous actions
                  **/
-                !settings.useMediaManager
+                !useMediaManager
             ) {
                 val intent = Intent()
                 intent.action = AndroidSettings.ACTION_REQUEST_MANAGE_MEDIA
                 val uri = Uri.fromParts("package", this.packageName, null)
                 intent.data = uri
                 startActivity(intent)
-                settings.useMediaManager = true
+                useMediaManager = true
             }
         }
     }

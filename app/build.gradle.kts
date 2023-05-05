@@ -175,11 +175,11 @@ dependencies {
     // Exifinterface
     implementation("androidx.exifinterface:exifinterface:1.3.6")
 
-    // Encrypted SharedPreferences
-    implementation("androidx.security:security-crypto:1.1.0-alpha06")
-
     // Compose-Extended-Gestures
     implementation("com.github.SmartToolFactory:Compose-Extended-Gestures:3.0.0")
+
+    // Datastore Preferences
+    implementation("androidx.datastore:datastore-preferences:1.1.0-alpha04")
 
     // Tests
     testImplementation("junit:junit:4.13.2")

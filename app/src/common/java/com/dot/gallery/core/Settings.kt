@@ -6,88 +6,87 @@
 package com.dot.gallery.core
 
 import android.content.Context
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.security.crypto.EncryptedSharedPreferences
-import androidx.security.crypto.MasterKey
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.floatPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
+import com.dot.gallery.core.Settings.PREFERENCE_NAME
+import com.dot.gallery.core.util.rememberPreference
+import com.dot.gallery.feature_node.presentation.util.Screen
+import com.dot.gallery.ui.theme.Dimens
+import kotlinx.coroutines.flow.map
 
-class Settings(context: Context) {
+val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = PREFERENCE_NAME)
 
-    private val masterKey = MasterKey.Builder(context)
-        .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-        .build()
+/**
+ * TODO: Create 'Preference' annotation to generate the composable remember functions automatically
+ */
+object Settings {
 
-    private val sharedPreferences = EncryptedSharedPreferences.create(
-        context,
-        PREFERENCE_NAME,
-        masterKey,
-        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-    )
-
-    var albumLastSort: Int
-        get() = sharedPreferences.getInt(Album.LAST_SORT, 0)
-        set(value) = sharedPreferences
-            .edit()
-            .putInt(Album.LAST_SORT, value)
-            .apply()
-
-    var useMediaManager: Boolean
-        get() = sharedPreferences.getBoolean(Misc.USER_CHOICE_MEDIA_MANAGER, false)
-        set(value) = sharedPreferences
-            .edit()
-            .putBoolean(Misc.USER_CHOICE_MEDIA_MANAGER, value)
-            .apply()
-
-    var trashCanEnabled: Boolean
-        get() = sharedPreferences.getBoolean(Misc.ENABLE_TRASH, true)
-        set(value) = sharedPreferences
-            .edit()
-            .putBoolean(Misc.ENABLE_TRASH, value)
-            .apply()
-
-    var diskCacheSize: Long
-        get() = sharedPreferences.getLong(Glide.DISK_CACHE_SIZE, 150)
-        set(value) = sharedPreferences
-            .edit()
-            .putLong(Glide.DISK_CACHE_SIZE, value)
-            .apply()
-
-    var cachedScreenCount: Float
-        get() = sharedPreferences.getFloat(Glide.CACHED_SCREEN_COUNT, 8f)
-        set(value) = sharedPreferences
-            .edit()
-            .putFloat(Glide.CACHED_SCREEN_COUNT, value)
-            .apply()
-
-    var maxImageSize: Int
-        get() = sharedPreferences.getInt(Glide.MAX_IMAGE_SIZE, Constants.MAX_IMAGE_SIZE)
-        set(value) = sharedPreferences
-            .edit()
-            .putInt(Glide.MAX_IMAGE_SIZE, value)
-            .apply()
-
-    fun resetToDefaults() {
-        albumLastSort = 0
-        useMediaManager = false
-        trashCanEnabled = true
-    }
+    const val PREFERENCE_NAME = "settings"
 
     object Album {
-        const val LAST_SORT = "album_last_sort"
+        private val LAST_SORT = intPreferencesKey("album_last_sort")
+        @Composable
+        fun rememberLastSort() =
+            rememberPreference(key = LAST_SORT, defaultValue = 0)
     }
 
     object Glide {
-        const val DISK_CACHE_SIZE = "disk_cache_size"
-        const val CACHED_SCREEN_COUNT = "cached_screen_count"
-        const val MAX_IMAGE_SIZE = "max_image_size"
+        private val DISK_CACHE_SIZE = longPreferencesKey("disk_cache_size")
+        @Composable
+        fun rememberDiskCacheSize() =
+            rememberPreference(key = DISK_CACHE_SIZE, defaultValue = 150)
+        fun getDiskCacheSize(context: Context) =
+            context.dataStore.data.map { it[DISK_CACHE_SIZE] ?: 150 }
+
+        private val CACHED_SCREEN_COUNT = floatPreferencesKey("cached_screen_count")
+        @Composable
+        fun rememberCachedScreenCount() =
+            rememberPreference(key = CACHED_SCREEN_COUNT, defaultValue = 8f)
+        fun getCachedScreenCount(context: Context) =
+            context.dataStore.data.map { it[CACHED_SCREEN_COUNT] ?: 8f }
+
+        private val MAX_IMAGE_SIZE = intPreferencesKey("max_image_size")
+        @Composable
+        fun rememberMaxImageSize() =
+            rememberPreference(key = MAX_IMAGE_SIZE, defaultValue = 4096)
     }
 
     object Misc {
-        const val USER_CHOICE_MEDIA_MANAGER = "use_media_manager"
-        const val ENABLE_TRASH = "enable_trashcan"
-    }
-    companion object {
-        private const val PREFERENCE_NAME = "settings"
+        private val USER_CHOICE_MEDIA_MANAGER = booleanPreferencesKey("use_media_manager")
+        @Composable
+        fun rememberIsMediaManager() =
+            rememberPreference(key = USER_CHOICE_MEDIA_MANAGER, defaultValue = false)
+
+        private val ENABLE_TRASH = booleanPreferencesKey("enable_trashcan")
+        @Composable
+        fun rememberTrashEnabled() =
+            rememberPreference(key = ENABLE_TRASH, defaultValue = true)
+        fun getTrashEnabled(context: Context) =
+            context.dataStore.data.map { it[ENABLE_TRASH] ?: true }
+
+        private val LAST_SCREEN = stringPreferencesKey("last_screen")
+        @Composable
+        fun rememberLastScreen() =
+            rememberPreference(key = LAST_SCREEN, defaultValue = Screen.TimelineScreen.route)
+
+        private val MEDIA_GRID_SIZE = floatPreferencesKey("media_grid_size")
+        @Composable
+        fun rememberMediaGridSize() =
+            rememberPreference(key = MEDIA_GRID_SIZE, defaultValue = Dimens.Photo().value)
+
+        private val ALBUM_GRID_SIZE = floatPreferencesKey("album_grid_size")
+        @Composable
+        fun rememberAlbumGridSize() =
+            rememberPreference(key = ALBUM_GRID_SIZE, defaultValue = Dimens.Album().value)
     }
 }
 
@@ -105,23 +104,95 @@ sealed class Position {
     object Alone : Position()
 }
 
-data class SettingsEntity(
-    val icon: ImageVector? = null,
-    val title: String,
-    val summary: String? = null,
+sealed class SettingsEntity(
+    open val icon: ImageVector? = null,
+    open val title: String,
+    open val summary: String? = null,
     val type: SettingsType = SettingsType.Default,
-    val enabled: Boolean = true,
-    val isChecked: Boolean? = null,
-    val onCheck: ((Boolean) -> Unit)? = null,
-    val onClick: (() -> Unit)? = null,
-    val minValue: Float? = null,
-    val currentValue: Float? = null,
-    val maxValue: Float? = null,
-    val step: Int = 1,
-    val valueMultiplier: Int = 1,
-    val seekSuffix: String? = null,
-    val onSeek: ((Float) -> Unit)? = null,
-    val screenPosition: Position = Position.Alone
+    open val enabled: Boolean = true,
+    open val isChecked: Boolean? = null,
+    open val onCheck: ((Boolean) -> Unit)? = null,
+    open val onClick: (() -> Unit)? = null,
+    open val minValue: Float? = null,
+    open val currentValue: Float? = null,
+    open val maxValue: Float? = null,
+    open val step: Int = 1,
+    open val valueMultiplier: Int = 1,
+    open val seekSuffix: String? = null,
+    open val onSeek: ((Float) -> Unit)? = null,
+    open val screenPosition: Position = Position.Alone
 ) {
     val isHeader = type == SettingsType.Header
+
+    data class Header(
+        override val title: String
+    ): SettingsEntity(
+        title = title,
+        type = SettingsType.Header
+    )
+
+    data class Preference(
+        override val icon: ImageVector? = null,
+        override val title: String,
+        override val summary: String? = null,
+        override val enabled: Boolean = true,
+        override val screenPosition: Position = Position.Alone,
+        override val onClick: (() -> Unit)? = null,
+    ) : SettingsEntity(
+        icon = icon,
+        title = title,
+        summary = summary,
+        enabled = enabled,
+        screenPosition = screenPosition,
+        onClick = onClick,
+        type = SettingsType.Default
+    )
+
+    data class SwitchPreference(
+        override val icon: ImageVector? = null,
+        override val title: String,
+        override val summary: String? = null,
+        override val enabled: Boolean = true,
+        override val screenPosition: Position = Position.Alone,
+        override val isChecked: Boolean = false,
+        override val onCheck: ((Boolean) -> Unit)? = null,
+    ): SettingsEntity(
+        icon = icon,
+        title = title,
+        summary = summary,
+        enabled = enabled,
+        isChecked = isChecked,
+        onCheck = onCheck,
+        screenPosition = screenPosition,
+        type = SettingsType.Switch
+    )
+
+    data class SeekPreference(
+        override val icon: ImageVector? = null,
+        override val title: String,
+        override val summary: String? = null,
+        override val enabled: Boolean = true,
+        override val screenPosition: Position = Position.Alone,
+        override val minValue: Float? = null,
+        override val currentValue: Float? = null,
+        override val maxValue: Float? = null,
+        override val step: Int = 1,
+        override val valueMultiplier: Int = 1,
+        override val seekSuffix: String? = null,
+        override val onSeek: ((Float) -> Unit)? = null,
+    ): SettingsEntity(
+        icon = icon,
+        title = title,
+        summary = summary,
+        enabled = enabled,
+        screenPosition = screenPosition,
+        minValue = minValue,
+        currentValue = currentValue,
+        maxValue = maxValue,
+        step = step,
+        valueMultiplier = valueMultiplier,
+        seekSuffix = seekSuffix,
+        onSeek = onSeek,
+        type = SettingsType.Seek
+    )
 }

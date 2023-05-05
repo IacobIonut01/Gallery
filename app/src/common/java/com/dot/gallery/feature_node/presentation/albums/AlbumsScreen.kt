@@ -55,7 +55,7 @@ import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.integration.compose.rememberGlidePreloadingData
 import com.bumptech.glide.signature.MediaStoreSignature
 import com.dot.gallery.R
-import com.dot.gallery.core.Settings
+import com.dot.gallery.core.Settings.Album.rememberLastSort
 import com.dot.gallery.core.presentation.components.EmptyMedia
 import com.dot.gallery.core.presentation.components.Error
 import com.dot.gallery.core.presentation.components.FilterButton
@@ -73,7 +73,6 @@ fun AlbumsScreen(
     navigate: (route: String) -> Unit,
     paddingValues: PaddingValues,
     viewModel: AlbumsViewModel = hiltViewModel(),
-    settings: Settings,
 ) {
     val state by rememberSaveable {
         viewModel.albumsState
@@ -103,9 +102,9 @@ fun AlbumsScreen(
     val filterNameAZ = stringResource(R.string.filter_nameAZ)
     val filterNameZA = stringResource(R.string.filter_nameZA)
 
-    val albumSortSetting: Int = rememberSaveable { settings.albumLastSort }
+    val albumSortSetting by rememberLastSort()
 
-    val filterOptions = remember {
+    val filterOptions = remember(albumSortSetting) {
         ArrayList<FilterOption>().apply {
             add(
                 FilterOption(
@@ -149,7 +148,7 @@ fun AlbumsScreen(
         viewModel.toggleAlbumPin(album, !album.isPinned)
     }
 
-    LaunchedEffect(state.albums) {
+    LaunchedEffect(state.albums, albumSortSetting) {
         val filterOption = filterOptions.first { it.selected }
         filterOption.onClick(filterOption.mediaOrder)
     }
@@ -281,7 +280,7 @@ fun AlbumsScreen(
             item(
                 span = { GridItemSpan(maxLineSpan) }
             ) {
-                FilterButton(filterOptions = filterOptions.toTypedArray(), settings = settings)
+                FilterButton(filterOptions = filterOptions.toTypedArray())
             }
             items(state.albums.size) { index ->
                 val (album, preloadRequestBuilder) = preloadingDataNonPinned[index]

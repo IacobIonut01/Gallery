@@ -28,17 +28,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.R
-import com.dot.gallery.core.Settings
+import com.dot.gallery.core.Settings.Album.rememberLastSort
 import com.dot.gallery.feature_node.domain.util.MediaOrder
 
 @Composable
 fun FilterButton(
     modifier: Modifier = Modifier,
-    filterOptions: Array<FilterOption> = emptyArray(),
-    settings: Settings
+    filterOptions: Array<FilterOption> = emptyArray()
 ) {
+    var lastSort by rememberLastSort()
     var expanded by remember { mutableStateOf(false) }
-    var selectedFilter by remember { mutableStateOf(filterOptions.first { it.selected }.title) }
+    var selectedFilter by remember(lastSort) { mutableStateOf(filterOptions.first { it.selected }.title) }
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -74,7 +74,7 @@ fun FilterButton(
                             if (it.selected) selectedFilter = it.title
                         }
                         filter.onClick(filter.mediaOrder)
-                        settings.albumLastSort = filterOptions.indexOf(filter)
+                        lastSort = filterOptions.indexOf(filter)
                     },
                     trailingIcon = {
                         if (filter.selected)

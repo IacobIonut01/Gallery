@@ -26,9 +26,6 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class StandaloneActivity : ComponentActivity() {
 
-    @Inject
-    lateinit var settings: Settings
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -51,7 +48,6 @@ class StandaloneActivity : ComponentActivity() {
                     }
                     StandaloneMediaViewScreen(
                         paddingValues = paddingValues,
-                        settings = settings,
                         mediaState = viewModel.photoState,
                         handler = viewModel.handler
                     )
