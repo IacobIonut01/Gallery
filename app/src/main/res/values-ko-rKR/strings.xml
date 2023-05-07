@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Gallery</string>
-    <string name="nav_albums">Albums</string>
-    <string name="searchbar_title"><![CDATA[Search photos & videos]]></string>
-    <string name="header_today">Today</string>
-    <string name="header_yesterday">Yesterday</string>
-    <string name="share_media">Share</string>
-    <string name="request_permissions">Request permissions</string>
-    <string name="filter">Filter</string>
-    <string name="filter_recent">Recent</string>
-    <string name="filter_nameAZ">Name (A-Z)</string>
-    <string name="filter_nameZA">Name (Z-A)</string>
-    <string name="filter_old">Old</string>
-    <string name="selected_s">Selected %s</string>
-    <string name="trash">Trash</string>
-    <string name="pause_video">Pause video</string>
+    <string name="app_name">갤러리</string>
+    <string name="nav_albums">앨범</string>
+    <string name="searchbar_title"><![CDATA[사진 및 동영상 검색]]></string>
+    <string name="header_today">오늘</string>
+    <string name="header_yesterday">어제</string>
+    <string name="share_media">공유</string>
+    <string name="request_permissions">권한 요청</string>
+    <string name="filter">필터</string>
+    <string name="filter_recent">최신순</string>
+    <string name="filter_nameAZ">이름 (A-Z)</string>
+    <string name="filter_nameZA">이름 (Z-A)</string>
+    <string name="filter_old">오래된순</string>
+    <string name="selected_s">%s개 선택됨</string>
+    <string name="trash">휴지통</string>
+    <string name="pause_video">동영상 일시 정지</string>
     <string name="play_video">Play video</string>
     <string name="favorites">Favorites</string>
     <string name="no_media_title">Seems empty here</string>
