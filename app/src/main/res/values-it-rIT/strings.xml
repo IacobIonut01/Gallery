@@ -12,7 +12,7 @@
     <string name="filter_nameAZ">Nome (A-Z)</string>
     <string name="filter_nameZA">Nome (Z-A)</string>
     <string name="filter_old">Old</string>
-    <string name="selected_s">Selected %s</string>
+    <string name="selected_s">Selezionati %s</string>
     <string name="trash">Cestino</string>
     <string name="pause_video">Pause video</string>
     <string name="play_video">Play video</string>
@@ -43,7 +43,7 @@
     <string name="select_all">Seleziona tutto</string>
     <string name="unselect_all">Deseleziona tutto</string>
     <string name="drop_down_cd">Drop down</string>
-    <string name="back_cd">Back</string>
+    <string name="back_cd">Indietro</string>
     <string name="settings_title">Impostazioni</string>
     <string name="reset_settings">Ripristina impostazioni</string>
     <string name="settings_general">Generali</string>
