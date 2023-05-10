@@ -18,8 +18,12 @@ import java.io.File
 import java.io.IOException
 
 @Throws(IOException::class)
-fun getExifInterface(context: Context, uri: Uri): ExifInterface {
-    return ExifInterface(context.uriToPath(uri).toString())
+fun getExifInterface(context: Context, uri: Uri): ExifInterface? {
+    return try {
+        ExifInterface(context.uriToPath(uri).toString())
+    } catch (_: IOException) {
+        null
+    }
 }
 
 fun Context.uriToPath(uri: Uri?): String? {

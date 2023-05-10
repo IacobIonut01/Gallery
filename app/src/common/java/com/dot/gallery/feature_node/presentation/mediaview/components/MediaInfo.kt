@@ -120,61 +120,66 @@ fun Media.retrieveMetadata(context: Context): List<InfoRow> {
             )
         )
     }
-    try {
-        val exifMetadata = ExifMetadata(getExifInterface(context = context, uri = uri))
-        infoList.apply {
-            exifMetadata.modelName?.let {
-                val focalLength = exifMetadata.focalLength
-                val isoValue = exifMetadata.isoValue
-                val stringBuilder = StringBuilder()
-                stringBuilder.append("f/${exifMetadata.apertureValue}")
-                if (focalLength != 0.0)
-                    stringBuilder.append(" • ${focalLength}mm")
-                if (isoValue != 0)
-                    stringBuilder.append(context.getString(R.string.iso) + isoValue)
-                add(
-                    InfoRow(
-                        icon = Icons.Outlined.Camera,
-                        label = it,
-                        content = stringBuilder.toString()
+    if (trashed == 1) return infoList
+    val exifInterface = getExifInterface(context = context, uri = uri)
+    if (exifInterface != null) {
+        try {
+            val exifMetadata = ExifMetadata(exifInterface)
+            infoList.apply {
+                exifMetadata.modelName?.let {
+                    val focalLength = exifMetadata.focalLength
+                    val isoValue = exifMetadata.isoValue
+                    val stringBuilder = StringBuilder()
+                    stringBuilder.append("f/${exifMetadata.apertureValue}")
+                    if (focalLength != 0.0)
+                        stringBuilder.append(" • ${focalLength}mm")
+                    if (isoValue != 0)
+                        stringBuilder.append(context.getString(R.string.iso) + isoValue)
+                    add(
+                        InfoRow(
+                            icon = Icons.Outlined.Camera,
+                            label = it,
+                            content = stringBuilder.toString()
+                        )
                     )
-                )
-            }
-            if (!exifMetadata.imageWidth.isNullOrEmpty() && !exifMetadata.imageHeight.isNullOrEmpty()) {
-                val width = exifMetadata.imageWidth
-                val height = exifMetadata.imageHeight
-                val roundingMP = DecimalFormat("#.#").apply {
-                    roundingMode = RoundingMode.DOWN
                 }
-                val mpValue = roundingMP.format(width.toDouble() * height.toDouble() / 1024000.0)
-                val roundingSize = DecimalFormat("#.##").apply {
-                    roundingMode = RoundingMode.DOWN
-                }
-                var fileSize = File(path).length().toDouble() / 1024.0
-                var fileSizeName = context.getString(R.string.kb)
-                if (fileSize > 1024.0) {
-                    fileSize /= 1024.0
-                    fileSizeName = context.getString(R.string.mb)
+                if (!exifMetadata.imageWidth.isNullOrEmpty() && !exifMetadata.imageHeight.isNullOrEmpty()) {
+                    val width = exifMetadata.imageWidth
+                    val height = exifMetadata.imageHeight
+                    val roundingMP = DecimalFormat("#.#").apply {
+                        roundingMode = RoundingMode.DOWN
+                    }
+                    val mpValue =
+                        roundingMP.format(width.toDouble() * height.toDouble() / 1024000.0)
+                    val roundingSize = DecimalFormat("#.##").apply {
+                        roundingMode = RoundingMode.DOWN
+                    }
+                    var fileSize = File(path).length().toDouble() / 1024.0
+                    var fileSizeName = context.getString(R.string.kb)
                     if (fileSize > 1024.0) {
                         fileSize /= 1024.0
-                        fileSizeName = context.getString(R.string.gb)
+                        fileSizeName = context.getString(R.string.mb)
+                        if (fileSize > 1024.0) {
+                            fileSize /= 1024.0
+                            fileSizeName = context.getString(R.string.gb)
+                        }
                     }
-                }
-                val contentString = StringBuilder()
-                contentString.append("${roundingSize.format(fileSize)} $fileSizeName")
-                if (mpValue > "0") contentString.append(" • $mpValue MP")
-                if (width > "0" && height > "0") contentString.append(" • $width x $height")
-                add(
-                    InfoRow(
-                        icon = Icons.Outlined.ImageSearch,
-                        label = context.getString(R.string.metadata),
-                        content = contentString.toString()
+                    val contentString = StringBuilder()
+                    contentString.append("${roundingSize.format(fileSize)} $fileSizeName")
+                    if (mpValue > "0") contentString.append(" • $mpValue MP")
+                    if (width > "0" && height > "0") contentString.append(" • $width x $height")
+                    add(
+                        InfoRow(
+                            icon = Icons.Outlined.ImageSearch,
+                            label = context.getString(R.string.metadata),
+                            content = contentString.toString()
+                        )
                     )
-                )
+                }
             }
+        } catch (e: IOException) {
+            Log.e(TAG, "ExifInterface ERROR\n" + e.printStackTrace())
         }
-    } catch (e: IOException) {
-        Log.e(TAG, "ExifInterface ERROR\n" + e.printStackTrace())
     }
 
     return infoList
