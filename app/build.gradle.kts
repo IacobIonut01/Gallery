@@ -97,7 +97,7 @@ android {
         buildConfig = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.2"
+        kotlinCompilerExtensionVersion = "1.4.7"
     }
     packaging {
         resources {
@@ -109,7 +109,7 @@ android {
 dependencies {
     implementation("androidx.profileinstaller:profileinstaller:1.3.1")
     "baselineProfile"(project(mapOf("path" to ":baselineprofile")))
-    val bom = "2023.04.01"
+    val bom = "2023.05.01"
     val lifecycleVersion = "2.6.1"
     val material3Version = "1.1.0"
     val accompanistVersion = "0.31.0-alpha"
