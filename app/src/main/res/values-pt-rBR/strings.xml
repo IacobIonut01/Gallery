@@ -72,6 +72,17 @@
     <string name="settings_cached_screen_title">Contagem de tela em cache</string>
     <string name="settings_cached_screen_summary">Quantas telas de mídia estão armazenadas na memória</string>
     <string name="settings_disk_cache_summary">Quanto espaço de armazenamento pode ser usado para cache persistente</string>
+    <string name="use_as">Use as</string>
+    <string name="set_as">"Set as: "</string>
+    <string name="delete_dialog_title">You\'re about to delete %s items</string>
+    <string name="delete_dialog_title_confirmation">Deleting %s items..</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_confirm">Confirm</string>
+    <string name="action_confirmed">Confirmed</string>
+    <string name="restore_dialog_title">You\'re about to restore %s items</string>
+    <string name="restore_dialog_title_confirmation">Restoring %s items…</string>
+    <string name="trash_dialog_title">You\'re about to trash %s items</string>
+    <string name="trash_dialog_title_confirmation">Moving to trash %s items…</string>
     <plurals name="item_count">
         <item quantity="one">%s ítem</item>
         <item quantity="other">%s ítens</item>
