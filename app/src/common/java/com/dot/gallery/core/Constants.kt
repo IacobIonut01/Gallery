@@ -13,10 +13,11 @@ import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import com.dot.gallery.BuildConfig
 
 object Constants {
 
-    const val AUTHORITY = "com.dot.gallery.media_provider"
+    const val AUTHORITY: String = BuildConfig.CONTENT_AUTHORITY
 
     /**
      * Default logging tag
