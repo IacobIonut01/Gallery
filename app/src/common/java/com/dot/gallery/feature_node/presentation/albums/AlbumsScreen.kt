@@ -6,6 +6,7 @@
 package com.dot.gallery.feature_node.presentation.albums
 
 import android.graphics.drawable.Drawable
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -15,8 +16,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -42,13 +41,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.bumptech.glide.RequestBuilder
@@ -64,6 +63,7 @@ import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.util.MediaOrder
 import com.dot.gallery.feature_node.domain.util.OrderType
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumComponent
+import com.dot.gallery.feature_node.presentation.albums.components.CarouselPinnedAlbums
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.ui.theme.Dimens
 
@@ -197,9 +197,7 @@ fun AlbumsScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            item(
-                span = { GridItemSpan(maxLineSpan) }
-            ) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -245,38 +243,29 @@ fun AlbumsScreen(
                 }
             }
             if (pinnedState.albums.isNotEmpty()) {
-                item(
-                    span = { GridItemSpan(maxLineSpan) }
-                ) {
+                item(span = { GridItemSpan(maxLineSpan) }) {
                     Column {
                         Text(
                             modifier = Modifier
                                 .padding(horizontal = 8.dp)
                                 .padding(bottom = 24.dp),
                             text = stringResource(R.string.pinned_albums_title),
-                            style = MaterialTheme.typography.bodyLarge
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Medium
                         )
-                        LazyRow(
-                            modifier = Modifier.wrapContentHeight(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            items(pinnedState.albums.size) { index ->
-                                val (album, preloadRequestBuilder) = preloadingDataPinned[index]
-                                AlbumComponent(
-                                    album = album,
-                                    preloadRequestBuilder = preloadRequestBuilder,
-                                    onItemClick = onAlbumClick,
-                                    onTogglePinClick = onAlbumLongClick
-                                )
-                            }
-                        }
+
+                        CarouselPinnedAlbums(
+                            albumList = pinnedState.albums,
+                            onAlbumClick = onAlbumClick,
+                            onAlbumLongClick = onAlbumLongClick
+                        )
                     }
                 }
             }
-            item(
-                span = { GridItemSpan(maxLineSpan) }
-            ) {
-                FilterButton(filterOptions = filterOptions.toTypedArray())
+            if (state.albums.isNotEmpty()) {
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    FilterButton(filterOptions = filterOptions.toTypedArray())
+                }
             }
             items(state.albums.size) { index ->
                 val (album, preloadRequestBuilder) = preloadingDataNonPinned[index]
@@ -291,7 +280,7 @@ fun AlbumsScreen(
         /** Error State Handling Block **/
         if (state.error.isNotEmpty()) {
             Error(errorMessage = state.error)
-        } else if (state.albums.isEmpty()) {
+        } else if (state.albums.isEmpty() && pinnedState.albums.isEmpty()) {
             EmptyMedia(modifier = Modifier.fillMaxSize())
         }
         /** ************ **/

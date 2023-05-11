@@ -111,7 +111,7 @@ dependencies {
     "baselineProfile"(project(mapOf("path" to ":baselineprofile")))
     val bom = "2023.04.01"
     val lifecycleVersion = "2.6.1"
-    val material3Version = "1.1.0-rc01"
+    val material3Version = "1.1.0"
     val accompanistVersion = "0.31.0-alpha"
     val kotlinCoroutinesVersion = "1.6.4"
     val hiltVersion = "2.45"
