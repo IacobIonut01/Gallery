@@ -197,12 +197,14 @@ fun BoxScope.MediaViewBottomBar(
     if (currentMedia != null) {
         val metadataList = remember(currentMedia) { currentMedia.retrieveMetadata(context) }
         val exifMetadata = remember(currentMedia) {
-            ExifMetadata(
-                getExifInterface(
-                    context = context,
-                    uri = MediaStore.setRequireOriginal(currentMedia.uri)
+            getExifInterface(
+                context = context,
+                uri = MediaStore.setRequireOriginal(currentMedia.uri)
+            )?.let {
+                ExifMetadata(
+                    it
                 )
-            )
+            }
         }
         if (openBottomSheet) {
             ModalBottomSheet(
@@ -296,88 +298,92 @@ fun BoxScope.MediaViewBottomBar(
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
                     )
-                    if (exifMetadata.gpsLatLong != null) {
-                        val lat = exifMetadata.gpsLatLong[0]
-                        val long = exifMetadata.gpsLatLong[1]
-                        val connection by connectivityState()
-                        val isConnected = connection == ConnectionState.Available
-                        ListItem(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 8.dp)
-                                .clip(Shapes.medium)
-                                .combinedClickable(
-                                    onClick = {
-                                        context.launchMap(lat, long)
-                                    }
-                                ),
-                            headlineContent = {
-                                Text(
-                                    text = stringResource(R.string.location),
-                                    fontWeight = FontWeight.Medium
-                                )
-                            },
-                            leadingContent = {
-                                Icon(
-                                    imageVector = Icons.Outlined.LocationOn,
-                                    contentDescription = stringResource(R.string.location_cd)
-                                )
-                            },
-                            overlineContent = if (isConnected) { {} } else null,
-                            supportingContent = {
-                                if (isConnected) {
-                                    Row(
-                                        modifier = Modifier
-                                            .padding(top = 8.dp)
-                                            .fillMaxWidth()
-                                    ) {
-                                        GlideImage(
-                                            model = MapBoxURL(
-                                                latitude = lat,
-                                                longitude = long,
-                                                darkTheme = isSystemInDarkTheme()
-                                            ),
-                                            contentScale = ContentScale.FillWidth,
-                                            contentDescription = stringResource(R.string.location_map_cd),
+                    if (exifMetadata != null) {
+                        if (exifMetadata.gpsLatLong != null) {
+                            val lat = exifMetadata.gpsLatLong[0]
+                            val long = exifMetadata.gpsLatLong[1]
+                            val connection by connectivityState()
+                            val isConnected = connection == ConnectionState.Available
+                            ListItem(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 8.dp)
+                                    .clip(Shapes.medium)
+                                    .combinedClickable(
+                                        onClick = {
+                                            context.launchMap(lat, long)
+                                        }
+                                    ),
+                                headlineContent = {
+                                    Text(
+                                        text = stringResource(R.string.location),
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                },
+                                leadingContent = {
+                                    Icon(
+                                        imageVector = Icons.Outlined.LocationOn,
+                                        contentDescription = stringResource(R.string.location_cd)
+                                    )
+                                },
+                                overlineContent = if (isConnected) {
+                                    {}
+                                } else null,
+                                supportingContent = {
+                                    if (isConnected) {
+                                        Row(
                                             modifier = Modifier
-                                                .size(width = 247.5.dp, height = 165.dp)
-                                                .clip(Shapes.large)
-                                                .border(
-                                                    width = 0.5.dp,
-                                                    color = MaterialTheme.colorScheme.outline,
-                                                    Shapes.large
-                                                )
-                                        )
-                                        Image(
-                                            imageVector = Icons.Outlined.OpenInNew,
-                                            contentDescription = null,
-                                            modifier = Modifier
-                                                .size(24.dp)
-                                                .padding(start = 32.dp),
-                                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
-                                        )
+                                                .padding(top = 8.dp)
+                                                .fillMaxWidth()
+                                        ) {
+                                            GlideImage(
+                                                model = MapBoxURL(
+                                                    latitude = lat,
+                                                    longitude = long,
+                                                    darkTheme = isSystemInDarkTheme()
+                                                ),
+                                                contentScale = ContentScale.FillWidth,
+                                                contentDescription = stringResource(R.string.location_map_cd),
+                                                modifier = Modifier
+                                                    .size(width = 247.5.dp, height = 165.dp)
+                                                    .clip(Shapes.large)
+                                                    .border(
+                                                        width = 0.5.dp,
+                                                        color = MaterialTheme.colorScheme.outline,
+                                                        Shapes.large
+                                                    )
+                                            )
+                                            Image(
+                                                imageVector = Icons.Outlined.OpenInNew,
+                                                contentDescription = null,
+                                                modifier = Modifier
+                                                    .size(24.dp)
+                                                    .padding(start = 32.dp),
+                                                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
+                                            )
+                                        }
+                                    } else {
+                                        Text(text = "$lat, $long")
                                     }
-                                } else {
-                                    Text(text = "$lat, $long")
                                 }
-                            }
-                        )
-                    }
-                    for (metadata in metadataList) {
-                        MediaInfoRow(
-                            label = metadata.label,
-                            content = metadata.content,
-                            icon = metadata.icon
-                        )
+                            )
+                        }
+                        for (metadata in metadataList) {
+                            MediaInfoRow(
+                                label = metadata.label,
+                                content = metadata.content,
+                                icon = metadata.icon
+                            )
+                        }
                     }
                     Spacer(modifier = Modifier.height(paddingValues.calculateBottomPadding()))
                 }
-                BackHandler {
-                    openBottomSheet = false
-                    scope.launch {
-                        bottomSheetState.hide()
-                    }
-                }
+            }
+        }
+        BackHandler(bottomSheetState.isVisible) {
+            openBottomSheet = false
+            scope.launch {
+                bottomSheetState.hide()
             }
         }
     }
