@@ -214,8 +214,7 @@ fun BoxScope.MediaViewBottomBar(
                         bottomSheetState.hide()
                     }
                 },
-                modifier = Modifier
-                    .absoluteOffset(y = paddingValues.calculateBottomPadding()),
+                shape = RoundedCornerShape(24.dp),
                 sheetState = bottomSheetState,
                 dragHandle = {
                     Surface(

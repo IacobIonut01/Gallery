@@ -7,9 +7,13 @@ package com.dot.gallery.feature_node.presentation.util
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.provider.MediaStore
 import android.view.HapticFeedbackConstants
 import android.view.View
 import android.view.accessibility.AccessibilityManager
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import com.dot.gallery.R
 import com.dot.gallery.feature_node.domain.model.Media
 import kotlinx.coroutines.Dispatchers
@@ -57,3 +61,14 @@ suspend fun Context.launchUseAsIntent(media: Media) =
         }
         startActivity(Intent.createChooser(intent, getString(R.string.set_as)))
     }
+
+
+@Composable
+fun rememberIsMediaManager(): Boolean {
+    val context = LocalContext.current
+    return remember(context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+            MediaStore.canManageMedia(context)
+        else false
+    }
+}

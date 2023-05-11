@@ -1,17 +1,22 @@
 package com.dot.gallery.feature_node.presentation.library.trashed.components
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.DeleteOutline
@@ -21,14 +26,17 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,9 +52,58 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+fun rememberTrashDialogState(): TrashState {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    return rememberSaveable(saver = TrashState.Saver()) {
+        TrashState(sheetState)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+class TrashState(
+    val sheetState: SheetState
+) {
+
+    var isVisible by mutableStateOf(false)
+        private set
+
+    internal constructor(sheetState: SheetState, isVisible: Boolean) : this(sheetState) {
+        this.isVisible = isVisible
+    }
+
+    suspend fun show() {
+        if (!isVisible) {
+            isVisible = true
+            sheetState.show()
+        }
+    }
+
+    suspend fun hide() {
+        if (isVisible) {
+            sheetState.hide()
+            isVisible = false
+        }
+    }
+
+    companion object {
+        fun Saver(
+            skipPartiallyExpanded: Boolean = true,
+            confirmValueChange: (SheetValue) -> Boolean = { true }
+        ) = Saver<TrashState, Pair<SheetValue, Boolean>>(
+            save = { Pair(it.sheetState.currentValue, it.isVisible) }
+        ) { savedValue ->
+            TrashState(
+                SheetState(skipPartiallyExpanded, savedValue.first, confirmValueChange),
+                savedValue.second
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
 fun TrashDialog(
-    openBottomSheet: MutableState<Boolean>,
-    sheetState: SheetState,
+    trashState: TrashState,
     data: List<Media>,
     defaultText: @Composable (size: Int) -> String = {
         stringResource(R.string.delete_dialog_title, it)
@@ -57,14 +114,23 @@ fun TrashDialog(
     image: ImageVector = Icons.Outlined.DeleteOutline,
     onConfirm: suspend (List<Media>) -> Unit
 ) {
+
+    var confirmed by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-    if (openBottomSheet.value) {
+    BackHandler(
+        trashState.isVisible && !confirmed
+    ) {
+        scope.launch {
+            trashState.hide()
+        }
+    }
+    if (trashState.isVisible) {
         ModalBottomSheet(
-            sheetState = sheetState,
+            sheetState = trashState.sheetState,
+            shape = RoundedCornerShape(24.dp),
             onDismissRequest = {
                 scope.launch {
-                    openBottomSheet.value = false
-                    sheetState.hide()
+                    trashState.hide()
                 }
             },
             dragHandle = {
@@ -80,19 +146,18 @@ fun TrashDialog(
         ) {
             val defaultText2 = defaultText.invoke(data.size)
             val confirmedText2 = confirmedText.invoke(data.size)
-            var confirmed by remember { mutableStateOf(false) }
             val text = remember(confirmed) {
                 if (confirmed) confirmedText2 else defaultText2
             }
             val primaryContainer = MaterialTheme.colorScheme.primaryContainer
             val tertiaryContainer = MaterialTheme.colorScheme.tertiaryContainer
             val containerBackground by animateColorAsState(
-                targetValue = if (confirmed) tertiaryContainer else primaryContainer
+                targetValue = if (confirmed) tertiaryContainer else primaryContainer, label = "containerBackground"
             )
             val primaryOnContainer = MaterialTheme.colorScheme.onPrimaryContainer
             val tertiaryOnContainer = MaterialTheme.colorScheme.onTertiaryContainer
             val onContainerBackground by animateColorAsState(
-                targetValue = if (confirmed) tertiaryOnContainer else primaryOnContainer
+                targetValue = if (confirmed) tertiaryOnContainer else primaryOnContainer, label = "onContainerBackground"
             )
             val mainButtonDefaultText = stringResource(R.string.action_confirm)
             val mainButtonConfirmText = stringResource(R.string.action_confirmed)
@@ -142,8 +207,7 @@ fun TrashDialog(
                         Button(
                             onClick = {
                                 scope.launch {
-                                    sheetState.hide()
-                                    openBottomSheet.value = false
+                                    trashState.hide()
                                 }
                             },
                             colors = ButtonDefaults.buttonColors(
@@ -167,6 +231,7 @@ fun TrashDialog(
                     }
                 }
             }
+            Spacer(modifier = Modifier.navigationBarsPadding())
         }
     }
 }

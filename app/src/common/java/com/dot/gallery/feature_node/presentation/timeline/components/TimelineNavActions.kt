@@ -1,7 +1,8 @@
 package com.dot.gallery.feature_node.presentation.timeline.components
 
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.IntentSenderRequest
+import android.app.Activity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -28,7 +29,10 @@ import com.dot.gallery.core.Constants
 import com.dot.gallery.core.MediaState
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
+import com.dot.gallery.feature_node.presentation.library.trashed.components.TrashDialog
+import com.dot.gallery.feature_node.presentation.library.trashed.components.rememberTrashDialogState
 import com.dot.gallery.feature_node.presentation.util.Screen
+import com.dot.gallery.feature_node.presentation.util.rememberIsMediaManager
 import com.dot.gallery.feature_node.presentation.util.shareMedia
 import kotlinx.coroutines.launch
 
@@ -41,14 +45,29 @@ fun RowScope.TimelineNavActions(
     selectedMedia: SnapshotStateList<Media>,
     selectionState: MutableState<Boolean>,
     navigate: (route: String) -> Unit,
-    navigateUp: () -> Unit,
-    result: ActivityResultLauncher<IntentSenderRequest>
+    navigateUp: () -> Unit
 ) {
     val shareMedia = stringResource(id = R.string.share_media)
     val trashMedia = stringResource(R.string.trash)
     val context = LocalContext.current
     val state by mediaState
     val scope = rememberCoroutineScope()
+    val isMediaManager = rememberIsMediaManager()
+    val trashState = rememberTrashDialogState()
+    val result = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartIntentSenderForResult(),
+        onResult = {
+            if (it.resultCode == Activity.RESULT_OK) {
+                selectedMedia.clear()
+                selectionState.value = false
+                if (isMediaManager) {
+                    scope.launch {
+                        trashState.hide()
+                    }
+                }
+            }
+        }
+    )
     AnimatedVisibility(
         visible = selectionState.value,
         enter = Constants.Animation.enterAnimation,
@@ -87,10 +106,11 @@ fun RowScope.TimelineNavActions(
             IconButton(
                 onClick = {
                     scope.launch {
-                        handler.trashMedia(
-                            result,
-                            selectedMedia
-                        )
+                        if (isMediaManager) {
+                            trashState.show()
+                        } else {
+                            handler.trashMedia(result, selectedMedia)
+                        }
                     }
                 }
             ) {
@@ -168,5 +188,19 @@ fun RowScope.TimelineNavActions(
             }
         )
     }
+    TrashDialog(
+        trashState = trashState,
+        data = selectedMedia,
+        defaultText = {
+            stringResource(R.string.trash_dialog_title, it)
+        },
+        confirmedText = {
+            stringResource(R.string.trash_dialog_title_confirmation, it)
+        },
+        image = Icons.Outlined.DeleteOutline,
+        onConfirm = {
+            handler.trashMedia(result, it, true)
+        }
+    )
 }
 

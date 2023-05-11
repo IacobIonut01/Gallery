@@ -48,9 +48,7 @@ fun TimelineScreen(
     toggleSelection = toggleSelection,
     showMonthlyHeader = true,
     alwaysGoBack = false,
-    NavActions = {
-                   expandedDropDown: MutableState<Boolean>,
-                   result: ActivityResultLauncher<IntentSenderRequest> ->
+    NavActions = {expandedDropDown: MutableState<Boolean>, _ ->
         TimelineNavActions(
             albumId = albumId,
             handler = handler,
@@ -59,8 +57,7 @@ fun TimelineScreen(
             selectedMedia = selectedMedia,
             selectionState = selectionState,
             navigate = navigate,
-            navigateUp = navigateUp,
-            result = result
+            navigateUp = navigateUp
         )
     },
     EmptyComponent = { EmptyMedia(Modifier.fillMaxSize()) },
