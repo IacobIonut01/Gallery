@@ -117,7 +117,7 @@ dependencies {
     val hiltVersion = "2.45"
     val roomVersion = "2.5.1"
     val glideVersion = "4.15.1"
-    val media3Version = "1.0.0"
+    val media3Version = "1.0.1"
 
     // Core
     implementation("androidx.core:core-ktx:1.10.0")
@@ -145,6 +145,9 @@ dependencies {
     implementation("com.google.accompanist:accompanist-systemuicontroller:$accompanistVersion")
     implementation("com.google.accompanist:accompanist-permissions:$accompanistVersion")
     implementation("com.google.accompanist:accompanist-navigation-animation:$accompanistVersion")
+
+    // Android MDC - Material
+    implementation("com.google.android.material:material:1.9.0")
 
     // Kotlin - Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinCoroutinesVersion")
