@@ -16,7 +16,13 @@ import com.dot.gallery.core.Constants.Target.TARGET_TRASH
 import com.dot.gallery.core.MediaState
 import com.dot.gallery.core.Resource
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.model.MediaItem
 import com.dot.gallery.feature_node.domain.use_case.MediaUseCases
+import com.dot.gallery.feature_node.presentation.util.DateExt
+import com.dot.gallery.feature_node.presentation.util.getDate
+import com.dot.gallery.feature_node.presentation.util.getDateExt
+import com.dot.gallery.feature_node.presentation.util.getDateHeader
+import com.dot.gallery.feature_node.presentation.util.getMonth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -100,9 +106,44 @@ open class MediaViewModel @Inject constructor(
             mediaUseCases.getMediaUseCase()
         }
         flow.map { result ->
+            val mappedData = ArrayList<MediaItem>()
+            val mappedDataWithMonthly = ArrayList<MediaItem>()
+            val monthHeaderList = ArrayList<String>()
+            val data = result.data ?: emptyList()
+            data.groupBy {
+                it.timestamp.getDate(
+                    stringToday = "Today" /** Localized in composition */,
+                    stringYesterday = "Yesterday"  /** Localized in composition */
+                )
+            }.forEach { (date, data) ->
+                val month = getMonth(date)
+                if (month.isNotEmpty() && !monthHeaderList.contains(month)) {
+                    monthHeaderList.add(month)
+                    mappedDataWithMonthly.add(MediaItem.Header("header_big_$month", month, data))
+                }
+                val item = MediaItem.Header("header_$date", date, data)
+                mappedData.add(item)
+                mappedDataWithMonthly.add(item)
+                for (media in data) {
+                    val mediaItem = MediaItem.MediaViewItem.Loaded("media_${media.id}", media)
+                    mappedData.add(mediaItem)
+                    mappedDataWithMonthly.add(mediaItem)
+                }
+            }
+            val startDate: DateExt? = if (target == null) {
+                data.last().timestamp.getDateExt()
+            } else null
+            val endDate: DateExt? = if (target == null) {
+                data.first().timestamp.getDateExt()
+            } else null
+            val dateHeader = if (albumId != -1L && startDate != null && endDate != null)
+                getDateHeader(startDate, endDate) else ""
             photoState.value = MediaState(
                 error = if (result is Resource.Error) result.message ?: "An error occurred" else "",
-                media = result.data ?: emptyList()
+                media = data,
+                mappedMedia = mappedData,
+                mappedMediaWithMonthly = mappedDataWithMonthly,
+                dateHeader = dateHeader
             )
         }.launchIn(viewModelScope)
     }

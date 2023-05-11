@@ -8,11 +8,16 @@ package com.dot.gallery.core
 import android.os.Parcelable
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.model.MediaItem
+import com.dot.gallery.feature_node.presentation.util.DateExt
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class MediaState(
     val media: List<Media> = emptyList(),
+    val mappedMedia: List<MediaItem> = emptyList(),
+    val mappedMediaWithMonthly: List<MediaItem> = emptyList(),
+    val dateHeader: String = "",
     val error: String = ""
 ) : Parcelable
 

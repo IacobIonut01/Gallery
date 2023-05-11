@@ -68,12 +68,7 @@ import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaItem
 import com.dot.gallery.feature_node.domain.model.isHeaderKey
 import com.dot.gallery.feature_node.presentation.timeline.components.StickyHeader
-import com.dot.gallery.feature_node.presentation.util.DateExt
 import com.dot.gallery.feature_node.presentation.util.Screen
-import com.dot.gallery.feature_node.presentation.util.getDate
-import com.dot.gallery.feature_node.presentation.util.getDateExt
-import com.dot.gallery.feature_node.presentation.util.getDateHeader
-import com.dot.gallery.feature_node.presentation.util.getMonth
 import com.dot.gallery.feature_node.presentation.util.vibrate
 import com.dot.gallery.ui.theme.Dimens
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -131,6 +126,7 @@ fun MediaScreen(
         /** STATES BLOCK **/
         val gridState = rememberLazyGridState()
         val state by mediaState
+        val mappedData = if (showMonthlyHeader) state.mappedMediaWithMonthly else state.mappedMedia
         /** ************ **/
 
         /** Glide Preloading **/
@@ -156,60 +152,6 @@ fun MediaScreen(
         /** ************  **/
 
         /**
-         * This block requires recomputing on state change
-         */
-        val sortedAscendingMedia: List<Media> = remember(state.media) {
-            state.media.sortedBy { it.timestamp }
-        }
-        val startDate: DateExt? = remember(state.media) {
-            try {
-                sortedAscendingMedia.first().timestamp.getDateExt()
-            } catch (e: NoSuchElementException) {
-                null
-            }
-        }
-        val endDate: DateExt? = remember(state.media) {
-            try {
-                sortedAscendingMedia.last().timestamp.getDateExt()
-            } catch (e: NoSuchElementException) {
-                null
-            }
-        }
-        val subtitle: String = remember(state.media) {
-            if (albumId != -1L && startDate != null && endDate != null)
-                getDateHeader(startDate, endDate)
-            else ""
-        }
-        val mappedData = remember { ArrayList<MediaItem>() }
-        val monthHeaderList = remember { ArrayList<String>() }
-        remember(state.media) {
-            mappedData.clear()
-            if (showMonthlyHeader) {
-                monthHeaderList.clear()
-            }
-            state.media.groupBy {
-                it.timestamp.getDate(
-                    stringToday = stringToday,
-                    stringYesterday = stringYesterday
-                )
-            }.forEach { (date, data) ->
-                if (showMonthlyHeader) {
-                    val month = getMonth(date)
-                    if (month.isNotEmpty() && !monthHeaderList.contains(month)) {
-                        monthHeaderList.add(month)
-                        mappedData.add(MediaItem.Header("header_big_$month", month, data))
-                    }
-                }
-                mappedData.add(MediaItem.Header("header_$date", date, data))
-                for (media in data) {
-                    mappedData.add(MediaItem.MediaViewItem.Loaded("media_${media.id}", media))
-                }
-            }
-            true
-        }
-        /** ************ **/
-
-        /**
          * Remember last known header item
          */
         val stickyHeaderLastItem = remember { mutableStateOf<String?>(null) }
@@ -224,7 +166,9 @@ fun MediaScreen(
                 }
                 stickyHeaderLastItem.apply {
                     if (item != null && item is MediaItem.Header) {
-                        value = item.key.replace("header_", "")
+                        value = item.text
+                            .replace("Today", stringToday)
+                            .replace("Yesterday", stringYesterday)
                     }
                 }.value
             }
@@ -245,10 +189,10 @@ fun MediaScreen(
                                 overflow = TextOverflow.Ellipsis,
                                 maxLines = 1
                             )
-                            if (subtitle.isNotEmpty()) {
+                            if (state.dateHeader.isNotEmpty()) {
                                 Text(
                                     modifier = Modifier,
-                                    text = subtitle.uppercase(),
+                                    text = state.dateHeader.uppercase(),
                                     style = MaterialTheme.typography.labelSmall,
                                     fontFamily = FontFamily.Monospace,
                                     overflow = TextOverflow.Ellipsis,
@@ -341,8 +285,11 @@ fun MediaScreen(
                                     // Partial check of media items should not check the header
                                     isChecked.value = selectedMedia.containsAll(item.data)
                                 }
+                                val title = item.text
+                                    .replace("Today", stringToday)
+                                    .replace("Yesterday", stringYesterday)
                                 StickyHeader(
-                                    date = item.text,
+                                    date = title,
                                     showAsBig = item.key.contains("big"),
                                     isCheckVisible = selectionState,
                                     isChecked = isChecked
