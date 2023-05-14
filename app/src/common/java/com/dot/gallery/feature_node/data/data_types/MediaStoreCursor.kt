@@ -9,12 +9,9 @@ import android.content.ContentResolver
 import android.content.ContentUris
 import android.database.Cursor
 import android.database.MergeCursor
-import android.net.Uri
 import android.os.Build
-import android.os.Bundle
 import android.provider.MediaStore
 import com.dot.gallery.feature_node.data.data_source.Query
-import com.dot.gallery.feature_node.data.data_source.Query.MediaQuery
 import com.dot.gallery.feature_node.domain.model.Media
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
