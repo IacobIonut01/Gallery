@@ -61,13 +61,13 @@
     <string name="location_map_cd">Location Map</string>
     <string name="app_dev">by %s</string>
     <string name="app_dev_name">IacobIonut01</string>
-    <string name="donate">Donate</string>
+    <string name="donate">捐赠</string>
     <string name="github">Github</string>
-    <string name="donate_button_cd">Donate Button</string>
-    <string name="github_button_cd">Github Button</string>
+    <string name="donate_button_cd">捐赠按钮</string>
+    <string name="github_button_cd">Github按钮</string>
     <string name="donate_url">https://www.paypal.com/paypalme/iacobionut01</string>
     <string name="github_url">https://github.com/IacobIonut01/Gallery</string>
-    <string name="settings_cache">Cache</string>
+    <string name="settings_cache">缓存</string>
     <string name="settings_disk_cache_title">Disk cache size</string>
     <string name="settings_cached_screen_title">Cached screen count</string>
     <string name="settings_cached_screen_summary">How many screens of media are stored in the memory</string>
