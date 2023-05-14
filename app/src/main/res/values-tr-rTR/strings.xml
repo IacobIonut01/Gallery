@@ -79,8 +79,8 @@
     <string name="action_cancel">Cancel</string>
     <string name="action_confirm">Confirm</string>
     <string name="action_confirmed">Confirmed</string>
-    <string name="restore_dialog_title">You\'re about to restore %s items</string>
-    <string name="restore_dialog_title_confirmation">Restoring %s items…</string>
+    <string name="restore_dialog_title">%s öğe geri yüklemek üzeresiniz</string>
+    <string name="restore_dialog_title_confirmation">%s öğe geri yükleniyor…</string>
     <string name="trash_dialog_title">You\'re about to trash %s items</string>
     <string name="trash_dialog_title_confirmation">Moving to trash %s items…</string>
     <plurals name="item_count">
