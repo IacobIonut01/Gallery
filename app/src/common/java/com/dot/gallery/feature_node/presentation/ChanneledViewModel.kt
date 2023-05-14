@@ -24,7 +24,10 @@ class ChanneledViewModel @Inject constructor() : ViewModel() {
         eventChannel.receiveAsFlow().map {
             when (it) {
                 is Event.NavigationRouteEvent ->
-                    navController.navigate(it.route)
+                    navController.navigate(it.route) {
+                        launchSingleTop = true
+                        restoreState = true
+                    }
                 is Event.NavigationUpEvent ->
                     navController.navigateUp()
             }
