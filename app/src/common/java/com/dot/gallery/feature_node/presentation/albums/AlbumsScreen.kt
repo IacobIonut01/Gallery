@@ -6,7 +6,6 @@
 package com.dot.gallery.feature_node.presentation.albums
 
 import android.graphics.drawable.Drawable
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -41,6 +40,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -58,10 +58,7 @@ import com.dot.gallery.core.Settings.Album.rememberLastSort
 import com.dot.gallery.core.presentation.components.EmptyMedia
 import com.dot.gallery.core.presentation.components.Error
 import com.dot.gallery.core.presentation.components.FilterButton
-import com.dot.gallery.core.presentation.components.FilterOption
 import com.dot.gallery.feature_node.domain.model.Album
-import com.dot.gallery.feature_node.domain.util.MediaOrder
-import com.dot.gallery.feature_node.domain.util.OrderType
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumComponent
 import com.dot.gallery.feature_node.presentation.albums.components.CarouselPinnedAlbums
 import com.dot.gallery.feature_node.presentation.util.Screen
@@ -74,17 +71,11 @@ fun AlbumsScreen(
     paddingValues: PaddingValues,
     viewModel: AlbumsViewModel = hiltViewModel(),
 ) {
-    val state by viewModel.albumsState
-    val pinnedState by viewModel.pinnedAlbumState
+    val state by rememberSaveable(viewModel.albumsState) { viewModel.albumsState }
+    val pinnedState by rememberSaveable(viewModel.pinnedAlbumState) { viewModel.pinnedAlbumState }
+    val filterOptions = viewModel.rememberFilters()
     val preloadingDataNonPinned = rememberGlidePreloadingData(
         data = state.albums,
-        preloadImageSize = Size(200f, 200f)
-    ) { item: Album, requestBuilder: RequestBuilder<Drawable> ->
-        requestBuilder.load(item.pathToThumbnail)
-            .signature(MediaStoreSignature(null, item.timestamp, 0))
-    }
-    val preloadingDataPinned = rememberGlidePreloadingData(
-        data = pinnedState.albums,
         preloadImageSize = Size(200f, 200f)
     ) { item: Album, requestBuilder: RequestBuilder<Drawable> ->
         requestBuilder.load(item.pathToThumbnail)
@@ -93,56 +84,7 @@ fun AlbumsScreen(
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
-    val filterRecent = stringResource(R.string.filter_recent)
-    val filterOld = stringResource(R.string.filter_old)
-    val filterNameAZ = stringResource(R.string.filter_nameAZ)
-    val filterNameZA = stringResource(R.string.filter_nameZA)
-
     val albumSortSetting by rememberLastSort()
-
-    val filterOptions = remember(albumSortSetting) {
-        ArrayList<FilterOption>().apply {
-            add(
-                FilterOption(
-                    title = filterRecent,
-                    mediaOrder = MediaOrder.Date(OrderType.Descending),
-                    onClick = { viewModel.updateOrder(it) },
-                    selected = albumSortSetting == 0
-                )
-            )
-            add(
-                FilterOption(
-                    title = filterOld,
-                    mediaOrder = MediaOrder.Date(OrderType.Ascending),
-                    onClick = { viewModel.updateOrder(it) },
-                    selected = albumSortSetting == 1
-                )
-            )
-            add(
-                FilterOption(
-                    title = filterNameAZ,
-                    mediaOrder = MediaOrder.Label(OrderType.Ascending),
-                    onClick = { viewModel.updateOrder(it) },
-                    selected = albumSortSetting == 2
-                )
-            )
-            add(
-                FilterOption(
-                    title = filterNameZA,
-                    mediaOrder = MediaOrder.Label(OrderType.Descending),
-                    onClick = { viewModel.updateOrder(it) },
-                    selected = albumSortSetting == 3
-                )
-            )
-        }
-    }
-
-    val onAlbumClick: (Album) -> Unit = { album ->
-        navigate(Screen.AlbumViewScreen.route + "?albumId=${album.id}&albumName=${album.label}")
-    }
-    val onAlbumLongClick: (Album) -> Unit = { album ->
-        viewModel.toggleAlbumPin(album, !album.isPinned)
-    }
 
     LaunchedEffect(state.albums, albumSortSetting) {
         val filterOption = filterOptions.first { it.selected }
@@ -202,6 +144,7 @@ fun AlbumsScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 8.dp, vertical = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Button(
@@ -220,7 +163,6 @@ fun AlbumsScreen(
                             text = stringResource(id = R.string.trash)
                         )
                     }
-                    Spacer(modifier = Modifier.size(16.dp))
                     Button(
                         modifier = Modifier.weight(1f),
                         onClick = {
@@ -253,11 +195,10 @@ fun AlbumsScreen(
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Medium
                         )
-
                         CarouselPinnedAlbums(
                             albumList = pinnedState.albums,
-                            onAlbumClick = onAlbumClick,
-                            onAlbumLongClick = onAlbumLongClick
+                            onAlbumClick = viewModel.onAlbumClick(navigate),
+                            onAlbumLongClick = viewModel.onAlbumLongClick
                         )
                     }
                 }
@@ -272,8 +213,8 @@ fun AlbumsScreen(
                 AlbumComponent(
                     album = album,
                     preloadRequestBuilder = preloadRequestBuilder,
-                    onItemClick = onAlbumClick,
-                    onTogglePinClick = onAlbumLongClick
+                    onItemClick = viewModel.onAlbumClick(navigate),
+                    onTogglePinClick = viewModel.onAlbumLongClick
                 )
             }
         }

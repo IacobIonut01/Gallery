@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import com.dot.gallery.R
 import com.dot.gallery.core.Settings.Album.rememberLastSort
 import com.dot.gallery.feature_node.domain.util.MediaOrder
+import com.dot.gallery.feature_node.domain.util.OrderType
 
 @Composable
 fun FilterButton(
@@ -38,7 +39,7 @@ fun FilterButton(
 ) {
     var lastSort by rememberLastSort()
     var expanded by remember { mutableStateOf(false) }
-    var selectedFilter by remember(lastSort) { mutableStateOf(filterOptions.first { it.selected }.title) }
+    var selectedFilter by remember(lastSort) { mutableStateOf(filterOptions.first { it.selected }.titleRes) }
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -50,7 +51,7 @@ fun FilterButton(
             Row {
                 Text(
                     modifier = Modifier.padding(end = 4.dp),
-                    text = selectedFilter
+                    text = stringResource(selectedFilter)
                 )
                 Icon(
                     imageVector = Icons.Outlined.FilterList,
@@ -67,11 +68,11 @@ fun FilterButton(
         ) {
             for (filter in filterOptions) {
                 DropdownMenuItem(
-                    text = { Text(text = filter.title) },
+                    text = { Text(text = stringResource(filter.titleRes)) },
                     onClick = {
                         filterOptions.forEach {
-                            it.selected = it.title == filter.title
-                            if (it.selected) selectedFilter = it.title
+                            it.selected = it.titleRes == filter.titleRes
+                            if (it.selected) selectedFilter = it.titleRes
                         }
                         filter.onClick(filter.mediaOrder)
                         lastSort = filterOptions.indexOf(filter)
@@ -91,8 +92,8 @@ fun FilterButton(
 
 
 data class FilterOption(
-    val title: String,
-    val onClick: (MediaOrder) -> Unit,
-    val mediaOrder: MediaOrder,
+    val titleRes: Int = -1,
+    val onClick: (MediaOrder) -> Unit = {},
+    val mediaOrder: MediaOrder = MediaOrder.Date(OrderType.Descending),
     var selected: Boolean = false
 )

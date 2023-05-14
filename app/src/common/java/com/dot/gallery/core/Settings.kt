@@ -7,7 +7,6 @@ package com.dot.gallery.core
 
 import android.content.Context
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
@@ -37,6 +36,8 @@ object Settings {
         @Composable
         fun rememberLastSort() =
             rememberPreference(key = LAST_SORT, defaultValue = 0)
+        fun getLastSort(context: Context) =
+            context.dataStore.data.map { it[LAST_SORT] ?: 0 }
     }
 
     object Glide {
