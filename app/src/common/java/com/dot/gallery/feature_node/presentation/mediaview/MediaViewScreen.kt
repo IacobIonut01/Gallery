@@ -5,7 +5,6 @@
 
 package com.dot.gallery.feature_node.presentation.mediaview
 
-import android.app.Activity
 import android.graphics.drawable.Drawable
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -26,13 +25,13 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.core.view.WindowCompat
 import androidx.media3.exoplayer.ExoPlayer
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.integration.compose.rememberGlidePreloadingData
@@ -53,6 +52,7 @@ import com.dot.gallery.feature_node.presentation.library.trashed.components.Tras
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewAppBar
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewBottomBar
 import com.dot.gallery.feature_node.presentation.util.getDate
+import com.dot.gallery.feature_node.presentation.util.rememberWindowInsetsController
 import com.dot.gallery.feature_node.presentation.util.toggleSystemBars
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -65,20 +65,18 @@ fun MediaViewScreen(
     mediaState: MutableState<MediaState>,
     handler: MediaHandleUseCase
 ) {
-    val runtimeMediaId = remember { mutableStateOf(mediaId) }
+    var runtimeMediaId by rememberSaveable(mediaId) { mutableStateOf(mediaId) }
     val state by mediaState
-    val initialPage = remember { state.media.indexOfFirst { it.id == mediaId } }
+    val initialPage = rememberSaveable(runtimeMediaId) { state.media.indexOfFirst { it.id == runtimeMediaId } }
     val pagerState = rememberPagerState(initialPage = if (initialPage == -1) 0 else initialPage)
-    val scrollEnabled = remember { mutableStateOf(true) }
+    val scrollEnabled = rememberSaveable { mutableStateOf(true) }
 
-    val currentDate = remember { mutableStateOf("") }
-    val currentMedia = remember { mutableStateOf<Media?>(null) }
+    val currentDate = rememberSaveable { mutableStateOf("") }
+    val currentMedia = rememberSaveable { mutableStateOf<Media?>(null) }
 
-    val showUI = remember { mutableStateOf(true) }
+    val showUI = rememberSaveable { mutableStateOf(true) }
     val maxImageSize by rememberMaxImageSize()
-    val window = with(LocalContext.current as Activity) { return@with window }
-    val windowInsetsController =
-        remember { WindowCompat.getInsetsController(window, window.decorView) }
+    val windowInsetsController = rememberWindowInsetsController()
 
     /** Glide Preloading **/
     val preloadingData = rememberGlidePreloadingData(
@@ -96,16 +94,14 @@ fun MediaViewScreen(
         onResult = {}
     )
     val lastIndex = remember { mutableStateOf(-1) }
-    val updateContent: (Int) -> Unit = remember {
-        { page ->
-            if (state.media.isNotEmpty()) {
-                val index = if (page == -1) 0 else page
-                if (lastIndex.value != -1)
-                    runtimeMediaId.value = state.media[lastIndex.value].id
-                currentDate.value = state.media[index].timestamp.getDate(HEADER_DATE_FORMAT)
-                currentMedia.value = state.media[index]
-            }
-        }
+    val updateContent: (Int) -> Unit = { page ->
+        if (state.media.isNotEmpty()) {
+            val index = if (page == -1) 0 else page
+            if (lastIndex.value != -1)
+                runtimeMediaId = state.media[lastIndex.value].id
+            currentDate.value = state.media[index].timestamp.getDate(HEADER_DATE_FORMAT)
+            currentMedia.value = state.media[index]
+        } else navigateUp()
     }
 
     LaunchedEffect(pagerState) {
@@ -115,11 +111,7 @@ fun MediaViewScreen(
     }
 
     LaunchedEffect(state.media) {
-        if (state.media.isEmpty()) {
-            navigateUp()
-        } else {
-            updateContent(state.media.indexOfFirst { it.id == runtimeMediaId.value })
-        }
+        updateContent(pagerState.currentPage)
     }
     Box(
         modifier = Modifier

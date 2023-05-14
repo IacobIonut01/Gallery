@@ -4,6 +4,7 @@
  */
 package com.dot.gallery.feature_node.presentation.util
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -14,10 +15,11 @@ import android.view.accessibility.AccessibilityManager
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import com.dot.gallery.R
 import com.dot.gallery.feature_node.domain.model.Media
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 fun View.vibrate() = reallyPerformHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
@@ -71,4 +73,10 @@ fun rememberIsMediaManager(): Boolean {
             MediaStore.canManageMedia(context)
         else false
     }
+}
+
+@Composable
+fun rememberWindowInsetsController(): WindowInsetsControllerCompat {
+    val window = with(LocalContext.current as Activity) { return@with window }
+    return remember { WindowCompat.getInsetsController(window, window.decorView) }
 }
