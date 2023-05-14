@@ -72,7 +72,7 @@
     <string name="settings_cached_screen_title">Zwischengespeicherte Anzahl von Bildschirmen</string>
     <string name="settings_cached_screen_summary">Wie viele Bildschirme mit Medien im Speicher gespeichert sind</string>
     <string name="settings_disk_cache_summary">Wie viel Speicherplatz für die dauerhafte Zwischenspeicherung verwendet werden kann</string>
-    <string name="use_as">Use as</string>
+    <string name="use_as">Verwenden als</string>
     <string name="set_as">"Set as: "</string>
     <string name="delete_dialog_title">You\'re about to delete %s items</string>
     <string name="delete_dialog_title_confirmation">Deleting %s items..</string>
