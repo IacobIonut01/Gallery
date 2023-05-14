@@ -6,13 +6,11 @@
 package com.dot.gallery.core.presentation.components.media
 
 import android.graphics.drawable.Drawable
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.media3.exoplayer.ExoPlayer
 import com.bumptech.glide.RequestBuilder
 import com.dot.gallery.feature_node.domain.model.Media
@@ -30,9 +28,6 @@ fun MediaPreviewComponent(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                color = Color.Black,
-            ),
     ) {
         if (media.duration != null) {
             VideoPlayer(
