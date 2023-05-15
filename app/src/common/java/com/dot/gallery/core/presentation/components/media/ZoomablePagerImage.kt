@@ -60,7 +60,7 @@ fun ZoomablePagerImage(
             .size(maxImageSize)
             .build(),
         contentScale = ContentScale.Fit,
-        filterQuality = FilterQuality.High
+        filterQuality = FilterQuality.None
     )
 
     val onDoubleTap: (Offset) -> Unit = remember {
