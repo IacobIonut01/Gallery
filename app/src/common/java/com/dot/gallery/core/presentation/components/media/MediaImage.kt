@@ -38,7 +38,6 @@ import androidx.compose.ui.unit.dp
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
-import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade
 import com.bumptech.glide.signature.MediaStoreSignature
 import com.dot.gallery.core.Constants.Animation
 import com.dot.gallery.feature_node.domain.model.Media
@@ -84,8 +83,7 @@ fun MediaImage(
         ) {
             it.thumbnail(preloadRequestBuilder)
                 .signature(MediaStoreSignature(media.mimeType, media.timestamp, media.orientation))
-                .override(600, 600)
-                .transition(withCrossFade())
+                .override(500)
         }
 
         AnimatedVisibility(

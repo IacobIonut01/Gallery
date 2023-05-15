@@ -8,15 +8,14 @@ package com.dot.gallery.injection
 import android.content.Context
 import com.bumptech.glide.GlideBuilder
 import com.bumptech.glide.annotation.GlideModule
-import com.bumptech.glide.load.DecodeFormat
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.engine.bitmap_recycle.LruBitmapPool
 import com.bumptech.glide.load.engine.cache.DiskLruCacheFactory
 import com.bumptech.glide.load.engine.cache.LruResourceCache
 import com.bumptech.glide.load.engine.cache.MemorySizeCalculator
+import com.bumptech.glide.load.engine.executor.GlideExecutor
 import com.bumptech.glide.module.AppGlideModule
 import com.bumptech.glide.request.RequestOptions
-import com.dot.gallery.core.Settings
 import com.dot.gallery.core.Settings.Glide.getCachedScreenCount
 import com.dot.gallery.core.Settings.Glide.getDiskCacheSize
 import kotlinx.coroutines.flow.first
@@ -45,5 +44,15 @@ class GalleryGlideModule : AppGlideModule() {
             .setBitmapPoolScreens(screenCount)
             .build()
         builder.setBitmapPool(LruBitmapPool(bitmapCalculator.bitmapPoolSize.toLong()))
+        builder.setImageDecoderEnabledForBitmaps(true)
+        builder.setSourceExecutor(
+            GlideExecutor
+                .newSourceBuilder()
+                .setThreadCount(
+                    Runtime.getRuntime().availableProcessors()
+                )
+                .build()
+        )
+        builder.setIsActiveResourceRetentionAllowed(true)
     }
 }
