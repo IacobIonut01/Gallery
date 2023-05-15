@@ -6,7 +6,6 @@
 package com.dot.gallery.core.presentation.components
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -17,7 +16,6 @@ import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavBackStackEntry
@@ -71,8 +69,6 @@ fun BottomAppBar(
                         },
                         label = {
                             Text(
-                                modifier = Modifier
-                                    .height(16.dp),
                                 text = item.name,
                                 fontWeight = FontWeight.Medium,
                                 style = MaterialTheme.typography.bodyMedium,
