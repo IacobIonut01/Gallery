@@ -48,9 +48,7 @@ class GalleryGlideModule : AppGlideModule() {
         builder.setSourceExecutor(
             GlideExecutor
                 .newSourceBuilder()
-                .setThreadCount(
-                    Runtime.getRuntime().availableProcessors()
-                )
+                .setThreadCount(GlideExecutor.calculateBestThreadCount())
                 .build()
         )
     }
