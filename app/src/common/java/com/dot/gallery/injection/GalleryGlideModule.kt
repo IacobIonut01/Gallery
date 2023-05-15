@@ -29,7 +29,7 @@ class GalleryGlideModule : AppGlideModule() {
         val screenCount = runBlocking {  getCachedScreenCount(context).first() }
 
         builder.setDefaultRequestOptions(
-            RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL)
+            RequestOptions().diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
         )
         val memoryCalculator = MemorySizeCalculator.Builder(context)
             .setMemoryCacheScreens(screenCount)
