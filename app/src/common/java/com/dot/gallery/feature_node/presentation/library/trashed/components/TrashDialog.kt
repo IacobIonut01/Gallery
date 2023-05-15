@@ -3,7 +3,6 @@ package com.dot.gallery.feature_node.presentation.library.trashed.components
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -121,10 +120,12 @@ fun TrashDialog(
         trashState.isVisible && !confirmed
     ) {
         scope.launch {
+            confirmed = false
             trashState.hide()
         }
     }
     if (trashState.isVisible) {
+        confirmed = false
         ModalBottomSheet(
             sheetState = trashState.sheetState,
             shape = RoundedCornerShape(24.dp),
