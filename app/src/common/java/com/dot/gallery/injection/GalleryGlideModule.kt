@@ -53,6 +53,5 @@ class GalleryGlideModule : AppGlideModule() {
                 )
                 .build()
         )
-        builder.setIsActiveResourceRetentionAllowed(true)
     }
 }
