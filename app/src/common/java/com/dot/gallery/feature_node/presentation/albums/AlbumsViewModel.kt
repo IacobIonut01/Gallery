@@ -24,6 +24,8 @@ import com.dot.gallery.feature_node.domain.util.MediaOrder
 import com.dot.gallery.feature_node.domain.util.OrderType
 import com.dot.gallery.feature_node.presentation.util.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -127,9 +129,15 @@ class AlbumsViewModel @Inject constructor(
             // Result data list
             val data = result.data ?: emptyList()
             val error = if (result is Resource.Error) result.message ?: "An error occurred" else ""
-            albumsState.value = AlbumState(error = error, albums = data.filter { !it.isPinned })
-            pinnedAlbumState.value = AlbumState(error = error, albums = data.filter { it.isPinned })
-        }.launchIn(viewModelScope)
+            val newAlbumState = AlbumState(error = error, albums = data.filter { !it.isPinned })
+            val newPinnedState = AlbumState(error = error, albums = data.filter { it.isPinned })
+            if (albumsState.value != newAlbumState) {
+                albumsState.value = newAlbumState
+            }
+            if (pinnedAlbumState.value != newPinnedState) {
+                pinnedAlbumState.value = newPinnedState
+            }
+        }.flowOn(Dispatchers.IO).launchIn(viewModelScope)
     }
 
 }
