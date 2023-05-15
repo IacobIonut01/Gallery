@@ -15,6 +15,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Photo
@@ -106,6 +107,7 @@ class MainActivity : ComponentActivity() {
                                 NavigationRail(
                                     containerColor = MaterialTheme.colorScheme.surface
                                 ) {
+                                    Spacer(Modifier.weight(1f))
                                     bottomNavItems.forEach { item ->
                                         val selected =
                                             item.route == backStackEntry.value?.destination?.route
@@ -147,6 +149,7 @@ class MainActivity : ComponentActivity() {
                                             }
                                         )
                                     }
+                                    Spacer(Modifier.weight(1f))
                                 }
                             }
                             NavigationComp(
