@@ -198,7 +198,7 @@ fun AlbumsScreen(
             }
             items(
                 items = state.albums,
-                key = { item -> item.id }
+                key = { item -> item.toString() }
             ) { item ->
                 AlbumComponent(
                     album = item,
