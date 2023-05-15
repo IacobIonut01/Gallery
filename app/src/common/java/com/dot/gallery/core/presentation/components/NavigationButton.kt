@@ -8,23 +8,24 @@ import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.res.stringResource
-import androidx.navigation.NavController
 import com.dot.gallery.R
 
 @Composable
 fun NavigationButton(
     albumId: Long,
+    target: String?,
     navigateUp: () -> Unit,
     clearSelection: () -> Unit,
     selectionState: MutableState<Boolean>,
     alwaysGoBack: Boolean,
 ) {
+    val isChildRoute = albumId != -1L || target != null
     val onClick: () -> Unit =
-        if (albumId != -1L && !selectionState.value || alwaysGoBack) navigateUp
+        if (isChildRoute && !selectionState.value) navigateUp
         else clearSelection
-    val icon = if (albumId != -1L && !selectionState.value || alwaysGoBack) Icons.Default.ArrowBack
+    val icon = if (isChildRoute && !selectionState.value) Icons.Default.ArrowBack
     else Icons.Default.Close
-    if (albumId != -1L || selectionState.value || alwaysGoBack) {
+    if (isChildRoute || selectionState.value || alwaysGoBack) {
         IconButton(onClick = onClick) {
             Icon(
                 imageVector = icon,

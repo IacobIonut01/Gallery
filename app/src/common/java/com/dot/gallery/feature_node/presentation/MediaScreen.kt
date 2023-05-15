@@ -204,6 +204,7 @@ fun MediaScreen(
                     navigationIcon = {
                         NavigationButton(
                             albumId = albumId,
+                            target = target,
                             navigateUp = navigateUp,
                             clearSelection = clearSelection,
                             selectionState = selectionState,
