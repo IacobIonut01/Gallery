@@ -5,7 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -60,11 +59,6 @@ fun SettingsItem(
     val switch: @Composable () -> Unit = {
         Switch(checked = checked, onCheckedChange = null)
     }
-    val headlineColor =
-        if (item.isHeader)
-            MaterialTheme.colorScheme.primary
-        else
-            MaterialTheme.colorScheme.onSurface
 
     val shape = remember(item.screenPosition) {
         when (item.screenPosition) {
@@ -91,25 +85,13 @@ fun SettingsItem(
             )
         }
     }
-    val paddingModifier = if (!item.isHeader)
+    val paddingModifier =
         when (item.screenPosition) {
             Position.Alone -> Modifier.padding(bottom = 16.dp)
             Position.Bottom -> Modifier.padding(top = 1.dp)
             Position.Middle -> Modifier.padding(vertical = 1.dp)
             Position.Top -> Modifier.padding(bottom = 1.dp)
         }
-    else Modifier
-    val heightModifier = if (item.isHeader) {
-        Modifier.height(36.dp)
-    } else Modifier
-    val backgroundModifier =
-        if (!item.isHeader)
-            Modifier
-                .clip(shape)
-                .background(
-                    color = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
-                )
-        else Modifier.background(Color.Transparent)
 
     var currentSeekValue by remember(item.currentValue) {
         mutableStateOf(item.currentValue?.div(item.valueMultiplier))
@@ -166,26 +148,41 @@ fun SettingsItem(
                 } else item.onClick
             }
         else Modifier
-    ListItem(
-        headlineContent = {
-            Text(text = item.title)
-        },
-        supportingContent = supportingContent,
-        trailingContent = trailingContent,
-        leadingContent = if (item.icon != null) icon else null,
-        modifier = Modifier
-            .then(paddingModifier)
-            .padding(horizontal = 16.dp)
-            .then(backgroundModifier)
-            .then(clickableModifier)
-            .padding(8.dp)
-            .then(heightModifier)
-            .fillMaxWidth(),
-        colors = ListItemDefaults.colors(
-            containerColor = Color.Transparent,
-            headlineColor = headlineColor
+    if (item.isHeader) {
+        Text(
+            text = item.title,
+            color = MaterialTheme.colorScheme.primary,
+            style = MaterialTheme.typography.titleSmall,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 40.dp, vertical = 8.dp)
+                .padding(bottom = 8.dp)
         )
-    )
+    } else {
+        ListItem(
+            headlineContent = {
+                Text(
+                    text = item.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(bottom = 2.dp)
+                )
+            },
+            supportingContent = supportingContent,
+            trailingContent = trailingContent,
+            leadingContent = if (item.icon != null) icon else null,
+            modifier = Modifier
+                .then(paddingModifier)
+                .padding(horizontal = 16.dp)
+                .clip(shape)
+                .background(
+                    color = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
+                )
+                .then(clickableModifier)
+                .padding(8.dp)
+                .fillMaxWidth(),
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+        )
+    }
 }
 
 @Preview(
