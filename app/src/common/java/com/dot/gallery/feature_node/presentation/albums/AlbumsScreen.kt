@@ -5,7 +5,6 @@
 
 package com.dot.gallery.feature_node.presentation.albums
 
-import android.graphics.drawable.Drawable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -18,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -44,21 +44,16 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.bumptech.glide.RequestBuilder
-import com.bumptech.glide.integration.compose.rememberGlidePreloadingData
-import com.bumptech.glide.signature.MediaStoreSignature
 import com.dot.gallery.R
 import com.dot.gallery.core.Settings.Album.rememberLastSort
 import com.dot.gallery.core.presentation.components.EmptyMedia
 import com.dot.gallery.core.presentation.components.Error
 import com.dot.gallery.core.presentation.components.FilterButton
-import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumComponent
 import com.dot.gallery.feature_node.presentation.albums.components.CarouselPinnedAlbums
 import com.dot.gallery.feature_node.presentation.util.Screen
@@ -74,13 +69,6 @@ fun AlbumsScreen(
     val state by rememberSaveable(viewModel.albumsState) { viewModel.albumsState }
     val pinnedState by rememberSaveable(viewModel.pinnedAlbumState) { viewModel.pinnedAlbumState }
     val filterOptions = viewModel.rememberFilters()
-    val preloadingDataNonPinned = rememberGlidePreloadingData(
-        data = state.albums,
-        preloadImageSize = Size(200f, 200f)
-    ) { item: Album, requestBuilder: RequestBuilder<Drawable> ->
-        requestBuilder.load(item.pathToThumbnail)
-            .signature(MediaStoreSignature(null, item.timestamp, 0))
-    }
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
@@ -208,11 +196,12 @@ fun AlbumsScreen(
                     FilterButton(filterOptions = filterOptions.toTypedArray())
                 }
             }
-            items(state.albums.size) { index ->
-                val (album, preloadRequestBuilder) = preloadingDataNonPinned[index]
+            items(
+                items = state.albums,
+                key = { item -> item.id }
+            ) { item ->
                 AlbumComponent(
-                    album = album,
-                    preloadRequestBuilder = preloadRequestBuilder,
+                    album = item,
                     onItemClick = viewModel.onAlbumClick(navigate),
                     onTogglePinClick = viewModel.onAlbumLongClick
                 )

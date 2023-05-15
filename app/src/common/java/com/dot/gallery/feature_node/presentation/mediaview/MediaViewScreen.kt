@@ -5,7 +5,6 @@
 
 package com.dot.gallery.feature_node.presentation.mediaview
 
-import android.graphics.drawable.Drawable
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -29,13 +28,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.media3.exoplayer.ExoPlayer
-import com.bumptech.glide.RequestBuilder
-import com.bumptech.glide.integration.compose.rememberGlidePreloadingData
-import com.bumptech.glide.signature.MediaStoreSignature
 import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
@@ -77,17 +72,6 @@ fun MediaViewScreen(
     val showUI = rememberSaveable { mutableStateOf(true) }
     val maxImageSize by rememberMaxImageSize()
     val windowInsetsController = rememberWindowInsetsController()
-
-    /** Glide Preloading **/
-    val preloadingData = rememberGlidePreloadingData(
-        data = state.media,
-        preloadImageSize = Size(512f, 384f)
-    ) { media: Media, requestBuilder: RequestBuilder<Drawable> ->
-        requestBuilder
-            .signature(MediaStoreSignature(media.mimeType, media.timestamp, media.orientation))
-            .load(media.uri)
-    }
-    /** ************ **/
 
     val result = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartIntentSenderForResult(),
@@ -131,12 +115,10 @@ fun MediaViewScreen(
             ),
             pageSpacing = 16.dp
         ) { index ->
-            val (media, preloadRequestBuilder) = preloadingData[index]
             MediaPreviewComponent(
-                media = media,
+                media = state.media[index],
                 scrollEnabled = scrollEnabled,
                 maxImageSize = maxImageSize,
-                preloadRequestBuilder = preloadRequestBuilder,
                 playWhenReady = index == pagerState.currentPage,
                 onItemClick = {
                     showUI.value = !showUI.value

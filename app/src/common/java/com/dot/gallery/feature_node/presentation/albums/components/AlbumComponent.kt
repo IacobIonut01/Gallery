@@ -5,7 +5,6 @@
 
 package com.dot.gallery.feature_node.presentation.albums.components
 
-import android.graphics.drawable.Drawable
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
@@ -27,9 +26,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
-import com.bumptech.glide.RequestBuilder
-import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
-import com.bumptech.glide.integration.compose.GlideImage
+import coil.compose.AsyncImage
 import com.dot.gallery.R
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.ui.theme.Dimens
@@ -39,7 +36,6 @@ import java.io.File
 @Composable
 fun AlbumComponent(
     album: Album,
-    preloadRequestBuilder: RequestBuilder<Drawable>,
     onItemClick: (Album) -> Unit,
     onTogglePinClick: (Album) -> Unit
 ) {
@@ -49,7 +45,7 @@ fun AlbumComponent(
     Column(
         modifier = Modifier.padding(horizontal = 8.dp),
     ) {
-        AlbumImage(album = album, preloadRequestBuilder, onItemClick) {
+        AlbumImage(album = album, onItemClick) {
             showDropDown.value = !showDropDown.value
         }
         Text(
@@ -82,15 +78,14 @@ fun AlbumComponent(
     }
 }
 
-@OptIn(ExperimentalGlideComposeApi::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AlbumImage(
     album: Album,
-    preloadRequestBuilder: RequestBuilder<Drawable>,
     onItemClick: (Album) -> Unit,
     onItemLongClick: (Album) -> Unit
 ) {
-    GlideImage(
+    AsyncImage(
         modifier = Modifier
             .aspectRatio(1f)
             .size(Dimens.Album())
@@ -107,7 +102,5 @@ fun AlbumImage(
         model = File(album.pathToThumbnail),
         contentDescription = album.label,
         contentScale = ContentScale.Crop,
-    ) {
-        it.thumbnail(preloadRequestBuilder)
-    }
+    )
 }

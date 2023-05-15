@@ -5,8 +5,8 @@
 
 package com.dot.gallery.core.presentation.components.media
 
-import android.graphics.drawable.Drawable
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -16,27 +16,25 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
-import com.bumptech.glide.RequestBuilder
-import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
-import com.bumptech.glide.integration.compose.GlideImage
-import com.bumptech.glide.load.resource.bitmap.DownsampleStrategy
-import com.dot.gallery.R
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import com.dot.gallery.core.presentation.components.util.tapAndGesture
 import com.dot.gallery.feature_node.domain.model.Media
 import kotlin.math.abs
 import kotlin.math.withSign
 
-@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 fun ZoomablePagerImage(
+    modifier: Modifier = Modifier,
     media: Media,
     scrollEnabled: MutableState<Boolean>,
-    preloadRequestBuilder: RequestBuilder<Drawable>,
     minScale: Float = 1f,
     maxScale: Float = 10f,
     maxImageSize: Int,
@@ -53,6 +51,17 @@ fun ZoomablePagerImage(
     var offsetY by remember { mutableStateOf(1f) }
     val configuration = LocalConfiguration.current
     val screenWidthPx = with(LocalDensity.current) { configuration.screenWidthDp.dp.toPx() }
+
+    val painter = rememberAsyncImagePainter(
+        model = ImageRequest.Builder(LocalContext.current)
+            .data(media.uri)
+            .memoryCacheKey("media_${media.label}_${media.id}")
+            .diskCacheKey("media_${media.label}_${media.id}")
+            .size(maxImageSize)
+            .build(),
+        contentScale = ContentScale.Fit,
+        filterQuality = FilterQuality.High
+    )
 
     val onDoubleTap: (Offset) -> Unit = remember {
         {
@@ -91,8 +100,8 @@ fun ZoomablePagerImage(
         }
     }
 
-    GlideImage(
-        modifier = Modifier
+    Image(
+        modifier = modifier
             .fillMaxSize()
             .tapAndGesture(
                 onTap = { onItemClick() },
@@ -109,16 +118,8 @@ fun ZoomablePagerImage(
                 translationX = offsetX
                 translationY = offsetY
             },
-        model = media.uri,
+        painter = painter,
         contentScale = ContentScale.Fit,
         contentDescription = media.label
-    ) { request ->
-        request
-            .thumbnail(preloadRequestBuilder)
-            .dontTransform()
-            .encodeQuality(100)
-            .downsample(DownsampleStrategy.AT_MOST)
-            .override(maxImageSize)
-            .error(R.drawable.ic_error)
-    }
+    )
 }

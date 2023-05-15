@@ -5,14 +5,12 @@
 
 package com.dot.gallery.core.presentation.components.media
 
-import android.graphics.drawable.Drawable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
 import androidx.media3.exoplayer.ExoPlayer
-import com.bumptech.glide.RequestBuilder
 import com.dot.gallery.feature_node.domain.model.Media
 
 @Composable
@@ -20,7 +18,6 @@ fun MediaPreviewComponent(
     media: Media,
     scrollEnabled: MutableState<Boolean>,
     maxImageSize: Int,
-    preloadRequestBuilder: RequestBuilder<Drawable>,
     playWhenReady: Boolean,
     onItemClick: () -> Unit,
     videoController: @Composable (ExoPlayer, MutableState<Long>, Long, Int, () -> Unit) -> Unit,
@@ -40,7 +37,6 @@ fun MediaPreviewComponent(
             ZoomablePagerImage(
                 media = media,
                 scrollEnabled = scrollEnabled,
-                preloadRequestBuilder = preloadRequestBuilder,
                 maxImageSize = maxImageSize,
                 onItemClick = onItemClick
             )

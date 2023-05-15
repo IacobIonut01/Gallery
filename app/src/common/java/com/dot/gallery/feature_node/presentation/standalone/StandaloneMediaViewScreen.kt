@@ -6,7 +6,6 @@
 package com.dot.gallery.feature_node.presentation.standalone
 
 import android.app.Activity
-import android.graphics.drawable.Drawable
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
@@ -25,15 +24,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.media3.exoplayer.ExoPlayer
-import com.bumptech.glide.RequestBuilder
-import com.bumptech.glide.integration.compose.rememberGlidePreloadingData
-import com.bumptech.glide.signature.MediaStoreSignature
 import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
@@ -43,7 +38,6 @@ import com.dot.gallery.core.MediaState
 import com.dot.gallery.core.Settings.Glide.rememberMaxImageSize
 import com.dot.gallery.core.presentation.components.media.MediaPreviewComponent
 import com.dot.gallery.core.presentation.components.media.VideoPlayerController
-import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewAppBar
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewBottomBar
@@ -69,17 +63,6 @@ fun StandaloneMediaViewScreen(
     val window = with(LocalContext.current as Activity) { return@with window }
     val windowInsetsController =
         remember { WindowCompat.getInsetsController(window, window.decorView) }
-
-    /** Glide Preloading **/
-    val preloadingData = rememberGlidePreloadingData(
-        data = state.media,
-        preloadImageSize = Size(512f, 384f)
-    ) { media: Media, requestBuilder: RequestBuilder<Drawable> ->
-        requestBuilder
-            .signature(MediaStoreSignature(media.mimeType, media.timestamp, media.orientation))
-            .load(media.uri)
-    }
-    /** ************ **/
 
     LaunchedEffect(state.media) {
         state.media.firstOrNull()?.let {
@@ -107,12 +90,10 @@ fun StandaloneMediaViewScreen(
                 .background(Color.Black)
                 .fillMaxSize()
         ) { index ->
-            val (media, preloadRequestBuilder) = preloadingData[index]
             MediaPreviewComponent(
-                media = media,
+                media = state.media[index],
                 scrollEnabled = scrollEnabled,
                 maxImageSize = maxImageSize,
-                preloadRequestBuilder = preloadRequestBuilder,
                 playWhenReady = index == pagerState.currentPage,
                 onItemClick = {
                     showUI.value = !showUI.value

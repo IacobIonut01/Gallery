@@ -122,6 +122,7 @@ dependencies {
     val hiltVersion = "2.45"
     val roomVersion = "2.5.1"
     val glideVersion = "4.15.1"
+    val coilVersion = "2.3.0"
     val media3Version = "1.0.1"
 
     // Core
@@ -178,6 +179,13 @@ dependencies {
 
     // SVG Support for Glide
     implementation("com.github.qoqa:glide-svg:4.0.2")
+
+    // Coil
+    implementation("io.coil-kt:coil-bom:$coilVersion")
+    implementation("io.coil-kt:coil-compose")
+    implementation("io.coil-kt:coil-svg")
+    implementation("io.coil-kt:coil-gif")
+    implementation("io.coil-kt:coil-video")
 
     // Exo Player
     implementation("androidx.media3:media3-exoplayer:$media3Version")
