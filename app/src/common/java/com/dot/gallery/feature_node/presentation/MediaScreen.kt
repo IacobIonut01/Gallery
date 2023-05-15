@@ -132,7 +132,7 @@ fun MediaScreen(
         /** Glide Preloading **/
         val preloadingData = rememberGlidePreloadingData(
             data = state.media,
-            preloadImageSize = Size(100f, 100f)
+            preloadImageSize = Size(50f, 50f)
         ) { media: Media, requestBuilder: RequestBuilder<Drawable> ->
             requestBuilder
                 .signature(MediaStoreSignature(media.mimeType, media.timestamp, media.orientation))
