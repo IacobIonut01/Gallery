@@ -25,10 +25,11 @@ import com.dot.gallery.feature_node.domain.util.OrderType
 import com.dot.gallery.feature_node.presentation.util.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -85,7 +86,7 @@ class AlbumsViewModel @Inject constructor(
     }
 
     private fun updateOrder(mediaOrder: MediaOrder) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val newState = albumsState.value.copy(
                 albums = mediaOrder.sortAlbums(albumsState.value.albums)
             )
@@ -96,7 +97,7 @@ class AlbumsViewModel @Inject constructor(
     }
 
     private fun toggleAlbumPin(album: Album, isPinned: Boolean = true) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val newAlbum = album.copy(isPinned = isPinned)
             if (isPinned) {
                 // Insert pinnedAlbumId to Database
@@ -125,19 +126,23 @@ class AlbumsViewModel @Inject constructor(
     }
 
     private fun getAlbums(mediaOrder: MediaOrder = MediaOrder.Date(OrderType.Descending)) {
-        mediaUseCases.getAlbumsUseCase(mediaOrder).map { result ->
-            // Result data list
-            val data = result.data ?: emptyList()
-            val error = if (result is Resource.Error) result.message ?: "An error occurred" else ""
-            val newAlbumState = AlbumState(error = error, albums = data.filter { !it.isPinned })
-            val newPinnedState = AlbumState(error = error, albums = data.filter { it.isPinned })
-            if (albumsState.value != newAlbumState) {
-                albumsState.value = newAlbumState
-            }
-            if (pinnedAlbumState.value != newPinnedState) {
-                pinnedAlbumState.value = newPinnedState
-            }
-        }.flowOn(Dispatchers.IO).launchIn(viewModelScope)
+        viewModelScope.launch(Dispatchers.IO) {
+            mediaUseCases.getAlbumsUseCase(mediaOrder).onEach { result ->
+                // Result data list
+                val data = result.data ?: emptyList()
+                val error = if (result is Resource.Error) result.message ?: "An error occurred" else ""
+                val newAlbumState = AlbumState(error = error, albums = data.filter { !it.isPinned })
+                val newPinnedState = AlbumState(error = error, albums = data.filter { it.isPinned })
+                withContext(Dispatchers.Main) {
+                    if (albumsState.value != newAlbumState) {
+                        albumsState.value = newAlbumState
+                    }
+                    if (pinnedAlbumState.value != newPinnedState) {
+                        pinnedAlbumState.value = newPinnedState
+                    }
+                }
+            }.flowOn(Dispatchers.IO).collect()
+        }
     }
 
 }
