@@ -77,8 +77,8 @@
     <string name="delete_dialog_title">You\'re about to delete %s items</string>
     <string name="delete_dialog_title_confirmation">Deleting %s items..</string>
     <string name="action_cancel">取消</string>
-    <string name="action_confirm">Confirm</string>
-    <string name="action_confirmed">Confirmed</string>
+    <string name="action_confirm">确认</string>
+    <string name="action_confirmed">已确认</string>
     <string name="restore_dialog_title">You\'re about to restore %s items</string>
     <string name="restore_dialog_title_confirmation">Restoring %s items…</string>
     <string name="trash_dialog_title">You\'re about to trash %s items</string>
