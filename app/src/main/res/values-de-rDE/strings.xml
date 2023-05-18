@@ -83,6 +83,10 @@
     <string name="restore_dialog_title_confirmation">Wiederherstellung von %s Artikeln…</string>
     <string name="trash_dialog_title">Sie sind dabei, %s Elemente zu löschen</string>
     <string name="trash_dialog_title_confirmation">Verschiebe %s Elemente in den Papierkorb…</string>
+    <string name="history_delete">Delete item</string>
+    <string name="history_recent_title">Recent</string>
+    <string name="history_suggestions_title">Suggestions</string>
+    <string name="no_media_found">No media found</string>
     <plurals name="item_count">
         <item quantity="one">%s Datei</item>
         <item quantity="other">%s Dateien</item>
