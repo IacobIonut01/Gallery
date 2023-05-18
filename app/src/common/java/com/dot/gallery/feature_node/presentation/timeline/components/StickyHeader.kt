@@ -34,7 +34,7 @@ fun StickyHeader(
     showAsBig: Boolean = false,
     isCheckVisible: MutableState<Boolean>,
     isChecked: MutableState<Boolean>,
-    onChecked: () -> Unit
+    onChecked: (() -> Unit)? = null
 ) {
     val smallModifier = Modifier
         .padding(
@@ -63,10 +63,10 @@ fun StickyHeader(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
                     onLongClick = {
-                        onChecked()
+                        onChecked?.invoke()
                     },
                     onClick = {
-                        if (isCheckVisible.value) onChecked()
+                        if (isCheckVisible.value) onChecked?.invoke()
                     }
                 ) else Modifier
             )

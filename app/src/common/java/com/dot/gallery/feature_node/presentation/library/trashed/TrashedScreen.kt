@@ -34,7 +34,8 @@ fun TrashedGridScreen(
     selectedMedia: SnapshotStateList<Media>,
     toggleSelection: (Int) -> Unit,
     navigate: (route: String) -> Unit,
-    navigateUp: () -> Unit
+    navigateUp: () -> Unit,
+    toggleNavbar: (Boolean) -> Unit
 ) = MediaScreen(
     paddingValues = paddingValues,
     albumName = albumName,
@@ -49,7 +50,8 @@ fun TrashedGridScreen(
     },
     EmptyComponent = { EmptyTrash(Modifier.fillMaxSize()) },
     navigate = navigate,
-    navigateUp = navigateUp
+    navigateUp = navigateUp,
+    toggleNavbar = toggleNavbar
 ) { result ->
     if (result.resultCode == Activity.RESULT_OK) {
         selectedMedia.clear()

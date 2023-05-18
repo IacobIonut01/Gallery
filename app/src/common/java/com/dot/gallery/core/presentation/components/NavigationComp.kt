@@ -34,7 +34,6 @@ import com.dot.gallery.feature_node.presentation.mediaview.MediaViewScreen
 import com.dot.gallery.feature_node.presentation.settings.SettingsScreen
 import com.dot.gallery.feature_node.presentation.settings.SettingsViewModel
 import com.dot.gallery.feature_node.presentation.timeline.TimelineScreen
-import com.dot.gallery.feature_node.presentation.util.BottomNavItem
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
@@ -45,17 +44,18 @@ fun NavigationComp(
     navController: NavHostController,
     paddingValues: PaddingValues,
     bottomBarState: MutableState<Boolean>,
-    systemBarFollowThemeState: MutableState<Boolean>,
-    bottomNavEntries: List<BottomNavItem>
+    systemBarFollowThemeState: MutableState<Boolean>
 ) {
+    val bottomNavEntries = rememberNavigationItems()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     navBackStackEntry?.destination?.route?.let {
-        bottomBarState.value = bottomNavEntries.firstOrNull { item -> item.route == it } != null
+        val shouldDisplayBottomBar = bottomNavEntries.firstOrNull { item -> item.route == it } != null
+        bottomBarState.value = shouldDisplayBottomBar
         systemBarFollowThemeState.value = !it.contains(Screen.MediaViewScreen.route)
     }
     val navPipe = hiltViewModel<ChanneledViewModel>()
     navPipe
-        .initWithNav(navController)
+        .initWithNav(navController, bottomBarState)
         .collectAsStateWithLifecycle(LocalLifecycleOwner.current)
     AnimatedNavHost(
         navController = navController,
@@ -80,7 +80,8 @@ fun NavigationComp(
                 selectedMedia = viewModel.selectedPhotoState,
                 toggleSelection = viewModel::toggleSelection,
                 navigate = navPipe::navigate,
-                navigateUp = navPipe::navigateUp
+                navigateUp = navPipe::navigateUp,
+                toggleNavbar = navPipe::toggleNavbar
             )
         }
         composable(
@@ -99,7 +100,8 @@ fun NavigationComp(
                 handler = viewModel.handler,
                 toggleSelection = viewModel::toggleSelection,
                 navigate = navPipe::navigate,
-                navigateUp = navPipe::navigateUp
+                navigateUp = navPipe::navigateUp,
+                toggleNavbar = navPipe::toggleNavbar
             )
         }
         composable(
@@ -118,7 +120,8 @@ fun NavigationComp(
                 toggleFavorite = viewModel::toggleFavorite,
                 toggleSelection = viewModel::toggleSelection,
                 navigate = navPipe::navigate,
-                navigateUp = navPipe::navigateUp
+                navigateUp = navPipe::navigateUp,
+                toggleNavbar = navPipe::toggleNavbar
             )
         }
         composable(
@@ -142,6 +145,7 @@ fun NavigationComp(
             val viewModel = hiltViewModel<AlbumsViewModel>()
             AlbumsScreen(
                 navigate = navPipe::navigate,
+                toggleNavbar = navPipe::toggleNavbar,
                 paddingValues = paddingValues,
                 viewModel = viewModel
             )
@@ -180,7 +184,8 @@ fun NavigationComp(
                 selectedMedia = viewModel.selectedPhotoState,
                 toggleSelection = viewModel::toggleSelection,
                 navigate = navPipe::navigate,
-                navigateUp = navPipe::navigateUp
+                navigateUp = navPipe::navigateUp,
+                toggleNavbar = navPipe::toggleNavbar
             )
         }
         composable(

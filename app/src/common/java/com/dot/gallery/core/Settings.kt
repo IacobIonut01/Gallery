@@ -15,6 +15,7 @@ import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.dot.gallery.core.Settings.PREFERENCE_NAME
 import com.dot.gallery.core.util.rememberPreference
@@ -59,6 +60,14 @@ object Settings {
         @Composable
         fun rememberMaxImageSize() =
             rememberPreference(key = MAX_IMAGE_SIZE, defaultValue = 4096)
+    }
+
+    object Search {
+        private val HISTORY = stringSetPreferencesKey("search_history")
+
+        @Composable
+        fun rememberSearchHistory() =
+            rememberPreference(key = HISTORY, defaultValue = emptySet())
     }
 
     object Misc {

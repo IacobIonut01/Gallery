@@ -29,7 +29,6 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -86,7 +85,7 @@ class AlbumsViewModel @Inject constructor(
     }
 
     private fun updateOrder(mediaOrder: MediaOrder) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             val newState = albumsState.value.copy(
                 albums = mediaOrder.sortAlbums(albumsState.value.albums)
             )
@@ -97,7 +96,7 @@ class AlbumsViewModel @Inject constructor(
     }
 
     private fun toggleAlbumPin(album: Album, isPinned: Boolean = true) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             val newAlbum = album.copy(isPinned = isPinned)
             if (isPinned) {
                 // Insert pinnedAlbumId to Database
@@ -126,20 +125,18 @@ class AlbumsViewModel @Inject constructor(
     }
 
     private fun getAlbums(mediaOrder: MediaOrder = MediaOrder.Date(OrderType.Descending)) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             mediaUseCases.getAlbumsUseCase(mediaOrder).onEach { result ->
                 // Result data list
                 val data = result.data ?: emptyList()
                 val error = if (result is Resource.Error) result.message ?: "An error occurred" else ""
                 val newAlbumState = AlbumState(error = error, albums = data.filter { !it.isPinned })
                 val newPinnedState = AlbumState(error = error, albums = data.filter { it.isPinned })
-                withContext(Dispatchers.Main) {
-                    if (albumsState.value != newAlbumState) {
-                        albumsState.value = newAlbumState
-                    }
-                    if (pinnedAlbumState.value != newPinnedState) {
-                        pinnedAlbumState.value = newPinnedState
-                    }
+                if (albumsState.value != newAlbumState) {
+                    albumsState.value = newAlbumState
+                }
+                if (pinnedAlbumState.value != newPinnedState) {
+                    pinnedAlbumState.value = newPinnedState
                 }
             }.flowOn(Dispatchers.IO).collect()
         }

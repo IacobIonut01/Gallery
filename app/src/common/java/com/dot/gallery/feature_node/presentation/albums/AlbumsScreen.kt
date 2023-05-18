@@ -26,15 +26,11 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -44,7 +40,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -56,22 +51,20 @@ import com.dot.gallery.core.presentation.components.Error
 import com.dot.gallery.core.presentation.components.FilterButton
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumComponent
 import com.dot.gallery.feature_node.presentation.albums.components.CarouselPinnedAlbums
+import com.dot.gallery.feature_node.presentation.library.components.MainSearchBar
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.ui.theme.Dimens
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlbumsScreen(
     navigate: (route: String) -> Unit,
+    toggleNavbar: (Boolean) -> Unit,
     paddingValues: PaddingValues,
     viewModel: AlbumsViewModel = hiltViewModel(),
 ) {
     val state by rememberSaveable(viewModel.albumsState) { viewModel.albumsState }
     val pinnedState by rememberSaveable(viewModel.pinnedAlbumState) { viewModel.pinnedAlbumState }
     val filterOptions = viewModel.rememberFilters()
-    val scrollBehavior =
-        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
-
     val albumSortSetting by rememberLastSort()
 
     LaunchedEffect(state.albums, albumSortSetting) {
@@ -80,39 +73,32 @@ fun AlbumsScreen(
     }
 
     Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            LargeTopAppBar(
-                title = {
-                    Column {
-                        Text(
-                            text = stringResource(id = R.string.nav_albums),
-                        )
-                    }
-                },
-                scrollBehavior = scrollBehavior,
-                actions = {
-                    var expandedDropdown by remember { mutableStateOf(false) }
-                    IconButton(onClick = { expandedDropdown = !expandedDropdown }) {
-                        Icon(
-                            imageVector = Icons.Outlined.MoreVert,
-                            contentDescription = stringResource(R.string.drop_down_cd)
-                        )
-                    }
-                    DropdownMenu(
-                        expanded = expandedDropdown,
-                        onDismissRequest = { expandedDropdown = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text(text = stringResource(id = R.string.settings_title)) },
-                            onClick = {
-                                expandedDropdown = false
-                                navigate(Screen.SettingsScreen.route)
-                            }
-                        )
-                    }
+            MainSearchBar(
+                bottomPadding = paddingValues.calculateBottomPadding(),
+                navigate = navigate,
+                toggleNavbar = toggleNavbar
+            ) {
+                var expandedDropdown by remember { mutableStateOf(false) }
+                IconButton(onClick = { expandedDropdown = !expandedDropdown }) {
+                    Icon(
+                        imageVector = Icons.Outlined.MoreVert,
+                        contentDescription = stringResource(R.string.drop_down_cd)
+                    )
                 }
-            )
+                DropdownMenu(
+                    expanded = expandedDropdown,
+                    onDismissRequest = { expandedDropdown = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(text = stringResource(id = R.string.settings_title)) },
+                        onClick = {
+                            expandedDropdown = false
+                            navigate(Screen.SettingsScreen.route)
+                        }
+                    )
+                }
+            }
         }
     ) {
         LazyVerticalGrid(
@@ -122,7 +108,7 @@ fun AlbumsScreen(
             columns = GridCells.Adaptive(Dimens.Album()),
             contentPadding = PaddingValues(
                 top = it.calculateTopPadding(),
-                bottom = paddingValues.calculateBottomPadding() + 16.dp
+                bottom = paddingValues.calculateBottomPadding() + 16.dp + 64.dp
             ),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)

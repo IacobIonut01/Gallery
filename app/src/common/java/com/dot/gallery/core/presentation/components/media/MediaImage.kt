@@ -59,13 +59,13 @@ fun MediaImage(
         isSelected.value = selectedMedia.find { it.id == media.id } != null
     }
     val selectedSize by animateDpAsState(
-        if (isSelected.value) 12.dp else 0.dp
+        if (isSelected.value) 12.dp else 0.dp, label = "selectedSize"
     )
     val scale by animateFloatAsState(
-        if (isSelected.value) 0.5f else 1f
+        if (isSelected.value) 0.5f else 1f, label = "scale"
     )
     val selectedShapeSize by animateDpAsState(
-        if (isSelected.value) 16.dp else 0.dp
+        if (isSelected.value) 16.dp else 0.dp, label = "selectedShapeSize"
     )
     Box(
         modifier = modifier

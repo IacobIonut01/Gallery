@@ -1,5 +1,6 @@
 package com.dot.gallery.feature_node.presentation
 
+import androidx.compose.runtime.MutableState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
@@ -15,12 +16,13 @@ class ChanneledViewModel @Inject constructor() : ViewModel() {
 
     sealed class Event {
         data class NavigationRouteEvent(val route: String): Event()
+        data class ToggleNavigationBarEvent(val isVisible: Boolean): Event()
         object NavigationUpEvent: Event()
     }
 
     private val eventChannel = Channel<Event>()
 
-    fun initWithNav(navController: NavController) =
+    fun initWithNav(navController: NavController, bottomBarState: MutableState<Boolean>) =
         eventChannel.receiveAsFlow().map {
             when (it) {
                 is Event.NavigationRouteEvent ->
@@ -30,12 +32,22 @@ class ChanneledViewModel @Inject constructor() : ViewModel() {
                     }
                 is Event.NavigationUpEvent ->
                     navController.navigateUp()
+
+                is Event.ToggleNavigationBarEvent -> {
+                    bottomBarState.value = it.isVisible
+                }
             }
         }
 
     fun navigate(route: String) {
         viewModelScope.launch {
             eventChannel.send(Event.NavigationRouteEvent(route))
+        }
+    }
+
+    fun toggleNavbar(isVisible: Boolean) {
+        viewModelScope.launch {
+            eventChannel.send(Event.ToggleNavigationBarEvent(isVisible))
         }
     }
 

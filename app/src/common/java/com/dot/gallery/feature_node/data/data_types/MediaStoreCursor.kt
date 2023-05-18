@@ -11,8 +11,10 @@ import android.database.Cursor
 import android.database.MergeCursor
 import android.os.Build
 import android.provider.MediaStore
+import com.dot.gallery.core.Constants
 import com.dot.gallery.feature_node.data.data_source.Query
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.presentation.util.getDate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -77,6 +79,7 @@ fun Cursor.getMediaFromCursor(): Media {
         contentUri,
         getLong(getColumnIndexOrThrow(MediaStore.MediaColumns._ID))
     )
+    val formattedDate = timestamp.getDate(Constants.FULL_DATE_FORMAT)
     return Media(
         id = id,
         label = title,
@@ -85,6 +88,7 @@ fun Cursor.getMediaFromCursor(): Media {
         albumID = albumID,
         albumLabel = albumLabel,
         timestamp = timestamp,
+        fullDate = formattedDate,
         duration = duration,
         favorite = isFavorite,
         trashed = isTrashed,

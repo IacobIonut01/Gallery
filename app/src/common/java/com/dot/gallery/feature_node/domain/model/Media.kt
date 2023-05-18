@@ -10,7 +10,6 @@ import android.os.Parcelable
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import kotlinx.parcelize.Parcelize
-import java.util.concurrent.TimeUnit
 
 @Parcelize
 sealed class MediaItem : Parcelable {
@@ -46,24 +45,15 @@ data class Media(
     val albumID: Long,
     val albumLabel: String,
     val timestamp: Long,
+    val fullDate: String,
     val mimeType: String,
     val orientation: Int,
     val favorite: Int,
     val trashed: Int,
     val duration: String? = null,
+    val tags: Set<Pair<String, String>> = emptySet(),
     var selected: Boolean = false
-) : Parcelable {
-    fun formatTime(): String {
-        val timestamp = duration?.toLong() ?: return ""
-        return String.format(
-            "%d:%02d",
-            TimeUnit.MILLISECONDS.toMinutes(timestamp),
-            TimeUnit.MILLISECONDS.toSeconds(timestamp) -
-                    TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(timestamp))
-        )
-    }
-
-}
+) : Parcelable
 
 @Parcelize
 data class Album(

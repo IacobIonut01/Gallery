@@ -27,7 +27,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.dot.gallery.R
-import com.dot.gallery.feature_node.presentation.library.components.SearchBar
 import com.dot.gallery.feature_node.presentation.util.Screen
 
 /**
@@ -39,9 +38,7 @@ fun LibraryScreen(
 ) {
     Scaffold(
         topBar = {
-            SearchBar {
 
-            }
         },
         modifier = Modifier.fillMaxSize(),
         content = {

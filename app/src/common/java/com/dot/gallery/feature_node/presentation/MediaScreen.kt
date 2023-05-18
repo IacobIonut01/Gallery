@@ -29,6 +29,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
@@ -67,6 +68,7 @@ import com.dot.gallery.core.presentation.components.util.StickyHeaderGrid
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaItem
 import com.dot.gallery.feature_node.domain.model.isHeaderKey
+import com.dot.gallery.feature_node.presentation.library.components.MainSearchBar
 import com.dot.gallery.feature_node.presentation.timeline.components.StickyHeader
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.feature_node.presentation.util.vibrate
@@ -95,6 +97,7 @@ fun MediaScreen(
     OverGrid: @Composable (() -> Unit)? = null,
     navigate: (route: String) -> Unit,
     navigateUp: () -> Unit,
+    toggleNavbar: (Boolean) -> Unit,
     onActivityResult: (result: ActivityResult) -> Unit,
 ) {
 
@@ -120,6 +123,7 @@ fun MediaScreen(
     }
     /** ************ **/
     else {
+        val showSearchBar = albumId == -1L && target == null
         val scrollBehavior =
             TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
@@ -173,58 +177,80 @@ fun MediaScreen(
                 }.value
             }
         }
-
         Scaffold(
-            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+            modifier = Modifier
+                .then(
+                    if (!showSearchBar)
+                        Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
+                    else Modifier
+                ),
             topBar = {
-                LargeTopAppBar(
-                    title = {
-                        Column {
-                            val toolbarTitle = if (selectionState.value) stringResource(
-                                R.string.selected_s,
-                                selectedMedia.size
-                            ) else albumName
-                            Text(
-                                text = toolbarTitle,
-                                overflow = TextOverflow.Ellipsis,
-                                maxLines = 1
-                            )
-                            if (state.dateHeader.isNotEmpty()) {
+                if (!showSearchBar) {
+                    LargeTopAppBar(
+                        title = {
+                            Column {
+                                val toolbarTitle = if (selectionState.value) stringResource(
+                                    R.string.selected_s,
+                                    selectedMedia.size
+                                ) else albumName
                                 Text(
-                                    modifier = Modifier,
-                                    text = state.dateHeader.uppercase(),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontFamily = FontFamily.Monospace,
+                                    text = toolbarTitle,
                                     overflow = TextOverflow.Ellipsis,
                                     maxLines = 1
                                 )
+                                if (state.dateHeader.isNotEmpty()) {
+                                    Text(
+                                        modifier = Modifier,
+                                        text = state.dateHeader.uppercase(),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontFamily = FontFamily.Monospace,
+                                        overflow = TextOverflow.Ellipsis,
+                                        maxLines = 1
+                                    )
+                                }
                             }
-                        }
-                    },
-                    navigationIcon = {
-                        NavigationButton(
-                            albumId = albumId,
-                            target = target,
-                            navigateUp = navigateUp,
-                            clearSelection = clearSelection,
-                            selectionState = selectionState,
-                            alwaysGoBack = alwaysGoBack,
-                        )
-                    },
-                    actions = {
+                        },
+                        navigationIcon = {
+                            NavigationButton(
+                                albumId = albumId,
+                                target = target,
+                                navigateUp = navigateUp,
+                                clearSelection = clearSelection,
+                                selectionState = selectionState,
+                                alwaysGoBack = true,
+                            )
+                        },
+                        actions = {
+                            NavigationActions(
+                                actions = NavActions,
+                                onActivityResult = onActivityResult
+                            )
+                        },
+                        scrollBehavior = scrollBehavior
+                    )
+                } else {
+                    MainSearchBar(
+                        bottomPadding = paddingValues.calculateBottomPadding(),
+                        navigate = navigate,
+                        toggleNavbar = toggleNavbar
+                    ) {
                         NavigationActions(
                             actions = NavActions,
                             onActivityResult = onActivityResult
                         )
-                    },
-                    scrollBehavior = scrollBehavior
-                )
+                    }
+                }
             }
         ) { it ->
+            val searchBarPadding = if (showSearchBar) {
+                SearchBarDefaults.InputFieldHeight + paddingValues.calculateTopPadding() + 8.dp
+            } else 0.dp
             StickyHeaderGrid(
                 modifier = Modifier.fillMaxSize(),
                 lazyState = gridState,
                 headerMatcher = { item -> item.key.isHeaderKey },
+                showSearchBar = showSearchBar,
+                searchBarPadding = searchBarPadding,
                 stickyHeader = {
                     if (state.media.isNotEmpty()) {
                         stickyHeaderItem?.let {
@@ -242,7 +268,8 @@ fun MediaScreen(
                                             )
                                         )
                                     )
-                                    .padding(horizontal = 16.dp, vertical = 24.dp)
+                                    .padding(horizontal = 16.dp)
+                                    .padding(top = 24.dp + searchBarPadding, bottom = 24.dp)
                                     .fillMaxWidth()
                             )
                         }
@@ -255,7 +282,7 @@ fun MediaScreen(
                     columns = GridCells.Adaptive(Dimens.Photo()),
                     contentPadding = PaddingValues(
                         top = it.calculateTopPadding(),
-                        bottom = paddingValues.calculateBottomPadding() + 16.dp
+                        bottom = paddingValues.calculateBottomPadding() + 16.dp + 64.dp
                     ),
                     horizontalArrangement = Arrangement.spacedBy(1.dp),
                     verticalArrangement = Arrangement.spacedBy(1.dp),

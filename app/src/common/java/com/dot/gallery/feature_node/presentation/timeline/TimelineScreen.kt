@@ -6,8 +6,6 @@
 package com.dot.gallery.feature_node.presentation.timeline
 
 import android.app.Activity
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.IntentSenderRequest
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -35,7 +33,8 @@ fun TimelineScreen(
     selectedMedia: SnapshotStateList<Media>,
     toggleSelection: (Int) -> Unit,
     navigate: (route: String) -> Unit,
-    navigateUp: () -> Unit
+    navigateUp: () -> Unit,
+    toggleNavbar: (Boolean) -> Unit
 ) = MediaScreen(
     paddingValues = paddingValues,
     albumId = albumId,
@@ -62,7 +61,8 @@ fun TimelineScreen(
     },
     EmptyComponent = { EmptyMedia(Modifier.fillMaxSize()) },
     navigate = navigate,
-    navigateUp = navigateUp
+    navigateUp = navigateUp,
+    toggleNavbar = toggleNavbar
 ) { result ->
     if (result.resultCode == Activity.RESULT_OK) {
         selectedMedia.clear()

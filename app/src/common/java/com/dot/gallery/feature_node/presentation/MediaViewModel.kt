@@ -23,6 +23,7 @@ import com.dot.gallery.feature_node.presentation.util.getDate
 import com.dot.gallery.feature_node.presentation.util.getDateExt
 import com.dot.gallery.feature_node.presentation.util.getDateHeader
 import com.dot.gallery.feature_node.presentation.util.getMonth
+import com.dot.gallery.feature_node.presentation.util.update
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
@@ -98,20 +99,19 @@ open class MediaViewModel @Inject constructor(
             multiSelectState.value = selectedPhotoState.isNotEmpty()
         }
     }
-
     private fun getMedia(albumId: Long = -1L, target: String? = null) {
-        val flow = if (albumId != -1L) {
-            mediaUseCases.getMediaByAlbumUseCase(albumId)
-        } else if (!target.isNullOrEmpty()) {
-            when (target) {
-                TARGET_FAVORITES -> mediaUseCases.getMediaFavoriteUseCase()
-                TARGET_TRASH -> mediaUseCases.getMediaTrashedUseCase()
-                else -> mediaUseCases.getMediaUseCase()
+        viewModelScope.launch {
+            val flow = if (albumId != -1L) {
+                mediaUseCases.getMediaByAlbumUseCase(albumId)
+            } else if (!target.isNullOrEmpty()) {
+                when (target) {
+                    TARGET_FAVORITES -> mediaUseCases.getMediaFavoriteUseCase()
+                    TARGET_TRASH -> mediaUseCases.getMediaTrashedUseCase()
+                    else -> mediaUseCases.getMediaUseCase()
+                }
+            } else {
+                mediaUseCases.getMediaUseCase()
             }
-        } else {
-            mediaUseCases.getMediaUseCase()
-        }
-        viewModelScope.launch(Dispatchers.IO) {
             flow.onEach { result ->
                 val mappedData = ArrayList<MediaItem>()
                 val mappedDataWithMonthly = ArrayList<MediaItem>()
@@ -156,8 +156,8 @@ open class MediaViewModel @Inject constructor(
                 } else null
                 val dateHeader = if (albumId != -1L && startDate != null && endDate != null)
                     getDateHeader(startDate, endDate) else ""
-                withContext(Dispatchers.Main) {
-                    photoState.value = MediaState(
+                photoState.update(
+                    MediaState(
                         error = if (result is Resource.Error) result.message
                             ?: "An error occurred" else "",
                         media = data,
@@ -165,7 +165,7 @@ open class MediaViewModel @Inject constructor(
                         mappedMediaWithMonthly = mappedDataWithMonthly,
                         dateHeader = dateHeader
                     )
-                }
+                )
             }.flowOn(Dispatchers.IO).collect()
         }
     }

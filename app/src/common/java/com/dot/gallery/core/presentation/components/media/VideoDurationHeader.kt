@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.core.presentation.components.util.advancedShadow
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.presentation.util.formatMinSec
 
 @Composable
 fun BoxScope.VideoDurationHeader(modifier: Modifier = Modifier, media: Media) {
@@ -42,7 +43,7 @@ fun BoxScope.VideoDurationHeader(modifier: Modifier = Modifier, media: Media) {
                     alpha = 0.1f,
                     offsetY = (-2).dp
                 ),
-            text = media.formatTime(),
+            text = media.duration.formatMinSec(),
             style = MaterialTheme.typography.labelSmall,
             color = Color.White
         )

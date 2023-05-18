@@ -119,5 +119,59 @@ fun Long.formatMinSec(): String {
     }
 }
 
+fun String?.formatMinSec(): String {
+    return when (val value = this?.toLong()) {
+        null -> ""
+        else -> value.formatMinSec()
+    }
+}
+
+private val datePatternChecks = mapOf(
+    "dd mm yyyy" to
+            "^(3[01]|[12][0-9]|0[1-9]|[1-9]) (1[0-2]|0[1-9]|[1-9]) [0-9]{4}$".toRegex(),
+
+    "dd mm yyyy hh:MM" to
+            "^(3[01]|[12][0-9]|0[1-9]|[1-9]) (1[0-2]|0[1-9]|[1-9]) [0-9]{4} [0-9][0-9]:([0]?[0-5][0-9]|[0-9])$".toRegex(),
+
+    "mm dd yyyy" to
+            "^(1[0-2]|0[1-9]|[1-9]) (3[01]|[12][0-9]|0[1-9]|[1-9]) [0-9]{4}$".toRegex(),
+
+    "mm dd yyyy hh:MM" to
+            "^(1[0-2]|0[1-9]|[1-9]) (3[01]|[12][0-9]|0[1-9]|[1-9]) [0-9]{4} [0-9][0-9]:([0]?[0-5][0-9]|[0-9])$".toRegex(),
+
+    "dd MMM yyyy" to
+            "^(3[01]|[12][0-9]|0[1-9]|[1-9]) [a-zA-Z]{3} [0-9]{4}$".toRegex(),
+
+    "MMM dd yyyy" to
+            "^[a-zA-Z]{3} (3[01]|[12][0-9]|0[1-9]|[1-9]) [0-9]{4}$".toRegex(),
+
+    "dd MMMM yyyy" to
+            "^\\b(0?[1-9]|[12][0-9]|3[01]) \\p{L}+ [0-9]{4}\\b$".toRegex(),
+
+    "dd MMMM" to
+            "^\\b(0?[1-9]|[12][0-9]|3[01]) \\p{L}+\\b$".toRegex(),
+
+    "MMMM dd" to
+            "^\\b\\p{L}+ (0?[1-9]|[12][0-9]|3[01])\\b$".toRegex(),
+
+    "MMMM" to
+            "^\\b\\p{L}+\\b$".toRegex(),
+
+    // etc.
+).map(::DatePatternChecker)
+
+
+fun String.isDate(): Boolean = datePatternChecks
+    .firstOrNull { it.isValid(this) }
+    ?.run { true } ?: false
+
 @Parcelize
 data class DateExt(val month: String, val day: Int, val year: Int): Parcelable
+
+/* label is the date format and pattern is the regex for that format.
+*  result() provides a message (string) when trying to match, but can be
+*  modified to get a bool result, like in boolResult(). */
+data class DatePatternChecker(val label: String, val pattern: Regex) {
+    fun isValid(dateString: String): Boolean = pattern.matches(dateString)
+    constructor(labelPattern: Map.Entry<String, Regex>) : this(labelPattern.key, labelPattern.value)
+}

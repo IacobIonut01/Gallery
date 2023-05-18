@@ -33,7 +33,8 @@ fun FavoriteScreen(
     toggleFavorite: (ActivityResultLauncher<IntentSenderRequest>, List<Media>, Boolean) -> Unit,
     toggleSelection: (Int) -> Unit,
     navigate: (route: String) -> Unit,
-    navigateUp: () -> Unit
+    navigateUp: () -> Unit,
+    toggleNavbar: (Boolean) -> Unit
 ) = MediaScreen(
     paddingValues = paddingValues,
     albumName = albumName,
@@ -48,7 +49,8 @@ fun FavoriteScreen(
     },
     EmptyComponent = { EmptyFavorites(Modifier.fillMaxSize()) },
     navigate = navigate,
-    navigateUp = navigateUp
+    navigateUp = navigateUp,
+    toggleNavbar = toggleNavbar
 ) { result ->
     if (result.resultCode == Activity.RESULT_OK) {
         selectedMedia.clear()
