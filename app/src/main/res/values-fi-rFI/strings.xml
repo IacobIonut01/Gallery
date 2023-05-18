@@ -83,6 +83,10 @@
     <string name="restore_dialog_title_confirmation">Restoring %s items…</string>
     <string name="trash_dialog_title">You\'re about to trash %s items</string>
     <string name="trash_dialog_title_confirmation">Moving to trash %s items…</string>
+    <string name="history_delete">Delete item</string>
+    <string name="history_recent_title">Recent</string>
+    <string name="history_suggestions_title">Suggestions</string>
+    <string name="no_media_found">No media found</string>
     <plurals name="item_count">
         <item quantity="one">%s kohde</item>
         <item quantity="other">%s kohdetta</item>
