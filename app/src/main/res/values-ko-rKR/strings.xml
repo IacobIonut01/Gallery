@@ -83,6 +83,10 @@
     <string name="restore_dialog_title_confirmation">%s개 항목을 복원하는 중...</string>
     <string name="trash_dialog_title">%s개 항목을 휴지통으로 이동합니다</string>
     <string name="trash_dialog_title_confirmation">%s개 항목을 휴지통으로 이동 중...</string>
+    <string name="history_delete">Delete item</string>
+    <string name="history_recent_title">Recent</string>
+    <string name="history_suggestions_title">Suggestions</string>
+    <string name="no_media_found">No media found</string>
     <plurals name="item_count">
         <item quantity="other">%s개 항목</item>
     </plurals>
