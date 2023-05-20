@@ -87,6 +87,13 @@
     <string name="history_recent_title">Recent</string>
     <string name="history_suggestions_title">Suggestions</string>
     <string name="no_media_found">No media found</string>
+    <string name="image_add_description">Add a description</string>
+    <string name="edit_cd">edit</string>
+    <string name="edit_location_cd">Edit location</string>
+    <string name="add_location_cd">Add location</string>
+    <string name="settings_theme_header">Theme</string>
+    <string name="settings_follow_system_theme_title">Follow System Theme</string>
+    <string name="settings_dark_mode_title">Use Dark Mode</string>
     <plurals name="item_count">
         <item quantity="one">%s Ítem</item>
         <item quantity="other">%s Ítems</item>
