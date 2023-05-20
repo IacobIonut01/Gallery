@@ -14,9 +14,12 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import com.dot.gallery.core.Settings.Misc.rememberForceTheme
+import com.dot.gallery.core.Settings.Misc.rememberIsDarkMode
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
 private val LightColors = lightColorScheme(
@@ -91,10 +94,13 @@ fun GalleryTheme(
     dynamicColor: Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
     content: @Composable () -> Unit
 ) {
+    val forceThemeValue by rememberForceTheme()
+    val isDarkMode by rememberIsDarkMode()
+    val forcedDarkTheme: Boolean = if (forceThemeValue) isDarkMode else darkTheme
     val colorScheme = when {
         dynamicColor -> {
             val context = LocalContext.current
-            if (darkTheme) if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (forcedDarkTheme) if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 dynamicDarkColorScheme(context)
             } else {
                 DarkColors
@@ -105,13 +111,13 @@ fun GalleryTheme(
             }
         }
 
-        darkTheme -> DarkColors
+        forcedDarkTheme -> DarkColors
         else -> LightColors
     }
     val view = LocalView.current
     // Remember a SystemUiController
     val systemUiController = rememberSystemUiController()
-    val useDarkIcons = !isSystemInDarkTheme()
+    val useDarkIcons = !forcedDarkTheme
     if (!view.isInEditMode) {
         DisposableEffect(systemUiController, useDarkIcons) {
             // Update all of the system bar colors to be transparent, and use

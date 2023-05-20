@@ -17,6 +17,8 @@ import com.dot.gallery.R
 import com.dot.gallery.core.Position
 import com.dot.gallery.core.Settings.Glide.rememberCachedScreenCount
 import com.dot.gallery.core.Settings.Glide.rememberDiskCacheSize
+import com.dot.gallery.core.Settings.Misc.rememberForceTheme
+import com.dot.gallery.core.Settings.Misc.rememberIsDarkMode
 import com.dot.gallery.core.Settings.Misc.rememberTrashEnabled
 import com.dot.gallery.core.SettingsEntity
 import com.dot.gallery.core.SettingsEntity.Header
@@ -32,6 +34,25 @@ class SettingsViewModel @Inject constructor() : ViewModel() {
     @Composable
     fun rememberSettingsList(): SnapshotStateList<SettingsEntity> {
         val context = LocalContext.current
+        var forceTheme by rememberForceTheme()
+        val forceThemeValuePref = remember(forceTheme) {
+            SwitchPreference(
+                title = context.getString(R.string.settings_follow_system_theme_title),
+                isChecked = !forceTheme,
+                onCheck = { forceTheme = !it },
+                screenPosition = Position.Top
+            )
+        }
+        var darkModeValue by rememberIsDarkMode()
+        val darkThemePref = remember(darkModeValue, forceTheme) {
+            SwitchPreference(
+                title = context.getString(R.string.settings_dark_mode_title),
+                enabled = forceTheme,
+                isChecked = darkModeValue,
+                onCheck = { darkModeValue = it },
+                screenPosition = Position.Bottom
+            )
+        }
         var trashCanEnabled by rememberTrashEnabled()
         val trashCanEnabledPref = remember(trashCanEnabled) {
             SwitchPreference(
@@ -72,6 +93,11 @@ class SettingsViewModel @Inject constructor() : ViewModel() {
 
         return remember(arrayOf(trashCanEnabled, diskCacheSize, cachedScreenCount)) {
             mutableStateListOf<SettingsEntity>().apply {
+                /** ********************* **/
+                add(Header(title = context.getString(R.string.settings_theme_header)))
+                /** Theme Section Start **/
+                add(forceThemeValuePref)
+                add(darkThemePref)
                 /** ********************* **/
                 add(Header(title = context.getString(R.string.settings_general)))
                 /** General Section Start **/

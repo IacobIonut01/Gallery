@@ -97,6 +97,19 @@ object Settings {
         @Composable
         fun rememberAlbumGridSize() =
             rememberPreference(key = ALBUM_GRID_SIZE, defaultValue = Dimens.Album().value)
+
+        private val FORCE_THEME = booleanPreferencesKey("force_theme")
+
+        @Composable
+        fun rememberForceTheme() =
+            rememberPreference(key = FORCE_THEME, defaultValue = false)
+
+        private val DARK_MODE = booleanPreferencesKey("dark_mode")
+
+        @Composable
+        fun rememberIsDarkMode() =
+            rememberPreference(key = DARK_MODE, defaultValue = false)
+
     }
 }
 

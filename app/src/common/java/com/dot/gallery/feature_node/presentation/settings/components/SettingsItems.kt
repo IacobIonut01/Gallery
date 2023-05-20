@@ -1,6 +1,7 @@
 package com.dot.gallery.feature_node.presentation.settings.components
 
 import android.content.res.Configuration
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -23,6 +24,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
@@ -88,7 +90,7 @@ fun SettingsItem(
     val paddingModifier =
         when (item.screenPosition) {
             Position.Alone -> Modifier.padding(bottom = 16.dp)
-            Position.Bottom -> Modifier.padding(top = 1.dp)
+            Position.Bottom -> Modifier.padding(top = 1.dp, bottom = 16.dp)
             Position.Middle -> Modifier.padding(vertical = 1.dp)
             Position.Top -> Modifier.padding(bottom = 1.dp)
         }
@@ -139,7 +141,7 @@ fun SettingsItem(
     }
     val clickableModifier =
         if (item.type != SettingsType.Seek && !item.isHeader)
-            Modifier.clickable {
+            Modifier.clickable(item.enabled) {
                 if (item.type == SettingsType.Switch) {
                     item.onCheck?.let {
                         checked = !checked
@@ -159,6 +161,7 @@ fun SettingsItem(
                 .padding(bottom = 8.dp)
         )
     } else {
+        val alpha by animateFloatAsState(targetValue = if (item.enabled) 1f else 0.4f, label = "alpha")
         ListItem(
             headlineContent = {
                 Text(
@@ -179,7 +182,8 @@ fun SettingsItem(
                 )
                 .then(clickableModifier)
                 .padding(8.dp)
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .alpha(alpha),
             colors = ListItemDefaults.colors(containerColor = Color.Transparent)
         )
     }
