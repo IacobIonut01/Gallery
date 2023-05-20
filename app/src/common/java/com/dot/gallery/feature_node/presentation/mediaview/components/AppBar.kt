@@ -16,10 +16,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -29,15 +31,20 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.core.Constants
+import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
 import com.dot.gallery.ui.theme.Black40P
+import kotlinx.coroutines.launch
 
 @Composable
 fun MediaViewAppBar(
     showUI: Boolean,
+    showInfo: Boolean,
     currentDate: String,
     paddingValues: PaddingValues,
     onGoBack: () -> Unit,
+    bottomSheetState: AppBottomSheetState,
 ) {
+    val scope = rememberCoroutineScope()
     AnimatedVisibility(
         visible = showUI,
         enter = Constants.Animation.enterAnimation(Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION),
@@ -51,7 +58,8 @@ fun MediaViewAppBar(
                     )
                 )
                 .padding(top = paddingValues.calculateTopPadding())
-                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .padding(start = 5.dp, end = if (showInfo) 8.dp else 16.dp)
+                .padding(vertical = 8.dp)
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -65,14 +73,35 @@ fun MediaViewAppBar(
                         .height(48.dp)
                 )
             }
-            Text(
-                text = currentDate.uppercase(),
-                modifier = Modifier,
-                style = MaterialTheme.typography.titleSmall,
-                fontFamily = FontFamily.Monospace,
-                color = Color.White,
-                textAlign = TextAlign.End
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = currentDate.uppercase(),
+                    modifier = Modifier,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontFamily = FontFamily.Monospace,
+                    color = Color.White,
+                    textAlign = TextAlign.End
+                )
+                if (showInfo) {
+                    IconButton(
+                        onClick = {
+                            scope.launch {
+                                bottomSheetState.show()
+                            }
+                        }
+                    ) {
+                        Image(
+                            imageVector = Icons.Outlined.Info,
+                            colorFilter = ColorFilter.tint(Color.White),
+                            contentDescription = "info",
+                            modifier = Modifier
+                                .height(48.dp)
+                        )
+                    }
+                }
+            }
         }
     }
 }

@@ -42,6 +42,7 @@ import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewAppBar
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewBottomBar
 import com.dot.gallery.feature_node.presentation.util.getDate
+import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.toggleSystemBars
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -54,6 +55,7 @@ fun StandaloneMediaViewScreen(
     val state by mediaState
     val pagerState = rememberPagerState()
     val scrollEnabled = remember { mutableStateOf(true) }
+    val bottomSheetState = rememberAppBottomSheetState()
 
     val currentDate = remember { mutableStateOf("") }
 
@@ -119,16 +121,19 @@ fun StandaloneMediaViewScreen(
         }
         MediaViewAppBar(
             showUI = showUI.value,
+            showInfo = true,
             currentDate = currentDate.value,
             paddingValues = paddingValues,
-            onGoBack = (context as Activity)::finish
+            onGoBack = (context as Activity)::finish,
+            bottomSheetState = bottomSheetState
         )
         MediaViewBottomBar(
             showDeleteButton = false,
             handler = handler,
             showUI = showUI.value,
             paddingValues = paddingValues,
-            currentMedia = state.media.firstOrNull()
+            currentMedia = state.media.firstOrNull(),
+            bottomSheetState = bottomSheetState
         )
     }
 

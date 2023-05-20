@@ -24,18 +24,13 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.SheetState
-import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.Saver
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,63 +41,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.R
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
 import com.dot.gallery.ui.core.icons.Face
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun rememberTrashDialogState(): TrashState {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    return rememberSaveable(saver = TrashState.Saver()) {
-        TrashState(sheetState)
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-class TrashState(
-    val sheetState: SheetState
-) {
-
-    var isVisible by mutableStateOf(false)
-        private set
-
-    internal constructor(sheetState: SheetState, isVisible: Boolean) : this(sheetState) {
-        this.isVisible = isVisible
-    }
-
-    suspend fun show() {
-        if (!isVisible) {
-            isVisible = true
-            sheetState.show()
-        }
-    }
-
-    suspend fun hide() {
-        if (isVisible) {
-            sheetState.hide()
-            isVisible = false
-        }
-    }
-
-    companion object {
-        fun Saver(
-            skipPartiallyExpanded: Boolean = true,
-            confirmValueChange: (SheetValue) -> Boolean = { true }
-        ) = Saver<TrashState, Pair<SheetValue, Boolean>>(
-            save = { Pair(it.sheetState.currentValue, it.isVisible) }
-        ) { savedValue ->
-            TrashState(
-                SheetState(skipPartiallyExpanded, savedValue.first, confirmValueChange),
-                savedValue.second
-            )
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
 fun TrashDialog(
-    trashState: TrashState,
+    appBottomSheetState: AppBottomSheetState,
     data: List<Media>,
     defaultText: @Composable (size: Int) -> String = {
         stringResource(R.string.delete_dialog_title, it)
@@ -117,21 +63,21 @@ fun TrashDialog(
     var confirmed by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     BackHandler(
-        trashState.isVisible && !confirmed
+        appBottomSheetState.isVisible && !confirmed
     ) {
         scope.launch {
             confirmed = false
-            trashState.hide()
+            appBottomSheetState.hide()
         }
     }
-    if (trashState.isVisible) {
+    if (appBottomSheetState.isVisible) {
         confirmed = false
         ModalBottomSheet(
-            sheetState = trashState.sheetState,
+            sheetState = appBottomSheetState.sheetState,
             shape = RoundedCornerShape(24.dp),
             onDismissRequest = {
                 scope.launch {
-                    trashState.hide()
+                    appBottomSheetState.hide()
                 }
             },
             dragHandle = {
@@ -208,7 +154,7 @@ fun TrashDialog(
                         Button(
                             onClick = {
                                 scope.launch {
-                                    trashState.hide()
+                                    appBottomSheetState.hide()
                                 }
                             },
                             colors = ButtonDefaults.buttonColors(

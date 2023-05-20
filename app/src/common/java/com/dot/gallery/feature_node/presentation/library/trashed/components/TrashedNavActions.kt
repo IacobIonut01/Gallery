@@ -18,6 +18,7 @@ import com.dot.gallery.R
 import com.dot.gallery.core.MediaState
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
+import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.rememberIsMediaManager
 import kotlinx.coroutines.launch
 
@@ -31,8 +32,8 @@ fun TrashedNavActions(
     val state by mediaState
     val scope = rememberCoroutineScope()
     val isMediaManager = rememberIsMediaManager()
-    val deleteSheetState = rememberTrashDialogState()
-    val restoreSheetState = rememberTrashDialogState()
+    val deleteSheetState = rememberAppBottomSheetState()
+    val restoreSheetState = rememberAppBottomSheetState()
     val result = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartIntentSenderForResult(),
         onResult = {
@@ -106,14 +107,14 @@ fun TrashedNavActions(
         }
     }
     TrashDialog(
-        trashState = deleteSheetState,
+        appBottomSheetState = deleteSheetState,
         data = selectedMedia.ifEmpty { state.media },
         onConfirm = {
             handler.deleteMedia(result, it)
         }
     )
     TrashDialog(
-        trashState = restoreSheetState,
+        appBottomSheetState = restoreSheetState,
         data = selectedMedia.ifEmpty { state.media },
         defaultText = {
             stringResource(R.string.restore_dialog_title, it)

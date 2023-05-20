@@ -30,8 +30,8 @@ import com.dot.gallery.core.MediaState
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.library.trashed.components.TrashDialog
-import com.dot.gallery.feature_node.presentation.library.trashed.components.rememberTrashDialogState
 import com.dot.gallery.feature_node.presentation.util.Screen
+import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.rememberIsMediaManager
 import com.dot.gallery.feature_node.presentation.util.shareMedia
 import kotlinx.coroutines.launch
@@ -53,7 +53,7 @@ fun RowScope.TimelineNavActions(
     val state by mediaState
     val scope = rememberCoroutineScope()
     val isMediaManager = rememberIsMediaManager()
-    val trashState = rememberTrashDialogState()
+    val trashState = rememberAppBottomSheetState()
     val result = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartIntentSenderForResult(),
         onResult = {
@@ -189,7 +189,7 @@ fun RowScope.TimelineNavActions(
         )
     }
     TrashDialog(
-        trashState = trashState,
+        appBottomSheetState = trashState,
         data = selectedMedia,
         defaultText = {
             stringResource(R.string.trash_dialog_title, it)

@@ -47,6 +47,7 @@ import com.dot.gallery.feature_node.presentation.library.trashed.components.Tras
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewAppBar
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewBottomBar
 import com.dot.gallery.feature_node.presentation.util.getDate
+import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.rememberWindowInsetsController
 import com.dot.gallery.feature_node.presentation.util.toggleSystemBars
 
@@ -65,6 +66,7 @@ fun MediaViewScreen(
     val initialPage = rememberSaveable(runtimeMediaId) { state.media.indexOfFirst { it.id == runtimeMediaId } }
     val pagerState = rememberPagerState(initialPage = if (initialPage == -1) 0 else initialPage)
     val scrollEnabled = rememberSaveable { mutableStateOf(true) }
+    val bottomSheetState = rememberAppBottomSheetState()
 
     val currentDate = rememberSaveable { mutableStateOf("") }
     val currentMedia = rememberSaveable { mutableStateOf<Media?>(null) }
@@ -144,7 +146,9 @@ fun MediaViewScreen(
         }
         MediaViewAppBar(
             showUI = showUI.value,
+            showInfo = currentMedia.value?.trashed == 0,
             currentDate = currentDate.value,
+            bottomSheetState = bottomSheetState,
             paddingValues = paddingValues,
             onGoBack = navigateUp
         )
@@ -161,6 +165,7 @@ fun MediaViewScreen(
             }
         } else {
             MediaViewBottomBar(
+                bottomSheetState = bottomSheetState,
                 handler = handler,
                 showUI = showUI.value,
                 paddingValues = paddingValues,
