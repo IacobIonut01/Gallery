@@ -70,7 +70,7 @@ android {
             applicationIdSuffix = ".staging"
             versionNameSuffix = "-staging"
             manifestPlaceholders["appName"] = "Gallery Staging"
-            manifestPlaceholders["appProvider"] = "com.dot.gallery.staging.media_provider"
+            manifestPlaceholders["appProvider"] = "com.dot.staging.debug.media_provider"
             buildConfigField("String", "CONTENT_AUTHORITY", "\"com.dot.staging.debug.media_provider\"")
         }
     }
