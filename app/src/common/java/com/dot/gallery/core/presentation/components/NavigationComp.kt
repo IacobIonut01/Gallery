@@ -49,7 +49,7 @@ fun NavigationComp(
     val bottomNavEntries = rememberNavigationItems()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     navBackStackEntry?.destination?.route?.let {
-        val shouldDisplayBottomBar = bottomNavEntries.firstOrNull { item -> item.route == it } != null
+        val shouldDisplayBottomBar = bottomNavEntries.find { item -> item.route == it } != null
         bottomBarState.value = shouldDisplayBottomBar
         systemBarFollowThemeState.value = !it.contains(Screen.MediaViewScreen.route)
     }
