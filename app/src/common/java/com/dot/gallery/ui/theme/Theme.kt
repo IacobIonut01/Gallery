@@ -94,7 +94,15 @@ fun GalleryTheme(
     val colorScheme = when {
         dynamicColor -> {
             val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            if (darkTheme) if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                dynamicDarkColorScheme(context)
+            } else {
+                DarkColors
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                dynamicLightColorScheme(context)
+            } else {
+                LightColors
+            }
         }
 
         darkTheme -> DarkColors
