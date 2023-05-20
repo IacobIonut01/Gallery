@@ -16,10 +16,30 @@ import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.text.TextUtils
 import android.util.Log
+import com.dot.gallery.R
 import java.io.File
 import java.io.FileOutputStream
+import java.math.RoundingMode
+import java.text.DecimalFormat
 import java.util.UUID
 import kotlin.math.min
+
+fun File.formattedFileSize(context: Context): String {
+    var fileSize = this.length().toDouble() / 1024.0
+    var fileSizeName = context.getString(R.string.kb)
+    if (fileSize > 1024.0) {
+        fileSize /= 1024.0
+        fileSizeName = context.getString(R.string.mb)
+        if (fileSize > 1024.0) {
+            fileSize /= 1024.0
+            fileSizeName = context.getString(R.string.gb)
+        }
+    }
+    val roundingSize = DecimalFormat("#.##").apply {
+        roundingMode = RoundingMode.DOWN
+    }
+    return "${roundingSize.format(fileSize)} $fileSizeName"
+}
 
 class FileUtils(var context: Context) {
     @SuppressLint("NewApi")
@@ -115,12 +135,15 @@ class FileUtils(var context: Context) {
                     "image" -> {
                         contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
                     }
+
                     "video" -> {
                         contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI
                     }
+
                     "audio" -> {
                         contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
                     }
+
                     "document" -> {
                         contentUri = MediaStore.Files.getContentUri(MediaStore.getVolumeName(uri))
                     }

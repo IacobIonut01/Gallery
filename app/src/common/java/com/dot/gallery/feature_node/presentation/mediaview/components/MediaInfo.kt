@@ -53,14 +53,13 @@ import com.dot.gallery.feature_node.presentation.util.ExifMetadata
 import com.dot.gallery.feature_node.presentation.util.MapBoxURL
 import com.dot.gallery.feature_node.presentation.util.connectivityState
 import com.dot.gallery.feature_node.presentation.util.formatMinSec
+import com.dot.gallery.feature_node.presentation.util.formattedFileSize
 import com.dot.gallery.feature_node.presentation.util.getExifInterface
 import com.dot.gallery.feature_node.presentation.util.launchMap
 import com.dot.gallery.ui.theme.Shapes
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import java.io.File
 import java.io.IOException
-import java.math.RoundingMode
-import java.text.DecimalFormat
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -116,8 +115,8 @@ fun MediaInfoRow(
 fun LocationInfo(exifMetadata: ExifMetadata) {
     if (exifMetadata.gpsLatLong != null) {
         val context = LocalContext.current
-        val lat = exifMetadata.gpsLatLong!![0]
-        val long = exifMetadata.gpsLatLong!![1]
+        val lat = exifMetadata.gpsLatLong[0]
+        val long = exifMetadata.gpsLatLong[1]
         val connection by connectivityState()
         val isConnected = connection == ConnectionState.Available
         Column(
@@ -153,7 +152,7 @@ fun LocationInfo(exifMetadata: ExifMetadata) {
                     Text(
                         text = String.format(
                             "%.3f, %.3f",
-                            exifMetadata.gpsLatLong!![0], exifMetadata.gpsLatLong!![1]
+                            exifMetadata.gpsLatLong[0], exifMetadata.gpsLatLong[1]
                         ),
                     )
                 },
@@ -252,25 +251,13 @@ fun Media.retrieveMetadata(context: Context): List<InfoRow> {
                         content = label
                     )
                 )
-                var fileSize = File(path).length().toDouble() / 1024.0
-                var fileSizeName = context.getString(R.string.kb)
-                if (fileSize > 1024.0) {
-                    fileSize /= 1024.0
-                    fileSizeName = context.getString(R.string.mb)
-                    if (fileSize > 1024.0) {
-                        fileSize /= 1024.0
-                        fileSizeName = context.getString(R.string.gb)
-                    }
-                }
-                if (exifMetadata.imageWidth != -1 && exifMetadata.imageHeight != -1) {
+                val formattedFileSize = File(path).formattedFileSize(context)
+                if (exifMetadata.imageWidth != 0 && exifMetadata.imageHeight != 0) {
                     val width = exifMetadata.imageWidth
                     val height = exifMetadata.imageHeight
                     val imageMp = exifMetadata.imageMp
-                    val roundingSize = DecimalFormat("#.##").apply {
-                        roundingMode = RoundingMode.DOWN
-                    }
                     val contentString = StringBuilder()
-                    contentString.append("${roundingSize.format(fileSize)} $fileSizeName")
+                    contentString.append(formattedFileSize)
                     if (imageMp > "0") contentString.append(" • $imageMp MP")
                     if (width > 0 && height > 0) contentString.append(" • $width x $height")
                     add(
@@ -282,11 +269,8 @@ fun Media.retrieveMetadata(context: Context): List<InfoRow> {
                     )
                 }
                 if (duration != null) {
-                    val roundingSize = DecimalFormat("#.##").apply {
-                        roundingMode = RoundingMode.DOWN
-                    }
                     val contentString = StringBuilder()
-                    contentString.append("${roundingSize.format(fileSize)} $fileSizeName")
+                    contentString.append(formattedFileSize)
                     contentString.append(" • ${duration.formatMinSec()}")
                     add(
                         InfoRow(
