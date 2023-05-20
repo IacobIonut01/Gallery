@@ -45,6 +45,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
+import com.dot.gallery.BuildConfig
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.TAG
 import com.dot.gallery.feature_node.domain.model.Media
@@ -125,7 +126,7 @@ fun LocationInfo(exifMetadata: ExifMetadata) {
                 .clip(Shapes.large)
                 .background(MaterialTheme.colorScheme.surface)
         ) {
-            if (isConnected) {
+            if (isConnected && BuildConfig.MAPS_TOKEN != "DEBUG") {
                 GlideImage(
                     model = MapBoxURL(
                         latitude = lat,

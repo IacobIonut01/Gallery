@@ -218,6 +218,6 @@ fun getApiKey(): String {
         properties.load(FileInputStream(fl))
         properties.getProperty("MAPS_TOKEN")
     } catch (e: Exception) {
-        "DEBUG"
+        "\"DEBUG\""
     }
 }
