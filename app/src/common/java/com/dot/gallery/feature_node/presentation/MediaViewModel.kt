@@ -156,16 +156,18 @@ open class MediaViewModel @Inject constructor(
                 } else null
                 val dateHeader = if (albumId != -1L && startDate != null && endDate != null)
                     getDateHeader(startDate, endDate) else ""
-                photoState.update(
-                    MediaState(
-                        error = if (result is Resource.Error) result.message
-                            ?: "An error occurred" else "",
-                        media = data,
-                        mappedMedia = mappedData,
-                        mappedMediaWithMonthly = mappedDataWithMonthly,
-                        dateHeader = dateHeader
+                withContext(Dispatchers.Main) {
+                    photoState.update(
+                        MediaState(
+                            error = if (result is Resource.Error) result.message
+                                ?: "An error occurred" else "",
+                            media = data,
+                            mappedMedia = mappedData,
+                            mappedMediaWithMonthly = mappedDataWithMonthly,
+                            dateHeader = dateHeader
+                        )
                     )
-                )
+                }
             }.flowOn(Dispatchers.IO).collect()
         }
     }
