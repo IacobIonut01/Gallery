@@ -94,6 +94,7 @@
     <string name="settings_theme_header">Theme</string>
     <string name="settings_follow_system_theme_title">Follow System Theme</string>
     <string name="settings_dark_mode_title">Use Dark Mode</string>
+    <string name="selection_dialog_close_cd">Close selection dialog</string>
     <plurals name="item_count">
         <item quantity="other">%s 个项目</item>
     </plurals>
