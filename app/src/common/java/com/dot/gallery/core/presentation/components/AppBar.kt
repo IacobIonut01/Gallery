@@ -6,6 +6,8 @@
 package com.dot.gallery.core.presentation.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -39,8 +41,6 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.dot.gallery.R
-import com.dot.gallery.core.Constants.Animation.enterAnimation
-import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.feature_node.presentation.util.NavigationItem
 import com.dot.gallery.feature_node.presentation.util.Screen
 
@@ -110,8 +110,8 @@ fun AppBarContainer(
             AnimatedVisibility(
                 modifier = Modifier.align(Alignment.BottomCenter),
                 visible = showNavigation,
-                enter = enterAnimation(100),
-                exit = exitAnimation(100),
+                enter = slideInVertically { it * 2 },
+                exit = slideOutVertically { it * 2 },
                 content = {
                     AppNavigationBar(
                         backStackEntry = backStackEntry,
