@@ -62,7 +62,8 @@ class MainActivity : ComponentActivity() {
                                 navController = navController,
                                 paddingValues = paddingValues,
                                 bottomBarState = bottomBarState,
-                                systemBarFollowThemeState = systemBarFollowThemeState
+                                systemBarFollowThemeState = systemBarFollowThemeState,
+                                windowSizeClass = windowSizeClass
                             )
                         }
                     }

@@ -31,6 +31,7 @@ fun TimelineScreen(
     mediaState: MutableState<MediaState>,
     selectionState: MutableState<Boolean>,
     selectedMedia: SnapshotStateList<Media>,
+    allowNavBar: Boolean = true,
     toggleSelection: (Int) -> Unit,
     navigate: (route: String) -> Unit,
     navigateUp: () -> Unit,
@@ -41,12 +42,13 @@ fun TimelineScreen(
     target = null,
     albumName = albumName,
     retrieveMedia = retrieveMedia,
+    handler = handler,
     mediaState = mediaState,
     selectionState = selectionState,
     selectedMedia = selectedMedia,
     toggleSelection = toggleSelection,
     showMonthlyHeader = true,
-    alwaysGoBack = false,
+    allowNavBar = allowNavBar,
     NavActions = {expandedDropDown: MutableState<Boolean>, _ ->
         TimelineNavActions(
             albumId = albumId,

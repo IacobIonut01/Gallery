@@ -7,6 +7,8 @@ package com.dot.gallery.core.presentation.components
 
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -44,8 +46,10 @@ fun NavigationComp(
     navController: NavHostController,
     paddingValues: PaddingValues,
     bottomBarState: MutableState<Boolean>,
-    systemBarFollowThemeState: MutableState<Boolean>
+    systemBarFollowThemeState: MutableState<Boolean>,
+    windowSizeClass: WindowSizeClass
 ) {
+    val useNavRail = windowSizeClass.widthSizeClass > WindowWidthSizeClass.Compact
     val bottomNavEntries = rememberNavigationItems()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     navBackStackEntry?.destination?.route?.let {
@@ -79,6 +83,7 @@ fun NavigationComp(
                 selectionState = viewModel.multiSelectState,
                 selectedMedia = viewModel.selectedPhotoState,
                 toggleSelection = viewModel::toggleSelection,
+                allowNavBar = !useNavRail,
                 navigate = navPipe::navigate,
                 navigateUp = navPipe::navigateUp,
                 toggleNavbar = navPipe::toggleNavbar
@@ -115,6 +120,7 @@ fun NavigationComp(
             FavoriteScreen(
                 paddingValues = paddingValues,
                 mediaState = viewModel.photoState,
+                handler = viewModel.handler,
                 selectionState = viewModel.multiSelectState,
                 selectedMedia = viewModel.selectedPhotoState,
                 toggleFavorite = viewModel::toggleFavorite,
@@ -183,6 +189,7 @@ fun NavigationComp(
                 selectionState = viewModel.multiSelectState,
                 selectedMedia = viewModel.selectedPhotoState,
                 toggleSelection = viewModel::toggleSelection,
+                allowNavBar = false,
                 navigate = navPipe::navigate,
                 navigateUp = navPipe::navigateUp,
                 toggleNavbar = navPipe::toggleNavbar

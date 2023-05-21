@@ -38,8 +38,9 @@ fun TrashedGridScreen(
     toggleNavbar: (Boolean) -> Unit
 ) = MediaScreen(
     paddingValues = paddingValues,
-    albumName = albumName,
     target = TARGET_TRASH,
+    albumName = albumName,
+    handler = handler,
     mediaState = mediaState,
     selectionState = selectionState,
     selectedMedia = selectedMedia,

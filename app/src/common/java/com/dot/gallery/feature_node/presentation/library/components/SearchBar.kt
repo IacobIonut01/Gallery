@@ -46,6 +46,7 @@ import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -71,12 +72,12 @@ import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.Settings.Search.rememberSearchHistory
+import com.dot.gallery.core.presentation.components.StickyHeader
 import com.dot.gallery.core.presentation.components.media.MediaComponent
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaItem
 import com.dot.gallery.feature_node.domain.model.isHeaderKey
 import com.dot.gallery.feature_node.presentation.library.SearchViewModel
-import com.dot.gallery.feature_node.presentation.timeline.components.StickyHeader
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.ui.theme.Dimens
 
@@ -84,6 +85,7 @@ import com.dot.gallery.ui.theme.Dimens
 @Composable
 fun MainSearchBar(
     bottomPadding: Dp,
+    selectionState: MutableState<Boolean>? = null,
     navigate: (String) -> Unit,
     toggleNavbar: (Boolean) -> Unit,
     menuItems: @Composable (RowScope.() -> Unit)? = null,
@@ -105,7 +107,8 @@ fun MainSearchBar(
         }
     }
     LaunchedEffect(LocalConfiguration.current, activeState) {
-        toggleNavbar(!activeState)
+        if (selectionState == null || !selectionState.value)
+            toggleNavbar(!activeState)
     }
 
     LaunchedEffect(query) {

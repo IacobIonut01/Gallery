@@ -24,8 +24,22 @@ class MediaHandleUseCase @Inject constructor(
     suspend fun toggleFavorite(
         result: ActivityResultLauncher<IntentSenderRequest>,
         mediaList: List<Media>,
-        favorite: Boolean = true
+        favorite: Boolean
     ) = repository.toggleFavorite(result, mediaList, favorite)
+
+    suspend fun toggleFavorite(
+        result: ActivityResultLauncher<IntentSenderRequest>,
+        mediaList: List<Media>
+    ) {
+        val turnToFavorite = mediaList.filter { it.favorite == 0 }
+        val turnToNotFavorite = mediaList.filter { it.favorite == 1 }
+        if (turnToFavorite.isNotEmpty()) {
+            repository.toggleFavorite(result, turnToFavorite, true)
+        }
+        if (turnToNotFavorite.isNotEmpty()) {
+            repository.toggleFavorite(result, turnToNotFavorite, false)
+        }
+    }
 
     suspend fun trashMedia(
         result: ActivityResultLauncher<IntentSenderRequest>,

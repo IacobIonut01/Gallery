@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package com.dot.gallery.feature_node.presentation.timeline.components
+package com.dot.gallery.core.presentation.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -12,10 +12,9 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -71,16 +70,16 @@ fun StickyHeader(
                 ) else Modifier
             )
         )
-        if (!showAsBig) {
+        if (!showAsBig && onChecked != null) {
             AnimatedVisibility(
                 visible = isCheckVisible.value,
                 enter = enterAnimation,
                 exit = exitAnimation
             ) {
-                RadioButton(
-                    modifier = Modifier.height(22.dp),
-                    selected = isChecked.value,
-                    onClick = onChecked
+                CheckBox(
+                    isChecked = isChecked.value,
+                    onCheck = onChecked,
+                    modifier = Modifier.size(20.dp)
                 )
             }
         }

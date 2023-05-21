@@ -19,6 +19,7 @@ import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Target.TARGET_FAVORITES
 import com.dot.gallery.core.MediaState
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.MediaScreen
 import com.dot.gallery.feature_node.presentation.library.favorites.components.EmptyFavorites
 import com.dot.gallery.feature_node.presentation.library.favorites.components.FavoriteNavActions
@@ -27,6 +28,7 @@ import com.dot.gallery.feature_node.presentation.library.favorites.components.Fa
 fun FavoriteScreen(
     paddingValues: PaddingValues,
     albumName: String = stringResource(id = R.string.favorites),
+    handler: MediaHandleUseCase,
     mediaState: MutableState<MediaState>,
     selectionState: MutableState<Boolean>,
     selectedMedia: SnapshotStateList<Media>,
@@ -37,8 +39,9 @@ fun FavoriteScreen(
     toggleNavbar: (Boolean) -> Unit
 ) = MediaScreen(
     paddingValues = paddingValues,
-    albumName = albumName,
     target = TARGET_FAVORITES,
+    albumName = albumName,
+    handler = handler,
     mediaState = mediaState,
     selectionState = selectionState,
     selectedMedia = selectedMedia,

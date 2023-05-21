@@ -7,10 +7,11 @@ package com.dot.gallery.core.presentation.components.media
 
 import android.graphics.drawable.Drawable
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,7 +22,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -30,7 +30,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
@@ -40,6 +39,7 @@ import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.bumptech.glide.signature.MediaStoreSignature
 import com.dot.gallery.core.Constants.Animation
+import com.dot.gallery.core.presentation.components.CheckBox
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.ui.theme.Dimens
 
@@ -67,6 +67,13 @@ fun MediaImage(
     val selectedShapeSize by animateDpAsState(
         if (isSelected.value) 16.dp else 0.dp, label = "selectedShapeSize"
     )
+    val strokeSize by animateDpAsState(
+        targetValue = if (isSelected.value) 2.dp else 0.dp, label = "strokeSize"
+    )
+    val strokeColor by animateColorAsState(
+        targetValue = if (isSelected.value) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
+        label = "strokeColor"
+    )
     Box(
         modifier = modifier
             .aspectRatio(1f)
@@ -76,7 +83,12 @@ fun MediaImage(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(selectedSize)
-                .clip(RoundedCornerShape(selectedShapeSize)),
+                .clip(RoundedCornerShape(selectedShapeSize))
+                .border(
+                    width = strokeSize,
+                    shape = RoundedCornerShape(selectedShapeSize),
+                    color = strokeColor
+                ),
             model = media.uri,
             contentDescription = media.label,
             contentScale = ContentScale.Crop,
@@ -105,11 +117,11 @@ fun MediaImage(
             enter = Animation.enterAnimation,
             exit = Animation.exitAnimation,
             modifier = Modifier
-                .padding(selectedSize / 2)
                 .align(Alignment.BottomEnd)
         ) {
             Image(
                 modifier = Modifier
+                    .padding(selectedSize / 2)
                     .scale(scale)
                     .padding(8.dp)
                     .size(16.dp),
@@ -127,21 +139,9 @@ fun MediaImage(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(
-                        Brush.verticalGradient(
-                            listOf(
-                                if (isSelected.value) MaterialTheme.colorScheme.surface.copy(alpha = 0.4f)
-                                else Color.Transparent,
-                                Color.Transparent
-                            )
-                        )
-                    )
+                    .padding(4.dp)
             ) {
-                RadioButton(
-                    modifier = Modifier.padding(8.dp),
-                    selected = isSelected.value,
-                    onClick = null
-                )
+                CheckBox(isChecked = isSelected.value)
             }
         }
     }
