@@ -12,10 +12,12 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -31,6 +33,8 @@ import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import com.dot.gallery.feature_node.domain.model.Media
+import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.seconds
 
 @Suppress("DEPRECATION")
 @OptIn(ExperimentalFoundationApi::class)
@@ -44,7 +48,7 @@ fun VideoPlayer(
 ) {
 
     var totalDuration by remember { mutableStateOf(0L) }
-    val currentTime = remember { mutableStateOf(0L) }
+    val currentTime = rememberSaveable { mutableStateOf(0L) }
     var bufferedPercentage by remember { mutableStateOf(0) }
     var isPlaying by remember { mutableStateOf(true) }
     val context = LocalContext.current
@@ -59,25 +63,21 @@ fun VideoPlayer(
                 )
                 val source = ProgressiveMediaSource.Factory(dataSourceFactory)
                     .createMediaSource(MediaItem.fromUri(media.uri))
-
+                videoScalingMode = C.VIDEO_SCALING_MODE_SCALE_TO_FIT
+                repeatMode = Player.REPEAT_MODE_ONE
                 prepare(source)
             }
     }
-
     exoPlayer.playWhenReady = playWhenReady
     if (playWhenReady)
         exoPlayer.playWhenReady = isPlaying
-    exoPlayer.videoScalingMode = C.VIDEO_SCALING_MODE_SCALE_TO_FIT
-    exoPlayer.repeatMode = Player.REPEAT_MODE_ONE
 
     DisposableEffect(
         AndroidView(modifier = Modifier
             .combinedClickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
-                onClick = {
-                    onItemClick()
-                },
+                onClick = onItemClick,
             ), factory = {
             PlayerView(context).apply {
                 useController = false
@@ -92,17 +92,23 @@ fun VideoPlayer(
             object : Player.Listener {
                 override fun onEvents(player: Player, events: Player.Events) {
                     super.onEvents(player, events)
-                    totalDuration = player.duration.coerceAtLeast(0L)
-                    currentTime.value = player.currentPosition.coerceAtLeast(0L)
-                    bufferedPercentage = player.bufferedPercentage
                     isPlaying = player.isPlaying
                 }
             }
-
         exoPlayer.addListener(listener)
         onDispose {
             exoPlayer.removeListener(listener)
             exoPlayer.release()
+        }
+    }
+    if (isPlaying) {
+        LaunchedEffect(Unit) {
+            while(true) {
+                totalDuration = exoPlayer.duration.coerceAtLeast(0L)
+                currentTime.value = exoPlayer.currentPosition.coerceAtLeast(0L)
+                bufferedPercentage = exoPlayer.bufferedPercentage
+                delay(1.seconds / 30)
+            }
         }
     }
     videoController(exoPlayer, currentTime, totalDuration, bufferedPercentage) {
