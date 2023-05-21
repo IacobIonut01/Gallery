@@ -8,6 +8,7 @@ package com.dot.gallery.feature_node.presentation.library.components
 import android.graphics.drawable.Drawable
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -55,6 +56,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
@@ -106,6 +108,10 @@ fun MainSearchBar(
             query = ""
         }
     }
+    val alpha by animateFloatAsState(
+        targetValue = if (selectionState != null && selectionState.value) 0.6f else 1f,
+        label = "alpha"
+    )
     LaunchedEffect(LocalConfiguration.current, activeState) {
         if (selectionState == null || !selectionState.value)
             toggleNavbar(!activeState)
@@ -132,6 +138,7 @@ fun MainSearchBar(
         modifier = Modifier
             .semantics { isContainer = true }
             .zIndex(1f)
+            .alpha(alpha)
             .fillMaxWidth()
     ) {
         /**
@@ -140,6 +147,7 @@ fun MainSearchBar(
          */
         SearchBar(
             modifier = Modifier.align(Alignment.TopCenter),
+            enabled = selectionState == null || !selectionState.value,
             query = query,
             onQueryChange = { query = it },
             onSearch = {
