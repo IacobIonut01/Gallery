@@ -1,25 +1,513 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<issues format="6" by="lint 8.0.0-beta02" type="baseline" client="gradle" dependencies="false" name="AGP (8.0.0-beta02)" variant="all" version="8.0.0-beta02">
+<issues format="6" by="lint 8.0.1" type="baseline" client="gradle" dependencies="false" name="AGP (8.0.1)" variant="all" version="8.0.1">
 
     <issue
-        id="LintError"
-        message="Unexpected failure during lint analysis of AlbumsScreen.kt (this is a bug in lint or one of the libraries it depends on)&#xA;&#xA;Message: Index 1 out of bounds for length 1&#xA;&#xA;The crash seems to involve the detector `com.android.tools.lint.checks.ApiDetector`.&#xA;You can try disabling it with something like this:&#xA;    android {&#xA;        lint {&#xA;            disable &quot;InlinedApi&quot;, &quot;ObsoleteSdkInt&quot;, &quot;Override&quot;, &quot;NewApi&quot;, &quot;UnusedAttribute&quot;&#xA;        }&#xA;    }&#xA;&#xA;Stack: `IndexOutOfBoundsException:Preconditions.outOfBounds(Preconditions.java:64)←Preconditions.outOfBoundsCheckIndex(Preconditions.java:70)←Preconditions.checkIndex(Preconditions.java:266)←Objects.checkIndex(Objects.java:359)←ArrayList.get(ArrayList.java:427)←UImplicitCallExpression.getArgumentForParameter(UImplicitCallExpression.kt:117)←ApiDetector$ApiVisitor.visitCall(ApiDetector.kt:1603)←ApiDetector$ApiVisitor.visitArrayAccessExpression(ApiDetector.kt:2088)←UElementVisitor$DispatchPsiVisitor.visitArrayAccessExpression(UElementVisitor.kt:473)←UElementVisitor$DelegatingPsiVisitor.visitArrayAccessExpression(UElementVisitor.kt:1150)←UArrayAccessExpression$DefaultImpls.accept(UArrayAccessExpression.kt:24)←KotlinUArrayAccessExpression.accept(KotlinUArrayAccessExpression.kt:10)←KotlinULocalVariable.accept(KotlinULocalVariable.kt:46)←ImplementationUtilsKt.acceptList(implementationUtils.kt:15)←UDeclarationsExpression$DefaultImpls.accept(UDeclarationsExpression.kt:22)←KotlinUDeclarationsExpression.accept(KotlinUDeclarationsExpression.kt:10)←ImplementationUtilsKt.acceptList(implementationUtils.kt:15)←UBlockExpression$DefaultImpls.accept(UBlockExpression.kt:21)←KotlinUBlockExpression.accept(KotlinUBlockExpression.kt:12)←ULambdaExpression$DefaultImpls.accept(ULambdaExpression.kt:41)←KotlinULambdaExpression.accept(KotlinULambdaExpression.kt:12)←ImplementationUtilsKt.acceptList(implementationUtils.kt:15)←KotlinUFunctionCallExpression.accept(KotlinUFunctionCallExpression.kt:169)←ImplementationUtilsKt.acceptList(implementationUtils.kt:15)←UBlockExpression$DefaultImpls.accept(UBlockExpression.kt:21)←KotlinUBlockExpression.accept(KotlinUBlockExpression.kt:12)←ULambdaExpression$DefaultImpls.accept(ULambdaExpression.kt:41)←KotlinULambdaExpression.accept(KotlinULambdaExpression.kt:12)←ImplementationUtilsKt.acceptList(implementationUtils.kt:15)←KotlinUFunctionCallExpression.accept(KotlinUFunctionCallExpression.kt:169)←ImplementationUtilsKt.acceptList(implementationUtils.kt:15)←UBlockExpression$DefaultImpls.accept(UBlockExpression.kt:21)←KotlinUBlockExpression.accept(KotlinUBlockExpression.kt:12)←UMethod$DefaultImpls.accept(UMethod.kt:45)←KotlinUMethod.accept(KotlinUMethod.kt:18)←ImplementationUtilsKt.acceptList(implementationUtils.kt:15)←AbstractKotlinUClass.accept(AbstractKotlinUClass.kt:46)←ImplementationUtilsKt.acceptList(implementationUtils.kt:15)←UFile$DefaultImpls.accept(UFile.kt:91)←KotlinUFile.accept(KotlinUFile.kt:15)←UastLintUtilsKt.acceptSourceFile(UastLintUtils.kt:679)←UElementVisitor$visitFile$3.run(UElementVisitor.kt:274)←LintClient.runReadAction(LintClient.kt:1820)←LintDriver$LintClientWrapper.runReadAction(LintDriver.kt:2828)←UElementVisitor.visitFile(UElementVisitor.kt:271)←LintDriver$visitUastDetectors$1.run(LintDriver.kt:2113)←LintClient.runReadAction(LintClient.kt:1820)←LintDriver$LintClientWrapper.runReadAction(LintDriver.kt:2828)←LintDriver.visitUastDetectors(LintDriver.kt:2113)←LintDriver.visitUast(LintDriver.kt:2072)←LintDriver.runFileDetectors(LintDriver.kt:1434)←LintDriver.checkProject(LintDriver.kt:1197)←LintDriver.checkProjectRoot(LintDriver.kt:657)←LintDriver.access$checkProjectRoot(LintDriver.kt:166)←LintDriver$analyzeOnly$1.invoke(LintDriver.kt:470)←LintDriver$analyzeOnly$1.invoke(LintDriver.kt:463)←LintDriver.doAnalyze(LintDriver.kt:530)←LintDriver.analyzeOnly(LintDriver.kt:463)←LintCliClient$analyzeOnly$1.invoke(LintCliClient.kt:247)←LintCliClient$analyzeOnly$1.invoke(LintCliClient.kt:247)←LintCliClient.run(LintCliClient.kt:289)←LintCliClient.run$default(LintCliClient.kt:272)←LintCliClient.analyzeOnly(LintCliClient.kt:247)←Main.run(Main.java:1668)←Main.run(Main.java:274)←NativeMethodAccessorImpl.invoke0(NativeMethodAccessorImpl.java:-2)←NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)←DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)←Method.invoke(Method.java:568)←AndroidLintWorkAction.invokeLintMainRunMethod(AndroidLintWorkAction.kt:98)←AndroidLintWorkAction.runLint(AndroidLintWorkAction.kt:87)←AndroidLintWorkAction.execute(AndroidLintWorkAction.kt:62)←DefaultWorkerServer.execute(DefaultWorkerServer.java:63)←NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:66)←NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:62)←ClassLoaderUtils.executeInClassloader(ClassLoaderUtils.java:100)←NoIsolationWorkerFactory$1.lambda$execute$0(NoIsolationWorkerFactory.java:62)←AbstractWorker$1.call(AbstractWorker.java:44)←AbstractWorker$1.call(AbstractWorker.java:41)←DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)←DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:199)←DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)←DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)←DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:157)←DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)←DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)←DefaultBuildOperationExecutor.call(DefaultBuildOperationExecutor.java:73)←AbstractWorker.executeWrappedInBuildOperation(AbstractWorker.java:41)←NoIsolationWorkerFactory$1.execute(NoIsolationWorkerFactory.java:59)←DefaultWorkerExecutor.lambda$submitWork$0(DefaultWorkerExecutor.java:169)←FutureTask.run(FutureTask.java:264)←DefaultConditionalExecutionQueue$ExecutionRunner.runExecution(DefaultConditionalExecutionQueue.java:187)←DefaultConditionalExecutionQueue$ExecutionRunner.access$700(DefaultConditionalExecutionQueue.java:120)←DefaultConditionalExecutionQueue$ExecutionRunner$1.run(DefaultConditionalExecutionQueue.java:162)←Factories$1.create(Factories.java:31)←DefaultWorkerLeaseService.withLocks(DefaultWorkerLeaseService.java:249)←DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:109)←DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:114)←DefaultConditionalExecutionQueue$ExecutionRunner.runBatch(DefaultConditionalExecutionQueue.java:157)←DefaultConditionalExecutionQueue$ExecutionRunner.run(DefaultConditionalExecutionQueue.java:126)`&#xA;&#xA;You can run with --stacktrace or set environment variable `LINT_PRINT_STACKTRACE=true` to dump a full stacktrace to stdout.">
+        id="NotificationPermission"
+        message="When targeting Android 13 or higher, posting a permission requires holding the `POST_NOTIFICATIONS` permission (usage from com.bumptech.glide.request.target.NotificationTarget)">
         <location
-            file="src/main/java/com/dot/gallery/feature_node/presentation/albums/AlbumsScreen.kt"/>
+            file="src/main/AndroidManifest.xml"/>
     </issue>
 
     <issue
-        id="LintError"
-        message="Unexpected failure during lint analysis of MediaViewScreen.kt (this is a bug in lint or one of the libraries it depends on)&#xA;&#xA;Message: Index 1 out of bounds for length 1&#xA;&#xA;The crash seems to involve the detector `com.android.tools.lint.checks.ApiDetector`.&#xA;You can try disabling it with something like this:&#xA;    android {&#xA;        lint {&#xA;            disable &quot;InlinedApi&quot;, &quot;ObsoleteSdkInt&quot;, &quot;Override&quot;, &quot;NewApi&quot;, &quot;UnusedAttribute&quot;&#xA;        }&#xA;    }&#xA;&#xA;Stack: `IndexOutOfBoundsException:Preconditions.outOfBounds(Preconditions.java:64)←Preconditions.outOfBoundsCheckIndex(Preconditions.java:70)←Preconditions.checkIndex(Preconditions.java:266)←Objects.checkIndex(Objects.java:359)←ArrayList.get(ArrayList.java:427)←UImplicitCallExpression.getArgumentForParameter(UImplicitCallExpression.kt:117)←ApiDetector$ApiVisitor.visitCall(ApiDetector.kt:1603)←ApiDetector$ApiVisitor.visitArrayAccessExpression(ApiDetector.kt:2088)←UElementVisitor$DispatchPsiVisitor.visitArrayAccessExpression(UElementVisitor.kt:473)←UElementVisitor$DelegatingPsiVisitor.visitArrayAccessExpression(UElementVisitor.kt:1150)←UArrayAccessExpression$DefaultImpls.accept(UArrayAccessExpression.kt:24)←KotlinUArrayAccessExpression.accept(KotlinUArrayAccessExpression.kt:10)←KotlinULocalVariable.accept(KotlinULocalVariable.kt:46)←ImplementationUtilsKt.acceptList(implementationUtils.kt:15)←UDeclarationsExpression$DefaultImpls.accept(UDeclarationsExpression.kt:22)←KotlinUDeclarationsExpression.accept(KotlinUDeclarationsExpression.kt:10)←ImplementationUtilsKt.acceptList(implementationUtils.kt:15)←UBlockExpression$DefaultImpls.accept(UBlockExpression.kt:21)←KotlinUBlockExpression.accept(KotlinUBlockExpression.kt:12)←ULambdaExpression$DefaultImpls.accept(ULambdaExpression.kt:41)←KotlinULambdaExpression.accept(KotlinULambdaExpression.kt:12)←ImplementationUtilsKt.acceptList(implementationUtils.kt:15)←KotlinUFunctionCallExpression.accept(KotlinUFunctionCallExpression.kt:169)←ImplementationUtilsKt.acceptList(implementationUtils.kt:15)←UBlockExpression$DefaultImpls.accept(UBlockExpression.kt:21)←KotlinUBlockExpression.accept(KotlinUBlockExpression.kt:12)←ULambdaExpression$DefaultImpls.accept(ULambdaExpression.kt:41)←KotlinULambdaExpression.accept(KotlinULambdaExpression.kt:12)←ImplementationUtilsKt.acceptList(implementationUtils.kt:15)←KotlinUFunctionCallExpression.accept(KotlinUFunctionCallExpression.kt:169)←ImplementationUtilsKt.acceptList(implementationUtils.kt:15)←UBlockExpression$DefaultImpls.accept(UBlockExpression.kt:21)←KotlinUBlockExpression.accept(KotlinUBlockExpression.kt:12)←UMethod$DefaultImpls.accept(UMethod.kt:45)←KotlinUMethod.accept(KotlinUMethod.kt:18)←ImplementationUtilsKt.acceptList(implementationUtils.kt:15)←AbstractKotlinUClass.accept(AbstractKotlinUClass.kt:46)←ImplementationUtilsKt.acceptList(implementationUtils.kt:15)←UFile$DefaultImpls.accept(UFile.kt:91)←KotlinUFile.accept(KotlinUFile.kt:15)←UastLintUtilsKt.acceptSourceFile(UastLintUtils.kt:679)←UElementVisitor$visitFile$3.run(UElementVisitor.kt:274)←LintClient.runReadAction(LintClient.kt:1820)←LintDriver$LintClientWrapper.runReadAction(LintDriver.kt:2828)←UElementVisitor.visitFile(UElementVisitor.kt:271)←LintDriver$visitUastDetectors$1.run(LintDriver.kt:2113)←LintClient.runReadAction(LintClient.kt:1820)←LintDriver$LintClientWrapper.runReadAction(LintDriver.kt:2828)←LintDriver.visitUastDetectors(LintDriver.kt:2113)←LintDriver.visitUast(LintDriver.kt:2072)←LintDriver.runFileDetectors(LintDriver.kt:1434)←LintDriver.checkProject(LintDriver.kt:1197)←LintDriver.checkProjectRoot(LintDriver.kt:657)←LintDriver.access$checkProjectRoot(LintDriver.kt:166)←LintDriver$analyzeOnly$1.invoke(LintDriver.kt:470)←LintDriver$analyzeOnly$1.invoke(LintDriver.kt:463)←LintDriver.doAnalyze(LintDriver.kt:530)←LintDriver.analyzeOnly(LintDriver.kt:463)←LintCliClient$analyzeOnly$1.invoke(LintCliClient.kt:247)←LintCliClient$analyzeOnly$1.invoke(LintCliClient.kt:247)←LintCliClient.run(LintCliClient.kt:289)←LintCliClient.run$default(LintCliClient.kt:272)←LintCliClient.analyzeOnly(LintCliClient.kt:247)←Main.run(Main.java:1668)←Main.run(Main.java:274)←NativeMethodAccessorImpl.invoke0(NativeMethodAccessorImpl.java:-2)←NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)←DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)←Method.invoke(Method.java:568)←AndroidLintWorkAction.invokeLintMainRunMethod(AndroidLintWorkAction.kt:98)←AndroidLintWorkAction.runLint(AndroidLintWorkAction.kt:87)←AndroidLintWorkAction.execute(AndroidLintWorkAction.kt:62)←DefaultWorkerServer.execute(DefaultWorkerServer.java:63)←NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:66)←NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:62)←ClassLoaderUtils.executeInClassloader(ClassLoaderUtils.java:100)←NoIsolationWorkerFactory$1.lambda$execute$0(NoIsolationWorkerFactory.java:62)←AbstractWorker$1.call(AbstractWorker.java:44)←AbstractWorker$1.call(AbstractWorker.java:41)←DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)←DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:199)←DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)←DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)←DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:157)←DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)←DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)←DefaultBuildOperationExecutor.call(DefaultBuildOperationExecutor.java:73)←AbstractWorker.executeWrappedInBuildOperation(AbstractWorker.java:41)←NoIsolationWorkerFactory$1.execute(NoIsolationWorkerFactory.java:59)←DefaultWorkerExecutor.lambda$submitWork$0(DefaultWorkerExecutor.java:169)←FutureTask.run(FutureTask.java:264)←DefaultConditionalExecutionQueue$ExecutionRunner.runExecution(DefaultConditionalExecutionQueue.java:187)←DefaultConditionalExecutionQueue$ExecutionRunner.access$700(DefaultConditionalExecutionQueue.java:120)←DefaultConditionalExecutionQueue$ExecutionRunner$1.run(DefaultConditionalExecutionQueue.java:162)←Factories$1.create(Factories.java:31)←DefaultWorkerLeaseService.withLocks(DefaultWorkerLeaseService.java:249)←DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:109)←DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:114)←DefaultConditionalExecutionQueue$ExecutionRunner.runBatch(DefaultConditionalExecutionQueue.java:157)←DefaultConditionalExecutionQueue$ExecutionRunner.run(DefaultConditionalExecutionQueue.java:126)`&#xA;&#xA;You can run with --stacktrace or set environment variable `LINT_PRINT_STACKTRACE=true` to dump a full stacktrace to stdout.">
+        id="MissingQuantity"
+        message="For locale &quot;fr&quot; (French) the following quantity should also be defined: `many` (e.g. &quot;1000000 de jours&quot;)"
+        errorLine1="    &lt;plurals name=&quot;item_count&quot;>"
+        errorLine2="    ^">
         <location
-            file="src/main/java/com/dot/gallery/feature_node/presentation/mediaview/MediaViewScreen.kt"/>
+            file="src/main/res/values-fr-rFR/strings.xml"
+            line="75"
+            column="5"/>
     </issue>
 
     <issue
-        id="LintError"
-        message="Unexpected failure during lint analysis of PhotosScreen.kt (this is a bug in lint or one of the libraries it depends on)&#xA;&#xA;Message: Index 1 out of bounds for length 1&#xA;&#xA;The crash seems to involve the detector `com.android.tools.lint.checks.ApiDetector`.&#xA;You can try disabling it with something like this:&#xA;    android {&#xA;        lint {&#xA;            disable &quot;InlinedApi&quot;, &quot;ObsoleteSdkInt&quot;, &quot;Override&quot;, &quot;NewApi&quot;, &quot;UnusedAttribute&quot;&#xA;        }&#xA;    }&#xA;&#xA;Stack: `IndexOutOfBoundsException:Preconditions.outOfBounds(Preconditions.java:64)←Preconditions.outOfBoundsCheckIndex(Preconditions.java:70)←Preconditions.checkIndex(Preconditions.java:266)←Objects.checkIndex(Objects.java:359)←ArrayList.get(ArrayList.java:427)←UImplicitCallExpression.getArgumentForParameter(UImplicitCallExpression.kt:117)←ApiDetector$ApiVisitor.visitCall(ApiDetector.kt:1603)←ApiDetector$ApiVisitor.visitArrayAccessExpression(ApiDetector.kt:2088)←UElementVisitor$DispatchPsiVisitor.visitArrayAccessExpression(UElementVisitor.kt:473)←UElementVisitor$DelegatingPsiVisitor.visitArrayAccessExpression(UElementVisitor.kt:1150)←UArrayAccessExpression$DefaultImpls.accept(UArrayAccessExpression.kt:24)←KotlinUArrayAccessExpression.accept(KotlinUArrayAccessExpression.kt:10)←KotlinULocalVariable.accept(KotlinULocalVariable.kt:46)←ImplementationUtilsKt.acceptList(implementationUtils.kt:15)←UDeclarationsExpression$DefaultImpls.accept(UDeclarationsExpression.kt:22)←KotlinUDeclarationsExpression.accept(KotlinUDeclarationsExpression.kt:10)←ImplementationUtilsKt.acceptList(implementationUtils.kt:15)←UBlockExpression$DefaultImpls.accept(UBlockExpression.kt:21)←KotlinUBlockExpression.accept(KotlinUBlockExpression.kt:12)←ULambdaExpression$DefaultImpls.accept(ULambdaExpression.kt:41)←KotlinULambdaExpression.accept(KotlinULambdaExpression.kt:12)←ImplementationUtilsKt.acceptList(implementationUtils.kt:15)←KotlinUFunctionCallExpression.accept(KotlinUFunctionCallExpression.kt:169)←ImplementationUtilsKt.acceptList(implementationUtils.kt:15)←UBlockExpression$DefaultImpls.accept(UBlockExpression.kt:21)←KotlinUBlockExpression.accept(KotlinUBlockExpression.kt:12)←ULambdaExpression$DefaultImpls.accept(ULambdaExpression.kt:41)←KotlinULambdaExpression.accept(KotlinULambdaExpression.kt:12)←ImplementationUtilsKt.acceptList(implementationUtils.kt:15)←KotlinUFunctionCallExpression.accept(KotlinUFunctionCallExpression.kt:169)←UQualifiedReferenceExpression$DefaultImpls.accept(UQualifiedReferenceExpression.kt:34)←KotlinUQualifiedReferenceExpression.accept(KotlinUQualifiedReferenceExpression.kt:12)←ImplementationUtilsKt.acceptList(implementationUtils.kt:15)←UBlockExpression$DefaultImpls.accept(UBlockExpression.kt:21)←KotlinUBlockExpression.accept(KotlinUBlockExpression.kt:12)←ULambdaExpression$DefaultImpls.accept(ULambdaExpression.kt:41)←KotlinULambdaExpression.accept(KotlinULambdaExpression.kt:12)←ImplementationUtilsKt.acceptList(implementationUtils.kt:15)←KotlinUFunctionCallExpression.accept(KotlinUFunctionCallExpression.kt:169)←ImplementationUtilsKt.acceptList(implementationUtils.kt:15)←UBlockExpression$DefaultImpls.accept(UBlockExpression.kt:21)←KotlinUBlockExpression.accept(KotlinUBlockExpression.kt:12)←UIfExpression$DefaultImpls.accept(UIfExpression.kt:60)←KotlinUIfExpression.accept(KotlinUIfExpression.kt:11)←ImplementationUtilsKt.acceptList(implementationUtils.kt:15)←UBlockExpression$DefaultImpls.accept(UBlockExpression.kt:21)←KotlinUBlockExpression.accept(KotlinUBlockExpression.kt:12)←UMethod$DefaultImpls.accept(UMethod.kt:45)←KotlinUMethod.accept(KotlinUMethod.kt:18)←ImplementationUtilsKt.acceptList(implementationUtils.kt:15)←AbstractKotlinUClass.accept(AbstractKotlinUClass.kt:46)←ImplementationUtilsKt.acceptList(implementationUtils.kt:15)←UFile$DefaultImpls.accept(UFile.kt:91)←KotlinUFile.accept(KotlinUFile.kt:15)←UastLintUtilsKt.acceptSourceFile(UastLintUtils.kt:679)←UElementVisitor$visitFile$3.run(UElementVisitor.kt:274)←LintClient.runReadAction(LintClient.kt:1820)←LintDriver$LintClientWrapper.runReadAction(LintDriver.kt:2828)←UElementVisitor.visitFile(UElementVisitor.kt:271)←LintDriver$visitUastDetectors$1.run(LintDriver.kt:2113)←LintClient.runReadAction(LintClient.kt:1820)←LintDriver$LintClientWrapper.runReadAction(LintDriver.kt:2828)←LintDriver.visitUastDetectors(LintDriver.kt:2113)←LintDriver.visitUast(LintDriver.kt:2072)←LintDriver.runFileDetectors(LintDriver.kt:1434)←LintDriver.checkProject(LintDriver.kt:1197)←LintDriver.checkProjectRoot(LintDriver.kt:657)←LintDriver.access$checkProjectRoot(LintDriver.kt:166)←LintDriver$analyzeOnly$1.invoke(LintDriver.kt:470)←LintDriver$analyzeOnly$1.invoke(LintDriver.kt:463)←LintDriver.doAnalyze(LintDriver.kt:530)←LintDriver.analyzeOnly(LintDriver.kt:463)←LintCliClient$analyzeOnly$1.invoke(LintCliClient.kt:247)←LintCliClient$analyzeOnly$1.invoke(LintCliClient.kt:247)←LintCliClient.run(LintCliClient.kt:289)←LintCliClient.run$default(LintCliClient.kt:272)←LintCliClient.analyzeOnly(LintCliClient.kt:247)←Main.run(Main.java:1668)←Main.run(Main.java:274)←NativeMethodAccessorImpl.invoke0(NativeMethodAccessorImpl.java:-2)←NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)←DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)←Method.invoke(Method.java:568)←AndroidLintWorkAction.invokeLintMainRunMethod(AndroidLintWorkAction.kt:98)←AndroidLintWorkAction.runLint(AndroidLintWorkAction.kt:87)←AndroidLintWorkAction.execute(AndroidLintWorkAction.kt:62)←DefaultWorkerServer.execute(DefaultWorkerServer.java:63)←NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:66)←NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:62)←ClassLoaderUtils.executeInClassloader(ClassLoaderUtils.java:100)←NoIsolationWorkerFactory$1.lambda$execute$0(NoIsolationWorkerFactory.java:62)←AbstractWorker$1.call(AbstractWorker.java:44)←AbstractWorker$1.call(AbstractWorker.java:41)←DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)←DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:199)←DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)←DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)←DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:157)←DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)←DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)`&#xA;&#xA;You can run with --stacktrace or set environment variable `LINT_PRINT_STACKTRACE=true` to dump a full stacktrace to stdout.">
+        id="MissingTranslation"
+        message="&quot;use_as&quot; is not translated in &quot;de&quot; (German), &quot;no&quot; (Norwegian), &quot;fi&quot; (Finnish), &quot;ru&quot; (Russian), &quot;pt&quot; (Portuguese), &quot;fr&quot; (French), &quot;hu&quot; (Hungarian), &quot;uk&quot; (Ukrainian), &quot;ca&quot; (Catalan), &quot;sr&quot; (Serbian), &quot;sv&quot; (Swedish), &quot;ko&quot; (Korean), &quot;af&quot; (Afrikaans), &quot;gl&quot; (Galician), &quot;el&quot; (Greek), &quot;en&quot; (English), &quot;it&quot; (Italian), &quot;es&quot; (Spanish), &quot;iw&quot; (Hebrew), &quot;zh&quot; (Chinese), &quot;cs&quot; (Czech), &quot;ar&quot; (Arabic), &quot;vi&quot; (Vietnamese), &quot;ja&quot; (Japanese), &quot;pl&quot; (Polish), &quot;da&quot; (Danish), &quot;ro&quot; (Romanian), &quot;nl&quot; (Dutch), &quot;tr&quot; (Turkish)"
+        errorLine1="    &lt;string name=&quot;use_as&quot;>Use as&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~">
         <location
-            file="src/main/java/com/dot/gallery/feature_node/presentation/photos/PhotosScreen.kt"/>
+            file="src/main/res/values/strings.xml"
+            line="75"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;set_as&quot; is not translated in &quot;de&quot; (German), &quot;no&quot; (Norwegian), &quot;fi&quot; (Finnish), &quot;ru&quot; (Russian), &quot;pt&quot; (Portuguese), &quot;fr&quot; (French), &quot;hu&quot; (Hungarian), &quot;uk&quot; (Ukrainian), &quot;ca&quot; (Catalan), &quot;sr&quot; (Serbian), &quot;sv&quot; (Swedish), &quot;ko&quot; (Korean), &quot;af&quot; (Afrikaans), &quot;gl&quot; (Galician), &quot;el&quot; (Greek), &quot;en&quot; (English), &quot;it&quot; (Italian), &quot;es&quot; (Spanish), &quot;iw&quot; (Hebrew), &quot;zh&quot; (Chinese), &quot;cs&quot; (Czech), &quot;ar&quot; (Arabic), &quot;vi&quot; (Vietnamese), &quot;ja&quot; (Japanese), &quot;pl&quot; (Polish), &quot;da&quot; (Danish), &quot;ro&quot; (Romanian), &quot;nl&quot; (Dutch), &quot;tr&quot; (Turkish)"
+        errorLine1="    &lt;string name=&quot;set_as&quot;>&quot;Set as: &quot;&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="76"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;delete_dialog_title&quot; is not translated in &quot;de&quot; (German), &quot;no&quot; (Norwegian), &quot;fi&quot; (Finnish), &quot;ru&quot; (Russian), &quot;pt&quot; (Portuguese), &quot;fr&quot; (French), &quot;hu&quot; (Hungarian), &quot;uk&quot; (Ukrainian), &quot;ca&quot; (Catalan), &quot;sr&quot; (Serbian), &quot;sv&quot; (Swedish), &quot;ko&quot; (Korean), &quot;af&quot; (Afrikaans), &quot;gl&quot; (Galician), &quot;el&quot; (Greek), &quot;en&quot; (English), &quot;it&quot; (Italian), &quot;es&quot; (Spanish), &quot;iw&quot; (Hebrew), &quot;zh&quot; (Chinese), &quot;cs&quot; (Czech), &quot;ar&quot; (Arabic), &quot;vi&quot; (Vietnamese), &quot;ja&quot; (Japanese), &quot;pl&quot; (Polish), &quot;da&quot; (Danish), &quot;ro&quot; (Romanian), &quot;nl&quot; (Dutch), &quot;tr&quot; (Turkish)"
+        errorLine1="    &lt;string name=&quot;delete_dialog_title&quot;>You\&apos;re about to delete %s items&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="77"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;delete_dialog_title_confirmation&quot; is not translated in &quot;de&quot; (German), &quot;no&quot; (Norwegian), &quot;fi&quot; (Finnish), &quot;ru&quot; (Russian), &quot;pt&quot; (Portuguese), &quot;fr&quot; (French), &quot;hu&quot; (Hungarian), &quot;uk&quot; (Ukrainian), &quot;ca&quot; (Catalan), &quot;sr&quot; (Serbian), &quot;sv&quot; (Swedish), &quot;ko&quot; (Korean), &quot;af&quot; (Afrikaans), &quot;gl&quot; (Galician), &quot;el&quot; (Greek), &quot;en&quot; (English), &quot;it&quot; (Italian), &quot;es&quot; (Spanish), &quot;iw&quot; (Hebrew), &quot;zh&quot; (Chinese), &quot;cs&quot; (Czech), &quot;ar&quot; (Arabic), &quot;vi&quot; (Vietnamese), &quot;ja&quot; (Japanese), &quot;pl&quot; (Polish), &quot;da&quot; (Danish), &quot;ro&quot; (Romanian), &quot;nl&quot; (Dutch), &quot;tr&quot; (Turkish)"
+        errorLine1="    &lt;string name=&quot;delete_dialog_title_confirmation&quot;>Deleting %s items..&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="78"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;action_cancel&quot; is not translated in &quot;de&quot; (German), &quot;no&quot; (Norwegian), &quot;fi&quot; (Finnish), &quot;ru&quot; (Russian), &quot;pt&quot; (Portuguese), &quot;fr&quot; (French), &quot;hu&quot; (Hungarian), &quot;uk&quot; (Ukrainian), &quot;ca&quot; (Catalan), &quot;sr&quot; (Serbian), &quot;sv&quot; (Swedish), &quot;ko&quot; (Korean), &quot;af&quot; (Afrikaans), &quot;gl&quot; (Galician), &quot;el&quot; (Greek), &quot;en&quot; (English), &quot;it&quot; (Italian), &quot;es&quot; (Spanish), &quot;iw&quot; (Hebrew), &quot;zh&quot; (Chinese), &quot;cs&quot; (Czech), &quot;ar&quot; (Arabic), &quot;vi&quot; (Vietnamese), &quot;ja&quot; (Japanese), &quot;pl&quot; (Polish), &quot;da&quot; (Danish), &quot;ro&quot; (Romanian), &quot;nl&quot; (Dutch), &quot;tr&quot; (Turkish)"
+        errorLine1="    &lt;string name=&quot;action_cancel&quot;>Cancel&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="79"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;action_confirm&quot; is not translated in &quot;de&quot; (German), &quot;no&quot; (Norwegian), &quot;fi&quot; (Finnish), &quot;ru&quot; (Russian), &quot;pt&quot; (Portuguese), &quot;fr&quot; (French), &quot;hu&quot; (Hungarian), &quot;uk&quot; (Ukrainian), &quot;ca&quot; (Catalan), &quot;sr&quot; (Serbian), &quot;sv&quot; (Swedish), &quot;ko&quot; (Korean), &quot;af&quot; (Afrikaans), &quot;gl&quot; (Galician), &quot;el&quot; (Greek), &quot;en&quot; (English), &quot;it&quot; (Italian), &quot;es&quot; (Spanish), &quot;iw&quot; (Hebrew), &quot;zh&quot; (Chinese), &quot;cs&quot; (Czech), &quot;ar&quot; (Arabic), &quot;vi&quot; (Vietnamese), &quot;ja&quot; (Japanese), &quot;pl&quot; (Polish), &quot;da&quot; (Danish), &quot;ro&quot; (Romanian), &quot;nl&quot; (Dutch), &quot;tr&quot; (Turkish)"
+        errorLine1="    &lt;string name=&quot;action_confirm&quot;>Confirm&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="80"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;action_confirmed&quot; is not translated in &quot;de&quot; (German), &quot;no&quot; (Norwegian), &quot;fi&quot; (Finnish), &quot;ru&quot; (Russian), &quot;pt&quot; (Portuguese), &quot;fr&quot; (French), &quot;hu&quot; (Hungarian), &quot;uk&quot; (Ukrainian), &quot;ca&quot; (Catalan), &quot;sr&quot; (Serbian), &quot;sv&quot; (Swedish), &quot;ko&quot; (Korean), &quot;af&quot; (Afrikaans), &quot;gl&quot; (Galician), &quot;el&quot; (Greek), &quot;en&quot; (English), &quot;it&quot; (Italian), &quot;es&quot; (Spanish), &quot;iw&quot; (Hebrew), &quot;zh&quot; (Chinese), &quot;cs&quot; (Czech), &quot;ar&quot; (Arabic), &quot;vi&quot; (Vietnamese), &quot;ja&quot; (Japanese), &quot;pl&quot; (Polish), &quot;da&quot; (Danish), &quot;ro&quot; (Romanian), &quot;nl&quot; (Dutch), &quot;tr&quot; (Turkish)"
+        errorLine1="    &lt;string name=&quot;action_confirmed&quot;>Confirmed&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="81"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;restore_dialog_title&quot; is not translated in &quot;de&quot; (German), &quot;no&quot; (Norwegian), &quot;fi&quot; (Finnish), &quot;ru&quot; (Russian), &quot;pt&quot; (Portuguese), &quot;fr&quot; (French), &quot;hu&quot; (Hungarian), &quot;uk&quot; (Ukrainian), &quot;ca&quot; (Catalan), &quot;sr&quot; (Serbian), &quot;sv&quot; (Swedish), &quot;ko&quot; (Korean), &quot;af&quot; (Afrikaans), &quot;gl&quot; (Galician), &quot;el&quot; (Greek), &quot;en&quot; (English), &quot;it&quot; (Italian), &quot;es&quot; (Spanish), &quot;iw&quot; (Hebrew), &quot;zh&quot; (Chinese), &quot;cs&quot; (Czech), &quot;ar&quot; (Arabic), &quot;vi&quot; (Vietnamese), &quot;ja&quot; (Japanese), &quot;pl&quot; (Polish), &quot;da&quot; (Danish), &quot;ro&quot; (Romanian), &quot;nl&quot; (Dutch), &quot;tr&quot; (Turkish)"
+        errorLine1="    &lt;string name=&quot;restore_dialog_title&quot;>You\&apos;re about to restore %s items&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="82"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;restore_dialog_title_confirmation&quot; is not translated in &quot;de&quot; (German), &quot;no&quot; (Norwegian), &quot;fi&quot; (Finnish), &quot;ru&quot; (Russian), &quot;pt&quot; (Portuguese), &quot;fr&quot; (French), &quot;hu&quot; (Hungarian), &quot;uk&quot; (Ukrainian), &quot;ca&quot; (Catalan), &quot;sr&quot; (Serbian), &quot;sv&quot; (Swedish), &quot;ko&quot; (Korean), &quot;af&quot; (Afrikaans), &quot;gl&quot; (Galician), &quot;el&quot; (Greek), &quot;en&quot; (English), &quot;it&quot; (Italian), &quot;es&quot; (Spanish), &quot;iw&quot; (Hebrew), &quot;zh&quot; (Chinese), &quot;cs&quot; (Czech), &quot;ar&quot; (Arabic), &quot;vi&quot; (Vietnamese), &quot;ja&quot; (Japanese), &quot;pl&quot; (Polish), &quot;da&quot; (Danish), &quot;ro&quot; (Romanian), &quot;nl&quot; (Dutch), &quot;tr&quot; (Turkish)"
+        errorLine1="    &lt;string name=&quot;restore_dialog_title_confirmation&quot;>Restoring %s items…&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="83"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;trash_dialog_title&quot; is not translated in &quot;de&quot; (German), &quot;no&quot; (Norwegian), &quot;fi&quot; (Finnish), &quot;ru&quot; (Russian), &quot;pt&quot; (Portuguese), &quot;fr&quot; (French), &quot;hu&quot; (Hungarian), &quot;uk&quot; (Ukrainian), &quot;ca&quot; (Catalan), &quot;sr&quot; (Serbian), &quot;sv&quot; (Swedish), &quot;ko&quot; (Korean), &quot;af&quot; (Afrikaans), &quot;gl&quot; (Galician), &quot;el&quot; (Greek), &quot;en&quot; (English), &quot;it&quot; (Italian), &quot;es&quot; (Spanish), &quot;iw&quot; (Hebrew), &quot;zh&quot; (Chinese), &quot;cs&quot; (Czech), &quot;ar&quot; (Arabic), &quot;vi&quot; (Vietnamese), &quot;ja&quot; (Japanese), &quot;pl&quot; (Polish), &quot;da&quot; (Danish), &quot;ro&quot; (Romanian), &quot;nl&quot; (Dutch), &quot;tr&quot; (Turkish)"
+        errorLine1="    &lt;string name=&quot;trash_dialog_title&quot;>You\&apos;re about to trash %s items&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="84"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;trash_dialog_title_confirmation&quot; is not translated in &quot;de&quot; (German), &quot;no&quot; (Norwegian), &quot;fi&quot; (Finnish), &quot;ru&quot; (Russian), &quot;pt&quot; (Portuguese), &quot;fr&quot; (French), &quot;hu&quot; (Hungarian), &quot;uk&quot; (Ukrainian), &quot;ca&quot; (Catalan), &quot;sr&quot; (Serbian), &quot;sv&quot; (Swedish), &quot;ko&quot; (Korean), &quot;af&quot; (Afrikaans), &quot;gl&quot; (Galician), &quot;el&quot; (Greek), &quot;en&quot; (English), &quot;it&quot; (Italian), &quot;es&quot; (Spanish), &quot;iw&quot; (Hebrew), &quot;zh&quot; (Chinese), &quot;cs&quot; (Czech), &quot;ar&quot; (Arabic), &quot;vi&quot; (Vietnamese), &quot;ja&quot; (Japanese), &quot;pl&quot; (Polish), &quot;da&quot; (Danish), &quot;ro&quot; (Romanian), &quot;nl&quot; (Dutch), &quot;tr&quot; (Turkish)"
+        errorLine1="    &lt;string name=&quot;trash_dialog_title_confirmation&quot;>Moving to trash %s items…&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="85"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;history_delete&quot; is not translated in &quot;de&quot; (German), &quot;no&quot; (Norwegian), &quot;fi&quot; (Finnish), &quot;ru&quot; (Russian), &quot;pt&quot; (Portuguese), &quot;fr&quot; (French), &quot;hu&quot; (Hungarian), &quot;uk&quot; (Ukrainian), &quot;ca&quot; (Catalan), &quot;sr&quot; (Serbian), &quot;sv&quot; (Swedish), &quot;ko&quot; (Korean), &quot;af&quot; (Afrikaans), &quot;gl&quot; (Galician), &quot;el&quot; (Greek), &quot;en&quot; (English), &quot;it&quot; (Italian), &quot;es&quot; (Spanish), &quot;iw&quot; (Hebrew), &quot;zh&quot; (Chinese), &quot;cs&quot; (Czech), &quot;ar&quot; (Arabic), &quot;vi&quot; (Vietnamese), &quot;ja&quot; (Japanese), &quot;pl&quot; (Polish), &quot;da&quot; (Danish), &quot;ro&quot; (Romanian), &quot;nl&quot; (Dutch), &quot;tr&quot; (Turkish)"
+        errorLine1="    &lt;string name=&quot;history_delete&quot;>Delete item&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="86"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;history_recent_title&quot; is not translated in &quot;de&quot; (German), &quot;no&quot; (Norwegian), &quot;fi&quot; (Finnish), &quot;ru&quot; (Russian), &quot;pt&quot; (Portuguese), &quot;fr&quot; (French), &quot;hu&quot; (Hungarian), &quot;uk&quot; (Ukrainian), &quot;ca&quot; (Catalan), &quot;sr&quot; (Serbian), &quot;sv&quot; (Swedish), &quot;ko&quot; (Korean), &quot;af&quot; (Afrikaans), &quot;gl&quot; (Galician), &quot;el&quot; (Greek), &quot;en&quot; (English), &quot;it&quot; (Italian), &quot;es&quot; (Spanish), &quot;iw&quot; (Hebrew), &quot;zh&quot; (Chinese), &quot;cs&quot; (Czech), &quot;ar&quot; (Arabic), &quot;vi&quot; (Vietnamese), &quot;ja&quot; (Japanese), &quot;pl&quot; (Polish), &quot;da&quot; (Danish), &quot;ro&quot; (Romanian), &quot;nl&quot; (Dutch), &quot;tr&quot; (Turkish)"
+        errorLine1="    &lt;string name=&quot;history_recent_title&quot;>Recent&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="87"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;history_suggestions_title&quot; is not translated in &quot;de&quot; (German), &quot;no&quot; (Norwegian), &quot;fi&quot; (Finnish), &quot;ru&quot; (Russian), &quot;pt&quot; (Portuguese), &quot;fr&quot; (French), &quot;hu&quot; (Hungarian), &quot;uk&quot; (Ukrainian), &quot;ca&quot; (Catalan), &quot;sr&quot; (Serbian), &quot;sv&quot; (Swedish), &quot;ko&quot; (Korean), &quot;af&quot; (Afrikaans), &quot;gl&quot; (Galician), &quot;el&quot; (Greek), &quot;en&quot; (English), &quot;it&quot; (Italian), &quot;es&quot; (Spanish), &quot;iw&quot; (Hebrew), &quot;zh&quot; (Chinese), &quot;cs&quot; (Czech), &quot;ar&quot; (Arabic), &quot;vi&quot; (Vietnamese), &quot;ja&quot; (Japanese), &quot;pl&quot; (Polish), &quot;da&quot; (Danish), &quot;ro&quot; (Romanian), &quot;nl&quot; (Dutch), &quot;tr&quot; (Turkish)"
+        errorLine1="    &lt;string name=&quot;history_suggestions_title&quot;>Suggestions&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="88"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;no_media_found&quot; is not translated in &quot;de&quot; (German), &quot;no&quot; (Norwegian), &quot;fi&quot; (Finnish), &quot;ru&quot; (Russian), &quot;pt&quot; (Portuguese), &quot;fr&quot; (French), &quot;hu&quot; (Hungarian), &quot;uk&quot; (Ukrainian), &quot;ca&quot; (Catalan), &quot;sr&quot; (Serbian), &quot;sv&quot; (Swedish), &quot;ko&quot; (Korean), &quot;af&quot; (Afrikaans), &quot;gl&quot; (Galician), &quot;el&quot; (Greek), &quot;en&quot; (English), &quot;it&quot; (Italian), &quot;es&quot; (Spanish), &quot;iw&quot; (Hebrew), &quot;zh&quot; (Chinese), &quot;cs&quot; (Czech), &quot;ar&quot; (Arabic), &quot;vi&quot; (Vietnamese), &quot;ja&quot; (Japanese), &quot;pl&quot; (Polish), &quot;da&quot; (Danish), &quot;ro&quot; (Romanian), &quot;nl&quot; (Dutch), &quot;tr&quot; (Turkish)"
+        errorLine1="    &lt;string name=&quot;no_media_found&quot;>No media found&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="89"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;image_add_description&quot; is not translated in &quot;de&quot; (German), &quot;no&quot; (Norwegian), &quot;fi&quot; (Finnish), &quot;ru&quot; (Russian), &quot;pt&quot; (Portuguese), &quot;fr&quot; (French), &quot;hu&quot; (Hungarian), &quot;uk&quot; (Ukrainian), &quot;ca&quot; (Catalan), &quot;sr&quot; (Serbian), &quot;sv&quot; (Swedish), &quot;ko&quot; (Korean), &quot;af&quot; (Afrikaans), &quot;gl&quot; (Galician), &quot;el&quot; (Greek), &quot;en&quot; (English), &quot;it&quot; (Italian), &quot;es&quot; (Spanish), &quot;iw&quot; (Hebrew), &quot;zh&quot; (Chinese), &quot;cs&quot; (Czech), &quot;ar&quot; (Arabic), &quot;vi&quot; (Vietnamese), &quot;ja&quot; (Japanese), &quot;pl&quot; (Polish), &quot;da&quot; (Danish), &quot;ro&quot; (Romanian), &quot;nl&quot; (Dutch), &quot;tr&quot; (Turkish)"
+        errorLine1="    &lt;string name=&quot;image_add_description&quot;>Add a description&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="90"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;edit_cd&quot; is not translated in &quot;de&quot; (German), &quot;no&quot; (Norwegian), &quot;fi&quot; (Finnish), &quot;ru&quot; (Russian), &quot;pt&quot; (Portuguese), &quot;fr&quot; (French), &quot;hu&quot; (Hungarian), &quot;uk&quot; (Ukrainian), &quot;ca&quot; (Catalan), &quot;sr&quot; (Serbian), &quot;sv&quot; (Swedish), &quot;ko&quot; (Korean), &quot;af&quot; (Afrikaans), &quot;gl&quot; (Galician), &quot;el&quot; (Greek), &quot;en&quot; (English), &quot;it&quot; (Italian), &quot;es&quot; (Spanish), &quot;iw&quot; (Hebrew), &quot;zh&quot; (Chinese), &quot;cs&quot; (Czech), &quot;ar&quot; (Arabic), &quot;vi&quot; (Vietnamese), &quot;ja&quot; (Japanese), &quot;pl&quot; (Polish), &quot;da&quot; (Danish), &quot;ro&quot; (Romanian), &quot;nl&quot; (Dutch), &quot;tr&quot; (Turkish)"
+        errorLine1="    &lt;string name=&quot;edit_cd&quot;>edit&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="91"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;edit_location_cd&quot; is not translated in &quot;de&quot; (German), &quot;no&quot; (Norwegian), &quot;fi&quot; (Finnish), &quot;ru&quot; (Russian), &quot;pt&quot; (Portuguese), &quot;fr&quot; (French), &quot;hu&quot; (Hungarian), &quot;uk&quot; (Ukrainian), &quot;ca&quot; (Catalan), &quot;sr&quot; (Serbian), &quot;sv&quot; (Swedish), &quot;ko&quot; (Korean), &quot;af&quot; (Afrikaans), &quot;gl&quot; (Galician), &quot;el&quot; (Greek), &quot;en&quot; (English), &quot;it&quot; (Italian), &quot;es&quot; (Spanish), &quot;iw&quot; (Hebrew), &quot;zh&quot; (Chinese), &quot;cs&quot; (Czech), &quot;ar&quot; (Arabic), &quot;vi&quot; (Vietnamese), &quot;ja&quot; (Japanese), &quot;pl&quot; (Polish), &quot;da&quot; (Danish), &quot;ro&quot; (Romanian), &quot;nl&quot; (Dutch), &quot;tr&quot; (Turkish)"
+        errorLine1="    &lt;string name=&quot;edit_location_cd&quot;>Edit location&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="92"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;add_location_cd&quot; is not translated in &quot;de&quot; (German), &quot;no&quot; (Norwegian), &quot;fi&quot; (Finnish), &quot;ru&quot; (Russian), &quot;pt&quot; (Portuguese), &quot;fr&quot; (French), &quot;hu&quot; (Hungarian), &quot;uk&quot; (Ukrainian), &quot;ca&quot; (Catalan), &quot;sr&quot; (Serbian), &quot;sv&quot; (Swedish), &quot;ko&quot; (Korean), &quot;af&quot; (Afrikaans), &quot;gl&quot; (Galician), &quot;el&quot; (Greek), &quot;en&quot; (English), &quot;it&quot; (Italian), &quot;es&quot; (Spanish), &quot;iw&quot; (Hebrew), &quot;zh&quot; (Chinese), &quot;cs&quot; (Czech), &quot;ar&quot; (Arabic), &quot;vi&quot; (Vietnamese), &quot;ja&quot; (Japanese), &quot;pl&quot; (Polish), &quot;da&quot; (Danish), &quot;ro&quot; (Romanian), &quot;nl&quot; (Dutch), &quot;tr&quot; (Turkish)"
+        errorLine1="    &lt;string name=&quot;add_location_cd&quot;>Add location&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="93"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;settings_theme_header&quot; is not translated in &quot;de&quot; (German), &quot;no&quot; (Norwegian), &quot;fi&quot; (Finnish), &quot;ru&quot; (Russian), &quot;pt&quot; (Portuguese), &quot;fr&quot; (French), &quot;hu&quot; (Hungarian), &quot;uk&quot; (Ukrainian), &quot;ca&quot; (Catalan), &quot;sr&quot; (Serbian), &quot;sv&quot; (Swedish), &quot;ko&quot; (Korean), &quot;af&quot; (Afrikaans), &quot;gl&quot; (Galician), &quot;el&quot; (Greek), &quot;en&quot; (English), &quot;it&quot; (Italian), &quot;es&quot; (Spanish), &quot;iw&quot; (Hebrew), &quot;zh&quot; (Chinese), &quot;cs&quot; (Czech), &quot;ar&quot; (Arabic), &quot;vi&quot; (Vietnamese), &quot;ja&quot; (Japanese), &quot;pl&quot; (Polish), &quot;da&quot; (Danish), &quot;ro&quot; (Romanian), &quot;nl&quot; (Dutch), &quot;tr&quot; (Turkish)"
+        errorLine1="    &lt;string name=&quot;settings_theme_header&quot;>Theme&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="94"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;settings_follow_system_theme_title&quot; is not translated in &quot;de&quot; (German), &quot;no&quot; (Norwegian), &quot;fi&quot; (Finnish), &quot;ru&quot; (Russian), &quot;pt&quot; (Portuguese), &quot;fr&quot; (French), &quot;hu&quot; (Hungarian), &quot;uk&quot; (Ukrainian), &quot;ca&quot; (Catalan), &quot;sr&quot; (Serbian), &quot;sv&quot; (Swedish), &quot;ko&quot; (Korean), &quot;af&quot; (Afrikaans), &quot;gl&quot; (Galician), &quot;el&quot; (Greek), &quot;en&quot; (English), &quot;it&quot; (Italian), &quot;es&quot; (Spanish), &quot;iw&quot; (Hebrew), &quot;zh&quot; (Chinese), &quot;cs&quot; (Czech), &quot;ar&quot; (Arabic), &quot;vi&quot; (Vietnamese), &quot;ja&quot; (Japanese), &quot;pl&quot; (Polish), &quot;da&quot; (Danish), &quot;ro&quot; (Romanian), &quot;nl&quot; (Dutch), &quot;tr&quot; (Turkish)"
+        errorLine1="    &lt;string name=&quot;settings_follow_system_theme_title&quot;>Follow System Theme&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="95"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;settings_dark_mode_title&quot; is not translated in &quot;de&quot; (German), &quot;no&quot; (Norwegian), &quot;fi&quot; (Finnish), &quot;ru&quot; (Russian), &quot;pt&quot; (Portuguese), &quot;fr&quot; (French), &quot;hu&quot; (Hungarian), &quot;uk&quot; (Ukrainian), &quot;ca&quot; (Catalan), &quot;sr&quot; (Serbian), &quot;sv&quot; (Swedish), &quot;ko&quot; (Korean), &quot;af&quot; (Afrikaans), &quot;gl&quot; (Galician), &quot;el&quot; (Greek), &quot;en&quot; (English), &quot;it&quot; (Italian), &quot;es&quot; (Spanish), &quot;iw&quot; (Hebrew), &quot;zh&quot; (Chinese), &quot;cs&quot; (Czech), &quot;ar&quot; (Arabic), &quot;vi&quot; (Vietnamese), &quot;ja&quot; (Japanese), &quot;pl&quot; (Polish), &quot;da&quot; (Danish), &quot;ro&quot; (Romanian), &quot;nl&quot; (Dutch), &quot;tr&quot; (Turkish)"
+        errorLine1="    &lt;string name=&quot;settings_dark_mode_title&quot;>Use Dark Mode&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="96"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;selection_dialog_close_cd&quot; is not translated in &quot;de&quot; (German), &quot;no&quot; (Norwegian), &quot;fi&quot; (Finnish), &quot;ru&quot; (Russian), &quot;pt&quot; (Portuguese), &quot;fr&quot; (French), &quot;hu&quot; (Hungarian), &quot;uk&quot; (Ukrainian), &quot;ca&quot; (Catalan), &quot;sr&quot; (Serbian), &quot;sv&quot; (Swedish), &quot;ko&quot; (Korean), &quot;af&quot; (Afrikaans), &quot;gl&quot; (Galician), &quot;el&quot; (Greek), &quot;en&quot; (English), &quot;it&quot; (Italian), &quot;es&quot; (Spanish), &quot;iw&quot; (Hebrew), &quot;zh&quot; (Chinese), &quot;cs&quot; (Czech), &quot;ar&quot; (Arabic), &quot;vi&quot; (Vietnamese), &quot;ja&quot; (Japanese), &quot;pl&quot; (Polish), &quot;da&quot; (Danish), &quot;ro&quot; (Romanian), &quot;nl&quot; (Dutch), &quot;tr&quot; (Turkish)"
+        errorLine1="    &lt;string name=&quot;selection_dialog_close_cd&quot;>Close selection dialog&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="97"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="Typos"
+        message="&quot;Albums&quot; is a common misspelling; did you mean &quot;Álbuns&quot;?"
+        errorLine1="    &lt;string name=&quot;nav_albums&quot;>Albums&lt;/string>"
+        errorLine2="                              ^">
+        <location
+            file="src/main/res/values-pt-rPT/strings.xml"
+            line="4"
+            column="31"/>
+    </issue>
+
+    <issue
+        id="Typos"
+        message="&quot;video&quot; is a common misspelling; did you mean &quot;vídeo&quot;?"
+        errorLine1="    &lt;string name=&quot;pause_video&quot;>Pausar video&lt;/string>"
+        errorLine2="                                      ^">
+        <location
+            file="src/main/res/values-pt-rBR/strings.xml"
+            line="17"
+            column="39"/>
+    </issue>
+
+    <issue
+        id="Typos"
+        message="&quot;video&quot; is a common misspelling; did you mean &quot;vídeo&quot;?"
+        errorLine1="    &lt;string name=&quot;pause_video&quot;>Pause video&lt;/string>"
+        errorLine2="                                     ^">
+        <location
+            file="src/main/res/values-pt-rPT/strings.xml"
+            line="17"
+            column="38"/>
+    </issue>
+
+    <issue
+        id="Typos"
+        message="&quot;video&quot; is a common misspelling; did you mean &quot;vídeo&quot;?"
+        errorLine1="    &lt;string name=&quot;play_video&quot;>Reproduzir video&lt;/string>"
+        errorLine2="                                         ^">
+        <location
+            file="src/main/res/values-pt-rBR/strings.xml"
+            line="18"
+            column="42"/>
+    </issue>
+
+    <issue
+        id="Typos"
+        message="&quot;video&quot; is a common misspelling; did you mean &quot;vídeo&quot;?"
+        errorLine1="    &lt;string name=&quot;play_video&quot;>Play video&lt;/string>"
+        errorLine2="                                   ^">
+        <location
+            file="src/main/res/values-pt-rPT/strings.xml"
+            line="18"
+            column="36"/>
+    </issue>
+
+    <issue
+        id="Typos"
+        message="&quot;album&quot; is a common misspelling; did you mean &quot;álbum&quot;?"
+        errorLine1="    &lt;string name=&quot;move_album_to_trash&quot;>Move album to trash&lt;/string>"
+        errorLine2="                                            ^">
+        <location
+            file="src/main/res/values-pt-rBR/strings.xml"
+            line="54"
+            column="45"/>
+    </issue>
+
+    <issue
+        id="Typos"
+        message="&quot;album&quot; is a common misspelling; did you mean &quot;álbum&quot;?"
+        errorLine1="    &lt;string name=&quot;move_album_to_trash&quot;>Move album to trash&lt;/string>"
+        errorLine2="                                            ^">
+        <location
+            file="src/main/res/values-pt-rPT/strings.xml"
+            line="54"
+            column="45"/>
+    </issue>
+
+    <issue
+        id="Typos"
+        message="&quot;Albums&quot; is a common misspelling; did you mean &quot;Álbuns&quot;?"
+        errorLine1="    &lt;string name=&quot;pinned_albums_title&quot;>Pinned Albums&lt;/string>"
+        errorLine2="                                              ^">
+        <location
+            file="src/main/res/values-pt-rBR/strings.xml"
+            line="55"
+            column="47"/>
+    </issue>
+
+    <issue
+        id="Typos"
+        message="&quot;Albums&quot; is a common misspelling; did you mean &quot;Álbuns&quot;?"
+        errorLine1="    &lt;string name=&quot;pinned_albums_title&quot;>Pinned Albums&lt;/string>"
+        errorLine2="                                              ^">
+        <location
+            file="src/main/res/values-pt-rPT/strings.xml"
+            line="55"
+            column="47"/>
+    </issue>
+
+    <issue
+        id="ObsoleteSdkInt"
+        message="This folder configuration (`v26`) is unnecessary; `minSdkVersion` is 30. Merge all the resources in this folder into `mipmap`.">
+        <location
+            file="src/main/res/mipmap-v26"/>
+    </issue>
+
+    <issue
+        id="VectorPath"
+        message="Very long vector path (1553 characters), which is bad for performance. Considering reducing precision, removing minor details or rasterizing vector."
+        errorLine1="    &lt;path android:fillColor=&quot;#ffffff&quot; android:pathData=&quot;M64,12C41.94,12 24,29.94 24,52C24,74.06 41.94,92 64,92C86.06,92 104,74.06 104,52C104,29.94 86.06,12 64,12ZM64,20C81.64,20 96,34.36 96,52C96,69.64 81.64,84 64,84C46.36,84 32,69.64 32,52C32,34.36 46.36,20 64,20ZM60,28V32.76C57.12,33.81 54.73,35.9 53.3,38.62C52.06,41.01 51.69,43.76 52.25,46.4C52.74,48.69 53.88,50.8 55.54,52.46C56.63,53.55 57.93,54.44 59.36,55.05C60.79,55.66 62.36,56 64,56C64.57,56 65.1,56.11 65.58,56.3C66.06,56.5 66.49,56.78 66.85,57.15C67.22,57.51 67.5,57.94 67.7,58.42C67.89,58.9 68,59.43 68,60C68.02,60.79 67.8,61.56 67.36,62.22C66.93,62.88 66.31,63.4 65.58,63.7C65.1,63.89 64.57,64 64,64C63.43,64 62.9,63.89 62.42,63.7C61.94,63.5 61.51,63.22 61.15,62.85C60.78,62.48 60.48,62.03 60.29,61.54C60.09,61.05 59.99,60.53 60,60H52C52,63.11 53.23,66.1 55.43,68.3C56.71,69.61 58.28,70.62 60,71.24V76H68V71.24C70.02,70.52 71.81,69.27 73.18,67.63C74.56,65.99 75.48,64.01 75.84,61.9C76.33,58.9 75.65,55.83 73.93,53.32C73.06,52.04 71.96,50.94 70.68,50.07C69.38,49.19 67.93,48.57 66.4,48.25C65.61,48.08 64.81,48 64,48C63.43,48 62.9,47.89 62.42,47.7C61.94,47.5 61.51,47.22 61.15,46.85C60.78,46.49 60.5,46.06 60.3,45.58C60.1,45.08 60,44.54 60,44C60,43.43 60.11,42.9 60.3,42.42C60.5,41.94 60.78,41.51 61.15,41.15C61.51,40.78 61.94,40.5 62.42,40.3C62.9,40.11 63.43,40 64,40C66.28,40 68,41.72 68,44H76C76,42.74 75.8,41.5 75.41,40.3C74.82,38.57 73.85,36.99 72.57,35.69C71.28,34.38 69.72,33.38 68,32.76V28H60ZM8,84V116H16V92H37.52C34.13,89.73 31.04,87.04 28.32,84H8ZM99.68,84C96.96,87.04 93.87,89.73 90.48,92H112V116H120V84H99.68ZM24,100V108H104V100H24Z&quot;/>"
+        errorLine2="                                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/drawable/ic_donate.xml"
+            line="3"
+            column="57"/>
+    </issue>
+
+    <issue
+        id="VectorPath"
+        message="Very long vector path (862 characters), which is bad for performance. Considering reducing precision, removing minor details or rasterizing vector."
+        errorLine1="      android:pathData=&quot;M479.98,680Q494,680 503.5,670.52Q513,661.03 513,647.02Q513,633 503.52,623.5Q494.04,614 480.02,614Q466,614 456.5,623.48Q447,632.97 447,646.98Q447,661 456.48,670.5Q465.96,680 479.98,680ZM453,527L513,527L513,274L453,274L453,527ZM480.27,880Q397.53,880 324.77,848.5Q252,817 197.5,762.5Q143,708 111.5,635.16Q80,562.32 80,479.5Q80,396.68 111.5,323.84Q143,251 197.5,197Q252,143 324.84,111.5Q397.68,80 480.5,80Q563.32,80 636.16,111.5Q709,143 763,197Q817,251 848.5,324Q880,397 880,479.73Q880,562.47 848.5,635.23Q817,708 763,762.32Q709,816.63 636,848.32Q563,880 480.27,880ZM480.5,820Q622,820 721,720.5Q820,621 820,479.5Q820,338 721.19,239Q622.38,140 480,140Q339,140 239.5,238.81Q140,337.63 140,480Q140,621 239.5,720.5Q339,820 480.5,820ZM480,480Q480,480 480,480Q480,480 480,480Q480,480 480,480Q480,480 480,480Q480,480 480,480Q480,480 480,480Q480,480 480,480Q480,480 480,480Z&quot;/>"
+        errorLine2="                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/drawable/ic_error.xml"
+            line="9"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="VectorPath"
+        message="Very long vector path (978 characters), which is bad for performance. Considering reducing precision, removing minor details or rasterizing vector."
+        errorLine1="    &lt;path android:fillColor=&quot;#ffffff&quot; android:pathData=&quot;M64,10.67C57,10.67 50.06,12.05 43.59,14.73C37.12,17.41 31.24,21.34 26.29,26.29C16.29,36.29 10.67,49.86 10.67,64C10.67,87.57 25.97,107.57 47.15,114.67C49.81,115.09 50.67,113.44 50.67,112V102.99C35.89,106.19 32.75,95.84 32.75,95.84C30.29,89.65 26.83,88 26.83,88C21.97,84.69 27.2,84.8 27.2,84.8C32.53,85.17 35.36,90.29 35.36,90.29C40,98.4 47.84,96 50.88,94.72C51.36,91.25 52.75,88.91 54.24,87.57C42.4,86.24 29.97,81.65 29.97,61.33C29.97,55.41 32,50.67 35.47,46.88C34.93,45.55 33.07,40 36,32.8C36,32.8 40.48,31.36 50.67,38.24C54.88,37.07 59.47,36.48 64,36.48C68.53,36.48 73.12,37.07 77.33,38.24C87.52,31.36 92,32.8 92,32.8C94.93,40 93.07,45.55 92.53,46.88C96,50.67 98.03,55.41 98.03,61.33C98.03,81.71 85.55,86.19 73.65,87.52C75.57,89.17 77.33,92.43 77.33,97.39V112C77.33,113.44 78.19,115.15 80.91,114.67C102.08,107.52 117.33,87.57 117.33,64C117.33,57 115.95,50.06 113.27,43.59C110.59,37.12 106.67,31.24 101.71,26.29C96.76,21.34 90.88,17.41 84.41,14.73C77.94,12.05 71,10.67 64,10.67Z&quot;/>"
+        errorLine2="                                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/drawable/ic_github.xml"
+            line="3"
+            column="57"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.drawable.ic_error` appears to be unused"
+        errorLine1="&lt;vector xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2="^">
+        <location
+            file="src/main/res/drawable/ic_error.xml"
+            line="1"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.share_media` appears to be unused"
+        errorLine1="    &lt;string name=&quot;share_media&quot;>Share&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="7"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.info` appears to be unused"
+        errorLine1="    &lt;string name=&quot;info&quot;>Info&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="30"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.date` appears to be unused"
+        errorLine1="    &lt;string name=&quot;date&quot;>Date&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="36"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.reset_settings` appears to be unused"
+        errorLine1="    &lt;string name=&quot;reset_settings&quot;>Reset Settings&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="47"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.settings_about_app_title` appears to be unused"
+        errorLine1="    &lt;string name=&quot;settings_about_app_title&quot;>About Gallery&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="51"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.settings_about_app_summary` appears to be unused"
+        errorLine1="    &lt;string name=&quot;settings_about_app_summary&quot;>Version %s&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="52"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.history_delete` appears to be unused"
+        errorLine1="    &lt;string name=&quot;history_delete&quot;>Delete item&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="86"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ContentDescription"
+        message="Missing `contentDescription` attribute on image"
+        errorLine1="    &lt;ImageView"
+        errorLine2="     ~~~~~~~~~">
+        <location
+            file="src/main/res/layout/album_pin_frame.xml"
+            line="12"
+            column="6"/>
     </issue>
 
 </issues>

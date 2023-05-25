@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.util.archivesName
+import java.io.ByteArrayOutputStream
 import java.io.FileInputStream
 import java.util.Properties
 
@@ -12,9 +13,9 @@ plugins {
 }
 
 val versionMajor = 1
-val versionMinor = 0
-val versionPatch = 4
-val versionBuild = 18
+val versionMinor = 1
+val versionPatch = 0
+val versionBuild = 65
 
 android {
     namespace = "com.dot.gallery"
@@ -36,12 +37,10 @@ android {
                 arguments["room.schemaLocation"] = "$projectDir/schemas"
             }
         }
-        archivesName.set("Gallery-$versionName")
+        archivesName.set("Gallery-${versionName}_$gitHeadVersion")
     }
 
-    lintOptions {
-        baseline(file("lint-baseline.xml"))
-    }
+    lint.baseline = file("lint-baseline.xml")
 
     buildTypes {
         getByName("debug") {
@@ -50,13 +49,22 @@ android {
             manifestPlaceholders["appName"] = "Gallery Debug"
             versionNameSuffix = "-debug"
             manifestPlaceholders["appProvider"] = "com.dot.gallery.debug.media_provider"
-            buildConfigField("String", "CONTENT_AUTHORITY", "\"com.dot.gallery.debug.media_provider\"")
+            buildConfigField(
+                "String",
+                "CONTENT_AUTHORITY",
+                "\"com.dot.gallery.debug.media_provider\""
+            )
         }
         getByName("release") {
             manifestPlaceholders += mapOf()
             isMinifyEnabled = true
             isShrinkResources = true
-            setProguardFiles(listOf(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"))
+            setProguardFiles(
+                listOf(
+                    getDefaultProguardFile("proguard-android-optimize.txt"),
+                    "proguard-rules.pro"
+                )
+            )
             signingConfig = signingConfigs.getByName("debug")
             buildConfigField("String", "MAPS_TOKEN", getApiKey())
             manifestPlaceholders["appName"] = "Gallery"
@@ -71,23 +79,12 @@ android {
             versionNameSuffix = "-staging"
             manifestPlaceholders["appName"] = "Gallery Staging"
             manifestPlaceholders["appProvider"] = "com.dot.staging.debug.media_provider"
-            buildConfigField("String", "CONTENT_AUTHORITY", "\"com.dot.staging.debug.media_provider\"")
+            buildConfigField(
+                "String",
+                "CONTENT_AUTHORITY",
+                "\"com.dot.staging.debug.media_provider\""
+            )
         }
-    }
-    flavorDimensions += "version"
-
-    productFlavors {
-        create("system") {
-            dimension = "version"
-        }
-        create("compat") {
-            dimension = "version"
-        }
-    }
-
-    sourceSets {
-        getByName("system").java.setSrcDirs(listOf("src/common/java", "src/system/java"))
-        getByName("compat").java.setSrcDirs(listOf("src/common/java", "src/compat/java"))
     }
 
     compileOptions {
@@ -221,3 +218,13 @@ fun getApiKey(): String {
         "\"DEBUG\""
     }
 }
+
+val gitHeadVersion: String
+    get() {
+        val stdout = ByteArrayOutputStream()
+        rootProject.exec {
+            commandLine("git", "show", "-s", "--format=%h", "HEAD")
+            standardOutput = stdout
+        }
+        return stdout.toString().trim()
+    }

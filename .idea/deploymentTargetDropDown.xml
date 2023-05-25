@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="deploymentTargetDropDown">
+    <value>
+      <entry key="Gallery [:app:generateBaselineProfile:staging]">
+        <State />
+      </entry>
+      <entry key="Gallery [updateLintBaseline]">
+        <State />
+      </entry>
+      <entry key="Gallery:app [generateBaselineProfile]">
+        <State />
+      </entry>
+      <entry key="Gallery:app [generateStagingBaselineProfile]">
+        <State />
+      </entry>
+      <entry key="Generate Baseline Profile [compatRelease]">
+        <State />
+      </entry>
+      <entry key="Install Release">
+        <State />
+      </entry>
+      <entry key="app">
+        <State />
+      </entry>
+      <entry key="generate()">
+        <State />
+      </entry>
+    </value>
+  </component>
+</project>

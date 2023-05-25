@@ -8,10 +8,14 @@ package com.dot.gallery.feature_node.data.repository
 import android.annotation.SuppressLint
 import android.content.ContentResolver
 import android.content.Context
+import android.content.Intent
 import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.IntentSenderRequest
+import androidx.core.app.ActivityOptionsCompat
 import com.dot.gallery.core.Resource
 import com.dot.gallery.core.contentFlowObserver
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
@@ -32,7 +36,7 @@ import com.dot.gallery.feature_node.domain.util.OrderType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-abstract class MediaRepositoryImpl(
+class MediaRepositoryImpl(
     private val context: Context,
     private val database: InternalDatabase
 ) : MediaRepository {
@@ -139,6 +143,41 @@ abstract class MediaRepositoryImpl(
                 Resource.Success(data = mediaList)
             }
         }
+
+    override suspend fun toggleFavorite(
+        result: ActivityResultLauncher<IntentSenderRequest>,
+        mediaList: List<Media>,
+        favorite: Boolean
+    ) {
+        val intentSender = MediaStore.createFavoriteRequest(contentResolver, mediaList.map { it.uri }, favorite).intentSender
+        val senderRequest: IntentSenderRequest = IntentSenderRequest.Builder(intentSender)
+            .setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION, 0)
+            .build()
+        result.launch(senderRequest)
+    }
+
+    override suspend fun trashMedia(
+        result: ActivityResultLauncher<IntentSenderRequest>,
+        mediaList: List<Media>,
+        trash: Boolean
+    ) {
+        val intentSender = MediaStore.createTrashRequest(contentResolver, mediaList.map { it.uri }, trash).intentSender
+        val senderRequest: IntentSenderRequest = IntentSenderRequest.Builder(intentSender)
+            .setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION, 0)
+            .build()
+        result.launch(senderRequest, ActivityOptionsCompat.makeTaskLaunchBehind())
+    }
+
+    override suspend fun deleteMedia(
+        result: ActivityResultLauncher<IntentSenderRequest>,
+        mediaList: List<Media>
+    ) {
+        val intentSender = MediaStore.createDeleteRequest(contentResolver, mediaList.map { it.uri }).intentSender
+        val senderRequest: IntentSenderRequest = IntentSenderRequest.Builder(intentSender)
+            .setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION, 0)
+            .build()
+        result.launch(senderRequest)
+    }
 
     companion object {
         private val DEFAULT_ORDER = MediaOrder.Date(OrderType.Descending)

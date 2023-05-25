@@ -28,12 +28,6 @@ android {
 
     targetProjectPath = ":app"
 
-    flavorDimensions += listOf("version")
-    productFlavors {
-        create("system") { dimension = "version" }
-        create("compat") { dimension = "version" }
-    }
-
     testOptions.managedDevices.devices {
         create<ManagedVirtualDevice>("pixel6Api31") {
             device = "Pixel 6"

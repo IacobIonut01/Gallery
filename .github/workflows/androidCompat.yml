@@ -1,4 +1,4 @@
-name: Gallery (Compat) CI
+name: Gallery CI
 
 on:
  push:
@@ -22,9 +22,9 @@ jobs:
       env: 
         MAPS_TOKEN: $
       run: echo MAPS_TOKEN=\"$MAPS_TOKEN\" > ./api.properties
-    - name: Build Compat Release APK
-      run: ./gradlew assembleCompatRelease
+    - name: Build Release APK (Debug keys)
+      run: ./gradlew assembleRelease
     - uses: actions/upload-artifact@v3
       with:
         name: Gallery Release (Debug keys)
-        path: ./app/**/release/*.apk
+        path: app/build/outputs/apk/release/*.apk

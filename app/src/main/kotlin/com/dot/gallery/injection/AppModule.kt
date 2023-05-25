@@ -9,8 +9,8 @@ import android.app.Application
 import android.content.ContentResolver
 import android.content.Context
 import androidx.room.Room
-import com.dot.gallery.core.Settings
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
+import com.dot.gallery.feature_node.data.repository.MediaRepositoryImpl
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.domain.use_case.AddMediaUseCase
 import com.dot.gallery.feature_node.domain.use_case.DeletePinnedAlbumUseCase
@@ -64,5 +64,11 @@ object AppModule {
             insertPinnedAlbumUseCase = InsertPinnedAlbumUseCase(repository),
             deletePinnedAlbumUseCase = DeletePinnedAlbumUseCase(repository)
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideMediaRepository(@ApplicationContext context: Context, database: InternalDatabase): MediaRepository {
+        return MediaRepositoryImpl(context, database)
     }
 }
