@@ -7,9 +7,14 @@ package com.dot.gallery.feature_node.domain.model
 
 import android.net.Uri
 import android.os.Parcelable
+import android.webkit.MimeTypeMap
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.dot.gallery.core.Constants
+import com.dot.gallery.feature_node.presentation.util.getDate
 import kotlinx.parcelize.Parcelize
+import java.io.File
+
 
 @Parcelize
 sealed class MediaItem : Parcelable {
@@ -53,7 +58,53 @@ data class Media(
     val duration: String? = null,
     val tags: Set<Pair<String, String>> = emptySet(),
     var selected: Boolean = false
-) : Parcelable
+) : Parcelable {
+
+    /**
+     * Used to determine if the Media object is not accessible
+     * via MediaStore.
+     * This happens when the user tries to open media from an app
+     * using external sources (in our case, Gallery Media Viewer), but
+     * the specific media is only available internally in that app
+     * (Android/data(OR media)/com.package.name/)
+     *
+     * If it's readUriOnly then we know that we should expect a barebone
+     * Media object with limited functionality (no favorites, trash, timestamp etc)
+     */
+    fun readUriOnly(): Boolean = albumID == -99L && albumLabel == ""
+    companion object {
+        fun createFromUri(uri: Uri): Media? {
+            if (uri.path == null) return null
+            val extension = uri.toString().substringAfterLast(".")
+            val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension).toString()
+            var timestamp = 0L
+            uri.path?.let { File(it) }?.let {
+                timestamp = try {
+                    it.lastModified()
+                } catch (_: Exception) {
+                    0L
+                }
+            }
+            var formattedDate = ""
+            if (timestamp != 0L) {
+                formattedDate = timestamp.getDate(Constants.FULL_DATE_FORMAT)
+            }
+            return Media(
+                label = uri.toString().substringAfterLast("/"),
+                uri = uri,
+                path = uri.path.toString(),
+                albumID = -99L,
+                albumLabel = "",
+                timestamp = timestamp,
+                fullDate = formattedDate,
+                mimeType = mimeType,
+                favorite = 0,
+                trashed = 0,
+                orientation = 0
+            )
+        }
+    }
+}
 
 @Parcelize
 data class Album(

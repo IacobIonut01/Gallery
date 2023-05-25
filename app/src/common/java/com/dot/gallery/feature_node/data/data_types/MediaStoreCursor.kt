@@ -71,7 +71,7 @@ fun Cursor.getMediaFromCursor(): Media {
         getInt(getColumnIndexOrThrow(MediaStore.MediaColumns.IS_FAVORITE))
     val isTrashed: Int =
         getInt(getColumnIndexOrThrow(MediaStore.MediaColumns.IS_TRASHED))
-    val contentUri = if (duration == null)
+    val contentUri = if (mimeType.contains("image"))
         MediaStore.Images.Media.EXTERNAL_CONTENT_URI
     else
         MediaStore.Video.Media.EXTERNAL_CONTENT_URI

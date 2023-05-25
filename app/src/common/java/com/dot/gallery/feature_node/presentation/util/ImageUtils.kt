@@ -19,6 +19,7 @@ import java.io.IOException
 
 @Throws(IOException::class)
 fun getExifInterface(context: Context, uri: Uri): ExifInterface? {
+    if (uri.isFromApps()) return null
     return try {
         ExifInterface(context.uriToPath(uri).toString())
     } catch (_: IOException) {
@@ -32,19 +33,28 @@ fun Context.uriToPath(uri: Uri?): String? {
     var path: String? = null
     val cursor: Cursor? = contentResolver.query(uri, proj, null, null, null)
     if (cursor != null && cursor.count != 0) {
-        val columnIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA)
         cursor.moveToFirst()
-        path = cursor.getString(columnIndex)
+        path = try {
+            val columnIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA)
+            cursor.getString(columnIndex)
+        } catch (_: IllegalArgumentException) {
+            null
+        }
     }
     cursor?.close()
     return path ?: FileUtils(this).getPath(uri)
 }
 
 fun Context.shareMedia(media: Media) {
+    val uri = if (media.uri.isFromApps()) media.uri else FileProvider.getUriForFile(
+        this,
+        Constants.AUTHORITY,
+        File(media.path)
+    )
     ShareCompat
         .IntentBuilder(this)
-        .setType(if (media.duration != null) "video/*" else "image/*")
-        .addStream(FileProvider.getUriForFile(this, Constants.AUTHORITY, File(media.path)))
+        .setType(media.mimeType)
+        .addStream(uri)
         .startChooser()
 }
 
@@ -58,11 +68,12 @@ fun Context.shareMedia(mediaList: List<Media>) {
         .IntentBuilder(this)
         .setType(mimeTypes)
     mediaList.forEach {
-        shareCompat.addStream(
-            FileProvider.getUriForFile(
-                this, Constants.AUTHORITY, File(it.path)
-            )
+        val uri = if (it.uri.isFromApps()) it.uri else FileProvider.getUriForFile(
+            this,
+            Constants.AUTHORITY,
+            File(it.path)
         )
+        shareCompat.addStream(uri)
     }
     shareCompat.startChooser()
 }

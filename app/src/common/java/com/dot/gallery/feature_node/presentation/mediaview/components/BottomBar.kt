@@ -267,15 +267,17 @@ private fun MediaViewActions(
     ) {
         context.shareMedia(media = it)
     }
-    // Favorite Component
-    BottomBarColumn(
-        currentMedia = currentMedia,
-        imageVector = favoriteIcon,
-        title = stringResource(id = R.string.favorites)
-    ) {
-        result?.let { result ->
-            scope.launch {
-                handler.toggleFavorite(result = result, arrayListOf(it), it.favorite != 1)
+    if (!currentMedia.readUriOnly() && currentMedia.trashed == 0) {
+        // Favorite Component
+        BottomBarColumn(
+            currentMedia = currentMedia,
+            imageVector = favoriteIcon,
+            title = stringResource(id = R.string.favorites)
+        ) {
+            result?.let { result ->
+                scope.launch {
+                    handler.toggleFavorite(result = result, arrayListOf(it), it.favorite != 1)
+                }
             }
         }
     }

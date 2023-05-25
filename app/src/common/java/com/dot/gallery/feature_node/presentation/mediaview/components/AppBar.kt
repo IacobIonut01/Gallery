@@ -39,6 +39,7 @@ import kotlinx.coroutines.launch
 fun MediaViewAppBar(
     showUI: Boolean,
     showInfo: Boolean,
+    showDate: Boolean,
     currentDate: String,
     paddingValues: PaddingValues,
     onGoBack: () -> Unit,
@@ -76,14 +77,16 @@ fun MediaViewAppBar(
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = currentDate.uppercase(),
-                    modifier = Modifier,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontFamily = FontFamily.Monospace,
-                    color = Color.White,
-                    textAlign = TextAlign.End
-                )
+                if (showDate) {
+                    Text(
+                        text = currentDate.uppercase(),
+                        modifier = Modifier,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontFamily = FontFamily.Monospace,
+                        color = Color.White,
+                        textAlign = TextAlign.End
+                    )
+                }
                 if (showInfo) {
                     IconButton(
                         onClick = {

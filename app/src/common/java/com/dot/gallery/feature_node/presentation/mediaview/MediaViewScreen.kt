@@ -56,6 +56,7 @@ import com.dot.gallery.feature_node.presentation.util.toggleSystemBars
 fun MediaViewScreen(
     navigateUp: () -> Unit,
     paddingValues: PaddingValues,
+    isStandalone: Boolean = false,
     mediaId: Long,
     target: String? = null,
     mediaState: MutableState<MediaState>,
@@ -63,8 +64,10 @@ fun MediaViewScreen(
 ) {
     var runtimeMediaId by rememberSaveable(mediaId) { mutableStateOf(mediaId) }
     val state by mediaState
-    val initialPage = rememberSaveable(runtimeMediaId) { state.media.indexOfFirst { it.id == runtimeMediaId } }
-    val pagerState = rememberPagerState(initialPage = if (initialPage == -1) 0 else initialPage)
+    val initialPage = rememberSaveable(runtimeMediaId) {
+        state.media.indexOfFirst { it.id == runtimeMediaId }.coerceAtLeast(0)
+    }
+    val pagerState = rememberPagerState(initialPage = initialPage)
     val scrollEnabled = rememberSaveable { mutableStateOf(true) }
     val bottomSheetState = rememberAppBottomSheetState()
 
@@ -87,7 +90,7 @@ fun MediaViewScreen(
                 runtimeMediaId = state.media[lastIndex.value].id
             currentDate.value = state.media[index].timestamp.getDate(HEADER_DATE_FORMAT)
             currentMedia.value = state.media[index]
-        } else navigateUp()
+        } else if (!isStandalone) navigateUp()
     }
 
     LaunchedEffect(pagerState) {
@@ -146,7 +149,8 @@ fun MediaViewScreen(
         }
         MediaViewAppBar(
             showUI = showUI.value,
-            showInfo = currentMedia.value?.trashed == 0,
+            showInfo = currentMedia.value?.trashed == 0 && !(currentMedia.value?.readUriOnly() ?: false),
+            showDate = currentMedia.value?.timestamp != 0L,
             currentDate = currentDate.value,
             bottomSheetState = bottomSheetState,
             paddingValues = paddingValues,
@@ -165,6 +169,7 @@ fun MediaViewScreen(
             }
         } else {
             MediaViewBottomBar(
+                showDeleteButton = !isStandalone,
                 bottomSheetState = bottomSheetState,
                 handler = handler,
                 showUI = showUI.value,

@@ -126,7 +126,7 @@ abstract class MediaRepositoryImpl(
                         )
                     }
                 )
-                Resource.Success(data = if (isSecure) listOf(media) else it.getMedia(query))
+                Resource.Success(data = if (isSecure) listOf(media) else it.getMedia(query).ifEmpty { listOf(media) })
             }
         }
 

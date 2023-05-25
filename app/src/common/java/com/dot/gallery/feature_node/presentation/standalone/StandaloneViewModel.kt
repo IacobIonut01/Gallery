@@ -10,8 +10,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dot.gallery.core.MediaState
-import com.dot.gallery.core.Resource
 import com.dot.gallery.feature_node.domain.use_case.MediaUseCases
+import com.dot.gallery.feature_node.presentation.util.update
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
@@ -28,51 +28,29 @@ class StandaloneViewModel @Inject constructor(
 
     val photoState = mutableStateOf(MediaState())
     val handler = mediaUseCases.mediaHandleUseCase
-    var standaloneUri: String? = null
+
+    var dataList: List<Uri> = emptyList()
         set(value) {
-            if (!value.isNullOrEmpty() && value != standaloneUri) {
-                getMedia(standaloneUri = value)
+            if (value.isNotEmpty() && value != dataList) {
+                getMedia(value)
             }
             field = value
         }
 
-    var clipDataUriList: List<Uri> = emptyList()
-        set(value) {
-            if (value.isNotEmpty() && value != clipDataUriList) {
-                getMedia(standaloneUri, clipDataUriList)
-            }
-            field = value
-        }
+    var mediaId: Long = -1
 
-    init {
-        getMedia()
-    }
-
-    private fun getMedia(standaloneUri: String? = null, clipDataUriList: List<Uri> = emptyList()) {
+    private fun getMedia(clipDataUriList: List<Uri> = emptyList()) {
         viewModelScope.launch(Dispatchers.IO) {
-            if (standaloneUri != null) {
-                mediaUseCases.getMediaByUriUseCase(standaloneUri, clipDataUriList.isNotEmpty()).onEach { result ->
-                    withContext(Dispatchers.Main) {
-                        photoState.value = MediaState(
-                            error = if (result is Resource.Error) result.message
-                                ?: "An error occurred" else "",
-                            media = result.data ?: emptyList()
-                        )
+            if (clipDataUriList.isNotEmpty()) {
+                mediaUseCases.getMediaListByUrisUseCase(clipDataUriList).onEach { result ->
+                    val data = result.data
+                    if (data != null) {
+                        withContext(Dispatchers.Main) {
+                            photoState.update(MediaState(media = data))
+                            mediaId = data.first().id
+                        }
                     }
                 }.flowOn(Dispatchers.IO).collect()
-                if (clipDataUriList.isNotEmpty()) {
-                    mediaUseCases.getMediaListByUrisUseCase(clipDataUriList).onEach { result ->
-                        val data = result.data
-                        if (data != null) {
-                            withContext(Dispatchers.Main) {
-                                photoState.value = photoState.value.copy(
-                                    media = photoState.value.media.toMutableList()
-                                        .apply { addAll(data) }
-                                )
-                            }
-                        }
-                    }.flowOn(Dispatchers.IO).collect()
-                }
             }
         }
     }

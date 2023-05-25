@@ -43,6 +43,9 @@ suspend fun ContentResolver.getMediaByUri(uri: Uri): Media? {
             moveToNext()
             close()
         }
+        if (media == null) {
+            media = Media.createFromUri(uri)
+        }
 
         return@withContext media
     }
@@ -76,6 +79,11 @@ suspend fun ContentResolver.getMediaListByUris(list: List<Uri>): List<Media> {
             }
             moveToNext()
             close()
+        }
+        if (mediaList.isEmpty()) {
+            for (uri in list) {
+                Media.createFromUri(uri)?.let { mediaList.add(it) }
+            }
         }
         mediaList
     }

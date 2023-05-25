@@ -269,7 +269,7 @@ fun Media.retrieveMetadata(context: Context): List<InfoRow> {
                         )
                     )
                 }
-                if (duration != null) {
+                if (mimeType.contains("video")) {
                     val contentString = StringBuilder()
                     contentString.append(formattedFileSize)
                     contentString.append(" • ${duration.formatMinSec()}")
