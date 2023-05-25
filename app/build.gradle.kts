@@ -123,10 +123,10 @@ dependencies {
     val roomVersion = "2.5.1"
     val glideVersion = "4.15.1"
     val coilVersion = "2.3.0"
-    val media3Version = "1.0.1"
+    val media3Version = "1.0.2"
 
     // Core
-    implementation("androidx.core:core-ktx:1.10.0")
+    implementation("androidx.core:core-ktx:1.10.1")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("androidx.navigation:navigation-runtime-ktx:2.5.3")
 
