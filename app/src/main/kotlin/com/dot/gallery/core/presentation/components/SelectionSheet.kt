@@ -144,7 +144,11 @@ fun SelectionSheet(
             Row(
                 modifier = Modifier
                     .then(sizeModifier)
-                    .horizontalScroll(rememberScrollState()),
+                    .horizontalScroll(rememberScrollState())
+                    .background(
+                        color = MaterialTheme.colorScheme.surface,
+                        shape = Shapes.large
+                    ),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
