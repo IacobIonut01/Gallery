@@ -18,7 +18,7 @@ import com.dot.gallery.core.MediaState
 import com.dot.gallery.core.presentation.components.EmptyMedia
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
-import com.dot.gallery.feature_node.presentation.MediaScreen
+import com.dot.gallery.feature_node.presentation.common.MediaScreen
 import com.dot.gallery.feature_node.presentation.timeline.components.TimelineNavActions
 
 @Composable

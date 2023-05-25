@@ -1,4 +1,4 @@
-package com.dot.gallery.feature_node.presentation.library.favorites.components
+package com.dot.gallery.feature_node.presentation.favorites.components
 
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest

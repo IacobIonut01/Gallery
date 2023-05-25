@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package com.dot.gallery.feature_node.presentation
+package com.dot.gallery.feature_node.presentation.common
 
 import android.graphics.drawable.Drawable
 import androidx.activity.compose.BackHandler
@@ -73,7 +73,7 @@ import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaItem
 import com.dot.gallery.feature_node.domain.model.isHeaderKey
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
-import com.dot.gallery.feature_node.presentation.library.components.MainSearchBar
+import com.dot.gallery.feature_node.presentation.search.MainSearchBar
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.feature_node.presentation.util.vibrate
 import com.dot.gallery.ui.theme.Dimens

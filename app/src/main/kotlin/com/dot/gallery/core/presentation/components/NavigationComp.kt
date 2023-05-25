@@ -22,20 +22,20 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.dot.gallery.R
-import com.dot.gallery.core.Constants
+import com.dot.gallery.core.Constants.Animation.navigateInAnimation
+import com.dot.gallery.core.Constants.Animation.navigateUpAnimation
 import com.dot.gallery.core.Constants.Target.TARGET_FAVORITES
 import com.dot.gallery.core.Constants.Target.TARGET_TRASH
-import com.dot.gallery.feature_node.presentation.ChanneledViewModel
-import com.dot.gallery.feature_node.presentation.MediaViewModel
 import com.dot.gallery.feature_node.presentation.albums.AlbumsScreen
 import com.dot.gallery.feature_node.presentation.albums.AlbumsViewModel
-import com.dot.gallery.feature_node.presentation.library.LibraryScreen
-import com.dot.gallery.feature_node.presentation.library.favorites.FavoriteScreen
-import com.dot.gallery.feature_node.presentation.library.trashed.TrashedGridScreen
+import com.dot.gallery.feature_node.presentation.common.ChanneledViewModel
+import com.dot.gallery.feature_node.presentation.common.MediaViewModel
+import com.dot.gallery.feature_node.presentation.favorites.FavoriteScreen
 import com.dot.gallery.feature_node.presentation.mediaview.MediaViewScreen
 import com.dot.gallery.feature_node.presentation.settings.SettingsScreen
 import com.dot.gallery.feature_node.presentation.settings.SettingsViewModel
 import com.dot.gallery.feature_node.presentation.timeline.TimelineScreen
+import com.dot.gallery.feature_node.presentation.trashed.TrashedGridScreen
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
@@ -67,10 +67,10 @@ fun NavigationComp(
     ) {
         composable(
             route = Screen.TimelineScreen.route,
-            enterTransition = { Constants.Animation.navigateInAnimation },
-            exitTransition = { Constants.Animation.navigateUpAnimation },
-            popEnterTransition = { Constants.Animation.navigateInAnimation },
-            popExitTransition = { Constants.Animation.navigateUpAnimation }
+            enterTransition = { navigateInAnimation },
+            exitTransition = { navigateUpAnimation },
+            popEnterTransition = { navigateInAnimation },
+            popExitTransition = { navigateUpAnimation }
         ) {
             val viewModel =
                 hiltViewModel<MediaViewModel>().apply(MediaViewModel::launchInPhotosScreen)
@@ -91,10 +91,10 @@ fun NavigationComp(
         }
         composable(
             route = Screen.TrashedScreen.route,
-            enterTransition = { Constants.Animation.navigateInAnimation },
-            exitTransition = { Constants.Animation.navigateUpAnimation },
-            popEnterTransition = { Constants.Animation.navigateInAnimation },
-            popExitTransition = { Constants.Animation.navigateUpAnimation }
+            enterTransition = { navigateInAnimation },
+            exitTransition = { navigateUpAnimation },
+            popEnterTransition = { navigateInAnimation },
+            popExitTransition = { navigateUpAnimation }
         ) {
             val viewModel = hiltViewModel<MediaViewModel>().apply { target = TARGET_TRASH }
             TrashedGridScreen(
@@ -111,10 +111,10 @@ fun NavigationComp(
         }
         composable(
             route = Screen.FavoriteScreen.route,
-            enterTransition = { Constants.Animation.navigateInAnimation },
-            exitTransition = { Constants.Animation.navigateUpAnimation },
-            popEnterTransition = { Constants.Animation.navigateInAnimation },
-            popExitTransition = { Constants.Animation.navigateUpAnimation }
+            enterTransition = { navigateInAnimation },
+            exitTransition = { navigateUpAnimation },
+            popEnterTransition = { navigateInAnimation },
+            popExitTransition = { navigateUpAnimation }
         ) {
             val viewModel = hiltViewModel<MediaViewModel>().apply { target = TARGET_FAVORITES }
             FavoriteScreen(
@@ -131,22 +131,11 @@ fun NavigationComp(
             )
         }
         composable(
-            route = Screen.LibraryScreen.route,
-            enterTransition = { Constants.Animation.navigateInAnimation },
-            exitTransition = { Constants.Animation.navigateUpAnimation },
-            popEnterTransition = { Constants.Animation.navigateInAnimation },
-            popExitTransition = { Constants.Animation.navigateUpAnimation }
-        ) {
-            LibraryScreen(
-                navController = navController
-            )
-        }
-        composable(
             route = Screen.AlbumsScreen.route,
-            enterTransition = { Constants.Animation.navigateInAnimation },
-            exitTransition = { Constants.Animation.navigateUpAnimation },
-            popEnterTransition = { Constants.Animation.navigateInAnimation },
-            popExitTransition = { Constants.Animation.navigateUpAnimation }
+            enterTransition = { navigateInAnimation },
+            exitTransition = { navigateUpAnimation },
+            popEnterTransition = { navigateInAnimation },
+            popExitTransition = { navigateUpAnimation }
         ) {
             val viewModel = hiltViewModel<AlbumsViewModel>()
             AlbumsScreen(
@@ -159,10 +148,10 @@ fun NavigationComp(
         composable(
             route = Screen.AlbumViewScreen.route +
                     "?albumId={albumId}&albumName={albumName}",
-            enterTransition = { Constants.Animation.navigateInAnimation },
-            exitTransition = { Constants.Animation.navigateUpAnimation },
-            popEnterTransition = { Constants.Animation.navigateInAnimation },
-            popExitTransition = { Constants.Animation.navigateUpAnimation },
+            enterTransition = { navigateInAnimation },
+            exitTransition = { navigateUpAnimation },
+            popEnterTransition = { navigateInAnimation },
+            popExitTransition = { navigateUpAnimation },
             arguments = listOf(
                 navArgument(name = "albumId") {
                     type = NavType.LongType
@@ -198,10 +187,10 @@ fun NavigationComp(
         composable(
             route = Screen.MediaViewScreen.route +
                     "?mediaId={mediaId}&albumId={albumId}",
-            enterTransition = { Constants.Animation.navigateInAnimation },
-            exitTransition = { Constants.Animation.navigateUpAnimation },
-            popEnterTransition = { Constants.Animation.navigateInAnimation },
-            popExitTransition = { Constants.Animation.navigateUpAnimation },
+            enterTransition = { navigateInAnimation },
+            exitTransition = { navigateUpAnimation },
+            popEnterTransition = { navigateInAnimation },
+            popExitTransition = { navigateUpAnimation },
             arguments = listOf(
                 navArgument(name = "mediaId") {
                     type = NavType.LongType
@@ -232,10 +221,10 @@ fun NavigationComp(
         composable(
             route = Screen.MediaViewScreen.route +
                     "?mediaId={mediaId}&target={target}",
-            enterTransition = { Constants.Animation.navigateInAnimation },
-            exitTransition = { Constants.Animation.navigateUpAnimation },
-            popEnterTransition = { Constants.Animation.navigateInAnimation },
-            popExitTransition = { Constants.Animation.navigateUpAnimation },
+            enterTransition = { navigateInAnimation },
+            exitTransition = { navigateUpAnimation },
+            popEnterTransition = { navigateInAnimation },
+            popExitTransition = { navigateUpAnimation },
             arguments = listOf(
                 navArgument(name = "mediaId") {
                     type = NavType.LongType
@@ -269,10 +258,10 @@ fun NavigationComp(
         }
         composable(
             route = Screen.SettingsScreen.route,
-            enterTransition = { Constants.Animation.navigateInAnimation },
-            exitTransition = { Constants.Animation.navigateUpAnimation },
-            popEnterTransition = { Constants.Animation.navigateInAnimation },
-            popExitTransition = { Constants.Animation.navigateUpAnimation },
+            enterTransition = { navigateInAnimation },
+            exitTransition = { navigateUpAnimation },
+            popEnterTransition = { navigateInAnimation },
+            popExitTransition = { navigateUpAnimation },
         ) {
             val viewModel = hiltViewModel<SettingsViewModel>()
             SettingsScreen(

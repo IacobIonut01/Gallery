@@ -3,11 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package com.dot.gallery.feature_node.presentation.library.components
+package com.dot.gallery.feature_node.presentation.search
 
 import android.graphics.drawable.Drawable
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
@@ -53,7 +54,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -79,7 +79,8 @@ import com.dot.gallery.core.presentation.components.media.MediaComponent
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaItem
 import com.dot.gallery.feature_node.domain.model.isHeaderKey
-import com.dot.gallery.feature_node.presentation.library.SearchViewModel
+import com.dot.gallery.feature_node.presentation.search.SearchBarElevation.Collapsed
+import com.dot.gallery.feature_node.presentation.search.SearchBarElevation.Expanded
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.ui.theme.Dimens
 
@@ -112,15 +113,13 @@ fun MainSearchBar(
         targetValue = if (selectionState != null && selectionState.value) 0.6f else 1f,
         label = "alpha"
     )
+    val elevation by animateDpAsState(
+        targetValue = if (activeState) Expanded() else Collapsed(),
+        label = "elevation"
+    )
     LaunchedEffect(LocalConfiguration.current, activeState) {
         if (selectionState == null || !selectionState.value)
             toggleNavbar(!activeState)
-    }
-
-    LaunchedEffect(query) {
-        snapshotFlow { query }.collect {
-            vm.queryMedia(it)
-        }
     }
 
     /** Glide Preloading **/
@@ -153,16 +152,19 @@ fun MainSearchBar(
             onSearch = {
                 if (it.isNotEmpty())
                     historySet = historySet.toMutableSet().apply { add(it) }
+                vm.queryMedia(it)
             },
             active = activeState,
             onActiveChange = { activeState = it },
             placeholder = {
                 Text(text = stringResource(id = R.string.searchbar_title))
             },
+            tonalElevation = elevation,
             leadingIcon = {
                 IconButton(onClick = {
                     activeState = !activeState
                     if (query.isNotEmpty()) query = ""
+                    vm.queryMedia(query)
                 }) {
                     val leadingIcon = if (activeState)
                         Icons.Outlined.ArrowBack else Icons.Outlined.Search
@@ -192,6 +194,7 @@ fun MainSearchBar(
             ) {
                 SearchHistory {
                     query = it
+                    vm.queryMedia(it)
                 }
             }
 
@@ -280,7 +283,7 @@ fun MainSearchBar(
         }
     }
 
-    BackHandler(query.isNotEmpty()) {
+    BackHandler(activeState) {
         dismissSearchBar()
     }
 }
@@ -382,4 +385,13 @@ fun LazyItemScope.HistoryItem(
             .animateItemPlacement()
             .clickable { search(historyQuery) }
     )
+}
+
+sealed class SearchBarElevation(val dp: Dp) {
+
+    object Collapsed: SearchBarElevation(2.dp)
+
+    object Expanded: SearchBarElevation(0.dp)
+
+    operator fun invoke() = dp
 }

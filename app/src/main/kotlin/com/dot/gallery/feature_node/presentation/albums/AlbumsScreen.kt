@@ -51,7 +51,7 @@ import com.dot.gallery.core.presentation.components.Error
 import com.dot.gallery.core.presentation.components.FilterButton
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumComponent
 import com.dot.gallery.feature_node.presentation.albums.components.CarouselPinnedAlbums
-import com.dot.gallery.feature_node.presentation.library.components.MainSearchBar
+import com.dot.gallery.feature_node.presentation.search.MainSearchBar
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.ui.theme.Dimens
 

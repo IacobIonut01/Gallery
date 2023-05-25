@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package com.dot.gallery
+package com.dot.gallery.feature_node.presentation.main
 
 import android.net.Uri
 import android.os.Bundle

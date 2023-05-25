@@ -1,4 +1,4 @@
-package com.dot.gallery.feature_node.presentation.library.trashed.components
+package com.dot.gallery.feature_node.presentation.trashed.components
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility

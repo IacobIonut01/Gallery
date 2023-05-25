@@ -43,7 +43,7 @@ import com.dot.gallery.core.presentation.components.media.MediaPreviewComponent
 import com.dot.gallery.core.presentation.components.media.VideoPlayerController
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
-import com.dot.gallery.feature_node.presentation.library.trashed.components.TrashedViewBottomBar
+import com.dot.gallery.feature_node.presentation.trashed.components.TrashedViewBottomBar
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewAppBar
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewBottomBar
 import com.dot.gallery.feature_node.presentation.util.getDate

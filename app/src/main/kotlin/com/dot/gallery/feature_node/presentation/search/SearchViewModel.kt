@@ -1,4 +1,4 @@
-package com.dot.gallery.feature_node.presentation.library
+package com.dot.gallery.feature_node.presentation.search
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -41,21 +41,20 @@ class SearchViewModel @Inject constructor(
         if (query.isEmpty())
             return emptyList()
         return filter { item ->
-            val lqQuery = query.lowercase()
-            if (lqQuery.isDate()) {
-                return@filter item.toString().lowercase().contains(lqQuery)
+            if (query.isDate()) {
+                return@filter item.toString().contains(query, true)
             }
-            val queries = query.lowercase().split("\\s".toRegex())
+            val queries = query.split("\\s".toRegex())
             var found = false
             queries.forEach {
-                found = item.toString().lowercase().contains(it)
+                found = item.toString().contains(it, true)
             }
             return@filter found
         }
     }
 
     fun queryMedia(query: String = "") {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             mediaUseCases.getMediaUseCase().onEach { result ->
                 val mappedData = ArrayList<MediaItem>()
                 val monthHeaderList = ArrayList<String>()
@@ -87,16 +86,14 @@ class SearchViewModel @Inject constructor(
                         mappedData.add(mediaItem)
                     }
                 }
-                withContext(Dispatchers.Main) {
-                    mediaState.update(
-                        MediaState(
-                            error = if (result is Resource.Error) result.message
-                                ?: "An error occurred" else "",
-                            media = data,
-                            mappedMedia = mappedData
-                        )
+                mediaState.update(
+                    MediaState(
+                        error = if (result is Resource.Error) result.message
+                            ?: "An error occurred" else "",
+                        media = data,
+                        mappedMedia = mappedData
                     )
-                }
+                )
             }.flowOn(Dispatchers.IO).collect()
         }
     }

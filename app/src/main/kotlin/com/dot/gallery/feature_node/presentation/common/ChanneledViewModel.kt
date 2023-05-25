@@ -1,4 +1,4 @@
-package com.dot.gallery.feature_node.presentation
+package com.dot.gallery.feature_node.presentation.common
 
 import androidx.compose.runtime.MutableState
 import androidx.lifecycle.ViewModel

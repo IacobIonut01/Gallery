@@ -10,6 +10,7 @@ plugins {
     id("kotlin-parcelize")
     id("dagger.hilt.android.plugin")
     id("androidx.baselineprofile")
+    id("com.google.devtools.ksp")
 }
 
 val versionMajor = 1
@@ -164,7 +165,7 @@ dependencies {
 
     // Room
     implementation("androidx.room:room-runtime:$roomVersion")
-    kapt("androidx.room:room-compiler:$roomVersion")
+    ksp("androidx.room:room-compiler:$roomVersion")
 
     // Kotlin Extensions and Coroutines support for Room
     implementation("androidx.room:room-ktx:$roomVersion")
@@ -172,7 +173,7 @@ dependencies {
     // Glide
     implementation("com.github.bumptech.glide:glide:$glideVersion")
     implementation("com.github.bumptech.glide:compose:1.0.0-alpha.3")
-    kapt("com.github.bumptech.glide:compiler:$glideVersion")
+    ksp("com.github.bumptech.glide:compiler:$glideVersion")
 
     // SVG Support for Glide
     implementation("com.github.qoqa:glide-svg:4.0.2")

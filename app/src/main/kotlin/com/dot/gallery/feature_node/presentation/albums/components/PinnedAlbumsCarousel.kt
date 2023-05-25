@@ -7,7 +7,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
@@ -22,9 +21,9 @@ import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.dot.gallery.R
 import com.dot.gallery.feature_node.domain.model.Album
-import com.dot.gallery.injection.GlideApp
 import com.google.android.material.carousel.CarouselLayoutManager
 import com.google.android.material.carousel.MaskableFrameLayout
 import kotlin.math.roundToInt
@@ -93,7 +92,7 @@ private class PinnedAlbumsAdapter(
                 GradientDrawable.Orientation.BOTTOM_TOP,
                 intArrayOf(containerColor, Color.TRANSPARENT)
             )
-            GlideApp
+            Glide
                 .with(albumImage.context)
                 .load(album.pathToThumbnail)
                 .into(albumImage)

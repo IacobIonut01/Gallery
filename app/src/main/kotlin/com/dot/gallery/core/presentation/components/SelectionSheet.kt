@@ -55,7 +55,7 @@ import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Target.TARGET_FAVORITES
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
-import com.dot.gallery.feature_node.presentation.library.trashed.components.TrashDialog
+import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialog
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.rememberIsMediaManager
 import com.dot.gallery.feature_node.presentation.util.shareMedia
