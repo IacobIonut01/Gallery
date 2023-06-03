@@ -11,9 +11,8 @@ import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.domain.util.MediaOrder
 import com.dot.gallery.feature_node.domain.util.OrderType
 import kotlinx.coroutines.flow.Flow
-import javax.inject.Inject
 
-class GetMediaTrashedUseCase @Inject constructor(
+class GetMediaTrashedUseCase(
     private val repository: MediaRepository
 ) {
 

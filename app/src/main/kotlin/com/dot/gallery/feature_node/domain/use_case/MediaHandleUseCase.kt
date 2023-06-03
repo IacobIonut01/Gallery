@@ -14,9 +14,8 @@ import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
 
-class MediaHandleUseCase @Inject constructor(
+class MediaHandleUseCase(
     private val repository: MediaRepository,
     private val context: Context
 ) {

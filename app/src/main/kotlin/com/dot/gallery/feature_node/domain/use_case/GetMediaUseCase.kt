@@ -9,9 +9,8 @@ import com.dot.gallery.core.Resource
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import kotlinx.coroutines.flow.Flow
-import javax.inject.Inject
 
-class GetMediaUseCase @Inject constructor(
+class GetMediaUseCase(
     private val repository: MediaRepository
 ) {
 

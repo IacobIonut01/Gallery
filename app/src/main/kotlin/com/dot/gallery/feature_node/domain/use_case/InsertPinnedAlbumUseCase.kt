@@ -8,9 +8,8 @@ package com.dot.gallery.feature_node.domain.use_case
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.PinnedAlbum
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
-import javax.inject.Inject
 
-class InsertPinnedAlbumUseCase @Inject constructor(
+class InsertPinnedAlbumUseCase(
     private val repository: MediaRepository
 ) {
 
