@@ -49,7 +49,7 @@ fun TimelineScreen(
     toggleSelection = toggleSelection,
     showMonthlyHeader = true,
     allowNavBar = allowNavBar,
-    NavActions = {expandedDropDown: MutableState<Boolean>, _ ->
+    navActionsContent = { expandedDropDown: MutableState<Boolean>, _ ->
         TimelineNavActions(
             albumId = albumId,
             handler = handler,
@@ -61,7 +61,7 @@ fun TimelineScreen(
             navigateUp = navigateUp
         )
     },
-    EmptyComponent = { EmptyMedia(Modifier.fillMaxSize()) },
+    emptyContent = { EmptyMedia(Modifier.fillMaxSize()) },
     navigate = navigate,
     navigateUp = navigateUp,
     toggleNavbar = toggleNavbar

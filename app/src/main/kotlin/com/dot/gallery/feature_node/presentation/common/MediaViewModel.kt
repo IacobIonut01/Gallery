@@ -67,13 +67,8 @@ open class MediaViewModel @Inject constructor(
         mediaList: List<Media>,
         favorite: Boolean = false
     ) {
-        viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                handler.toggleFavorite(result, mediaList, favorite)
-            }
-            photoState.value = photoState.value.copy(
-                media = photoState.value.media.minus(mediaList.toSet())
-            )
+        viewModelScope.launch(Dispatchers.IO) {
+            handler.toggleFavorite(result, mediaList, favorite)
         }
     }
 
@@ -89,16 +84,18 @@ open class MediaViewModel @Inject constructor(
             val selectedPhoto = selectedPhotoState.find { it.id == item.id }
             if (selectedPhoto != null) {
                 if (!isSelected) {
-                    selectedPhotoState[selectedPhotoState.indexOf(selectedPhoto)] = selectedPhoto.copy(
-                        selected = true
-                    )
+                    selectedPhotoState[selectedPhotoState.indexOf(selectedPhoto)] =
+                        selectedPhoto.copy(
+                            selected = true
+                        )
                 } else selectedPhotoState.remove(selectedPhoto)
             } else {
                 selectedPhotoState.add(item.copy(selected = !isSelected))
             }
-            multiSelectState.value = selectedPhotoState.isNotEmpty()
+            multiSelectState.update(selectedPhotoState.isNotEmpty())
         }
     }
+
     private fun getMedia(albumId: Long = -1L, target: String? = null) {
         val flow = if (albumId != -1L) {
             mediaUseCases.getMediaByAlbumUseCase(albumId)
@@ -111,15 +108,15 @@ open class MediaViewModel @Inject constructor(
         } else {
             mediaUseCases.getMediaUseCase()
         }
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             flow.onEach { result ->
                 val mappedData = ArrayList<MediaItem>()
                 val mappedDataWithMonthly = ArrayList<MediaItem>()
-                val monthHeaderList = ArrayList<String>()
+                val monthHeaderList = mutableSetOf<String>()
                 val data = result.data ?: emptyList()
                 if (data.isEmpty()) {
                     return@onEach withContext(Dispatchers.Main) {
-                        photoState.value = MediaState()
+                        photoState.update(MediaState())
                     }
                 }
                 data.groupBy {
@@ -141,31 +138,49 @@ open class MediaViewModel @Inject constructor(
                     val item = MediaItem.Header("header_$date", date, data)
                     mappedData.add(item)
                     mappedDataWithMonthly.add(item)
-                    for (media in data) {
+                    data.forEach { media ->
                         val mediaItem =
                             MediaItem.MediaViewItem.Loaded("media_${media.id}", media)
                         mappedData.add(mediaItem)
                         mappedDataWithMonthly.add(mediaItem)
                     }
                 }
-                val startDate: DateExt? = if (target == null) {
-                    data.last().timestamp.getDateExt()
-                } else null
-                val endDate: DateExt? = if (target == null) {
-                    data.first().timestamp.getDateExt()
-                } else null
-                val dateHeader = if (albumId != -1L && startDate != null && endDate != null)
-                    getDateHeader(startDate, endDate) else ""
-                photoState.update(
-                    MediaState(
-                        error = if (result is Resource.Error) result.message
-                            ?: "An error occurred" else "",
-                        media = data,
-                        mappedMedia = mappedData,
-                        mappedMediaWithMonthly = mappedDataWithMonthly,
-                        dateHeader = dateHeader
-                    )
-                )
+                return@onEach withContext(Dispatchers.Main) {
+                    if (target != null) {
+                        return@withContext photoState.update(
+                            MediaState(
+                                error = if (result is Resource.Error) result.message
+                                    ?: "An error occurred" else "",
+                                media = data,
+                                mappedMedia = mappedData,
+                                mappedMediaWithMonthly = mappedDataWithMonthly
+                            )
+                        )
+                    } else if (albumId != -1L) {
+                        val startDate: DateExt = data.last().timestamp.getDateExt()
+                        val endDate: DateExt = data.first().timestamp.getDateExt()
+                        return@withContext photoState.update(
+                            MediaState(
+                                error = if (result is Resource.Error) result.message
+                                    ?: "An error occurred" else "",
+                                media = data,
+                                mappedMedia = mappedData,
+                                mappedMediaWithMonthly = mappedDataWithMonthly,
+                                dateHeader = getDateHeader(startDate, endDate)
+                            )
+                        )
+                    } else {
+                        return@withContext photoState.update(
+                            MediaState(
+                                error = if (result is Resource.Error) result.message
+                                    ?: "An error occurred" else "",
+                                media = data,
+                                mappedMedia = mappedData,
+                                mappedMediaWithMonthly = mappedDataWithMonthly
+                            )
+                        )
+                    }
+                }
             }.flowOn(Dispatchers.IO).collect()
         }
     }

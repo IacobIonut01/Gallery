@@ -67,6 +67,7 @@ import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.ExifMetadata
 import com.dot.gallery.feature_node.presentation.util.getDate
 import com.dot.gallery.feature_node.presentation.util.getExifInterface
+import com.dot.gallery.feature_node.presentation.util.launchEditIntent
 import com.dot.gallery.feature_node.presentation.util.launchUseAsIntent
 import com.dot.gallery.feature_node.presentation.util.shareMedia
 import com.dot.gallery.ui.theme.Black40P
@@ -280,6 +281,14 @@ private fun MediaViewActions(
                 }
             }
         }
+    }
+    // Edit
+    BottomBarColumn(
+        currentMedia = currentMedia,
+        imageVector = Icons.Outlined.Edit,
+        title = stringResource(R.string.edit)
+    ) {
+        scope.launch { context.launchEditIntent(it) }
     }
     // Use as
     BottomBarColumn(

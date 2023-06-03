@@ -53,6 +53,17 @@ private fun Context.isTouchExplorationEnabled(): Boolean {
     return accessibilityManager?.isTouchExplorationEnabled ?: false
 }
 
+suspend fun Context.launchEditIntent(media: Media) =
+    withContext(Dispatchers.Default) {
+        val intent = Intent(Intent.ACTION_EDIT).apply {
+            addCategory(Intent.CATEGORY_DEFAULT)
+            setDataAndType(media.uri, media.mimeType)
+            putExtra("mimeType", media.mimeType)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        startActivity(Intent.createChooser(intent, getString(R.string.edit)))
+    }
+
 suspend fun Context.launchUseAsIntent(media: Media) =
     withContext(Dispatchers.Default) {
         val intent = Intent(Intent.ACTION_ATTACH_DATA).apply {

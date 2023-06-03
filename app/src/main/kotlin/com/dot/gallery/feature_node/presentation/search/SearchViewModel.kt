@@ -27,6 +27,9 @@ class SearchViewModel @Inject constructor(
     private val mediaUseCases: MediaUseCases
 ) : ViewModel() {
 
+    var lastQuery = mutableStateOf("")
+        private set
+
     var mediaState = mutableStateOf(MediaState())
         private set
 
@@ -54,7 +57,10 @@ class SearchViewModel @Inject constructor(
     }
 
     fun queryMedia(query: String = "") {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
+            withContext(Dispatchers.Main) {
+                lastQuery.value = query
+            }
             mediaUseCases.getMediaUseCase().onEach { result ->
                 val mappedData = ArrayList<MediaItem>()
                 val monthHeaderList = ArrayList<String>()
@@ -86,14 +92,16 @@ class SearchViewModel @Inject constructor(
                         mappedData.add(mediaItem)
                     }
                 }
-                mediaState.update(
-                    MediaState(
-                        error = if (result is Resource.Error) result.message
-                            ?: "An error occurred" else "",
-                        media = data,
-                        mappedMedia = mappedData
+                withContext(Dispatchers.Main) {
+                    mediaState.update(
+                        MediaState(
+                            error = if (result is Resource.Error) result.message
+                                ?: "An error occurred" else "",
+                            media = data,
+                            mappedMedia = mappedData
+                        )
                     )
-                )
+                }
             }.flowOn(Dispatchers.IO).collect()
         }
     }

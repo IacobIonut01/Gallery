@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package com.dot.gallery.core.presentation.components.media
+package com.dot.gallery.feature_node.presentation.mediaview.components.media
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,6 +12,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
 import androidx.media3.exoplayer.ExoPlayer
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.presentation.mediaview.components.video.VideoPlayer
 
 @Composable
 fun MediaPreviewComponent(

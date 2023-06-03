@@ -5,7 +5,6 @@
 
 package com.dot.gallery.feature_node.presentation.search
 
-import android.graphics.drawable.Drawable
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
@@ -19,17 +18,11 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowBack
@@ -57,7 +50,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
@@ -67,22 +59,14 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.bumptech.glide.RequestBuilder
-import com.bumptech.glide.integration.compose.rememberGlidePreloadingData
-import com.bumptech.glide.signature.MediaStoreSignature
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.Settings.Search.rememberSearchHistory
-import com.dot.gallery.core.presentation.components.StickyHeader
-import com.dot.gallery.core.presentation.components.media.MediaComponent
-import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.model.MediaItem
-import com.dot.gallery.feature_node.domain.model.isHeaderKey
+import com.dot.gallery.feature_node.presentation.common.components.MediaGridView
 import com.dot.gallery.feature_node.presentation.search.SearchBarElevation.Collapsed
 import com.dot.gallery.feature_node.presentation.search.SearchBarElevation.Expanded
 import com.dot.gallery.feature_node.presentation.util.Screen
-import com.dot.gallery.ui.theme.Dimens
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -94,10 +78,7 @@ fun MainSearchBar(
     menuItems: @Composable (RowScope.() -> Unit)? = null,
 ) {
     var historySet by rememberSearchHistory()
-    val stringToday = stringResource(id = R.string.header_today)
-    val stringYesterday = stringResource(id = R.string.header_yesterday)
     val vm = hiltViewModel<SearchViewModel>()
-    val gridState = rememberLazyGridState()
     var query by rememberSaveable { mutableStateOf("") }
     val state by vm.mediaState
     var activeState by rememberSaveable {
@@ -107,6 +88,7 @@ fun MainSearchBar(
         {
             activeState = false
             query = ""
+            vm.queryMedia(query)
         }
     }
     val alpha by animateFloatAsState(
@@ -121,17 +103,6 @@ fun MainSearchBar(
         if (selectionState == null || !selectionState.value)
             toggleNavbar(!activeState)
     }
-
-    /** Glide Preloading **/
-    val preloadingData = rememberGlidePreloadingData(
-        data = state.media,
-        preloadImageSize = Size(50f, 50f)
-    ) { media: Media, requestBuilder: RequestBuilder<Drawable> ->
-        requestBuilder
-            .signature(MediaStoreSignature(media.mimeType, media.timestamp, media.orientation))
-            .load(media.uri)
-    }
-    /** ************ **/
 
     Box(
         modifier = Modifier
@@ -188,7 +159,7 @@ fun MainSearchBar(
              * Recent searches
              */
             AnimatedVisibility(
-                visible = query.isEmpty(),
+                visible = vm.lastQuery.value.isEmpty(),
                 enter = enterAnimation,
                 exit = exitAnimation
             ) {
@@ -202,7 +173,7 @@ fun MainSearchBar(
              * Searched content
              */
             AnimatedVisibility(
-                visible = query.isNotEmpty(),
+                visible = vm.lastQuery.value.isNotEmpty(),
                 enter = enterAnimation,
                 exit = exitAnimation
             ) {
@@ -227,56 +198,16 @@ fun MainSearchBar(
                         )
                     }
                 } else {
-                    LazyVerticalGrid(
-                        state = gridState,
-                        modifier = Modifier.fillMaxSize(),
-                        columns = GridCells.Adaptive(Dimens.Photo()),
-                        contentPadding = PaddingValues(
+                    MediaGridView(
+                        mediaState = vm.mediaState,
+                        paddingValues = PaddingValues(
                             bottom = bottomPadding + 16.dp
                         ),
-                        horizontalArrangement = Arrangement.spacedBy(1.dp),
-                        verticalArrangement = Arrangement.spacedBy(1.dp),
-                    ) {
-                        items(
-                            items = state.mappedMedia,
-                            contentType = { it.key.startsWith("media_") },
-                            span = { item ->
-                                GridItemSpan(if (item.key.isHeaderKey) maxLineSpan else 1)
-                            }
-                        ) { item ->
-                            when (item) {
-                                is MediaItem.Header -> {
-                                    val isChecked = rememberSaveable { mutableStateOf(false) }
-                                    val title = item.text
-                                        .replace("Today", stringToday)
-                                        .replace("Yesterday", stringYesterday)
-                                    StickyHeader(
-                                        date = title,
-                                        showAsBig = item.key.contains("big"),
-                                        isCheckVisible = isChecked,
-                                        isChecked = isChecked
-                                    )
-                                }
-
-                                is MediaItem.MediaViewItem -> {
-                                    val (media, preloadRequestBuilder) = preloadingData[state.media.indexOf(
-                                        item.media
-                                    )]
-                                    MediaComponent(
-                                        media = media,
-                                        selectionState = vm.selectionState,
-                                        selectedMedia = vm.selectedMedia,
-                                        preloadRequestBuilder = preloadRequestBuilder,
-                                        onItemLongClick = {},
-                                        onItemClick = {
-                                            dismissSearchBar()
-                                            navigate(Screen.MediaViewScreen.route + "?mediaId=${it.id}")
-                                        }
-                                    )
-                                }
-                            }
+                        onMediaClick = {
+                            dismissSearchBar()
+                            navigate(Screen.MediaViewScreen.route + "?mediaId=${it.id}")
                         }
-                    }
+                    )
                 }
             }
 

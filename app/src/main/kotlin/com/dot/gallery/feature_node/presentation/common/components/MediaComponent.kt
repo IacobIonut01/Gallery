@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package com.dot.gallery.core.presentation.components.media
+package com.dot.gallery.feature_node.presentation.common.components
 
 import android.graphics.drawable.Drawable
 import androidx.compose.foundation.ExperimentalFoundationApi

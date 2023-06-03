@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package com.dot.gallery.core.presentation.components.media
+package com.dot.gallery.feature_node.presentation.mediaview.components.video
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement

@@ -157,12 +157,12 @@ private val datePatternChecks = mapOf(
     "MMMM" to
             "^\\b\\p{L}+\\b$".toRegex(),
 
-    // etc.
+    //TODO: Cover more scenarios
 ).map(::DatePatternChecker)
 
 
 fun String.isDate(): Boolean = datePatternChecks
-    .firstOrNull { it.isValid(this) }
+    .find { it.isValid(this) }
     ?.run { true } ?: false
 
 @Parcelize

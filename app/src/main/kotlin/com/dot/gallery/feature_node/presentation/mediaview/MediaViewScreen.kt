@@ -39,13 +39,13 @@ import com.dot.gallery.core.Constants.HEADER_DATE_FORMAT
 import com.dot.gallery.core.Constants.Target.TARGET_TRASH
 import com.dot.gallery.core.MediaState
 import com.dot.gallery.core.Settings.Glide.rememberMaxImageSize
-import com.dot.gallery.core.presentation.components.media.MediaPreviewComponent
-import com.dot.gallery.core.presentation.components.media.VideoPlayerController
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
-import com.dot.gallery.feature_node.presentation.trashed.components.TrashedViewBottomBar
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewAppBar
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewBottomBar
+import com.dot.gallery.feature_node.presentation.mediaview.components.media.MediaPreviewComponent
+import com.dot.gallery.feature_node.presentation.mediaview.components.video.VideoPlayerController
+import com.dot.gallery.feature_node.presentation.trashed.components.TrashedViewBottomBar
 import com.dot.gallery.feature_node.presentation.util.getDate
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.rememberWindowInsetsController
@@ -118,7 +118,8 @@ fun MediaViewScreen(
                     durationMillis = DEFAULT_LOW_VELOCITY_SWIPE_DURATION
                 )
             ),
-            pageSpacing = 16.dp
+            key = { index -> state.media[index].id + state.media[index].timestamp },
+            pageSpacing = 16.dp,
         ) { index ->
             MediaPreviewComponent(
                 media = state.media[index],

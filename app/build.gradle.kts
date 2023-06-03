@@ -57,7 +57,10 @@ android {
             )
         }
         getByName("release") {
-            manifestPlaceholders += mapOf()
+            manifestPlaceholders += mapOf(
+                "appName" to "Gallery",
+                "appProvider" to "com.dot.gallery.media_provider"
+            )
             isMinifyEnabled = true
             isShrinkResources = true
             setProguardFiles(
@@ -68,8 +71,6 @@ android {
             )
             signingConfig = signingConfigs.getByName("debug")
             buildConfigField("String", "MAPS_TOKEN", getApiKey())
-            manifestPlaceholders["appName"] = "Gallery"
-            manifestPlaceholders["appProvider"] = "com.dot.gallery.media_provider"
             buildConfigField("String", "CONTENT_AUTHORITY", "\"com.dot.gallery.media_provider\"")
         }
         create("staging") {
@@ -112,15 +113,15 @@ android {
 dependencies {
     implementation("androidx.profileinstaller:profileinstaller:1.3.1")
     "baselineProfile"(project(mapOf("path" to ":baselineprofile")))
-    val bom = "2023.05.01"
+    val bom = "2023.05.00"
     val lifecycleVersion = "2.6.1"
     val material3Version = "1.1.0"
     val accompanistVersion = "0.31.0-alpha"
-    val kotlinCoroutinesVersion = "1.6.4"
-    val hiltVersion = "2.45"
+    val kotlinCoroutinesVersion = "1.7.1"
+    val hiltVersion = "2.46.1"
     val roomVersion = "2.5.1"
     val glideVersion = "4.15.1"
-    val coilVersion = "2.3.0"
+    val coilVersion = "2.4.0"
     val media3Version = "1.0.2"
 
     // Core
@@ -134,11 +135,12 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:$lifecycleVersion")
 
     // Compose
-    implementation("androidx.activity:activity-compose:1.7.1")
+    implementation("androidx.activity:activity-compose:1.7.2")
     implementation(platform("androidx.compose:compose-bom:$bom"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation("androidx.compose.ui:ui-util")
     implementation("androidx.compose.material:material-icons-extended")
 
     // Compose - Material3

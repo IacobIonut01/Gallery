@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package com.dot.gallery.core.presentation.components.media
+package com.dot.gallery.feature_node.presentation.common.components
 
 import android.graphics.drawable.Drawable
 import androidx.compose.animation.AnimatedVisibility
@@ -40,6 +40,7 @@ import com.bumptech.glide.integration.compose.GlideImage
 import com.bumptech.glide.signature.MediaStoreSignature
 import com.dot.gallery.core.Constants.Animation
 import com.dot.gallery.core.presentation.components.CheckBox
+import com.dot.gallery.feature_node.presentation.mediaview.components.video.VideoDurationHeader
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.ui.theme.Dimens
 

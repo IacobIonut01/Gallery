@@ -46,11 +46,11 @@ fun FavoriteScreen(
     selectionState = selectionState,
     selectedMedia = selectedMedia,
     toggleSelection = toggleSelection,
-    NavActions = { _: MutableState<Boolean>,
-                   result: ActivityResultLauncher<IntentSenderRequest> ->
+    navActionsContent = { _: MutableState<Boolean>,
+                          result: ActivityResultLauncher<IntentSenderRequest> ->
         FavoriteNavActions(toggleFavorite, mediaState, selectedMedia, selectionState, result)
     },
-    EmptyComponent = { EmptyFavorites(Modifier.fillMaxSize()) },
+    emptyContent = { EmptyFavorites(Modifier.fillMaxSize()) },
     navigate = navigate,
     navigateUp = navigateUp,
     toggleNavbar = toggleNavbar
