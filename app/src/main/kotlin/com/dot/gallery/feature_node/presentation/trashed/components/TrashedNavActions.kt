@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: 2023 IacobIacob01
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package com.dot.gallery.feature_node.presentation.trashed.components
 
 import android.app.Activity
