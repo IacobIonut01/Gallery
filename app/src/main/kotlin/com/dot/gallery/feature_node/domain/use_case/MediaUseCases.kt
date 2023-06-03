@@ -5,16 +5,22 @@
 
 package com.dot.gallery.feature_node.domain.use_case
 
+import android.content.Context
+import com.dot.gallery.feature_node.domain.repository.MediaRepository
+
 data class MediaUseCases(
-    val addMediaUseCase: AddMediaUseCase,
-    val getAlbumsUseCase: GetAlbumsUseCase,
-    val getMediaUseCase: GetMediaUseCase,
-    val getMediaByAlbumUseCase: GetMediaByAlbumUseCase,
-    val getMediaFavoriteUseCase: GetMediaFavoriteUseCase,
-    val getMediaTrashedUseCase: GetMediaTrashedUseCase,
-    val getMediaByUriUseCase: GetMediaByUriUseCase,
-    val getMediaListByUrisUseCase: GetMediaListByUrisUseCase,
-    val mediaHandleUseCase: MediaHandleUseCase,
-    val insertPinnedAlbumUseCase: InsertPinnedAlbumUseCase,
-    val deletePinnedAlbumUseCase: DeletePinnedAlbumUseCase
-)
+    private val context: Context,
+    private val repository: MediaRepository
+) {
+    val addMediaUseCase = AddMediaUseCase(repository)
+    val getAlbumsUseCase = GetAlbumsUseCase(repository)
+    val getMediaUseCase = GetMediaUseCase(repository)
+    val getMediaByAlbumUseCase = GetMediaByAlbumUseCase(repository)
+    val getMediaFavoriteUseCase = GetMediaFavoriteUseCase(repository)
+    val getMediaTrashedUseCase = GetMediaTrashedUseCase(repository)
+    val getMediaByUriUseCase = GetMediaByUriUseCase(repository)
+    val getMediaListByUrisUseCase = GetMediaListByUrisUseCase(repository)
+    val mediaHandleUseCase = MediaHandleUseCase(repository, context)
+    val insertPinnedAlbumUseCase = InsertPinnedAlbumUseCase(repository)
+    val deletePinnedAlbumUseCase = DeletePinnedAlbumUseCase(repository)
+}
