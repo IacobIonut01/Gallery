@@ -131,7 +131,7 @@ class AlbumsViewModel @Inject constructor(
                 val data = result.data ?: emptyList()
                 val error = if (result is Resource.Error) result.message ?: "An error occurred" else ""
                 val newAlbumState = AlbumState(error = error, albums = data.filter { !it.isPinned })
-                val newPinnedState = AlbumState(error = error, albums = data.filter { it.isPinned })
+                val newPinnedState = AlbumState(error = error, albums = data.filter { it.isPinned }.sortedBy { it.label })
                 if (albumsState.value != newAlbumState) {
                     albumsState.value = newAlbumState
                 }
