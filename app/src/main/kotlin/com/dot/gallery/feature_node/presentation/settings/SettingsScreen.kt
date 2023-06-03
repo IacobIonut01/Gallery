@@ -6,7 +6,6 @@
 package com.dot.gallery.feature_node.presentation.settings
 
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -25,7 +24,6 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.dot.gallery.R
-import com.dot.gallery.core.SettingsType.*
 import com.dot.gallery.feature_node.presentation.settings.components.SettingsAppHeader
 import com.dot.gallery.feature_node.presentation.settings.components.SettingsItem
 
@@ -63,8 +61,8 @@ fun SettingsScreen(
     ) { padding ->
         LazyColumn(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(top = padding.calculateTopPadding())
+                .fillMaxSize(),
+            contentPadding = padding
         ) {
             item { SettingsAppHeader() }
             items(
