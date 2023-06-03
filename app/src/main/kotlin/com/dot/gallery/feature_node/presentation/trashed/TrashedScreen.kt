@@ -21,6 +21,7 @@ import com.dot.gallery.core.MediaState
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.common.MediaScreen
+import com.dot.gallery.feature_node.presentation.trashed.components.AutoDeleteFooter
 import com.dot.gallery.feature_node.presentation.trashed.components.EmptyTrash
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashedNavActions
 
@@ -50,6 +51,8 @@ fun TrashedGridScreen(
         TrashedNavActions(handler, mediaState, selectedMedia, selectionState)
     },
     emptyContent = { EmptyTrash(Modifier.fillMaxSize()) },
+    aboveGridContent = { AutoDeleteFooter() },
+    enableStickyHeaders = false,
     navigate = navigate,
     navigateUp = navigateUp,
     toggleNavbar = toggleNavbar

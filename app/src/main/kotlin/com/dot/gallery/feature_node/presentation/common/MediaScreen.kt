@@ -63,6 +63,7 @@ fun MediaScreen(
     selectedMedia: SnapshotStateList<Media>,
     toggleSelection: (Int) -> Unit,
     showMonthlyHeader: Boolean = false,
+    enableStickyHeaders: Boolean = true,
     allowNavBar: Boolean = false,
     navActionsContent: @Composable (RowScope.(expandedDropDown: MutableState<Boolean>, result: ActivityResultLauncher<IntentSenderRequest>) -> Unit),
     emptyContent: @Composable () -> Unit,
@@ -169,7 +170,7 @@ fun MediaScreen(
                     allowSelection = true,
                     showSearchBar = showSearchBar,
                     searchBarPaddingTop = paddingValues.calculateTopPadding(),
-                    enableStickyHeaders = true,
+                    enableStickyHeaders = enableStickyHeaders,
                     paddingValues = PaddingValues(
                         top = it.calculateTopPadding(),
                         bottom = paddingValues.calculateBottomPadding() + 16.dp + 64.dp
