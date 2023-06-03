@@ -9,7 +9,6 @@ import android.annotation.SuppressLint
 import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
-import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
@@ -68,13 +67,6 @@ class MediaRepositoryImpl(
 
     override suspend fun removePinnedAlbum(pinnedAlbum: PinnedAlbum) =
         database.getPinnedDao().removePinnedAlbum(pinnedAlbum)
-
-    override suspend fun insertMedia(
-        media: Media,
-        callback: MediaScannerConnection.OnScanCompletedListener
-    ) {
-        MediaScannerConnection.scanFile(context, arrayOf(media.path), null, callback)
-    }
 
     @SuppressLint("Range")
     override suspend fun getMediaById(mediaId: Long): Media? {

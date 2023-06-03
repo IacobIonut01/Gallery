@@ -5,7 +5,6 @@
 
 package com.dot.gallery.feature_node.domain.repository
 
-import android.media.MediaScannerConnection
 import android.net.Uri
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
@@ -29,8 +28,6 @@ interface MediaRepository {
     suspend fun insertPinnedAlbum(pinnedAlbum: PinnedAlbum)
 
     suspend fun removePinnedAlbum(pinnedAlbum: PinnedAlbum)
-
-    suspend fun insertMedia(media: Media, callback: MediaScannerConnection.OnScanCompletedListener)
 
     suspend fun getMediaById(mediaId: Long): Media?
 

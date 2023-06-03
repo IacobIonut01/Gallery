@@ -12,7 +12,6 @@ data class MediaUseCases(
     private val context: Context,
     private val repository: MediaRepository
 ) {
-    val addMediaUseCase = AddMediaUseCase(repository)
     val getAlbumsUseCase = GetAlbumsUseCase(repository)
     val getMediaUseCase = GetMediaUseCase(repository)
     val getMediaByAlbumUseCase = GetMediaByAlbumUseCase(repository)
