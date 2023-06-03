@@ -33,7 +33,6 @@ object AppModule {
     @Singleton
     fun provideDatabase(app: Application): InternalDatabase {
         return Room.databaseBuilder(app, InternalDatabase::class.java, InternalDatabase.NAME)
-            .allowMainThreadQueries()
             .build()
     }
 
