@@ -19,13 +19,13 @@
     <string name="favorites">Preferiti</string>
     <string name="no_media_title">Sembra vuoto qui</string>
     <string name="no_media_cd">Nessun contenuto multimediale trovato</string>
-    <string name="empty_trash_title">Squeaky Clean</string>
+    <string name="empty_trash_title">Lindo e pinto</string>
     <string name="empty_trash_cd">Il cestino è vuoto</string>
     <string name="error_title">Qualcosa è andato storto :(</string>
     <string name="error_cd">Si è verificato un errore</string>
     <string name="copy_error">Copy error</string>
     <string name="trash_restore">Ripristina</string>
-    <string name="trash_empty">Vuoto</string>
+    <string name="trash_empty">Svuota</string>
     <string name="trash_delete">Elimina</string>
     <string name="share">Condividi</string>
     <string name="info">Informazioni</string>
@@ -93,7 +93,7 @@
     <string name="add_location_cd">Aggiungi posizione</string>
     <string name="settings_theme_header">Tema</string>
     <string name="settings_follow_system_theme_title">Predefinito di sistema</string>
-    <string name="settings_dark_mode_title">Use Dark Mode</string>
+    <string name="settings_dark_mode_title">Scuro</string>
     <string name="selection_dialog_close_cd">Close selection dialog</string>
     <string name="edit">Modifica</string>
     <string name="trash_deletion_warning">Photos and videos you delete will be removed after 30 days.</string>
