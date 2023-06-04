@@ -5,6 +5,7 @@
 
 package com.dot.gallery.feature_node.presentation.mediaview
 
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -102,6 +103,12 @@ fun MediaViewScreen(
     LaunchedEffect(state.media) {
         updateContent(pagerState.currentPage)
     }
+
+    BackHandler(!showUI.value) {
+        windowInsetsController.toggleSystemBars(show = true)
+        navigateUp()
+    }
+
     Box(
         modifier = Modifier
             .background(Color.Black)
