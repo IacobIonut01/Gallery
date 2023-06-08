@@ -69,9 +69,9 @@
     <string name="github_url">https://github.com/IacobIonut01/Gallery</string>
     <string name="settings_cache">Cache</string>
     <string name="settings_disk_cache_title">Dimensiunea cache-ului de disc</string>
-    <string name="settings_cached_screen_title">Cached screen count</string>
-    <string name="settings_cached_screen_summary">How many screens of media are stored in the memory</string>
-    <string name="settings_disk_cache_summary">How much storage space can be used for persistent caching</string>
+    <string name="settings_cached_screen_title">Număr de ecrane în cache</string>
+    <string name="settings_cached_screen_summary">Câte ecrane de media sunt stocate în memorie</string>
+    <string name="settings_disk_cache_summary">Cât spațiu de stocare poate fi utilizat pentru stocarea în cache persistent</string>
     <string name="use_as">Utilizare ca</string>
     <string name="set_as">"Setează ca: "</string>
     <string name="delete_dialog_title">Ești pe cale să ștergi %s elemente</string>
