@@ -197,6 +197,9 @@ dependencies {
     // Compose-Extended-Gestures
     implementation("com.github.SmartToolFactory:Compose-Extended-Gestures:3.0.0")
 
+    // Zoomable
+    implementation("net.engawapg.lib:zoomable:1.4.3")
+
     // Datastore Preferences
     implementation("androidx.datastore:datastore-preferences:1.1.0-alpha04")
 

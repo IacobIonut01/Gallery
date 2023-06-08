@@ -8,6 +8,7 @@ package com.dot.gallery.feature_node.presentation.mediaview.components.media
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.FilterQuality
@@ -15,9 +16,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
-import com.dot.gallery.core.util.zoomable.customZoomable
-import com.dot.gallery.core.util.zoomable.rememberZoomState
 import com.dot.gallery.feature_node.domain.model.Media
+import net.engawapg.lib.zoomable.rememberZoomState
+import net.engawapg.lib.zoomable.zoomable
 
 @Composable
 fun ZoomablePagerImage(
@@ -45,13 +46,16 @@ fun ZoomablePagerImage(
         }
     )
 
+    LaunchedEffect(zoomState.scale) {
+        scrollEnabled.value = zoomState.scale == 1f
+    }
+
     Image(
         modifier = modifier
             .fillMaxSize()
-            .customZoomable(
+            .zoomable(
                 zoomState = zoomState,
-                scrollEnabled = scrollEnabled,
-                onClick = onItemClick
+                onTap = onItemClick
             ),
         painter = painter,
         contentScale = ContentScale.Fit,
