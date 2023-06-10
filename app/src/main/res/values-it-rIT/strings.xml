@@ -96,7 +96,7 @@
     <string name="settings_dark_mode_title">Scuro</string>
     <string name="selection_dialog_close_cd">Close selection dialog</string>
     <string name="edit">Modifica</string>
-    <string name="trash_deletion_warning">Photos and videos you delete will be removed after 30 days.</string>
+    <string name="trash_deletion_warning">Le foto e i video eliminati saranno rimossi dopo 30 giorni.</string>
     <plurals name="item_count">
         <item quantity="one">%s elemento</item>
         <item quantity="other">%s elementi</item>
