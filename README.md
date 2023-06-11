@@ -10,4 +10,4 @@
 ![](./screenshots/preview.png)
 ![](./screenshots/items/support_banner.png)
 [![PayPal](./screenshots/items/support_paypal.png)](https://www.paypal.me/iacobionut01)
-[![PayPal](./screenshots/items/support_revolut.png)](revolut.me/somaldoaca)
+[![Revolut](./screenshots/items/support_revolut.png)](https://revolut.me/somaldoaca)
