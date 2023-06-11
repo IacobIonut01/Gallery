@@ -16,6 +16,8 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 17
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v2
     - name: Make Gradle executable
       run: chmod +x ./gradlew
     - name: Load Maps Token
