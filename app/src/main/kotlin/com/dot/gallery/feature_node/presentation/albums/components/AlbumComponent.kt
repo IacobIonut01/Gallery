@@ -26,7 +26,8 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.bumptech.glide.integration.compose.GlideImage
 import com.dot.gallery.R
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.ui.theme.Dimens
@@ -78,14 +79,14 @@ fun AlbumComponent(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalGlideComposeApi::class)
 @Composable
 fun AlbumImage(
     album: Album,
     onItemClick: (Album) -> Unit,
     onItemLongClick: (Album) -> Unit
 ) {
-    AsyncImage(
+    GlideImage(
         modifier = Modifier
             .aspectRatio(1f)
             .size(Dimens.Album())
