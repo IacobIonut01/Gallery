@@ -24,9 +24,19 @@ jobs:
       env: 
         MAPS_TOKEN: $
       run: echo MAPS_TOKEN=\"$MAPS_TOKEN\" > ./api.properties
-    - name: Build Release APK (Debug keys)
+    - name: Build Release APK
       run: ./gradlew assembleRelease
+    - uses: r0adkll/sign-android-release@v1
+      id: signed_release
+      with:
+        releaseDirectory: app/build/outputs/apk/release
+        signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+        alias: ${{ secrets.ALIAS }}
+        keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+        keyPassword: ${{ secrets.KEY_PASSWORD }}
+      env:
+        BUILD_TOOLS_VERSION: "34.0.0"
     - uses: actions/upload-artifact@v3
       with:
-        name: Gallery Release (Debug keys)
-        path: app/build/outputs/apk/release/*.apk
+        name: Gallery Release
+        path: ${{steps.signed_release.outputs.signedReleaseFile}}
