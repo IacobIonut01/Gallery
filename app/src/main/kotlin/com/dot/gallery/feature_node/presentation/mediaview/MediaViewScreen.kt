@@ -125,7 +125,7 @@ fun MediaViewScreen(
                     durationMillis = DEFAULT_LOW_VELOCITY_SWIPE_DURATION
                 )
             ),
-            key = { index -> state.media[index].id + state.media[index].timestamp },
+            key = { index -> state.media[index].toString() },
             pageSpacing = 16.dp,
         ) { index ->
             MediaPreviewComponent(
