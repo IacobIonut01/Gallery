@@ -1,5 +1,5 @@
 [versions]
-agp = "8.2.0-alpha07"
+agp = "8.2.0-alpha08"
 appcompat = "1.6.1"
 bom = "2023.05.00"
 coilVersion = "2.4.0"
