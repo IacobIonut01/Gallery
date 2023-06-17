@@ -125,7 +125,6 @@ fun MediaViewScreen(
                     durationMillis = DEFAULT_LOW_VELOCITY_SWIPE_DURATION
                 )
             ),
-            beyondBoundsPageCount = 4,
             key = { index -> state.media[index].toString() },
             pageSpacing = 16.dp,
         ) { index ->
