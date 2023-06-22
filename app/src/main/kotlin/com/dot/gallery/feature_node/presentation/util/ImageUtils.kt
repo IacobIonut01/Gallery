@@ -10,11 +10,8 @@ import android.database.Cursor
 import android.net.Uri
 import android.provider.MediaStore
 import androidx.core.app.ShareCompat
-import androidx.core.content.FileProvider
 import androidx.exifinterface.media.ExifInterface
-import com.dot.gallery.core.Constants
 import com.dot.gallery.feature_node.domain.model.Media
-import java.io.File
 import java.io.IOException
 
 @Throws(IOException::class)
@@ -46,15 +43,10 @@ fun Context.uriToPath(uri: Uri?): String? {
 }
 
 fun Context.shareMedia(media: Media) {
-    val uri = if (media.uri.isFromApps()) media.uri else FileProvider.getUriForFile(
-        this,
-        Constants.AUTHORITY,
-        File(media.path)
-    )
     ShareCompat
         .IntentBuilder(this)
         .setType(media.mimeType)
-        .addStream(uri)
+        .addStream(media.uri)
         .startChooser()
 }
 
@@ -68,12 +60,7 @@ fun Context.shareMedia(mediaList: List<Media>) {
         .IntentBuilder(this)
         .setType(mimeTypes)
     mediaList.forEach {
-        val uri = if (it.uri.isFromApps()) it.uri else FileProvider.getUriForFile(
-            this,
-            Constants.AUTHORITY,
-            File(it.path)
-        )
-        shareCompat.addStream(uri)
+        shareCompat.addStream(it.uri)
     }
     shareCompat.startChooser()
 }
