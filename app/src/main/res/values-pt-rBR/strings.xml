@@ -97,6 +97,7 @@
     <string name="selection_dialog_close_cd">Fechar diálogo de seleção</string>
     <string name="edit">Editar</string>
     <string name="trash_deletion_warning">Fotos e vídeos que forem apagados serão removidos após 30 dias.</string>
+    <string name="open_with">"Open with: "</string>
     <plurals name="item_count">
         <item quantity="one">%s ítem</item>
         <item quantity="other">%s ítens</item>
