@@ -38,9 +38,9 @@ fun BoxScope.VideoDurationHeader(modifier: Modifier = Modifier, media: Media) {
         Text(
             modifier = Modifier
                 .advancedShadow(
-                    cornersRadius = 2.dp,
-                    shadowBlurRadius = 6.dp,
-                    alpha = 0.1f,
+                    cornersRadius = 1.dp,
+                    shadowBlurRadius = 4.dp,
+                    alpha = 0.2f,
                     offsetY = (-2).dp
                 ),
             text = media.duration.formatMinSec(),
