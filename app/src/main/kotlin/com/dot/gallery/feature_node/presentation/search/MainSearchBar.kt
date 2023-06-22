@@ -53,7 +53,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.isContainer
+import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -106,7 +106,7 @@ fun MainSearchBar(
 
     Box(
         modifier = Modifier
-            .semantics { isContainer = true }
+            .semantics { isTraversalGroup = true }
             .zIndex(1f)
             .alpha(alpha)
             .fillMaxWidth()

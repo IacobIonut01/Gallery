@@ -68,7 +68,11 @@ fun MediaViewScreen(
     val initialPage = rememberSaveable(runtimeMediaId) {
         state.media.indexOfFirst { it.id == runtimeMediaId }.coerceAtLeast(0)
     }
-    val pagerState = rememberPagerState(initialPage = initialPage)
+    val pagerState = rememberPagerState(
+        initialPage = initialPage,
+        initialPageOffsetFraction = 0f,
+        pageCount = state.media::size
+    )
     val scrollEnabled = rememberSaveable { mutableStateOf(true) }
     val bottomSheetState = rememberAppBottomSheetState()
 
@@ -116,7 +120,6 @@ fun MediaViewScreen(
     ) {
         HorizontalPager(
             state = pagerState,
-            pageCount = state.media.size,
             userScrollEnabled = scrollEnabled.value,
             flingBehavior = PagerDefaults.flingBehavior(
                 state = pagerState,
