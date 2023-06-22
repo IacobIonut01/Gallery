@@ -97,7 +97,7 @@
     <string name="selection_dialog_close_cd">Thoát hộp thoại chọn</string>
     <string name="edit">Sửa</string>
     <string name="trash_deletion_warning">Ảnh và video bạn đã xóa sẽ bị xóa hoàn toàn sau 30 ngày.</string>
-    <string name="open_with">"Open with: "</string>
+    <string name="open_with">"Mở bằng: "</string>
     <plurals name="item_count">
         <item quantity="other">%s mục</item>
     </plurals>
