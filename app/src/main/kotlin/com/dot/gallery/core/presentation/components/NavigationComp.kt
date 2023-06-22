@@ -79,7 +79,7 @@ fun NavigationComp(
                 paddingValues = paddingValues,
                 retrieveMedia = viewModel::launchInPhotosScreen,
                 handler = viewModel.handler,
-                mediaState = viewModel.photoState,
+                mediaState = viewModel.mediaState,
                 selectionState = viewModel.multiSelectState,
                 selectedMedia = viewModel.selectedPhotoState,
                 toggleSelection = viewModel::toggleSelection,
@@ -99,7 +99,7 @@ fun NavigationComp(
             val viewModel = hiltViewModel<MediaViewModel>().apply { target = TARGET_TRASH }
             TrashedGridScreen(
                 paddingValues = paddingValues,
-                mediaState = viewModel.photoState,
+                mediaState = viewModel.mediaState,
                 selectionState = viewModel.multiSelectState,
                 selectedMedia = viewModel.selectedPhotoState,
                 handler = viewModel.handler,
@@ -119,7 +119,7 @@ fun NavigationComp(
             val viewModel = hiltViewModel<MediaViewModel>().apply { target = TARGET_FAVORITES }
             FavoriteScreen(
                 paddingValues = paddingValues,
-                mediaState = viewModel.photoState,
+                mediaState = viewModel.mediaState,
                 handler = viewModel.handler,
                 selectionState = viewModel.multiSelectState,
                 selectedMedia = viewModel.selectedPhotoState,
@@ -174,7 +174,7 @@ fun NavigationComp(
                 albumId = argumentAlbumId,
                 albumName = argumentAlbumName,
                 handler = viewModel.handler,
-                mediaState = viewModel.photoState,
+                mediaState = viewModel.mediaState,
                 selectionState = viewModel.multiSelectState,
                 selectedMedia = viewModel.selectedPhotoState,
                 toggleSelection = viewModel::toggleSelection,
@@ -213,7 +213,7 @@ fun NavigationComp(
             MediaViewScreen(
                 paddingValues = paddingValues,
                 mediaId = mediaId,
-                mediaState = viewModel.photoState,
+                mediaState = viewModel.mediaState,
                 handler = viewModel.handler,
                 navigateUp = navPipe::navigateUp
             )
@@ -251,7 +251,7 @@ fun NavigationComp(
                 paddingValues = paddingValues,
                 mediaId = mediaId,
                 target = target,
-                mediaState = viewModel.photoState,
+                mediaState = viewModel.mediaState,
                 handler = viewModel.handler,
                 navigateUp = navPipe::navigateUp
             )

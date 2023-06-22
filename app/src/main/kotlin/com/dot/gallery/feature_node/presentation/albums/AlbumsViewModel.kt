@@ -8,7 +8,6 @@ package com.dot.gallery.feature_node.presentation.albums
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
@@ -25,6 +24,8 @@ import com.dot.gallery.feature_node.domain.util.OrderType
 import com.dot.gallery.feature_node.presentation.util.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onEach
@@ -36,12 +37,15 @@ class AlbumsViewModel @Inject constructor(
     private val mediaUseCases: MediaUseCases
 ) : ViewModel() {
 
-    val albumsState = mutableStateOf(AlbumState())
-    val pinnedAlbumState = mutableStateOf(AlbumState())
+    private val _albumsState = MutableStateFlow(AlbumState())
+    val albumsState = _albumsState.asStateFlow()
+    private val _pinnedAlbumState = MutableStateFlow(AlbumState())
+    val pinnedAlbumState = _pinnedAlbumState.asStateFlow()
 
     fun onAlbumClick(navigate: (String) -> Unit): (Album) -> Unit = { album ->
         navigate(Screen.AlbumViewScreen.route + "?albumId=${album.id}&albumName=${album.label}")
     }
+
     val onAlbumLongClick: (Album) -> Unit = { album ->
         toggleAlbumPin(album, !album.isPinned)
     }
@@ -90,7 +94,7 @@ class AlbumsViewModel @Inject constructor(
                 albums = mediaOrder.sortAlbums(albumsState.value.albums)
             )
             if (albumsState.value != newState) {
-                albumsState.value = newState
+                _albumsState.emit(newState)
             }
         }
     }
@@ -102,23 +106,27 @@ class AlbumsViewModel @Inject constructor(
                 // Insert pinnedAlbumId to Database
                 mediaUseCases.insertPinnedAlbumUseCase(newAlbum)
                 // Remove original Album from unpinned List
-                albumsState.value = albumsState.value.copy(
-                    albums = albumsState.value.albums.minus(album)
+                _albumsState.emit(
+                    albumsState.value.copy(
+                        albums = albumsState.value.albums.minus(album)
+                    )
                 )
                 // Add 'pinned' version of the album object to the pinned List
-                pinnedAlbumState.value = pinnedAlbumState.value.copy(
+                _pinnedAlbumState.emit(pinnedAlbumState.value.copy(
                     albums = pinnedAlbumState.value.albums.toMutableList().apply { add(newAlbum) }
-                )
+                ))
             } else {
                 // Delete pinnedAlbumId from Database
                 mediaUseCases.deletePinnedAlbumUseCase(album)
                 // Add 'un-pinned' version of the album object to the pinned List
-                albumsState.value = albumsState.value.copy(
+                _albumsState.emit(albumsState.value.copy(
                     albums = albumsState.value.albums.toMutableList().apply { add(newAlbum) }
-                )
+                ))
                 // Remove original Album from pinned List
-                pinnedAlbumState.value = pinnedAlbumState.value.copy(
-                    albums = pinnedAlbumState.value.albums.minus(album)
+                _pinnedAlbumState.emit(
+                    pinnedAlbumState.value.copy(
+                        albums = pinnedAlbumState.value.albums.minus(album)
+                    )
                 )
             }
         }
@@ -129,14 +137,17 @@ class AlbumsViewModel @Inject constructor(
             mediaUseCases.getAlbumsUseCase(mediaOrder).onEach { result ->
                 // Result data list
                 val data = result.data ?: emptyList()
-                val error = if (result is Resource.Error) result.message ?: "An error occurred" else ""
+                val error =
+                    if (result is Resource.Error) result.message ?: "An error occurred" else ""
                 val newAlbumState = AlbumState(error = error, albums = data.filter { !it.isPinned })
-                val newPinnedState = AlbumState(error = error, albums = data.filter { it.isPinned }.sortedBy { it.label })
+                val newPinnedState = AlbumState(
+                    error = error,
+                    albums = data.filter { it.isPinned }.sortedBy { it.label })
                 if (albumsState.value != newAlbumState) {
-                    albumsState.value = newAlbumState
+                    _albumsState.emit(newAlbumState)
                 }
                 if (pinnedAlbumState.value != newPinnedState) {
-                    pinnedAlbumState.value = newPinnedState
+                    _pinnedAlbumState.emit(newPinnedState)
                 }
             }.flowOn(Dispatchers.IO).collect()
         }

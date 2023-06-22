@@ -30,6 +30,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.PERMISSIONS
 import com.dot.gallery.core.Constants.Target.TARGET_TRASH
@@ -46,6 +47,7 @@ import com.dot.gallery.feature_node.presentation.search.MainSearchBar
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import kotlinx.coroutines.flow.StateFlow
 
 @OptIn(
     ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class
@@ -58,7 +60,7 @@ fun MediaScreen(
     albumName: String,
     retrieveMedia: (() -> Unit)? = null,
     handler: MediaHandleUseCase,
-    mediaState: MutableState<MediaState>,
+    mediaState: StateFlow<MediaState>,
     selectionState: MutableState<Boolean>,
     selectedMedia: SnapshotStateList<Media>,
     toggleSelection: (Int) -> Unit,
@@ -99,7 +101,7 @@ fun MediaScreen(
             TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
         /** STATES BLOCK **/
-        val state by mediaState
+        val state by mediaState.collectAsStateWithLifecycle()
         /** ************ **/
 
         /** Selection state handling **/
@@ -166,7 +168,7 @@ fun MediaScreen(
                 }
             ) { it ->
                 MediaGridView(
-                    mediaState = mediaState,
+                    mediaState = state,
                     allowSelection = true,
                     showSearchBar = showSearchBar,
                     searchBarPaddingTop = paddingValues.calculateTopPadding(),
@@ -179,15 +181,14 @@ fun MediaScreen(
                     selectedMedia = selectedMedia,
                     showMonthlyHeader = showMonthlyHeader,
                     toggleSelection = toggleSelection,
-                    aboveGridContent = aboveGridContent,
-                    onMediaClick = {
-                        val albumRoute = "albumId=$albumId"
-                        val targetRoute = "target=$target"
-                        val param =
-                            if (target != null) targetRoute else albumRoute
-                        navigate(Screen.MediaViewScreen.route + "?mediaId=${it.id}&$param")
-                    }
-                )
+                    aboveGridContent = aboveGridContent
+                ) {
+                    val albumRoute = "albumId=$albumId"
+                    val targetRoute = "target=$target"
+                    val param =
+                        if (target != null) targetRoute else albumRoute
+                    navigate(Screen.MediaViewScreen.route + "?mediaId=${it.id}&$param")
+                }
             }
             if (target != TARGET_TRASH) {
                 SelectionSheet(

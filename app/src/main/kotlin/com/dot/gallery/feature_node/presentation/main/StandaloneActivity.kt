@@ -52,7 +52,7 @@ class StandaloneActivity : ComponentActivity() {
                         isStandalone = true,
                         paddingValues = paddingValues,
                         mediaId = viewModel.mediaId,
-                        mediaState = viewModel.photoState,
+                        mediaState = viewModel.mediaState,
                         handler = viewModel.handler
                     )
                 }

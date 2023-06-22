@@ -19,22 +19,24 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
 import com.dot.gallery.core.MediaState
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.rememberIsMediaManager
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 @Composable
 fun TrashedNavActions(
     handler: MediaHandleUseCase,
-    mediaState: MutableState<MediaState>,
+    mediaState: StateFlow<MediaState>,
     selectedMedia: SnapshotStateList<Media>,
     selectionState: MutableState<Boolean>,
 ) {
-    val state by mediaState
+    val state by mediaState.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val isMediaManager = rememberIsMediaManager()
     val deleteSheetState = rememberAppBottomSheetState()

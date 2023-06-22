@@ -26,6 +26,8 @@ import com.dot.gallery.feature_node.presentation.util.getMonth
 import com.dot.gallery.feature_node.presentation.util.update
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onEach
@@ -39,8 +41,8 @@ open class MediaViewModel @Inject constructor(
 ) : ViewModel() {
 
     val multiSelectState = mutableStateOf(false)
-    var photoState = mutableStateOf(MediaState())
-        private set
+    private val _mediaState = MutableStateFlow(MediaState())
+    val mediaState = _mediaState.asStateFlow()
     val selectedPhotoState = mutableStateListOf<Media>()
     val handler = mediaUseCases.mediaHandleUseCase
 
@@ -74,23 +76,12 @@ open class MediaViewModel @Inject constructor(
 
     fun toggleSelection(index: Int) {
         viewModelScope.launch {
-            val item = photoState.value.media[index]
-            val isSelected = item.selected || selectedPhotoState.find { it.id == item.id } != null
-            photoState.value = photoState.value.copy(
-                media = photoState.value.media.apply {
-                    get(index).selected = !isSelected
-                }
-            )
+            val item = mediaState.value.media[index]
             val selectedPhoto = selectedPhotoState.find { it.id == item.id }
             if (selectedPhoto != null) {
-                if (!isSelected) {
-                    selectedPhotoState[selectedPhotoState.indexOf(selectedPhoto)] =
-                        selectedPhoto.copy(
-                            selected = true
-                        )
-                } else selectedPhotoState.remove(selectedPhoto)
+                selectedPhotoState.remove(selectedPhoto)
             } else {
-                selectedPhotoState.add(item.copy(selected = !isSelected))
+                selectedPhotoState.add(item)
             }
             multiSelectState.update(selectedPhotoState.isNotEmpty())
         }
@@ -116,7 +107,7 @@ open class MediaViewModel @Inject constructor(
                 val data = result.data ?: emptyList()
                 if (data.isEmpty()) {
                     return@onEach withContext(Dispatchers.Main) {
-                        photoState.update(MediaState())
+                        _mediaState.emit(MediaState())
                     }
                 }
                 data.groupBy {
@@ -147,7 +138,7 @@ open class MediaViewModel @Inject constructor(
                 }
                 return@onEach withContext(Dispatchers.Main) {
                     if (target != null) {
-                        return@withContext photoState.update(
+                        return@withContext _mediaState.emit(
                             MediaState(
                                 error = if (result is Resource.Error) result.message
                                     ?: "An error occurred" else "",
@@ -159,7 +150,7 @@ open class MediaViewModel @Inject constructor(
                     } else if (albumId != -1L) {
                         val startDate: DateExt = data.last().timestamp.getDateExt()
                         val endDate: DateExt = data.first().timestamp.getDateExt()
-                        return@withContext photoState.update(
+                        return@withContext _mediaState.emit(
                             MediaState(
                                 error = if (result is Resource.Error) result.message
                                     ?: "An error occurred" else "",
@@ -170,7 +161,7 @@ open class MediaViewModel @Inject constructor(
                             )
                         )
                     } else {
-                        return@withContext photoState.update(
+                        return@withContext _mediaState.emit(
                             MediaState(
                                 error = if (result is Resource.Error) result.message
                                     ?: "An error occurred" else "",

@@ -22,11 +22,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
 import com.dot.gallery.core.MediaState
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.util.Screen
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 @Composable
@@ -34,7 +36,7 @@ fun TimelineNavActions(
     albumId: Long,
     handler: MediaHandleUseCase,
     expandedDropDown: MutableState<Boolean>,
-    mediaState: MutableState<MediaState>,
+    mediaState: StateFlow<MediaState>,
     selectedMedia: SnapshotStateList<Media>,
     selectionState: MutableState<Boolean>,
     navigate: (route: String) -> Unit,
@@ -44,7 +46,7 @@ fun TimelineNavActions(
         selectedMedia.clear()
         selectionState.value = false
     }
-    val state by mediaState
+    val state by mediaState.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val result = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartIntentSenderForResult(),

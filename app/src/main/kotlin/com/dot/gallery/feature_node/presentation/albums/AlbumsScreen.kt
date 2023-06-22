@@ -36,7 +36,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,6 +43,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
 import com.dot.gallery.core.Settings.Album.rememberLastSort
 import com.dot.gallery.core.presentation.components.EmptyMedia
@@ -62,8 +62,8 @@ fun AlbumsScreen(
     paddingValues: PaddingValues,
     viewModel: AlbumsViewModel = hiltViewModel(),
 ) {
-    val state by rememberSaveable(viewModel.albumsState) { viewModel.albumsState }
-    val pinnedState by rememberSaveable(viewModel.pinnedAlbumState) { viewModel.pinnedAlbumState }
+    val state by viewModel.albumsState.collectAsStateWithLifecycle()
+    val pinnedState by viewModel.pinnedAlbumState.collectAsStateWithLifecycle()
     val filterOptions = viewModel.rememberFilters()
     val albumSortSetting by rememberLastSort()
 

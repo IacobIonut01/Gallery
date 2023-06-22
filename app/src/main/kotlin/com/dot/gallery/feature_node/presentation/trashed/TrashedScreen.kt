@@ -24,13 +24,14 @@ import com.dot.gallery.feature_node.presentation.common.MediaScreen
 import com.dot.gallery.feature_node.presentation.trashed.components.AutoDeleteFooter
 import com.dot.gallery.feature_node.presentation.trashed.components.EmptyTrash
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashedNavActions
+import kotlinx.coroutines.flow.StateFlow
 
 @Composable
 fun TrashedGridScreen(
     paddingValues: PaddingValues,
     albumName: String = stringResource(id = R.string.trash),
     handler: MediaHandleUseCase,
-    mediaState: MutableState<MediaState>,
+    mediaState: StateFlow<MediaState>,
     selectionState: MutableState<Boolean>,
     selectedMedia: SnapshotStateList<Media>,
     toggleSelection: (Int) -> Unit,

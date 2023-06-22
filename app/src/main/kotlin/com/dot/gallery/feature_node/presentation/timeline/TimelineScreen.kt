@@ -20,6 +20,7 @@ import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.common.MediaScreen
 import com.dot.gallery.feature_node.presentation.timeline.components.TimelineNavActions
+import kotlinx.coroutines.flow.StateFlow
 
 @Composable
 fun TimelineScreen(
@@ -28,7 +29,7 @@ fun TimelineScreen(
     albumName: String = stringResource(R.string.app_name),
     retrieveMedia: (() -> Unit)? = null,
     handler: MediaHandleUseCase,
-    mediaState: MutableState<MediaState>,
+    mediaState: StateFlow<MediaState>,
     selectionState: MutableState<Boolean>,
     selectedMedia: SnapshotStateList<Media>,
     allowNavBar: Boolean = true,

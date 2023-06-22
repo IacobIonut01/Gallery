@@ -61,7 +61,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MediaGridView(
-    mediaState: MutableState<MediaState>,
+    mediaState: MediaState,
     paddingValues: PaddingValues = PaddingValues(0.dp),
     gridState: LazyGridState = rememberLazyGridState(),
     searchBarPaddingTop: Dp = 0.dp,
@@ -79,13 +79,11 @@ fun MediaGridView(
     val stringYesterday = stringResource(id = R.string.header_yesterday)
 
     val scope = rememberCoroutineScope()
-
-    val state by mediaState
-    val mappedData = if (showMonthlyHeader) state.mappedMediaWithMonthly else state.mappedMedia
+    val mappedData = if (showMonthlyHeader) mediaState.mappedMediaWithMonthly else mediaState.mappedMedia
 
     /** Glide Preloading **/
     val preloadingData = rememberGlidePreloadingData(
-        data = state.media,
+        data = mediaState.media,
         preloadImageSize = Size(50f, 50f)
     ) { media: Media, requestBuilder: RequestBuilder<Drawable> ->
         requestBuilder
@@ -173,7 +171,7 @@ fun MediaGridView(
                     }
 
                     is MediaItem.MediaViewItem -> {
-                        val mediaIndex = state.media.indexOf(item.media).coerceAtLeast(0)
+                        val mediaIndex = mediaState.media.indexOf(item.media).coerceAtLeast(0)
                         val (media, preloadRequestBuilder) = preloadingData[mediaIndex]
                         val view = LocalView.current
                         MediaComponent(
@@ -184,13 +182,13 @@ fun MediaGridView(
                             onItemLongClick = {
                                 if (allowSelection) {
                                     view.vibrate()
-                                    toggleSelection(state.media.indexOf(it))
+                                    toggleSelection(mediaState.media.indexOf(it))
                                 }
                             },
                             onItemClick = {
                                 if (selectionState.value && allowSelection) {
                                     view.vibrate()
-                                    toggleSelection(state.media.indexOf(it))
+                                    toggleSelection(mediaState.media.indexOf(it))
                                 } else onMediaClick(it)
                             }
                         )
@@ -206,7 +204,7 @@ fun MediaGridView(
          */
         val stickyHeaderLastItem = remember { mutableStateOf<String?>(null) }
 
-        val stickyHeaderItem by remember(state.media) {
+        val stickyHeaderItem by remember(mediaState.media) {
             derivedStateOf {
                 var firstIndex = gridState.layoutInfo.visibleItemsInfo.firstOrNull()?.index
                 var item = firstIndex?.let(mappedData::getOrNull)
@@ -233,7 +231,7 @@ fun MediaGridView(
             showSearchBar = showSearchBar,
             searchBarPadding = searchBarPadding,
             stickyHeader = {
-                if (state.media.isNotEmpty()) {
+                if (mediaState.media.isNotEmpty()) {
                     stickyHeaderItem?.let {
                         Text(
                             text = it,

@@ -59,6 +59,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
@@ -80,7 +81,7 @@ fun MainSearchBar(
     var historySet by rememberSearchHistory()
     val vm = hiltViewModel<SearchViewModel>()
     var query by rememberSaveable { mutableStateOf("") }
-    val state by vm.mediaState
+    val state by vm.mediaState.collectAsStateWithLifecycle()
     var activeState by rememberSaveable {
         mutableStateOf(false)
     }
@@ -199,15 +200,14 @@ fun MainSearchBar(
                     }
                 } else {
                     MediaGridView(
-                        mediaState = vm.mediaState,
+                        mediaState = state,
                         paddingValues = PaddingValues(
                             bottom = bottomPadding + 16.dp
-                        ),
-                        onMediaClick = {
-                            dismissSearchBar()
-                            navigate(Screen.MediaViewScreen.route + "?mediaId=${it.id}")
-                        }
-                    )
+                        )
+                    ) {
+                        dismissSearchBar()
+                        navigate(Screen.MediaViewScreen.route + "?mediaId=${it.id}")
+                    }
                 }
             }
 

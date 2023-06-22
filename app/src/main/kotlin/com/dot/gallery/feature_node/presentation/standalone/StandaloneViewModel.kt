@@ -6,14 +6,14 @@
 package com.dot.gallery.feature_node.presentation.standalone
 
 import android.net.Uri
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dot.gallery.core.MediaState
 import com.dot.gallery.feature_node.domain.use_case.MediaUseCases
-import com.dot.gallery.feature_node.presentation.util.update
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onEach
@@ -26,7 +26,8 @@ class StandaloneViewModel @Inject constructor(
     private val mediaUseCases: MediaUseCases
 ) : ViewModel() {
 
-    val photoState = mutableStateOf(MediaState())
+    private val _mediaState = MutableStateFlow(MediaState())
+    val mediaState = _mediaState.asStateFlow()
     val handler = mediaUseCases.mediaHandleUseCase
 
     var dataList: List<Uri> = emptyList()
@@ -46,7 +47,7 @@ class StandaloneViewModel @Inject constructor(
                     val data = result.data
                     if (data != null) {
                         withContext(Dispatchers.Main) {
-                            photoState.update(MediaState(media = data))
+                            _mediaState.emit(MediaState(media = data))
                             mediaId = data.first().id
                         }
                     }

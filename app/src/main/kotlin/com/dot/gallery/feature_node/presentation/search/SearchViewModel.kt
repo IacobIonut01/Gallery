@@ -17,9 +17,10 @@ import com.dot.gallery.feature_node.domain.use_case.MediaUseCases
 import com.dot.gallery.feature_node.presentation.util.getDate
 import com.dot.gallery.feature_node.presentation.util.getMonth
 import com.dot.gallery.feature_node.presentation.util.isDate
-import com.dot.gallery.feature_node.presentation.util.update
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onEach
@@ -35,8 +36,8 @@ class SearchViewModel @Inject constructor(
     var lastQuery = mutableStateOf("")
         private set
 
-    var mediaState = mutableStateOf(MediaState())
-        private set
+    private val _mediaState = MutableStateFlow(MediaState())
+    val mediaState = _mediaState.asStateFlow()
 
     val selectionState = mutableStateOf(false)
     val selectedMedia = mutableStateListOf<Media>()
@@ -72,7 +73,7 @@ class SearchViewModel @Inject constructor(
                 var data = result.data ?: emptyList()
                 if (data.isEmpty()) {
                     return@onEach withContext(Dispatchers.Main) {
-                        mediaState.value = MediaState()
+                        _mediaState.emit(MediaState())
                     }
                 }
                 data = data.parseQuery(query)
@@ -98,7 +99,7 @@ class SearchViewModel @Inject constructor(
                     }
                 }
                 withContext(Dispatchers.Main) {
-                    mediaState.update(
+                    _mediaState.emit(
                         MediaState(
                             error = if (result is Resource.Error) result.message
                                 ?: "An error occurred" else "",

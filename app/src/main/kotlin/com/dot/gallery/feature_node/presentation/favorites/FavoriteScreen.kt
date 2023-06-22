@@ -23,13 +23,14 @@ import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.common.MediaScreen
 import com.dot.gallery.feature_node.presentation.favorites.components.EmptyFavorites
 import com.dot.gallery.feature_node.presentation.favorites.components.FavoriteNavActions
+import kotlinx.coroutines.flow.StateFlow
 
 @Composable
 fun FavoriteScreen(
     paddingValues: PaddingValues,
     albumName: String = stringResource(id = R.string.favorites),
     handler: MediaHandleUseCase,
-    mediaState: MutableState<MediaState>,
+    mediaState: StateFlow<MediaState>,
     selectionState: MutableState<Boolean>,
     selectedMedia: SnapshotStateList<Media>,
     toggleFavorite: (ActivityResultLauncher<IntentSenderRequest>, List<Media>, Boolean) -> Unit,

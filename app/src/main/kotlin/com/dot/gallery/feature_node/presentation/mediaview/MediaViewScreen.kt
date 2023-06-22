@@ -31,6 +31,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.exoplayer.ExoPlayer
 import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Constants.Animation.enterAnimation
@@ -51,6 +52,7 @@ import com.dot.gallery.feature_node.presentation.util.getDate
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.rememberWindowInsetsController
 import com.dot.gallery.feature_node.presentation.util.toggleSystemBars
+import kotlinx.coroutines.flow.StateFlow
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -60,11 +62,11 @@ fun MediaViewScreen(
     isStandalone: Boolean = false,
     mediaId: Long,
     target: String? = null,
-    mediaState: MutableState<MediaState>,
+    mediaState: StateFlow<MediaState>,
     handler: MediaHandleUseCase
 ) {
     var runtimeMediaId by rememberSaveable(mediaId) { mutableStateOf(mediaId) }
-    val state by mediaState
+    val state by mediaState.collectAsStateWithLifecycle()
     val initialPage = rememberSaveable(runtimeMediaId) {
         state.media.indexOfFirst { it.id == runtimeMediaId }.coerceAtLeast(0)
     }
