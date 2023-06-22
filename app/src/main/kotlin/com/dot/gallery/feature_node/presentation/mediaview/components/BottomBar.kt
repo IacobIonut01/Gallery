@@ -20,11 +20,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -68,6 +68,7 @@ import com.dot.gallery.feature_node.presentation.util.ExifMetadata
 import com.dot.gallery.feature_node.presentation.util.getDate
 import com.dot.gallery.feature_node.presentation.util.getExifInterface
 import com.dot.gallery.feature_node.presentation.util.launchEditIntent
+import com.dot.gallery.feature_node.presentation.util.launchOpenWithIntent
 import com.dot.gallery.feature_node.presentation.util.launchUseAsIntent
 import com.dot.gallery.feature_node.presentation.util.shareMedia
 import com.dot.gallery.ui.theme.Black40P
@@ -232,7 +233,8 @@ private fun MediaViewDateContainer(
                 }
             }
             Text(
-                text = exifMetadata.imageDescription ?: stringResource(R.string.image_add_description),
+                text = exifMetadata.imageDescription
+                    ?: stringResource(R.string.image_add_description),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
                     .padding(vertical = 8.dp)
@@ -290,13 +292,23 @@ private fun MediaViewActions(
     ) {
         scope.launch { context.launchEditIntent(it) }
     }
-    // Use as
-    BottomBarColumn(
-        currentMedia = currentMedia,
-        imageVector = Icons.Outlined.OpenInNew,
-        title = stringResource(R.string.use_as)
-    ) {
-        scope.launch { context.launchUseAsIntent(it) }
+    // Use as or Open With
+    if (currentMedia.mimeType.startsWith("video")) {
+        BottomBarColumn(
+            currentMedia = currentMedia,
+            imageVector = Icons.Outlined.OpenInNew,
+            title = stringResource(R.string.open_with)
+        ) {
+            scope.launch { context.launchOpenWithIntent(it) }
+        }
+    } else {
+        BottomBarColumn(
+            currentMedia = currentMedia,
+            imageVector = Icons.Outlined.OpenInNew,
+            title = stringResource(R.string.use_as)
+        ) {
+            scope.launch { context.launchUseAsIntent(it) }
+        }
     }
     if (showDeleteButton) {
         // Trash Component
@@ -326,8 +338,10 @@ fun BottomBarColumn(
     Column(
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
-            .height(80.dp)
-            .width(90.dp)
+            .defaultMinSize(
+                minWidth = 90.dp,
+                minHeight = 80.dp
+            )
             .clickable {
                 currentMedia?.let {
                     onItemClick.invoke(it)

@@ -97,6 +97,7 @@
     <string name="selection_dialog_close_cd">Close selection dialog</string>
     <string name="edit">Edit</string>
     <string name="trash_deletion_warning">Photos and videos you delete will be removed after 30 days.</string>
+    <string name="open_with">"Open with: "</string>
     <plurals name="item_count">
         <item quantity="one">%s item</item>
         <item quantity="other">%s items</item>

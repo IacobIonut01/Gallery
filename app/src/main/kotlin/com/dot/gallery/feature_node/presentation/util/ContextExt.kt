@@ -75,6 +75,16 @@ suspend fun Context.launchUseAsIntent(media: Media) =
         startActivity(Intent.createChooser(intent, getString(R.string.set_as)))
     }
 
+suspend fun Context.launchOpenWithIntent(media: Media) =
+    withContext(Dispatchers.Default) {
+        val intent = Intent(Intent.ACTION_VIEW).apply {
+            addCategory(Intent.CATEGORY_DEFAULT)
+            setDataAndType(media.uri, media.mimeType)
+            putExtra("mimeType", media.mimeType)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        startActivity(Intent.createChooser(intent, getString(R.string.open_with)))
+    }
 
 @Composable
 fun rememberIsMediaManager(): Boolean {
