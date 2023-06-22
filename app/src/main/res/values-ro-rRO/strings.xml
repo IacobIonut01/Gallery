@@ -97,6 +97,7 @@
     <string name="selection_dialog_close_cd">Închide dialogul de selecție</string>
     <string name="edit">Editează</string>
     <string name="trash_deletion_warning">Fotografiile și videoclipurile pe care le ștergi vor fi eliminate după 30 de zile.</string>
+    <string name="open_with">"Open with: "</string>
     <plurals name="item_count">
         <item quantity="one">%s articol</item>
         <item quantity="few">%s articole</item>
