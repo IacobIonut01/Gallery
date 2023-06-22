@@ -93,15 +93,15 @@
     <string name="add_location_cd">Добавить местоположение</string>
     <string name="settings_theme_header">Тема</string>
     <string name="settings_follow_system_theme_title">Следовать системной теме</string>
-    <string name="settings_dark_mode_title">Использовать Ночной Режим</string>
+    <string name="settings_dark_mode_title">Использовать Темный Режим</string>
     <string name="selection_dialog_close_cd">Закрыть окно выбора</string>
     <string name="edit">Редактировать</string>
     <string name="trash_deletion_warning">Перемещённые Вами в корзину фотографии и видео будут полностью удалены через 30 дней.</string>
-    <string name="open_with">"Open with: "</string>
+    <string name="open_with">"Открыть с помощью: "</string>
     <plurals name="item_count">
-        <item quantity="one">%sпункт</item>
-        <item quantity="few">%sпунктов</item>
-        <item quantity="many">%sпунктов</item>
-        <item quantity="other">%sпунктов</item>
+        <item quantity="one">%s пункт</item>
+        <item quantity="few">%s пунктов</item>
+        <item quantity="many">%s пунктов</item>
+        <item quantity="other">%s пунктов</item>
     </plurals>
 </resources>
