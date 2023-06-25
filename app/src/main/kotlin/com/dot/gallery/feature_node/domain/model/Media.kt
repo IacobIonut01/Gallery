@@ -8,6 +8,7 @@ package com.dot.gallery.feature_node.domain.model
 import android.net.Uri
 import android.os.Parcelable
 import android.webkit.MimeTypeMap
+import androidx.compose.runtime.Immutable
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.dot.gallery.core.Constants
@@ -16,6 +17,7 @@ import kotlinx.parcelize.Parcelize
 import java.io.File
 
 
+@Immutable
 @Parcelize
 sealed class MediaItem : Parcelable {
     abstract val key: String
@@ -41,6 +43,7 @@ sealed class MediaItem : Parcelable {
 val Any.isHeaderKey: Boolean
     get() = this is String && this.startsWith("header")
 
+@Immutable
 @Parcelize
 data class Media(
     val id: Long = 0,
@@ -108,6 +111,7 @@ data class Media(
     }
 }
 
+@Immutable
 @Parcelize
 data class Album(
     val id: Long = 0,
