@@ -7,7 +7,6 @@ package com.dot.gallery.feature_node.presentation.mediaview.components.video
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
@@ -27,22 +26,20 @@ import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.presentation.util.formatMinSec
 
 @Composable
-fun BoxScope.VideoDurationHeader(modifier: Modifier = Modifier, media: Media) {
+fun VideoDurationHeader(modifier: Modifier = Modifier, media: Media) {
     Row(
         modifier = modifier
-            .align(Alignment.TopEnd)
-            .padding(all = 8.dp),
+            .padding(all = 8.dp)
+            .advancedShadow(
+                cornersRadius = 8.dp,
+                shadowBlurRadius = 6.dp,
+                alpha = 0.3f
+            ),
         horizontalArrangement = Arrangement.End,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            modifier = Modifier
-                .advancedShadow(
-                    cornersRadius = 1.dp,
-                    shadowBlurRadius = 4.dp,
-                    alpha = 0.2f,
-                    offsetY = (-2).dp
-                ),
+            modifier = Modifier,
             text = media.duration.formatMinSec(),
             style = MaterialTheme.typography.labelSmall,
             color = Color.White
