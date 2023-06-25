@@ -20,10 +20,6 @@ fun ContentResolver.contentFlowObserver(uris: Array<Uri>) = callbackFlow {
         override fun onChange(selfChange: Boolean, uri: Uri?) {
             trySend(selfChange)
         }
-
-        override fun onChange(selfChange: Boolean) {
-            onChange(selfChange, null)
-        }
     }
     for (uri in uris)
         registerContentObserver(uri, true, observer)

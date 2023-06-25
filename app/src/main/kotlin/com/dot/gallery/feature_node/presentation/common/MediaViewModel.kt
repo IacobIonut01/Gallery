@@ -11,28 +11,20 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.dot.gallery.core.Constants.Target.TARGET_FAVORITES
-import com.dot.gallery.core.Constants.Target.TARGET_TRASH
 import com.dot.gallery.core.MediaState
 import com.dot.gallery.core.Resource
 import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.model.MediaItem
 import com.dot.gallery.feature_node.domain.use_case.MediaUseCases
-import com.dot.gallery.feature_node.presentation.util.DateExt
-import com.dot.gallery.feature_node.presentation.util.getDate
-import com.dot.gallery.feature_node.presentation.util.getDateExt
-import com.dot.gallery.feature_node.presentation.util.getDateHeader
-import com.dot.gallery.feature_node.presentation.util.getMonth
+import com.dot.gallery.feature_node.presentation.util.collectMedia
+import com.dot.gallery.feature_node.presentation.util.mediaFlow
 import com.dot.gallery.feature_node.presentation.util.update
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -88,91 +80,17 @@ open class MediaViewModel @Inject constructor(
     }
 
     private fun getMedia(albumId: Long = -1L, target: String? = null) {
-        val flow = if (albumId != -1L) {
-            mediaUseCases.getMediaByAlbumUseCase(albumId)
-        } else if (!target.isNullOrEmpty()) {
-            when (target) {
-                TARGET_FAVORITES -> mediaUseCases.getMediaFavoriteUseCase()
-                TARGET_TRASH -> mediaUseCases.getMediaTrashedUseCase()
-                else -> mediaUseCases.getMediaUseCase()
-            }
-        } else {
-            mediaUseCases.getMediaUseCase()
-        }
-        viewModelScope.launch(Dispatchers.IO) {
-            flow.onEach { result ->
-                val mappedData = ArrayList<MediaItem>()
-                val mappedDataWithMonthly = ArrayList<MediaItem>()
-                val monthHeaderList = mutableSetOf<String>()
+        viewModelScope.launch {
+            mediaUseCases.mediaFlow(albumId, target).flowOn(Dispatchers.IO).collectLatest { result ->
                 val data = result.data ?: emptyList()
+                if (data == mediaState.value.media) return@collectLatest
+                val error = if (result is Resource.Error) result.message
+                    ?: "An error occurred" else ""
                 if (data.isEmpty()) {
-                    return@onEach withContext(Dispatchers.Main) {
-                        _mediaState.emit(MediaState())
-                    }
+                    return@collectLatest _mediaState.emit(MediaState())
                 }
-                data.groupBy {
-                    it.timestamp.getDate(
-                        stringToday = "Today"
-                        /** Localized in composition */
-                        ,
-                        stringYesterday = "Yesterday"
-                        /** Localized in composition */
-                    )
-                }.forEach { (date, data) ->
-                    val month = getMonth(date)
-                    if (month.isNotEmpty() && !monthHeaderList.contains(month)) {
-                        monthHeaderList.add(month)
-                        mappedDataWithMonthly.add(
-                            MediaItem.Header("header_big_$month", month, data)
-                        )
-                    }
-                    val item = MediaItem.Header("header_$date", date, data)
-                    mappedData.add(item)
-                    mappedDataWithMonthly.add(item)
-                    data.forEach { media ->
-                        val mediaItem =
-                            MediaItem.MediaViewItem.Loaded("media_${media.id}", media)
-                        mappedData.add(mediaItem)
-                        mappedDataWithMonthly.add(mediaItem)
-                    }
-                }
-                return@onEach withContext(Dispatchers.Main) {
-                    if (target != null) {
-                        return@withContext _mediaState.emit(
-                            MediaState(
-                                error = if (result is Resource.Error) result.message
-                                    ?: "An error occurred" else "",
-                                media = data,
-                                mappedMedia = mappedData,
-                                mappedMediaWithMonthly = mappedDataWithMonthly
-                            )
-                        )
-                    } else if (albumId != -1L) {
-                        val startDate: DateExt = data.last().timestamp.getDateExt()
-                        val endDate: DateExt = data.first().timestamp.getDateExt()
-                        return@withContext _mediaState.emit(
-                            MediaState(
-                                error = if (result is Resource.Error) result.message
-                                    ?: "An error occurred" else "",
-                                media = data,
-                                mappedMedia = mappedData,
-                                mappedMediaWithMonthly = mappedDataWithMonthly,
-                                dateHeader = getDateHeader(startDate, endDate)
-                            )
-                        )
-                    } else {
-                        return@withContext _mediaState.emit(
-                            MediaState(
-                                error = if (result is Resource.Error) result.message
-                                    ?: "An error occurred" else "",
-                                media = data,
-                                mappedMedia = mappedData,
-                                mappedMediaWithMonthly = mappedDataWithMonthly
-                            )
-                        )
-                    }
-                }
-            }.flowOn(Dispatchers.IO).collect()
+                return@collectLatest _mediaState.collectMedia(data, error, albumId)
+            }
         }
     }
 

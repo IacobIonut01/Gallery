@@ -14,11 +14,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -41,17 +39,15 @@ class StandaloneViewModel @Inject constructor(
     var mediaId: Long = -1
 
     private fun getMedia(clipDataUriList: List<Uri> = emptyList()) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             if (clipDataUriList.isNotEmpty()) {
-                mediaUseCases.getMediaListByUrisUseCase(clipDataUriList).onEach { result ->
+                mediaUseCases.getMediaListByUrisUseCase(clipDataUriList).flowOn(Dispatchers.IO).collectLatest { result ->
                     val data = result.data
                     if (data != null) {
-                        withContext(Dispatchers.Main) {
-                            _mediaState.emit(MediaState(media = data))
-                            mediaId = data.first().id
-                        }
+                        mediaId = data.first().id
+                        _mediaState.value = MediaState(media = data)
                     }
-                }.flowOn(Dispatchers.IO).collect()
+                }
             }
         }
     }

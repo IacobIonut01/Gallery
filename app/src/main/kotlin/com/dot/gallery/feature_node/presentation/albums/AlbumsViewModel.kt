@@ -26,9 +26,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -134,7 +133,7 @@ class AlbumsViewModel @Inject constructor(
 
     private fun getAlbums(mediaOrder: MediaOrder = MediaOrder.Date(OrderType.Descending)) {
         viewModelScope.launch {
-            mediaUseCases.getAlbumsUseCase(mediaOrder).onEach { result ->
+            mediaUseCases.getAlbumsUseCase(mediaOrder).flowOn(Dispatchers.IO).collectLatest { result ->
                 // Result data list
                 val data = result.data ?: emptyList()
                 val error =
@@ -149,7 +148,7 @@ class AlbumsViewModel @Inject constructor(
                 if (pinnedAlbumState.value != newPinnedState) {
                     _pinnedAlbumState.emit(newPinnedState)
                 }
-            }.flowOn(Dispatchers.IO).collect()
+            }
         }
     }
 

@@ -205,7 +205,7 @@ fun MediaScreen(
         /** Error State Handling Block **/
         if (state.error.isNotEmpty())
             Error(errorMessage = state.error)
-        else if (state.media.isEmpty())
+        else if (!state.isLoading && state.media.isEmpty())
             emptyContent.invoke()
         /** ************ **/
     }

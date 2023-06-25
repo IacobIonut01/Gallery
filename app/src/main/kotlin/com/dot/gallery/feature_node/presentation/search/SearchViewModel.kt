@@ -21,11 +21,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -63,18 +61,17 @@ class SearchViewModel @Inject constructor(
     }
 
     fun queryMedia(query: String = "") {
-        viewModelScope.launch(Dispatchers.IO) {
-            withContext(Dispatchers.Main) {
-                lastQuery.value = query
-            }
-            mediaUseCases.getMediaUseCase().onEach { result ->
+        viewModelScope.launch {
+            lastQuery.value = query
+            mediaUseCases.getMediaUseCase().flowOn(Dispatchers.IO).collectLatest { result ->
                 val mappedData = ArrayList<MediaItem>()
                 val monthHeaderList = ArrayList<String>()
                 var data = result.data ?: emptyList()
+                if (data == mediaState.value.media) return@collectLatest
+                val error = if (result is Resource.Error) result.message
+                    ?: "An error occurred" else ""
                 if (data.isEmpty()) {
-                    return@onEach withContext(Dispatchers.Main) {
-                        _mediaState.emit(MediaState())
-                    }
+                    return@collectLatest _mediaState.emit(MediaState())
                 }
                 data = data.parseQuery(query)
                 data.groupBy {
@@ -90,25 +87,21 @@ class SearchViewModel @Inject constructor(
                     if (month.isNotEmpty() && !monthHeaderList.contains(month)) {
                         monthHeaderList.add(month)
                     }
-                    val item = MediaItem.Header("header_$date", date, data)
-                    mappedData.add(item)
-                    for (media in data) {
-                        val mediaItem =
-                            MediaItem.MediaViewItem.Loaded("media_${media.id}", media)
-                        mappedData.add(mediaItem)
-                    }
-                }
-                withContext(Dispatchers.Main) {
-                    _mediaState.emit(
-                        MediaState(
-                            error = if (result is Resource.Error) result.message
-                                ?: "An error occurred" else "",
-                            media = data,
-                            mappedMedia = mappedData
+                    mappedData.add(MediaItem.Header("header_$date", date, data))
+                    mappedData.addAll(data.map {
+                        MediaItem.MediaViewItem.Loaded(
+                            "media_${it.id}_${it.label}",
+                            it
                         )
-                    )
+                    })
                 }
-            }.flowOn(Dispatchers.IO).collect()
+                _mediaState.value =
+                    MediaState(
+                        error = error,
+                        media = data,
+                        mappedMedia = mappedData
+                    )
+            }
         }
     }
 
