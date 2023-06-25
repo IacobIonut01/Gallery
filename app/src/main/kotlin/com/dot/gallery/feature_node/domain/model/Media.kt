@@ -56,9 +56,11 @@ data class Media(
     val favorite: Int,
     val trashed: Int,
     val duration: String? = null,
-    val tags: Set<Pair<String, String>> = emptySet(),
-    var selected: Boolean = false
 ) : Parcelable {
+
+    override fun toString(): String {
+        return "$id, $path, $fullDate, $mimeType, favorite=$favorite"
+    }
 
     /**
      * Used to determine if the Media object is not accessible
