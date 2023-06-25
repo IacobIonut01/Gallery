@@ -7,7 +7,6 @@ package com.dot.gallery.feature_node.data.repository
 
 import android.annotation.SuppressLint
 import android.content.ContentResolver
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -36,10 +35,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 class MediaRepositoryImpl(
-    private val context: Context,
+    private val contentResolver: ContentResolver,
     private val database: InternalDatabase
 ) : MediaRepository {
-    private val contentResolver by lazy { context.contentResolver }
 
     /**
      * TODO: Add media reordering
