@@ -5,7 +5,6 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.kotlinAndroid)
-    alias(libs.plugins.kspAndroid)
     alias(libs.plugins.hiltAndroid)
     alias(libs.plugins.baselineProfilePlugin)
     kotlin("kapt")
@@ -156,7 +155,7 @@ dependencies {
 
     // Room
     implementation(libs.room.runtime)
-    ksp(libs.room.compiler)
+    kapt(libs.room.compiler)
 
     // Kotlin Extensions and Coroutines support for Room
     implementation(libs.room.ktx)
@@ -164,7 +163,7 @@ dependencies {
     // Glide
     implementation(libs.glide)
     implementation(libs.glide.compose)
-    ksp(libs.glide.compiler)
+    kapt(libs.glide.compiler)
 
     // SVG Support for Glide
     implementation(libs.glide.svg)
