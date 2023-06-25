@@ -85,8 +85,8 @@ class SettingsViewModel @Inject constructor() : ViewModel() {
                 summary = context.getString(R.string.settings_cached_screen_summary),
                 currentValue = cachedScreenCount,
                 minValue = 1f,
-                maxValue = 20f,
-                step = 19,
+                maxValue = 120f,
+                step = 119,
                 onSeek = { cachedScreenCount = it }
             )
         }

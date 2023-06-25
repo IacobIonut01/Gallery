@@ -52,9 +52,9 @@ object Settings {
         private val CACHED_SCREEN_COUNT = floatPreferencesKey("cached_screen_count")
         @Composable
         fun rememberCachedScreenCount() =
-            rememberPreference(key = CACHED_SCREEN_COUNT, defaultValue = 8f)
+            rememberPreference(key = CACHED_SCREEN_COUNT, defaultValue = 80f)
         fun getCachedScreenCount(context: Context) =
-            context.dataStore.data.map { it[CACHED_SCREEN_COUNT] ?: 8f }
+            context.dataStore.data.map { it[CACHED_SCREEN_COUNT] ?: 80f }
 
         private val MAX_IMAGE_SIZE = intPreferencesKey("max_image_size")
         @Composable
