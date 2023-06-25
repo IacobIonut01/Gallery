@@ -71,7 +71,7 @@ fun MutableStateFlow<MediaState>.collectMedia(
         val month = getMonth(date)
         if (month.isNotEmpty() && !monthHeaderList!!.contains(month)) {
             monthHeaderList!!.add(month)
-            if (withMonthHeader) {
+            if (withMonthHeader && mappedDataWithMonthly!!.isNotEmpty()) {
                 mappedDataWithMonthly!!.add(MediaItem.Header("header_big_$month", month, data))
             }
         }
