@@ -97,7 +97,7 @@
     <string name="selection_dialog_close_cd">Закрыть окно выбора</string>
     <string name="edit">Редактировать</string>
     <string name="trash_deletion_warning">Перемещённые Вами в корзину фотографии и видео будут полностью удалены через 30 дней.</string>
-    <string name="open_with">"Открыть с помощью: "</string>
+    <string name="open_with">Open with</string>
     <plurals name="item_count">
         <item quantity="one">%s пункт</item>
         <item quantity="few">%s пунктов</item>
