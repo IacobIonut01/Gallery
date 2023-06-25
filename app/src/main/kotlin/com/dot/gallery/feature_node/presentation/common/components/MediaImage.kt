@@ -105,7 +105,7 @@ fun MediaImage(
             visible = media.duration != null,
             enter = Animation.enterAnimation,
             exit = Animation.exitAnimation,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.align(Alignment.TopEnd)
         ) {
             VideoDurationHeader(
                 modifier = Modifier
