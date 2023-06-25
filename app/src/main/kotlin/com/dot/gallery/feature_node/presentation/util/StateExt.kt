@@ -98,7 +98,6 @@ fun MutableStateFlow<MediaState>.collectMedia(
     mappedData = null
     mappedDataWithMonthly = null
     monthHeaderList = null
-    System.gc()
 }
 
 private fun List<Media>.dateHeader(albumId: Long): String =
