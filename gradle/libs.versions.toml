@@ -67,6 +67,9 @@ compose-ui-tooling-preview = { group = "androidx.compose.ui", name= "ui-tooling-
 compose-ui = { group = "androidx.compose.ui", name = "ui" }
 compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
 
+# Compose-shimmer
+compose-shimmer = { group = "com.valentinilk.shimmer", name = "compose-shimmer", version = "1.0.5"}
+
 # Compose Tests
 compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }

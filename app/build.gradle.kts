@@ -131,6 +131,8 @@ dependencies {
     implementation(libs.compose.ui.util)
     implementation(libs.compose.material.icons.extended)
 
+    // Compose - Shimmer
+    implementation(libs.compose.shimmer)
     // Compose - Material3
     implementation(libs.compose.material3)
     implementation(libs.compose.material3.window.size)
