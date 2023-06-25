@@ -8,6 +8,7 @@ package com.dot.gallery.feature_node.presentation.common
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
@@ -32,10 +33,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
+import com.dot.gallery.core.Constants.Animation.enterAnimation
+import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.Constants.PERMISSIONS
 import com.dot.gallery.core.Constants.Target.TARGET_TRASH
 import com.dot.gallery.core.MediaState
 import com.dot.gallery.core.presentation.components.Error
+import com.dot.gallery.core.presentation.components.LoadingMedia
 import com.dot.gallery.core.presentation.components.NavigationActions
 import com.dot.gallery.core.presentation.components.NavigationButton
 import com.dot.gallery.core.presentation.components.SelectionSheet
@@ -167,6 +171,18 @@ fun MediaScreen(
                     }
                 }
             ) { it ->
+                AnimatedVisibility(
+                    visible = state.isLoading,
+                    enter = enterAnimation,
+                    exit = exitAnimation
+                ) {
+                    LoadingMedia(
+                        paddingValues = PaddingValues(
+                            top = it.calculateTopPadding(),
+                            bottom = paddingValues.calculateBottomPadding() + 16.dp + 64.dp
+                        )
+                    )
+                }
                 MediaGridView(
                     mediaState = state,
                     allowSelection = true,
