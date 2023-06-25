@@ -37,11 +37,12 @@ import androidx.compose.ui.unit.dp
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
+import com.bumptech.glide.load.DecodeFormat
 import com.bumptech.glide.signature.MediaStoreSignature
 import com.dot.gallery.core.Constants.Animation
 import com.dot.gallery.core.presentation.components.CheckBox
-import com.dot.gallery.feature_node.presentation.mediaview.components.video.VideoDurationHeader
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.presentation.mediaview.components.video.VideoDurationHeader
 import com.dot.gallery.ui.theme.Dimens
 
 @OptIn(ExperimentalGlideComposeApi::class)
@@ -96,7 +97,8 @@ fun MediaImage(
         ) {
             it.thumbnail(preloadRequestBuilder)
                 .signature(MediaStoreSignature(media.mimeType, media.timestamp, media.orientation))
-                .override(500)
+                .format(DecodeFormat.PREFER_RGB_565)
+                .override(270)
         }
 
         AnimatedVisibility(
