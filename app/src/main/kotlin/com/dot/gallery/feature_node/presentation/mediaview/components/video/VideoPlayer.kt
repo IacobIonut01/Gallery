@@ -59,8 +59,6 @@ fun VideoPlayer(
                 repeatMode = Player.REPEAT_MODE_ONE
                 setMediaItem(MediaItem.fromUri(media.uri))
                 prepare()
-            }.also {
-                totalDuration = it.duration.coerceAtLeast(0L)
             }
     }
 
@@ -91,6 +89,7 @@ fun VideoPlayer(
         exoPlayer.addListener(
             object : Player.Listener {
                 override fun onEvents(player: Player, events: Player.Events) {
+                    totalDuration = exoPlayer.duration.coerceAtLeast(0L)
                     isPlaying = player.isPlaying
                 }
             }
@@ -109,7 +108,6 @@ fun VideoPlayer(
     if (isPlaying) {
         LaunchedEffect(Unit) {
             while (true) {
-                totalDuration = exoPlayer.duration.coerceAtLeast(0L)
                 currentTime.value = exoPlayer.currentPosition.coerceAtLeast(0L)
                 bufferedPercentage = exoPlayer.bufferedPercentage
                 delay(1.seconds / 30)
