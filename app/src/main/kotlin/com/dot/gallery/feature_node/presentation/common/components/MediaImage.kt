@@ -38,8 +38,8 @@ import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.bumptech.glide.load.DecodeFormat
-import com.bumptech.glide.signature.MediaStoreSignature
 import com.dot.gallery.core.Constants.Animation
+import com.dot.gallery.core.MediaKey
 import com.dot.gallery.core.presentation.components.CheckBox
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.presentation.mediaview.components.video.VideoDurationHeader
@@ -96,7 +96,7 @@ fun MediaImage(
             contentScale = ContentScale.Crop,
         ) {
             it.thumbnail(preloadRequestBuilder)
-                .signature(MediaStoreSignature(media.mimeType, media.timestamp, media.orientation))
+                .signature(MediaKey(media.id, media.timestamp, media.mimeType, media.orientation))
                 .format(DecodeFormat.PREFER_RGB_565)
                 .override(270)
         }
