@@ -31,6 +31,8 @@ import com.dot.gallery.feature_node.domain.model.PinnedAlbum
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.domain.util.MediaOrder
 import com.dot.gallery.feature_node.domain.util.OrderType
+import com.dot.gallery.feature_node.presentation.picker.AllowedMedia
+import com.dot.gallery.feature_node.presentation.picker.AllowedMedia.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -44,6 +46,16 @@ class MediaRepositoryImpl(
      */
     override fun getMedia(): Flow<Resource<List<Media>>> =
         contentResolver.retrieveMedia { it.getMedia(mediaOrder = DEFAULT_ORDER) }
+
+    override fun getMediaByType(allowedMedia: AllowedMedia): Flow<Resource<List<Media>>> =
+        contentResolver.retrieveMedia {
+            val query = when (allowedMedia) {
+                PHOTOS -> Query.PhotoQuery()
+                VIDEOS -> Query.VideoQuery()
+                BOTH -> Query.MediaQuery()
+            }
+            it.getMedia(mediaQuery = query, mediaOrder = DEFAULT_ORDER)
+        }
 
     override fun getFavorites(mediaOrder: MediaOrder): Flow<Resource<List<Media>>> =
         contentResolver.retrieveMedia { it.getMediaFavorite(mediaOrder = mediaOrder) }
@@ -101,7 +113,36 @@ class MediaRepositoryImpl(
             it.getMedia(query)
         }
 
-    override fun getMediaByUri(uriAsString: String, isSecure: Boolean): Flow<Resource<List<Media>>> =
+    override fun getMediaByAlbumIdWithType(
+        albumId: Long,
+        allowedMedia: AllowedMedia
+    ): Flow<Resource<List<Media>>>  =
+        contentResolver.retrieveMedia {
+            val query = Query.MediaQuery().copy(
+                bundle = Bundle().apply {
+                    val mimeType = when (allowedMedia) {
+                        PHOTOS -> "image%"
+                        VIDEOS -> "video%"
+                        BOTH -> "%/%"
+                    }
+                    putString(
+                        ContentResolver.QUERY_ARG_SQL_SELECTION,
+                        MediaStore.MediaColumns.BUCKET_ID + "= ? and " + MediaStore.MediaColumns.MIME_TYPE + " like ?"
+                    )
+                    putStringArray(
+                        ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS,
+                        arrayOf(albumId.toString(), mimeType)
+                    )
+                }
+            )
+            /** return@retrieveMedia */
+            it.getMedia(query)
+        }
+
+    override fun getMediaByUri(
+        uriAsString: String,
+        isSecure: Boolean
+    ): Flow<Resource<List<Media>>> =
         contentResolver.retrieveMediaAsResource {
             val media = it.getMediaByUri(Uri.parse(uriAsString))
             /** return@retrieveMediaAsResource */
@@ -120,7 +161,9 @@ class MediaRepositoryImpl(
                         )
                     }
                 )
-                Resource.Success(data = if (isSecure) listOf(media) else it.getMedia(query).ifEmpty { listOf(media) })
+                Resource.Success(
+                    data = if (isSecure) listOf(media) else it.getMedia(query)
+                        .ifEmpty { listOf(media) })
             }
         }
 
@@ -139,7 +182,11 @@ class MediaRepositoryImpl(
         mediaList: List<Media>,
         favorite: Boolean
     ) {
-        val intentSender = MediaStore.createFavoriteRequest(contentResolver, mediaList.map { it.uri }, favorite).intentSender
+        val intentSender = MediaStore.createFavoriteRequest(
+            contentResolver,
+            mediaList.map { it.uri },
+            favorite
+        ).intentSender
         val senderRequest: IntentSenderRequest = IntentSenderRequest.Builder(intentSender)
             .setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION, 0)
             .build()
@@ -151,7 +198,11 @@ class MediaRepositoryImpl(
         mediaList: List<Media>,
         trash: Boolean
     ) {
-        val intentSender = MediaStore.createTrashRequest(contentResolver, mediaList.map { it.uri }, trash).intentSender
+        val intentSender = MediaStore.createTrashRequest(
+            contentResolver,
+            mediaList.map { it.uri },
+            trash
+        ).intentSender
         val senderRequest: IntentSenderRequest = IntentSenderRequest.Builder(intentSender)
             .setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION, 0)
             .build()
@@ -162,7 +213,8 @@ class MediaRepositoryImpl(
         result: ActivityResultLauncher<IntentSenderRequest>,
         mediaList: List<Media>
     ) {
-        val intentSender = MediaStore.createDeleteRequest(contentResolver, mediaList.map { it.uri }).intentSender
+        val intentSender =
+            MediaStore.createDeleteRequest(contentResolver, mediaList.map { it.uri }).intentSender
         val senderRequest: IntentSenderRequest = IntentSenderRequest.Builder(intentSender)
             .setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION, 0)
             .build()
