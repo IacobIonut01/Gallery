@@ -18,12 +18,12 @@ val versionBuild = 65
 
 android {
     namespace = "com.dot.gallery"
-    compileSdk = 33
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.dot.gallery"
         minSdk = 30
-        targetSdk = 33
+        targetSdk = 34
         versionCode = versionMajor * 10000 + versionMinor * 1000 + versionPatch * 100 + versionBuild
         versionName = "${versionMajor}.${versionMinor}.${versionPatch}"
 
