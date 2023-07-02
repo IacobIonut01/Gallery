@@ -55,7 +55,6 @@ import com.dot.gallery.feature_node.presentation.util.MapBoxURL
 import com.dot.gallery.feature_node.presentation.util.connectivityState
 import com.dot.gallery.feature_node.presentation.util.formatMinSec
 import com.dot.gallery.feature_node.presentation.util.formattedFileSize
-import com.dot.gallery.feature_node.presentation.util.getExifInterface
 import com.dot.gallery.feature_node.presentation.util.launchMap
 import com.dot.gallery.ui.theme.Shapes
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -199,7 +198,7 @@ data class InfoRow(
     val onLongClick: (() -> Unit)? = null,
 )
 
-fun Media.retrieveMetadata(context: Context): List<InfoRow> {
+fun Media.retrieveMetadata(context: Context, exifMetadata: ExifMetadata): List<InfoRow> {
     val infoList = ArrayList<InfoRow>()
     if (trashed == 1) {
         infoList.apply {
@@ -220,79 +219,74 @@ fun Media.retrieveMetadata(context: Context): List<InfoRow> {
         }
         return infoList
     }
-    val exifInterface = getExifInterface(context = context, uri = uri)
-    if (exifInterface != null) {
-        try {
-            val exifMetadata = ExifMetadata(exifInterface)
-
-            infoList.apply {
-                if (!exifMetadata.modelName.isNullOrEmpty()) {
-                    val aperture = exifMetadata.apertureValue
-                    val focalLength = exifMetadata.focalLength
-                    val isoValue = exifMetadata.isoValue
-                    val stringBuilder = StringBuilder()
-                    if (aperture != 0.0)
-                        stringBuilder.append("f/$aperture")
-                    if (focalLength != 0.0)
-                        stringBuilder.append(" • ${focalLength}mm")
-                    if (isoValue != 0)
-                        stringBuilder.append(context.getString(R.string.iso) + isoValue)
-                    add(
-                        InfoRow(
-                            icon = Icons.Outlined.Camera,
-                            label = "${exifMetadata.manufacturerName} ${exifMetadata.modelName}",
-                            content = stringBuilder.toString()
-                        )
-                    )
-                }
+    try {
+        infoList.apply {
+            if (!exifMetadata.modelName.isNullOrEmpty()) {
+                val aperture = exifMetadata.apertureValue
+                val focalLength = exifMetadata.focalLength
+                val isoValue = exifMetadata.isoValue
+                val stringBuilder = StringBuilder()
+                if (aperture != 0.0)
+                    stringBuilder.append("f/$aperture")
+                if (focalLength != 0.0)
+                    stringBuilder.append(" • ${focalLength}mm")
+                if (isoValue != 0)
+                    stringBuilder.append(context.getString(R.string.iso) + isoValue)
                 add(
                     InfoRow(
-                        icon = Icons.Outlined.Photo,
-                        label = context.getString(R.string.label),
-                        content = label
-                    )
-                )
-                val formattedFileSize = File(path).formattedFileSize(context)
-                if (exifMetadata.imageWidth != 0 && exifMetadata.imageHeight != 0) {
-                    val width = exifMetadata.imageWidth
-                    val height = exifMetadata.imageHeight
-                    val imageMp = exifMetadata.imageMp
-                    val contentString = StringBuilder()
-                    contentString.append(formattedFileSize)
-                    if (imageMp > "0") contentString.append(" • $imageMp MP")
-                    if (width > 0 && height > 0) contentString.append(" • $width x $height")
-                    add(
-                        InfoRow(
-                            icon = Icons.Outlined.ImageSearch,
-                            label = context.getString(R.string.metadata),
-                            content = contentString.toString()
-                        )
-                    )
-                }
-                if (mimeType.contains("video")) {
-                    val contentString = StringBuilder()
-                    contentString.append(formattedFileSize)
-                    contentString.append(" • ${duration.formatMinSec()}")
-                    add(
-                        InfoRow(
-                            icon = Icons.Outlined.VideoFile,
-                            label = context.getString(R.string.metadata),
-                            content = contentString.toString()
-                        )
-                    )
-                }
-
-                add(
-                    InfoRow(
-                        icon = Icons.Outlined.Info,
-                        label = context.getString(R.string.path),
-                        content = path.substringBeforeLast("/")
+                        icon = Icons.Outlined.Camera,
+                        label = "${exifMetadata.manufacturerName} ${exifMetadata.modelName}",
+                        content = stringBuilder.toString()
                     )
                 )
             }
-        } catch (e: IOException) {
-            Log.e(TAG, "ExifInterface ERROR\n" + e.printStackTrace())
+            add(
+                InfoRow(
+                    icon = Icons.Outlined.Photo,
+                    label = context.getString(R.string.label),
+                    content = label
+                )
+            )
+            val formattedFileSize = File(path).formattedFileSize(context)
+            if (exifMetadata.imageWidth != 0 && exifMetadata.imageHeight != 0) {
+                val width = exifMetadata.imageWidth
+                val height = exifMetadata.imageHeight
+                val imageMp = exifMetadata.imageMp
+                val contentString = StringBuilder()
+                contentString.append(formattedFileSize)
+                if (imageMp > "0") contentString.append(" • $imageMp MP")
+                if (width > 0 && height > 0) contentString.append(" • $width x $height")
+                add(
+                    InfoRow(
+                        icon = Icons.Outlined.ImageSearch,
+                        label = context.getString(R.string.metadata),
+                        content = contentString.toString()
+                    )
+                )
+            }
+            if (mimeType.contains("video")) {
+                val contentString = StringBuilder()
+                contentString.append(formattedFileSize)
+                contentString.append(" • ${duration.formatMinSec()}")
+                add(
+                    InfoRow(
+                        icon = Icons.Outlined.VideoFile,
+                        label = context.getString(R.string.metadata),
+                        content = contentString.toString()
+                    )
+                )
+            }
+
+            add(
+                InfoRow(
+                    icon = Icons.Outlined.Info,
+                    label = context.getString(R.string.path),
+                    content = path.substringBeforeLast("/")
+                )
+            )
         }
+    } catch (e: IOException) {
+        Log.e(TAG, "ExifInterface ERROR\n" + e.printStackTrace())
     }
 
     return infoList

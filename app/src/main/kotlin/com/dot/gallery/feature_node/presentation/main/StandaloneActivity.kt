@@ -17,7 +17,6 @@ import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.dot.gallery.feature_node.presentation.mediaview.MediaViewScreen
 import com.dot.gallery.feature_node.presentation.standalone.StandaloneViewModel
-import com.dot.gallery.feature_node.presentation.util.uriToPath
 import com.dot.gallery.ui.theme.GalleryTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -31,9 +30,7 @@ class StandaloneActivity : ComponentActivity() {
         val isSecure = action.toLowerCase(Locale.current).contains("secure")
         val clipData = intent.clipData
         val uriList = ArrayList<Uri>()
-        intent.data?.let {
-            uriList.add(Uri.parse(uriToPath(it)))
-        }
+        intent.data?.let(uriList::add)
         if (clipData != null) {
             for (i in 0 until clipData.itemCount) {
                 uriList.add(clipData.getItemAt(i).uri)

@@ -5,7 +5,6 @@
 
 package com.dot.gallery.feature_node.presentation.mediaview.components
 
-import android.provider.MediaStore
 import androidx.activity.compose.BackHandler
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
@@ -129,33 +128,32 @@ fun BoxScope.MediaViewBottomBar(
         }
     }
     currentMedia?.let {
-        val metadataList = remember(currentMedia) { currentMedia.retrieveMetadata(context) }
         val exifInterface = remember(currentMedia) {
-            getExifInterface(
-                context = context,
-                uri = MediaStore.setRequireOriginal(currentMedia.uri)
-            )
+            getExifInterface(context = context, uri = currentMedia.uri)
         }
-        val exifMetadata = remember(currentMedia) {
-            exifInterface?.let { ExifMetadata(it) }
-        }
-        if (bottomSheetState.isVisible) {
-            ModalBottomSheet(
-                modifier = Modifier
-                    .padding(horizontal = 16.dp),
-                onDismissRequest = {
-                    scope.launch {
-                        bottomSheetState.hide()
-                    }
-                },
-                shape = Shapes.extraSmall,
-                sheetState = bottomSheetState.sheetState,
-                containerColor = Color.Transparent,
-                contentColor = Color.White,
-                dragHandle = null
-            ) {
-                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                    if (exifMetadata != null) {
+        if (exifInterface != null) {
+            val exifMetadata = remember(currentMedia) {
+                ExifMetadata(exifInterface)
+            }
+            val metadataList = remember(currentMedia) {
+                currentMedia.retrieveMetadata(context, exifMetadata)
+            }
+            if (bottomSheetState.isVisible) {
+                ModalBottomSheet(
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp),
+                    onDismissRequest = {
+                        scope.launch {
+                            bottomSheetState.hide()
+                        }
+                    },
+                    shape = Shapes.extraSmall,
+                    sheetState = bottomSheetState.sheetState,
+                    containerColor = Color.Transparent,
+                    contentColor = Color.White,
+                    dragHandle = null
+                ) {
+                    Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                         MediaViewDateContainer(
                             currentMedia = currentMedia,
                             exifMetadata = exifMetadata
