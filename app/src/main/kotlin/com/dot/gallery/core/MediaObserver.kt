@@ -8,8 +8,13 @@ package com.dot.gallery.core
 import android.content.ContentResolver
 import android.database.ContentObserver
 import android.net.Uri
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 
 /**
  * Register an observer class that gets callbacks when data identified by a given content URI
@@ -18,7 +23,11 @@ import kotlinx.coroutines.flow.callbackFlow
 fun ContentResolver.contentFlowObserver(uris: Array<Uri>) = callbackFlow {
     val observer = object : ContentObserver(null) {
         override fun onChange(selfChange: Boolean, uri: Uri?) {
-            trySend(selfChange)
+            if (isActive) {
+                launch(Dispatchers.IO) {
+                    send(selfChange)
+                }
+            }
         }
     }
     for (uri in uris)
@@ -28,4 +37,4 @@ fun ContentResolver.contentFlowObserver(uris: Array<Uri>) = callbackFlow {
     awaitClose {
         unregisterContentObserver(observer)
     }
-}
+}.buffer(capacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
