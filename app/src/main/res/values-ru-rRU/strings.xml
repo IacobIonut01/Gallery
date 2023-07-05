@@ -55,7 +55,7 @@
     <string name="pinned_albums_title">Закрепленные альбомы</string>
     <string name="unpin">Открепить</string>
     <string name="pin">Закрепить</string>
-    <string name="nav_timeline">Временная шкала</string>
+    <string name="nav_timeline">Хронология</string>
     <string name="location">Местоположение</string>
     <string name="location_cd">Местоположение медиафайла</string>
     <string name="location_map_cd">Карта</string>
