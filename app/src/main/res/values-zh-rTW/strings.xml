@@ -72,10 +72,10 @@
     <string name="settings_cached_screen_title">快取畫面數量</string>
     <string name="settings_cached_screen_summary">儲存在記憶體中的媒體畫面數量</string>
     <string name="settings_disk_cache_summary">可用於永久快取的儲存空間大小</string>
-    <string name="use_as">Use as</string>
-    <string name="set_as">"Set as: "</string>
-    <string name="delete_dialog_title">You\'re about to delete %s items</string>
-    <string name="delete_dialog_title_confirmation">Deleting %s items..</string>
+    <string name="use_as">使用方式</string>
+    <string name="set_as">"設定為： "</string>
+    <string name="delete_dialog_title">您即將刪除 %s 個項目</string>
+    <string name="delete_dialog_title_confirmation">正在刪除 %s 個項目..</string>
     <string name="action_cancel">Cancel</string>
     <string name="action_confirm">Confirm</string>
     <string name="action_confirmed">Confirmed</string>
