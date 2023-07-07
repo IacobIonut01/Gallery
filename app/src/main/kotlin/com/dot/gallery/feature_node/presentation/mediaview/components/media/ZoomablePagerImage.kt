@@ -57,7 +57,7 @@ fun ZoomablePagerImage(
         modifier = modifier
             .fillMaxSize()
             .zoomable(
-                zoomState = zoomState,
+                zoomState = zoomState
             )
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
