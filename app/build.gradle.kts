@@ -188,6 +188,9 @@ dependencies {
     // Datastore Preferences
     implementation(libs.datastore.prefs)
 
+    // Fuzzy Search
+    implementation(libs.fuzzywuzzy)
+
     // Tests
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)

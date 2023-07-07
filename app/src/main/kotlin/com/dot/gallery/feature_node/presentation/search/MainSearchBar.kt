@@ -64,6 +64,7 @@ import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.Settings.Search.rememberSearchHistory
+import com.dot.gallery.core.presentation.components.LoadingMedia
 import com.dot.gallery.feature_node.presentation.common.components.MediaGridView
 import com.dot.gallery.feature_node.presentation.search.SearchBarElevation.Collapsed
 import com.dot.gallery.feature_node.presentation.search.SearchBarElevation.Expanded
@@ -120,10 +121,14 @@ fun MainSearchBar(
             modifier = Modifier.align(Alignment.TopCenter),
             enabled = selectionState == null || !selectionState.value,
             query = query,
-            onQueryChange = { query = it },
+            onQueryChange = {
+                query = it
+                if (it != vm.lastQuery.value && vm.lastQuery.value.isNotEmpty())
+                    vm.clearQuery()
+            },
             onSearch = {
                 if (it.isNotEmpty())
-                    historySet = historySet.toMutableSet().apply { add(it) }
+                    historySet = historySet.toMutableSet().apply { add("${System.currentTimeMillis()}/$it") }
                 vm.queryMedia(it)
             },
             active = activeState,
@@ -178,7 +183,7 @@ fun MainSearchBar(
                 enter = enterAnimation,
                 exit = exitAnimation
             ) {
-                if (state.media.isEmpty()) {
+                if (state.media.isEmpty() && !state.isLoading) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -199,15 +204,26 @@ fun MainSearchBar(
                         )
                     }
                 } else {
-                    MediaGridView(
-                        mediaState = state,
-                        paddingValues = PaddingValues(
-                            bottom = bottomPadding + 16.dp
-                        )
-                    ) {
-                        dismissSearchBar()
-                        navigate(Screen.MediaViewScreen.route + "?mediaId=${it.id}")
+                    val pd = PaddingValues(
+                        bottom = bottomPadding + 16.dp
+                    )
+                    Box {
+                        MediaGridView(
+                            mediaState = state,
+                            paddingValues = pd
+                        ) {
+                            dismissSearchBar()
+                            navigate(Screen.MediaViewScreen.route + "?mediaId=${it.id}")
+                        }
+                        androidx.compose.animation.AnimatedVisibility(
+                            visible = state.isLoading,
+                            enter = enterAnimation,
+                            exit = exitAnimation
+                        ) {
+                            LoadingMedia(paddingValues = pd)
+                        }
                     }
+
                 }
             }
 
@@ -215,22 +231,44 @@ fun MainSearchBar(
     }
 
     BackHandler(activeState) {
-        dismissSearchBar()
+        if (vm.lastQuery.value.isEmpty())
+            dismissSearchBar()
+        else {
+            query = ""
+            vm.clearQuery()
+        }
     }
 }
 
 @Composable
 private fun SearchHistory(search: (query: String) -> Unit) {
     var historySet by rememberSearchHistory()
+    val historyItems = remember(historySet) {
+        historySet.toList().mapIndexed { index, item ->
+            Pair(
+                item.substringBefore(
+                    delimiter = "/",
+                    missingDelimiterValue = index.toString()
+                ),
+                item.substringAfter(
+                    delimiter = "/",
+                    missingDelimiterValue = item
+                )
+            )
+        }.sortedByDescending { it.first }
+    }
     val suggestionSet = listOf(
-        "Screenshots",
-        "Camera",
-        "May 2022",
-        "Thursday"
+        "0" to "Screenshots",
+        "1" to "Camera",
+        "2" to "May 2022",
+        "3" to "Thursday"
     )
+    val maxItems = remember(historySet) {
+        if (historyItems.size >= 5) 5 else historyItems.size
+    }
 
     LazyColumn {
-        if (historySet.isNotEmpty()) {
+        if (historyItems.isNotEmpty()) {
             item {
                 Text(
                     text = stringResource(R.string.history_recent_title),
@@ -241,13 +279,13 @@ private fun SearchHistory(search: (query: String) -> Unit) {
                         .padding(top = 16.dp)
                 )
             }
-        }
-        items(historySet.toList()) {
-            HistoryItem(
-                historyQuery = it,
-                search = search,
-            ) {
-                historySet = historySet.toMutableSet().apply { remove(it) }
+            items(historyItems.subList(0, maxItems)) {
+                HistoryItem(
+                    historyQuery = it,
+                    search = search,
+                ) {
+                    historySet = historySet.toMutableSet().apply { remove(it) }
+                }
             }
         }
         item {
@@ -272,7 +310,7 @@ private fun SearchHistory(search: (query: String) -> Unit) {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun LazyItemScope.HistoryItem(
-    historyQuery: String,
+    historyQuery: Pair<String, String>,
     search: (String) -> Unit,
     onDelete: ((String) -> Unit)? = null
 ) {
@@ -282,14 +320,15 @@ fun LazyItemScope.HistoryItem(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = historyQuery,
+                    text = historyQuery.second,
                     modifier = Modifier
                         .weight(1f)
                 )
                 if (onDelete != null) {
                     IconButton(
                         onClick = {
-                            onDelete(historyQuery)
+                            val timestamp = if (historyQuery.first.length < 10) "" else "${historyQuery.first}/"
+                            onDelete("$timestamp${historyQuery.second}")
                         }
                     ) {
                         Icon(
@@ -314,15 +353,15 @@ fun LazyItemScope.HistoryItem(
         ),
         modifier = Modifier
             .animateItemPlacement()
-            .clickable { search(historyQuery) }
+            .clickable { search(historyQuery.second) }
     )
 }
 
 sealed class SearchBarElevation(val dp: Dp) {
 
-    object Collapsed: SearchBarElevation(2.dp)
+    object Collapsed : SearchBarElevation(2.dp)
 
-    object Expanded: SearchBarElevation(0.dp)
+    object Expanded : SearchBarElevation(0.dp)
 
     operator fun invoke() = dp
 }

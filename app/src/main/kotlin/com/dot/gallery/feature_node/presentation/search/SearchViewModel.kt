@@ -16,7 +16,6 @@ import com.dot.gallery.feature_node.domain.model.MediaItem
 import com.dot.gallery.feature_node.domain.use_case.MediaUseCases
 import com.dot.gallery.feature_node.presentation.util.getDate
 import com.dot.gallery.feature_node.presentation.util.getMonth
-import com.dot.gallery.feature_node.presentation.util.isDate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,6 +23,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import me.xdrop.fuzzywuzzy.FuzzySearch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -44,21 +45,16 @@ class SearchViewModel @Inject constructor(
         queryMedia()
     }
 
-    private fun List<Media>.parseQuery(query: String): List<Media> {
-        if (query.isEmpty())
-            return emptyList()
-        return filter { item ->
-            if (query.isDate()) {
-                return@filter item.toString().contains(query, true)
-            }
-            val queries = query.split("\\s".toRegex())
-            var found = false
-            queries.forEach {
-                found = item.toString().contains(it, true)
-            }
-            return@filter found
+    private suspend fun List<Media>.parseQuery(query: String): List<Media> {
+        return withContext(Dispatchers.IO) {
+            if (query.isEmpty())
+                return@withContext emptyList()
+            val matches = FuzzySearch.extractSorted(query, this@parseQuery, { it.toString() }, 60)
+            return@withContext matches.map { it.referent }.ifEmpty { emptyList() }
         }
     }
+
+    fun clearQuery() = queryMedia("")
 
     fun queryMedia(query: String = "") {
         viewModelScope.launch {
@@ -66,15 +62,16 @@ class SearchViewModel @Inject constructor(
             mediaUseCases.getMediaUseCase().flowOn(Dispatchers.IO).collectLatest { result ->
                 val mappedData = ArrayList<MediaItem>()
                 val monthHeaderList = ArrayList<String>()
-                var data = result.data ?: emptyList()
+                val data = result.data ?: emptyList()
                 if (data == mediaState.value.media) return@collectLatest
                 val error = if (result is Resource.Error) result.message
                     ?: "An error occurred" else ""
                 if (data.isEmpty()) {
                     return@collectLatest _mediaState.emit(MediaState())
                 }
-                data = data.parseQuery(query)
-                data.groupBy {
+                _mediaState.value = MediaState(isLoading = true)
+                val parsedData = data.parseQuery(query)
+                parsedData.groupBy {
                     it.timestamp.getDate(
                         stringToday = "Today"
                         /** Localized in composition */
@@ -98,7 +95,7 @@ class SearchViewModel @Inject constructor(
                 _mediaState.value =
                     MediaState(
                         error = error,
-                        media = data,
+                        media = parsedData,
                         mappedMedia = mappedData
                     )
             }

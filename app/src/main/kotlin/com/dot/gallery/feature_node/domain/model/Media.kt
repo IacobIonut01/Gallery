@@ -92,7 +92,7 @@ data class Media(
             }
             var formattedDate = ""
             if (timestamp != 0L) {
-                formattedDate = timestamp.getDate(Constants.FULL_DATE_FORMAT)
+                formattedDate = timestamp.getDate(Constants.EXTENDED_DATE_FORMAT)
             }
             return Media(
                 label = uri.toString().substringAfterLast("/"),
