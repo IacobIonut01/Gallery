@@ -9,7 +9,6 @@ import android.content.Context
 import com.bumptech.glide.GlideBuilder
 import com.bumptech.glide.annotation.GlideModule
 import com.bumptech.glide.load.engine.DiskCacheStrategy
-import com.bumptech.glide.load.engine.bitmap_recycle.LruBitmapPool
 import com.bumptech.glide.load.engine.cache.DiskLruCacheFactory
 import com.bumptech.glide.load.engine.cache.LruResourceCache
 import com.bumptech.glide.load.engine.cache.MemorySizeCalculator
@@ -43,11 +42,6 @@ class GalleryGlideModule : AppGlideModule() {
                     diskCacheSize * 1024 * 1024
                 )
             )
-            val bitmapCalculator = MemorySizeCalculator.Builder(context)
-                .setBitmapPoolScreens(screenCount)
-                .build()
-            builder.setBitmapPool(LruBitmapPool(bitmapCalculator.bitmapPoolSize.toLong()))
-            builder.setImageDecoderEnabledForBitmaps(true)
             builder.setIsActiveResourceRetentionAllowed(true)
             builder.setSourceExecutor(
                 GlideExecutor
