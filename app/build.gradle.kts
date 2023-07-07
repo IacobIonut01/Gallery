@@ -5,6 +5,8 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.kotlinAndroid)
+    alias(libs.plugins.kspAndroid)
+    alias(libs.plugins.roomPlugin)
     alias(libs.plugins.hiltAndroid)
     alias(libs.plugins.baselineProfilePlugin)
     kotlin("kapt")
@@ -30,11 +32,6 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
-        }
-        javaCompileOptions {
-            annotationProcessorOptions {
-                arguments["room.schemaLocation"] = "$projectDir/schemas"
-            }
         }
         archivesName.set("Gallery-${versionName}_$gitHeadVersion")
     }
@@ -106,6 +103,10 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+
+    room {
+        schemaDirectory("$projectDir/schemas/")
+    }
 }
 
 dependencies {
@@ -157,7 +158,7 @@ dependencies {
 
     // Room
     implementation(libs.room.runtime)
-    kapt(libs.room.compiler)
+    ksp(libs.room.compiler)
 
     // Kotlin Extensions and Coroutines support for Room
     implementation(libs.room.ktx)
