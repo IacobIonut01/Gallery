@@ -42,7 +42,6 @@ android {
         getByName("debug") {
             buildConfigField("String", "MAPS_TOKEN", getApiKey())
             applicationIdSuffix = ".debug"
-            manifestPlaceholders["appName"] = "Gallery Debug"
             versionNameSuffix = "-debug"
             manifestPlaceholders["appProvider"] = "com.dot.gallery.debug.media_provider"
             buildConfigField(
@@ -53,7 +52,6 @@ android {
         }
         getByName("release") {
             manifestPlaceholders += mapOf(
-                "appName" to "Gallery",
                 "appProvider" to "com.dot.gallery.media_provider"
             )
             isMinifyEnabled = true
@@ -74,7 +72,6 @@ android {
             isShrinkResources = false
             applicationIdSuffix = ".staging"
             versionNameSuffix = "-staging"
-            manifestPlaceholders["appName"] = "Gallery Staging"
             manifestPlaceholders["appProvider"] = "com.dot.staging.debug.media_provider"
             buildConfigField(
                 "String",
