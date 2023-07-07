@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package com.dot.gallery.feature_node.presentation.main
+package com.dot.gallery.feature_node.presentation.standalone
 
 import android.net.Uri
 import android.os.Bundle
@@ -16,7 +16,6 @@ import androidx.compose.ui.text.toLowerCase
 import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.dot.gallery.feature_node.presentation.mediaview.MediaViewScreen
-import com.dot.gallery.feature_node.presentation.standalone.StandaloneViewModel
 import com.dot.gallery.ui.theme.GalleryTheme
 import dagger.hilt.android.AndroidEntryPoint
 
