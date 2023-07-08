@@ -5,24 +5,31 @@
 
 package com.dot.gallery.feature_node.presentation.mediaview.components.media
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.dot.gallery.feature_node.domain.model.Media
+import kotlinx.coroutines.launch
 import net.engawapg.lib.zoomable.rememberZoomState
+import net.engawapg.lib.zoomable.toggleScale
 import net.engawapg.lib.zoomable.zoomable
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ZoomablePagerImage(
     modifier: Modifier = Modifier,
@@ -32,6 +39,9 @@ fun ZoomablePagerImage(
     maxImageSize: Int,
     onItemClick: () -> Unit
 ) {
+    val scope = rememberCoroutineScope()
+    val doubleTapPosition = remember { mutableStateOf(Offset.Zero) }
+    
     val zoomState = rememberZoomState(
         maxScale = maxScale
     )
@@ -56,13 +66,19 @@ fun ZoomablePagerImage(
     Image(
         modifier = modifier
             .fillMaxSize()
-            .zoomable(
-                zoomState = zoomState
-            )
-            .clickable(
+            .combinedClickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
+                onDoubleClick = {
+                    scope.launch {
+                        zoomState.toggleScale(2.5f, doubleTapPosition.value)
+                    }
+                },
                 onClick = onItemClick
+            )
+            .zoomable(
+                zoomState = zoomState,
+                onDoubleTap = { position -> doubleTapPosition.value = position }
             ),
         painter = painter,
         contentScale = ContentScale.Fit,
