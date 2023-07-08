@@ -106,8 +106,8 @@
     <string name="video">Video</string>
     <string name="picker_subtitle">Questa app può accedere solo alle foto che selezioni</string>
     <string name="close">Chiudi</string>
-    <string name="manage_media_title">Allow Gallery to Manage your Media</string>
-    <string name="manage_media_summary">This setting just skips any extra confirmation dialogs while performing various actions like marking as favorite.</string>
+    <string name="manage_media_title">Autorizza Galleria a gestire i contenuti multimediali</string>
+    <string name="manage_media_summary">Questa impostazione consente di saltare le finestre di conferma supplementari durante l\'esecuzione di varie azioni, come la marcatura come preferito.</string>
     <string name="skip">Salta</string>
     <string name="allow">Consenti</string>
     <plurals name="item_count">
