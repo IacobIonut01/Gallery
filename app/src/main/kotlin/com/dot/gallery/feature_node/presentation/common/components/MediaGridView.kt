@@ -53,6 +53,7 @@ import com.dot.gallery.core.presentation.components.util.StickyHeaderGrid
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaItem
 import com.dot.gallery.feature_node.domain.model.isHeaderKey
+import com.dot.gallery.feature_node.domain.model.isIgnoredKey
 import com.dot.gallery.feature_node.presentation.util.update
 import com.dot.gallery.feature_node.presentation.util.vibrate
 import com.dot.gallery.ui.theme.Dimens
@@ -115,7 +116,8 @@ fun MediaGridView(
         ) {
             if (aboveGridContent != null) {
                 item(
-                    span = { GridItemSpan(maxLineSpan) }
+                    span = { GridItemSpan(maxLineSpan) },
+                    key = "aboveGrid"
                 ) {
                     aboveGridContent.invoke()
                 }
@@ -227,7 +229,7 @@ fun MediaGridView(
         StickyHeaderGrid(
             modifier = Modifier.fillMaxSize(),
             lazyState = gridState,
-            headerMatcher = { item -> item.key.isHeaderKey },
+            headerMatcher = { item -> item.key.isHeaderKey || item.key.isIgnoredKey },
             showSearchBar = showSearchBar,
             searchBarPadding = searchBarPadding,
             stickyHeader = {

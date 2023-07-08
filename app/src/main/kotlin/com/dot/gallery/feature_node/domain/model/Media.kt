@@ -43,6 +43,9 @@ sealed class MediaItem : Parcelable {
 val Any.isHeaderKey: Boolean
     get() = this is String && this.startsWith("header")
 
+val Any.isIgnoredKey: Boolean
+    get() = this is String && this == "aboveGrid"
+
 @Immutable
 @Parcelize
 data class Media(

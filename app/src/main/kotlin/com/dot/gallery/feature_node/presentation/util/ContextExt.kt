@@ -7,11 +7,14 @@ package com.dot.gallery.feature_node.presentation.util
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
+import android.provider.Settings
 import android.view.HapticFeedbackConstants
 import android.view.View
 import android.view.accessibility.AccessibilityManager
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
@@ -51,6 +54,15 @@ private fun Context.isTouchExplorationEnabled(): Boolean {
     // can be null during unit tests
     val accessibilityManager = getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager?
     return accessibilityManager?.isTouchExplorationEnabled ?: false
+}
+
+@RequiresApi(Build.VERSION_CODES.S)
+fun Context.launchManageMedia() {
+    val intent = Intent().apply {
+        action = Settings.ACTION_REQUEST_MANAGE_MEDIA
+        data = Uri.fromParts("package", packageName, null)
+    }
+    startActivity(intent)
 }
 
 suspend fun Context.launchEditIntent(media: Media) =
