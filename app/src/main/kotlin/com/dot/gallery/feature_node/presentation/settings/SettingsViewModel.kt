@@ -15,18 +15,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import com.dot.gallery.R
 import com.dot.gallery.core.Position
-import com.dot.gallery.core.Settings.Glide.rememberCachedScreenCount
-import com.dot.gallery.core.Settings.Glide.rememberDiskCacheSize
 import com.dot.gallery.core.Settings.Misc.rememberForceTheme
 import com.dot.gallery.core.Settings.Misc.rememberIsDarkMode
 import com.dot.gallery.core.Settings.Misc.rememberTrashEnabled
 import com.dot.gallery.core.SettingsEntity
 import com.dot.gallery.core.SettingsEntity.Header
-import com.dot.gallery.core.SettingsEntity.SeekPreference
 import com.dot.gallery.core.SettingsEntity.SwitchPreference
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-import kotlin.math.roundToLong
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor() : ViewModel() {
@@ -62,36 +58,8 @@ class SettingsViewModel @Inject constructor() : ViewModel() {
                 onCheck = { trashCanEnabled = it }
             )
         }
-        var diskCacheSize by rememberDiskCacheSize()
-        val diskCachePref = remember(diskCacheSize) {
-            SeekPreference(
-                screenPosition = Position.Top,
-                title = context.getString(R.string.settings_disk_cache_title),
-                summary = context.getString(R.string.settings_disk_cache_summary),
-                currentValue = diskCacheSize.toFloat(),
-                minValue = 2f,
-                maxValue = 50f,
-                valueMultiplier = 10,
-                step = 48,
-                seekSuffix = context.getString(R.string.mb),
-                onSeek = { diskCacheSize = it.roundToLong() }
-            )
-        }
-        var cachedScreenCount by rememberCachedScreenCount()
-        val cachedScreenCountPref = remember(cachedScreenCount) {
-            SeekPreference(
-                screenPosition = Position.Bottom,
-                title = context.getString(R.string.settings_cached_screen_title),
-                summary = context.getString(R.string.settings_cached_screen_summary),
-                currentValue = cachedScreenCount,
-                minValue = 1f,
-                maxValue = 120f,
-                step = 119,
-                onSeek = { cachedScreenCount = it }
-            )
-        }
 
-        return remember(arrayOf(trashCanEnabled, diskCacheSize, cachedScreenCount)) {
+        return remember(arrayOf(forceTheme, darkModeValue, trashCanEnabled)) {
             mutableStateListOf<SettingsEntity>().apply {
                 /** ********************* **/
                 add(Header(title = context.getString(R.string.settings_theme_header)))
@@ -103,13 +71,6 @@ class SettingsViewModel @Inject constructor() : ViewModel() {
                 /** General Section Start **/
                 add(trashCanEnabledPref)
                 /** General Section End **/
-
-                /** ********************* **/
-                add(Header(title = context.getString(R.string.settings_cache)))
-                /** Cache Section Start **/
-                add(diskCachePref)
-                add(cachedScreenCountPref)
-                /** Cache Section End **/
             }
         }
     }

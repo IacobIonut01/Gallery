@@ -80,7 +80,6 @@ fun SettingsAppHeader() {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 11.sp,
                 modifier = Modifier
-                    .padding(bottom = 3.dp)
             )
         }
         Spacer(modifier = Modifier.height(8.dp))
