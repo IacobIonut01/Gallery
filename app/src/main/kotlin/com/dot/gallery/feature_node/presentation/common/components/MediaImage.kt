@@ -11,6 +11,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
@@ -86,6 +87,10 @@ fun MediaImage(
                 .fillMaxSize()
                 .padding(selectedSize)
                 .clip(RoundedCornerShape(selectedShapeSize))
+                .background(
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    shape = RoundedCornerShape(selectedShapeSize)
+                )
                 .border(
                     width = strokeSize,
                     shape = RoundedCornerShape(selectedShapeSize),
