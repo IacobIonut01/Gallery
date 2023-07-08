@@ -108,8 +108,8 @@
     <string name="close">Chiudi</string>
     <string name="manage_media_title">Allow Gallery to Manage your Media</string>
     <string name="manage_media_summary">This setting just skips any extra confirmation dialogs while performing various actions like marking as favorite.</string>
-    <string name="skip">Skip</string>
-    <string name="allow">Allow</string>
+    <string name="skip">Salta</string>
+    <string name="allow">Consenti</string>
     <plurals name="item_count">
         <item quantity="one">%s elemento</item>
         <item quantity="other">%s elementi</item>
