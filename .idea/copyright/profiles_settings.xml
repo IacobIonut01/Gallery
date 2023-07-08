@@ -1,0 +1,12 @@
+<component name="CopyrightManager">
+  <settings default="ApacheSPDX">
+    <module2copyright>
+      <element module="Project Files" copyright="ApacheSPDX" />
+      <element module="Tests" copyright="ApacheSPDX" />
+    </module2copyright>
+    <LanguageOptions name="Kotlin">
+      <option name="fileTypeOverride" value="3" />
+      <option name="addBlankAfter" value="false" />
+    </LanguageOptions>
+  </settings>
+</component>
