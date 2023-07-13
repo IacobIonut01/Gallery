@@ -110,6 +110,15 @@ object Settings {
         fun rememberIsDarkMode() =
             rememberPreference(key = DARK_MODE, defaultValue = false)
 
+        private val SECURE_MODE = booleanPreferencesKey("secure_mode")
+
+        @Composable
+        fun rememberSecureMode() =
+            rememberPreference(key = SECURE_MODE, defaultValue = true)
+
+        fun getSecureMode(context: Context) =
+            context.dataStore.data.map { it[SECURE_MODE] ?: true }
+
     }
 }
 

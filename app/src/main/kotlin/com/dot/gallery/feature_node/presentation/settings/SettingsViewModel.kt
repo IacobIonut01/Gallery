@@ -17,6 +17,7 @@ import com.dot.gallery.R
 import com.dot.gallery.core.Position
 import com.dot.gallery.core.Settings.Misc.rememberForceTheme
 import com.dot.gallery.core.Settings.Misc.rememberIsDarkMode
+import com.dot.gallery.core.Settings.Misc.rememberSecureMode
 import com.dot.gallery.core.Settings.Misc.rememberTrashEnabled
 import com.dot.gallery.core.SettingsEntity
 import com.dot.gallery.core.SettingsEntity.Header
@@ -55,7 +56,18 @@ class SettingsViewModel @Inject constructor() : ViewModel() {
                 title = context.getString(R.string.settings_trash_title),
                 summary = context.getString(R.string.settings_trash_summary),
                 isChecked = trashCanEnabled,
-                onCheck = { trashCanEnabled = it }
+                onCheck = { trashCanEnabled = it },
+                screenPosition = Position.Top
+            )
+        }
+        var secureMode by rememberSecureMode()
+        val secureModePref = remember(secureMode) {
+            SwitchPreference(
+                title = context.getString(R.string.secure_mode_title),
+                summary = context.getString(R.string.secure_mode_summary),
+                isChecked = secureMode,
+                onCheck = { secureMode = it },
+                screenPosition = Position.Bottom
             )
         }
 
@@ -70,6 +82,7 @@ class SettingsViewModel @Inject constructor() : ViewModel() {
                 add(Header(title = context.getString(R.string.settings_general)))
                 /** General Section Start **/
                 add(trashCanEnabledPref)
+                add(secureModePref)
                 /** General Section End **/
             }
         }
