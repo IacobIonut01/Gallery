@@ -110,6 +110,7 @@
     <string name="manage_media_summary">Questa impostazione consente di saltare le finestre di conferma supplementari durante l\'esecuzione di varie azioni, come la marcatura come preferito.</string>
     <string name="skip">Salta</string>
     <string name="allow">Consenti</string>
+    <string name="all">All</string>
     <plurals name="item_count">
         <item quantity="one">%s elemento</item>
         <item quantity="other">%s elementi</item>
