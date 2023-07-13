@@ -205,6 +205,12 @@ fun MediaScreen(
                         if (target != null) targetRoute else albumRoute
                     navigate(Screen.MediaViewScreen.route + "?mediaId=${it.id}&$param")
                 }
+                /** Error State Handling Block **/
+                if (state.error.isNotEmpty())
+                    Error(errorMessage = state.error)
+                else if (!state.isLoading && state.media.isEmpty())
+                    emptyContent.invoke()
+                /** ************ **/
             }
             if (target != TARGET_TRASH) {
                 SelectionSheet(
@@ -217,12 +223,5 @@ fun MediaScreen(
                 )
             }
         }
-
-        /** Error State Handling Block **/
-        if (state.error.isNotEmpty())
-            Error(errorMessage = state.error)
-        else if (!state.isLoading && state.media.isEmpty())
-            emptyContent.invoke()
-        /** ************ **/
     }
 }
