@@ -110,6 +110,7 @@
     <string name="manage_media_summary">This setting just skips any extra confirmation dialogs while performing various actions like marking as favorite.</string>
     <string name="skip">Skip</string>
     <string name="allow">Allow</string>
+    <string name="all">All</string>
     <plurals name="item_count">
         <item quantity="one">%s пункт</item>
         <item quantity="few">%s пунктов</item>
