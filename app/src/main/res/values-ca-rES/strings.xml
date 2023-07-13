@@ -111,6 +111,8 @@
     <string name="skip">Skip</string>
     <string name="allow">Allow</string>
     <string name="all">All</string>
+    <string name="secure_mode_title">Secure Mode</string>
+    <string name="secure_mode_summary">Hide the app preview when you exit it</string>
     <plurals name="item_count">
         <item quantity="one">%s item</item>
         <item quantity="other">%s items</item>
