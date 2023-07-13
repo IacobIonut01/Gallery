@@ -38,6 +38,8 @@ interface MediaRepository {
 
     fun getMediaByAlbumIdWithType(albumId: Long, allowedMedia: AllowedMedia): Flow<Resource<List<Media>>>
 
+    fun getAlbumsWithType(allowedMedia: AllowedMedia): Flow<Resource<List<Album>>>
+
     fun getMediaByUri(uriAsString: String, isSecure: Boolean): Flow<Resource<List<Media>>>
 
     fun getMediaListByUris(listOfUris: List<Uri>): Flow<Resource<List<Media>>>

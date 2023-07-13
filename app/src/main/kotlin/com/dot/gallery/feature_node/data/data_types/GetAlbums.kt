@@ -16,11 +16,12 @@ import com.dot.gallery.feature_node.domain.util.OrderType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-suspend fun ContentResolver.getAlbums(mediaOrder: MediaOrder = MediaOrder.Date(OrderType.Descending)): List<Album> {
+suspend fun ContentResolver.getAlbums(query: Query = Query.AlbumQuery(), mediaOrder: MediaOrder = MediaOrder.Date(OrderType.Descending)): List<Album> {
     return withContext(Dispatchers.IO) {
         val albums = ArrayList<Album>()
-        val albumQuery = Query.AlbumQuery().copy(
-            bundle = Bundle().apply {
+        val bundle = query.bundle ?: Bundle()
+        val albumQuery = query.copy(
+            bundle = bundle.apply {
                 putInt(
                     ContentResolver.QUERY_ARG_SORT_DIRECTION,
                     ContentResolver.QUERY_SORT_DIRECTION_DESCENDING

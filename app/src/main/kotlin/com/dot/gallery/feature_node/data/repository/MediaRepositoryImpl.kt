@@ -139,6 +139,28 @@ class MediaRepositoryImpl(
             it.getMedia(query)
         }
 
+    override fun getAlbumsWithType(allowedMedia: AllowedMedia): Flow<Resource<List<Album>>> =
+        contentResolver.retrieveAlbums {
+            val query = Query.AlbumQuery().copy(
+                bundle = Bundle().apply {
+                    val mimeType = when (allowedMedia) {
+                        PHOTOS -> "image%"
+                        VIDEOS -> "video%"
+                        BOTH -> "%/%"
+                    }
+                    putString(
+                        ContentResolver.QUERY_ARG_SQL_SELECTION,
+                        MediaStore.MediaColumns.MIME_TYPE + " like ?"
+                    )
+                    putStringArray(
+                        ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS,
+                        arrayOf(mimeType)
+                    )
+                }
+            )
+            it.getAlbums(query, mediaOrder = MediaOrder.Label(OrderType.Ascending))
+        }
+
     override fun getMediaByUri(
         uriAsString: String,
         isSecure: Boolean
