@@ -88,6 +88,7 @@ fun TimelineNavActions(
         if (albumId != -1L) {
             DropdownMenuItem(
                 text = { Text(text = stringResource(R.string.move_album_to_trash)) },
+                enabled = !selectionState.value,
                 onClick = {
                     scope.launch {
                         handler.trashMedia(
@@ -103,6 +104,7 @@ fun TimelineNavActions(
         }
         DropdownMenuItem(
             text = { Text(text = stringResource(R.string.favorites)) },
+            enabled = !selectionState.value,
             onClick = {
                 navigate(Screen.FavoriteScreen.route)
                 expandedDropDown.value = false
@@ -110,6 +112,7 @@ fun TimelineNavActions(
         )
         DropdownMenuItem(
             text = { Text(text = stringResource(R.string.trash)) },
+            enabled = !selectionState.value,
             onClick = {
                 navigate(Screen.TrashedScreen.route)
                 expandedDropDown.value = false
@@ -117,6 +120,7 @@ fun TimelineNavActions(
         )
         DropdownMenuItem(
             text = { Text(text = stringResource(R.string.settings_title)) },
+            enabled = !selectionState.value,
             onClick = {
                 navigate(Screen.SettingsScreen.route)
                 expandedDropDown.value = false
