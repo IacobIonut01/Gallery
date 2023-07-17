@@ -9,42 +9,10 @@ import android.net.Uri
 import android.os.Parcelable
 import android.webkit.MimeTypeMap
 import androidx.compose.runtime.Immutable
-import androidx.room.Entity
-import androidx.room.PrimaryKey
 import com.dot.gallery.core.Constants
 import com.dot.gallery.feature_node.presentation.util.getDate
 import kotlinx.parcelize.Parcelize
 import java.io.File
-
-
-@Immutable
-@Parcelize
-sealed class MediaItem : Parcelable {
-    abstract val key: String
-
-    data class Header(
-        override val key: String,
-        val text: String,
-        val data: List<Media>
-    ) : MediaItem()
-
-    @Parcelize
-    sealed class MediaViewItem : MediaItem() {
-
-        abstract val media: Media
-
-        data class Loaded(
-            override val key: String,
-            override val media: Media,
-        ) : MediaViewItem()
-    }
-}
-
-val Any.isHeaderKey: Boolean
-    get() = this is String && this.startsWith("header")
-
-val Any.isIgnoredKey: Boolean
-    get() = this is String && this == "aboveGrid"
 
 @Immutable
 @Parcelize
@@ -113,23 +81,3 @@ data class Media(
         }
     }
 }
-
-@Immutable
-@Parcelize
-data class Album(
-    val id: Long = 0,
-    val label: String,
-    val pathToThumbnail: String,
-    val timestamp: Long,
-    var count: Long = 0,
-    val selected: Boolean = false,
-    val isPinned: Boolean = false,
-) : Parcelable
-
-@Entity(tableName = "pinned_table")
-data class PinnedAlbum(
-    @PrimaryKey(autoGenerate = false)
-    val id: Long
-)
-
-class InvalidMediaException(message: String) : Exception(message)
