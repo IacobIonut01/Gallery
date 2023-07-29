@@ -113,6 +113,7 @@
     <string name="all">Alle</string>
     <string name="secure_mode_title">Sicherer Modus</string>
     <string name="secure_mode_summary">Ausblenden der Anwendungsvorschau beim Beenden der Anwendung</string>
+    <string name="rotate_screen_cd">Rotate Screen</string>
     <plurals name="item_count">
         <item quantity="one">%s Datei</item>
         <item quantity="other">%s Dateien</item>
