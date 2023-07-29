@@ -16,6 +16,7 @@ import androidx.compose.ui.text.toLowerCase
 import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.dot.gallery.feature_node.presentation.mediaview.MediaViewScreen
+import com.dot.gallery.feature_node.presentation.util.toggleOrientation
 import com.dot.gallery.ui.theme.GalleryTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -49,7 +50,8 @@ class StandaloneActivity : ComponentActivity() {
                         paddingValues = paddingValues,
                         mediaId = viewModel.mediaId,
                         mediaState = viewModel.mediaState,
-                        handler = viewModel.handler
+                        handler = viewModel.handler,
+                        toggleRotate = ::toggleOrientation
                     )
                 }
                 BackHandler {

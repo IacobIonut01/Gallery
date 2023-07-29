@@ -9,6 +9,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,6 +20,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PauseCircleFilled
 import androidx.compose.material.icons.filled.PlayCircleFilled
+import androidx.compose.material.icons.outlined.ScreenRotation
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
@@ -49,7 +52,8 @@ fun VideoPlayerController(
     currentTime: MutableState<Long>,
     totalTime: Long,
     buffer: Int,
-    playToggle: () -> Unit
+    playToggle: () -> Unit,
+    toggleRotate: () -> Unit,
 ) {
     var currentValue by rememberSaveable(currentTime.value) { mutableStateOf(currentTime.value) }
     Box(
@@ -57,62 +61,80 @@ fun VideoPlayerController(
             .fillMaxSize()
             .background(Color.Black.copy(alpha = 0.4f))
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .padding(horizontal = 16.dp)
                 .padding(bottom = paddingValues.calculateBottomPadding() + 72.dp)
                 .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceEvenly
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(
-                modifier = Modifier.width(52.dp),
-                text = currentValue.formatMinSec(),
-                fontWeight = FontWeight.Medium,
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.White,
-                textAlign = TextAlign.Center
-            )
-            Box(Modifier.weight(1f)) {
-                Slider(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = buffer.toFloat(),
-                    enabled = false,
-                    onValueChange = {},
-                    valueRange = 0f..100f,
-                    colors =
-                    SliderDefaults.colors(
-                        disabledThumbColor = Color.Transparent,
-                        disabledInactiveTrackColor = Color.DarkGray.copy(alpha = 0.4f),
-                        disabledActiveTrackColor = Color.Gray
-                    )
-                )
-                Slider(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = currentValue.toFloat(),
-                    onValueChange = {
-                        currentValue = it.toLong()
-                        player.seekTo(it.toLong())
-                    },
-                    valueRange = 0f..totalTime.toFloat(),
-                    colors =
-                    SliderDefaults.colors(
-                        thumbColor = Color.White,
-                        activeTrackColor = Color.White,
-                        activeTickColor = Color.White,
-                        inactiveTrackColor = Color.Transparent
+            IconButton(
+                onClick = { toggleRotate() },
+                modifier = Modifier
+                    .align(Alignment.End)
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.ScreenRotation,
+                    tint = Color.White,
+                    contentDescription = stringResource(
+                        R.string.rotate_screen_cd
                     )
                 )
             }
-            Text(
-                modifier = Modifier.width(52.dp),
-                text = totalTime.formatMinSec(),
-                fontWeight = FontWeight.Medium,
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.White,
-                textAlign = TextAlign.Center
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                Text(
+                    modifier = Modifier.width(52.dp),
+                    text = currentValue.formatMinSec(),
+                    fontWeight = FontWeight.Medium,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White,
+                    textAlign = TextAlign.Center
+                )
+                Box(Modifier.weight(1f)) {
+                    Slider(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = buffer.toFloat(),
+                        enabled = false,
+                        onValueChange = {},
+                        valueRange = 0f..100f,
+                        colors =
+                        SliderDefaults.colors(
+                            disabledThumbColor = Color.Transparent,
+                            disabledInactiveTrackColor = Color.DarkGray.copy(alpha = 0.4f),
+                            disabledActiveTrackColor = Color.Gray
+                        )
+                    )
+                    Slider(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = currentValue.toFloat(),
+                        onValueChange = {
+                            currentValue = it.toLong()
+                            player.seekTo(it.toLong())
+                        },
+                        valueRange = 0f..totalTime.toFloat(),
+                        colors =
+                        SliderDefaults.colors(
+                            thumbColor = Color.White,
+                            activeTrackColor = Color.White,
+                            activeTickColor = Color.White,
+                            inactiveTrackColor = Color.Transparent
+                        )
+                    )
+                }
+                Text(
+                    modifier = Modifier.width(52.dp),
+                    text = totalTime.formatMinSec(),
+                    fontWeight = FontWeight.Medium,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White,
+                    textAlign = TextAlign.Center
+                )
+            }
         }
 
         IconButton(

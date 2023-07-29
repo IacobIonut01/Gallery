@@ -58,6 +58,7 @@ import kotlinx.coroutines.flow.StateFlow
 @Composable
 fun MediaViewScreen(
     navigateUp: () -> Unit,
+    toggleRotate: () -> Unit,
     paddingValues: PaddingValues,
     isStandalone: Boolean = false,
     mediaId: Long,
@@ -155,7 +156,8 @@ fun MediaViewScreen(
                         currentTime = currentTime,
                         totalTime = totalTime,
                         buffer = buffer,
-                        playToggle = playToggle
+                        playToggle = playToggle,
+                        toggleRotate = toggleRotate
                     )
                 }
             }

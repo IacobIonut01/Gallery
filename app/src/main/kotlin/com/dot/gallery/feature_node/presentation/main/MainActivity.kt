@@ -23,6 +23,7 @@ import androidx.lifecycle.lifecycleScope
 import com.dot.gallery.core.Settings.Misc.getSecureMode
 import com.dot.gallery.core.presentation.components.AppBarContainer
 import com.dot.gallery.core.presentation.components.NavigationComp
+import com.dot.gallery.feature_node.presentation.util.toggleOrientation
 import com.dot.gallery.ui.theme.GalleryTheme
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
@@ -60,7 +61,8 @@ class MainActivity : ComponentActivity() {
                                 paddingValues = paddingValues,
                                 bottomBarState = bottomBarState,
                                 systemBarFollowThemeState = systemBarFollowThemeState,
-                                windowSizeClass = windowSizeClass
+                                windowSizeClass = windowSizeClass,
+                                toggleRotate = ::toggleOrientation
                             )
                         }
                     }

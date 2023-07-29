@@ -7,6 +7,7 @@ package com.dot.gallery.feature_node.presentation.util
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
@@ -52,8 +53,18 @@ private fun View.reallyPerformHapticFeedback(feedbackConstant: Int) {
 
 private fun Context.isTouchExplorationEnabled(): Boolean {
     // can be null during unit tests
-    val accessibilityManager = getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager?
+    val accessibilityManager =
+        getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager?
     return accessibilityManager?.isTouchExplorationEnabled ?: false
+}
+
+fun Activity.toggleOrientation() {
+    requestedOrientation =
+        if (requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED ||
+            requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        ) {
+            ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        } else ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
 }
 
 @RequiresApi(Build.VERSION_CODES.S)

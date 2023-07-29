@@ -47,7 +47,8 @@ fun NavigationComp(
     paddingValues: PaddingValues,
     bottomBarState: MutableState<Boolean>,
     systemBarFollowThemeState: MutableState<Boolean>,
-    windowSizeClass: WindowSizeClass
+    windowSizeClass: WindowSizeClass,
+    toggleRotate: () -> Unit,
 ) {
     val useNavRail = windowSizeClass.widthSizeClass > WindowWidthSizeClass.Compact
     val bottomNavEntries = rememberNavigationItems()
@@ -215,7 +216,8 @@ fun NavigationComp(
                 mediaId = mediaId,
                 mediaState = viewModel.mediaState,
                 handler = viewModel.handler,
-                navigateUp = navPipe::navigateUp
+                navigateUp = navPipe::navigateUp,
+                toggleRotate = toggleRotate
             )
         }
         composable(
@@ -253,7 +255,8 @@ fun NavigationComp(
                 target = target,
                 mediaState = viewModel.mediaState,
                 handler = viewModel.handler,
-                navigateUp = navPipe::navigateUp
+                navigateUp = navPipe::navigateUp,
+                toggleRotate = toggleRotate
             )
         }
         composable(
