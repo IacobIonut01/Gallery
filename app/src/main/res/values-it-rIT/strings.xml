@@ -113,6 +113,7 @@
     <string name="all">Tutto</string>
     <string name="secure_mode_title">Modalità sicura</string>
     <string name="secure_mode_summary">Nascondi l\'anteprima dell\'app quando esci</string>
+    <string name="rotate_screen_cd">Rotate Screen</string>
     <plurals name="item_count">
         <item quantity="one">%s elemento</item>
         <item quantity="other">%s elementi</item>
