@@ -113,6 +113,7 @@
     <string name="all">All</string>
     <string name="secure_mode_title">Secure Mode</string>
     <string name="secure_mode_summary">Hide the app preview when you exit it</string>
+    <string name="rotate_screen_cd">Rotate Screen</string>
     <plurals name="item_count">
         <item quantity="one">%s Ítem</item>
         <item quantity="other">%s Ítems</item>
