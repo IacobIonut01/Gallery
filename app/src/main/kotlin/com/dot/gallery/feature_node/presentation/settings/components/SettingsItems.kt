@@ -152,7 +152,7 @@ fun SettingsItem(
                         checked = !checked
                         it(checked)
                     }
-                } else item.onClick
+                } else item.onClick?.invoke()
             }
         else Modifier
     if (item.isHeader) {
@@ -166,7 +166,10 @@ fun SettingsItem(
                 .padding(bottom = 8.dp)
         )
     } else {
-        val alpha by animateFloatAsState(targetValue = if (item.enabled) 1f else 0.4f, label = "alpha")
+        val alpha by animateFloatAsState(
+            targetValue = if (item.enabled) 1f else 0.4f,
+            label = "alpha"
+        )
         ListItem(
             headlineContent = {
                 Text(
@@ -224,7 +227,7 @@ fun SettingsItemGroupPreview() =
             SettingsItem(
                 item = SeekPreference(
                     title = "Preview Middle Title",
-                    summary = "Preview Summary",
+                    summary = "Preview Summary\nSecond Line",
                     currentValue = 330f,
                     minValue = 1f,
                     maxValue = 350f,
@@ -237,7 +240,7 @@ fun SettingsItemGroupPreview() =
             SettingsItem(
                 item = SwitchPreference(
                     title = "Preview Middle Title",
-                    summary = "Preview Summary",
+                    summary = "Preview Summary\nSecond Line\nThird Line",
                     screenPosition = Position.Middle
                 )
             )

@@ -31,12 +31,13 @@ import com.dot.gallery.feature_node.presentation.settings.components.SettingsIte
 @Composable
 fun SettingsScreen(
     navigateUp: () -> Unit,
+    navigate: (String) -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
-    val settingsList = viewModel.rememberSettingsList()
+    val settingsList = viewModel.rememberSettingsList(navigate)
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),

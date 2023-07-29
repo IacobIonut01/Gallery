@@ -41,10 +41,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
+import com.dot.gallery.core.Settings.Album.rememberAlbumSize
 import com.dot.gallery.core.Settings.Album.rememberLastSort
 import com.dot.gallery.core.presentation.components.EmptyMedia
 import com.dot.gallery.core.presentation.components.Error
@@ -53,7 +55,6 @@ import com.dot.gallery.feature_node.presentation.albums.components.AlbumComponen
 import com.dot.gallery.feature_node.presentation.albums.components.CarouselPinnedAlbums
 import com.dot.gallery.feature_node.presentation.search.MainSearchBar
 import com.dot.gallery.feature_node.presentation.util.Screen
-import com.dot.gallery.ui.theme.Dimens
 
 @Composable
 fun AlbumsScreen(
@@ -66,6 +67,7 @@ fun AlbumsScreen(
     val pinnedState by viewModel.pinnedAlbumState.collectAsStateWithLifecycle()
     val filterOptions = viewModel.rememberFilters()
     val albumSortSetting by rememberLastSort()
+    val albumSize by rememberAlbumSize()
 
     LaunchedEffect(state.albums, albumSortSetting) {
         val filterOption = filterOptions.first { it.selected }
@@ -105,7 +107,7 @@ fun AlbumsScreen(
             modifier = Modifier
                 .padding(horizontal = 8.dp)
                 .fillMaxSize(),
-            columns = GridCells.Adaptive(Dimens.Album()),
+            columns = GridCells.Adaptive(Dp(albumSize)),
             contentPadding = PaddingValues(
                 top = it.calculateTopPadding(),
                 bottom = paddingValues.calculateBottomPadding() + 16.dp + 64.dp

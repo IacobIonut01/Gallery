@@ -39,6 +39,12 @@ object Settings {
             rememberPreference(key = LAST_SORT, defaultValue = 0)
         fun getLastSort(context: Context) =
             context.dataStore.data.map { it[LAST_SORT] ?: 0 }
+
+        private val ALBUM_SIZE = floatPreferencesKey("album_size")
+
+        @Composable
+        fun rememberAlbumSize() =
+            rememberPreference(key = ALBUM_SIZE, defaultValue = Dimens.Album.size.value)
     }
 
     object Glide {

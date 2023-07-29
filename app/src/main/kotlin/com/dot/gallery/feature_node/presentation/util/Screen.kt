@@ -16,4 +16,7 @@ sealed class Screen(val route: String) {
     object FavoriteScreen : Screen("favorite_screen")
 
     object SettingsScreen : Screen("settings_screen")
+    object AlbumSizeScreen: Screen("album_size_screen")
+
+    operator fun invoke() = route
 }

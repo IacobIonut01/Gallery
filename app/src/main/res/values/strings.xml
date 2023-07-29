@@ -114,6 +114,12 @@
     <string name="secure_mode_title">Secure Mode</string>
     <string name="secure_mode_summary">Hide the app preview when you exit it</string>
     <string name="rotate_screen_cd">Rotate Screen</string>
+    <string name="size_dp">%1$sdp</string>
+    <string name="change_album_size">Change Album Card Size</string>
+    <string name="reset">Reset</string>
+    <string name="customization">Customization</string>
+    <string name="album_card_size_title">Album Card Size</string>
+    <string name="album_card_size_summary">Manually pick your album card size</string>
     <plurals name="item_count">
         <item quantity="one">%s item</item>
         <item quantity="other">%s items</item>

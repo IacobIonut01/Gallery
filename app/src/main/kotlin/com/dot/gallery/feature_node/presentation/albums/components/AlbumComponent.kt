@@ -31,14 +31,18 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.dot.gallery.R
+import com.dot.gallery.core.Settings.Album.rememberAlbumSize
+import com.dot.gallery.core.presentation.components.util.AutoResizeText
+import com.dot.gallery.core.presentation.components.util.FontSizeRange
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.presentation.util.vibrate
-import com.dot.gallery.ui.theme.Dimens
 import java.io.File
 
 @Composable
@@ -56,20 +60,28 @@ fun AlbumComponent(
         AlbumImage(album = album, onItemClick) {
             showDropDown.value = !showDropDown.value
         }
-        Text(
+        AutoResizeText(
             modifier = Modifier
                 .padding(top = 12.dp)
                 .padding(horizontal = 16.dp),
             text = album.label,
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurface,
+            fontSizeRange = FontSizeRange(
+                min = 10.sp,
+                max = 16.sp
+            )
         )
-        Text(
+        AutoResizeText(
             modifier = Modifier
                 .padding(top = 2.dp, bottom = 16.dp)
                 .padding(horizontal = 16.dp),
             text = pluralStringResource(id = R.plurals.item_count, count = album.count.toInt(), album.count),
-            style = MaterialTheme.typography.labelMedium
+            style = MaterialTheme.typography.labelMedium,
+            fontSizeRange = FontSizeRange(
+                min = 6.sp,
+                max = 12.sp
+            )
         )
         DropdownMenu(
             expanded = showDropDown.value,
@@ -98,10 +110,11 @@ fun AlbumImage(
     val radius = if (isPressed.value) 32.dp else 16.dp
     val cornerRadius by animateDpAsState(targetValue = radius, label = "cornerRadius")
     val view = LocalView.current
+    val albumSize by rememberAlbumSize()
     GlideImage(
         modifier = Modifier
             .aspectRatio(1f)
-            .size(Dimens.Album())
+            .size(Dp(albumSize))
             .border(
                 width = 1.dp,
                 color = MaterialTheme.colorScheme.outlineVariant,

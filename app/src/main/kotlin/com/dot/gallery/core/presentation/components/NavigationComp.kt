@@ -34,6 +34,7 @@ import com.dot.gallery.feature_node.presentation.favorites.FavoriteScreen
 import com.dot.gallery.feature_node.presentation.mediaview.MediaViewScreen
 import com.dot.gallery.feature_node.presentation.settings.SettingsScreen
 import com.dot.gallery.feature_node.presentation.settings.SettingsViewModel
+import com.dot.gallery.feature_node.presentation.settings.customization.albumsize.AlbumSizeScreen
 import com.dot.gallery.feature_node.presentation.timeline.TimelineScreen
 import com.dot.gallery.feature_node.presentation.trashed.TrashedGridScreen
 import com.dot.gallery.feature_node.presentation.util.Screen
@@ -269,7 +270,19 @@ fun NavigationComp(
             val viewModel = hiltViewModel<SettingsViewModel>()
             SettingsScreen(
                 navigateUp = navPipe::navigateUp,
+                navigate = navPipe::navigate,
                 viewModel = viewModel
+            )
+        }
+        composable(
+            route = Screen.AlbumSizeScreen.route,
+            enterTransition = { navigateInAnimation },
+            exitTransition = { navigateUpAnimation },
+            popEnterTransition = { navigateInAnimation },
+            popExitTransition = { navigateUpAnimation },
+        ) {
+            AlbumSizeScreen(
+                navigateUp = navPipe::navigateUp
             )
         }
     }

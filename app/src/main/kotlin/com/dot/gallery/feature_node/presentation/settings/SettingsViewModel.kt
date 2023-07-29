@@ -21,7 +21,9 @@ import com.dot.gallery.core.Settings.Misc.rememberSecureMode
 import com.dot.gallery.core.Settings.Misc.rememberTrashEnabled
 import com.dot.gallery.core.SettingsEntity
 import com.dot.gallery.core.SettingsEntity.Header
+import com.dot.gallery.core.SettingsEntity.Preference
 import com.dot.gallery.core.SettingsEntity.SwitchPreference
+import com.dot.gallery.feature_node.presentation.util.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
@@ -29,7 +31,7 @@ import javax.inject.Inject
 class SettingsViewModel @Inject constructor() : ViewModel() {
 
     @Composable
-    fun rememberSettingsList(): SnapshotStateList<SettingsEntity> {
+    fun rememberSettingsList(navigate: (String) -> Unit): SnapshotStateList<SettingsEntity> {
         val context = LocalContext.current
         var forceTheme by rememberForceTheme()
         val forceThemeValuePref = remember(forceTheme) {
@@ -71,6 +73,13 @@ class SettingsViewModel @Inject constructor() : ViewModel() {
             )
         }
 
+        val albumSizePref = remember {
+            Preference(
+                title = context.getString(R.string.album_card_size_title),
+                summary = context.getString(R.string.album_card_size_summary)
+            ) { navigate(Screen.AlbumSizeScreen.route) }
+        }
+
         return remember(arrayOf(forceTheme, darkModeValue, trashCanEnabled)) {
             mutableStateListOf<SettingsEntity>().apply {
                 /** ********************* **/
@@ -78,6 +87,10 @@ class SettingsViewModel @Inject constructor() : ViewModel() {
                 /** Theme Section Start **/
                 add(forceThemeValuePref)
                 add(darkThemePref)
+                /** ********************* **/
+                add(Header(title = context.getString(R.string.customization)))
+                /** Customization Section Start **/
+                add(albumSizePref)
                 /** ********************* **/
                 add(Header(title = context.getString(R.string.settings_general)))
                 /** General Section Start **/
