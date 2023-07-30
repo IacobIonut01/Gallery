@@ -96,6 +96,17 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".feature_node.presentation.wallpaper.SetWallpaperActivity"
+            android:exported="true"
+            android:launchMode="singleInstance">
+            <intent-filter android:label="@string/set_wallpaper">
+                <action android:name="android.intent.action.ATTACH_DATA"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:mimeType="image/*"/>
+            </intent-filter>
+        </activity>
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${appProvider}"
