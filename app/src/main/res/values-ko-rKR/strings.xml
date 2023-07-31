@@ -120,6 +120,8 @@
     <string name="customization">Customization</string>
     <string name="album_card_size_title">Album Card Size</string>
     <string name="album_card_size_summary">Manually pick your album card size</string>
+    <string name="set_wallpaper">Wallpaper</string>
+    <string name="set_wallpaper_error">Can\'t set wallpaper, no app available!</string>
     <plurals name="item_count">
         <item quantity="other">%s개 항목</item>
     </plurals>
