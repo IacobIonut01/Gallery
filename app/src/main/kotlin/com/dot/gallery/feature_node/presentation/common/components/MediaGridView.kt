@@ -48,10 +48,12 @@ import com.bumptech.glide.integration.compose.rememberGlidePreloadingData
 import com.dot.gallery.R
 import com.dot.gallery.core.MediaKey
 import com.dot.gallery.core.MediaState
+import com.dot.gallery.core.Settings.Misc.rememberTimelineGroupByMonth
 import com.dot.gallery.core.presentation.components.StickyHeader
 import com.dot.gallery.core.presentation.components.util.StickyHeaderGrid
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaItem
+import com.dot.gallery.feature_node.domain.model.isBigHeaderKey
 import com.dot.gallery.feature_node.domain.model.isHeaderKey
 import com.dot.gallery.feature_node.domain.model.isIgnoredKey
 import com.dot.gallery.feature_node.presentation.util.update
@@ -80,7 +82,10 @@ fun MediaGridView(
     val stringYesterday = stringResource(id = R.string.header_yesterday)
 
     val scope = rememberCoroutineScope()
-    val mappedData = if (showMonthlyHeader) mediaState.mappedMediaWithMonthly else mediaState.mappedMedia
+    val groupTimelineByMonth by rememberTimelineGroupByMonth()
+    val mappedData = remember(mediaState, showMonthlyHeader, groupTimelineByMonth) {
+        if (showMonthlyHeader && !groupTimelineByMonth) mediaState.mappedMediaWithMonthly else mediaState.mappedMedia
+    }
 
     /** Glide Preloading **/
     val preloadingData = rememberGlidePreloadingData(
@@ -151,7 +156,7 @@ fun MediaGridView(
                         val view = LocalView.current
                         StickyHeader(
                             date = title,
-                            showAsBig = item.key.contains("big"),
+                            showAsBig = item.key.isBigHeaderKey,
                             isCheckVisible = selectionState,
                             isChecked = isChecked
                         ) {

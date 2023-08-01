@@ -26,6 +26,7 @@ import com.dot.gallery.core.Constants.Animation.navigateInAnimation
 import com.dot.gallery.core.Constants.Animation.navigateUpAnimation
 import com.dot.gallery.core.Constants.Target.TARGET_FAVORITES
 import com.dot.gallery.core.Constants.Target.TARGET_TRASH
+import com.dot.gallery.core.Settings.Misc.rememberTimelineGroupByMonth
 import com.dot.gallery.feature_node.presentation.albums.AlbumsScreen
 import com.dot.gallery.feature_node.presentation.albums.AlbumsViewModel
 import com.dot.gallery.feature_node.presentation.common.ChanneledViewModel
@@ -63,6 +64,9 @@ fun NavigationComp(
     navPipe
         .initWithNav(navController, bottomBarState)
         .collectAsStateWithLifecycle(LocalLifecycleOwner.current)
+
+    val groupTimelineByMonth by rememberTimelineGroupByMonth()
+
     AnimatedNavHost(
         navController = navController,
         startDestination = Screen.TimelineScreen.route
@@ -75,7 +79,9 @@ fun NavigationComp(
             popExitTransition = { navigateUpAnimation }
         ) {
             val viewModel =
-                hiltViewModel<MediaViewModel>().apply(MediaViewModel::launchInPhotosScreen)
+                hiltViewModel<MediaViewModel>()
+                    .apply(MediaViewModel::launchInPhotosScreen)
+                    .apply { groupByMonth = groupTimelineByMonth }
 
             TimelineScreen(
                 paddingValues = paddingValues,
@@ -98,7 +104,9 @@ fun NavigationComp(
             popEnterTransition = { navigateInAnimation },
             popExitTransition = { navigateUpAnimation }
         ) {
-            val viewModel = hiltViewModel<MediaViewModel>().apply { target = TARGET_TRASH }
+            val viewModel = hiltViewModel<MediaViewModel>()
+                .apply { target = TARGET_TRASH }
+                .apply { groupByMonth = groupTimelineByMonth }
             TrashedGridScreen(
                 paddingValues = paddingValues,
                 mediaState = viewModel.mediaState,
@@ -118,7 +126,9 @@ fun NavigationComp(
             popEnterTransition = { navigateInAnimation },
             popExitTransition = { navigateUpAnimation }
         ) {
-            val viewModel = hiltViewModel<MediaViewModel>().apply { target = TARGET_FAVORITES }
+            val viewModel = hiltViewModel<MediaViewModel>()
+                .apply { target = TARGET_FAVORITES }
+                .apply { groupByMonth = groupTimelineByMonth }
             FavoriteScreen(
                 paddingValues = paddingValues,
                 mediaState = viewModel.mediaState,
@@ -168,9 +178,9 @@ fun NavigationComp(
             val argumentAlbumName = backStackEntry.arguments?.getString("albumName")
                 ?: stringResource(id = R.string.app_name)
             val argumentAlbumId = backStackEntry.arguments?.getLong("albumId") ?: -1
-            val viewModel: MediaViewModel = hiltViewModel<MediaViewModel>().apply {
-                albumId = argumentAlbumId
-            }
+            val viewModel: MediaViewModel = hiltViewModel<MediaViewModel>()
+                .apply { albumId = argumentAlbumId }
+                .apply { groupByMonth = groupTimelineByMonth }
             TimelineScreen(
                 paddingValues = paddingValues,
                 albumId = argumentAlbumId,

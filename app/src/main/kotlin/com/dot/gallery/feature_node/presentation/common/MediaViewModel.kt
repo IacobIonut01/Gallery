@@ -49,6 +49,8 @@ open class MediaViewModel @Inject constructor(
             field = value
         }
 
+    var groupByMonth: Boolean = false
+
     /**
      * Used in PhotosScreen to retrieve all media
      */
@@ -89,7 +91,12 @@ open class MediaViewModel @Inject constructor(
                 if (data.isEmpty()) {
                     return@collectLatest _mediaState.emit(MediaState())
                 }
-                return@collectLatest _mediaState.collectMedia(data, error, albumId)
+                return@collectLatest _mediaState.collectMedia(
+                    data = data,
+                    error = error,
+                    albumId = albumId,
+                    groupByMonth = groupByMonth
+                )
             }
         }
     }

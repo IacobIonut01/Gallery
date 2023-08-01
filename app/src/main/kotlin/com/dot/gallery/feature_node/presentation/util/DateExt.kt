@@ -104,6 +104,16 @@ fun Long.getDate(
     }
 }
 
+fun Long.getMonth(): String {
+    val currentDate = Calendar.getInstance(Locale.US).apply { timeInMillis = System.currentTimeMillis() }
+    val mediaDate = Calendar.getInstance(Locale.US).apply { timeInMillis = this@getMonth * 1000L }
+    val month = mediaDate.getDisplayName(Calendar.MONTH, Calendar.LONG_FORMAT, Locale.US)!!
+    val year = mediaDate.get(Calendar.YEAR)
+    return if (currentDate.get(Calendar.YEAR) != mediaDate.get(Calendar.YEAR))
+        "$month $year"
+    else month
+}
+
 fun Long.formatMinSec(): String {
     return if (this == 0L) {
         "00:00"

@@ -8,6 +8,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
@@ -123,4 +124,13 @@ fun rememberIsMediaManager(): Boolean {
 fun rememberWindowInsetsController(): WindowInsetsControllerCompat {
     val window = with(LocalContext.current as Activity) { return@with window }
     return remember { WindowCompat.getInsetsController(window, window.decorView) }
+}
+
+fun Context.restartApplication() {
+    val packageManager: PackageManager = packageManager
+    val intent = packageManager.getLaunchIntentForPackage(packageName)
+    val componentName = intent!!.component
+    val mainIntent = Intent.makeRestartActivityTask(componentName)
+    startActivity(mainIntent)
+    Runtime.getRuntime().exit(0)
 }
