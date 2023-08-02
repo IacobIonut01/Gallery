@@ -73,14 +73,15 @@ fun MutableStateFlow<MediaState>.collectMedia(
             )
         }
     }.forEach { (date, data) ->
+        val dateHeader = MediaItem.Header("header_$date", date, data)
+        val groupedMedia = data.map {
+            MediaItem.MediaViewItem.Loaded("media_${it.id}_${it.label}", it)
+        }
         if (groupByMonth) {
-            val dateHeader = MediaItem.Header("header_$date", date, data)
             mappedData!!.add(dateHeader)
-            val groupedMedia = data.map {
-                MediaItem.MediaViewItem.Loaded("media_${it.id}_${it.label}", it)
-            }
+            mappedDataWithMonthly!!.add(dateHeader)
             mappedData!!.addAll(groupedMedia)
-            mappedDataWithMonthly!!.addAll(mappedData!!)
+            mappedDataWithMonthly!!.addAll(groupedMedia)
         } else {
             val month = getMonth(date)
             if (month.isNotEmpty() && !monthHeaderList!!.contains(month)) {
@@ -89,13 +90,9 @@ fun MutableStateFlow<MediaState>.collectMedia(
                     mappedDataWithMonthly!!.add(MediaItem.Header("header_big_$month", month, data))
                 }
             }
-            val dateHeader = MediaItem.Header("header_$date", date, data)
             mappedData!!.add(dateHeader)
             if (withMonthHeader) {
                 mappedDataWithMonthly!!.add(dateHeader)
-            }
-            val groupedMedia = data.map {
-                MediaItem.MediaViewItem.Loaded("media_${it.id}_${it.label}", it)
             }
             mappedData!!.addAll(groupedMedia)
             if (withMonthHeader) {

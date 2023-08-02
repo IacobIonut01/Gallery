@@ -48,7 +48,6 @@ import com.bumptech.glide.integration.compose.rememberGlidePreloadingData
 import com.dot.gallery.R
 import com.dot.gallery.core.MediaKey
 import com.dot.gallery.core.MediaState
-import com.dot.gallery.core.Settings.Misc.rememberTimelineGroupByMonth
 import com.dot.gallery.core.presentation.components.StickyHeader
 import com.dot.gallery.core.presentation.components.util.StickyHeaderGrid
 import com.dot.gallery.feature_node.domain.model.Media
@@ -82,10 +81,7 @@ fun MediaGridView(
     val stringYesterday = stringResource(id = R.string.header_yesterday)
 
     val scope = rememberCoroutineScope()
-    val groupTimelineByMonth by rememberTimelineGroupByMonth()
-    val mappedData = remember(mediaState, showMonthlyHeader, groupTimelineByMonth) {
-        if (showMonthlyHeader && !groupTimelineByMonth) mediaState.mappedMediaWithMonthly else mediaState.mappedMedia
-    }
+    val mappedData = if (showMonthlyHeader) mediaState.mappedMediaWithMonthly else mediaState.mappedMedia
 
     /** Glide Preloading **/
     val preloadingData = rememberGlidePreloadingData(
