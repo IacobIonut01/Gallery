@@ -13,11 +13,6 @@ plugins {
     id("kotlin-parcelize")
 }
 
-val versionMajor = 1
-val versionMinor = 1
-val versionPatch = 0
-val versionBuild = 65
-
 android {
     namespace = "com.dot.gallery"
     compileSdk = 34
@@ -26,8 +21,8 @@ android {
         applicationId = "com.dot.gallery"
         minSdk = 30
         targetSdk = 34
-        versionCode = versionMajor * 10000 + versionMinor * 1000 + versionPatch * 100 + versionBuild
-        versionName = "${versionMajor}.${versionMinor}.${versionPatch}"
+        versionCode = 11095
+        versionName = "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -169,7 +164,6 @@ dependencies {
     implementation(libs.glide.svg)
 
     // Coil
-    implementation(libs.coil.bom)
     implementation(libs.coil.compose)
     implementation(libs.coil.svg)
     implementation(libs.coil.gif)
