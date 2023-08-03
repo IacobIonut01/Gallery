@@ -120,6 +120,10 @@
     <string name="customization">Customization</string>
     <string name="album_card_size_title">Album Card Size</string>
     <string name="album_card_size_summary">Manually pick your album card size</string>
+    <string name="set_wallpaper">Wallpaper</string>
+    <string name="set_wallpaper_error">Can\'t set wallpaper, no app available!</string>
+    <string name="monthly_timeline_title">Monthly Timeline</string>
+    <string name="monthly_timeline_summary">Group the timeline monthly instead of per date (Restarts the app)</string>
     <plurals name="item_count">
         <item quantity="one">%s пункт</item>
         <item quantity="few">%s пунктов</item>
