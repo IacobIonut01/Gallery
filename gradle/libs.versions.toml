@@ -1,5 +1,5 @@
 [versions]
-agp = "8.2.0-alpha11"
+agp = "8.2.0-alpha15"
 appcompat = "1.6.1"
 coilVersion = "2.4.0"
 fuzzywuzzy = "1.4.0"
@@ -19,7 +19,7 @@ activity-compose = "1.7.2"
 compose-bom = "2023.06.01"
 hilt = "2.46.1"
 material = "1.9.0"
-material3 = "1.2.0-alpha03"
+material3 = "1.2.0-alpha04"
 media3Ui = "1.1.0"
 media3Exoplayer = "1.1.0"
 navigation-runtime-ktx = "2.6.0"
@@ -44,10 +44,10 @@ androidx-ui = { module = "androidx.compose.ui:ui" }
 
 # Coil
 coil-bom = { module = "io.coil-kt:coil-bom", version.ref = "coilVersion" }
-coil-video = { module = "io.coil-kt:coil-video" }
-coil-gif = { module = "io.coil-kt:coil-gif" }
-coil-svg = { module = "io.coil-kt:coil-svg" }
-coil-compose = { module = "io.coil-kt:coil-compose" }
+coil-video = { module = "io.coil-kt:coil-video", version.ref = "coilVersion" }
+coil-gif = { module = "io.coil-kt:coil-gif", version.ref = "coilVersion" }
+coil-svg = { module = "io.coil-kt:coil-svg", version.ref = "coilVersion" }
+coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilVersion" }
 
 # Glide
 glide-compiler = { module = "com.github.bumptech.glide:compiler", version.ref = "glideVersion" }
