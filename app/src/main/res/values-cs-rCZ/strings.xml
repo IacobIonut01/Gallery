@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Gallery</string>
-    <string name="nav_albums">Albums</string>
-    <string name="searchbar_title"><![CDATA[Search photos & videos]]></string>
-    <string name="header_today">Today</string>
-    <string name="header_yesterday">Yesterday</string>
+    <string name="app_name">Galerie</string>
+    <string name="nav_albums">Alba</string>
+    <string name="searchbar_title"><![CDATA[Hledat fotky a videa]]></string>
+    <string name="header_today">Dnes</string>
+    <string name="header_yesterday">Včera</string>
     <string name="share_media">Share</string>
     <string name="request_permissions">Request permissions</string>
     <string name="filter">Filter</string>
