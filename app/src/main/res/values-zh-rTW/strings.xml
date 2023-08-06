@@ -124,6 +124,8 @@
     <string name="set_wallpaper_error">無法設定桌布，沒有可用的應用程式！</string>
     <string name="monthly_timeline_title">Monthly Timeline</string>
     <string name="monthly_timeline_summary">Group the timeline monthly instead of per date (Restarts the app)</string>
+    <string name="amoled_mode_title">Use Amoled Mode</string>
+    <string name="amoled_mode_summary">Higher contrast, best suited for Amoled Screens</string>
     <plurals name="item_count">
         <item quantity="other">%s 個項目</item>
     </plurals>
