@@ -124,6 +124,8 @@
     <string name="set_wallpaper_error">Nelze nastavit jako pozadí, není k dispozici žádná aplikace!</string>
     <string name="monthly_timeline_title">Měsíční časová osa</string>
     <string name="monthly_timeline_summary">Seskupit časovou osu měsíčně místo podle data (restartuje aplikaci)</string>
+    <string name="amoled_mode_title">Use Amoled Mode</string>
+    <string name="amoled_mode_summary">Higher contrast, best suited for Amoled Screens</string>
     <plurals name="item_count">
         <item quantity="one">%s položka</item>
         <item quantity="few">%s položky</item>
