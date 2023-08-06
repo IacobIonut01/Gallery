@@ -116,6 +116,12 @@ object Settings {
         fun rememberIsDarkMode() =
             rememberPreference(key = DARK_MODE, defaultValue = false)
 
+        private val AMOLED_MODE = booleanPreferencesKey("amoled_mode")
+
+        @Composable
+        fun rememberIsAmoledMode() =
+            rememberPreference(key = AMOLED_MODE, defaultValue = false)
+
         private val SECURE_MODE = booleanPreferencesKey("secure_mode")
 
         @Composable

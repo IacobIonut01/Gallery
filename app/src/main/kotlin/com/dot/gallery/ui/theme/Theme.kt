@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import com.dot.gallery.core.Settings.Misc.rememberForceTheme
+import com.dot.gallery.core.Settings.Misc.rememberIsAmoledMode
 import com.dot.gallery.core.Settings.Misc.rememberIsDarkMode
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
@@ -97,7 +98,8 @@ fun GalleryTheme(
     val forceThemeValue by rememberForceTheme()
     val isDarkMode by rememberIsDarkMode()
     val forcedDarkTheme: Boolean = if (forceThemeValue) isDarkMode else darkTheme
-    val colorScheme = when {
+    val isAmoledMode by rememberIsAmoledMode()
+    var colorScheme = when {
         dynamicColor -> {
             val context = LocalContext.current
             if (forcedDarkTheme) if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -113,6 +115,13 @@ fun GalleryTheme(
 
         forcedDarkTheme -> DarkColors
         else -> LightColors
+    }
+    if (forcedDarkTheme && isAmoledMode) {
+        colorScheme = colorScheme.copy(
+            surface = Color.Black,
+            inverseSurface = Color.White,
+            background = Color.Black
+        )
     }
     val view = LocalView.current
     // Remember a SystemUiController

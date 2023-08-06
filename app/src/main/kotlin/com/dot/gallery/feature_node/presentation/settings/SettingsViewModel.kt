@@ -17,6 +17,7 @@ import androidx.lifecycle.ViewModel
 import com.dot.gallery.R
 import com.dot.gallery.core.Position
 import com.dot.gallery.core.Settings.Misc.rememberForceTheme
+import com.dot.gallery.core.Settings.Misc.rememberIsAmoledMode
 import com.dot.gallery.core.Settings.Misc.rememberIsDarkMode
 import com.dot.gallery.core.Settings.Misc.rememberSecureMode
 import com.dot.gallery.core.Settings.Misc.rememberTimelineGroupByMonth
@@ -56,6 +57,16 @@ class SettingsViewModel @Inject constructor() : ViewModel() {
                 enabled = forceTheme,
                 isChecked = darkModeValue,
                 onCheck = { darkModeValue = it },
+                screenPosition = Position.Middle
+            )
+        }
+        var amoledModeValue by rememberIsAmoledMode()
+        val amoledModePref = remember(amoledModeValue) {
+            SwitchPreference(
+                title = context.getString(R.string.amoled_mode_title),
+                summary = context.getString(R.string.amoled_mode_summary),
+                isChecked = amoledModeValue,
+                onCheck = { amoledModeValue = it },
                 screenPosition = Position.Bottom
             )
         }
@@ -112,6 +123,7 @@ class SettingsViewModel @Inject constructor() : ViewModel() {
                 /** Theme Section Start **/
                 add(forceThemeValuePref)
                 add(darkThemePref)
+                add(amoledModePref)
                 /** ********************* **/
                 add(Header(title = context.getString(R.string.customization)))
                 /** Customization Section Start **/
