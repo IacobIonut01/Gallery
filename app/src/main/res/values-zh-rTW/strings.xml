@@ -122,10 +122,10 @@
     <string name="album_card_size_summary">手動選擇您的相簿卡片大小</string>
     <string name="set_wallpaper">桌布</string>
     <string name="set_wallpaper_error">無法設定桌布，沒有可用的應用程式！</string>
-    <string name="monthly_timeline_title">Monthly Timeline</string>
-    <string name="monthly_timeline_summary">Group the timeline monthly instead of per date (Restarts the app)</string>
-    <string name="amoled_mode_title">Use Amoled Mode</string>
-    <string name="amoled_mode_summary">Higher contrast, best suited for Amoled Screens</string>
+    <string name="monthly_timeline_title">月時間軸</string>
+    <string name="monthly_timeline_summary">將時間軸按月份分組，而不是按日期 (重新啟動應用程式)</string>
+    <string name="amoled_mode_title">使用 Amoled 模式</string>
+    <string name="amoled_mode_summary">更高對比度，最適合 Amoled 螢幕</string>
     <plurals name="item_count">
         <item quantity="other">%s 個項目</item>
     </plurals>
