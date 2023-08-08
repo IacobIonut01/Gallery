@@ -56,7 +56,12 @@ fun Cursor.getMediaFromCursor(): Media {
     } catch (_: Exception) {
         Build.MODEL
     }
-    val timestamp: Long =
+    val takenTimestamp: Long? = try {
+        getLong(getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_TAKEN))
+    } catch (_: Exception) {
+        null
+    }
+    val modifiedTimestamp: Long =
         getLong(getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_MODIFIED))
     val duration: String? = try {
         getString(getColumnIndexOrThrow(MediaStore.MediaColumns.DURATION))
@@ -79,7 +84,7 @@ fun Cursor.getMediaFromCursor(): Media {
         contentUri,
         getLong(getColumnIndexOrThrow(MediaStore.MediaColumns._ID))
     )
-    val formattedDate = timestamp.getDate(Constants.FULL_DATE_FORMAT)
+    val formattedDate = modifiedTimestamp.getDate(Constants.FULL_DATE_FORMAT)
     return Media(
         id = id,
         label = title,
@@ -87,7 +92,8 @@ fun Cursor.getMediaFromCursor(): Media {
         path = path,
         albumID = albumID,
         albumLabel = albumLabel,
-        timestamp = timestamp,
+        timestamp = modifiedTimestamp,
+        takenTimestamp = takenTimestamp,
         fullDate = formattedDate,
         duration = duration,
         favorite = isFavorite,

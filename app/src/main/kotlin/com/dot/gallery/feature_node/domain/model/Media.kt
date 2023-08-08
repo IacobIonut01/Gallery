@@ -24,6 +24,7 @@ data class Media(
     val albumID: Long,
     val albumLabel: String,
     val timestamp: Long,
+    val takenTimestamp: Long? = null,
     val fullDate: String,
     val mimeType: String,
     val orientation: Int,

@@ -8,7 +8,7 @@ package com.dot.gallery.feature_node.domain.util
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.Media
 
-sealed class MediaOrder(val orderType: OrderType) {
+sealed class MediaOrder(private val orderType: OrderType) {
     class Label(orderType: OrderType) : MediaOrder(orderType)
     class Date(orderType: OrderType) : MediaOrder(orderType)
 
