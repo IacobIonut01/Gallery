@@ -16,6 +16,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
@@ -43,6 +44,7 @@ class MainActivity : ComponentActivity() {
             val windowSizeClass = calculateWindowSizeClass(this)
             GalleryTheme {
                 val navController = rememberAnimatedNavController()
+                val isScrolling = remember { mutableStateOf(false) }
                 val bottomBarState = rememberSaveable { (mutableStateOf(true)) }
                 val systemBarFollowThemeState = rememberSaveable { (mutableStateOf(true)) }
                 val systemUiController = rememberSystemUiController()
@@ -54,7 +56,8 @@ class MainActivity : ComponentActivity() {
                         AppBarContainer(
                             navController = navController,
                             bottomBarState = bottomBarState,
-                            windowSizeClass = windowSizeClass
+                            windowSizeClass = windowSizeClass,
+                            isScrolling = isScrolling
                         ) {
                             NavigationComp(
                                 navController = navController,
@@ -62,7 +65,8 @@ class MainActivity : ComponentActivity() {
                                 bottomBarState = bottomBarState,
                                 systemBarFollowThemeState = systemBarFollowThemeState,
                                 windowSizeClass = windowSizeClass,
-                                toggleRotate = ::toggleOrientation
+                                toggleRotate = ::toggleOrientation,
+                                isScrolling = isScrolling
                             )
                         }
                     }

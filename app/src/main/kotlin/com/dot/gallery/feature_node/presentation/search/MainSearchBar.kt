@@ -77,6 +77,7 @@ fun MainSearchBar(
     selectionState: MutableState<Boolean>? = null,
     navigate: (String) -> Unit,
     toggleNavbar: (Boolean) -> Unit,
+    isScrolling: MutableState<Boolean>,
     menuItems: @Composable (RowScope.() -> Unit)? = null,
 ) {
     var historySet by rememberSearchHistory()
@@ -117,9 +118,15 @@ fun MainSearchBar(
          * TODO: fillMaxWidth with fixed lateral padding on the search container only
          * It is not yet possible because of the material3 compose limitations
          */
+        val searchBarAlpha by animateFloatAsState(
+            targetValue = if (isScrolling.value) 0f else 1f,
+            label = "searchBarAlpha"
+        )
         SearchBar(
-            modifier = Modifier.align(Alignment.TopCenter),
-            enabled = selectionState == null || !selectionState.value,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .alpha(searchBarAlpha),
+            enabled = (selectionState == null || !selectionState.value) && !isScrolling.value,
             query = query,
             onQueryChange = {
                 query = it
@@ -210,7 +217,8 @@ fun MainSearchBar(
                     Box {
                         MediaGridView(
                             mediaState = state,
-                            paddingValues = pd
+                            paddingValues = pd,
+                            isScrolling = remember { mutableStateOf(false) }
                         ) {
                             dismissSearchBar()
                             navigate(Screen.MediaViewScreen.route + "?mediaId=${it.id}")

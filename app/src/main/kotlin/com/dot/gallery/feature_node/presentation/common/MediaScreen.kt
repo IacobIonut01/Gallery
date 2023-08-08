@@ -24,6 +24,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -71,12 +73,13 @@ fun MediaScreen(
     showMonthlyHeader: Boolean = false,
     enableStickyHeaders: Boolean = true,
     allowNavBar: Boolean = false,
-    navActionsContent: @Composable (RowScope.(expandedDropDown: MutableState<Boolean>, result: ActivityResultLauncher<IntentSenderRequest>) -> Unit),
+    navActionsContent: @Composable() (RowScope.(expandedDropDown: MutableState<Boolean>, result: ActivityResultLauncher<IntentSenderRequest>) -> Unit),
     emptyContent: @Composable () -> Unit,
-    aboveGridContent: @Composable (() -> Unit)? = null,
+    aboveGridContent: @Composable() (() -> Unit)? = null,
     navigate: (route: String) -> Unit,
     navigateUp: () -> Unit,
     toggleNavbar: (Boolean) -> Unit,
+    isScrolling: MutableState<Boolean> = remember { mutableStateOf(false) },
     onActivityResult: (result: ActivityResult) -> Unit,
 ) {
 
@@ -161,7 +164,8 @@ fun MediaScreen(
                             bottomPadding = paddingValues.calculateBottomPadding(),
                             navigate = navigate,
                             toggleNavbar = toggleNavbar,
-                            selectionState = selectionState
+                            selectionState = selectionState,
+                            isScrolling = isScrolling
                         ) {
                             NavigationActions(
                                 actions = navActionsContent,
@@ -197,7 +201,8 @@ fun MediaScreen(
                     selectedMedia = selectedMedia,
                     showMonthlyHeader = showMonthlyHeader,
                     toggleSelection = toggleSelection,
-                    aboveGridContent = aboveGridContent
+                    aboveGridContent = aboveGridContent,
+                    isScrolling = isScrolling
                 ) {
                     val albumRoute = "albumId=$albumId"
                     val targetRoute = "target=$target"

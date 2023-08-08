@@ -51,6 +51,7 @@ fun NavigationComp(
     systemBarFollowThemeState: MutableState<Boolean>,
     windowSizeClass: WindowSizeClass,
     toggleRotate: () -> Unit,
+    isScrolling: MutableState<Boolean>
 ) {
     val useNavRail = windowSizeClass.widthSizeClass > WindowWidthSizeClass.Compact
     val bottomNavEntries = rememberNavigationItems()
@@ -94,7 +95,8 @@ fun NavigationComp(
                 allowNavBar = !useNavRail,
                 navigate = navPipe::navigate,
                 navigateUp = navPipe::navigateUp,
-                toggleNavbar = navPipe::toggleNavbar
+                toggleNavbar = navPipe::toggleNavbar,
+                isScrolling = isScrolling,
             )
         }
         composable(
@@ -154,7 +156,8 @@ fun NavigationComp(
                 navigate = navPipe::navigate,
                 toggleNavbar = navPipe::toggleNavbar,
                 paddingValues = paddingValues,
-                viewModel = viewModel
+                viewModel = viewModel,
+                isScrolling = isScrolling,
             )
         }
         composable(
@@ -189,11 +192,12 @@ fun NavigationComp(
                 mediaState = viewModel.mediaState,
                 selectionState = viewModel.multiSelectState,
                 selectedMedia = viewModel.selectedPhotoState,
-                toggleSelection = viewModel::toggleSelection,
                 allowNavBar = false,
+                toggleSelection = viewModel::toggleSelection,
                 navigate = navPipe::navigate,
                 navigateUp = navPipe::navigateUp,
-                toggleNavbar = navPipe::toggleNavbar
+                toggleNavbar = navPipe::toggleNavbar,
+                isScrolling = isScrolling
             )
         }
         composable(

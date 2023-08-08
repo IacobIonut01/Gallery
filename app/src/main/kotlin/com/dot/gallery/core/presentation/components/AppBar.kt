@@ -69,6 +69,7 @@ fun AppBarContainer(
     windowSizeClass: WindowSizeClass,
     navController: NavController,
     bottomBarState: MutableState<Boolean>,
+    isScrolling: MutableState<Boolean>,
     content: @Composable () -> Unit,
 ) {
     val backStackEntry = navController.currentBackStackEntryAsState()
@@ -109,7 +110,7 @@ fun AppBarContainer(
         if (!useNavRail) {
             AnimatedVisibility(
                 modifier = Modifier.align(Alignment.BottomCenter),
-                visible = showNavigation,
+                visible = showNavigation && !isScrolling.value,
                 enter = slideInVertically { it * 2 },
                 exit = slideOutVertically { it * 2 },
                 content = {

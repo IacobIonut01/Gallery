@@ -39,7 +39,8 @@ fun TimelineScreen(
     toggleSelection: (Int) -> Unit,
     navigate: (route: String) -> Unit,
     navigateUp: () -> Unit,
-    toggleNavbar: (Boolean) -> Unit
+    toggleNavbar: (Boolean) -> Unit,
+    isScrolling: MutableState<Boolean>
 ) {
     val useMediaManager by Settings.Misc.rememberIsMediaManager()
     val aboveGrid: @Composable (() -> Unit)? =
@@ -75,7 +76,8 @@ fun TimelineScreen(
         navigate = navigate,
         navigateUp = navigateUp,
         toggleNavbar = toggleNavbar,
-        aboveGridContent = aboveGrid
+        aboveGridContent = aboveGrid,
+        isScrolling = isScrolling
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             selectedMedia.clear()

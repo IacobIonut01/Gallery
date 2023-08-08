@@ -7,6 +7,7 @@ package com.dot.gallery.feature_node.presentation.common.components
 
 import android.graphics.drawable.Drawable
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -74,14 +75,16 @@ fun MediaGridView(
     toggleSelection: (Int) -> Unit = {},
     enableStickyHeaders: Boolean = false,
     showMonthlyHeader: Boolean = false,
-    aboveGridContent: @Composable (() -> Unit)? = null,
+    aboveGridContent: @Composable() (() -> Unit)? = null,
+    isScrolling: MutableState<Boolean>,
     onMediaClick: (media: Media) -> Unit = {}
 ) {
     val stringToday = stringResource(id = R.string.header_today)
     val stringYesterday = stringResource(id = R.string.header_yesterday)
 
     val scope = rememberCoroutineScope()
-    val mappedData = if (showMonthlyHeader) mediaState.mappedMediaWithMonthly else mediaState.mappedMedia
+    val mappedData =
+        if (showMonthlyHeader) mediaState.mappedMediaWithMonthly else mediaState.mappedMedia
 
     /** Glide Preloading **/
     val preloadingData = rememberGlidePreloadingData(
@@ -107,6 +110,9 @@ fun MediaGridView(
 
     @Composable
     fun mediaGrid() {
+        LaunchedEffect(gridState.isScrollInProgress) {
+            isScrolling.value = gridState.isScrollInProgress
+        }
         LazyVerticalGrid(
             state = gridState,
             modifier = Modifier.fillMaxSize(),
@@ -126,7 +132,7 @@ fun MediaGridView(
 
             items(
                 items = mappedData,
-                key = { if (it is MediaItem.MediaViewItem) it.media.toString() else it.key  },
+                key = { if (it is MediaItem.MediaViewItem) it.media.toString() else it.key },
                 contentType = { it.key.startsWith("media_") },
                 span = { item ->
                     GridItemSpan(if (item.key.isHeaderKey) maxLineSpan else 1)
@@ -224,9 +230,12 @@ fun MediaGridView(
                 }.value
             }
         }
-        val searchBarPadding = if (showSearchBar) {
-            SearchBarDefaults.InputFieldHeight + searchBarPaddingTop + 8.dp
-        } else 0.dp
+        val searchBarPadding by animateDpAsState(
+            targetValue = if (showSearchBar && !isScrolling.value) {
+                SearchBarDefaults.InputFieldHeight + searchBarPaddingTop + 8.dp
+            } else if (showSearchBar && isScrolling.value) searchBarPaddingTop else 0.dp,
+            label = "searchBarPadding"
+        )
         StickyHeaderGrid(
             modifier = Modifier.fillMaxSize(),
             lazyState = gridState,

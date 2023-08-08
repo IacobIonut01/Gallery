@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -33,6 +34,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -62,16 +64,21 @@ fun AlbumsScreen(
     toggleNavbar: (Boolean) -> Unit,
     paddingValues: PaddingValues,
     viewModel: AlbumsViewModel = hiltViewModel(),
+    isScrolling: MutableState<Boolean>,
 ) {
     val state by viewModel.albumsState.collectAsStateWithLifecycle()
     val pinnedState by viewModel.pinnedAlbumState.collectAsStateWithLifecycle()
     val filterOptions = viewModel.rememberFilters()
     val albumSortSetting by rememberLastSort()
     val albumSize by rememberAlbumSize()
+    val gridState = rememberLazyGridState()
 
     LaunchedEffect(state.albums, albumSortSetting) {
         val filterOption = filterOptions.first { it.selected }
         filterOption.onClick(filterOption.mediaOrder)
+    }
+    LaunchedEffect(gridState.isScrollInProgress) {
+        isScrolling.value = gridState.isScrollInProgress
     }
 
     Scaffold(
@@ -79,7 +86,8 @@ fun AlbumsScreen(
             MainSearchBar(
                 bottomPadding = paddingValues.calculateBottomPadding(),
                 navigate = navigate,
-                toggleNavbar = toggleNavbar
+                toggleNavbar = toggleNavbar,
+                isScrolling = isScrolling
             ) {
                 var expandedDropdown by remember { mutableStateOf(false) }
                 IconButton(onClick = { expandedDropdown = !expandedDropdown }) {
@@ -104,6 +112,7 @@ fun AlbumsScreen(
         }
     ) {
         LazyVerticalGrid(
+            state = gridState,
             modifier = Modifier
                 .padding(horizontal = 8.dp)
                 .fillMaxSize(),
