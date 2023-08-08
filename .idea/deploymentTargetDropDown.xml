@@ -11,6 +11,15 @@
       <entry key="picker">
         <State />
       </entry>
+      <entry key="picker (image)">
+        <State />
+      </entry>
+      <entry key="picker (single)">
+        <State />
+      </entry>
+      <entry key="picker (video)">
+        <State />
+      </entry>
     </value>
   </component>
 </project>
