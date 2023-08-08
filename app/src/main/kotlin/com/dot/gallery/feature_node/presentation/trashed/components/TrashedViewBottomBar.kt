@@ -77,9 +77,9 @@ fun BoxScope.TrashedViewBottomBar(
                 title = stringResource(id = R.string.trash_restore)
             ) {
                 scope.launch {
+                    onDeleteMedia.invoke(currentIndex)
                     handler.trashMedia(result = result, arrayListOf(it), trash = false)
                 }
-                onDeleteMedia.invoke(currentIndex)
             }
             Spacer(modifier = Modifier.size(8.dp))
             // Delete Component
@@ -89,9 +89,9 @@ fun BoxScope.TrashedViewBottomBar(
                 title = stringResource(id = R.string.trash_delete)
             ) {
                 scope.launch {
+                    onDeleteMedia.invoke(currentIndex)
                     handler.deleteMedia(result = result, arrayListOf(it))
                 }
-                onDeleteMedia.invoke(currentIndex)
             }
         }
     }

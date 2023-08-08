@@ -95,7 +95,7 @@ fun MediaViewScreen(
         if (state.media.isNotEmpty()) {
             val index = if (page == -1) 0 else page
             if (lastIndex.value != -1)
-                runtimeMediaId = state.media[lastIndex.value].id
+                runtimeMediaId = state.media[lastIndex.value.coerceAtMost(state.media.size - 1)].id
             currentDate.value = state.media[index].timestamp.getDate(HEADER_DATE_FORMAT)
             currentMedia.value = state.media[index]
         } else if (!isStandalone) navigateUp()
@@ -131,7 +131,7 @@ fun MediaViewScreen(
                     durationMillis = DEFAULT_LOW_VELOCITY_SWIPE_DURATION
                 )
             ),
-            key = { index -> state.media[index].toString() },
+            key = { index -> state.media[index.coerceAtMost(state.media.size - 1)].toString() },
             pageSpacing = 16.dp,
         ) { index ->
             MediaPreviewComponent(
