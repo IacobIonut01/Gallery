@@ -100,7 +100,7 @@ class SettingsViewModel @Inject constructor() : ViewModel() {
         }
 
         var groupByMonth by rememberTimelineGroupByMonth()
-        val groupByMonthPref = remember(secureMode) {
+        val groupByMonthPref = remember(groupByMonth) {
             SwitchPreference(
                 title = context.getString(R.string.monthly_timeline_title),
                 summary = context.getString(R.string.monthly_timeline_summary),
@@ -116,7 +116,7 @@ class SettingsViewModel @Inject constructor() : ViewModel() {
             )
         }
 
-        return remember(arrayOf(forceTheme, darkModeValue, trashCanEnabled)) {
+        return remember(arrayOf(forceTheme, darkModeValue, trashCanEnabled, groupByMonth, amoledModeValue, secureMode)) {
             mutableStateListOf<SettingsEntity>().apply {
                 /** ********************* **/
                 add(Header(title = context.getString(R.string.settings_theme_header)))
