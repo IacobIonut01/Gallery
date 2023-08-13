@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.grid.LazyGridItemInfo
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Composable
@@ -57,7 +56,9 @@ fun StickyHeaderGrid(
         }
     }
     val toolbarOffset = with(LocalDensity.current) {
-        return@with if (showSearchBar) -statusBarHeightPx else 64.dp.roundToPx()
+        return@with remember(LocalDensity.current) {
+            if (showSearchBar) 0 else 64.dp.roundToPx() + statusBarHeightPx
+        }
     }
     val offsetAnimation by animateIntOffsetAsState(
         IntOffset(x = 0, y = headerOffset + toolbarOffset), label = "offsetAnimation"
@@ -66,9 +67,7 @@ fun StickyHeaderGrid(
     Box(modifier = modifier) {
         content()
         Box(
-            modifier = Modifier
-                .statusBarsPadding()
-                .offset { offsetAnimation }
+            modifier = Modifier.offset { offsetAnimation }
         ) {
             stickyHeader()
         }
