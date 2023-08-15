@@ -5,8 +5,10 @@
 
 package com.dot.gallery.feature_node.presentation.common
 
+import android.annotation.SuppressLint
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -15,6 +17,7 @@ import com.dot.gallery.core.MediaState
 import com.dot.gallery.core.Resource
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaUseCases
+import com.dot.gallery.feature_node.presentation.util.RepeatOnResume
 import com.dot.gallery.feature_node.presentation.util.collectMedia
 import com.dot.gallery.feature_node.presentation.util.mediaFlow
 import com.dot.gallery.feature_node.presentation.util.update
@@ -56,6 +59,14 @@ open class MediaViewModel @Inject constructor(
      */
     fun launchInPhotosScreen() {
         getMedia(-1, null)
+    }
+
+    @SuppressLint("ComposableNaming")
+    @Composable
+    fun attachToLifecycle() {
+        RepeatOnResume {
+            getMedia(albumId, target)
+        }
     }
 
     fun toggleFavorite(

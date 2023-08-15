@@ -5,7 +5,13 @@
 
 package com.dot.gallery.feature_node.presentation.util
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.dot.gallery.core.Constants
 import com.dot.gallery.core.MediaState
 import com.dot.gallery.core.Resource
@@ -15,6 +21,19 @@ import com.dot.gallery.feature_node.domain.use_case.MediaUseCases
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
+
+@Composable
+fun RepeatOnResume(action: () -> Unit) {
+    val owner = LocalLifecycleOwner.current
+    LaunchedEffect(Unit) {
+        owner.lifecycleScope.launch {
+            owner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                action()
+            }
+        }
+    }
+}
 
 fun <T> MutableState<T>.update(newState: T) {
     if (value != newState) {

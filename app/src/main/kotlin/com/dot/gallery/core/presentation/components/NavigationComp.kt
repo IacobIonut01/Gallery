@@ -79,11 +79,10 @@ fun NavigationComp(
             popEnterTransition = { navigateInAnimation },
             popExitTransition = { navigateUpAnimation }
         ) {
-            val viewModel =
-                hiltViewModel<MediaViewModel>()
-                    .apply(MediaViewModel::launchInPhotosScreen)
-                    .apply { groupByMonth = groupTimelineByMonth }
-
+            val viewModel = hiltViewModel<MediaViewModel>().apply {
+                groupByMonth = groupTimelineByMonth
+            }
+            viewModel.attachToLifecycle()
             TimelineScreen(
                 paddingValues = paddingValues,
                 retrieveMedia = viewModel::launchInPhotosScreen,
@@ -109,6 +108,7 @@ fun NavigationComp(
             val viewModel = hiltViewModel<MediaViewModel>()
                 .apply { target = TARGET_TRASH }
                 .apply { groupByMonth = groupTimelineByMonth }
+            viewModel.attachToLifecycle()
             TrashedGridScreen(
                 paddingValues = paddingValues,
                 mediaState = viewModel.mediaState,
@@ -131,6 +131,7 @@ fun NavigationComp(
             val viewModel = hiltViewModel<MediaViewModel>()
                 .apply { target = TARGET_FAVORITES }
                 .apply { groupByMonth = groupTimelineByMonth }
+            viewModel.attachToLifecycle()
             FavoriteScreen(
                 paddingValues = paddingValues,
                 mediaState = viewModel.mediaState,
@@ -152,6 +153,7 @@ fun NavigationComp(
             popExitTransition = { navigateUpAnimation }
         ) {
             val viewModel = hiltViewModel<AlbumsViewModel>()
+            viewModel.attachToLifecycle()
             AlbumsScreen(
                 navigate = navPipe::navigate,
                 toggleNavbar = navPipe::toggleNavbar,
@@ -184,6 +186,7 @@ fun NavigationComp(
             val viewModel: MediaViewModel = hiltViewModel<MediaViewModel>()
                 .apply { albumId = argumentAlbumId }
                 .apply { groupByMonth = groupTimelineByMonth }
+            viewModel.attachToLifecycle()
             TimelineScreen(
                 paddingValues = paddingValues,
                 albumId = argumentAlbumId,
@@ -226,6 +229,7 @@ fun NavigationComp(
                 navController.getBackStackEntry(entryName)
             }
             val viewModel = hiltViewModel<MediaViewModel>(parentEntry)
+            viewModel.attachToLifecycle()
             MediaViewScreen(
                 paddingValues = paddingValues,
                 mediaId = mediaId,
@@ -264,6 +268,7 @@ fun NavigationComp(
                 navController.getBackStackEntry(entryName)
             }
             val viewModel = hiltViewModel<MediaViewModel>(parentEntry)
+            viewModel.attachToLifecycle()
             MediaViewScreen(
                 paddingValues = paddingValues,
                 mediaId = mediaId,
