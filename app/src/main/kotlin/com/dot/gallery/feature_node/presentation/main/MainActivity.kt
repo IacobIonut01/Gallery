@@ -55,6 +55,7 @@ class MainActivity : ComponentActivity() {
                     content = { paddingValues ->
                         AppBarContainer(
                             navController = navController,
+                            paddingValues = paddingValues,
                             bottomBarState = bottomBarState,
                             windowSizeClass = windowSizeClass,
                             isScrolling = isScrolling
