@@ -13,6 +13,7 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,11 +26,13 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.exoplayer.ExoPlayer
@@ -53,6 +56,7 @@ import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetStat
 import com.dot.gallery.feature_node.presentation.util.rememberWindowInsetsController
 import com.dot.gallery.feature_node.presentation.util.toggleSystemBars
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -100,6 +104,11 @@ fun MediaViewScreen(
             currentMedia.value = state.media[index]
         } else if (!isStandalone) navigateUp()
     }
+    val scope = rememberCoroutineScope()
+
+    val showInfo = remember(currentMedia.value) {
+        currentMedia.value?.trashed == 0 && !(currentMedia.value?.readUriOnly() ?: false)
+    }
 
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }.collect { page ->
@@ -122,6 +131,17 @@ fun MediaViewScreen(
             .fillMaxSize()
     ) {
         HorizontalPager(
+            modifier = Modifier
+                .pointerInput(showInfo) {
+                    detectVerticalDragGestures { change, dragAmount ->
+                        if (showInfo && dragAmount < -5) {
+                            change.consume()
+                            scope.launch {
+                                bottomSheetState.show()
+                            }
+                        }
+                    }
+                },
             state = pagerState,
             userScrollEnabled = scrollEnabled.value,
             flingBehavior = PagerDefaults.flingBehavior(
@@ -164,7 +184,7 @@ fun MediaViewScreen(
         }
         MediaViewAppBar(
             showUI = showUI.value,
-            showInfo = currentMedia.value?.trashed == 0 && !(currentMedia.value?.readUriOnly() ?: false),
+            showInfo = showInfo,
             showDate = currentMedia.value?.timestamp != 0L,
             currentDate = currentDate.value,
             bottomSheetState = bottomSheetState,
