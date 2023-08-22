@@ -82,9 +82,10 @@ fun MediaImage(
             .aspectRatio(1f)
             .size(Dimens.Photo())
     ) {
-        GlideImage(
+        Box(
             modifier = Modifier
-                .fillMaxSize()
+                .align(Alignment.Center)
+                .aspectRatio(1f)
                 .padding(selectedSize)
                 .clip(RoundedCornerShape(selectedShapeSize))
                 .background(
@@ -95,15 +96,27 @@ fun MediaImage(
                     width = strokeSize,
                     shape = RoundedCornerShape(selectedShapeSize),
                     color = strokeColor
-                ),
-            model = media.uri,
-            contentDescription = media.label,
-            contentScale = ContentScale.Crop,
+                )
         ) {
-            it.thumbnail(preloadRequestBuilder)
-                .signature(MediaKey(media.id, media.timestamp, media.mimeType, media.orientation))
-                .format(DecodeFormat.PREFER_RGB_565)
-                .override(270)
+            GlideImage(
+                modifier = Modifier
+                    .fillMaxSize(),
+                model = media.uri,
+                contentDescription = media.label,
+                contentScale = ContentScale.Crop,
+            ) {
+                it.thumbnail(preloadRequestBuilder)
+                    .signature(
+                        MediaKey(
+                            media.id,
+                            media.timestamp,
+                            media.mimeType,
+                            media.orientation
+                        )
+                    )
+                    .format(DecodeFormat.PREFER_RGB_565)
+                    .override(270)
+            }
         }
 
         AnimatedVisibility(
