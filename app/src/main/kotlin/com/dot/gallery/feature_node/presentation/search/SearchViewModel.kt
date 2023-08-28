@@ -67,9 +67,9 @@ class SearchViewModel @Inject constructor(
                 val error = if (result is Resource.Error) result.message
                     ?: "An error occurred" else ""
                 if (data.isEmpty()) {
-                    return@collectLatest _mediaState.emit(MediaState())
+                    return@collectLatest _mediaState.emit(MediaState(isLoading = false))
                 }
-                _mediaState.value = MediaState(isLoading = true)
+                _mediaState.emit(MediaState())
                 val parsedData = data.parseQuery(query)
                 parsedData.groupBy {
                     it.timestamp.getDate(
@@ -92,12 +92,14 @@ class SearchViewModel @Inject constructor(
                         )
                     })
                 }
-                _mediaState.value =
+                _mediaState.emit(
                     MediaState(
                         error = error,
                         media = parsedData,
-                        mappedMedia = mappedData
+                        mappedMedia = mappedData,
+                        isLoading = false
                     )
+                )
             }
         }
     }
