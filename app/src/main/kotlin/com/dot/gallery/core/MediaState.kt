@@ -20,7 +20,7 @@ data class MediaState(
     val mappedMediaWithMonthly: List<MediaItem> = emptyList(),
     val dateHeader: String = "",
     val error: String = "",
-    val isLoading: Boolean = false
+    val isLoading: Boolean = true
 ) : Parcelable
 
 

@@ -77,7 +77,7 @@ open class PickerViewModel @Inject constructor(
                     val error = if (result is Resource.Error) result.message
                         ?: "An error occurred" else ""
                     if (data.isEmpty()) {
-                        return@collectLatest _mediaState.emit(MediaState())
+                        return@collectLatest _mediaState.emit(MediaState(isLoading = false))
                     }
                     _mediaState.collectMedia(data, error, albumId)
                 }

@@ -74,11 +74,6 @@ fun MutableStateFlow<MediaState>.collectMedia(
     var mappedData: ArrayList<MediaItem>? = ArrayList()
     var mappedDataWithMonthly: ArrayList<MediaItem>? = ArrayList()
     var monthHeaderList: MutableSet<String>? = mutableSetOf()
-    /**
-     * Allow loading animation if the last state is empty
-     */
-    if (value.media.isEmpty())
-        value = MediaState(isLoading = true)
     data.groupBy {
         if (groupByMonth) {
             it.timestamp.getMonth()
@@ -120,6 +115,7 @@ fun MutableStateFlow<MediaState>.collectMedia(
         }
     }
     value = MediaState(
+        isLoading = false,
         error = error,
         media = data,
         mappedMedia = mappedData!!,

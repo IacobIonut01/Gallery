@@ -100,7 +100,7 @@ open class MediaViewModel @Inject constructor(
                 val error = if (result is Resource.Error) result.message
                     ?: "An error occurred" else ""
                 if (data.isEmpty()) {
-                    return@collectLatest _mediaState.emit(MediaState())
+                    return@collectLatest _mediaState.emit(MediaState(isLoading = false))
                 }
                 return@collectLatest _mediaState.collectMedia(
                     data = data,
