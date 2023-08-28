@@ -120,6 +120,6 @@ kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kspAndroid = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 roomPlugin = { id = "androidx.room", version.ref = "room" }
 hiltAndroid = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
-baselineProfilePlugin = { id = "androidx.baselineprofile", version = "1.2.0-beta02" }
+baselineProfilePlugin = { id = "androidx.baselineprofile", version = "1.2.0-beta04" }
 [bundles]
 
