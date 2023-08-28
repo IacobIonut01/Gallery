@@ -5,7 +5,9 @@
 
 package com.dot.gallery.core.presentation.components.util
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntOffsetAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.offset
@@ -17,6 +19,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
@@ -64,10 +67,17 @@ fun StickyHeaderGrid(
         IntOffset(x = 0, y = headerOffset + toolbarOffset), label = "offsetAnimation"
     )
 
+    val alphaAnimation by animateFloatAsState(
+        targetValue = if (offsetAnimation.y < -100) 0f else 1f, label = "alphaAnimation",
+        animationSpec = tween(100, 10),
+    )
+
     Box(modifier = modifier) {
         content()
         Box(
-            modifier = Modifier.offset { offsetAnimation }
+            modifier = Modifier
+                .alpha(alphaAnimation)
+                .offset { offsetAnimation }
         ) {
             stickyHeader()
         }
