@@ -126,6 +126,12 @@
     <string name="monthly_timeline_summary">Group the timeline monthly instead of per date (Restarts the app)</string>
     <string name="amoled_mode_title">Use Amoled Mode</string>
     <string name="amoled_mode_summary">Higher contrast, best suited for Amoled Screens</string>
+    <string name="location_chip">Location: %s</string>
+    <string name="media_details">Details</string>
+    <string name="album_card_size">Album Card Size</string>
+    <string name="date_modified">Date Modified</string>
+    <string name="edit_metadata">Edit Metadata</string>
+    <string name="apply">Apply</string>
     <plurals name="item_count">
         <item quantity="other">%s mục</item>
     </plurals>
