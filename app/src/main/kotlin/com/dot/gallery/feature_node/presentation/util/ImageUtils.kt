@@ -5,14 +5,71 @@
 
 package com.dot.gallery.feature_node.presentation.util
 
+import android.app.Activity.RESULT_CANCELED
+import android.app.Activity.RESULT_OK
+import android.content.ContentResolver
 import android.content.Context
+import android.content.Intent
 import android.database.Cursor
 import android.net.Uri
 import android.provider.MediaStore
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ShareCompat
 import androidx.exifinterface.media.ExifInterface
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.presentation.mediaview.components.InfoRow
+import com.dot.gallery.feature_node.presentation.mediaview.components.retrieveMetadata
 import java.io.IOException
+
+@Composable
+fun rememberActivityResult(onResultOk: () -> Unit = {}, onResultCanceled: () -> Unit = {}) =
+    rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartIntentSenderForResult(),
+        onResult = {
+            if (it.resultCode == RESULT_OK) onResultOk()
+            if (it.resultCode == RESULT_CANCELED) onResultCanceled()
+        }
+    )
+
+fun Media.launchWriteRequest(
+    contentResolver: ContentResolver,
+    result: ActivityResultLauncher<IntentSenderRequest>
+) {
+    val editPendingIntent = MediaStore.createWriteRequest(contentResolver, arrayListOf(uri))
+    val senderRequest: IntentSenderRequest = IntentSenderRequest.Builder(editPendingIntent)
+        .setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION, 0)
+        .build()
+    result.launch(senderRequest)
+}
+
+@Composable
+fun rememberMediaInfo(media: Media, exifMetadata: ExifMetadata): List<InfoRow> {
+    val context = LocalContext.current
+    return remember(media) {
+        media.retrieveMetadata(context, exifMetadata)
+    }
+}
+
+@Composable
+fun rememberExifMetadata(media: Media, exifInterface: ExifInterface): ExifMetadata {
+    return remember(media) {
+        ExifMetadata(exifInterface)
+    }
+}
+
+@Composable
+fun rememberExifInterface(media: Media): ExifInterface? {
+    val context = LocalContext.current
+    return remember(media) {
+        getExifInterface(context, media.uri)
+    }
+}
 
 @Throws(IOException::class)
 fun getExifInterface(context: Context, uri: Uri): ExifInterface? {

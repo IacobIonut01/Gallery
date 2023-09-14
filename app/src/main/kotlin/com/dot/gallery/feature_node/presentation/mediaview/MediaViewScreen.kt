@@ -6,8 +6,6 @@
 package com.dot.gallery.feature_node.presentation.mediaview
 
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
@@ -24,6 +22,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -61,6 +61,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MediaViewScreen(
+    navigate: (String) -> Unit,
     navigateUp: () -> Unit,
     toggleRotate: () -> Unit,
     paddingValues: PaddingValues,
@@ -70,7 +71,7 @@ fun MediaViewScreen(
     mediaState: StateFlow<MediaState>,
     handler: MediaHandleUseCase
 ) {
-    var runtimeMediaId by rememberSaveable(mediaId) { mutableStateOf(mediaId) }
+    var runtimeMediaId by rememberSaveable(mediaId) { mutableLongStateOf(mediaId) }
     val state by mediaState.collectAsStateWithLifecycle()
     val initialPage = rememberSaveable(runtimeMediaId) {
         state.media.indexOfFirst { it.id == runtimeMediaId }.coerceAtLeast(0)
@@ -90,16 +91,12 @@ fun MediaViewScreen(
     val maxImageSize by rememberMaxImageSize()
     val windowInsetsController = rememberWindowInsetsController()
 
-    val result = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartIntentSenderForResult(),
-        onResult = {}
-    )
-    val lastIndex = remember { mutableStateOf(-1) }
+    var lastIndex by remember { mutableIntStateOf(-1) }
     val updateContent: (Int) -> Unit = { page ->
         if (state.media.isNotEmpty()) {
             val index = if (page == -1) 0 else page
-            if (lastIndex.value != -1)
-                runtimeMediaId = state.media[lastIndex.value.coerceAtMost(state.media.size - 1)].id
+            if (lastIndex != -1)
+                runtimeMediaId = state.media[lastIndex.coerceAtMost(state.media.size - 1)].id
             currentDate.value = state.media[index].timestamp.getDate(HEADER_DATE_FORMAT)
             currentMedia.value = state.media[index]
         } else if (!isStandalone) navigateUp()
@@ -110,14 +107,10 @@ fun MediaViewScreen(
         currentMedia.value?.trashed == 0 && !(currentMedia.value?.readUriOnly() ?: false)
     }
 
-    LaunchedEffect(pagerState) {
+    LaunchedEffect(pagerState, state.media) {
         snapshotFlow { pagerState.currentPage }.collect { page ->
             updateContent(page)
         }
-    }
-
-    LaunchedEffect(state.media) {
-        updateContent(pagerState.currentPage)
     }
 
     BackHandler(!showUI.value) {
@@ -151,7 +144,7 @@ fun MediaViewScreen(
                     durationMillis = DEFAULT_LOW_VELOCITY_SWIPE_DURATION
                 )
             ),
-            key = { index -> state.media[index.coerceAtMost(state.media.size - 1)].toString() },
+            key = { index -> state.media[index.coerceIn(0 until state.media.size)].toString() },
             pageSpacing = 16.dp,
         ) { index ->
             MediaPreviewComponent(
@@ -197,10 +190,9 @@ fun MediaViewScreen(
                 showUI = showUI.value,
                 paddingValues = paddingValues,
                 currentMedia = currentMedia.value,
-                currentIndex = pagerState.currentPage,
-                result = result,
+                currentIndex = pagerState.currentPage
             ) {
-                lastIndex.value = it
+                lastIndex = it
             }
         } else {
             MediaViewBottomBar(
@@ -211,9 +203,9 @@ fun MediaViewScreen(
                 paddingValues = paddingValues,
                 currentMedia = currentMedia.value,
                 currentIndex = pagerState.currentPage,
-                result = result,
+                navigate = navigate
             ) {
-                lastIndex.value = it
+                lastIndex = it
             }
         }
     }

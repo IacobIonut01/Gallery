@@ -25,7 +25,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.ImageSearch
@@ -151,7 +151,7 @@ fun MainSearchBar(
                     vm.queryMedia(query)
                 }) {
                     val leadingIcon = if (activeState)
-                        Icons.Outlined.ArrowBack else Icons.Outlined.Search
+                        Icons.AutoMirrored.Outlined.ArrowBack else Icons.Outlined.Search
                     Icon(
                         imageVector = leadingIcon,
                         modifier = Modifier.fillMaxHeight(),

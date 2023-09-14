@@ -15,13 +15,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun rememberAppBottomSheetState(): AppBottomSheetState {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    return rememberSaveable(saver = AppBottomSheetState.Saver()) {
+    return rememberSaveable(saver = AppBottomSheetState.Saver(density = LocalDensity.current)) {
         AppBottomSheetState(sheetState)
     }
 }
@@ -57,12 +59,18 @@ class AppBottomSheetState(
     companion object {
         fun Saver(
             skipPartiallyExpanded: Boolean = true,
-            confirmValueChange: (SheetValue) -> Boolean = { true }
+            confirmValueChange: (SheetValue) -> Boolean = { true },
+            density: Density
         ) = Saver<AppBottomSheetState, Pair<SheetValue, Boolean>>(
             save = { Pair(it.sheetState.currentValue, it.isVisible) },
             restore = { savedValue ->
                 AppBottomSheetState(
-                    SheetState(skipPartiallyExpanded, savedValue.first, confirmValueChange),
+                    SheetState(
+                        skipPartiallyExpanded,
+                        density,
+                        savedValue.first,
+                        confirmValueChange
+                    ),
                     savedValue.second
                 )
             }

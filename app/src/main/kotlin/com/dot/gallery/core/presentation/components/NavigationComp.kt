@@ -5,13 +5,13 @@
 
 package com.dot.gallery.core.presentation.components
 
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
@@ -19,6 +19,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.dot.gallery.R
@@ -27,10 +29,12 @@ import com.dot.gallery.core.Constants.Animation.navigateUpAnimation
 import com.dot.gallery.core.Constants.Target.TARGET_FAVORITES
 import com.dot.gallery.core.Constants.Target.TARGET_TRASH
 import com.dot.gallery.core.Settings.Misc.rememberTimelineGroupByMonth
+import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.presentation.albums.AlbumsScreen
 import com.dot.gallery.feature_node.presentation.albums.AlbumsViewModel
 import com.dot.gallery.feature_node.presentation.common.ChanneledViewModel
 import com.dot.gallery.feature_node.presentation.common.MediaViewModel
+import com.dot.gallery.feature_node.presentation.exif.EditExifScreen
 import com.dot.gallery.feature_node.presentation.favorites.FavoriteScreen
 import com.dot.gallery.feature_node.presentation.mediaview.MediaViewScreen
 import com.dot.gallery.feature_node.presentation.settings.SettingsScreen
@@ -39,10 +43,7 @@ import com.dot.gallery.feature_node.presentation.settings.customization.albumsiz
 import com.dot.gallery.feature_node.presentation.timeline.TimelineScreen
 import com.dot.gallery.feature_node.presentation.trashed.TrashedGridScreen
 import com.dot.gallery.feature_node.presentation.util.Screen
-import com.google.accompanist.navigation.animation.AnimatedNavHost
-import com.google.accompanist.navigation.animation.composable
 
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun NavigationComp(
     navController: NavHostController,
@@ -68,7 +69,7 @@ fun NavigationComp(
 
     val groupTimelineByMonth by rememberTimelineGroupByMonth()
 
-    AnimatedNavHost(
+    NavHost(
         navController = navController,
         startDestination = Screen.TimelineScreen.route
     ) {
@@ -204,6 +205,39 @@ fun NavigationComp(
             )
         }
         composable(
+            route = Screen.EditExifScreen() + "?mediaId={mediaId}",
+            enterTransition = { navigateInAnimation },
+            exitTransition = { navigateUpAnimation },
+            popEnterTransition = { navigateInAnimation },
+            popExitTransition = { navigateUpAnimation },
+            arguments = listOf(
+                navArgument(name = "mediaId") {
+                    type = NavType.LongType
+                    defaultValue = -1
+                },
+            )
+        ) { backStackEntry ->
+            val mediaId: Long = backStackEntry.arguments?.getLong("mediaId") ?: -1
+            if (mediaId != -1L) {
+                val parentEntry = remember(backStackEntry) {
+                    navController.getBackStackEntry(Screen.MediaViewScreen())
+                }
+                val viewModel = hiltViewModel<MediaViewModel>(parentEntry)
+                viewModel.attachToLifecycle()
+                val state by viewModel.mediaState.collectAsStateWithLifecycle()
+                val media: Media? by remember(state) {
+                    mutableStateOf(state.media.find { obj -> obj.id == mediaId })
+                }
+                if (state.media.isNotEmpty() && media != null) {
+                    EditExifScreen(
+                        media = media,
+                        handle = viewModel.handler,
+                        navigateUp = navPipe::navigateUp
+                    )
+                }
+            }
+        }
+        composable(
             route = Screen.MediaViewScreen.route +
                     "?mediaId={mediaId}&albumId={albumId}",
             enterTransition = { navigateInAnimation },
@@ -235,6 +269,7 @@ fun NavigationComp(
                 mediaId = mediaId,
                 mediaState = viewModel.mediaState,
                 handler = viewModel.handler,
+                navigate = navPipe::navigate,
                 navigateUp = navPipe::navigateUp,
                 toggleRotate = toggleRotate
             )
@@ -275,6 +310,7 @@ fun NavigationComp(
                 target = target,
                 mediaState = viewModel.mediaState,
                 handler = viewModel.handler,
+                navigate = navPipe::navigate,
                 navigateUp = navPipe::navigateUp,
                 toggleRotate = toggleRotate
             )

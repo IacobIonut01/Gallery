@@ -6,45 +6,52 @@
 package com.dot.gallery.feature_node.presentation.mediaview.components
 
 import androidx.activity.compose.BackHandler
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.IntentSenderRequest
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,29 +59,52 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.ClipboardManager
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.toUpperCase
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.bumptech.glide.integration.compose.GlideImage
+import com.dot.gallery.BuildConfig
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants
+import com.dot.gallery.core.Constants.Animation.enterAnimation
+import com.dot.gallery.core.Constants.Animation.exitAnimation
+import com.dot.gallery.core.Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION
+import com.dot.gallery.core.presentation.components.DragHandle
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.ExifMetadata
+import com.dot.gallery.feature_node.presentation.util.MapBoxURL
+import com.dot.gallery.feature_node.presentation.util.Screen
+import com.dot.gallery.feature_node.presentation.util.connectivityState
+import com.dot.gallery.feature_node.presentation.util.formattedAddress
 import com.dot.gallery.feature_node.presentation.util.getDate
-import com.dot.gallery.feature_node.presentation.util.getExifInterface
+import com.dot.gallery.feature_node.presentation.util.getLocation
 import com.dot.gallery.feature_node.presentation.util.launchEditIntent
+import com.dot.gallery.feature_node.presentation.util.launchMap
 import com.dot.gallery.feature_node.presentation.util.launchOpenWithIntent
 import com.dot.gallery.feature_node.presentation.util.launchUseAsIntent
+import com.dot.gallery.feature_node.presentation.util.rememberActivityResult
+import com.dot.gallery.feature_node.presentation.util.rememberExifInterface
+import com.dot.gallery.feature_node.presentation.util.rememberExifMetadata
+import com.dot.gallery.feature_node.presentation.util.rememberGeocoder
+import com.dot.gallery.feature_node.presentation.util.rememberMediaInfo
 import com.dot.gallery.feature_node.presentation.util.shareMedia
 import com.dot.gallery.ui.theme.Black40P
 import com.dot.gallery.ui.theme.Shapes
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BoxScope.MediaViewBottomBar(
     showDeleteButton: Boolean = true,
@@ -84,16 +114,13 @@ fun BoxScope.MediaViewBottomBar(
     paddingValues: PaddingValues,
     currentMedia: Media?,
     currentIndex: Int = 0,
-    result: ActivityResultLauncher<IntentSenderRequest>? = null,
+    navigate: (String) -> Unit,
     onDeleteMedia: ((Int) -> Unit)? = null,
 ) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-
     AnimatedVisibility(
         visible = showUI,
-        enter = Constants.Animation.enterAnimation(Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION),
-        exit = Constants.Animation.exitAnimation(Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION),
+        enter = enterAnimation(DEFAULT_TOP_BAR_ANIMATION_DURATION),
+        exit = exitAnimation(DEFAULT_TOP_BAR_ANIMATION_DURATION),
         modifier = Modifier
             .fillMaxWidth()
             .align(Alignment.BottomCenter)
@@ -115,130 +142,287 @@ fun BoxScope.MediaViewBottomBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
-            if (currentMedia != null) {
+            currentMedia?.let {
                 MediaViewActions(
                     currentIndex = currentIndex,
-                    currentMedia = currentMedia,
+                    currentMedia = it,
                     handler = handler,
                     onDeleteMedia = onDeleteMedia,
-                    result = result,
                     showDeleteButton = showDeleteButton
                 )
             }
         }
     }
     currentMedia?.let {
-        val exifInterface = remember(currentMedia) {
-            getExifInterface(context = context, uri = currentMedia.uri)
-        }
-        if (exifInterface != null) {
-            val exifMetadata = remember(currentMedia) {
-                ExifMetadata(exifInterface)
-            }
-            val metadataList = remember(currentMedia) {
-                currentMedia.retrieveMetadata(context, exifMetadata)
-            }
-            if (bottomSheetState.isVisible) {
-                ModalBottomSheet(
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp),
-                    onDismissRequest = {
-                        scope.launch {
-                            bottomSheetState.hide()
-                        }
-                    },
-                    shape = Shapes.extraSmall,
-                    sheetState = bottomSheetState.sheetState,
-                    containerColor = Color.Transparent,
-                    contentColor = Color.White,
-                    dragHandle = null
-                ) {
-                    Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                        MediaViewDateContainer(
-                            currentMedia = currentMedia,
-                            exifMetadata = exifMetadata
-                        ) {
-                            for (metadata in metadataList) {
-                                MediaInfoRow(
-                                    label = metadata.label,
-                                    content = metadata.content,
-                                    icon = metadata.icon
-                                )
-                            }
-                        }
-                        Spacer(modifier = Modifier.size(16.dp))
-                        LocationInfo(exifMetadata = exifMetadata)
-                        Spacer(modifier = Modifier.height(16.dp))
+        MediaInfoBottomSheet(media = it, state = bottomSheetState, navigate = navigate)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MediaInfoBottomSheet(
+    media: Media,
+    navigate: (String) -> Unit,
+    state: AppBottomSheetState
+) {
+    val scope = rememberCoroutineScope()
+    val exifInterface = rememberExifInterface(media)
+    if (exifInterface != null) {
+        val exifMetadata = rememberExifMetadata(media, exifInterface)
+        val mediaInfoList = rememberMediaInfo(media, exifMetadata)
+        if (state.isVisible) {
+            ModalBottomSheet(
+                onDismissRequest = {
+                    scope.launch { state.hide() }
+                },
+                dragHandle = { DragHandle() },
+                shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
+                sheetState = state.sheetState,
+                windowInsets = WindowInsets(0, 0, 0, 0)
+            ) {
+                BackHandler {
+                    scope.launch {
+                        state.hide()
                     }
                 }
-            }
-        }
-        BackHandler(bottomSheetState.isVisible) {
-            scope.launch {
-                bottomSheetState.hide()
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    MediaViewInfoActions(media)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    MediaInfoDateCaptionContainer(media, exifMetadata) {
+                        navigate(Screen.EditExifScreen() + "?mediaId=${media.id}")
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    MediaInfoMapPreview(exifMetadata)
+                    if (mediaInfoList.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp)
+                                .height(32.dp),
+                            text = stringResource(R.string.media_details),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        for (metadata in mediaInfoList) {
+                            MediaInfoRow(
+                                label = metadata.label,
+                                content = metadata.content,
+                                icon = metadata.icon
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.navigationBarsPadding())
+                }
             }
         }
     }
 }
 
 @Composable
-private fun MediaViewDateContainer(
-    currentMedia: Media,
+fun MediaInfoDateCaptionContainer(
+    media: Media,
     exifMetadata: ExifMetadata,
-    content: @Composable () -> Unit
+    onClickEditButton: () -> Unit = {}
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(Shapes.extraLarge)
-            .background(MaterialTheme.colorScheme.surfaceColorAtElevation(4.dp))
-    ) {
-        Column(
+    Column {
+        Box(
             modifier = Modifier
-                .background(MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp))
-                .padding(16.dp)
+                .padding(horizontal = 16.dp)
+                .fillMaxWidth()
+                .background(
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    shape = Shapes.large
+                )
+                .padding(all = 16.dp),
         ) {
-            Row(
+            Column(
                 modifier = Modifier
-                    .padding(bottom = 16.dp),
-                verticalAlignment = Alignment.Top
+                    .align(Alignment.TopStart)
+                    .fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
+                Text(
+                    text = media.timestamp.getDate(Constants.EXIF_DATE_FORMAT),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = 18.sp
+                )
+                val defaultDesc = stringResource(R.string.image_add_description)
+                val imageDesc = remember(exifMetadata) {
+                    val lensDesc = exifMetadata.lensDescription
+                    val imageCapt = exifMetadata.imageDescription
+                    return@remember if (lensDesc != null && imageCapt != null && imageCapt != lensDesc) {
+                        "$lensDesc\n$imageCapt"
+                    } else lensDesc ?: (imageCapt ?: defaultDesc)
+                }
+                Text(
+                    text = imageDesc,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            /*
+            if (!media.readUriOnly()) {
+                IconButton(
+                    modifier = Modifier.align(Alignment.TopEnd),
+                    onClick = onClickEditButton
                 ) {
-                    Text(
-                        text = currentMedia.timestamp.getDate(Constants.HEADER_DATE_FORMAT),
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Light,
-                        color = MaterialTheme.colorScheme.onSurface
+                    Icon(
+                        imageVector = Icons.Outlined.Edit,
+                        contentDescription = stringResource(id = R.string.edit_cd),
+                        tint = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier
+                            .size(40.dp)
+                            .padding(8.dp)
                     )
-                    exifMetadata.lensDescription?.let {
-                        Text(
-                            text = it,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Light,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
+                }
+            }*/
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(state = rememberScrollState())
+                .padding(horizontal = 16.dp)
+                .padding(top = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            if (media.isRaw) {
+                MediaInfoChip(
+                    text = media.fileExtension.toUpperCase(Locale.current),
+                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                )
+            }
+            if (exifMetadata.formattedCords != null) {
+                val geocoder = rememberGeocoder()
+                val clipboardManager: ClipboardManager = LocalClipboardManager.current
+                var locationName by remember { mutableStateOf(exifMetadata.formattedCords!!) }
+                LaunchedEffect(geocoder) {
+                    geocoder?.getLocation(exifMetadata.gpsLatLong!![0], exifMetadata.gpsLatLong[1]) {address ->
+                        address?.let {
+                            val addressName = it.formattedAddress
+                            if (addressName.isNotEmpty()) {
+                                locationName = addressName
+                            }
+                        }
                     }
                 }
-                IconButton(onClick = { /*TODO*/ }) {
-                    Image(
-                        imageVector = Icons.Outlined.Edit,
-                        contentDescription = stringResource(R.string.edit_cd),
-                        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurfaceVariant)
-                    )
-                }
+                MediaInfoChip(
+                    text = stringResource(R.string.location_chip, locationName),
+                    onLongClick = {
+                        clipboardManager.setText(AnnotatedString(exifMetadata.formattedCords!!))
+                    }
+                )
             }
-            Text(
-                text = exifMetadata.imageDescription
-                    ?: stringResource(R.string.image_add_description),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier
-                    .padding(vertical = 8.dp)
-            )
         }
-        content()
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun MediaInfoChip(
+    text: String,
+    contentColor: Color = MaterialTheme.colorScheme.onSecondaryContainer,
+    containerColor: Color = MaterialTheme.colorScheme.secondaryContainer,
+    outlineInLightTheme: Boolean = true,
+    onClick: () -> Unit = {},
+    onLongClick: () -> Unit = {},
+) {
+    Text(
+        modifier = Modifier
+            .background(
+                color = containerColor,
+                shape = Shapes.extraLarge
+            )
+            .then(
+                if (!isSystemInDarkTheme() && outlineInLightTheme) Modifier.border(
+                    width = 0.5.dp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                    shape = Shapes.extraLarge
+                ) else Modifier
+            )
+            .clip(Shapes.extraLarge)
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick
+            )
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+        text = text,
+        style = MaterialTheme.typography.bodyMedium,
+        color = contentColor
+    )
+}
+
+@Suppress("KotlinConstantConditions")
+@OptIn(
+    ExperimentalCoroutinesApi::class,
+    ExperimentalGlideComposeApi::class
+)
+@Composable
+fun MediaInfoMapPreview(exifMetadata: ExifMetadata) {
+    if (exifMetadata.gpsLatLong != null) {
+        val context = LocalContext.current
+        val lat = exifMetadata.gpsLatLong[0]
+        val long = exifMetadata.gpsLatLong[1]
+        val connection by connectivityState()
+        if (connection.isConnected() && BuildConfig.MAPS_TOKEN != "DEBUG") {
+            Box(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .fillMaxWidth()
+                    .clip(Shapes.large)
+                    .background(MaterialTheme.colorScheme.surface)
+            ) {
+                GlideImage(
+                    model = MapBoxURL(
+                        latitude = lat,
+                        longitude = long,
+                        darkTheme = isSystemInDarkTheme()
+                    ),
+                    contentScale = ContentScale.FillWidth,
+                    contentDescription = stringResource(R.string.location_map_cd),
+                    modifier = Modifier
+                        .clip(Shapes.large)
+                        .fillMaxWidth()
+                        .aspectRatio(1.78f)
+                        .clickable { context.launchMap(lat, long) }
+                )
+                Icon(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .size(40.dp)
+                        .padding(8.dp)
+                        .align(Alignment.TopEnd),
+                    imageVector = Icons.AutoMirrored.Outlined.OpenInNew,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun MediaViewInfoActions(
+    media: Media
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState()),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceEvenly,
+    ) {
+        // Share Component
+        ShareButton(media, followTheme = true)
+        // Use as or Open With
+        OpenAsButton(media, followTheme = true)
+        // Edit
+        EditButton(media, followTheme = true)
     }
 }
 
@@ -248,79 +432,132 @@ private fun MediaViewActions(
     currentMedia: Media,
     handler: MediaHandleUseCase,
     onDeleteMedia: ((Int) -> Unit)?,
-    result: ActivityResultLauncher<IntentSenderRequest>?,
     showDeleteButton: Boolean
+) {
+    // Share Component
+    ShareButton(currentMedia)
+    // Favorite Component
+    FavoriteButton(currentMedia, handler)
+    // Edit
+    EditButton(currentMedia)
+    // Trash Component
+    if (showDeleteButton) {
+        TrashButton(currentIndex, currentMedia, handler, false, onDeleteMedia)
+    }
+}
+
+@Composable
+private fun ShareButton(
+    media: Media,
+    followTheme: Boolean = false
 ) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
-    val favoriteIcon by remember(currentMedia) {
+    BottomBarColumn(
+        currentMedia = media,
+        imageVector = Icons.Outlined.Share,
+        followTheme = followTheme,
+        title = stringResource(R.string.share)
+    ) {
+        scope.launch {
+            context.shareMedia(media = it)
+        }
+    }
+}
+
+@Composable
+private fun FavoriteButton(
+    media: Media,
+    handler: MediaHandleUseCase,
+    followTheme: Boolean = false
+) {
+    val scope = rememberCoroutineScope()
+    val result = rememberActivityResult()
+    val favoriteIcon by remember(media) {
         mutableStateOf(
-            if (currentMedia.favorite == 1)
+            if (media.favorite == 1)
                 Icons.Filled.Favorite
             else Icons.Outlined.FavoriteBorder
         )
     }
-    // Share Component
-    BottomBarColumn(
-        currentMedia = currentMedia,
-        imageVector = Icons.Outlined.Share,
-        title = stringResource(R.string.share)
-    ) {
-        context.shareMedia(media = it)
-    }
-    if (!currentMedia.readUriOnly() && currentMedia.trashed == 0) {
-        // Favorite Component
+    if (!media.readUriOnly() && media.trashed == 0) {
         BottomBarColumn(
-            currentMedia = currentMedia,
+            currentMedia = media,
             imageVector = favoriteIcon,
+            followTheme = followTheme,
             title = stringResource(id = R.string.favorites)
         ) {
-            result?.let { result ->
-                scope.launch {
-                    handler.toggleFavorite(result = result, arrayListOf(it), it.favorite != 1)
-                }
+            scope.launch {
+                handler.toggleFavorite(result = result, arrayListOf(it), it.favorite != 1)
             }
         }
     }
-    // Edit
+}
+
+@Composable
+private fun EditButton(
+    media: Media,
+    followTheme: Boolean = false
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     BottomBarColumn(
-        currentMedia = currentMedia,
+        currentMedia = media,
         imageVector = Icons.Outlined.Edit,
+        followTheme = followTheme,
         title = stringResource(R.string.edit)
     ) {
         scope.launch { context.launchEditIntent(it) }
     }
-    // Use as or Open With
-    if (currentMedia.mimeType.startsWith("video")) {
+}
+
+@Composable
+private fun OpenAsButton(
+    media: Media,
+    followTheme: Boolean = false
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    if (media.mimeType.startsWith("video")) {
         BottomBarColumn(
-            currentMedia = currentMedia,
-            imageVector = Icons.Outlined.OpenInNew,
+            currentMedia = media,
+            imageVector = Icons.AutoMirrored.Outlined.OpenInNew,
+            followTheme = followTheme,
             title = stringResource(R.string.open_with)
         ) {
             scope.launch { context.launchOpenWithIntent(it) }
         }
     } else {
         BottomBarColumn(
-            currentMedia = currentMedia,
-            imageVector = Icons.Outlined.OpenInNew,
+            currentMedia = media,
+            imageVector = Icons.AutoMirrored.Outlined.OpenInNew,
+            followTheme = followTheme,
             title = stringResource(R.string.use_as)
         ) {
             scope.launch { context.launchUseAsIntent(it) }
         }
     }
-    if (showDeleteButton) {
-        // Trash Component
-        BottomBarColumn(
-            currentMedia = currentMedia,
-            imageVector = Icons.Outlined.DeleteOutline,
-            title = stringResource(id = R.string.trash)
-        ) {
-            result?.let { result ->
-                scope.launch {
-                    handler.trashMedia(result = result, arrayListOf(it))
-                    onDeleteMedia?.invoke(currentIndex)
-                }
-            }
+}
+
+@Composable
+private fun TrashButton(
+    index: Int,
+    media: Media,
+    handler: MediaHandleUseCase,
+    followTheme: Boolean = false,
+    onDeleteMedia: ((Int) -> Unit)?
+) {
+    val scope = rememberCoroutineScope()
+    val result = rememberActivityResult()
+    BottomBarColumn(
+        currentMedia = media,
+        imageVector = Icons.Outlined.DeleteOutline,
+        followTheme = followTheme,
+        title = stringResource(id = R.string.trash)
+    ) {
+        scope.launch {
+            handler.trashMedia(result = result, arrayListOf(it))
+            onDeleteMedia?.invoke(index)
         }
     }
 }
@@ -330,9 +567,10 @@ fun BottomBarColumn(
     currentMedia: Media?,
     imageVector: ImageVector,
     title: String,
+    followTheme: Boolean = false,
     onItemClick: (Media) -> Unit
 ) {
-    val tintColor = Color.White
+    val tintColor = if (followTheme) MaterialTheme.colorScheme.onSurface else Color.White
     Column(
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))

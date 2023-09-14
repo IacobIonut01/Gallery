@@ -24,7 +24,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dot.gallery.R
 import com.dot.gallery.core.Settings.Album.rememberAlbumSize
+import com.dot.gallery.core.presentation.components.DragHandle
 import com.dot.gallery.core.presentation.components.util.AutoResizeText
 import com.dot.gallery.core.presentation.components.util.FontSizeRange
 import com.dot.gallery.feature_node.domain.model.Album
@@ -107,6 +108,7 @@ fun AlbumSizeScreen(
         sheetContentColor = MaterialTheme.colorScheme.onSurface,
         sheetShape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
         sheetPeekHeight = 64.dp,
+        sheetDragHandle = { DragHandle() },
         sheetContent = {
             Row(
                 modifier = Modifier
@@ -124,7 +126,7 @@ fun AlbumSizeScreen(
                     modifier = Modifier.height(32.dp)
                 ) {
                     OutlinedButton(
-                        onClick = { albumSize = 182f },
+                        onClick = { albumSize = 178f },
                         border = null,
                         contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
                     ) {
@@ -157,11 +159,13 @@ fun AlbumSizeScreen(
         },
         topBar = {
             TopAppBar(
-                title = {},
+                title = {
+                    Text(text = stringResource(R.string.album_card_size))
+                },
                 navigationIcon = {
                     IconButton(onClick = { navigateUp() }) {
                         Icon(
-                            imageVector = Icons.Outlined.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
                             contentDescription = stringResource(
                                 id = R.string.back_cd
                             )
@@ -235,7 +239,7 @@ private fun FakeAlbumComponent(album: Album) {
 @Composable
 private fun FakeAlbumImage(album: Album) {
     val albumSize by rememberAlbumSize()
-    val imageId = when(album.id) {
+    val imageId = when (album.id) {
         1L -> R.drawable.image_sample_1
         2L -> R.drawable.image_sample_2
         3L -> R.drawable.image_sample_3

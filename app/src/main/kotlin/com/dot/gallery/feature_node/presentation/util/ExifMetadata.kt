@@ -47,4 +47,11 @@ class ExifMetadata(exifInterface: ExifInterface) {
      */
     val gpsLatLong: DoubleArray? =
         exifInterface.latLong
+
+    val formattedCords: String?
+        get() = if (gpsLatLong != null) String.format(
+            "%.3f, %.3f",
+            gpsLatLong[0], gpsLatLong[1]
+        ) else null
+
 }

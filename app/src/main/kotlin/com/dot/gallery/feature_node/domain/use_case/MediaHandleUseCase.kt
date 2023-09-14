@@ -9,6 +9,7 @@ import android.content.Context
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import com.dot.gallery.core.Settings.Misc.getTrashEnabled
+import com.dot.gallery.feature_node.domain.model.ExifAttributes
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import kotlinx.coroutines.Dispatchers
@@ -61,4 +62,20 @@ class MediaHandleUseCase(
         result: ActivityResultLauncher<IntentSenderRequest>,
         mediaList: List<Media>
     ) = repository.deleteMedia(result, mediaList)
+
+    suspend fun renameMedia(
+        media: Media,
+        newName: String
+    ): Boolean = repository.renameMedia(media, newName)
+
+    suspend fun moveMedia(
+        media: Media,
+        newPath: String
+    ): Boolean = repository.moveMedia(media, newPath)
+
+    suspend fun updateMediaExif(
+        media: Media,
+        exifAttributes: ExifAttributes
+    ): Boolean = repository.updateMediaExif(media, exifAttributes)
+
 }

@@ -5,18 +5,14 @@
 
 package com.dot.gallery.feature_node.presentation.trashed.components
 
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.IntentSenderRequest
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.RestoreFromTrash
@@ -33,6 +29,7 @@ import com.dot.gallery.core.Constants
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.mediaview.components.BottomBarColumn
+import com.dot.gallery.feature_node.presentation.util.rememberActivityResult
 import com.dot.gallery.ui.theme.Black40P
 import kotlinx.coroutines.launch
 
@@ -43,10 +40,10 @@ fun BoxScope.TrashedViewBottomBar(
     paddingValues: PaddingValues,
     currentMedia: Media?,
     currentIndex: Int,
-    result: ActivityResultLauncher<IntentSenderRequest>,
     onDeleteMedia: (Int) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
+    val result = rememberActivityResult()
     AnimatedVisibility(
         visible = showUI,
         enter = Constants.Animation.enterAnimation(Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION),
@@ -81,7 +78,6 @@ fun BoxScope.TrashedViewBottomBar(
                     handler.trashMedia(result = result, arrayListOf(it), trash = false)
                 }
             }
-            Spacer(modifier = Modifier.size(8.dp))
             // Delete Component
             BottomBarColumn(
                 currentMedia = currentMedia,

@@ -29,7 +29,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -45,6 +44,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.R
+import com.dot.gallery.core.presentation.components.DragHandle
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
 import com.dot.gallery.ui.core.icons.Face
@@ -84,16 +84,7 @@ fun TrashDialog(
                     appBottomSheetState.hide()
                 }
             },
-            dragHandle = {
-                Surface(
-                    modifier = Modifier
-                        .padding(vertical = 11.dp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                    shape = MaterialTheme.shapes.extraLarge
-                ) {
-                    Box(Modifier.size(width = 32.dp, height = 4.dp))
-                }
-            },
+            dragHandle = { DragHandle() },
             windowInsets = WindowInsets(0,0,0,0)
         ) {
             val defaultText2 = defaultText.invoke(data.size)

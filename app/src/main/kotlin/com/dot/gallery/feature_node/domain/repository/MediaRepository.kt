@@ -10,6 +10,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import com.dot.gallery.core.Resource
 import com.dot.gallery.feature_node.domain.model.Album
+import com.dot.gallery.feature_node.domain.model.ExifAttributes
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.PinnedAlbum
 import com.dot.gallery.feature_node.domain.util.MediaOrder
@@ -60,5 +61,21 @@ interface MediaRepository {
         result: ActivityResultLauncher<IntentSenderRequest>,
         mediaList: List<Media>
     )
+
+    suspend fun renameMedia(
+        media: Media,
+        newName: String
+    ): Boolean
+
+    suspend fun moveMedia(
+        media: Media,
+        newPath: String
+    ): Boolean
+
+    suspend fun updateMediaExif(
+        media: Media,
+        exifAttributes: ExifAttributes
+    ): Boolean
+
 
 }

@@ -94,4 +94,6 @@ private fun getCurrentConnectivityState(
 sealed class ConnectionState {
     object Available : ConnectionState()
     object Unavailable : ConnectionState()
+
+    fun isConnected() = this is Available
 }

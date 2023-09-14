@@ -7,6 +7,7 @@ package com.dot.gallery.feature_node.data.repository
 
 import android.annotation.SuppressLint
 import android.content.ContentResolver
+import android.content.ContentValues
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -25,7 +26,10 @@ import com.dot.gallery.feature_node.data.data_types.getMediaByUri
 import com.dot.gallery.feature_node.data.data_types.getMediaFavorite
 import com.dot.gallery.feature_node.data.data_types.getMediaListByUris
 import com.dot.gallery.feature_node.data.data_types.getMediaTrashed
+import com.dot.gallery.feature_node.data.data_types.updateMedia
+import com.dot.gallery.feature_node.data.data_types.updateMediaExif
 import com.dot.gallery.feature_node.domain.model.Album
+import com.dot.gallery.feature_node.domain.model.ExifAttributes
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.PinnedAlbum
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
@@ -116,7 +120,7 @@ class MediaRepositoryImpl(
     override fun getMediaByAlbumIdWithType(
         albumId: Long,
         allowedMedia: AllowedMedia
-    ): Flow<Resource<List<Media>>>  =
+    ): Flow<Resource<List<Media>>> =
         contentResolver.retrieveMedia {
             val query = Query.MediaQuery().copy(
                 bundle = Bundle().apply {
@@ -243,12 +247,45 @@ class MediaRepositoryImpl(
         result.launch(senderRequest)
     }
 
+    override suspend fun renameMedia(
+        media: Media,
+        newName: String
+    ): Boolean = contentResolver.updateMedia(
+        media = media,
+        contentValues = displayName(newName)
+    )
+
+    override suspend fun moveMedia(
+        media: Media,
+        newPath: String
+    ): Boolean = contentResolver.updateMedia(
+        media = media,
+        contentValues = relativePath(newPath)
+    )
+
+    override suspend fun updateMediaExif(
+        media: Media,
+        exifAttributes: ExifAttributes
+    ): Boolean = contentResolver.updateMediaExif(
+        media = media,
+        exifAttributes = exifAttributes
+    )
+
+
     companion object {
         private val DEFAULT_ORDER = MediaOrder.Date(OrderType.Descending)
         private val URIs = arrayOf(
             MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
             MediaStore.Video.Media.EXTERNAL_CONTENT_URI
         )
+
+        private fun displayName(newName: String) = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, newName)
+        }
+
+        private fun relativePath(newPath: String) = ContentValues().apply {
+            put(MediaStore.MediaColumns.RELATIVE_PATH, newPath)
+        }
 
         private fun ContentResolver.retrieveMediaAsResource(dataBody: suspend (ContentResolver) -> Resource<List<Media>>) =
             contentFlowObserver(URIs).map {

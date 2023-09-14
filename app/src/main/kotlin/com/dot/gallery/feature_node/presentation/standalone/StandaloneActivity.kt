@@ -51,7 +51,8 @@ class StandaloneActivity : ComponentActivity() {
                         mediaId = viewModel.mediaId,
                         mediaState = viewModel.mediaState,
                         handler = viewModel.handler,
-                        toggleRotate = ::toggleOrientation
+                        toggleRotate = ::toggleOrientation,
+                        navigate = {}
                     )
                 }
                 BackHandler {

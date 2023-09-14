@@ -9,7 +9,6 @@ plugins {
     alias(libs.plugins.roomPlugin)
     alias(libs.plugins.hiltAndroid)
     alias(libs.plugins.baselineProfilePlugin)
-    kotlin("kapt")
     id("kotlin-parcelize")
 }
 
@@ -133,7 +132,7 @@ dependencies {
     // Compose - Accompanists
     implementation(libs.accompanist.systemuicontroller)
     implementation(libs.accompanist.permissions)
-    implementation(libs.accompanist.navigation.animation)
+    implementation(libs.androidx.navigation.compose)
 
     // Android MDC - Material
     implementation(libs.material)
@@ -145,8 +144,8 @@ dependencies {
     // Dagger - Hilt
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.dagger.hilt)
-    kapt(libs.dagger.hilt.compiler)
-    kapt(libs.androidx.hilt.compiler)
+    ksp(libs.dagger.hilt.compiler)
+    ksp(libs.androidx.hilt.compiler)
 
     // Room
     implementation(libs.room.runtime)
@@ -158,7 +157,7 @@ dependencies {
     // Glide
     implementation(libs.glide)
     implementation(libs.glide.compose)
-    kapt(libs.glide.compiler)
+    ksp(libs.glide.compiler)
 
     // SVG Support for Glide
     implementation(libs.glide.svg)

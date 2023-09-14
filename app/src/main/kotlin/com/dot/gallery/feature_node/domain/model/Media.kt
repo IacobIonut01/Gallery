@@ -11,6 +11,7 @@ import android.webkit.MimeTypeMap
 import androidx.compose.runtime.Immutable
 import com.dot.gallery.core.Constants
 import com.dot.gallery.feature_node.presentation.util.getDate
+import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 import java.io.File
 
@@ -49,6 +50,42 @@ data class Media(
      * Media object with limited functionality (no favorites, trash, timestamp etc)
      */
     fun readUriOnly(): Boolean = albumID == -99L && albumLabel == ""
+
+    /**
+     * Determine if the current media is a raw format
+     *
+     * Checks if [mimeType] starts with "image/x-" or "image/vnd."
+     *
+     * Most used formats:
+     * - ARW: image/x-sony-arw
+     * - CR2: image/x-canon-cr2
+     * - CRW: image/x-canon-crw
+     * - DCR: image/x-kodak-dcr
+     * - DNG: image/x-adobe-dng
+     * - ERF: image/x-epson-erf
+     * - K25: image/x-kodak-k25
+     * - KDC: image/x-kodak-kdc
+     * - MRW: image/x-minolta-mrw
+     * - NEF: image/x-nikon-nef
+     * - ORF: image/x-olympus-orf
+     * - PEF: image/x-pentax-pef
+     * - RAF: image/x-fuji-raf
+     * - RAW: image/x-panasonic-raw
+     * - SR2: image/x-sony-sr2
+     * - SRF: image/x-sony-srf
+     * - X3F: image/x-sigma-x3f
+     *
+     * Other proprietary image types in the standard:
+     * image/vnd.manufacturer.filename_extension for instance for NEF by Nikon and .mrv for Minolta:
+     * - NEF: image/vnd.nikon.nef
+     * - Minolta: image/vnd.minolta.mrw
+     */
+    @IgnoredOnParcel
+    val isRaw: Boolean = mimeType.isNotBlank() && (mimeType.startsWith("image/x-") || mimeType.startsWith("image/vnd."))
+
+    @IgnoredOnParcel
+    val fileExtension: String = label.substringAfterLast(".").removePrefix(".")
+
     companion object {
         fun createFromUri(uri: Uri): Media? {
             if (uri.path == null) return null

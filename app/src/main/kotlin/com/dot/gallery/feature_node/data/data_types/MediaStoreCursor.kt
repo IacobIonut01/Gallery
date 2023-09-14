@@ -7,12 +7,15 @@ package com.dot.gallery.feature_node.data.data_types
 
 import android.content.ContentResolver
 import android.content.ContentUris
+import android.content.ContentValues
 import android.database.Cursor
 import android.database.MergeCursor
 import android.os.Build
 import android.provider.MediaStore
+import androidx.exifinterface.media.ExifInterface
 import com.dot.gallery.core.Constants
 import com.dot.gallery.feature_node.data.data_source.Query
+import com.dot.gallery.feature_node.domain.model.ExifAttributes
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.presentation.util.getDate
 import kotlinx.coroutines.Dispatchers
@@ -40,6 +43,46 @@ suspend fun ContentResolver.query(
         )
     }
 }
+
+suspend fun ContentResolver.updateMedia(
+    media: Media,
+    contentValues: ContentValues
+): Boolean = withContext(Dispatchers.IO) {
+    val selection = "${MediaStore.MediaColumns._ID} = ?"
+    val selectionArgs = arrayOf(media.id.toString())
+    val uri = if (media.mimeType.startsWith("image")) MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+    else MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+    return@withContext try {
+        update(
+            uri,
+            contentValues,
+            selection,
+            selectionArgs
+        ) > 0
+    } catch (_: NullPointerException) {
+        false
+    }
+}
+
+suspend fun ContentResolver.updateMediaExif(
+    media: Media,
+    exifAttributes: ExifAttributes
+) = withContext(Dispatchers.IO) {
+    return@withContext try {
+        openFileDescriptor(media.uri, "rw").use { imagePfd ->
+            if (imagePfd != null) {
+                val exif = ExifInterface(imagePfd.fileDescriptor)
+                exifAttributes.writeExif(exif)
+                exif.saveAttributes()
+            }
+            true
+        }
+    } catch (e: java.lang.Exception) {
+        e.printStackTrace()
+        false
+    }
+}
+
 
 @Throws(Exception::class)
 fun Cursor.getMediaFromCursor(): Media {
