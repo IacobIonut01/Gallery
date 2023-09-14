@@ -6,7 +6,7 @@
 package com.dot.gallery.core.presentation.components
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -28,7 +28,7 @@ fun NavigationButton(
     val onClick: () -> Unit =
         if (isChildRoute && !selectionState.value) navigateUp
         else clearSelection
-    val icon = if (isChildRoute && !selectionState.value) Icons.Default.ArrowBack
+    val icon = if (isChildRoute && !selectionState.value) Icons.AutoMirrored.Filled.ArrowBack
     else Icons.Default.Close
     if (isChildRoute || selectionState.value || alwaysGoBack) {
         IconButton(onClick = onClick) {
