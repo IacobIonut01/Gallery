@@ -80,6 +80,7 @@ fun MediaScreen(
     navigateUp: () -> Unit,
     toggleNavbar: (Boolean) -> Unit,
     isScrolling: MutableState<Boolean> = remember { mutableStateOf(false) },
+    searchBarActive: MutableState<Boolean> = mutableStateOf(false),
     onActivityResult: (result: ActivityResult) -> Unit,
 ) {
 
@@ -165,7 +166,8 @@ fun MediaScreen(
                             navigate = navigate,
                             toggleNavbar = toggleNavbar,
                             selectionState = selectionState,
-                            isScrolling = isScrolling
+                            isScrolling = isScrolling,
+                            activeState = searchBarActive
                         ) {
                             NavigationActions(
                                 actions = navActionsContent,

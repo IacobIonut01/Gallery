@@ -78,33 +78,24 @@ fun MainSearchBar(
     navigate: (String) -> Unit,
     toggleNavbar: (Boolean) -> Unit,
     isScrolling: MutableState<Boolean>,
+    activeState: MutableState<Boolean>,
     menuItems: @Composable (RowScope.() -> Unit)? = null,
 ) {
     var historySet by rememberSearchHistory()
     val vm = hiltViewModel<SearchViewModel>()
     var query by rememberSaveable { mutableStateOf("") }
     val state by vm.mediaState.collectAsStateWithLifecycle()
-    var activeState by rememberSaveable {
-        mutableStateOf(false)
-    }
-    val dismissSearchBar = remember {
-        {
-            activeState = false
-            query = ""
-            vm.queryMedia(query)
-        }
-    }
     val alpha by animateFloatAsState(
         targetValue = if (selectionState != null && selectionState.value) 0.6f else 1f,
         label = "alpha"
     )
     val elevation by animateDpAsState(
-        targetValue = if (activeState) Expanded() else Collapsed(),
+        targetValue = if (activeState.value) Expanded() else Collapsed(),
         label = "elevation"
     )
     LaunchedEffect(LocalConfiguration.current, activeState) {
         if (selectionState == null || !selectionState.value)
-            toggleNavbar(!activeState)
+            toggleNavbar(!activeState.value)
     }
 
     Box(
@@ -138,19 +129,19 @@ fun MainSearchBar(
                     historySet = historySet.toMutableSet().apply { add("${System.currentTimeMillis()}/$it") }
                 vm.queryMedia(it)
             },
-            active = activeState,
-            onActiveChange = { activeState = it },
+            active = activeState.value,
+            onActiveChange = { activeState.value = it },
             placeholder = {
                 Text(text = stringResource(id = R.string.searchbar_title))
             },
             tonalElevation = elevation,
             leadingIcon = {
                 IconButton(onClick = {
-                    activeState = !activeState
+                    activeState.value = !activeState.value
                     if (query.isNotEmpty()) query = ""
                     vm.queryMedia(query)
                 }) {
-                    val leadingIcon = if (activeState)
+                    val leadingIcon = if (activeState.value)
                         Icons.AutoMirrored.Outlined.ArrowBack else Icons.Outlined.Search
                     Icon(
                         imageVector = leadingIcon,
@@ -161,7 +152,7 @@ fun MainSearchBar(
             },
             trailingIcon = {
                 Row {
-                    if (!activeState) menuItems?.invoke(this)
+                    if (!activeState.value) menuItems?.invoke(this)
                 }
             },
             colors = SearchBarDefaults.colors(
@@ -220,7 +211,6 @@ fun MainSearchBar(
                             paddingValues = pd,
                             isScrolling = remember { mutableStateOf(false) }
                         ) {
-                            dismissSearchBar()
                             navigate(Screen.MediaViewScreen.route + "?mediaId=${it.id}")
                         }
                         androidx.compose.animation.AnimatedVisibility(
@@ -238,10 +228,12 @@ fun MainSearchBar(
         }
     }
 
-    BackHandler(activeState) {
-        if (vm.lastQuery.value.isEmpty())
-            dismissSearchBar()
-        else {
+    BackHandler(activeState.value) {
+        if (vm.lastQuery.value.isEmpty()) {
+            activeState.value = false
+            query = ""
+            vm.queryMedia(query)
+        } else {
             query = ""
             vm.clearQuery()
         }

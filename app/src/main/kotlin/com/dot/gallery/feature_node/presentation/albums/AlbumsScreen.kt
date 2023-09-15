@@ -65,6 +65,7 @@ fun AlbumsScreen(
     paddingValues: PaddingValues,
     viewModel: AlbumsViewModel = hiltViewModel(),
     isScrolling: MutableState<Boolean>,
+    searchBarActive: MutableState<Boolean>
 ) {
     val state by viewModel.albumsState.collectAsStateWithLifecycle()
     val pinnedState by viewModel.pinnedAlbumState.collectAsStateWithLifecycle()
@@ -87,7 +88,8 @@ fun AlbumsScreen(
                 bottomPadding = paddingValues.calculateBottomPadding(),
                 navigate = navigate,
                 toggleNavbar = toggleNavbar,
-                isScrolling = isScrolling
+                isScrolling = isScrolling,
+                activeState = searchBarActive
             ) {
                 var expandedDropdown by remember { mutableStateOf(false) }
                 IconButton(onClick = { expandedDropdown = !expandedDropdown }) {

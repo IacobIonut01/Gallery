@@ -13,6 +13,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -55,10 +56,13 @@ fun NavigationComp(
     isScrolling: MutableState<Boolean>
 ) {
     val useNavRail = windowSizeClass.widthSizeClass > WindowWidthSizeClass.Compact
+    val searchBarActive = rememberSaveable {
+        mutableStateOf(false)
+    }
     val bottomNavEntries = rememberNavigationItems()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     navBackStackEntry?.destination?.route?.let {
-        val shouldDisplayBottomBar = bottomNavEntries.find { item -> item.route == it } != null
+        val shouldDisplayBottomBar = bottomNavEntries.find { item -> item.route == it && !searchBarActive.value } != null
         bottomBarState.value = shouldDisplayBottomBar
         systemBarFollowThemeState.value = !it.contains(Screen.MediaViewScreen.route)
     }
@@ -97,6 +101,7 @@ fun NavigationComp(
                 navigateUp = navPipe::navigateUp,
                 toggleNavbar = navPipe::toggleNavbar,
                 isScrolling = isScrolling,
+                searchBarActive = searchBarActive,
             )
         }
         composable(
@@ -161,6 +166,7 @@ fun NavigationComp(
                 paddingValues = paddingValues,
                 viewModel = viewModel,
                 isScrolling = isScrolling,
+                searchBarActive = searchBarActive
             )
         }
         composable(
