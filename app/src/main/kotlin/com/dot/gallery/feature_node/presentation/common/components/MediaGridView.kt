@@ -75,7 +75,7 @@ fun MediaGridView(
     toggleSelection: (Int) -> Unit = {},
     enableStickyHeaders: Boolean = false,
     showMonthlyHeader: Boolean = false,
-    aboveGridContent: @Composable() (() -> Unit)? = null,
+    aboveGridContent: @Composable (() -> Unit)? = null,
     isScrolling: MutableState<Boolean>,
     onMediaClick: (media: Media) -> Unit = {}
 ) {

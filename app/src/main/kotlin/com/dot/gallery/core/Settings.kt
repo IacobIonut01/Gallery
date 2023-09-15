@@ -13,7 +13,6 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
-import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -25,9 +24,6 @@ import kotlinx.coroutines.flow.map
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = PREFERENCE_NAME)
 
-/**
- * TODO: Create 'Preference' annotation to generate the composable remember functions automatically
- */
 object Settings {
 
     const val PREFERENCE_NAME = "settings"
@@ -37,8 +33,6 @@ object Settings {
         @Composable
         fun rememberLastSort() =
             rememberPreference(key = LAST_SORT, defaultValue = 0)
-        fun getLastSort(context: Context) =
-            context.dataStore.data.map { it[LAST_SORT] ?: 0 }
 
         private val ALBUM_SIZE = floatPreferencesKey("album_size")
 
@@ -48,20 +42,6 @@ object Settings {
     }
 
     object Glide {
-        private val DISK_CACHE_SIZE = longPreferencesKey("disk_cache_size")
-        @Composable
-        fun rememberDiskCacheSize() =
-            rememberPreference(key = DISK_CACHE_SIZE, defaultValue = 150)
-        fun getDiskCacheSize(context: Context) =
-            context.dataStore.data.map { it[DISK_CACHE_SIZE] ?: 150 }
-
-        private val CACHED_SCREEN_COUNT = floatPreferencesKey("cached_screen_count")
-        @Composable
-        fun rememberCachedScreenCount() =
-            rememberPreference(key = CACHED_SCREEN_COUNT, defaultValue = 80f)
-        fun getCachedScreenCount(context: Context) =
-            context.dataStore.data.map { it[CACHED_SCREEN_COUNT] ?: 80f }
-
         private val MAX_IMAGE_SIZE = intPreferencesKey("max_image_size")
         @Composable
         fun rememberMaxImageSize() =
@@ -98,11 +78,6 @@ object Settings {
         @Composable
         fun rememberMediaGridSize() =
             rememberPreference(key = MEDIA_GRID_SIZE, defaultValue = Dimens.Photo().value)
-
-        private val ALBUM_GRID_SIZE = floatPreferencesKey("album_grid_size")
-        @Composable
-        fun rememberAlbumGridSize() =
-            rememberPreference(key = ALBUM_GRID_SIZE, defaultValue = Dimens.Album().value)
 
         private val FORCE_THEME = booleanPreferencesKey("force_theme")
 
@@ -141,17 +116,17 @@ object Settings {
 }
 
 sealed class SettingsType {
-    object Seek : SettingsType()
-    object Switch : SettingsType()
-    object Header : SettingsType()
-    object Default : SettingsType()
+    data object Seek : SettingsType()
+    data object Switch : SettingsType()
+    data object Header : SettingsType()
+    data object Default : SettingsType()
 }
 
 sealed class Position {
-    object Top : Position()
-    object Middle : Position()
-    object Bottom : Position()
-    object Alone : Position()
+    data object Top : Position()
+    data object Middle : Position()
+    data object Bottom : Position()
+    data object Alone : Position()
 }
 
 sealed class SettingsEntity(

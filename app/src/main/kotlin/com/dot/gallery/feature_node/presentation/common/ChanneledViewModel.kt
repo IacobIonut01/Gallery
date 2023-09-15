@@ -22,7 +22,7 @@ class ChanneledViewModel @Inject constructor() : ViewModel() {
     sealed class Event {
         data class NavigationRouteEvent(val route: String): Event()
         data class ToggleNavigationBarEvent(val isVisible: Boolean): Event()
-        object NavigationUpEvent: Event()
+        data object NavigationUpEvent: Event()
     }
 
     private val eventChannel = Channel<Event>()

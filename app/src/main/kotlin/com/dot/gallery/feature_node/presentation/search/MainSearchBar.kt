@@ -9,8 +9,6 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,20 +19,13 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyItemScope
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.ImageSearch
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
@@ -66,8 +57,9 @@ import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.Settings.Search.rememberSearchHistory
 import com.dot.gallery.core.presentation.components.LoadingMedia
 import com.dot.gallery.feature_node.presentation.common.components.MediaGridView
-import com.dot.gallery.feature_node.presentation.search.SearchBarElevation.Collapsed
-import com.dot.gallery.feature_node.presentation.search.SearchBarElevation.Expanded
+import com.dot.gallery.feature_node.presentation.search.components.SearchBarElevation.Collapsed
+import com.dot.gallery.feature_node.presentation.search.components.SearchBarElevation.Expanded
+import com.dot.gallery.feature_node.presentation.search.components.SearchHistory
 import com.dot.gallery.feature_node.presentation.util.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -238,130 +230,4 @@ fun MainSearchBar(
             vm.clearQuery()
         }
     }
-}
-
-@Composable
-private fun SearchHistory(search: (query: String) -> Unit) {
-    var historySet by rememberSearchHistory()
-    val historyItems = remember(historySet) {
-        historySet.toList().mapIndexed { index, item ->
-            Pair(
-                item.substringBefore(
-                    delimiter = "/",
-                    missingDelimiterValue = index.toString()
-                ),
-                item.substringAfter(
-                    delimiter = "/",
-                    missingDelimiterValue = item
-                )
-            )
-        }.sortedByDescending { it.first }
-    }
-    val suggestionSet = listOf(
-        "0" to "Screenshots",
-        "1" to "Camera",
-        "2" to "May 2022",
-        "3" to "Thursday"
-    )
-    val maxItems = remember(historySet) {
-        if (historyItems.size >= 5) 5 else historyItems.size
-    }
-
-    LazyColumn {
-        if (historyItems.isNotEmpty()) {
-            item {
-                Text(
-                    text = stringResource(R.string.history_recent_title),
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.titleSmall,
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                        .padding(top = 16.dp)
-                )
-            }
-            items(historyItems.subList(0, maxItems)) {
-                HistoryItem(
-                    historyQuery = it,
-                    search = search,
-                ) {
-                    historySet = historySet.toMutableSet().apply { remove(it) }
-                }
-            }
-        }
-        item {
-            Text(
-                text = stringResource(R.string.history_suggestions_title),
-                color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.titleSmall,
-                modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                    .padding(top = 16.dp)
-            )
-        }
-        items(suggestionSet) {
-            HistoryItem(
-                historyQuery = it,
-                search = search,
-            )
-        }
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun LazyItemScope.HistoryItem(
-    historyQuery: Pair<String, String>,
-    search: (String) -> Unit,
-    onDelete: ((String) -> Unit)? = null
-) {
-    ListItem(
-        headlineContent = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = historyQuery.second,
-                    modifier = Modifier
-                        .weight(1f)
-                )
-                if (onDelete != null) {
-                    IconButton(
-                        onClick = {
-                            val timestamp = if (historyQuery.first.length < 10) "" else "${historyQuery.first}/"
-                            onDelete("$timestamp${historyQuery.second}")
-                        }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Close,
-                            contentDescription = null
-                        )
-                    }
-                }
-            }
-        },
-        leadingContent = {
-            val icon = if (onDelete != null)
-                Icons.Outlined.History
-            else Icons.Outlined.Search
-            Icon(
-                imageVector = icon,
-                contentDescription = null
-            )
-        },
-        colors = ListItemDefaults.colors(
-            containerColor = Color.Transparent
-        ),
-        modifier = Modifier
-            .animateItemPlacement()
-            .clickable { search(historyQuery.second) }
-    )
-}
-
-sealed class SearchBarElevation(val dp: Dp) {
-
-    object Collapsed : SearchBarElevation(2.dp)
-
-    object Expanded : SearchBarElevation(0.dp)
-
-    operator fun invoke() = dp
 }

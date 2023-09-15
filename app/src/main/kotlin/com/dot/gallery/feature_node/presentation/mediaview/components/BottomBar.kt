@@ -475,12 +475,12 @@ private fun FavoriteButton(
     val result = rememberActivityResult()
     val favoriteIcon by remember(media) {
         mutableStateOf(
-            if (media.favorite == 1)
+            if (media.isFavorite)
                 Icons.Filled.Favorite
             else Icons.Outlined.FavoriteBorder
         )
     }
-    if (!media.readUriOnly() && media.trashed == 0) {
+    if (!media.readUriOnly() && media.isTrashed) {
         BottomBarColumn(
             currentMedia = media,
             imageVector = favoriteIcon,
@@ -518,7 +518,7 @@ private fun OpenAsButton(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    if (media.mimeType.startsWith("video")) {
+    if (media.isVideo) {
         BottomBarColumn(
             currentMedia = media,
             imageVector = Icons.AutoMirrored.Outlined.OpenInNew,

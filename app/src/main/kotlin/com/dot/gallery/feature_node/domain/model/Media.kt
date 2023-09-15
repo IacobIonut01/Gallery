@@ -34,6 +34,12 @@ data class Media(
     val duration: String? = null,
 ) : Parcelable {
 
+    val isVideo: Boolean get() = mimeType.startsWith("video/") && duration != null
+    val isImage: Boolean get() = mimeType.startsWith("image/")
+
+    val isTrashed: Boolean get() = trashed == 1
+    val isFavorite: Boolean get() = favorite == 1
+
     override fun toString(): String {
         return "$id, $path, $fullDate, $mimeType, favorite=$favorite"
     }

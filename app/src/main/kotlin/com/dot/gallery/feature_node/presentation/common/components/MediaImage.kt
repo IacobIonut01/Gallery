@@ -134,7 +134,7 @@ fun MediaImage(
         }
 
         AnimatedVisibility(
-            visible = media.favorite == 1,
+            visible = media.isFavorite,
             enter = Animation.enterAnimation,
             exit = Animation.exitAnimation,
             modifier = Modifier

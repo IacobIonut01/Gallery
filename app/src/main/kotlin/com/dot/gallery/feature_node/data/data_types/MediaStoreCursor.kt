@@ -50,7 +50,7 @@ suspend fun ContentResolver.updateMedia(
 ): Boolean = withContext(Dispatchers.IO) {
     val selection = "${MediaStore.MediaColumns._ID} = ?"
     val selectionArgs = arrayOf(media.id.toString())
-    val uri = if (media.mimeType.startsWith("image")) MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+    val uri = if (media.isImage) MediaStore.Images.Media.EXTERNAL_CONTENT_URI
     else MediaStore.Video.Media.EXTERNAL_CONTENT_URI
     return@withContext try {
         update(

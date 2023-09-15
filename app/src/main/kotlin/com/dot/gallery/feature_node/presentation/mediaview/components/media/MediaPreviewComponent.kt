@@ -27,7 +27,7 @@ fun MediaPreviewComponent(
         modifier = Modifier
             .fillMaxSize()
     ) {
-        if (media.mimeType.contains("video")) {
+        if (media.isVideo) {
             VideoPlayer(
                 media = media,
                 playWhenReady = playWhenReady,
