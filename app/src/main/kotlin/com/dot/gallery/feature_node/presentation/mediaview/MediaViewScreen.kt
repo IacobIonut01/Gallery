@@ -20,7 +20,6 @@ import androidx.compose.foundation.pager.PagerDefaults
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -35,7 +34,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.media3.exoplayer.ExoPlayer
 import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
@@ -156,7 +154,7 @@ fun MediaViewScreen(
                     showUI.value = !showUI.value
                     windowInsetsController.toggleSystemBars(showUI.value)
                 }
-            ) { player: ExoPlayer, currentTime: MutableState<Long>, totalTime: Long, buffer: Int, playToggle: () -> Unit ->
+            ) { player, isPlaying, currentTime, totalTime, buffer ->
                 AnimatedVisibility(
                     visible = showUI.value,
                     enter = enterAnimation(Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION),
@@ -166,10 +164,10 @@ fun MediaViewScreen(
                     VideoPlayerController(
                         paddingValues = paddingValues,
                         player = player,
+                        isPlaying = isPlaying,
                         currentTime = currentTime,
                         totalTime = totalTime,
                         buffer = buffer,
-                        playToggle = playToggle,
                         toggleRotate = toggleRotate
                     )
                 }

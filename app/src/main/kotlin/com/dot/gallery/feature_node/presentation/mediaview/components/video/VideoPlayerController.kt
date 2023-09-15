@@ -29,10 +29,7 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -44,18 +41,20 @@ import androidx.compose.ui.unit.dp
 import androidx.media3.exoplayer.ExoPlayer
 import com.dot.gallery.R
 import com.dot.gallery.feature_node.presentation.util.formatMinSec
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun VideoPlayerController(
     paddingValues: PaddingValues,
     player: ExoPlayer,
+    isPlaying: MutableState<Boolean>,
     currentTime: MutableState<Long>,
     totalTime: Long,
     buffer: Int,
-    playToggle: () -> Unit,
     toggleRotate: () -> Unit,
 ) {
-    var currentValue by rememberSaveable(currentTime.value) { mutableStateOf(currentTime.value) }
+    val scope = rememberCoroutineScope()
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -89,7 +88,7 @@ fun VideoPlayerController(
             ) {
                 Text(
                     modifier = Modifier.width(52.dp),
-                    text = currentValue.formatMinSec(),
+                    text = currentTime.value.formatMinSec(),
                     fontWeight = FontWeight.Medium,
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.White,
@@ -111,10 +110,14 @@ fun VideoPlayerController(
                     )
                     Slider(
                         modifier = Modifier.fillMaxWidth(),
-                        value = currentValue.toFloat(),
+                        value = currentTime.value.toFloat(),
                         onValueChange = {
-                            currentValue = it.toLong()
-                            player.seekTo(it.toLong())
+                            scope.launch {
+                                currentTime.value = it.toLong()
+                                player.seekTo(it.toLong())
+                                delay(50)
+                                player.play()
+                            }
                         },
                         valueRange = 0f..totalTime.toFloat(),
                         colors =
@@ -138,12 +141,12 @@ fun VideoPlayerController(
         }
 
         IconButton(
-            onClick = { playToggle.invoke() },
+            onClick = { isPlaying.value = !isPlaying.value },
             modifier = Modifier
                 .align(Alignment.Center)
                 .size(64.dp)
         ) {
-            if (player.isPlaying) {
+            if (isPlaying.value) {
                 Image(
                     modifier = Modifier.fillMaxSize(),
                     imageVector = Icons.Filled.PauseCircleFilled,

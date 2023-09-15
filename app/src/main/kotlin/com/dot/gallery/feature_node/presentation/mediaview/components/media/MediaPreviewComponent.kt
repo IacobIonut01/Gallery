@@ -21,7 +21,7 @@ fun MediaPreviewComponent(
     maxImageSize: Int,
     playWhenReady: Boolean,
     onItemClick: () -> Unit,
-    videoController: @Composable (ExoPlayer, MutableState<Long>, Long, Int, () -> Unit) -> Unit,
+    videoController: @Composable (ExoPlayer, MutableState<Boolean>, MutableState<Long>, Long, Int) -> Unit,
 ) {
     Box(
         modifier = Modifier

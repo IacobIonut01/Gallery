@@ -21,9 +21,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
@@ -42,14 +47,15 @@ import kotlin.time.Duration.Companion.seconds
 fun VideoPlayer(
     media: Media,
     playWhenReady: Boolean,
-    videoController: @Composable (ExoPlayer, MutableState<Long>, Long, Int, () -> Unit) -> Unit,
+    videoController: @Composable (ExoPlayer, MutableState<Boolean>, MutableState<Long>, Long, Int) -> Unit,
     onItemClick: () -> Unit
 ) {
 
     var totalDuration by remember { mutableStateOf(0L) }
     val currentTime = rememberSaveable { mutableStateOf(0L) }
     var bufferedPercentage by remember { mutableStateOf(0) }
-    var isPlaying by remember { mutableStateOf(true) }
+    val isPlaying = rememberSaveable { mutableStateOf(playWhenReady) }
+    var lastPlayingState by rememberSaveable { mutableStateOf(isPlaying.value) }
     val context = LocalContext.current
 
     val exoPlayer = remember(context) {
@@ -81,16 +87,15 @@ fun VideoPlayer(
                     }
                 }
             )
-            videoController(exoPlayer, currentTime, totalDuration, bufferedPercentage) {
-                isPlaying = !isPlaying
-            }
+            videoController(exoPlayer, isPlaying, currentTime, totalDuration, bufferedPercentage)
         }
     ) {
         exoPlayer.addListener(
             object : Player.Listener {
                 override fun onEvents(player: Player, events: Player.Events) {
                     totalDuration = exoPlayer.duration.coerceAtLeast(0L)
-                    isPlaying = player.isPlaying
+                    lastPlayingState = isPlaying.value
+                    isPlaying.value = player.isPlaying
                 }
             }
         )
@@ -99,13 +104,40 @@ fun VideoPlayer(
         }
     }
 
-    LaunchedEffect(playWhenReady, isPlaying) {
-        exoPlayer.playWhenReady = playWhenReady
-        if (playWhenReady)
-            exoPlayer.playWhenReady = isPlaying
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME && isPlaying.value) {
+                exoPlayer.play()
+            } else if (event == Lifecycle.Event.ON_STOP || event == Lifecycle.Event.ON_PAUSE) {
+                exoPlayer.pause()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
     }
 
-    if (isPlaying) {
+    val configuration = LocalConfiguration.current
+    LaunchedEffect(configuration) {
+        snapshotFlow { configuration.orientation }.collect {
+            if (exoPlayer.currentPosition != currentTime.value) {
+                exoPlayer.seekTo(currentTime.value)
+                isPlaying.value = lastPlayingState
+            }
+        }
+    }
+
+    LaunchedEffect(isPlaying.value) {
+        if (isPlaying.value) {
+            exoPlayer.play()
+        } else {
+            exoPlayer.pause()
+        }
+    }
+
+    if (isPlaying.value) {
         LaunchedEffect(Unit) {
             while (true) {
                 currentTime.value = exoPlayer.currentPosition.coerceAtLeast(0L)
