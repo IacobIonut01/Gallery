@@ -12,6 +12,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - uses: actions/cache@v2
+      with:
+      path: |
+        ~/.gradle/caches
+        ~/.gradle/wrapper
+      key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+      restore-keys: |
+        ${{ runner.os }}-gradle-
     - uses: actions/setup-java@v3
       with:
         distribution: 'adopt'
