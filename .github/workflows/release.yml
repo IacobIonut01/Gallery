@@ -3,7 +3,7 @@ name: Gallery CI
 on:
  push:
   branches:
-   - v1
+   - main
 
 jobs:
   build:
