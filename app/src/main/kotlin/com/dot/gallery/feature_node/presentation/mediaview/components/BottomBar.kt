@@ -480,7 +480,7 @@ private fun FavoriteButton(
             else Icons.Outlined.FavoriteBorder
         )
     }
-    if (!media.readUriOnly() && media.isTrashed) {
+    if (!media.readUriOnly()) {
         BottomBarColumn(
             currentMedia = media,
             imageVector = favoriteIcon,
