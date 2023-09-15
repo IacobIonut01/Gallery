@@ -126,10 +126,10 @@ object Settings {
 
         @Composable
         fun rememberSecureMode() =
-            rememberPreference(key = SECURE_MODE, defaultValue = true)
+            rememberPreference(key = SECURE_MODE, defaultValue = false)
 
         fun getSecureMode(context: Context) =
-            context.dataStore.data.map { it[SECURE_MODE] ?: true }
+            context.dataStore.data.map { it[SECURE_MODE] ?: false }
 
         private val TIMELINE_GROUP_BY_MONTH = booleanPreferencesKey("timeline_group_by_month")
 
