@@ -126,6 +126,12 @@
     <string name="monthly_timeline_summary">將時間軸按月份分組，而不是按日期 (重新啟動應用程式)</string>
     <string name="amoled_mode_title">使用 Amoled 模式</string>
     <string name="amoled_mode_summary">更高對比度，最適合 Amoled 螢幕</string>
+    <string name="location_chip">Location: %s</string>
+    <string name="media_details">Details</string>
+    <string name="album_card_size">Album Card Size</string>
+    <string name="date_modified">Date Modified</string>
+    <string name="edit_metadata">Edit Metadata</string>
+    <string name="apply">Apply</string>
     <plurals name="item_count">
         <item quantity="other">%s 個項目</item>
     </plurals>
