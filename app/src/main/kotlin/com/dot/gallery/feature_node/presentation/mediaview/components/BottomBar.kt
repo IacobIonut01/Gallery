@@ -100,7 +100,7 @@ import com.dot.gallery.feature_node.presentation.util.rememberExifMetadata
 import com.dot.gallery.feature_node.presentation.util.rememberGeocoder
 import com.dot.gallery.feature_node.presentation.util.rememberMediaInfo
 import com.dot.gallery.feature_node.presentation.util.shareMedia
-import com.dot.gallery.ui.theme.Black40P
+import com.dot.gallery.ui.theme.BlackScrim
 import com.dot.gallery.ui.theme.Shapes
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -129,7 +129,7 @@ fun BoxScope.MediaViewBottomBar(
             modifier = Modifier
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(Color.Transparent, Black40P)
+                        colors = listOf(Color.Transparent, BlackScrim)
                     )
                 )
                 .padding(

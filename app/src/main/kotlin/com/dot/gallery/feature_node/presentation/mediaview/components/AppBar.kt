@@ -32,7 +32,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.core.Constants
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
-import com.dot.gallery.ui.theme.Black40P
+import com.dot.gallery.ui.theme.BlackScrim
 import kotlinx.coroutines.launch
 
 @Composable
@@ -55,7 +55,7 @@ fun MediaViewAppBar(
             modifier = Modifier
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(Black40P, Color.Transparent)
+                        colors = listOf(BlackScrim, Color.Transparent)
                     )
                 )
                 .padding(top = paddingValues.calculateTopPadding())

@@ -30,7 +30,7 @@ import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.mediaview.components.BottomBarColumn
 import com.dot.gallery.feature_node.presentation.util.rememberActivityResult
-import com.dot.gallery.ui.theme.Black40P
+import com.dot.gallery.ui.theme.BlackScrim
 import kotlinx.coroutines.launch
 
 @Composable
@@ -56,7 +56,7 @@ fun BoxScope.TrashedViewBottomBar(
             modifier = Modifier
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(Color.Transparent, Black40P)
+                        colors = listOf(Color.Transparent, BlackScrim)
                     )
                 )
                 .padding(
