@@ -96,7 +96,6 @@ open class MediaViewModel @Inject constructor(
         viewModelScope.launch {
             mediaUseCases.mediaFlow(albumId, target).flowOn(Dispatchers.IO).collectLatest { result ->
                 val data = result.data ?: emptyList()
-                if (data == mediaState.value.media) return@collectLatest
                 val error = if (result is Resource.Error) result.message
                     ?: "An error occurred" else ""
                 if (data.isEmpty()) {
@@ -106,7 +105,7 @@ open class MediaViewModel @Inject constructor(
                     data = data,
                     error = error,
                     albumId = albumId,
-                    groupByMonth = groupByMonth
+                    groupByMonth = groupByMonth,
                 )
             }
         }
