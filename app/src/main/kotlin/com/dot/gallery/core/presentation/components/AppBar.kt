@@ -82,7 +82,6 @@ fun AppBarContainer(
     val backStackEntry = navController.currentBackStackEntryAsState()
     val bottomNavItems = rememberNavigationItems()
     val useNavRail = windowSizeClass.widthSizeClass > WindowWidthSizeClass.Compact
-    val showNavigation by bottomBarState
 
     Box {
         content.invoke()
@@ -90,7 +89,7 @@ fun AppBarContainer(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(bottom = paddingValues.calculateBottomPadding()),
-            visible = showNavigation && !isScrolling.value,
+            visible = bottomBarState.value && !isScrolling.value,
             enter = slideInVertically { it * 2 },
             exit = slideOutVertically { it * 2 },
             content = {

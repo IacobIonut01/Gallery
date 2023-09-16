@@ -6,7 +6,6 @@
 package com.dot.gallery.core.presentation.components
 
 import android.app.Activity
-import android.content.res.Configuration
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -39,9 +38,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
@@ -50,7 +51,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -67,6 +67,7 @@ import com.dot.gallery.feature_node.presentation.util.shareMedia
 import com.dot.gallery.ui.theme.Shapes
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun SelectionSheet(
     modifier: Modifier = Modifier,
@@ -97,11 +98,9 @@ fun SelectionSheet(
             }
         }
     )
-    val config = LocalConfiguration.current
-    val fullSize = remember(config) {
-        config.orientation == Configuration.ORIENTATION_PORTRAIT
-    }
-    val sizeModifier = if (fullSize) Modifier.fillMaxWidth()
+    val windowSizeClass = calculateWindowSizeClass(LocalContext.current as Activity)
+    val tabletMode = windowSizeClass.widthSizeClass > WindowWidthSizeClass.Compact
+    val sizeModifier = if (!tabletMode) Modifier.fillMaxWidth()
     else Modifier.wrapContentWidth()
     AnimatedVisibility(
         modifier = modifier,
