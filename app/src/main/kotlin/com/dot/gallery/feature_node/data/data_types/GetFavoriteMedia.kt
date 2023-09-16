@@ -6,8 +6,8 @@
 package com.dot.gallery.feature_node.data.data_types
 
 import android.content.ContentResolver
-import android.os.Bundle
 import android.provider.MediaStore
+import com.dot.gallery.feature_node.data.data_source.Query.Companion.defaultBundle
 import com.dot.gallery.feature_node.data.data_source.Query.MediaQuery
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.util.MediaOrder
@@ -20,7 +20,7 @@ suspend fun ContentResolver.getMediaFavorite(
 ): List<Media> {
     return withContext(Dispatchers.IO) {
         val mediaQuery = MediaQuery().copy(
-            bundle = Bundle().apply {
+            bundle = defaultBundle.apply {
                 putInt(MediaStore.QUERY_ARG_MATCH_FAVORITE, MediaStore.MATCH_ONLY)
             }
         )

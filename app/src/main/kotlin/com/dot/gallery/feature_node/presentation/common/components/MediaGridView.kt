@@ -73,6 +73,7 @@ fun MediaGridView(
     selectionState: MutableState<Boolean> = mutableStateOf(false),
     selectedMedia: SnapshotStateList<Media> = mutableStateListOf(),
     toggleSelection: (Int) -> Unit = {},
+    allowHeaders: Boolean = true,
     enableStickyHeaders: Boolean = false,
     showMonthlyHeader: Boolean = false,
     aboveGridContent: @Composable (() -> Unit)? = null,
@@ -130,78 +131,108 @@ fun MediaGridView(
                 }
             }
 
-            items(
-                items = mappedData,
-                key = { if (it is MediaItem.MediaViewItem) it.media.toString() else it.key },
-                contentType = { it.key.startsWith("media_") },
-                span = { item ->
-                    GridItemSpan(if (item.key.isHeaderKey) maxLineSpan else 1)
-                }
-            ) { item ->
-                when (item) {
-                    is MediaItem.Header -> {
-                        val isChecked = rememberSaveable { mutableStateOf(false) }
-                        if (allowSelection) {
-                            LaunchedEffect(selectionState.value) {
-                                // Uncheck if selectionState is set to false
-                                isChecked.value = isChecked.value && selectionState.value
-                            }
-                            LaunchedEffect(selectedMedia.size) {
-                                // Partial check of media items should not check the header
-                                isChecked.value = selectedMedia.containsAll(item.data)
-                            }
-                        }
-                        val title = item.text
-                            .replace("Today", stringToday)
-                            .replace("Yesterday", stringYesterday)
-
-                        val view = LocalView.current
-                        StickyHeader(
-                            date = title,
-                            showAsBig = item.key.isBigHeaderKey,
-                            isCheckVisible = selectionState,
-                            isChecked = isChecked
-                        ) {
+            if (allowHeaders) {
+                items(
+                    items = mappedData,
+                    key = { if (it is MediaItem.MediaViewItem) it.media.toString() else it.key },
+                    contentType = { it.key.startsWith("media_") },
+                    span = { item ->
+                        GridItemSpan(if (item.key.isHeaderKey) maxLineSpan else 1)
+                    }
+                ) { item ->
+                    when (item) {
+                        is MediaItem.Header -> {
+                            val isChecked = rememberSaveable { mutableStateOf(false) }
                             if (allowSelection) {
-                                view.vibrate()
-                                scope.launch {
-                                    isChecked.value = !isChecked.value
-                                    if (isChecked.value) {
-                                        val toAdd = item.data.toMutableList().apply {
-                                            // Avoid media from being added twice to selection
-                                            removeIf { selectedMedia.contains(it) }
-                                        }
-                                        selectedMedia.addAll(toAdd)
-                                    } else selectedMedia.removeAll(item.data)
-                                    selectionState.update(selectedMedia.isNotEmpty())
+                                LaunchedEffect(selectionState.value) {
+                                    // Uncheck if selectionState is set to false
+                                    isChecked.value = isChecked.value && selectionState.value
+                                }
+                                LaunchedEffect(selectedMedia.size) {
+                                    // Partial check of media items should not check the header
+                                    isChecked.value = selectedMedia.containsAll(item.data)
                                 }
                             }
-                        }
-                    }
+                            val title = item.text
+                                .replace("Today", stringToday)
+                                .replace("Yesterday", stringYesterday)
 
-                    is MediaItem.MediaViewItem -> {
-                        val mediaIndex = mediaState.media.indexOf(item.media).coerceAtLeast(0)
-                        val (media, preloadRequestBuilder) = preloadingData[mediaIndex]
-                        val view = LocalView.current
-                        MediaComponent(
-                            media = media,
-                            selectionState = selectionState,
-                            selectedMedia = selectedMedia,
-                            preloadRequestBuilder = preloadRequestBuilder,
-                            onItemLongClick = {
+                            val view = LocalView.current
+                            StickyHeader(
+                                date = title,
+                                showAsBig = item.key.isBigHeaderKey,
+                                isCheckVisible = selectionState,
+                                isChecked = isChecked
+                            ) {
                                 if (allowSelection) {
                                     view.vibrate()
-                                    toggleSelection(mediaState.media.indexOf(it))
+                                    scope.launch {
+                                        isChecked.value = !isChecked.value
+                                        if (isChecked.value) {
+                                            val toAdd = item.data.toMutableList().apply {
+                                                // Avoid media from being added twice to selection
+                                                removeIf { selectedMedia.contains(it) }
+                                            }
+                                            selectedMedia.addAll(toAdd)
+                                        } else selectedMedia.removeAll(item.data)
+                                        selectionState.update(selectedMedia.isNotEmpty())
+                                    }
                                 }
-                            },
-                            onItemClick = {
-                                if (selectionState.value && allowSelection) {
-                                    view.vibrate()
-                                    toggleSelection(mediaState.media.indexOf(it))
-                                } else onMediaClick(it)
                             }
-                        )
+                        }
+
+                        is MediaItem.MediaViewItem -> {
+                            val mediaIndex = mediaState.media.indexOf(item.media).coerceAtLeast(0)
+                            val (media, preloadRequestBuilder) = preloadingData[mediaIndex]
+                            val view = LocalView.current
+                            MediaComponent(
+                                media = media,
+                                selectionState = selectionState,
+                                selectedMedia = selectedMedia,
+                                preloadRequestBuilder = preloadRequestBuilder,
+                                onItemLongClick = {
+                                    if (allowSelection) {
+                                        view.vibrate()
+                                        toggleSelection(mediaState.media.indexOf(it))
+                                    }
+                                },
+                                onItemClick = {
+                                    if (selectionState.value && allowSelection) {
+                                        view.vibrate()
+                                        toggleSelection(mediaState.media.indexOf(it))
+                                    } else onMediaClick(it)
+                                }
+                            )
+                        }
                     }
+                }
+            } else {
+                items(
+                    items = mediaState.media,
+                    key = { it.toString() },
+                    contentType = { it.mimeType }
+                ) { origMedia ->
+                    val mediaIndex = mediaState.media.indexOf(origMedia).coerceAtLeast(0)
+                    val (media, preloadRequestBuilder) = preloadingData[mediaIndex]
+                    val view = LocalView.current
+                    MediaComponent(
+                        media = media,
+                        selectionState = selectionState,
+                        selectedMedia = selectedMedia,
+                        preloadRequestBuilder = preloadRequestBuilder,
+                        onItemLongClick = {
+                            if (allowSelection) {
+                                view.vibrate()
+                                toggleSelection(mediaState.media.indexOf(it))
+                            }
+                        },
+                        onItemClick = {
+                            if (selectionState.value && allowSelection) {
+                                view.vibrate()
+                                toggleSelection(mediaState.media.indexOf(it))
+                            } else onMediaClick(it)
+                        }
+                    )
                 }
             }
         }

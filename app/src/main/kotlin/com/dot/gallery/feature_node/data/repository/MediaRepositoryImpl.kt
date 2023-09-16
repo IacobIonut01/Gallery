@@ -19,6 +19,7 @@ import com.dot.gallery.core.Resource
 import com.dot.gallery.core.contentFlowObserver
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
 import com.dot.gallery.feature_node.data.data_source.Query
+import com.dot.gallery.feature_node.data.data_source.Query.Companion.defaultBundle
 import com.dot.gallery.feature_node.data.data_types.findMedia
 import com.dot.gallery.feature_node.data.data_types.getAlbums
 import com.dot.gallery.feature_node.data.data_types.getMedia
@@ -64,8 +65,8 @@ class MediaRepositoryImpl(
     override fun getFavorites(mediaOrder: MediaOrder): Flow<Resource<List<Media>>> =
         contentResolver.retrieveMedia { it.getMediaFavorite(mediaOrder = mediaOrder) }
 
-    override fun getTrashed(mediaOrder: MediaOrder): Flow<Resource<List<Media>>> =
-        contentResolver.retrieveMedia { it.getMediaTrashed(mediaOrder = mediaOrder) }
+    override fun getTrashed(): Flow<Resource<List<Media>>> =
+        contentResolver.retrieveMedia { it.getMediaTrashed() }
 
     override fun getAlbums(mediaOrder: MediaOrder): Flow<Resource<List<Album>>> =
         contentResolver.retrieveAlbums {

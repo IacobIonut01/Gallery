@@ -53,6 +53,7 @@ fun TrashedGridScreen(
     },
     emptyContent = { EmptyTrash(Modifier.fillMaxSize()) },
     aboveGridContent = { AutoDeleteFooter() },
+    allowHeaders = false,
     enableStickyHeaders = false,
     navigate = navigate,
     navigateUp = navigateUp,

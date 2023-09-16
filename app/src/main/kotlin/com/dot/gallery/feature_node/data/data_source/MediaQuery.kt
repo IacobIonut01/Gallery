@@ -30,6 +30,35 @@ sealed class Query(
         ),
     )
 
+    class TrashQuery : Query(
+        projection = arrayOf(
+            MediaStore.MediaColumns._ID,
+            MediaStore.MediaColumns.DATA,
+            MediaStore.MediaColumns.DISPLAY_NAME,
+            MediaStore.MediaColumns.BUCKET_ID,
+            MediaStore.MediaColumns.DATE_MODIFIED,
+            MediaStore.MediaColumns.DATE_TAKEN,
+            MediaStore.MediaColumns.DATE_EXPIRES,
+            MediaStore.MediaColumns.BUCKET_DISPLAY_NAME,
+            MediaStore.MediaColumns.DURATION,
+            MediaStore.MediaColumns.MIME_TYPE,
+            MediaStore.MediaColumns.ORIENTATION,
+            MediaStore.MediaColumns.IS_FAVORITE,
+            MediaStore.MediaColumns.IS_TRASHED
+        ),
+        bundle = Bundle().apply {
+            putStringArray(
+                ContentResolver.QUERY_ARG_SORT_COLUMNS,
+                arrayOf(MediaStore.MediaColumns.DATE_EXPIRES)
+            )
+            putInt(
+                ContentResolver.QUERY_ARG_SQL_SORT_ORDER,
+                ContentResolver.QUERY_SORT_DIRECTION_DESCENDING
+            )
+            putInt(MediaStore.QUERY_ARG_MATCH_TRASHED, MediaStore.MATCH_ONLY)
+        }
+    )
+
     class PhotoQuery: Query(
         projection = arrayOf(
             MediaStore.MediaColumns._ID,
@@ -45,7 +74,7 @@ sealed class Query(
             MediaStore.MediaColumns.IS_FAVORITE,
             MediaStore.MediaColumns.IS_TRASHED
         ),
-        bundle = Bundle().apply {
+        bundle = defaultBundle.apply {
             putString(
                 ContentResolver.QUERY_ARG_SQL_SELECTION,
                 MediaStore.MediaColumns.MIME_TYPE + " like ?"
@@ -72,7 +101,7 @@ sealed class Query(
             MediaStore.MediaColumns.IS_FAVORITE,
             MediaStore.MediaColumns.IS_TRASHED
         ),
-        bundle = Bundle().apply {
+        bundle = defaultBundle.apply {
             putString(
                 ContentResolver.QUERY_ARG_SQL_SELECTION,
                 MediaStore.MediaColumns.MIME_TYPE + " LIKE ?"
@@ -103,6 +132,19 @@ sealed class Query(
         this.projection = projection
         this.bundle = bundle
         return this
+    }
+
+    companion object {
+        val defaultBundle = Bundle().apply {
+            putStringArray(
+                ContentResolver.QUERY_ARG_SORT_COLUMNS,
+                arrayOf(MediaStore.MediaColumns.DATE_MODIFIED)
+            )
+            putInt(
+                ContentResolver.QUERY_ARG_SQL_SORT_ORDER,
+                ContentResolver.QUERY_SORT_DIRECTION_DESCENDING
+            )
+        }
     }
 
 }

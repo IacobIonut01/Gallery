@@ -119,14 +119,16 @@ fun Cursor.getMediaFromCursor(): Media {
         getInt(getColumnIndexOrThrow(MediaStore.MediaColumns.IS_FAVORITE))
     val isTrashed: Int =
         getInt(getColumnIndexOrThrow(MediaStore.MediaColumns.IS_TRASHED))
+    val expiryTimestamp: Long? = try {
+        getLong(getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_EXPIRES))
+    } catch (_: Exception) {
+        null
+    }
     val contentUri = if (mimeType.contains("image"))
         MediaStore.Images.Media.EXTERNAL_CONTENT_URI
     else
         MediaStore.Video.Media.EXTERNAL_CONTENT_URI
-    val uri = ContentUris.withAppendedId(
-        contentUri,
-        getLong(getColumnIndexOrThrow(MediaStore.MediaColumns._ID))
-    )
+    val uri = ContentUris.withAppendedId(contentUri, id)
     val formattedDate = modifiedTimestamp.getDate(Constants.FULL_DATE_FORMAT)
     return Media(
         id = id,
@@ -137,6 +139,7 @@ fun Cursor.getMediaFromCursor(): Media {
         albumLabel = albumLabel,
         timestamp = modifiedTimestamp,
         takenTimestamp = takenTimestamp,
+        expiryTimestamp = expiryTimestamp,
         fullDate = formattedDate,
         duration = duration,
         favorite = isFavorite,

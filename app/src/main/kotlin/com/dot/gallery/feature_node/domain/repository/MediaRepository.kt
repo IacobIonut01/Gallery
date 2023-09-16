@@ -25,7 +25,7 @@ interface MediaRepository {
 
     fun getFavorites(mediaOrder: MediaOrder): Flow<Resource<List<Media>>>
 
-    fun getTrashed(mediaOrder: MediaOrder): Flow<Resource<List<Media>>>
+    fun getTrashed(): Flow<Resource<List<Media>>>
 
     fun getAlbums(mediaOrder: MediaOrder): Flow<Resource<List<Album>>>
 
