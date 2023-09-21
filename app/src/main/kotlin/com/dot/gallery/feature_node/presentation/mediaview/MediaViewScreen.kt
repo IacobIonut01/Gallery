@@ -142,7 +142,11 @@ fun MediaViewScreen(
                     durationMillis = DEFAULT_LOW_VELOCITY_SWIPE_DURATION
                 )
             ),
-            key = { index -> state.media[index.coerceIn(0 until state.media.size)].toString() },
+            key = { index ->
+                if (state.media.isNotEmpty()) {
+                    state.media[index.coerceIn(0 until state.media.size)].toString()
+                } else "empty"
+            },
             pageSpacing = 16.dp,
         ) { index ->
             MediaPreviewComponent(
