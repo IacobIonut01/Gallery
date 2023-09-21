@@ -50,6 +50,7 @@ coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilVersion"
 
 # Glide
 glide-compiler = { module = "com.github.bumptech.glide:ksp", version.ref = "glideVersion" }
+glide-avif = { module = "com.github.bumptech.glide:avif-integration", version.ref = "glideVersion" }
 glide-compose = { module = "com.github.bumptech.glide:compose", version.ref = "glideCompose" }
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glideVersion" }
 glide-svg = { module = "com.github.qoqa:glide-svg", version.ref = "glideSvg" }

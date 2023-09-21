@@ -156,6 +156,7 @@ dependencies {
 
     // Glide
     implementation(libs.glide)
+    implementation(libs.glide.avif)
     implementation(libs.glide.compose)
     ksp(libs.glide.compiler)
 
