@@ -6,7 +6,6 @@
 package com.dot.gallery.core.presentation.components
 
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -50,7 +49,6 @@ fun NavigationComp(
     paddingValues: PaddingValues,
     bottomBarState: MutableState<Boolean>,
     systemBarFollowThemeState: MutableState<Boolean>,
-    windowSizeClass: WindowSizeClass,
     toggleRotate: () -> Unit,
     isScrolling: MutableState<Boolean>
 ) {

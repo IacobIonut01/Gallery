@@ -64,7 +64,6 @@ class MainActivity : ComponentActivity() {
                                 paddingValues = paddingValues,
                                 bottomBarState = bottomBarState,
                                 systemBarFollowThemeState = systemBarFollowThemeState,
-                                windowSizeClass = windowSizeClass,
                                 toggleRotate = ::toggleOrientation,
                                 isScrolling = isScrolling
                             )

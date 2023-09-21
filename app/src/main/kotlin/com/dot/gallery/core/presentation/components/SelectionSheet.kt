@@ -63,7 +63,6 @@ import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialog
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialogAction
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
-import com.dot.gallery.feature_node.presentation.util.rememberIsMediaManager
 import com.dot.gallery.feature_node.presentation.util.shareMedia
 import com.dot.gallery.ui.theme.Shapes
 import kotlinx.coroutines.launch
@@ -85,7 +84,6 @@ fun SelectionSheet(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val appSheetState = rememberAppBottomSheetState()
-    val isMediaManager = rememberIsMediaManager()
     val result = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartIntentSenderForResult(),
         onResult = {
