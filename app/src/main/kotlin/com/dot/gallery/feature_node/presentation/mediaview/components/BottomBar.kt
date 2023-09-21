@@ -82,6 +82,8 @@ import com.dot.gallery.core.Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION
 import com.dot.gallery.core.presentation.components.DragHandle
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
+import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialog
+import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialogAction
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.ExifMetadata
 import com.dot.gallery.feature_node.presentation.util.MapBoxURL
@@ -95,6 +97,7 @@ import com.dot.gallery.feature_node.presentation.util.launchMap
 import com.dot.gallery.feature_node.presentation.util.launchOpenWithIntent
 import com.dot.gallery.feature_node.presentation.util.launchUseAsIntent
 import com.dot.gallery.feature_node.presentation.util.rememberActivityResult
+import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.rememberExifInterface
 import com.dot.gallery.feature_node.presentation.util.rememberExifMetadata
 import com.dot.gallery.feature_node.presentation.util.rememberGeocoder
@@ -547,6 +550,7 @@ private fun TrashButton(
     followTheme: Boolean = false,
     onDeleteMedia: ((Int) -> Unit)?
 ) {
+    val state = rememberAppBottomSheetState()
     val scope = rememberCoroutineScope()
     val result = rememberActivityResult()
     BottomBarColumn(
@@ -556,9 +560,17 @@ private fun TrashButton(
         title = stringResource(id = R.string.trash)
     ) {
         scope.launch {
-            handler.trashMedia(result = result, arrayListOf(it))
-            onDeleteMedia?.invoke(index)
+            state.show()
         }
+    }
+
+    TrashDialog(
+        appBottomSheetState = state,
+        data = listOf(media),
+        action = TrashDialogAction.TRASH
+    ) {
+        handler.trashMedia(result, it, true)
+        onDeleteMedia?.invoke(index)
     }
 }
 

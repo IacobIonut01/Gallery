@@ -8,8 +8,6 @@ package com.dot.gallery.feature_node.presentation.trashed.components
 import android.app.Activity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.RestoreFromTrash
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -116,23 +114,16 @@ fun TrashedNavActions(
     TrashDialog(
         appBottomSheetState = deleteSheetState,
         data = selectedMedia.ifEmpty { state.media },
-        onConfirm = {
-            handler.deleteMedia(result, it)
-        }
-    )
+        action = TrashDialogAction.DELETE
+    ) {
+        handler.deleteMedia(result, it)
+    }
     TrashDialog(
         appBottomSheetState = restoreSheetState,
         data = selectedMedia.ifEmpty { state.media },
-        defaultText = {
-            stringResource(R.string.restore_dialog_title, it)
-        },
-        confirmedText = {
-            stringResource(R.string.restore_dialog_title_confirmation, it)
-        },
-        image = Icons.Outlined.RestoreFromTrash,
-        onConfirm = {
-            handler.trashMedia(result, it, false)
-        }
-    )
+        action = TrashDialogAction.RESTORE
+    ) {
+        handler.trashMedia(result, it, false)
+    }
 }
 

@@ -61,6 +61,7 @@ import com.dot.gallery.core.Constants.Target.TARGET_FAVORITES
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialog
+import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialogAction
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.rememberIsMediaManager
 import com.dot.gallery.feature_node.presentation.util.shareMedia
@@ -184,11 +185,7 @@ fun SelectionSheet(
                     title = stringResource(id = R.string.trash)
                 ) {
                     scope.launch {
-                        if (isMediaManager) {
-                            appSheetState.show()
-                        } else {
-                            handler.trashMedia(result = result, it)
-                        }
+                        appSheetState.show()
                     }
                 }
             }
@@ -198,17 +195,10 @@ fun SelectionSheet(
     TrashDialog(
         appBottomSheetState = appSheetState,
         data = selectedMedia,
-        defaultText = {
-            stringResource(R.string.trash_dialog_title, it)
-        },
-        confirmedText = {
-            stringResource(R.string.trash_dialog_title_confirmation, it)
-        },
-        image = Icons.Outlined.DeleteOutline,
-        onConfirm = {
-            handler.trashMedia(result, it, true)
-        }
-    )
+        action = TrashDialogAction.TRASH
+    ) {
+        handler.trashMedia(result, it, true)
+    }
 }
 
 @Composable
