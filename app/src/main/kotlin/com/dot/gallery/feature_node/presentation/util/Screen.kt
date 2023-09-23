@@ -12,8 +12,6 @@ sealed class Screen(val route: String) {
     data object AlbumViewScreen : Screen("album_view_screen")
     data object MediaViewScreen : Screen("media_screen")
 
-    data object EditExifScreen : Screen("edit_exif_screen")
-
     data object TrashedScreen : Screen("trashed_screen")
     data object FavoriteScreen : Screen("favorite_screen")
 

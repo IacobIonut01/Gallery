@@ -142,6 +142,11 @@
     <string name="restoring_items">Restoring %1$s items..</string>
     <string name="trash_incompatible_title">Some items cannot be trashed!</string>
     <string name="trash_incompatible_summary">Such items will be deleted permanently instead.</string>
+    <string name="error_toast">An error occurred!</string>
+    <string name="beta">Beta</string>
+    <string name="remove_metadata">Remove Metadata</string>
+    <string name="remove_location">Remove Location</string>
+    <string name="description">Description</string>
     <plurals name="item_count">
         <item quantity="one">%s item</item>
         <item quantity="other">%s items</item>

@@ -42,6 +42,7 @@ import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -82,12 +83,12 @@ import com.dot.gallery.core.Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION
 import com.dot.gallery.core.presentation.components.DragHandle
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
+import com.dot.gallery.feature_node.presentation.exif.MetadataEditSheet
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialog
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialogAction
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.ExifMetadata
 import com.dot.gallery.feature_node.presentation.util.MapBoxURL
-import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.feature_node.presentation.util.connectivityState
 import com.dot.gallery.feature_node.presentation.util.formattedAddress
 import com.dot.gallery.feature_node.presentation.util.getDate
@@ -157,7 +158,11 @@ fun BoxScope.MediaViewBottomBar(
         }
     }
     currentMedia?.let {
-        MediaInfoBottomSheet(media = it, state = bottomSheetState, navigate = navigate)
+        MediaInfoBottomSheet(
+            media = it,
+            state = bottomSheetState,
+            handler = handler
+        )
     }
 }
 
@@ -165,11 +170,12 @@ fun BoxScope.MediaViewBottomBar(
 @Composable
 fun MediaInfoBottomSheet(
     media: Media,
-    navigate: (String) -> Unit,
-    state: AppBottomSheetState
+    state: AppBottomSheetState,
+    handler: MediaHandleUseCase
 ) {
     val scope = rememberCoroutineScope()
-    val exifInterface = rememberExifInterface(media)
+    val exifInterface = rememberExifInterface(media, true)
+    val metadataState = rememberAppBottomSheetState()
     if (exifInterface != null) {
         val exifMetadata = rememberExifMetadata(media, exifInterface)
         val mediaInfoList = rememberMediaInfo(media, exifMetadata)
@@ -196,7 +202,10 @@ fun MediaInfoBottomSheet(
                     MediaViewInfoActions(media)
                     Spacer(modifier = Modifier.height(8.dp))
                     MediaInfoDateCaptionContainer(media, exifMetadata) {
-                        navigate(Screen.EditExifScreen() + "?mediaId=${media.id}")
+                        scope.launch {
+                            state.hide()
+                            metadataState.show()
+                        }
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     MediaInfoMapPreview(exifMetadata)
@@ -221,6 +230,13 @@ fun MediaInfoBottomSheet(
                     Spacer(modifier = Modifier.navigationBarsPadding())
                 }
             }
+        }
+        if (metadataState.isVisible) {
+            MetadataEditSheet(
+                state = metadataState,
+                media = media,
+                handle = handler
+            )
         }
     }
 }
@@ -258,7 +274,7 @@ fun MediaInfoDateCaptionContainer(
                 val imageDesc = remember(exifMetadata) {
                     val lensDesc = exifMetadata.lensDescription
                     val imageCapt = exifMetadata.imageDescription
-                    return@remember if (lensDesc != null && imageCapt != null && imageCapt != lensDesc) {
+                    return@remember if (lensDesc != null && !imageCapt.isNullOrBlank() && imageCapt != lensDesc) {
                         "$lensDesc\n$imageCapt"
                     } else lensDesc ?: (imageCapt ?: defaultDesc)
                 }
@@ -268,7 +284,7 @@ fun MediaInfoDateCaptionContainer(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            /*
+
             if (!media.readUriOnly()) {
                 IconButton(
                     modifier = Modifier.align(Alignment.TopEnd),
@@ -283,7 +299,7 @@ fun MediaInfoDateCaptionContainer(
                             .padding(8.dp)
                     )
                 }
-            }*/
+            }
         }
         Row(
             modifier = Modifier

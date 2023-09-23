@@ -9,12 +9,10 @@ import android.app.Activity.RESULT_CANCELED
 import android.app.Activity.RESULT_OK
 import android.content.ContentResolver
 import android.content.Context
-import android.content.Intent
 import android.database.Cursor
 import android.net.Uri
 import android.provider.MediaStore
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
@@ -64,16 +62,10 @@ fun rememberActivityResult(onResultOk: () -> Unit = {}, onResultCanceled: () -> 
         }
     )
 
-fun Media.launchWriteRequest(
+
+fun Media.writeRequest(
     contentResolver: ContentResolver,
-    result: ActivityResultLauncher<IntentSenderRequest>
-) {
-    val editPendingIntent = MediaStore.createWriteRequest(contentResolver, arrayListOf(uri))
-    val senderRequest: IntentSenderRequest = IntentSenderRequest.Builder(editPendingIntent)
-        .setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION, 0)
-        .build()
-    result.launch(senderRequest)
-}
+) = IntentSenderRequest.Builder(MediaStore.createWriteRequest(contentResolver, arrayListOf(uri))).build()
 
 @Composable
 fun rememberMediaInfo(media: Media, exifMetadata: ExifMetadata): List<InfoRow> {
@@ -91,10 +83,11 @@ fun rememberExifMetadata(media: Media, exifInterface: ExifInterface): ExifMetada
 }
 
 @Composable
-fun rememberExifInterface(media: Media): ExifInterface? {
+fun rememberExifInterface(media: Media, useDirectPath: Boolean = false): ExifInterface? {
     val context = LocalContext.current
     return remember(media) {
-        getExifInterface(context, media.uri)
+        if (useDirectPath) try { ExifInterface(media.path) } catch (_: IOException) { null }
+        else getExifInterface(context, media.uri)
     }
 }
 

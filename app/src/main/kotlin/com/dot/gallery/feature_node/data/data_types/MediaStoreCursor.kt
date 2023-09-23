@@ -50,11 +50,9 @@ suspend fun ContentResolver.updateMedia(
 ): Boolean = withContext(Dispatchers.IO) {
     val selection = "${MediaStore.MediaColumns._ID} = ?"
     val selectionArgs = arrayOf(media.id.toString())
-    val uri = if (media.isImage) MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-    else MediaStore.Video.Media.EXTERNAL_CONTENT_URI
     return@withContext try {
         update(
-            uri,
+            media.uri,
             contentValues,
             selection,
             selectionArgs
@@ -73,7 +71,11 @@ suspend fun ContentResolver.updateMediaExif(
             if (imagePfd != null) {
                 val exif = ExifInterface(imagePfd.fileDescriptor)
                 exifAttributes.writeExif(exif)
-                exif.saveAttributes()
+                runCatching {
+                    exif.saveAttributes()
+                }.onFailure {
+                    it.printStackTrace()
+                }
             }
             true
         }

@@ -28,12 +28,10 @@ import com.dot.gallery.core.Constants.Animation.navigateUpAnimation
 import com.dot.gallery.core.Constants.Target.TARGET_FAVORITES
 import com.dot.gallery.core.Constants.Target.TARGET_TRASH
 import com.dot.gallery.core.Settings.Misc.rememberTimelineGroupByMonth
-import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.presentation.albums.AlbumsScreen
 import com.dot.gallery.feature_node.presentation.albums.AlbumsViewModel
 import com.dot.gallery.feature_node.presentation.common.ChanneledViewModel
 import com.dot.gallery.feature_node.presentation.common.MediaViewModel
-import com.dot.gallery.feature_node.presentation.exif.EditExifScreen
 import com.dot.gallery.feature_node.presentation.favorites.FavoriteScreen
 import com.dot.gallery.feature_node.presentation.mediaview.MediaViewScreen
 import com.dot.gallery.feature_node.presentation.settings.SettingsScreen
@@ -204,39 +202,6 @@ fun NavigationComp(
                 toggleNavbar = navPipe::toggleNavbar,
                 isScrolling = isScrolling
             )
-        }
-        composable(
-            route = Screen.EditExifScreen() + "?mediaId={mediaId}",
-            enterTransition = { navigateInAnimation },
-            exitTransition = { navigateUpAnimation },
-            popEnterTransition = { navigateInAnimation },
-            popExitTransition = { navigateUpAnimation },
-            arguments = listOf(
-                navArgument(name = "mediaId") {
-                    type = NavType.LongType
-                    defaultValue = -1
-                },
-            )
-        ) { backStackEntry ->
-            val mediaId: Long = backStackEntry.arguments?.getLong("mediaId") ?: -1
-            if (mediaId != -1L) {
-                val parentEntry = remember(backStackEntry) {
-                    navController.getBackStackEntry(Screen.MediaViewScreen())
-                }
-                val viewModel = hiltViewModel<MediaViewModel>(parentEntry)
-                viewModel.attachToLifecycle()
-                val state by viewModel.mediaState.collectAsStateWithLifecycle()
-                val media: Media? by remember(state) {
-                    mutableStateOf(state.media.find { obj -> obj.id == mediaId })
-                }
-                if (state.media.isNotEmpty() && media != null) {
-                    EditExifScreen(
-                        media = media,
-                        handle = viewModel.handler,
-                        navigateUp = navPipe::navigateUp
-                    )
-                }
-            }
         }
         composable(
             route = Screen.MediaViewScreen.route +
