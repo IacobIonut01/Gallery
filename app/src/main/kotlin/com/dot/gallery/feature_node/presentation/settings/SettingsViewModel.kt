@@ -5,6 +5,7 @@
 
 package com.dot.gallery.feature_node.presentation.settings
 
+import android.os.Build
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -16,6 +17,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import com.dot.gallery.R
 import com.dot.gallery.core.Position
+import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
 import com.dot.gallery.core.Settings.Misc.rememberForceTheme
 import com.dot.gallery.core.Settings.Misc.rememberIsAmoledMode
 import com.dot.gallery.core.Settings.Misc.rememberIsDarkMode
@@ -112,6 +114,19 @@ class SettingsViewModel @Inject constructor() : ViewModel() {
                         context.restartApplication()
                     }
                 },
+                screenPosition = Position.Middle
+            )
+        }
+
+        val shouldAllowBlur = remember { Build.VERSION.SDK_INT >= Build.VERSION_CODES.S }
+        var allowBlur by rememberAllowBlur()
+        val allowBlurPref = remember(allowBlur) {
+            SwitchPreference(
+                title = "Fancy Blur",
+                summary = "Blur background in Media View",
+                isChecked = allowBlur,
+                onCheck = { allowBlur = it },
+                enabled = shouldAllowBlur,
                 screenPosition = Position.Bottom
             )
         }
@@ -129,6 +144,7 @@ class SettingsViewModel @Inject constructor() : ViewModel() {
                 /** Customization Section Start **/
                 add(albumSizePref)
                 add(groupByMonthPref)
+                add(allowBlurPref)
                 /** ********************* **/
                 add(Header(title = context.getString(R.string.settings_general)))
                 /** General Section Start **/

@@ -112,6 +112,10 @@ object Settings {
         fun rememberTimelineGroupByMonth() =
             rememberPreference(key = TIMELINE_GROUP_BY_MONTH, defaultValue = false)
 
+        private val ALLOW_BLUR = booleanPreferencesKey("allow_blur")
+
+        @Composable
+        fun rememberAllowBlur() = rememberPreference(key = ALLOW_BLUR, defaultValue = true)
     }
 }
 
