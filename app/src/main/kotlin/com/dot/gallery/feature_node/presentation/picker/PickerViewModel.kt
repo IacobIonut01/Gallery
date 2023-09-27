@@ -48,7 +48,7 @@ open class PickerViewModel @Inject constructor(
 
     var albumId: Long = -1L
 
-    private val emptyAlbum = Album(id = -1, label = "All", pathToThumbnail = "", timestamp = 0)
+    private val emptyAlbum = Album(id = -1, label = "All", pathToThumbnail = "", timestamp = 0, relativePath = "")
 
     private fun getAlbums(allowedMedia: AllowedMedia) {
         viewModelScope.launch(Dispatchers.IO) {

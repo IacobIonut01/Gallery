@@ -22,6 +22,7 @@ data class Media(
     val label: String,
     val uri: Uri,
     val path: String,
+    val relativePath: String,
     val albumID: Long,
     val albumLabel: String,
     val timestamp: Long,
@@ -93,6 +94,9 @@ data class Media(
     @IgnoredOnParcel
     val fileExtension: String = label.substringAfterLast(".").removePrefix(".")
 
+    @IgnoredOnParcel
+    val volume: String = path.substringBeforeLast("/").removeSuffix(relativePath.removeSuffix("/"))
+
     companion object {
         fun createFromUri(uri: Uri): Media? {
             if (uri.path == null) return null
@@ -114,6 +118,7 @@ data class Media(
                 label = uri.toString().substringAfterLast("/"),
                 uri = uri,
                 path = uri.path.toString(),
+                relativePath = uri.path.toString().substringBeforeLast("/"),
                 albumID = -99L,
                 albumLabel = "",
                 timestamp = timestamp,

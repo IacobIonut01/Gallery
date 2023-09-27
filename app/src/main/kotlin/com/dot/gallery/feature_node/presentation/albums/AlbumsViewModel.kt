@@ -40,8 +40,11 @@ class AlbumsViewModel @Inject constructor(
 
     private val _albumsState = MutableStateFlow(AlbumState())
     val albumsState = _albumsState.asStateFlow()
+    private val _unPinnedAlbumsState = MutableStateFlow(AlbumState())
+    val unPinnedAlbumsState = _unPinnedAlbumsState.asStateFlow()
     private val _pinnedAlbumState = MutableStateFlow(AlbumState())
     val pinnedAlbumState = _pinnedAlbumState.asStateFlow()
+    val handler = mediaUseCases.mediaHandleUseCase
 
     fun onAlbumClick(navigate: (String) -> Unit): (Album) -> Unit = { album ->
         navigate(Screen.AlbumViewScreen.route + "?albumId=${album.id}&albumName=${album.label}")
@@ -95,11 +98,11 @@ class AlbumsViewModel @Inject constructor(
 
     private fun updateOrder(mediaOrder: MediaOrder) {
         viewModelScope.launch {
-            val newState = albumsState.value.copy(
-                albums = mediaOrder.sortAlbums(albumsState.value.albums)
+            val newState = unPinnedAlbumsState.value.copy(
+                albums = mediaOrder.sortAlbums(unPinnedAlbumsState.value.albums)
             )
-            if (albumsState.value != newState) {
-                _albumsState.emit(newState)
+            if (unPinnedAlbumsState.value != newState) {
+                _unPinnedAlbumsState.emit(newState)
             }
         }
     }
@@ -111,9 +114,9 @@ class AlbumsViewModel @Inject constructor(
                 // Insert pinnedAlbumId to Database
                 mediaUseCases.insertPinnedAlbumUseCase(newAlbum)
                 // Remove original Album from unpinned List
-                _albumsState.emit(
-                    albumsState.value.copy(
-                        albums = albumsState.value.albums.minus(album)
+                _unPinnedAlbumsState.emit(
+                    unPinnedAlbumsState.value.copy(
+                        albums = unPinnedAlbumsState.value.albums.minus(album)
                     )
                 )
                 // Add 'pinned' version of the album object to the pinned List
@@ -124,8 +127,8 @@ class AlbumsViewModel @Inject constructor(
                 // Delete pinnedAlbumId from Database
                 mediaUseCases.deletePinnedAlbumUseCase(album)
                 // Add 'un-pinned' version of the album object to the pinned List
-                _albumsState.emit(albumsState.value.copy(
-                    albums = albumsState.value.albums.toMutableList().apply { add(newAlbum) }
+                _unPinnedAlbumsState.emit(unPinnedAlbumsState.value.copy(
+                    albums = unPinnedAlbumsState.value.albums.toMutableList().apply { add(newAlbum) }
                 ))
                 // Remove original Album from pinned List
                 _pinnedAlbumState.emit(
@@ -144,15 +147,19 @@ class AlbumsViewModel @Inject constructor(
                 val data = result.data ?: emptyList()
                 val error =
                     if (result is Resource.Error) result.message ?: "An error occurred" else ""
-                val newAlbumState = AlbumState(error = error, albums = data.filter { !it.isPinned })
+                val newAlbumState = AlbumState(error = error, albums = data)
+                val newUnPinnedAlbumState = AlbumState(error = error, albums = data.filter { !it.isPinned })
                 val newPinnedState = AlbumState(
                     error = error,
                     albums = data.filter { it.isPinned }.sortedBy { it.label })
-                if (albumsState.value != newAlbumState) {
-                    _albumsState.emit(newAlbumState)
+                if (unPinnedAlbumsState.value != newUnPinnedAlbumState) {
+                    _unPinnedAlbumsState.emit(newUnPinnedAlbumState)
                 }
                 if (pinnedAlbumState.value != newPinnedState) {
                     _pinnedAlbumState.emit(newPinnedState)
+                }
+                if (albumsState.value != newAlbumState) {
+                    _albumsState.emit(newAlbumState)
                 }
             }
         }

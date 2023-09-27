@@ -16,7 +16,10 @@ import com.dot.gallery.feature_node.domain.util.OrderType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-suspend fun ContentResolver.getAlbums(query: Query = Query.AlbumQuery(), mediaOrder: MediaOrder = MediaOrder.Date(OrderType.Descending)): List<Album> {
+suspend fun ContentResolver.getAlbums(
+    query: Query = Query.AlbumQuery(),
+    mediaOrder: MediaOrder = MediaOrder.Date(OrderType.Descending)
+): List<Album> {
     return withContext(Dispatchers.IO) {
         val albums = ArrayList<Album>()
         val bundle = query.bundle ?: Bundle()
@@ -36,18 +39,26 @@ suspend fun ContentResolver.getAlbums(query: Query = Query.AlbumQuery(), mediaOr
             moveToFirst()
             while (!isAfterLast) {
                 try {
-                    val id = getLong(getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_ID))
+                    val id = getLong(getColumnIndexOrThrow(MediaStore.MediaColumns.BUCKET_ID))
                     val label: String? = try {
-                        getString(getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_DISPLAY_NAME))
+                        getString(getColumnIndexOrThrow(MediaStore.MediaColumns.BUCKET_DISPLAY_NAME))
                     } catch (e: Exception) {
                         Build.MODEL
                     }
                     val thumbnailPath =
-                        getString(getColumnIndexOrThrow(MediaStore.Images.Media.DATA))
+                        getString(getColumnIndexOrThrow(MediaStore.MediaColumns.DATA))
+                    val thumbnailRelativePath =
+                        getString(getColumnIndexOrThrow(MediaStore.MediaColumns.RELATIVE_PATH))
                     val thumbnailDate =
-                        getLong(getColumnIndexOrThrow(MediaStore.Images.Media.DATE_MODIFIED))
-                    val album =
-                        Album(id, label ?: Build.MODEL, thumbnailPath, thumbnailDate, count = 1)
+                        getLong(getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_MODIFIED))
+                    val album = Album(
+                        id = id,
+                        label = label ?: Build.MODEL,
+                        pathToThumbnail = thumbnailPath,
+                        relativePath = thumbnailRelativePath,
+                        timestamp = thumbnailDate,
+                        count = 1
+                    )
                     val currentAlbum = albums.find { albm -> albm.id == id }
                     if (currentAlbum == null)
                         albums.add(album)

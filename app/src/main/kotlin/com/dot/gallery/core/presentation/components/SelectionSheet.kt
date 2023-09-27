@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.DriveFileMove
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -60,6 +61,7 @@ import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Target.TARGET_FAVORITES
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
+import com.dot.gallery.feature_node.presentation.exif.MoveMediaSheet
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialog
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialogAction
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
@@ -83,15 +85,16 @@ fun SelectionSheet(
 
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val appSheetState = rememberAppBottomSheetState()
+    val trashSheetState = rememberAppBottomSheetState()
+    val moveSheetState = rememberAppBottomSheetState()
     val result = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartIntentSenderForResult(),
         onResult = {
             if (it.resultCode == Activity.RESULT_OK) {
                 clearSelection()
-                if (appSheetState.isVisible) {
+                if (trashSheetState.isVisible) {
                     scope.launch {
-                        appSheetState.hide()
+                        trashSheetState.hide()
                     }
                 }
             }
@@ -147,11 +150,11 @@ fun SelectionSheet(
             Row(
                 modifier = Modifier
                     .then(sizeModifier)
-                    .horizontalScroll(rememberScrollState())
                     .background(
                         color = MaterialTheme.colorScheme.surface,
                         shape = Shapes.large
-                    ),
+                    )
+                    .horizontalScroll(rememberScrollState()),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
@@ -176,6 +179,16 @@ fun SelectionSheet(
                         handler.toggleFavorite(result = result, it)
                     }
                 }
+                // Move Component
+                SelectionBarColumn(
+                    selectedMedia = selectedMedia,
+                    imageVector = Icons.AutoMirrored.Outlined.DriveFileMove,
+                    title = stringResource(R.string.move)
+                ) {
+                    scope.launch {
+                        moveSheetState.show()
+                    }
+                }
                 // Trash Component
                 SelectionBarColumn(
                     selectedMedia = selectedMedia,
@@ -183,15 +196,21 @@ fun SelectionSheet(
                     title = stringResource(id = R.string.trash)
                 ) {
                     scope.launch {
-                        appSheetState.show()
+                        trashSheetState.show()
                     }
                 }
             }
         }
     }
 
+    MoveMediaSheet(
+        sheetState = moveSheetState,
+        mediaList = selectedMedia,
+        onFinish = ::clearSelection
+    )
+
     TrashDialog(
-        appBottomSheetState = appSheetState,
+        appBottomSheetState = trashSheetState,
         data = selectedMedia,
         action = TrashDialogAction.TRASH
     ) {
@@ -211,7 +230,7 @@ private fun SelectionBarColumn(
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
             .height(80.dp)
-            .width(90.dp)
+            .width(80.dp)
             .clickable {
                 onItemClick.invoke(selectedMedia)
             }

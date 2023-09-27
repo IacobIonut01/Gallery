@@ -16,16 +16,25 @@ import android.provider.Settings
 import android.view.HapticFeedbackConstants
 import android.view.View
 import android.view.accessibility.AccessibilityManager
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.dot.gallery.R
 import com.dot.gallery.feature_node.domain.model.Media
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlin.reflect.KClass
+
+@Composable
+fun KClass<Toast>.Error(message: String? = null): Toast {
+    val context = LocalContext.current
+    return Toast.makeText(context, message ?: stringResource(id = R.string.error_toast), Toast.LENGTH_SHORT)
+}
 
 fun View.vibrate() = reallyPerformHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
 fun View.vibrateStrong() = reallyPerformHapticFeedback(HapticFeedbackConstants.LONG_PRESS)

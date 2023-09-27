@@ -19,7 +19,6 @@ import com.dot.gallery.core.Resource
 import com.dot.gallery.core.contentFlowObserver
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
 import com.dot.gallery.feature_node.data.data_source.Query
-import com.dot.gallery.feature_node.data.data_source.Query.Companion.defaultBundle
 import com.dot.gallery.feature_node.data.data_types.findMedia
 import com.dot.gallery.feature_node.data.data_types.getAlbums
 import com.dot.gallery.feature_node.data.data_types.getMedia

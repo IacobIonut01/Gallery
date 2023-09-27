@@ -67,7 +67,7 @@ fun AlbumsScreen(
     isScrolling: MutableState<Boolean>,
     searchBarActive: MutableState<Boolean>
 ) {
-    val state by viewModel.albumsState.collectAsStateWithLifecycle()
+    val state by viewModel.unPinnedAlbumsState.collectAsStateWithLifecycle()
     val pinnedState by viewModel.pinnedAlbumState.collectAsStateWithLifecycle()
     val filterOptions = viewModel.rememberFilters()
     val albumSortSetting by rememberLastSort()

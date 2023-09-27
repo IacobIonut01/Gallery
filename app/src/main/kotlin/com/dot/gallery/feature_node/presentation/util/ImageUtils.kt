@@ -53,7 +53,7 @@ fun Media.canBeTrashed(): Boolean {
 }
 
 @Composable
-fun rememberActivityResult(onResultOk: () -> Unit = {}, onResultCanceled: () -> Unit = {}) =
+fun rememberActivityResult(onResultCanceled: () -> Unit = {}, onResultOk: () -> Unit = {}) =
     rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartIntentSenderForResult(),
         onResult = {
@@ -66,6 +66,10 @@ fun rememberActivityResult(onResultOk: () -> Unit = {}, onResultCanceled: () -> 
 fun Media.writeRequest(
     contentResolver: ContentResolver,
 ) = IntentSenderRequest.Builder(MediaStore.createWriteRequest(contentResolver, arrayListOf(uri))).build()
+
+fun List<Media>.writeRequest(
+    contentResolver: ContentResolver,
+) = IntentSenderRequest.Builder(MediaStore.createWriteRequest(contentResolver, map { it.uri })).build()
 
 @Composable
 fun rememberMediaInfo(media: Media, exifMetadata: ExifMetadata): List<InfoRow> {

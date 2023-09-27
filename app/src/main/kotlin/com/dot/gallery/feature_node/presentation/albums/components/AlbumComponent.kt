@@ -26,6 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalView
@@ -48,18 +49,26 @@ import java.io.File
 @Composable
 fun AlbumComponent(
     album: Album,
+    isEnabled: Boolean = true,
     onItemClick: (Album) -> Unit,
-    onTogglePinClick: (Album) -> Unit
+    onTogglePinClick: ((Album) -> Unit)?
 ) {
     val showDropDown = remember { mutableStateOf(false) }
     val pinTitle =
         if (album.isPinned) stringResource(R.string.unpin) else stringResource(R.string.pin)
     Column(
-        modifier = Modifier.padding(horizontal = 8.dp),
+        modifier = Modifier
+            .alpha(if (isEnabled) 1f else 0.4f)
+            .padding(horizontal = 8.dp),
     ) {
-        AlbumImage(album = album, onItemClick) {
-            showDropDown.value = !showDropDown.value
-        }
+        AlbumImage(
+            album = album,
+            isEnabled = isEnabled,
+            onItemClick = onItemClick,
+            onItemLongClick = if (onTogglePinClick != null) {
+                { showDropDown.value = !showDropDown.value }
+            } else null
+        )
         AutoResizeText(
             modifier = Modifier
                 .padding(top = 12.dp)
@@ -83,17 +92,19 @@ fun AlbumComponent(
                 max = 12.sp
             )
         )
-        DropdownMenu(
-            expanded = showDropDown.value,
-            offset = DpOffset(16.dp, (-64).dp),
-            onDismissRequest = { showDropDown.value = false }) {
-            DropdownMenuItem(
-                text = { Text(text = pinTitle) },
-                onClick = {
-                    onTogglePinClick(album)
-                    showDropDown.value = false
-                }
-            )
+        if (onTogglePinClick != null) {
+            DropdownMenu(
+                expanded = showDropDown.value,
+                offset = DpOffset(16.dp, (-64).dp),
+                onDismissRequest = { showDropDown.value = false }) {
+                DropdownMenuItem(
+                    text = { Text(text = pinTitle) },
+                    onClick = {
+                        onTogglePinClick(album)
+                        showDropDown.value = false
+                    }
+                )
+            }
         }
     }
 }
@@ -102,8 +113,9 @@ fun AlbumComponent(
 @Composable
 fun AlbumImage(
     album: Album,
+    isEnabled: Boolean,
     onItemClick: (Album) -> Unit,
-    onItemLongClick: (Album) -> Unit
+    onItemLongClick: ((Album) -> Unit)?
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed = interactionSource.collectIsPressedAsState()
@@ -122,12 +134,15 @@ fun AlbumImage(
             )
             .clip(RoundedCornerShape(cornerRadius))
             .combinedClickable(
+                enabled = isEnabled,
                 interactionSource = interactionSource,
                 indication = rememberRipple(),
                 onClick = { onItemClick(album) },
                 onLongClick = {
-                    view.vibrate()
-                    onItemLongClick(album)
+                    onItemLongClick?.let {
+                        view.vibrate()
+                        it(album)
+                    }
                 }
             ),
         model = File(album.pathToThumbnail),

@@ -34,6 +34,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.DriveFileMove
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.DeleteOutline
@@ -84,6 +85,7 @@ import com.dot.gallery.core.presentation.components.DragHandle
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.exif.MetadataEditSheet
+import com.dot.gallery.feature_node.presentation.exif.MoveMediaSheet
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialog
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialogAction
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
@@ -440,6 +442,8 @@ private fun MediaViewInfoActions(
         ShareButton(media, followTheme = true)
         // Use as or Open With
         OpenAsButton(media, followTheme = true)
+        // Move
+        MoveButton(media, followTheme = true)
         // Edit
         EditButton(media, followTheme = true)
     }
@@ -463,6 +467,31 @@ private fun MediaViewActions(
     if (showDeleteButton) {
         TrashButton(currentIndex, currentMedia, handler, false, onDeleteMedia)
     }
+}
+
+@Composable
+private fun MoveButton(
+    media: Media,
+    followTheme: Boolean = false
+) {
+    val moveSheetState = rememberAppBottomSheetState()
+    val scope = rememberCoroutineScope()
+    BottomBarColumn(
+        currentMedia = media,
+        imageVector = Icons.AutoMirrored.Outlined.DriveFileMove,
+        followTheme = followTheme,
+        title = stringResource(R.string.move)
+    ) {
+        scope.launch {
+            moveSheetState.show()
+        }
+    }
+
+    MoveMediaSheet(
+        sheetState = moveSheetState,
+        mediaList = listOf(media),
+        onFinish = {  }
+    )
 }
 
 @Composable

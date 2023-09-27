@@ -123,6 +123,8 @@
     <string name="remove_metadata">Remove Metadata</string>
     <string name="remove_location">Remove Location</string>
     <string name="description">Description</string>
+    <string name="move_to_another_album">Move to another album</string>
+    <string name="move">Move</string>
     <plurals name="item_count">
         <item quantity="one">%s item</item>
         <item quantity="other">%s items</item>

@@ -57,7 +57,8 @@ suspend fun ContentResolver.updateMedia(
             selection,
             selectionArgs
         ) > 0
-    } catch (_: NullPointerException) {
+    } catch (e: java.lang.Exception) {
+        e.printStackTrace()
         false
     }
 }
@@ -92,6 +93,8 @@ fun Cursor.getMediaFromCursor(): Media {
         getLong(getColumnIndexOrThrow(MediaStore.MediaColumns._ID))
     val path: String =
         getString(getColumnIndexOrThrow(MediaStore.MediaColumns.DATA))
+    val relativePath: String =
+        getString(getColumnIndexOrThrow(MediaStore.MediaColumns.RELATIVE_PATH))
     val title: String =
         getString(getColumnIndexOrThrow(MediaStore.MediaColumns.DISPLAY_NAME))
     val albumID: Long =
@@ -137,6 +140,7 @@ fun Cursor.getMediaFromCursor(): Media {
         label = title,
         uri = uri,
         path = path,
+        relativePath = relativePath,
         albumID = albumID,
         albumLabel = albumLabel,
         timestamp = modifiedTimestamp,

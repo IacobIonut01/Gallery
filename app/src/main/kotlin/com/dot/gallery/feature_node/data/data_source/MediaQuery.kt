@@ -17,6 +17,7 @@ sealed class Query(
         projection = arrayOf(
             MediaStore.MediaColumns._ID,
             MediaStore.MediaColumns.DATA,
+            MediaStore.MediaColumns.RELATIVE_PATH,
             MediaStore.MediaColumns.DISPLAY_NAME,
             MediaStore.MediaColumns.BUCKET_ID,
             MediaStore.MediaColumns.DATE_MODIFIED,
@@ -34,6 +35,7 @@ sealed class Query(
         projection = arrayOf(
             MediaStore.MediaColumns._ID,
             MediaStore.MediaColumns.DATA,
+            MediaStore.MediaColumns.RELATIVE_PATH,
             MediaStore.MediaColumns.DISPLAY_NAME,
             MediaStore.MediaColumns.BUCKET_ID,
             MediaStore.MediaColumns.DATE_MODIFIED,
@@ -63,6 +65,7 @@ sealed class Query(
         projection = arrayOf(
             MediaStore.MediaColumns._ID,
             MediaStore.MediaColumns.DATA,
+            MediaStore.MediaColumns.RELATIVE_PATH,
             MediaStore.MediaColumns.DISPLAY_NAME,
             MediaStore.MediaColumns.BUCKET_ID,
             MediaStore.MediaColumns.DATE_MODIFIED,
@@ -90,6 +93,7 @@ sealed class Query(
         projection = arrayOf(
             MediaStore.MediaColumns._ID,
             MediaStore.MediaColumns.DATA,
+            MediaStore.MediaColumns.RELATIVE_PATH,
             MediaStore.MediaColumns.DISPLAY_NAME,
             MediaStore.MediaColumns.BUCKET_ID,
             MediaStore.MediaColumns.DATE_MODIFIED,
@@ -119,6 +123,7 @@ sealed class Query(
             MediaStore.MediaColumns.BUCKET_DISPLAY_NAME,
             MediaStore.MediaColumns.DISPLAY_NAME,
             MediaStore.MediaColumns.DATA,
+            MediaStore.MediaColumns.RELATIVE_PATH,
             MediaStore.MediaColumns._ID,
             MediaStore.MediaColumns.DATE_MODIFIED,
             MediaStore.MediaColumns.DATE_TAKEN

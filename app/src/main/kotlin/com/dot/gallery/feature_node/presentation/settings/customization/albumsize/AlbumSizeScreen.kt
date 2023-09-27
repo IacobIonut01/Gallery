@@ -70,6 +70,7 @@ fun AlbumSizeScreen(
                 id = 1,
                 label = "Camera",
                 pathToThumbnail = "",
+                relativePath = "",
                 timestamp = 10,
                 count = 14
             ),
@@ -77,6 +78,7 @@ fun AlbumSizeScreen(
                 id = 2,
                 label = "Screenshots",
                 pathToThumbnail = "",
+                relativePath = "",
                 timestamp = 9,
                 count = 27
             ),
@@ -84,6 +86,7 @@ fun AlbumSizeScreen(
                 id = 3,
                 label = "Pictures",
                 pathToThumbnail = "",
+                relativePath = "",
                 timestamp = 8,
                 count = 10
             ),
@@ -91,6 +94,7 @@ fun AlbumSizeScreen(
                 id = 4,
                 label = "My Album",
                 pathToThumbnail = "",
+                relativePath = "",
                 timestamp = 8,
                 count = 104
             )

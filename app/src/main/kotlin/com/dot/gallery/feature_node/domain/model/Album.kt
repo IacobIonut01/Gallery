@@ -6,6 +6,7 @@ package com.dot.gallery.feature_node.domain.model
 
 import android.os.Parcelable
 import androidx.compose.runtime.Immutable
+import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 
 @Immutable
@@ -14,8 +15,13 @@ data class Album(
     val id: Long = 0,
     val label: String,
     val pathToThumbnail: String,
+    val relativePath: String,
     val timestamp: Long,
     var count: Long = 0,
     val selected: Boolean = false,
     val isPinned: Boolean = false,
-) : Parcelable
+) : Parcelable {
+
+    @IgnoredOnParcel
+    val volume: String = pathToThumbnail.substringBeforeLast("/").removeSuffix(relativePath.removeSuffix("/"))
+}
