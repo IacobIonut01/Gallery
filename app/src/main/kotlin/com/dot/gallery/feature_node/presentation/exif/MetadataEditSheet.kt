@@ -1,10 +1,7 @@
 package com.dot.gallery.feature_node.presentation.exif
 
-import android.app.Activity.RESULT_OK
 import android.media.MediaScannerConnection
 import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -35,7 +32,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -58,9 +54,10 @@ import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.rememberExifAttributes
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
+import com.dot.gallery.feature_node.presentation.util.Error
+import com.dot.gallery.feature_node.presentation.util.rememberActivityResult
 import com.dot.gallery.feature_node.presentation.util.rememberExifInterface
 import com.dot.gallery.feature_node.presentation.util.writeRequest
-import com.dot.gallery.ui.theme.GalleryTheme
 import com.dot.gallery.ui.theme.Shapes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -80,225 +77,218 @@ fun MetadataEditSheet(
     val cr = remember(context) { context.contentResolver }
     var exifAttributes by rememberExifAttributes(exifInterface)
     var newLabel by remember { mutableStateOf(media.label) }
-    val errorToast = stringResource(R.string.error_toast)
-    val request = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartIntentSenderForResult(),
-        onResult = {
-            if (it.resultCode == RESULT_OK) {
-                scope.launch {
-                    var done: Boolean
-                    done = handle.updateMediaExif(media, exifAttributes)
-                    if (newLabel != media.label && newLabel.isNotBlank()) {
-                        done = handle.renameMedia(media, newLabel)
-                    }
-                    if (done) {
-                        MediaScannerConnection.scanFile(
-                            context, arrayOf(media.path.substringBeforeLast("/")), arrayOf(media.mimeType), null
-                        )
-                        state.hide()
-                    }
-                    else {
-                        Toast.makeText(context, errorToast, Toast.LENGTH_SHORT).show()
-                    }
-                }
+    val errorToast = Toast::class.Error()
+    val request = rememberActivityResult {
+        scope.launch {
+            var done: Boolean
+            done = handle.updateMediaExif(media, exifAttributes)
+            if (newLabel != media.label && newLabel.isNotBlank()) {
+                done = handle.renameMedia(media, newLabel)
+            }
+            if (done) {
+                MediaScannerConnection.scanFile(
+                    context,
+                    arrayOf(media.path.substringBeforeLast("/")),
+                    arrayOf(media.mimeType),
+                    null
+                )
+                state.hide()
+            } else {
+                errorToast.show()
             }
         }
-    )
-    LaunchedEffect(Unit) {
-        state.show()
     }
-    GalleryTheme {
-        if (state.isVisible) {
-            ModalBottomSheet(
-                sheetState = state.sheetState,
-                onDismissRequest = {
-                    scope.launch {
-                        state.hide()
-                    }
-                },
-                dragHandle = { DragHandle() },
-                windowInsets = WindowInsets(0, 0, 0, 0)
+
+    if (state.isVisible) {
+        ModalBottomSheet(
+            sheetState = state.sheetState,
+            onDismissRequest = {
+                scope.launch {
+                    state.hide()
+                }
+            },
+            dragHandle = { DragHandle() },
+            windowInsets = WindowInsets(0, 0, 0, 0)
+        ) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
             ) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
+                Text(
+                    text = buildAnnotatedString {
+                        withStyle(
+                            style = SpanStyle(
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontStyle = MaterialTheme.typography.titleLarge.fontStyle,
+                                fontSize = MaterialTheme.typography.titleLarge.fontSize,
+                                letterSpacing = MaterialTheme.typography.titleLarge.letterSpacing
+                            )
+                        ) {
+                            append(stringResource(R.string.edit_metadata))
+                        }
+                        append("\n")
+                        withStyle(
+                            style = SpanStyle(
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontStyle = MaterialTheme.typography.bodyMedium.fontStyle,
+                                fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                                letterSpacing = MaterialTheme.typography.bodyMedium.letterSpacing
+                            )
+                        ) {
+                            append(stringResource(R.string.beta))
+                        }
+                    },
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .padding(24.dp)
+                        .fillMaxWidth()
+                )
+
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .verticalScroll(rememberScrollState())
+                        .horizontalScroll(state = rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = buildAnnotatedString {
-                            withStyle(
-                                style = SpanStyle(
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    fontStyle = MaterialTheme.typography.titleLarge.fontStyle,
-                                    fontSize = MaterialTheme.typography.titleLarge.fontSize,
-                                    letterSpacing = MaterialTheme.typography.titleLarge.letterSpacing
-                                )
-                            ) {
-                                append(stringResource(R.string.edit_metadata))
-                            }
-                            append("\n")
-                            withStyle(
-                                style = SpanStyle(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontStyle = MaterialTheme.typography.bodyMedium.fontStyle,
-                                    fontSize = MaterialTheme.typography.bodyMedium.fontSize,
-                                    letterSpacing = MaterialTheme.typography.bodyMedium.letterSpacing
-                                )
-                            ) {
-                                append(stringResource(R.string.beta))
-                            }
+                    Spacer(Modifier.width(8.dp))
+                    FilterChip(
+                        selected = shouldRemoveMetadata,
+                        onClick = {
+                            shouldRemoveLocation = false
+                            shouldRemoveMetadata = !shouldRemoveMetadata
                         },
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .padding(24.dp)
-                            .fillMaxWidth()
+                        label = {
+                            Text(text = stringResource(R.string.remove_metadata))
+                        },
+                        leadingIcon = {
+                            Icon(
+                                modifier = Modifier.size(18.dp),
+                                imageVector = Icons.Outlined.DeleteSweep,
+                                contentDescription = null
+                            )
+                        },
+                        shape = RoundedCornerShape(100),
+                        border = null,
+                        colors = FilterChipDefaults.filterChipColors(
+                            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                            labelColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                            iconColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                            selectedContainerColor = MaterialTheme.colorScheme.tertiary,
+                            selectedLabelColor = MaterialTheme.colorScheme.onTertiary,
+                            selectedLeadingIconColor = MaterialTheme.colorScheme.onTertiary
+                        )
                     )
+                    FilterChip(
+                        selected = shouldRemoveLocation,
+                        onClick = {
+                            shouldRemoveMetadata = false
+                            shouldRemoveLocation = !shouldRemoveLocation
+                        },
+                        label = {
+                            Text(text = stringResource(R.string.remove_location))
+                        },
+                        leadingIcon = {
+                            Icon(
+                                modifier = Modifier.size(18.dp),
+                                imageVector = Icons.Outlined.GpsOff,
+                                contentDescription = null
+                            )
+                        },
+                        shape = RoundedCornerShape(100),
+                        border = null,
+                        colors = FilterChipDefaults.filterChipColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            labelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            iconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                            selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary
+                        )
+                    )
+                    Spacer(Modifier.width(8.dp))
+                }
 
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(state = rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                TextField(
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .fillMaxWidth(),
+                    value = newLabel,
+                    onValueChange = { newValue ->
+                        newLabel = newValue
+                    },
+                    label = {
+                        Text(text = stringResource(id = R.string.label))
+                    },
+                    singleLine = true,
+                    shape = Shapes.large,
+                    colors = TextFieldDefaults.colors(
+                        unfocusedIndicatorColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent,
+                        errorIndicatorColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent
+                    )
+                )
+
+                TextField(
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .fillMaxWidth()
+                        .height(112.dp),
+                    value = exifAttributes.imageDescription ?: "",
+                    onValueChange = { newValue ->
+                        exifAttributes = exifAttributes.copy(imageDescription = newValue)
+                    },
+                    label = {
+                        Text(text = stringResource(R.string.description))
+                    },
+                    shape = Shapes.large,
+                    colors = TextFieldDefaults.colors(
+                        unfocusedIndicatorColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent,
+                        errorIndicatorColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent
+                    )
+                )
+
+                Row(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalArrangement = Arrangement
+                        .spacedBy(24.dp, Alignment.CenterHorizontally)
+                ) {
+                    val tertiaryContainer = MaterialTheme.colorScheme.tertiaryContainer
+                    val tertiaryOnContainer = MaterialTheme.colorScheme.onTertiaryContainer
+                    Button(
+                        onClick = {
+                            scope.launch { state.hide() }
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = tertiaryContainer,
+                            contentColor = tertiaryOnContainer
+                        )
                     ) {
-                        Spacer(Modifier.width(8.dp))
-                        FilterChip(
-                            selected = shouldRemoveMetadata,
-                            onClick = {
-                                 shouldRemoveLocation = false
-                                 shouldRemoveMetadata = !shouldRemoveMetadata
-                            },
-                            label = {
-                                Text(text = stringResource(R.string.remove_metadata))
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    modifier = Modifier.size(18.dp),
-                                    imageVector = Icons.Outlined.DeleteSweep,
-                                    contentDescription = null
-                                )
-                            },
-                            shape = RoundedCornerShape(100),
-                            border = null,
-                            colors = FilterChipDefaults.filterChipColors(
-                                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                                labelColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                                iconColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                                selectedContainerColor = MaterialTheme.colorScheme.tertiary,
-                                selectedLabelColor = MaterialTheme.colorScheme.onTertiary,
-                                selectedLeadingIconColor = MaterialTheme.colorScheme.onTertiary
-                            )
-                        )
-                        FilterChip(
-                            selected = shouldRemoveLocation,
-                            onClick = {
-                                shouldRemoveMetadata = false
-                                shouldRemoveLocation = !shouldRemoveLocation
-                            },
-                            label = {
-                                Text(text = stringResource(R.string.remove_location))
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    modifier = Modifier.size(18.dp),
-                                    imageVector = Icons.Outlined.GpsOff,
-                                    contentDescription = null
-                                )
-                            },
-                            shape = RoundedCornerShape(100),
-                            border = null,
-                            colors = FilterChipDefaults.filterChipColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                labelColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                iconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                selectedContainerColor = MaterialTheme.colorScheme.primary,
-                                selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
-                                selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary
-                            )
-                        )
-                        Spacer(Modifier.width(8.dp))
+                        Text(text = stringResource(R.string.action_cancel))
                     }
-
-                    TextField(
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp)
-                            .fillMaxWidth(),
-                        value = newLabel,
-                        onValueChange = { newValue ->
-                            newLabel = newValue
-                        },
-                        label = {
-                            Text(text = stringResource(id = R.string.label))
-                        },
-                        singleLine = true,
-                        shape = Shapes.large,
-                        colors = TextFieldDefaults.colors(
-                            unfocusedIndicatorColor = Color.Transparent,
-                            disabledIndicatorColor = Color.Transparent,
-                            errorIndicatorColor = Color.Transparent,
-                            focusedIndicatorColor = Color.Transparent
-                        )
-                    )
-
-                    TextField(
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp)
-                            .fillMaxWidth()
-                            .height(112.dp),
-                        value = exifAttributes.imageDescription ?: "",
-                        onValueChange = { newValue ->
-                            exifAttributes = exifAttributes.copy(imageDescription = newValue)
-                        },
-                        label = {
-                            Text(text = stringResource(R.string.description))
-                        },
-                        shape = Shapes.large,
-                        colors = TextFieldDefaults.colors(
-                            unfocusedIndicatorColor = Color.Transparent,
-                            disabledIndicatorColor = Color.Transparent,
-                            errorIndicatorColor = Color.Transparent,
-                            focusedIndicatorColor = Color.Transparent
-                        )
-                    )
-
-                    Row(
-                        modifier = Modifier.padding(24.dp),
-                        horizontalArrangement = Arrangement
-                            .spacedBy(24.dp, Alignment.CenterHorizontally)
-                    ) {
-                        val tertiaryContainer = MaterialTheme.colorScheme.tertiaryContainer
-                        val tertiaryOnContainer = MaterialTheme.colorScheme.onTertiaryContainer
-                        Button(
-                            onClick = {
-                                scope.launch { state.hide() }
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = tertiaryContainer,
-                                contentColor = tertiaryOnContainer
-                            )
-                        ) {
-                            Text(text = stringResource(R.string.action_cancel))
-                        }
-                        Button(
-                            onClick = {
-                                scope.launch(Dispatchers.Main) {
-                                    if (shouldRemoveMetadata) {
-                                        exifAttributes = ExifAttributes()
-                                    } else if (shouldRemoveLocation) {
-                                        exifAttributes = exifAttributes.copy(gpsLatLong = null)
-                                    }
-                                    request.launch(media.writeRequest(cr))
+                    Button(
+                        onClick = {
+                            scope.launch(Dispatchers.Main) {
+                                if (shouldRemoveMetadata) {
+                                    exifAttributes = ExifAttributes()
+                                } else if (shouldRemoveLocation) {
+                                    exifAttributes = exifAttributes.copy(gpsLatLong = null)
                                 }
+                                request.launch(media.writeRequest(cr))
                             }
-                        ) {
-                            Text(text = stringResource(R.string.action_confirm))
                         }
+                    ) {
+                        Text(text = stringResource(R.string.action_confirm))
                     }
                 }
-                Spacer(modifier = Modifier.navigationBarsPadding())
             }
+            Spacer(modifier = Modifier.navigationBarsPadding())
         }
     }
 }
