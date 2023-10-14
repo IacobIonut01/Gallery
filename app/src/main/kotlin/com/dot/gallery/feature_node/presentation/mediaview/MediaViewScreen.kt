@@ -59,7 +59,6 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MediaViewScreen(
-    navigate: (String) -> Unit,
     navigateUp: () -> Unit,
     toggleRotate: () -> Unit,
     paddingValues: PaddingValues,
@@ -205,8 +204,7 @@ fun MediaViewScreen(
                 showUI = showUI.value,
                 paddingValues = paddingValues,
                 currentMedia = currentMedia.value,
-                currentIndex = pagerState.currentPage,
-                navigate = navigate
+                currentIndex = pagerState.currentPage
             ) {
                 lastIndex = it
             }

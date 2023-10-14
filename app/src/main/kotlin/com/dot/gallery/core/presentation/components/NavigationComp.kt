@@ -231,13 +231,12 @@ fun NavigationComp(
             val viewModel = hiltViewModel<MediaViewModel>(parentEntry)
             viewModel.attachToLifecycle()
             MediaViewScreen(
+                navigateUp = navPipe::navigateUp,
+                toggleRotate = toggleRotate,
                 paddingValues = paddingValues,
                 mediaId = mediaId,
                 mediaState = viewModel.mediaState,
-                handler = viewModel.handler,
-                navigate = navPipe::navigate,
-                navigateUp = navPipe::navigateUp,
-                toggleRotate = toggleRotate
+                handler = viewModel.handler
             )
         }
         composable(
@@ -271,14 +270,13 @@ fun NavigationComp(
             val viewModel = hiltViewModel<MediaViewModel>(parentEntry)
             viewModel.attachToLifecycle()
             MediaViewScreen(
+                navigateUp = navPipe::navigateUp,
+                toggleRotate = toggleRotate,
                 paddingValues = paddingValues,
                 mediaId = mediaId,
                 target = target,
                 mediaState = viewModel.mediaState,
-                handler = viewModel.handler,
-                navigate = navPipe::navigate,
-                navigateUp = navPipe::navigateUp,
-                toggleRotate = toggleRotate
+                handler = viewModel.handler
             )
         }
         composable(

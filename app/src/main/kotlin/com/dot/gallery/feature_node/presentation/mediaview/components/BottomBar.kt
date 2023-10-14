@@ -120,7 +120,6 @@ fun BoxScope.MediaViewBottomBar(
     paddingValues: PaddingValues,
     currentMedia: Media?,
     currentIndex: Int = 0,
-    navigate: (String) -> Unit,
     onDeleteMedia: ((Int) -> Unit)? = null,
 ) {
     AnimatedVisibility(

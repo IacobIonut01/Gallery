@@ -61,6 +61,20 @@ fun AlbumComponent(
             .alpha(if (isEnabled) 1f else 0.4f)
             .padding(horizontal = 8.dp),
     ) {
+        if (onTogglePinClick != null) {
+            DropdownMenu(
+                expanded = showDropDown.value,
+                offset = DpOffset(16.dp, (-64).dp),
+                onDismissRequest = { showDropDown.value = false }) {
+                DropdownMenuItem(
+                    text = { Text(text = pinTitle) },
+                    onClick = {
+                        onTogglePinClick(album)
+                        showDropDown.value = false
+                    }
+                )
+            }
+        }
         AlbumImage(
             album = album,
             isEnabled = isEnabled,
@@ -92,20 +106,7 @@ fun AlbumComponent(
                 max = 12.sp
             )
         )
-        if (onTogglePinClick != null) {
-            DropdownMenu(
-                expanded = showDropDown.value,
-                offset = DpOffset(16.dp, (-64).dp),
-                onDismissRequest = { showDropDown.value = false }) {
-                DropdownMenuItem(
-                    text = { Text(text = pinTitle) },
-                    onClick = {
-                        onTogglePinClick(album)
-                        showDropDown.value = false
-                    }
-                )
-            }
-        }
+
     }
 }
 

@@ -46,13 +46,12 @@ class StandaloneActivity : ComponentActivity() {
 
                     MediaViewScreen(
                         navigateUp = { finish() },
-                        isStandalone = true,
+                        toggleRotate = ::toggleOrientation,
                         paddingValues = paddingValues,
+                        isStandalone = true,
                         mediaId = viewModel.mediaId,
                         mediaState = viewModel.mediaState,
-                        handler = viewModel.handler,
-                        toggleRotate = ::toggleOrientation,
-                        navigate = {}
+                        handler = viewModel.handler
                     )
                 }
                 BackHandler {
