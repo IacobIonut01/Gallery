@@ -17,9 +17,9 @@ espresso-core = "3.5.1"
 lifecycle-runtime = "2.6.2"
 activity-compose = "1.8.0"
 compose-bom = "2023.10.00"
-hilt = "2.48"
+hilt = "2.48.1"
 material = "1.10.0"
-material3 = "1.2.0-alpha08"
+material3 = "1.2.0-alpha09"
 media3Ui = "1.1.1"
 media3Exoplayer = "1.1.1"
 navigation-runtime-ktx = "2.7.4"
@@ -79,7 +79,7 @@ compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4
 dagger-hilt = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
 dagger-hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
 androidx-hilt-compiler = { group = "androidx.hilt", name = "hilt-compiler", version = "1.0.0" }
-androidx-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version = "1.1.0-alpha01" }
+androidx-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version = "1.1.0-beta01" }
 
 # Room
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
