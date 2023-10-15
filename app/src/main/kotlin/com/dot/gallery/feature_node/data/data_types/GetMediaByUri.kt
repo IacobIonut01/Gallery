@@ -58,28 +58,15 @@ suspend fun ContentResolver.getMediaListByUris(list: List<Uri>): List<Media> {
             bundle = Bundle().apply {
                 putString(
                     ContentResolver.QUERY_ARG_SQL_SELECTION,
-                    MediaStore.MediaColumns.DATA + "=?"
+                    MediaStore.MediaColumns._ID + "=?"
                 )
                 putStringArray(
                     ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS,
-                    list.map { it.toString() }.toTypedArray()
+                    list.map { it.toString().substringAfterLast("/") }.toTypedArray()
                 )
             }
         )
-        with(query(mediaQuery)) {
-            moveToFirst()
-            while (!isAfterLast) {
-                try {
-                    mediaList.add(getMediaFromCursor())
-                    break
-                } catch (e: Exception) {
-                    close()
-                    e.printStackTrace()
-                }
-            }
-            moveToNext()
-            close()
-        }
+        mediaList.addAll(getMedia(mediaQuery))
         if (mediaList.isEmpty()) {
             for (uri in list) {
                 Media.createFromUri(uri)?.let { mediaList.add(it) }

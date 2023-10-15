@@ -43,7 +43,7 @@ interface MediaRepository {
 
     fun getMediaByUri(uriAsString: String, isSecure: Boolean): Flow<Resource<List<Media>>>
 
-    fun getMediaListByUris(listOfUris: List<Uri>): Flow<Resource<List<Media>>>
+    fun getMediaListByUris(listOfUris: List<Uri>, reviewMode: Boolean): Flow<Resource<List<Media>>>
 
     suspend fun toggleFavorite(
         result: ActivityResultLauncher<IntentSenderRequest>,

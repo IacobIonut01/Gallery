@@ -15,9 +15,10 @@ class GetMediaListByUrisUseCase(
     private val repository: MediaRepository
 ) {
     operator fun invoke(
-        listOfUris: List<Uri>
+        listOfUris: List<Uri>,
+        reviewMode: Boolean
     ): Flow<Resource<List<Media>>> {
-        return repository.getMediaListByUris(listOfUris)
+        return repository.getMediaListByUris(listOfUris, reviewMode)
     }
 
 }

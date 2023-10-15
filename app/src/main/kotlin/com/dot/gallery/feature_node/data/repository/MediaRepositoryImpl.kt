@@ -193,9 +193,24 @@ class MediaRepositoryImpl(
             }
         }
 
-    override fun getMediaListByUris(listOfUris: List<Uri>): Flow<Resource<List<Media>>> =
+    override fun getMediaListByUris(listOfUris: List<Uri>, reviewMode: Boolean): Flow<Resource<List<Media>>> =
         contentResolver.retrieveMediaAsResource {
-            val mediaList = it.getMediaListByUris(listOfUris)
+            var mediaList = it.getMediaListByUris(listOfUris)
+            if (reviewMode) {
+                val query = Query.MediaQuery().copy(
+                    bundle = Bundle().apply {
+                        putString(
+                            ContentResolver.QUERY_ARG_SQL_SELECTION,
+                            MediaStore.MediaColumns.BUCKET_ID + "= ?"
+                        )
+                        putStringArray(
+                            ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS,
+                            arrayOf(mediaList.first().albumID.toString())
+                        )
+                    }
+                )
+                mediaList = it.getMedia(query)
+            }
             if (mediaList.isEmpty()) {
                 Resource.Error(message = "Media could not be opened")
             } else {

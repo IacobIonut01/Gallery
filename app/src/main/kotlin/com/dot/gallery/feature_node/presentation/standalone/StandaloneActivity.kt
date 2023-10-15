@@ -41,6 +41,7 @@ class StandaloneActivity : ComponentActivity() {
             GalleryTheme(darkTheme = true) {
                 Scaffold { paddingValues ->
                     val viewModel = hiltViewModel<StandaloneViewModel>().apply {
+                        reviewMode = action.contains("REVIEW")
                         dataList = uriList
                     }
 

@@ -27,6 +27,7 @@ class StandaloneViewModel @Inject constructor(
     private val _mediaState = MutableStateFlow(MediaState())
     val mediaState = _mediaState.asStateFlow()
     val handler = mediaUseCases.mediaHandleUseCase
+    var reviewMode: Boolean = false
 
     var dataList: List<Uri> = emptyList()
         set(value) {
@@ -41,13 +42,15 @@ class StandaloneViewModel @Inject constructor(
     private fun getMedia(clipDataUriList: List<Uri> = emptyList()) {
         viewModelScope.launch {
             if (clipDataUriList.isNotEmpty()) {
-                mediaUseCases.getMediaListByUrisUseCase(clipDataUriList).flowOn(Dispatchers.IO).collectLatest { result ->
-                    val data = result.data
-                    if (data != null) {
-                        mediaId = data.first().id
-                        _mediaState.value = MediaState(media = data)
+                mediaUseCases.getMediaListByUrisUseCase(clipDataUriList, reviewMode)
+                    .flowOn(Dispatchers.IO)
+                    .collectLatest { result ->
+                        val data = result.data
+                        if (data != null) {
+                            mediaId = data.first().id
+                            _mediaState.value = MediaState(media = data)
+                        }
                     }
-                }
             }
         }
     }
