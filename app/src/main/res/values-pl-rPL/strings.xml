@@ -127,8 +127,8 @@
     <string name="move">Przenieś</string>
     <plurals name="item_count">
         <item quantity="one">%s pozycja</item>
-        <item quantity="few">%s items</item>
-        <item quantity="many">%s items</item>
-        <item quantity="other">%s pozycje</item>
+        <item quantity="few">%s pozycjami</item>
+        <item quantity="many">%s pozycyj</item>
+        <item quantity="other">%s pozycjach</item>
     </plurals>
 </resources>
