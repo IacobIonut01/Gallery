@@ -65,7 +65,7 @@
     <string name="action_cancel">Anulează</string>
     <string name="action_confirm">Confirmă</string>
     <string name="action_confirmed">Confirmat</string>
-    <string name="history_recent_title">Recent</string>
+    <string name="history_recent_title">Recente</string>
     <string name="history_suggestions_title">Sugestii</string>
     <string name="no_media_found">Nu s-a găsit niciun element media</string>
     <string name="image_add_description">Adaugă o descriere</string>
@@ -104,11 +104,11 @@
     <string name="monthly_timeline_summary">Grupați cronologia lunar în loc de pe date (Aplicația va reporni)</string>
     <string name="amoled_mode_title">Folosiți Modul Amoled</string>
     <string name="amoled_mode_summary">Contrast mare, cel mai potrivit pentru ecranele Amoled</string>
-    <string name="location_chip">Location: %s</string>
-    <string name="media_details">Details</string>
+    <string name="location_chip">Locație: %s</string>
+    <string name="media_details">Detalii</string>
     <string name="album_card_size">Album Card Size</string>
-    <string name="edit_metadata">Edit Metadata</string>
-    <string name="dialog_to_trash">Moving to Trash</string>
+    <string name="edit_metadata">Editați Metadatele</string>
+    <string name="dialog_to_trash">Se mută la Gunoi</string>
     <string name="dialog_delete">Deleting Permanently</string>
     <string name="s_items">%1$s items</string>
     <string name="trashing_items">Trashing %1$s items..</string>
