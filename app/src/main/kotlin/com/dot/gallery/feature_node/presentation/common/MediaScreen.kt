@@ -105,7 +105,7 @@ fun MediaScreen(
     }
     /** ************ **/
     else {
-        val showSearchBar = albumId == -1L && target == null
+        val showSearchBar = remember { albumId == -1L && target == null }
         val scrollBehavior =
             TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
@@ -114,11 +114,6 @@ fun MediaScreen(
         /** ************ **/
 
         /** Selection state handling **/
-        fun clearSelection() {
-            selectionState.value = false
-            selectedMedia.clear()
-        }
-
         LaunchedEffect(LocalConfiguration.current, selectionState.value) {
             if (allowNavBar) {
                 toggleNavbar(!selectionState.value)
@@ -148,7 +143,10 @@ fun MediaScreen(
                                     albumId = albumId,
                                     target = target,
                                     navigateUp = navigateUp,
-                                    clearSelection = { clearSelection() },
+                                    clearSelection = {
+                                        selectionState.value = false
+                                        selectedMedia.clear()
+                                    },
                                     selectionState = selectionState,
                                     alwaysGoBack = true,
                                 )

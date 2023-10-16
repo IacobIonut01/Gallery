@@ -11,7 +11,6 @@ import android.net.Uri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
@@ -36,4 +35,4 @@ fun ContentResolver.contentFlowObserver(uris: Array<Uri>) = callbackFlow {
     awaitClose {
         unregisterContentObserver(observer)
     }
-}.conflate()
+}

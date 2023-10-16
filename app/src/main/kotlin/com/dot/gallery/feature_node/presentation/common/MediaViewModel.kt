@@ -94,7 +94,7 @@ open class MediaViewModel @Inject constructor(
 
     private fun getMedia(albumId: Long = -1L, target: String? = null) {
         viewModelScope.launch {
-            mediaUseCases.mediaFlow(albumId, target).flowOn(Dispatchers.IO).collectLatest { result ->
+            mediaUseCases.mediaFlow(albumId, target).collectLatest { result ->
                 val data = result.data ?: emptyList()
                 val error = if (result is Resource.Error) result.message
                     ?: "An error occurred" else ""

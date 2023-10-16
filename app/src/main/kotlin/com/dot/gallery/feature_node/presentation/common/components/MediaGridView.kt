@@ -84,8 +84,10 @@ fun MediaGridView(
     val stringYesterday = stringResource(id = R.string.header_yesterday)
 
     val scope = rememberCoroutineScope()
-    val mappedData =
-        if (showMonthlyHeader) mediaState.mappedMediaWithMonthly else mediaState.mappedMedia
+    val mappedData = remember(showMonthlyHeader, mediaState) {
+        if (showMonthlyHeader) mediaState.mappedMediaWithMonthly
+        else mediaState.mappedMedia
+    }
 
     /** Glide Preloading **/
     val preloadingData = rememberGlidePreloadingData(
@@ -99,15 +101,14 @@ fun MediaGridView(
     /** ************ **/
 
     /** Selection state handling **/
-    fun clearSelection() {
-        selectionState.value = false
-        selectedMedia.clear()
-    }
-
     BackHandler(
         enabled = selectionState.value && allowSelection,
-        onBack = { clearSelection() }
+        onBack = {
+            selectionState.value = false
+            selectedMedia.clear()
+        }
     )
+    /** ************ **/
 
     @Composable
     fun mediaGrid() {

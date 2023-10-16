@@ -38,6 +38,7 @@ import com.dot.gallery.feature_node.domain.util.OrderType
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia.*
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.map
 
 class MediaRepositoryImpl(
@@ -309,7 +310,7 @@ class MediaRepositoryImpl(
                 } catch (e: Exception) {
                     Resource.Error(message = e.localizedMessage ?: "An error occurred")
                 }
-            }
+            }.conflate()
 
         private fun ContentResolver.retrieveMedia(dataBody: suspend (ContentResolver) -> List<Media>) =
             contentFlowObserver(URIs).map {
@@ -318,7 +319,7 @@ class MediaRepositoryImpl(
                 } catch (e: Exception) {
                     Resource.Error(message = e.localizedMessage ?: "An error occurred")
                 }
-            }
+            }.conflate()
 
         private fun ContentResolver.retrieveAlbums(dataBody: suspend (ContentResolver) -> List<Album>) =
             contentFlowObserver(URIs).map {
@@ -327,6 +328,6 @@ class MediaRepositoryImpl(
                 } catch (e: Exception) {
                     Resource.Error(message = e.localizedMessage ?: "An error occurred")
                 }
-            }
+            }.conflate()
     }
 }

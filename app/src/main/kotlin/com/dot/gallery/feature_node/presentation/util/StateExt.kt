@@ -19,8 +19,11 @@ import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaItem
 import com.dot.gallery.feature_node.domain.use_case.MediaUseCases
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.conflate
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 
 @Composable
@@ -45,14 +48,14 @@ fun MediaUseCases.mediaFlowWithType(
     albumId: Long,
     allowedMedia: AllowedMedia
 ): Flow<Resource<List<Media>>> =
-    if (albumId != -1L) {
+    (if (albumId != -1L) {
         getMediaByAlbumWithTypeUseCase(albumId, allowedMedia)
     } else {
         getMediaByTypeUseCase(allowedMedia)
-    }
+    }).flowOn(Dispatchers.IO).conflate()
 
 fun MediaUseCases.mediaFlow(albumId: Long, target: String?): Flow<Resource<List<Media>>> =
-    if (albumId != -1L) {
+    (if (albumId != -1L) {
         getMediaByAlbumUseCase(albumId)
     } else if (!target.isNullOrEmpty()) {
         when (target) {
@@ -62,7 +65,7 @@ fun MediaUseCases.mediaFlow(albumId: Long, target: String?): Flow<Resource<List<
         }
     } else {
         getMediaUseCase()
-    }
+    }).flowOn(Dispatchers.IO).conflate()
 
 fun MutableStateFlow<MediaState>.collectMedia(
     data: List<Media>,
@@ -93,15 +96,14 @@ fun MutableStateFlow<MediaState>.collectMedia(
         }
         if (groupByMonth) {
             mappedData!!.add(dateHeader)
-            mappedDataWithMonthly!!.add(dateHeader)
             mappedData!!.addAll(groupedMedia)
-            mappedDataWithMonthly!!.addAll(groupedMedia)
+            mappedDataWithMonthly!!.addAll(mappedData!!)
         } else {
             val month = getMonth(date)
             if (month.isNotEmpty() && !monthHeaderList!!.contains(month)) {
                 monthHeaderList!!.add(month)
                 if (withMonthHeader && mappedDataWithMonthly!!.isNotEmpty()) {
-                    mappedDataWithMonthly!!.add(MediaItem.Header("header_big_$month", month, data))
+                    mappedDataWithMonthly!!.add(MediaItem.Header("header_big_${month}_${data.size}", month, emptyList()))
                 }
             }
             mappedData!!.add(dateHeader)
@@ -114,13 +116,15 @@ fun MutableStateFlow<MediaState>.collectMedia(
             }
         }
     }
-    value = MediaState(
-        isLoading = false,
-        error = error,
-        media = data,
-        mappedMedia = mappedData!!,
-        mappedMediaWithMonthly = if (withMonthHeader) mappedDataWithMonthly!! else emptyList(),
-        dateHeader = data.dateHeader(albumId)
+    tryEmit(
+        MediaState(
+            isLoading = false,
+            error = error,
+            media = data,
+            mappedMedia = mappedData!!,
+            mappedMediaWithMonthly = if (withMonthHeader) mappedDataWithMonthly!! else emptyList(),
+            dateHeader = data.dateHeader(albumId)
+        )
     )
     mappedData = null
     mappedDataWithMonthly = null
