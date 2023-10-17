@@ -8,6 +8,7 @@
 ![GitHub Repo stars](https://img.shields.io/github/stars/IacobIonut01/Gallery?color=%23247EE0)
 
 ![](./screenshots/preview.png)
+[![](./screenshots/items/play_banner.png)](https://play.google.com/store/apps/details?id=com.dot.gallery.gplay)
 ![](./screenshots/items/support_banner.png)
 [![PayPal](./screenshots/items/support_paypal.png)](https://www.paypal.me/iacobionut01)
 [![Revolut](./screenshots/items/support_revolut.png)](https://revolut.me/somaldoaca)
