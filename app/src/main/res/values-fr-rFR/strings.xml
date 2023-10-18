@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Gallery</string>
+    <string name="app_name">Galerie</string>
     <string name="nav_albums">Albums</string>
-    <string name="searchbar_title"><![CDATA[Search photos & videos]]></string>
-    <string name="header_today">Today</string>
-    <string name="header_yesterday">Yesterday</string>
-    <string name="request_permissions">Request permissions</string>
-    <string name="filter">Filter</string>
-    <string name="filter_recent">Recent</string>
-    <string name="filter_nameAZ">Name (A-Z)</string>
-    <string name="filter_nameZA">Name (Z-A)</string>
-    <string name="filter_old">Old</string>
+    <string name="searchbar_title"><![CDATA[Rechercher des photos et vidéos]]></string>
+    <string name="header_today">Aujourd\'hui</string>
+    <string name="header_yesterday">Hier</string>
+    <string name="request_permissions">Demander les autorisations</string>
+    <string name="filter">Filtrer</string>
+    <string name="filter_recent">Récents</string>
+    <string name="filter_nameAZ">Nom (A-Z)</string>
+    <string name="filter_nameZA">Nom (Z-A)</string>
+    <string name="filter_old">Ancien</string>
     <string name="selected_s">Selected %s</string>
     <string name="trash">Trash</string>
     <string name="pause_video">Pause video</string>
