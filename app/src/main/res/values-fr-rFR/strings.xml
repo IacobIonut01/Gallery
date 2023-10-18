@@ -39,7 +39,7 @@
     <string name="metadata">Métadonnées</string>
     <string name="select_all">Tout sélectionner</string>
     <string name="unselect_all">Tout désélectionner</string>
-    <string name="drop_down_cd">Drop down</string>
+    <string name="drop_down_cd">Dérouler</string>
     <string name="back_cd">Retour</string>
     <string name="settings_title">Paramètres</string>
     <string name="settings_general">Général</string>
@@ -51,7 +51,7 @@
     <string name="pin">Épingler</string>
     <string name="nav_timeline">Chronologie</string>
     <string name="location_cd">Emplacement des médias</string>
-    <string name="location_map_cd">Location Map</string>
+    <string name="location_map_cd">Carte de localisation</string>
     <string name="app_dev">par %s</string>
     <string name="app_dev_name">IacobIonut01</string>
     <string name="donate">Faire un don</string>
@@ -126,7 +126,7 @@
     <string name="move_to_another_album">Déplacer dans un autre album</string>
     <string name="move">Déplacer</string>
     <plurals name="item_count">
-        <item quantity="one">%s item</item>
+        <item quantity="one">%s élément</item>
         <item quantity="other">%s éléments</item>
     </plurals>
 </resources>
