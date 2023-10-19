@@ -54,7 +54,6 @@ fun TimelineScreen(
         albumId = albumId,
         target = null,
         albumName = albumName,
-        retrieveMedia = retrieveMedia,
         handler = handler,
         mediaState = mediaState,
         selectionState = selectionState,
@@ -75,10 +74,10 @@ fun TimelineScreen(
             )
         },
         emptyContent = { EmptyMedia(Modifier.fillMaxSize()) },
+        aboveGridContent = aboveGrid,
         navigate = navigate,
         navigateUp = navigateUp,
         toggleNavbar = toggleNavbar,
-        aboveGridContent = aboveGrid,
         isScrolling = isScrolling,
         searchBarActive = searchBarActive
     ) { result ->

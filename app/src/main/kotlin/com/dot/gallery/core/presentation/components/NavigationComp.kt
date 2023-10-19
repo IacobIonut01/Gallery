@@ -12,6 +12,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -23,11 +25,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.dot.gallery.R
+import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Constants.Animation.navigateInAnimation
 import com.dot.gallery.core.Constants.Animation.navigateUpAnimation
 import com.dot.gallery.core.Constants.Target.TARGET_FAVORITES
 import com.dot.gallery.core.Constants.Target.TARGET_TRASH
 import com.dot.gallery.core.Settings.Misc.rememberTimelineGroupByMonth
+import com.dot.gallery.core.presentation.components.util.permissionGranted
 import com.dot.gallery.feature_node.presentation.albums.AlbumsScreen
 import com.dot.gallery.feature_node.presentation.albums.AlbumsViewModel
 import com.dot.gallery.feature_node.presentation.common.ChanneledViewModel
@@ -37,10 +41,13 @@ import com.dot.gallery.feature_node.presentation.mediaview.MediaViewScreen
 import com.dot.gallery.feature_node.presentation.settings.SettingsScreen
 import com.dot.gallery.feature_node.presentation.settings.SettingsViewModel
 import com.dot.gallery.feature_node.presentation.settings.customization.albumsize.AlbumSizeScreen
+import com.dot.gallery.feature_node.presentation.setup.SetupScreen
 import com.dot.gallery.feature_node.presentation.timeline.TimelineScreen
 import com.dot.gallery.feature_node.presentation.trashed.TrashedGridScreen
 import com.dot.gallery.feature_node.presentation.util.Screen
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun NavigationComp(
     navController: NavHostController,
@@ -67,10 +74,30 @@ fun NavigationComp(
 
     val groupTimelineByMonth by rememberTimelineGroupByMonth()
 
+    val context = LocalContext.current
+    var permissionState by remember { mutableStateOf(context.permissionGranted(Constants.PERMISSIONS)) }
+    val startDest = remember(permissionState) {
+        if (permissionState) {
+            Screen.TimelineScreen()
+        } else Screen.SetupScreen()
+    }
     NavHost(
         navController = navController,
-        startDestination = Screen.TimelineScreen.route
+        startDestination = startDest
     ) {
+        composable(
+            route = Screen.SetupScreen(),
+            enterTransition = { navigateInAnimation },
+            exitTransition = { navigateUpAnimation },
+            popEnterTransition = { navigateInAnimation },
+            popExitTransition = { navigateUpAnimation }
+        ) {
+            navPipe.toggleNavbar(false)
+            SetupScreen {
+                permissionState = true
+                navPipe.navigate(Screen.TimelineScreen())
+            }
+        }
         composable(
             route = Screen.TimelineScreen.route,
             enterTransition = { navigateInAnimation },

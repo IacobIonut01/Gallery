@@ -47,14 +47,14 @@ fun TrashedGridScreen(
     selectionState = selectionState,
     selectedMedia = selectedMedia,
     toggleSelection = toggleSelection,
+    allowHeaders = false,
+    enableStickyHeaders = false,
     navActionsContent = { _: MutableState<Boolean>,
                           _: ActivityResultLauncher<IntentSenderRequest> ->
         TrashedNavActions(handler, mediaState, selectedMedia, selectionState)
     },
     emptyContent = { EmptyTrash(Modifier.fillMaxSize()) },
     aboveGridContent = { AutoDeleteFooter() },
-    allowHeaders = false,
-    enableStickyHeaders = false,
     navigate = navigate,
     navigateUp = navigateUp,
     toggleNavbar = toggleNavbar
