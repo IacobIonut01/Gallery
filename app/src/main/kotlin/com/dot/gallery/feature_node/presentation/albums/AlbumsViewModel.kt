@@ -97,7 +97,7 @@ class AlbumsViewModel @Inject constructor(
     }
 
     private fun updateOrder(mediaOrder: MediaOrder) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val newState = unPinnedAlbumsState.value.copy(
                 albums = mediaOrder.sortAlbums(unPinnedAlbumsState.value.albums)
             )
@@ -108,7 +108,7 @@ class AlbumsViewModel @Inject constructor(
     }
 
     private fun toggleAlbumPin(album: Album, isPinned: Boolean = true) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val newAlbum = album.copy(isPinned = isPinned)
             if (isPinned) {
                 // Insert pinnedAlbumId to Database
@@ -141,7 +141,7 @@ class AlbumsViewModel @Inject constructor(
     }
 
     private fun getAlbums(mediaOrder: MediaOrder = MediaOrder.Date(OrderType.Descending)) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             mediaUseCases.getAlbumsUseCase(mediaOrder).flowOn(Dispatchers.IO).collectLatest { result ->
                 // Result data list
                 val data = result.data ?: emptyList()

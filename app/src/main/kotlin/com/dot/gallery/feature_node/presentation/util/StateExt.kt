@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun RepeatOnResume(action: () -> Unit) {
@@ -67,7 +68,7 @@ fun MediaUseCases.mediaFlow(albumId: Long, target: String?): Flow<Resource<List<
         getMediaUseCase()
     }).flowOn(Dispatchers.IO).conflate()
 
-fun MutableStateFlow<MediaState>.collectMedia(
+suspend fun MutableStateFlow<MediaState>.collectMedia(
     data: List<Media>,
     error: String,
     albumId: Long,
@@ -77,55 +78,65 @@ fun MutableStateFlow<MediaState>.collectMedia(
     var mappedData: ArrayList<MediaItem>? = ArrayList()
     var mappedDataWithMonthly: ArrayList<MediaItem>? = ArrayList()
     var monthHeaderList: MutableSet<String>? = mutableSetOf()
-    data.groupBy {
-        if (groupByMonth) {
-            it.timestamp.getMonth()
-        } else {
-            it.timestamp.getDate(
-                stringToday = "Today"
-                /** Localized in composition */
-                ,
-                stringYesterday = "Yesterday"
-                /** Localized in composition */
-            )
-        }
-    }.forEach { (date, data) ->
-        val dateHeader = MediaItem.Header("header_$date", date, data)
-        val groupedMedia = data.map {
-            MediaItem.MediaViewItem.Loaded("media_${it.id}_${it.label}", it)
-        }
-        if (groupByMonth) {
-            mappedData!!.add(dateHeader)
-            mappedData!!.addAll(groupedMedia)
-            mappedDataWithMonthly!!.addAll(mappedData!!)
-        } else {
-            val month = getMonth(date)
-            if (month.isNotEmpty() && !monthHeaderList!!.contains(month)) {
-                monthHeaderList!!.add(month)
-                if (withMonthHeader && mappedDataWithMonthly!!.isNotEmpty()) {
-                    mappedDataWithMonthly!!.add(MediaItem.Header("header_big_${month}_${data.size}", month, emptyList()))
+    withContext(Dispatchers.IO) {
+        data.groupBy {
+            if (groupByMonth) {
+                it.timestamp.getMonth()
+            } else {
+                it.timestamp.getDate(
+                    stringToday = "Today"
+                    /** Localized in composition */
+                    ,
+                    stringYesterday = "Yesterday"
+                    /** Localized in composition */
+                )
+            }
+        }.forEach { (date, data) ->
+            val dateHeader = MediaItem.Header("header_$date", date, data)
+            val groupedMedia = data.map {
+                MediaItem.MediaViewItem("media_${it.id}_${it.label}", it)
+            }
+            if (groupByMonth) {
+                mappedData!!.add(dateHeader)
+                mappedData!!.addAll(groupedMedia)
+                mappedDataWithMonthly!!.addAll(mappedData!!)
+            } else {
+                val month = getMonth(date)
+                if (month.isNotEmpty() && !monthHeaderList!!.contains(month)) {
+                    monthHeaderList!!.add(month)
+                    if (withMonthHeader && mappedDataWithMonthly!!.isNotEmpty()) {
+                        mappedDataWithMonthly!!.add(
+                            MediaItem.Header(
+                                "header_big_${month}_${data.size}",
+                                month,
+                                emptyList()
+                            )
+                        )
+                    }
                 }
-            }
-            mappedData!!.add(dateHeader)
-            if (withMonthHeader) {
-                mappedDataWithMonthly!!.add(dateHeader)
-            }
-            mappedData!!.addAll(groupedMedia)
-            if (withMonthHeader) {
-                mappedDataWithMonthly!!.addAll(groupedMedia)
+                mappedData!!.add(dateHeader)
+                if (withMonthHeader) {
+                    mappedDataWithMonthly!!.add(dateHeader)
+                }
+                mappedData!!.addAll(groupedMedia)
+                if (withMonthHeader) {
+                    mappedDataWithMonthly!!.addAll(groupedMedia)
+                }
             }
         }
     }
-    tryEmit(
-        MediaState(
-            isLoading = false,
-            error = error,
-            media = data,
-            mappedMedia = mappedData!!,
-            mappedMediaWithMonthly = if (withMonthHeader) mappedDataWithMonthly!! else emptyList(),
-            dateHeader = data.dateHeader(albumId)
+    withContext(Dispatchers.Main) {
+        tryEmit(
+            MediaState(
+                isLoading = false,
+                error = error,
+                media = data,
+                mappedMedia = mappedData!!,
+                mappedMediaWithMonthly = if (withMonthHeader) mappedDataWithMonthly!! else emptyList(),
+                dateHeader = data.dateHeader(albumId)
+            )
         )
-    )
+    }
     mappedData = null
     mappedDataWithMonthly = null
     monthHeaderList = null

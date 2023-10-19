@@ -26,7 +26,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -80,7 +79,7 @@ open class MediaViewModel @Inject constructor(
     }
 
     fun toggleSelection(index: Int) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val item = mediaState.value.media[index]
             val selectedPhoto = selectedPhotoState.find { it.id == item.id }
             if (selectedPhoto != null) {
@@ -93,7 +92,7 @@ open class MediaViewModel @Inject constructor(
     }
 
     private fun getMedia(albumId: Long = -1L, target: String? = null) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             mediaUseCases.mediaFlow(albumId, target).collectLatest { result ->
                 val data = result.data ?: emptyList()
                 val error = if (result is Resource.Error) result.message

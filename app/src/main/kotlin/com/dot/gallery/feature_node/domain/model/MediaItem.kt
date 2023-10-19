@@ -5,10 +5,8 @@
 package com.dot.gallery.feature_node.domain.model
 
 import android.os.Parcelable
-import androidx.compose.runtime.Immutable
 import kotlinx.parcelize.Parcelize
 
-@Immutable
 @Parcelize
 sealed class MediaItem : Parcelable {
     abstract val key: String
@@ -19,16 +17,11 @@ sealed class MediaItem : Parcelable {
         val data: List<Media>
     ) : MediaItem()
 
-    @Parcelize
-    sealed class MediaViewItem : MediaItem() {
+    data class MediaViewItem(
+        override val key: String,
+        val media: Media
+    ) : MediaItem()
 
-        abstract val media: Media
-
-        data class Loaded(
-            override val key: String,
-            override val media: Media,
-        ) : MediaViewItem()
-    }
 }
 
 val Any.isHeaderKey: Boolean

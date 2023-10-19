@@ -57,8 +57,10 @@ class SearchViewModel @Inject constructor(
     fun clearQuery() = queryMedia("")
 
     fun queryMedia(query: String = "") {
-        viewModelScope.launch {
-            lastQuery.value = query
+        viewModelScope.launch(Dispatchers.IO) {
+            withContext(Dispatchers.Main) {
+                lastQuery.value = query
+            }
             mediaUseCases.getMediaUseCase().flowOn(Dispatchers.IO).collectLatest { result ->
                 val mappedData = ArrayList<MediaItem>()
                 val monthHeaderList = ArrayList<String>()
@@ -67,9 +69,10 @@ class SearchViewModel @Inject constructor(
                 val error = if (result is Resource.Error) result.message
                     ?: "An error occurred" else ""
                 if (data.isEmpty()) {
-                    return@collectLatest _mediaState.emit(MediaState(isLoading = false))
+                    _mediaState.tryEmit(MediaState(isLoading = false))
+                    return@collectLatest
                 }
-                _mediaState.emit(MediaState())
+                _mediaState.tryEmit(MediaState())
                 val parsedData = data.parseQuery(query)
                 parsedData.groupBy {
                     it.timestamp.getDate(
@@ -86,13 +89,13 @@ class SearchViewModel @Inject constructor(
                     }
                     mappedData.add(MediaItem.Header("header_$date", date, data))
                     mappedData.addAll(data.map {
-                        MediaItem.MediaViewItem.Loaded(
+                        MediaItem.MediaViewItem(
                             "media_${it.id}_${it.label}",
                             it
                         )
                     })
                 }
-                _mediaState.emit(
+                _mediaState.tryEmit(
                     MediaState(
                         error = error,
                         media = parsedData,

@@ -40,7 +40,7 @@ class StandaloneViewModel @Inject constructor(
     var mediaId: Long = -1
 
     private fun getMedia(clipDataUriList: List<Uri> = emptyList()) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             if (clipDataUriList.isNotEmpty()) {
                 mediaUseCases.getMediaListByUrisUseCase(clipDataUriList, reviewMode)
                     .flowOn(Dispatchers.IO)

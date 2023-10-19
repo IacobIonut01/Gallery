@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -45,19 +46,19 @@ class ChanneledViewModel @Inject constructor() : ViewModel() {
         }
 
     fun navigate(route: String) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             eventChannel.send(Event.NavigationRouteEvent(route))
         }
     }
 
     fun toggleNavbar(isVisible: Boolean) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             eventChannel.send(Event.ToggleNavigationBarEvent(isVisible))
         }
     }
 
     fun navigateUp() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             eventChannel.send(Event.NavigationUpEvent)
         }
     }

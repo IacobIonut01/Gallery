@@ -27,7 +27,7 @@ class GalleryGlideModule : AppGlideModule() {
                 RequestOptions().diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
             )
             val memoryCalculator = MemorySizeCalculator.Builder(context)
-                .setMemoryCacheScreens(80f)
+                .setMemoryCacheScreens(8f)
                 .build()
             builder.setMemoryCache(LruResourceCache(memoryCalculator.memoryCacheSize.toLong()))
             builder.setDiskCache(

@@ -92,7 +92,8 @@ fun MediaGridView(
     /** Glide Preloading **/
     val preloadingData = rememberGlidePreloadingData(
         data = mediaState.media,
-        preloadImageSize = Size(48f, 48f)
+        preloadImageSize = Size(24f, 24f),
+        fixedVisibleItemCount = 4
     ) { media: Media, requestBuilder: RequestBuilder<Drawable> ->
         requestBuilder
             .signature(MediaKey(media.id, media.timestamp, media.mimeType, media.orientation))
@@ -135,7 +136,7 @@ fun MediaGridView(
             if (allowHeaders) {
                 items(
                     items = mappedData,
-                    key = { if (it is MediaItem.MediaViewItem) it.media.toString() else it.key },
+                    key = { if (it is MediaItem.MediaViewItem) it.media.id else it.key },
                     contentType = { it.key.startsWith("media_") },
                     span = { item ->
                         GridItemSpan(if (item.key.isHeaderKey) maxLineSpan else 1)
