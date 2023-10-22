@@ -21,6 +21,7 @@ import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
 import com.dot.gallery.core.Settings.Misc.rememberForceTheme
 import com.dot.gallery.core.Settings.Misc.rememberIsAmoledMode
 import com.dot.gallery.core.Settings.Misc.rememberIsDarkMode
+import com.dot.gallery.core.Settings.Misc.rememberOldNavbar
 import com.dot.gallery.core.Settings.Misc.rememberSecureMode
 import com.dot.gallery.core.Settings.Misc.rememberTimelineGroupByMonth
 import com.dot.gallery.core.Settings.Misc.rememberTrashEnabled
@@ -122,11 +123,22 @@ class SettingsViewModel @Inject constructor() : ViewModel() {
         var allowBlur by rememberAllowBlur()
         val allowBlurPref = remember(allowBlur) {
             SwitchPreference(
-                title = "Fancy Blur",
-                summary = "Blur background in Media View",
+                title = context.getString(R.string.fancy_blur),
+                summary = context.getString(R.string.fancy_blur_summary),
                 isChecked = allowBlur,
                 onCheck = { allowBlur = it },
                 enabled = shouldAllowBlur,
+                screenPosition = Position.Middle
+            )
+        }
+
+        var showOldNavbar by rememberOldNavbar()
+        val showOldNavbarPref = remember(showOldNavbar) {
+            SwitchPreference(
+                title = context.getString(R.string.old_navbar),
+                summary = context.getString(R.string.old_navbar_summary),
+                isChecked = showOldNavbar,
+                onCheck = { showOldNavbar = it },
                 screenPosition = Position.Bottom
             )
         }
@@ -145,6 +157,7 @@ class SettingsViewModel @Inject constructor() : ViewModel() {
                 add(albumSizePref)
                 add(groupByMonthPref)
                 add(allowBlurPref)
+                add(showOldNavbarPref)
                 /** ********************* **/
                 add(Header(title = context.getString(R.string.settings_general)))
                 /** General Section Start **/

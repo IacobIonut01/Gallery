@@ -7,7 +7,10 @@ package com.dot.gallery.core.presentation.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -16,6 +19,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -27,7 +31,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Photo
 import androidx.compose.material.icons.outlined.PhotoAlbum
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
+import androidx.compose.material3.NavigationRailItemDefaults
+import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -41,12 +52,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.dot.gallery.R
+import com.dot.gallery.core.Settings.Misc.rememberOldNavbar
 import com.dot.gallery.feature_node.presentation.util.NavigationItem
 import com.dot.gallery.feature_node.presentation.util.Screen
 
@@ -82,29 +95,69 @@ fun AppBarContainer(
     val backStackEntry = navController.currentBackStackEntryAsState()
     val bottomNavItems = rememberNavigationItems()
     val useNavRail = windowSizeClass.widthSizeClass > WindowWidthSizeClass.Compact
+    val useOldNavbar by rememberOldNavbar()
 
-    Box {
-        content.invoke()
-        AnimatedVisibility(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(bottom = paddingValues.calculateBottomPadding()),
-            visible = bottomBarState.value && !isScrolling.value,
-            enter = slideInVertically { it * 2 },
-            exit = slideOutVertically { it * 2 },
-            content = {
-                val modifier = remember(useNavRail) {
-                    if (useNavRail) Modifier.requiredWidth((110 * bottomNavItems.size).dp)
-                    else Modifier.fillMaxWidth()
-                }
-                GalleryNavBar(
-                    modifier = modifier,
+    if (useOldNavbar) {
+        Box {
+            AnimatedVisibility(
+                visible = useNavRail && bottomBarState.value,
+                enter = slideInHorizontally { it * -2 },
+                exit = slideOutHorizontally { it * -2 }
+            ) {
+                ClassicNavigationRail(
                     backStackEntry = backStackEntry,
                     navigationItems = bottomNavItems,
                     onClick = { navigate(navController, it) }
                 )
             }
-        )
+            val animatedPadding by animateDpAsState(
+                targetValue = if (useNavRail && bottomBarState.value) 80.dp else 0.dp,
+                label = "animatedPadding"
+            )
+            Box(
+                modifier = Modifier.padding(start = animatedPadding)
+            ) {
+                content()
+            }
+
+            AnimatedVisibility(
+                modifier = Modifier.align(Alignment.BottomCenter),
+                visible = !useNavRail && bottomBarState.value && !isScrolling.value,
+                enter = slideInVertically { it * 2 },
+                exit = slideOutVertically { it * 2 },
+                content = {
+                    ClassicNavBar(
+                        backStackEntry = backStackEntry,
+                        navigationItems = bottomNavItems,
+                        onClick = { navigate(navController, it) },
+                    )
+                }
+            )
+        }
+    } else {
+        Box {
+            content()
+            AnimatedVisibility(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(bottom = paddingValues.calculateBottomPadding()),
+                visible = bottomBarState.value && !isScrolling.value,
+                enter = slideInVertically { it * 2 },
+                exit = slideOutVertically { it * 2 },
+                content = {
+                    val modifier = remember(useNavRail) {
+                        if (useNavRail) Modifier.requiredWidth((110 * bottomNavItems.size).dp)
+                        else Modifier.fillMaxWidth()
+                    }
+                    GalleryNavBar(
+                        modifier = modifier,
+                        backStackEntry = backStackEntry,
+                        navigationItems = bottomNavItems,
+                        onClick = { navigate(navController, it) }
+                    )
+                }
+            )
+        }
     }
 }
 
@@ -137,7 +190,7 @@ fun GalleryNavBar(
             .then(modifier)
             .height(64.dp)
             .background(
-                color = colorScheme.surfaceColorAtElevation(2.dp),
+                color = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp),
                 shape = RoundedCornerShape(percent = 100)
             ),
         verticalAlignment = Alignment.CenterVertically
@@ -154,6 +207,93 @@ fun GalleryNavBar(
 }
 
 @Composable
+fun ClassicNavBar(
+    backStackEntry: State<NavBackStackEntry?>,
+    navigationItems: List<NavigationItem>,
+    onClick: (route: String) -> Unit
+) {
+    val label: @Composable (item: NavigationItem) -> Unit = {
+        Text(
+            text = it.name,
+            fontWeight = FontWeight.Medium,
+            style = MaterialTheme.typography.bodyMedium,
+        )
+    }
+    val icon: @Composable (item: NavigationItem) -> Unit = {
+        Icon(
+            imageVector = it.icon,
+            contentDescription = "${it.name} Icon",
+        )
+    }
+    NavigationBar(
+        containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
+    ) {
+        navigationItems.forEach { item ->
+            val selected = item.route == backStackEntry.value?.destination?.route
+            NavigationBarItem(
+                selected = selected,
+                colors = NavigationBarItemDefaults.colors(
+                    indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
+                    selectedIconColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                ),
+                onClick = {
+                    if (!selected) {
+                        onClick(item.route)
+                    }
+                },
+                label = { label(item) },
+                icon = { icon(item) }
+            )
+        }
+    }
+}
+
+@Composable
+private fun ClassicNavigationRail(
+    backStackEntry: State<NavBackStackEntry?>,
+    navigationItems: List<NavigationItem>,
+    onClick: (route: String) -> Unit
+) {
+    val label: @Composable (item: NavigationItem) -> Unit = {
+        Text(
+            text = it.name,
+            fontWeight = FontWeight.Medium,
+            style = MaterialTheme.typography.bodyMedium,
+        )
+    }
+    val icon: @Composable (item: NavigationItem) -> Unit = {
+        Icon(
+            imageVector = it.icon,
+            contentDescription = "${it.name} Icon",
+        )
+    }
+    NavigationRail(
+        containerColor = MaterialTheme.colorScheme.surface
+    ) {
+        Spacer(Modifier.weight(1f))
+        navigationItems.forEach { item ->
+            val selected = item.route == backStackEntry.value?.destination?.route
+            NavigationRailItem(
+                selected = selected,
+                colors = NavigationRailItemDefaults.colors(
+                    indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
+                    selectedIconColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                ),
+                onClick = {
+                    if (!selected) {
+                        onClick(item.route)
+                    }
+                },
+                label = { label(item) },
+                icon = { icon(item) }
+            )
+        }
+        Spacer(Modifier.weight(1f))
+    }
+
+}
+
+@Composable
 fun RowScope.GalleryNavBarItem(
     navItem: NavigationItem,
     isSelected: Boolean,
@@ -161,11 +301,11 @@ fun RowScope.GalleryNavBarItem(
 ) {
     val mutableInteraction = remember { MutableInteractionSource() }
     val selectedColor by animateColorAsState(
-        targetValue = if (isSelected) colorScheme.secondaryContainer else Color.Transparent,
+        targetValue = if (isSelected) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent,
         label = "selectedColor"
     )
     val selectedIconColor by animateColorAsState(
-        targetValue = if (isSelected) colorScheme.onSecondaryContainer else colorScheme.onSurfaceVariant,
+        targetValue = if (isSelected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
         label = "selectedIconColor"
     )
     Box(

@@ -116,6 +116,11 @@ object Settings {
 
         @Composable
         fun rememberAllowBlur() = rememberPreference(key = ALLOW_BLUR, defaultValue = true)
+
+        private val OLD_NAVBAR = booleanPreferencesKey("old_navbar")
+
+        @Composable
+        fun rememberOldNavbar() = rememberPreference(key = OLD_NAVBAR, defaultValue = false )
     }
 }
 

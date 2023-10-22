@@ -141,6 +141,10 @@
     <string name="access_media_location_summary"><![CDATA[Allows the app to read location data of your images & videos]]></string>
     <string name="internet">Internet</string>
     <string name="internet_summary"><![CDATA[Required to display Location Previews of your images & videos]]></string>
+    <string name="fancy_blur">Fancy Blur</string>
+    <string name="fancy_blur_summary">Blur background in Media View</string>
+    <string name="old_navbar">Use Material Navigation</string>
+    <string name="old_navbar_summary">Show the old navigation bar UI (with rails for bigger screens)</string>
     <plurals name="item_count">
         <item quantity="one">%s item</item>
         <item quantity="other">%s items</item>

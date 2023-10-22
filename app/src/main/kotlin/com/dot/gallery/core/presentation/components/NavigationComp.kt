@@ -47,7 +47,6 @@ import com.dot.gallery.feature_node.presentation.trashed.TrashedGridScreen
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 
-@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun NavigationComp(
     navController: NavHostController,
