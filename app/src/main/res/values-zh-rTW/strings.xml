@@ -125,6 +125,26 @@
     <string name="description">描述</string>
     <string name="move_to_another_album">移至其他相簿</string>
     <string name="move">移動項目</string>
+    <string name="some_permissions_are_not_granted">權限缺失！</string>
+    <string name="get_started">開始體驗</string>
+    <string name="welcome">歡迎您</string>
+    <string name="setup_summary">要想瀏覽您的媒體，您必須授予以下的權限：</string>
+    <string name="required">必要</string>
+    <string name="optional">可選</string>
+    <string name="permission_manage_media_title">• 媒體管理</string>
+    <string name="permission_manage_media_summary">"    • 當您想要對媒體進行多項操作時（例如：標記喜愛、管理回收站、編輯元資料等），系統會自動彈出確認對話框"</string>
+    <string name="read_media_images">讀取圖片媒體</string>
+    <string name="read_media_images_summary">讓應用程式能夠展示您的圖片</string>
+    <string name="read_media_videos">媒體影片讀取</string>
+    <string name="read_media_videos_summary">讓應用程式能夠展示您的影片</string>
+    <string name="access_media_location">媒體位置存取</string>
+    <string name="access_media_location_summary"><![CDATA[允許應用程式讀取您的圖片和影片的位置資訊]]></string>
+    <string name="internet">網路連線</string>
+    <string name="internet_summary"><![CDATA[為了顯示您的圖片和影片的位置預覽而需要的]]></string>
+    <string name="fancy_blur">精緻背景模糊</string>
+    <string name="fancy_blur_summary">在媒體檢視模式下對背景進行模糊處理</string>
+    <string name="old_navbar">採用 Material 的導覽功能</string>
+    <string name="old_navbar_summary">展示舊版的導覽列使用者介面（對於較大螢幕，配有軌道）</string>
     <plurals name="item_count">
         <item quantity="other">%s 個項目</item>
     </plurals>
