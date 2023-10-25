@@ -45,9 +45,9 @@ object AppModule {
     @Provides
     @Singleton
     fun provideMediaRepository(
-        contentResolver: ContentResolver,
+        @ApplicationContext context: Context,
         database: InternalDatabase
     ): MediaRepository {
-        return MediaRepositoryImpl(contentResolver, database)
+        return MediaRepositoryImpl(context, database)
     }
 }

@@ -5,9 +5,12 @@
 
 package com.dot.gallery.core
 
-import android.content.ContentResolver
+import android.content.Context
 import android.database.ContentObserver
 import android.net.Uri
+import android.provider.MediaStore
+import com.dot.gallery.core.Settings.Misc.getStoredMediaVersion
+import com.dot.gallery.core.Settings.Misc.updateStoredMediaVersion
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
@@ -18,21 +21,27 @@ import kotlinx.coroutines.launch
  * Register an observer class that gets callbacks when data identified by a given content URI
  * changes.
  */
-fun ContentResolver.contentFlowObserver(uris: Array<Uri>) = callbackFlow {
+fun Context.contentFlowObserver(uris: Array<Uri>) = callbackFlow {
+    val ctx = this@contentFlowObserver
     val observer = object : ContentObserver(null) {
         override fun onChange(selfChange: Boolean, uri: Uri?) {
             if (isActive) {
                 launch(Dispatchers.IO) {
-                    send(selfChange)
+                    val mediaStoreVersion = MediaStore.getVersion(ctx)
+                    if (getStoredMediaVersion(ctx) != mediaStoreVersion) {
+                        updateStoredMediaVersion(ctx, mediaStoreVersion)
+                        send(selfChange)
+                    }
                 }
             }
         }
     }
     for (uri in uris)
-        registerContentObserver(uri, true, observer)
+        contentResolver.registerContentObserver(uri, true, observer)
     // trigger first.
+    updateStoredMediaVersion(ctx, MediaStore.getVersion(ctx))
     trySend(false)
     awaitClose {
-        unregisterContentObserver(observer)
+        contentResolver.unregisterContentObserver(observer)
     }
 }

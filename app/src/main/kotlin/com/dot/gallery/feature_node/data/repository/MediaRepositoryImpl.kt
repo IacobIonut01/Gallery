@@ -8,6 +8,7 @@ package com.dot.gallery.feature_node.data.repository
 import android.annotation.SuppressLint
 import android.content.ContentResolver
 import android.content.ContentValues
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -42,7 +43,7 @@ import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.map
 
 class MediaRepositoryImpl(
-    private val contentResolver: ContentResolver,
+    private val context: Context,
     private val database: InternalDatabase
 ) : MediaRepository {
 
@@ -50,10 +51,10 @@ class MediaRepositoryImpl(
      * TODO: Add media reordering
      */
     override fun getMedia(): Flow<Resource<List<Media>>> =
-        contentResolver.retrieveMedia { it.getMedia(mediaOrder = DEFAULT_ORDER) }
+        context.retrieveMedia { it.getMedia(mediaOrder = DEFAULT_ORDER) }
 
     override fun getMediaByType(allowedMedia: AllowedMedia): Flow<Resource<List<Media>>> =
-        contentResolver.retrieveMedia {
+        context.retrieveMedia {
             val query = when (allowedMedia) {
                 PHOTOS -> Query.PhotoQuery()
                 VIDEOS -> Query.VideoQuery()
@@ -63,13 +64,13 @@ class MediaRepositoryImpl(
         }
 
     override fun getFavorites(mediaOrder: MediaOrder): Flow<Resource<List<Media>>> =
-        contentResolver.retrieveMedia { it.getMediaFavorite(mediaOrder = mediaOrder) }
+        context.retrieveMedia { it.getMediaFavorite(mediaOrder = mediaOrder) }
 
     override fun getTrashed(): Flow<Resource<List<Media>>> =
-        contentResolver.retrieveMedia { it.getMediaTrashed() }
+        context.retrieveMedia { it.getMediaTrashed() }
 
     override fun getAlbums(mediaOrder: MediaOrder): Flow<Resource<List<Album>>> =
-        contentResolver.retrieveAlbums {
+        context.retrieveAlbums {
             it.getAlbums(mediaOrder = mediaOrder).toMutableList().apply {
                 replaceAll { album ->
                     album.copy(isPinned = database.getPinnedDao().albumIsPinned(album.id))
@@ -97,11 +98,11 @@ class MediaRepositoryImpl(
                 )
             }
         )
-        return contentResolver.findMedia(query)
+        return context.contentResolver.findMedia(query)
     }
 
     override fun getMediaByAlbumId(albumId: Long): Flow<Resource<List<Media>>> =
-        contentResolver.retrieveMedia {
+        context.retrieveMedia {
             val query = Query.MediaQuery().copy(
                 bundle = Bundle().apply {
                     putString(
@@ -122,7 +123,7 @@ class MediaRepositoryImpl(
         albumId: Long,
         allowedMedia: AllowedMedia
     ): Flow<Resource<List<Media>>> =
-        contentResolver.retrieveMedia {
+        context.retrieveMedia {
             val query = Query.MediaQuery().copy(
                 bundle = Bundle().apply {
                     val mimeType = when (allowedMedia) {
@@ -145,7 +146,7 @@ class MediaRepositoryImpl(
         }
 
     override fun getAlbumsWithType(allowedMedia: AllowedMedia): Flow<Resource<List<Album>>> =
-        contentResolver.retrieveAlbums {
+        context.retrieveAlbums {
             val query = Query.AlbumQuery().copy(
                 bundle = Bundle().apply {
                     val mimeType = when (allowedMedia) {
@@ -170,7 +171,7 @@ class MediaRepositoryImpl(
         uriAsString: String,
         isSecure: Boolean
     ): Flow<Resource<List<Media>>> =
-        contentResolver.retrieveMediaAsResource {
+        context.retrieveMediaAsResource {
             val media = it.getMediaByUri(Uri.parse(uriAsString))
             /** return@retrieveMediaAsResource */
             if (media == null) {
@@ -195,7 +196,7 @@ class MediaRepositoryImpl(
         }
 
     override fun getMediaListByUris(listOfUris: List<Uri>, reviewMode: Boolean): Flow<Resource<List<Media>>> =
-        contentResolver.retrieveMediaAsResource {
+        context.retrieveMediaAsResource {
             var mediaList = it.getMediaListByUris(listOfUris)
             if (reviewMode) {
                 val query = Query.MediaQuery().copy(
@@ -225,7 +226,7 @@ class MediaRepositoryImpl(
         favorite: Boolean
     ) {
         val intentSender = MediaStore.createFavoriteRequest(
-            contentResolver,
+            context.contentResolver,
             mediaList.map { it.uri },
             favorite
         ).intentSender
@@ -241,7 +242,7 @@ class MediaRepositoryImpl(
         trash: Boolean
     ) {
         val intentSender = MediaStore.createTrashRequest(
-            contentResolver,
+            context.contentResolver,
             mediaList.map { it.uri },
             trash
         ).intentSender
@@ -256,7 +257,7 @@ class MediaRepositoryImpl(
         mediaList: List<Media>
     ) {
         val intentSender =
-            MediaStore.createDeleteRequest(contentResolver, mediaList.map { it.uri }).intentSender
+            MediaStore.createDeleteRequest(context.contentResolver, mediaList.map { it.uri }).intentSender
         val senderRequest: IntentSenderRequest = IntentSenderRequest.Builder(intentSender)
             .setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION, 0)
             .build()
@@ -266,7 +267,7 @@ class MediaRepositoryImpl(
     override suspend fun renameMedia(
         media: Media,
         newName: String
-    ): Boolean = contentResolver.updateMedia(
+    ): Boolean = context.contentResolver.updateMedia(
         media = media,
         contentValues = displayName(newName)
     )
@@ -274,7 +275,7 @@ class MediaRepositoryImpl(
     override suspend fun moveMedia(
         media: Media,
         newPath: String
-    ): Boolean = contentResolver.updateMedia(
+    ): Boolean = context.contentResolver.updateMedia(
         media = media,
         contentValues = relativePath(newPath)
     )
@@ -282,7 +283,7 @@ class MediaRepositoryImpl(
     override suspend fun updateMediaExif(
         media: Media,
         exifAttributes: ExifAttributes
-    ): Boolean = contentResolver.updateMediaExif(
+    ): Boolean = context.contentResolver.updateMediaExif(
         media = media,
         exifAttributes = exifAttributes
     )
@@ -303,28 +304,28 @@ class MediaRepositoryImpl(
             put(MediaStore.MediaColumns.RELATIVE_PATH, newPath)
         }
 
-        private fun ContentResolver.retrieveMediaAsResource(dataBody: suspend (ContentResolver) -> Resource<List<Media>>) =
+        private fun Context.retrieveMediaAsResource(dataBody: suspend (ContentResolver) -> Resource<List<Media>>) =
             contentFlowObserver(URIs).map {
                 try {
-                    dataBody.invoke(this)
+                    dataBody.invoke(contentResolver)
                 } catch (e: Exception) {
                     Resource.Error(message = e.localizedMessage ?: "An error occurred")
                 }
             }.conflate()
 
-        private fun ContentResolver.retrieveMedia(dataBody: suspend (ContentResolver) -> List<Media>) =
+        private fun Context.retrieveMedia(dataBody: suspend (ContentResolver) -> List<Media>) =
             contentFlowObserver(URIs).map {
                 try {
-                    Resource.Success(data = dataBody.invoke(this))
+                    Resource.Success(data = dataBody.invoke(contentResolver))
                 } catch (e: Exception) {
                     Resource.Error(message = e.localizedMessage ?: "An error occurred")
                 }
             }.conflate()
 
-        private fun ContentResolver.retrieveAlbums(dataBody: suspend (ContentResolver) -> List<Album>) =
+        private fun Context.retrieveAlbums(dataBody: suspend (ContentResolver) -> List<Album>) =
             contentFlowObserver(URIs).map {
                 try {
-                    Resource.Success(data = dataBody.invoke(this))
+                    Resource.Success(data = dataBody.invoke(contentResolver))
                 } catch (e: Exception) {
                     Resource.Error(message = e.localizedMessage ?: "An error occurred")
                 }

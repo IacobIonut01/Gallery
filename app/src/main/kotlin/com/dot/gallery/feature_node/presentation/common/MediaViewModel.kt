@@ -41,15 +41,7 @@ open class MediaViewModel @Inject constructor(
     val handler = mediaUseCases.mediaHandleUseCase
 
     var albumId: Long = -1L
-        set(value) {
-            getMedia(albumId = value)
-            field = value
-        }
     var target: String? = null
-        set(value) {
-            getMedia(target = value)
-            field = value
-        }
 
     var groupByMonth: Boolean = false
 
@@ -100,6 +92,7 @@ open class MediaViewModel @Inject constructor(
                 if (data.isEmpty()) {
                     return@collectLatest _mediaState.emit(MediaState(isLoading = false))
                 }
+                if (data == _mediaState.value.media) return@collectLatest
                 return@collectLatest _mediaState.collectMedia(
                     data = data,
                     error = error,
