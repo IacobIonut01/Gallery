@@ -17,6 +17,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import com.dot.gallery.R
 import com.dot.gallery.core.Position
+import com.dot.gallery.core.Settings.Album.rememberHideTimelineOnAlbum
 import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
 import com.dot.gallery.core.Settings.Misc.rememberForceTheme
 import com.dot.gallery.core.Settings.Misc.rememberIsAmoledMode
@@ -139,6 +140,17 @@ class SettingsViewModel @Inject constructor() : ViewModel() {
                 summary = context.getString(R.string.old_navbar_summary),
                 isChecked = showOldNavbar,
                 onCheck = { showOldNavbar = it },
+                screenPosition = Position.Middle
+            )
+        }
+
+        var hideTimelineOnAlbum by rememberHideTimelineOnAlbum()
+        val hideTimelineOnAlbumPref = remember(hideTimelineOnAlbum) {
+            SwitchPreference(
+                title = context.getString(R.string.hide_timeline_for_albums),
+                summary = context.getString(R.string.hide_timeline_for_album_summary),
+                isChecked = hideTimelineOnAlbum,
+                onCheck = { hideTimelineOnAlbum = it },
                 screenPosition = Position.Bottom
             )
         }
@@ -158,6 +170,7 @@ class SettingsViewModel @Inject constructor() : ViewModel() {
                 add(groupByMonthPref)
                 add(allowBlurPref)
                 add(showOldNavbarPref)
+                add(hideTimelineOnAlbumPref)
                 /** ********************* **/
                 add(Header(title = context.getString(R.string.settings_general)))
                 /** General Section Start **/

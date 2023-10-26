@@ -37,6 +37,8 @@ fun TimelineScreen(
     selectionState: MutableState<Boolean>,
     selectedMedia: SnapshotStateList<Media>,
     allowNavBar: Boolean = true,
+    allowHeaders: Boolean = true,
+    enableStickyHeaders: Boolean = true,
     toggleSelection: (Int) -> Unit,
     navigate: (route: String) -> Unit,
     navigateUp: () -> Unit,
@@ -59,6 +61,8 @@ fun TimelineScreen(
         selectionState = selectionState,
         selectedMedia = selectedMedia,
         toggleSelection = toggleSelection,
+        allowHeaders = allowHeaders,
+        enableStickyHeaders = enableStickyHeaders,
         showMonthlyHeader = true,
         allowNavBar = allowNavBar,
         navActionsContent = { expandedDropDown: MutableState<Boolean>, _ ->

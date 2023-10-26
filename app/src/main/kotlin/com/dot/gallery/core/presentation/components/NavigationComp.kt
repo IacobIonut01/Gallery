@@ -30,6 +30,7 @@ import com.dot.gallery.core.Constants.Animation.navigateInAnimation
 import com.dot.gallery.core.Constants.Animation.navigateUpAnimation
 import com.dot.gallery.core.Constants.Target.TARGET_FAVORITES
 import com.dot.gallery.core.Constants.Target.TARGET_TRASH
+import com.dot.gallery.core.Settings.Album.rememberHideTimelineOnAlbum
 import com.dot.gallery.core.Settings.Misc.rememberTimelineGroupByMonth
 import com.dot.gallery.core.presentation.components.util.permissionGranted
 import com.dot.gallery.feature_node.presentation.albums.AlbumsScreen
@@ -45,7 +46,6 @@ import com.dot.gallery.feature_node.presentation.setup.SetupScreen
 import com.dot.gallery.feature_node.presentation.timeline.TimelineScreen
 import com.dot.gallery.feature_node.presentation.trashed.TrashedGridScreen
 import com.dot.gallery.feature_node.presentation.util.Screen
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
 
 @Composable
 fun NavigationComp(
@@ -213,6 +213,7 @@ fun NavigationComp(
                 .apply { albumId = argumentAlbumId }
                 .apply { groupByMonth = groupTimelineByMonth }
             viewModel.attachToLifecycle()
+            val hideTimeline by rememberHideTimelineOnAlbum()
             TimelineScreen(
                 paddingValues = paddingValues,
                 albumId = argumentAlbumId,
@@ -221,6 +222,8 @@ fun NavigationComp(
                 mediaState = viewModel.mediaState,
                 selectionState = viewModel.multiSelectState,
                 selectedMedia = viewModel.selectedPhotoState,
+                allowHeaders = !hideTimeline,
+                enableStickyHeaders = !hideTimeline,
                 allowNavBar = false,
                 toggleSelection = viewModel::toggleSelection,
                 navigate = navPipe::navigate,

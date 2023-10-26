@@ -41,6 +41,12 @@ object Settings {
         @Composable
         fun rememberAlbumSize() =
             rememberPreference(key = ALBUM_SIZE, defaultValue = Dimens.Album.size.value)
+
+        private val HIDE_TIMELINE_ON_ALBUM = booleanPreferencesKey("hide_timeline_on_album")
+
+        @Composable
+        fun rememberHideTimelineOnAlbum() =
+            rememberPreference(key = HIDE_TIMELINE_ON_ALBUM, defaultValue = false)
     }
 
     object Glide {
