@@ -3,7 +3,6 @@ package com.dot.gallery.feature_node.presentation.search.components
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.History
@@ -18,9 +17,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun LazyItemScope.HistoryItem(
+fun HistoryItem(
     historyQuery: Pair<String, String>,
     search: (String) -> Unit,
     onDelete: ((String) -> Unit)? = null
@@ -63,7 +61,6 @@ fun LazyItemScope.HistoryItem(
             containerColor = Color.Transparent
         ),
         modifier = Modifier
-            .animateItemPlacement()
             .clickable { search(historyQuery.second) }
     )
 }
