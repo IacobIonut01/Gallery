@@ -145,6 +145,8 @@
     <string name="fancy_blur_summary">Размытие фона в режиме просмотра мультимедиа</string>
     <string name="old_navbar">Использовать Material Navigation</string>
     <string name="old_navbar_summary">Показывать старый пользовательский интерфейс панели навигации (вертикальная панель для больших экранов)</string>
+    <string name="hide_timeline_for_albums">Hide timeline for albums</string>
+    <string name="hide_timeline_for_album_summary">Hides date headers when opening an album</string>
     <plurals name="item_count">
         <item quantity="one">%s пункт</item>
         <item quantity="few">%s пунктов</item>
