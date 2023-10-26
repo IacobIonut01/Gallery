@@ -145,6 +145,8 @@
     <string name="fancy_blur_summary">Hintergrund in der Medienansicht verwischen</string>
     <string name="old_navbar">Material Navigation verwenden</string>
     <string name="old_navbar_summary">Die alte Navigationsleiste UI anzeigen (mit Rails für größere Bildschirme)</string>
+    <string name="hide_timeline_for_albums">Hide timeline for albums</string>
+    <string name="hide_timeline_for_album_summary">Hides date headers when opening an album</string>
     <plurals name="item_count">
         <item quantity="one">%s Datei</item>
         <item quantity="other">%s Dateien</item>
