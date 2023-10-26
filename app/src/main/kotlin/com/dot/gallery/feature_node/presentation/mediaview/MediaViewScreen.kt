@@ -11,13 +11,17 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerDefaults
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -29,9 +33,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.core.Constants
@@ -53,6 +61,7 @@ import com.dot.gallery.feature_node.presentation.util.getDate
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.rememberWindowInsetsController
 import com.dot.gallery.feature_node.presentation.util.toggleSystemBars
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
@@ -159,20 +168,80 @@ fun MediaViewScreen(
                     windowInsetsController.toggleSystemBars(showUI.value)
                 }
             ) { player, isPlaying, currentTime, totalTime, buffer ->
-                AnimatedVisibility(
-                    visible = showUI.value,
-                    enter = enterAnimation(Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION),
-                    exit = exitAnimation(Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION),
+                Box(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    VideoPlayerController(
-                        paddingValues = paddingValues,
-                        player = player,
-                        isPlaying = isPlaying,
-                        currentTime = currentTime,
-                        totalTime = totalTime,
-                        buffer = buffer,
-                        toggleRotate = toggleRotate
+                    AnimatedVisibility(
+                        visible = showUI.value,
+                        enter = enterAnimation(Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION),
+                        exit = exitAnimation(Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION),
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        VideoPlayerController(
+                            paddingValues = paddingValues,
+                            player = player,
+                            isPlaying = isPlaying,
+                            currentTime = currentTime,
+                            totalTime = totalTime,
+                            buffer = buffer,
+                            toggleRotate = toggleRotate
+                        )
+                    }
+
+                    val displayMetrics = LocalContext.current.resources.displayMetrics
+
+                    //Width And Height Of Screen
+                    val width = displayMetrics.widthPixels
+                    Spacer(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .graphicsLayer {
+                                translationX = width / 1.5f
+                            }
+                            .align(Alignment.TopEnd)
+                            .clip(CircleShape)
+                            .combinedClickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                onDoubleClick = {
+                                    scope.launch {
+                                        currentTime.value += 10 * 1000
+                                        player.seekTo(currentTime.value)
+                                        delay(100)
+                                        player.play()
+                                    }
+                                },
+                                onClick = {
+                                    showUI.value = !showUI.value
+                                    windowInsetsController.toggleSystemBars(showUI.value)
+                                }
+                            )
+                    )
+
+                    Spacer(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .graphicsLayer {
+                                translationX = -width / 1.5f
+                            }
+                            .align(Alignment.TopStart)
+                            .clip(CircleShape)
+                            .combinedClickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                onDoubleClick = {
+                                    scope.launch {
+                                        currentTime.value -= 10 * 1000
+                                        player.seekTo(currentTime.value)
+                                        delay(100)
+                                        player.play()
+                                    }
+                                },
+                                onClick = {
+                                    showUI.value = !showUI.value
+                                    windowInsetsController.toggleSystemBars(showUI.value)
+                                }
+                            )
                     )
                 }
             }
