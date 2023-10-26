@@ -145,6 +145,8 @@
     <string name="fancy_blur_summary">Blur background in Media View</string>
     <string name="old_navbar">Use Material Navigation</string>
     <string name="old_navbar_summary">Show the old navigation bar UI (with rails for bigger screens)</string>
+    <string name="hide_timeline_for_albums">Hide timeline for albums</string>
+    <string name="hide_timeline_for_album_summary">Hides date headers when opening an album</string>
     <plurals name="item_count">
         <item quantity="one">%s položka</item>
         <item quantity="few">%s položky</item>
