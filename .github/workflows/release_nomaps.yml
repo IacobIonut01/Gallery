@@ -12,9 +12,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - name: Strip internet permission
+      run: chmod +x ./strip_permission.sh && ./strip_permission.sh
     - uses: actions/setup-java@v3
       with:
         distribution: 'adopt'
+        cache: 'gradle'
         java-version: 17
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
