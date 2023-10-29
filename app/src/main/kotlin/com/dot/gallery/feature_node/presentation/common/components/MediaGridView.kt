@@ -10,6 +10,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -116,126 +117,137 @@ fun MediaGridView(
         LaunchedEffect(gridState.isScrollInProgress) {
             isScrolling.value = gridState.isScrollInProgress
         }
-        LazyVerticalGrid(
-            state = gridState,
-            modifier = Modifier.fillMaxSize(),
-            columns = GridCells.Adaptive(Dimens.Photo()),
-            contentPadding = paddingValues,
-            horizontalArrangement = Arrangement.spacedBy(1.dp),
-            verticalArrangement = Arrangement.spacedBy(1.dp),
-        ) {
-            if (aboveGridContent != null) {
-                item(
-                    span = { GridItemSpan(maxLineSpan) },
-                    key = "aboveGrid"
-                ) {
-                    aboveGridContent.invoke()
+        Box {
+            LazyVerticalGrid(
+                state = gridState,
+                modifier = Modifier.fillMaxSize(),
+                columns = GridCells.Adaptive(Dimens.Photo()),
+                contentPadding = paddingValues,
+                horizontalArrangement = Arrangement.spacedBy(1.dp),
+                verticalArrangement = Arrangement.spacedBy(1.dp),
+            ) {
+                if (aboveGridContent != null) {
+                    item(
+                        span = { GridItemSpan(maxLineSpan) },
+                        key = "aboveGrid"
+                    ) {
+                        aboveGridContent.invoke()
+                    }
+                }
+
+                if (allowHeaders) {
+                    items(
+                        items = mappedData,
+                        key = { if (it is MediaItem.MediaViewItem) it.media.id else it.key },
+                        contentType = { it.key.startsWith("media_") },
+                        span = { item ->
+                            GridItemSpan(if (item.key.isHeaderKey) maxLineSpan else 1)
+                        }
+                    ) { item ->
+                        when (item) {
+                            is MediaItem.Header -> {
+                                val isChecked = rememberSaveable { mutableStateOf(false) }
+                                if (allowSelection) {
+                                    LaunchedEffect(selectionState.value) {
+                                        // Uncheck if selectionState is set to false
+                                        isChecked.value = isChecked.value && selectionState.value
+                                    }
+                                    LaunchedEffect(selectedMedia.size) {
+                                        // Partial check of media items should not check the header
+                                        isChecked.value = selectedMedia.containsAll(item.data)
+                                    }
+                                }
+                                val title = item.text
+                                    .replace("Today", stringToday)
+                                    .replace("Yesterday", stringYesterday)
+
+                                val view = LocalView.current
+                                StickyHeader(
+                                    date = title,
+                                    showAsBig = item.key.isBigHeaderKey,
+                                    isCheckVisible = selectionState,
+                                    isChecked = isChecked
+                                ) {
+                                    if (allowSelection) {
+                                        view.vibrate()
+                                        scope.launch {
+                                            isChecked.value = !isChecked.value
+                                            if (isChecked.value) {
+                                                val toAdd = item.data.toMutableList().apply {
+                                                    // Avoid media from being added twice to selection
+                                                    removeIf { selectedMedia.contains(it) }
+                                                }
+                                                selectedMedia.addAll(toAdd)
+                                            } else selectedMedia.removeAll(item.data)
+                                            selectionState.update(selectedMedia.isNotEmpty())
+                                        }
+                                    }
+                                }
+                            }
+
+                            is MediaItem.MediaViewItem -> {
+                                val mediaIndex =
+                                    mediaState.media.indexOf(item.media).coerceAtLeast(0)
+                                val (media, preloadRequestBuilder) = preloadingData[mediaIndex]
+                                val view = LocalView.current
+                                MediaComponent(
+                                    media = media,
+                                    selectionState = selectionState,
+                                    selectedMedia = selectedMedia,
+                                    preloadRequestBuilder = preloadRequestBuilder,
+                                    onItemLongClick = {
+                                        if (allowSelection) {
+                                            view.vibrate()
+                                            toggleSelection(mediaState.media.indexOf(it))
+                                        }
+                                    },
+                                    onItemClick = {
+                                        if (selectionState.value && allowSelection) {
+                                            view.vibrate()
+                                            toggleSelection(mediaState.media.indexOf(it))
+                                        } else onMediaClick(it)
+                                    }
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    items(
+                        items = mediaState.media,
+                        key = { it.toString() },
+                        contentType = { it.mimeType }
+                    ) { origMedia ->
+                        val mediaIndex = mediaState.media.indexOf(origMedia).coerceAtLeast(0)
+                        val (media, preloadRequestBuilder) = preloadingData[mediaIndex]
+                        val view = LocalView.current
+                        MediaComponent(
+                            media = media,
+                            selectionState = selectionState,
+                            selectedMedia = selectedMedia,
+                            preloadRequestBuilder = preloadRequestBuilder,
+                            onItemLongClick = {
+                                if (allowSelection) {
+                                    view.vibrate()
+                                    toggleSelection(mediaState.media.indexOf(it))
+                                }
+                            },
+                            onItemClick = {
+                                if (selectionState.value && allowSelection) {
+                                    view.vibrate()
+                                    toggleSelection(mediaState.media.indexOf(it))
+                                } else onMediaClick(it)
+                            }
+                        )
+                    }
                 }
             }
 
             if (allowHeaders) {
-                items(
-                    items = mappedData,
-                    key = { if (it is MediaItem.MediaViewItem) it.media.id else it.key },
-                    contentType = { it.key.startsWith("media_") },
-                    span = { item ->
-                        GridItemSpan(if (item.key.isHeaderKey) maxLineSpan else 1)
-                    }
-                ) { item ->
-                    when (item) {
-                        is MediaItem.Header -> {
-                            val isChecked = rememberSaveable { mutableStateOf(false) }
-                            if (allowSelection) {
-                                LaunchedEffect(selectionState.value) {
-                                    // Uncheck if selectionState is set to false
-                                    isChecked.value = isChecked.value && selectionState.value
-                                }
-                                LaunchedEffect(selectedMedia.size) {
-                                    // Partial check of media items should not check the header
-                                    isChecked.value = selectedMedia.containsAll(item.data)
-                                }
-                            }
-                            val title = item.text
-                                .replace("Today", stringToday)
-                                .replace("Yesterday", stringYesterday)
-
-                            val view = LocalView.current
-                            StickyHeader(
-                                date = title,
-                                showAsBig = item.key.isBigHeaderKey,
-                                isCheckVisible = selectionState,
-                                isChecked = isChecked
-                            ) {
-                                if (allowSelection) {
-                                    view.vibrate()
-                                    scope.launch {
-                                        isChecked.value = !isChecked.value
-                                        if (isChecked.value) {
-                                            val toAdd = item.data.toMutableList().apply {
-                                                // Avoid media from being added twice to selection
-                                                removeIf { selectedMedia.contains(it) }
-                                            }
-                                            selectedMedia.addAll(toAdd)
-                                        } else selectedMedia.removeAll(item.data)
-                                        selectionState.update(selectedMedia.isNotEmpty())
-                                    }
-                                }
-                            }
-                        }
-
-                        is MediaItem.MediaViewItem -> {
-                            val mediaIndex = mediaState.media.indexOf(item.media).coerceAtLeast(0)
-                            val (media, preloadRequestBuilder) = preloadingData[mediaIndex]
-                            val view = LocalView.current
-                            MediaComponent(
-                                media = media,
-                                selectionState = selectionState,
-                                selectedMedia = selectedMedia,
-                                preloadRequestBuilder = preloadRequestBuilder,
-                                onItemLongClick = {
-                                    if (allowSelection) {
-                                        view.vibrate()
-                                        toggleSelection(mediaState.media.indexOf(it))
-                                    }
-                                },
-                                onItemClick = {
-                                    if (selectionState.value && allowSelection) {
-                                        view.vibrate()
-                                        toggleSelection(mediaState.media.indexOf(it))
-                                    } else onMediaClick(it)
-                                }
-                            )
-                        }
-                    }
-                }
-            } else {
-                items(
-                    items = mediaState.media,
-                    key = { it.toString() },
-                    contentType = { it.mimeType }
-                ) { origMedia ->
-                    val mediaIndex = mediaState.media.indexOf(origMedia).coerceAtLeast(0)
-                    val (media, preloadRequestBuilder) = preloadingData[mediaIndex]
-                    val view = LocalView.current
-                    MediaComponent(
-                        media = media,
-                        selectionState = selectionState,
-                        selectedMedia = selectedMedia,
-                        preloadRequestBuilder = preloadRequestBuilder,
-                        onItemLongClick = {
-                            if (allowSelection) {
-                                view.vibrate()
-                                toggleSelection(mediaState.media.indexOf(it))
-                            }
-                        },
-                        onItemClick = {
-                            if (selectionState.value && allowSelection) {
-                                view.vibrate()
-                                toggleSelection(mediaState.media.indexOf(it))
-                            } else onMediaClick(it)
-                        }
-                    )
-                }
+                TimelineScroller(
+                    gridState = gridState,
+                    mappedData = mappedData,
+                    paddingValues = paddingValues
+                )
             }
         }
     }
@@ -246,19 +258,34 @@ fun MediaGridView(
          */
         val stickyHeaderLastItem = remember { mutableStateOf<String?>(null) }
 
-        val stickyHeaderItem by remember(mediaState.media) {
+        val headers = remember(mappedData) {
+            mappedData.filterIsInstance<MediaItem.Header>()
+        }
+
+        val stickyHeaderItem by remember(mappedData) {
             derivedStateOf {
-                var firstIndex = gridState.layoutInfo.visibleItemsInfo.firstOrNull()?.index
-                var item = firstIndex?.let(mappedData::getOrNull)
-                if (item != null && item.key.contains("big")) {
-                    firstIndex = firstIndex!! + 1
-                    item = firstIndex.let(mappedData::getOrNull)
+                val firstItem = gridState.layoutInfo.visibleItemsInfo.firstOrNull()
+                var firstHeaderIndex =
+                    gridState.layoutInfo.visibleItemsInfo.firstOrNull { it.key.isHeaderKey }?.index
+                var item = firstHeaderIndex?.let(mappedData::getOrNull)
+                if (item != null && item.key.isBigHeaderKey) {
+                    firstHeaderIndex = firstHeaderIndex!! + 1
+                    item = firstHeaderIndex.let(mappedData::getOrNull)
                 }
                 stickyHeaderLastItem.apply {
                     if (item != null && item is MediaItem.Header) {
-                        value = item.text
+                        val newItem = item.text
                             .replace("Today", stringToday)
                             .replace("Yesterday", stringYesterday)
+                        val newIndex = (headers.indexOf(item) - 1).coerceAtLeast(0)
+                        val previousHeader = headers[newIndex].text
+                            .replace("Today", stringToday)
+                            .replace("Yesterday", stringYesterday)
+                        value = if (firstItem != null && !firstItem.key.isHeaderKey) {
+                            previousHeader
+                        } else {
+                            newItem
+                        }
                     }
                 }.value
             }

@@ -99,7 +99,8 @@ suspend fun MutableStateFlow<MediaState>.collectMedia(
             if (groupByMonth) {
                 mappedData!!.add(dateHeader)
                 mappedData!!.addAll(groupedMedia)
-                mappedDataWithMonthly!!.addAll(mappedData!!)
+                mappedDataWithMonthly!!.add(dateHeader)
+                mappedDataWithMonthly!!.addAll(groupedMedia)
             } else {
                 val month = getMonth(date)
                 if (month.isNotEmpty() && !monthHeaderList!!.contains(month)) {

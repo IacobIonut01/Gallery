@@ -56,6 +56,19 @@ fun getMonth(date: String): String {
     }
 }
 
+fun getYear(date: String): String {
+    return try {
+        val dateFormatExtended = SimpleDateFormat(Constants.EXTENDED_DATE_FORMAT, Locale.US).parse(date)
+        val cal = Calendar.getInstance(Locale.US).apply { timeInMillis = dateFormatExtended!!.time }
+        val year = cal.get(Calendar.YEAR)
+        year.toString()
+    } catch (e: ParseException) {
+        val cal = Calendar.getInstance(Locale.US).apply { timeInMillis = System.currentTimeMillis() }
+        cal.getDisplayName(Calendar.MONTH, Calendar.LONG_FORMAT, Locale.US)!!
+        cal.get(Calendar.YEAR).toString()
+    }
+}
+
 fun Long.getDate(
     format: CharSequence = Constants.DEFAULT_DATE_FORMAT,
 ): String {
