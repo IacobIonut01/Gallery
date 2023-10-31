@@ -110,7 +110,6 @@ fun NavigationComp(
             viewModel.attachToLifecycle()
             TimelineScreen(
                 paddingValues = paddingValues,
-                retrieveMedia = viewModel::launchInPhotosScreen,
                 handler = viewModel.handler,
                 mediaState = viewModel.mediaState,
                 selectionState = viewModel.multiSelectState,
@@ -222,9 +221,9 @@ fun NavigationComp(
                 mediaState = viewModel.mediaState,
                 selectionState = viewModel.multiSelectState,
                 selectedMedia = viewModel.selectedPhotoState,
+                allowNavBar = false,
                 allowHeaders = !hideTimeline,
                 enableStickyHeaders = !hideTimeline,
-                allowNavBar = false,
                 toggleSelection = viewModel::toggleSelection,
                 navigate = navPipe::navigate,
                 navigateUp = navPipe::navigateUp,

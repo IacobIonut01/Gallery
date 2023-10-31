@@ -31,7 +31,6 @@ fun TimelineScreen(
     paddingValues: PaddingValues,
     albumId: Long = -1L,
     albumName: String = stringResource(R.string.app_name),
-    retrieveMedia: (() -> Unit)? = null,
     handler: MediaHandleUseCase,
     mediaState: StateFlow<MediaState>,
     selectionState: MutableState<Boolean>,

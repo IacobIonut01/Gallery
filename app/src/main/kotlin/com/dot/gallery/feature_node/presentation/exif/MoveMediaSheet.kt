@@ -172,10 +172,12 @@ fun MoveMediaSheet(
                     exit = exitAnimation
                 ) {
                     LinearProgressIndicator(
+                        progress = {
+                            progress
+                        },
                         modifier = Modifier
                             .padding(16.dp)
                             .fillMaxWidth(),
-                        progress = progress
                     )
                 }
             }
