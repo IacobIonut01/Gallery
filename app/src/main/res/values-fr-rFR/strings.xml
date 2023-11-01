@@ -129,8 +129,8 @@
     <string name="get_started">Get Started</string>
     <string name="welcome">Welcome</string>
     <string name="setup_summary">In order to access your media, it is required to grant the following permissions:</string>
-    <string name="required">Required</string>
-    <string name="optional">Optional</string>
+    <string name="required">Requis</string>
+    <string name="optional">Optionnel</string>
     <string name="permission_manage_media_title">• Manage Media</string>
     <string name="permission_manage_media_summary">"    • Automatically grants system confirmation dialogs when you request several changes to your media (Toggle Favorite, Manage Trash, Edit metadata etc)"</string>
     <string name="read_media_images">Read Media Images</string>
