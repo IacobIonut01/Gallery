@@ -1,5 +1,5 @@
 [versions]
-agp = "8.2.0-rc02"
+agp = "8.2.0-rc03"
 appcompat = "1.6.1"
 coilVersion = "2.5.0"
 fuzzywuzzy = "1.4.0"
