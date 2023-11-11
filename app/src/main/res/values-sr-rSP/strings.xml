@@ -85,7 +85,7 @@
     <string name="video">Видео снимак</string>
     <string name="close">Затвори</string>
     <string name="manage_media_title">Дозволите апликацији „Галерија” да управља вашим медијима</string>
-    <string name="manage_media_summary">Ово подешавање само прескаче све додатне дијалоге за потврду док изводи различите радње, као што је означавање као омиљено.</string>
+    <string name="manage_media_summary">Ово подешавање прескаче све додатне дијалоге за потврду док изводи различите радње, као што је означавање као омиљено.</string>
     <string name="skip">Прескочи</string>
     <string name="allow">Дозволи</string>
     <string name="all">Све</string>
@@ -132,7 +132,7 @@
     <string name="required">Неопходно</string>
     <string name="optional">Опционално</string>
     <string name="permission_manage_media_title">• Управљање медијима</string>
-    <string name="permission_manage_media_summary">"    • Аутоматски даје системске дијалоге за потврду, када затражите неколико промена на вашем медију (укључивање омиљеих, управљање смећем, измена метаподатака итд.)"</string>
+    <string name="permission_manage_media_summary">"    • Аутоматски даје системске дијалоге за потврду, када затражите неколико промена на вашем медију (укључивање омиљених, управљање смећем, измена метаподатака итд.)"</string>
     <string name="read_media_images">Читање слика медија</string>
     <string name="read_media_images_summary">Дозвољава апликацији да приказује ваше слике</string>
     <string name="read_media_videos">Читање видео снимака медија</string>
