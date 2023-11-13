@@ -61,7 +61,7 @@
     <string name="donate_url">https://www.paypal.com/paypalme/iacobionut01</string>
     <string name="github_url">https://github.com/IacobIonut01/Gallery</string>
     <string name="use_as">Utiliser comme</string>
-    <string name="set_as">"Définir comme : "</string>
+    <string name="set_as">Définir comme : </string>
     <string name="action_cancel">Annuler</string>
     <string name="action_confirm">Confirmer</string>
     <string name="action_confirmed">Confirmé</string>
@@ -138,7 +138,7 @@
     <string name="read_media_videos">Lire les vidéos</string>
     <string name="read_media_videos_summary">Permet à l\'application de monter vos vidéos</string>
     <string name="access_media_location">Lire la localisation des médias</string>
-    <string name="access_media_location_summary"><![CDATA[Permet à l'application de lire les données de localisation de vos images et vidéos]]></string>
+    <string name="access_media_location_summary"><![CDATA[Permet à l\'application de lire les données de localisation de vos images et vidéos]]></string>
     <string name="internet">Internet</string>
     <string name="internet_summary"><![CDATA[Nécessaire pour afficher les aperçus de la localisation de vos images et vidéos]]></string>
     <string name="fancy_blur">Flou artistique</string>
