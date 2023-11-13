@@ -78,7 +78,7 @@ compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4
 # Dagger
 dagger-hilt = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
 dagger-hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
-androidx-hilt-compiler = { group = "androidx.hilt", name = "hilt-compiler", version = "1.0.0" }
+androidx-hilt-compiler = { group = "androidx.hilt", name = "hilt-compiler", version = "1.1.0" }
 androidx-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version = "1.1.0" }
 
 # Room
