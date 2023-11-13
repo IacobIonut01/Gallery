@@ -84,6 +84,8 @@ fun VideoPlayer(
 
                         player = exoPlayer
                         layoutParams = FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
+
+                        keepScreenOn = true
                     }
                 }
             )
