@@ -12,12 +12,12 @@
     <string name="filter_nameZA">名前順（ZからA）</string>
     <string name="filter_old">昔</string>
     <string name="selected_s">選択済み %s</string>
-    <string name="trash">トラッシュ</string>
-    <string name="pause_video">動画を一時停止する</string>
-    <string name="play_video">プレイ動画</string>
+    <string name="trash">ゴミ箱</string>
+    <string name="pause_video">動画を一時停止</string>
+    <string name="play_video">動画を再生</string>
     <string name="favorites">お気に入り</string>
-    <string name="no_media_title">ここは空いています</string>
-    <string name="no_media_cd">メディアは見つかりませんでした</string>
+    <string name="no_media_title">ここには何もありません</string>
+    <string name="no_media_cd">メディアが見つかりません</string>
     <string name="empty_trash_title">Squeaky Clean</string>
     <string name="empty_trash_cd">Trash is empty</string>
     <string name="error_title">Something went wrong :(</string>
