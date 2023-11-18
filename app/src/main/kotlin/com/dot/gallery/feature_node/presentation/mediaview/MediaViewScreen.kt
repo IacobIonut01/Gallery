@@ -171,23 +171,6 @@ fun MediaViewScreen(
                 Box(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    AnimatedVisibility(
-                        visible = showUI.value,
-                        enter = enterAnimation(Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION),
-                        exit = exitAnimation(Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION),
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        VideoPlayerController(
-                            paddingValues = paddingValues,
-                            player = player,
-                            isPlaying = isPlaying,
-                            currentTime = currentTime,
-                            totalTime = totalTime,
-                            buffer = buffer,
-                            toggleRotate = toggleRotate
-                        )
-                    }
-
                     val displayMetrics = LocalContext.current.resources.displayMetrics
 
                     //Width And Height Of Screen
@@ -243,6 +226,23 @@ fun MediaViewScreen(
                                 }
                             )
                     )
+
+                    AnimatedVisibility(
+                        visible = showUI.value,
+                        enter = enterAnimation(Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION),
+                        exit = exitAnimation(Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION),
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        VideoPlayerController(
+                            paddingValues = paddingValues,
+                            player = player,
+                            isPlaying = isPlaying,
+                            currentTime = currentTime,
+                            totalTime = totalTime,
+                            buffer = buffer,
+                            toggleRotate = toggleRotate
+                        )
+                    }
                 }
             }
         }
