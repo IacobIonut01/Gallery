@@ -15,15 +15,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
 import com.dot.gallery.core.MediaState
-import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
+import com.dot.gallery.feature_node.presentation.util.clear
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.rememberIsMediaManager
+import com.dot.gallery.feature_node.presentation.util.selectedMedia
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
@@ -31,7 +31,7 @@ import kotlinx.coroutines.launch
 fun TrashedNavActions(
     handler: MediaHandleUseCase,
     mediaState: StateFlow<MediaState>,
-    selectedMedia: SnapshotStateList<Media>,
+    selectedMedia: MutableState<Set<Long>>,
     selectionState: MutableState<Boolean>,
 ) {
     val state by mediaState.collectAsStateWithLifecycle()
@@ -55,6 +55,7 @@ fun TrashedNavActions(
         }
     )
     if (state.media.isNotEmpty()) {
+        val selectedMediaList = state.media.selectedMedia(selectedSet = selectedMedia)
         TextButton(
             onClick = {
                 scope.launch {
@@ -63,7 +64,7 @@ fun TrashedNavActions(
                     } else {
                         handler.trashMedia(
                             result,
-                            selectedMedia.ifEmpty { state.media },
+                            selectedMediaList.ifEmpty { state.media },
                             false
                         )
                     }
@@ -82,7 +83,7 @@ fun TrashedNavActions(
                         if (isMediaManager) {
                             deleteSheetState.show()
                         } else {
-                            handler.deleteMedia(result, selectedMedia)
+                           handler.deleteMedia(result, selectedMediaList)
                         }
                     }
                 }
@@ -113,14 +114,14 @@ fun TrashedNavActions(
     }
     TrashDialog(
         appBottomSheetState = deleteSheetState,
-        data = selectedMedia.ifEmpty { state.media },
+        data = state.media.filter { selectedMedia.value.contains(it.id) }.ifEmpty { state.media },
         action = TrashDialogAction.DELETE
     ) {
         handler.deleteMedia(result, it)
     }
     TrashDialog(
         appBottomSheetState = restoreSheetState,
-        data = selectedMedia.ifEmpty { state.media },
+        data = state.media.filter { selectedMedia.value.contains(it.id) }.ifEmpty { state.media },
         action = TrashDialogAction.RESTORE
     ) {
         handler.trashMedia(result, it, false)

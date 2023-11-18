@@ -12,18 +12,17 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Target.TARGET_TRASH
 import com.dot.gallery.core.MediaState
-import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.common.MediaScreen
 import com.dot.gallery.feature_node.presentation.trashed.components.AutoDeleteFooter
 import com.dot.gallery.feature_node.presentation.trashed.components.EmptyTrash
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashedNavActions
+import com.dot.gallery.feature_node.presentation.util.clear
 import kotlinx.coroutines.flow.StateFlow
 
 @Composable
@@ -33,7 +32,7 @@ fun TrashedGridScreen(
     handler: MediaHandleUseCase,
     mediaState: StateFlow<MediaState>,
     selectionState: MutableState<Boolean>,
-    selectedMedia: SnapshotStateList<Media>,
+    selectedMedia: MutableState<Set<Long>>,
     toggleSelection: (Int) -> Unit,
     navigate: (route: String) -> Unit,
     navigateUp: () -> Unit,
@@ -45,7 +44,7 @@ fun TrashedGridScreen(
     handler = handler,
     mediaState = mediaState,
     selectionState = selectionState,
-    selectedMedia = selectedMedia,
+    selectedIds = selectedMedia,
     toggleSelection = toggleSelection,
     allowHeaders = false,
     enableStickyHeaders = false,

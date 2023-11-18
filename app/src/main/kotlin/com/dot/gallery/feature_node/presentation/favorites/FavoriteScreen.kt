@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.dot.gallery.R
@@ -32,7 +31,7 @@ fun FavoriteScreen(
     handler: MediaHandleUseCase,
     mediaState: StateFlow<MediaState>,
     selectionState: MutableState<Boolean>,
-    selectedMedia: SnapshotStateList<Media>,
+    selectedMedia: MutableState<Set<Long>>,
     toggleFavorite: (ActivityResultLauncher<IntentSenderRequest>, List<Media>, Boolean) -> Unit,
     toggleSelection: (Int) -> Unit,
     navigate: (route: String) -> Unit,
@@ -45,7 +44,7 @@ fun FavoriteScreen(
     handler = handler,
     mediaState = mediaState,
     selectionState = selectionState,
-    selectedMedia = selectedMedia,
+    selectedIds = selectedMedia,
     toggleSelection = toggleSelection,
     navActionsContent = { _: MutableState<Boolean>,
                           result: ActivityResultLauncher<IntentSenderRequest> ->
@@ -57,7 +56,7 @@ fun FavoriteScreen(
     toggleNavbar = toggleNavbar
 ) { result ->
     if (result.resultCode == Activity.RESULT_OK) {
-        selectedMedia.clear()
+        selectedMedia.value = emptySet()
         selectionState.value = false
     }
 }

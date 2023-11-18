@@ -20,17 +20,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
 import com.dot.gallery.core.MediaState
-import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.common.components.OptionItem
 import com.dot.gallery.feature_node.presentation.common.components.OptionSheet
 import com.dot.gallery.feature_node.presentation.util.Screen
+import com.dot.gallery.feature_node.presentation.util.add
+import com.dot.gallery.feature_node.presentation.util.clear
+import com.dot.gallery.feature_node.presentation.util.mappedIds
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -41,7 +42,7 @@ fun TimelineNavActions(
     handler: MediaHandleUseCase,
     expandedDropDown: MutableState<Boolean>,
     mediaState: StateFlow<MediaState>,
-    selectedMedia: SnapshotStateList<Media>,
+    selectedMedia: MutableState<Set<Long>>,
     selectionState: MutableState<Boolean>,
     navigate: (route: String) -> Unit,
     navigateUp: () -> Unit
@@ -78,7 +79,7 @@ fun TimelineNavActions(
                 onClick = {
                     selectionState.value = !selectionState.value
                     if (selectionState.value)
-                        selectedMedia.addAll(state.media)
+                        selectedMedia.add(state.media.mappedIds)
                     else
                         selectedMedia.clear()
                     expandedDropDown.value = false

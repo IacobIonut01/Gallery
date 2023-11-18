@@ -9,7 +9,6 @@ import android.annotation.SuppressLint
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -18,8 +17,10 @@ import com.dot.gallery.core.Resource
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaUseCases
 import com.dot.gallery.feature_node.presentation.util.RepeatOnResume
+import com.dot.gallery.feature_node.presentation.util.add
 import com.dot.gallery.feature_node.presentation.util.collectMedia
 import com.dot.gallery.feature_node.presentation.util.mediaFlow
+import com.dot.gallery.feature_node.presentation.util.remove
 import com.dot.gallery.feature_node.presentation.util.update
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -34,10 +35,10 @@ open class MediaViewModel @Inject constructor(
     private val mediaUseCases: MediaUseCases
 ) : ViewModel() {
 
-    val multiSelectState = mutableStateOf(false)
+    val selectionState = mutableStateOf(false)
     private val _mediaState = MutableStateFlow(MediaState())
     val mediaState = _mediaState.asStateFlow()
-    val selectedPhotoState = mutableStateListOf<Media>()
+    val selectedMediaIdState = mutableStateOf<Set<Long>>(emptySet())
     val handler = mediaUseCases.mediaHandleUseCase
 
     var albumId: Long = -1L
@@ -73,13 +74,13 @@ open class MediaViewModel @Inject constructor(
     fun toggleSelection(index: Int) {
         viewModelScope.launch(Dispatchers.IO) {
             val item = mediaState.value.media[index]
-            val selectedPhoto = selectedPhotoState.find { it.id == item.id }
+            val selectedPhoto = selectedMediaIdState.value.find { it == item.id }
             if (selectedPhoto != null) {
-                selectedPhotoState.remove(selectedPhoto)
+                selectedMediaIdState.remove(selectedPhoto)
             } else {
-                selectedPhotoState.add(item)
+                selectedMediaIdState.add(item.id)
             }
-            multiSelectState.update(selectedPhotoState.isNotEmpty())
+            selectionState.update(selectedMediaIdState.value.isNotEmpty())
         }
     }
 

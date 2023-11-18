@@ -26,7 +26,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,14 +51,14 @@ fun MediaImage(
     media: Media,
     preloadRequestBuilder: RequestBuilder<Drawable>,
     selectionState: MutableState<Boolean>,
-    selectedMedia: SnapshotStateList<Media>,
+    selectedMedia: MutableState<Set<Long>>,
     isSelected: MutableState<Boolean>,
     modifier: Modifier = Modifier
 ) {
     if (!selectionState.value) {
         isSelected.value = false
     } else {
-        isSelected.value = selectedMedia.find { it.id == media.id } != null
+        isSelected.value = selectedMedia.value.find { it == media.id } != null
     }
     val selectedSize by animateDpAsState(
         if (isSelected.value) 12.dp else 0.dp, label = "selectedSize"

@@ -13,19 +13,19 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
 import com.dot.gallery.core.MediaState
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.presentation.util.selectedMedia
 import kotlinx.coroutines.flow.StateFlow
 
 @Composable
 fun FavoriteNavActions(
     toggleFavorite: (ActivityResultLauncher<IntentSenderRequest>, List<Media>, Boolean) -> Unit,
     mediaState: StateFlow<MediaState>,
-    selectedMedia: SnapshotStateList<Media>,
+    selectedIds: MutableState<Set<Long>>,
     selectionState: MutableState<Boolean>,
     result: ActivityResultLauncher<IntentSenderRequest>
 ) {
@@ -34,9 +34,10 @@ fun FavoriteNavActions(
     val title = if (selectionState.value) removeSelectedTitle else removeAllTitle
     val state by mediaState.collectAsStateWithLifecycle()
     if (state.media.isNotEmpty()) {
+        val selectedMediaList = state.media.selectedMedia(selectedIds)
         TextButton(
             onClick = {
-                toggleFavorite(result, selectedMedia.ifEmpty { state.media }, false)
+                toggleFavorite(result, selectedMediaList, false)
             }
         ) {
             Text(

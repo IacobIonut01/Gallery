@@ -9,6 +9,8 @@ import android.graphics.drawable.Drawable
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -31,20 +33,27 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.round
+import androidx.compose.ui.unit.toIntRect
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.integration.compose.rememberGlidePreloadingData
 import com.dot.gallery.R
@@ -57,9 +66,12 @@ import com.dot.gallery.feature_node.domain.model.MediaItem
 import com.dot.gallery.feature_node.domain.model.isBigHeaderKey
 import com.dot.gallery.feature_node.domain.model.isHeaderKey
 import com.dot.gallery.feature_node.domain.model.isIgnoredKey
+import com.dot.gallery.feature_node.presentation.util.clear
 import com.dot.gallery.feature_node.presentation.util.update
 import com.dot.gallery.feature_node.presentation.util.vibrate
 import com.dot.gallery.ui.theme.Dimens
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,8 +83,8 @@ fun MediaGridView(
     searchBarPaddingTop: Dp = 0.dp,
     showSearchBar: Boolean = false,
     allowSelection: Boolean = false,
-    selectionState: MutableState<Boolean> = mutableStateOf(false),
-    selectedMedia: SnapshotStateList<Media> = mutableStateListOf(),
+    selectionState: MutableState<Boolean> = rememberSaveable { mutableStateOf(false) },
+    selectedMedia: MutableState<Set<Long>> = rememberSaveable { mutableStateOf(emptySet()) },
     toggleSelection: (Int) -> Unit = {},
     allowHeaders: Boolean = true,
     enableStickyHeaders: Boolean = false,
@@ -117,10 +129,29 @@ fun MediaGridView(
         LaunchedEffect(gridState.isScrollInProgress) {
             isScrolling.value = gridState.isScrollInProgress
         }
+        val autoScrollSpeed = remember { mutableFloatStateOf(0f) }
+        LaunchedEffect(autoScrollSpeed.floatValue) {
+            if (autoScrollSpeed.floatValue != 0f) {
+                while (isActive) {
+                    gridState.scrollBy(autoScrollSpeed.floatValue)
+                    delay(10)
+                }
+            }
+        }
+        val scrollGestureActive = remember { mutableStateOf(false) }
         Box {
             LazyVerticalGrid(
                 state = gridState,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .photoGridDragHandler(
+                        lazyGridState = gridState,
+                        haptics = LocalHapticFeedback.current,
+                        selectedIds = selectedMedia,
+                        autoScrollSpeed = autoScrollSpeed,
+                        autoScrollThreshold = with(LocalDensity.current) { 40.dp.toPx() },
+                        scrollGestureActive = scrollGestureActive
+                    ),
                 columns = GridCells.Adaptive(Dimens.Photo()),
                 contentPadding = paddingValues,
                 horizontalArrangement = Arrangement.spacedBy(1.dp),
@@ -152,9 +183,11 @@ fun MediaGridView(
                                         // Uncheck if selectionState is set to false
                                         isChecked.value = isChecked.value && selectionState.value
                                     }
-                                    LaunchedEffect(selectedMedia.size) {
+                                    LaunchedEffect(selectedMedia.value.size) {
                                         // Partial check of media items should not check the header
-                                        isChecked.value = selectedMedia.containsAll(item.data)
+                                        isChecked.value =
+                                            selectedMedia.value.containsAll(item.data.map { it.id }
+                                                .toSet())
                                     }
                                 }
                                 val title = item.text
@@ -172,14 +205,14 @@ fun MediaGridView(
                                         view.vibrate()
                                         scope.launch {
                                             isChecked.value = !isChecked.value
+                                            val list = item.data.map { it.id }.toSet()
                                             if (isChecked.value) {
-                                                val toAdd = item.data.toMutableList().apply {
-                                                    // Avoid media from being added twice to selection
-                                                    removeIf { selectedMedia.contains(it) }
-                                                }
-                                                selectedMedia.addAll(toAdd)
-                                            } else selectedMedia.removeAll(item.data)
-                                            selectionState.update(selectedMedia.isNotEmpty())
+                                                selectedMedia.value = selectedMedia.value.plus(list)
+                                            } else {
+                                                selectedMedia.value =
+                                                    selectedMedia.value.minus(list)
+                                            }
+                                            selectionState.update(selectedMedia.value.isNotEmpty())
                                         }
                                     }
                                 }
@@ -195,6 +228,7 @@ fun MediaGridView(
                                     selectionState = selectionState,
                                     selectedMedia = selectedMedia,
                                     preloadRequestBuilder = preloadRequestBuilder,
+                                    scrollGestureActive = scrollGestureActive.value,
                                     onItemLongClick = {
                                         if (allowSelection) {
                                             view.vibrate()
@@ -333,4 +367,69 @@ fun MediaGridView(
     } else mediaGrid()
 
 
+}
+
+fun Modifier.photoGridDragHandler(
+    lazyGridState: LazyGridState,
+    haptics: HapticFeedback,
+    selectedIds: MutableState<Set<Long>>,
+    autoScrollSpeed: MutableState<Float>,
+    autoScrollThreshold: Float,
+    scrollGestureActive: MutableState<Boolean>
+) = pointerInput(Unit) {
+    fun LazyGridState.gridItemKeyAtPosition(hitPoint: Offset): Long? {
+        val key = layoutInfo.visibleItemsInfo.find { itemInfo ->
+            itemInfo.size.toIntRect().contains(hitPoint.round() - itemInfo.offset)
+        }?.key as? Long
+        return if (key?.isHeaderKey == false) key else null
+    }
+
+    var initialKey: Long? = null
+    var currentKey: Long? = null
+    detectDragGesturesAfterLongPress(
+        onDragStart = { offset ->
+            scrollGestureActive.value = true
+            lazyGridState.gridItemKeyAtPosition(offset)?.let { key ->
+                if (!selectedIds.value.contains(key)) {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    initialKey = key
+                    currentKey = key
+                    selectedIds.value += key
+                }
+            }
+        },
+        onDragCancel = {
+            scrollGestureActive.value = false
+            initialKey = null
+            autoScrollSpeed.value = 0f
+        },
+        onDragEnd = {
+            scrollGestureActive.value = false
+            initialKey = null
+            autoScrollSpeed.value = 0f
+        },
+        onDrag = { change, _ ->
+            if (initialKey != null) {
+                val distFromBottom =
+                    lazyGridState.layoutInfo.viewportSize.height - change.position.y
+                val distFromTop = change.position.y
+                autoScrollSpeed.value = when {
+                    distFromBottom < autoScrollThreshold -> autoScrollThreshold - distFromBottom
+                    distFromTop < autoScrollThreshold -> -(autoScrollThreshold - distFromTop)
+                    else -> 0f
+                }
+
+                lazyGridState.gridItemKeyAtPosition(change.position)?.let { key ->
+                    if (currentKey != key) {
+                        selectedIds.value = selectedIds.value
+                            .minus(initialKey!!..currentKey!!)
+                            .minus(currentKey!!..initialKey!!)
+                            .plus(initialKey!!..key)
+                            .plus(key..initialKey!!)
+                        currentKey = key
+                    }
+                }
+            }
+        }
+    )
 }

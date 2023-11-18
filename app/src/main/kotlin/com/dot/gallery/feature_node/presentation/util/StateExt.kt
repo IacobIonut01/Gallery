@@ -8,6 +8,8 @@ package com.dot.gallery.feature_node.presentation.util
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -149,3 +151,42 @@ private fun List<Media>.dateHeader(albumId: Long): String =
         val endDate: DateExt = first().timestamp.getDateExt()
         getDateHeader(startDate, endDate)
     } else ""
+
+val List<Media>.mappedIds: Set<Long> get() = map { it.id }.toSet()
+/*fun List<Media>.selectedMedia(selectedSet: MutableState<Set<Long>>): List<Media> {
+    return filter { selectedSet.value.contains(it.id) }
+}*/
+
+@Composable
+fun List<Media>.selectedMedia(selectedSet: MutableState<Set<Long>>) =
+    remember(this, selectedSet.value) { filter { selectedSet.value.contains(it.id) }.toMutableStateList() }
+
+val <T> MutableState<Set<T>>.size get() = value.size
+
+fun <T> MutableState<Set<T>>.clear() {
+    value = emptySet()
+}
+
+fun <T> MutableState<Set<T>>.add(item: T) {
+    value = value.plus(item)
+}
+
+fun <T> MutableState<Set<T>>.add(items: Array<out T>) {
+    value = value.plus(items)
+}
+
+fun <T> MutableState<Set<T>>.add(items: Collection<T>) {
+    value = value.plus(items.toSet())
+}
+
+fun <T> MutableState<Set<T>>.remove(item: T) {
+    value = value.minus(item)
+}
+
+fun <T> MutableState<Set<T>>.remove(items: Array<out T>) {
+    value = value.minus(items.toSet())
+}
+
+fun <T> MutableState<Set<T>>.remove(items: Collection<T>) {
+    value = value.minus(items.toSet())
+}

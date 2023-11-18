@@ -23,7 +23,6 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -39,12 +38,13 @@ import com.dot.gallery.core.presentation.components.LoadingMedia
 import com.dot.gallery.core.presentation.components.NavigationActions
 import com.dot.gallery.core.presentation.components.NavigationButton
 import com.dot.gallery.core.presentation.components.SelectionSheet
-import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.common.components.MediaGridView
 import com.dot.gallery.feature_node.presentation.common.components.TwoLinedDateToolbarTitle
 import com.dot.gallery.feature_node.presentation.search.MainSearchBar
 import com.dot.gallery.feature_node.presentation.util.Screen
+import com.dot.gallery.feature_node.presentation.util.clear
+import com.dot.gallery.feature_node.presentation.util.selectedMedia
 import kotlinx.coroutines.flow.StateFlow
 
 @OptIn(
@@ -59,7 +59,7 @@ fun MediaScreen(
     handler: MediaHandleUseCase,
     mediaState: StateFlow<MediaState>,
     selectionState: MutableState<Boolean>,
-    selectedMedia: SnapshotStateList<Media>,
+    selectedIds: MutableState<Set<Long>>,
     toggleSelection: (Int) -> Unit,
     allowHeaders: Boolean = true,
     showMonthlyHeader: Boolean = false,
@@ -115,7 +115,7 @@ fun MediaScreen(
                                 navigateUp = navigateUp,
                                 clearSelection = {
                                     selectionState.value = false
-                                    selectedMedia.clear()
+                                    selectedIds.clear()
                                 },
                                 selectionState = selectionState,
                                 alwaysGoBack = true,
@@ -169,7 +169,7 @@ fun MediaScreen(
                     bottom = paddingValues.calculateBottomPadding() + 16.dp + 64.dp
                 ),
                 selectionState = selectionState,
-                selectedMedia = selectedMedia,
+                selectedMedia = selectedIds,
                 allowHeaders = allowHeaders,
                 showMonthlyHeader = showMonthlyHeader,
                 toggleSelection = toggleSelection,
@@ -190,10 +190,11 @@ fun MediaScreen(
             /** ************ **/
         }
         if (target != TARGET_TRASH) {
+            val selectedMediaList = state.media.selectedMedia(selectedIds)
             SelectionSheet(
                 modifier = Modifier
                     .align(Alignment.BottomEnd),
-                selectedMedia = selectedMedia,
+                selectedMedia = selectedMediaList,
                 target = target,
                 selectionState = selectionState,
                 handler = handler

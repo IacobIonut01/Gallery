@@ -31,7 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -44,7 +44,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
-import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia
 import com.dot.gallery.feature_node.presentation.picker.PickerViewModel
 import kotlinx.coroutines.launch
@@ -58,7 +57,7 @@ fun PickerScreen(
 ) {
     val scope = rememberCoroutineScope()
     var selectedAlbumIndex by remember { mutableLongStateOf(-1) }
-    val selectedMedia = remember { mutableStateListOf<Media>() }
+    val selectedMedia = remember { mutableStateOf<Set<Long>>(emptySet()) }
     val mediaVM = hiltViewModel<PickerViewModel>().apply {
         init(allowedMedia = allowedMedia)
     }
@@ -112,11 +111,11 @@ fun PickerScreen(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(32.dp),
-                visible = !allowSelection || selectedMedia.isNotEmpty(),
+                visible = !allowSelection || selectedMedia.value.isNotEmpty(),
                 enter = slideInVertically { it * 2 },
                 exit = slideOutVertically { it * 2 }
             ) {
-                val enabled = selectedMedia.isNotEmpty()
+                val enabled = selectedMedia.value.isNotEmpty()
                 val containerColor by animateColorAsState(
                     targetValue = if (enabled) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
                     label = "containerColor"
@@ -128,7 +127,7 @@ fun PickerScreen(
                 ExtendedFloatingActionButton(
                     text = {
                         if (allowSelection)
-                            Text(text = "Add (${selectedMedia.size})")
+                            Text(text = "Add (${selectedMedia.value.size})")
                         else
                             Text(text = "Add")
                     },
@@ -144,7 +143,8 @@ fun PickerScreen(
                     onClick = {
                         if (enabled) {
                             scope.launch {
-                                sendMediaAsResult(selectedMedia.map { it.uri })
+                                val selectedUris = mediaVM.mediaState.value.media.filter { selectedMedia.value.contains(it.id) }.map { it.uri }
+                                sendMediaAsResult(selectedUris)
                             }
                         }
                     },
@@ -153,8 +153,8 @@ fun PickerScreen(
                             contentDescription = "Add media"
                         }
                 )
-                BackHandler(selectedMedia.isNotEmpty()) {
-                    selectedMedia.clear()
+                BackHandler(selectedMedia.value.isNotEmpty()) {
+                    selectedMedia.value = emptySet()
                 }
             }
         }
