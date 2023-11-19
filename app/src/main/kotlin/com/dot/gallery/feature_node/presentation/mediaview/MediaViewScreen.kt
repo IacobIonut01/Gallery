@@ -7,7 +7,7 @@ package com.dot.gallery.feature_node.presentation.mediaview
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -146,7 +146,7 @@ fun MediaViewScreen(
             flingBehavior = PagerDefaults.flingBehavior(
                 state = pagerState,
                 lowVelocityAnimationSpec = tween(
-                    easing = LinearEasing,
+                    easing = FastOutLinearInEasing,
                     durationMillis = DEFAULT_LOW_VELOCITY_SWIPE_DURATION
                 )
             ),
