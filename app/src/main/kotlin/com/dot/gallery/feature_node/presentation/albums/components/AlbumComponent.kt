@@ -29,7 +29,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
@@ -43,7 +42,7 @@ import com.dot.gallery.core.Settings.Album.rememberAlbumSize
 import com.dot.gallery.core.presentation.components.util.AutoResizeText
 import com.dot.gallery.core.presentation.components.util.FontSizeRange
 import com.dot.gallery.feature_node.domain.model.Album
-import com.dot.gallery.feature_node.presentation.util.vibrate
+import com.dot.gallery.feature_node.presentation.util.FeedbackManager.Companion.rememberFeedbackManager
 import java.io.File
 
 @Composable
@@ -122,8 +121,8 @@ fun AlbumImage(
     val isPressed = interactionSource.collectIsPressedAsState()
     val radius = if (isPressed.value) 32.dp else 16.dp
     val cornerRadius by animateDpAsState(targetValue = radius, label = "cornerRadius")
-    val view = LocalView.current
     val albumSize by rememberAlbumSize()
+    val feedbackManager = rememberFeedbackManager()
     GlideImage(
         modifier = Modifier
             .aspectRatio(1f)
@@ -141,7 +140,7 @@ fun AlbumImage(
                 onClick = { onItemClick(album) },
                 onLongClick = {
                     onItemLongClick?.let {
-                        view.vibrate()
+                        feedbackManager.vibrate()
                         it(album)
                     }
                 }

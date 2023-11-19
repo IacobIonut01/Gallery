@@ -1,7 +1,6 @@
 package com.dot.gallery.feature_node.presentation.exif
 
 import android.media.MediaScannerConnection
-import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
@@ -46,7 +45,7 @@ import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.presentation.albums.AlbumsViewModel
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumComponent
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
-import com.dot.gallery.feature_node.presentation.util.Error
+import com.dot.gallery.feature_node.presentation.util.toastError
 import com.dot.gallery.feature_node.presentation.util.rememberActivityResult
 import com.dot.gallery.feature_node.presentation.util.writeRequest
 import kotlinx.coroutines.Dispatchers
@@ -62,7 +61,7 @@ fun MoveMediaSheet(
     onFinish: () -> Unit,
 ) {
     val context = LocalContext.current
-    val toastError = Toast::class.Error()
+    val toastError = toastError()
     val albumViewModel = hiltViewModel<AlbumsViewModel>()
     albumViewModel.attachToLifecycle()
 

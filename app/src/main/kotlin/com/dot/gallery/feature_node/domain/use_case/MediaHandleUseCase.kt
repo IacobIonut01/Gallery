@@ -14,7 +14,7 @@ import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.presentation.util.mediaPair
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.withContext
 
 class MediaHandleUseCase(
@@ -47,7 +47,7 @@ class MediaHandleUseCase(
         mediaList: List<Media>,
         trash: Boolean = true
     ) = withContext(Dispatchers.Default) {
-        val isTrashEnabled = getTrashEnabled(context).first()
+        val isTrashEnabled = getTrashEnabled(context).last()
         /**
          * Trash media only if user enabled the Trash Can
          * Or if user wants to remove existing items from the trash

@@ -51,7 +51,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -69,10 +68,9 @@ import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialogA
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialogAction.RESTORE
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialogAction.TRASH
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
+import com.dot.gallery.feature_node.presentation.util.FeedbackManager.Companion.rememberFeedbackManager
 import com.dot.gallery.feature_node.presentation.util.canBeTrashed
 import com.dot.gallery.feature_node.presentation.util.mediaPair
-import com.dot.gallery.feature_node.presentation.util.vibrate
-import com.dot.gallery.feature_node.presentation.util.vibrateStrong
 import com.dot.gallery.ui.theme.Shapes
 import kotlinx.coroutines.launch
 
@@ -253,7 +251,6 @@ fun TrashDialog(
                         contentType = { it.mimeType }
                     ) {
                         val context = LocalContext.current
-                        val view = LocalView.current
                         val longPressText = stringResource(R.string.long_press_to_remove)
                         val canBeTrashed = it.canBeTrashed()
                         val borderWidth = if (canBeTrashed) 0.5.dp else 2.dp
@@ -261,6 +258,7 @@ fun TrashDialog(
                             if (canBeTrashed) MaterialTheme.colorScheme.onSurfaceVariant
                             else MaterialTheme.colorScheme.error
                         val shape = if (canBeTrashed) Shapes.large else Shapes.extraLarge
+                        val feedbackManager = rememberFeedbackManager()
                         Box(
                             modifier = Modifier
                                 .animateItemPlacement()
@@ -274,7 +272,7 @@ fun TrashDialog(
                                 .combinedClickable(
                                     enabled = !confirmed,
                                     onLongClick = {
-                                        view.vibrate()
+                                        feedbackManager.vibrate()
                                         scope.launch {
                                             dataCopy.remove(it)
                                             if (dataCopy.isEmpty()) {
@@ -284,7 +282,7 @@ fun TrashDialog(
                                         }
                                     },
                                     onClick = {
-                                        view.vibrateStrong()
+                                        feedbackManager.vibrateStrong()
                                         Toast
                                             .makeText(context, longPressText, Toast.LENGTH_SHORT)
                                             .show()

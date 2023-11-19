@@ -41,7 +41,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -57,8 +56,8 @@ import com.dot.gallery.feature_node.domain.model.MediaItem
 import com.dot.gallery.feature_node.domain.model.isBigHeaderKey
 import com.dot.gallery.feature_node.domain.model.isHeaderKey
 import com.dot.gallery.feature_node.domain.model.isIgnoredKey
+import com.dot.gallery.feature_node.presentation.util.FeedbackManager
 import com.dot.gallery.feature_node.presentation.util.update
-import com.dot.gallery.feature_node.presentation.util.vibrate
 import com.dot.gallery.ui.theme.Dimens
 import kotlinx.coroutines.launch
 
@@ -112,6 +111,8 @@ fun MediaGridView(
     )
     /** ************ **/
 
+    val feedbackManager = FeedbackManager.rememberFeedbackManager()
+
     @Composable
     fun mediaGrid() {
         LaunchedEffect(gridState.isScrollInProgress) {
@@ -160,8 +161,6 @@ fun MediaGridView(
                                 val title = item.text
                                     .replace("Today", stringToday)
                                     .replace("Yesterday", stringYesterday)
-
-                                val view = LocalView.current
                                 StickyHeader(
                                     date = title,
                                     showAsBig = item.key.isBigHeaderKey,
@@ -169,7 +168,7 @@ fun MediaGridView(
                                     isChecked = isChecked
                                 ) {
                                     if (allowSelection) {
-                                        view.vibrate()
+                                        feedbackManager.vibrate()
                                         scope.launch {
                                             isChecked.value = !isChecked.value
                                             if (isChecked.value) {
@@ -189,7 +188,6 @@ fun MediaGridView(
                                 val mediaIndex =
                                     mediaState.media.indexOf(item.media).coerceAtLeast(0)
                                 val (media, preloadRequestBuilder) = preloadingData[mediaIndex]
-                                val view = LocalView.current
                                 MediaComponent(
                                     media = media,
                                     selectionState = selectionState,
@@ -197,13 +195,13 @@ fun MediaGridView(
                                     preloadRequestBuilder = preloadRequestBuilder,
                                     onItemLongClick = {
                                         if (allowSelection) {
-                                            view.vibrate()
+                                            feedbackManager.vibrate()
                                             toggleSelection(mediaState.media.indexOf(it))
                                         }
                                     },
                                     onItemClick = {
                                         if (selectionState.value && allowSelection) {
-                                            view.vibrate()
+                                            feedbackManager.vibrate()
                                             toggleSelection(mediaState.media.indexOf(it))
                                         } else onMediaClick(it)
                                     }
@@ -219,7 +217,6 @@ fun MediaGridView(
                     ) { origMedia ->
                         val mediaIndex = mediaState.media.indexOf(origMedia).coerceAtLeast(0)
                         val (media, preloadRequestBuilder) = preloadingData[mediaIndex]
-                        val view = LocalView.current
                         MediaComponent(
                             media = media,
                             selectionState = selectionState,
@@ -227,13 +224,13 @@ fun MediaGridView(
                             preloadRequestBuilder = preloadRequestBuilder,
                             onItemLongClick = {
                                 if (allowSelection) {
-                                    view.vibrate()
+                                    feedbackManager.vibrate()
                                     toggleSelection(mediaState.media.indexOf(it))
                                 }
                             },
                             onItemClick = {
                                 if (selectionState.value && allowSelection) {
-                                    view.vibrate()
+                                    feedbackManager.vibrate()
                                     toggleSelection(mediaState.media.indexOf(it))
                                 } else onMediaClick(it)
                             }

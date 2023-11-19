@@ -32,6 +32,7 @@ object Settings {
 
     object Album {
         private val LAST_SORT = intPreferencesKey("album_last_sort")
+
         @Composable
         fun rememberLastSort() =
             rememberPreference(key = LAST_SORT, defaultValue = 0)
@@ -51,6 +52,7 @@ object Settings {
 
     object Glide {
         private val MAX_IMAGE_SIZE = intPreferencesKey("max_image_size")
+
         @Composable
         fun rememberMaxImageSize() =
             rememberPreference(key = MAX_IMAGE_SIZE, defaultValue = 4096)
@@ -66,23 +68,28 @@ object Settings {
 
     object Misc {
         private val USER_CHOICE_MEDIA_MANAGER = booleanPreferencesKey("use_media_manager")
+
         @Composable
         fun rememberIsMediaManager() =
             rememberPreference(key = USER_CHOICE_MEDIA_MANAGER, defaultValue = false)
 
         private val ENABLE_TRASH = booleanPreferencesKey("enable_trashcan")
+
         @Composable
         fun rememberTrashEnabled() =
             rememberPreference(key = ENABLE_TRASH, defaultValue = true)
+
         fun getTrashEnabled(context: Context) =
             context.dataStore.data.map { it[ENABLE_TRASH] ?: true }
 
         private val LAST_SCREEN = stringPreferencesKey("last_screen")
+
         @Composable
         fun rememberLastScreen() =
             rememberPreference(key = LAST_SCREEN, defaultValue = Screen.TimelineScreen.route)
 
         private val MEDIA_GRID_SIZE = floatPreferencesKey("media_grid_size")
+
         @Composable
         fun rememberMediaGridSize() =
             rememberPreference(key = MEDIA_GRID_SIZE, defaultValue = Dimens.Photo().value)
@@ -128,7 +135,7 @@ object Settings {
         private val OLD_NAVBAR = booleanPreferencesKey("old_navbar")
 
         @Composable
-        fun rememberOldNavbar() = rememberPreference(key = OLD_NAVBAR, defaultValue = false )
+        fun rememberOldNavbar() = rememberPreference(key = OLD_NAVBAR, defaultValue = false)
 
         private val MEDIA_VERSION = stringPreferencesKey("media_version")
 
@@ -145,6 +152,13 @@ object Settings {
                 it[MEDIA_VERSION] = newVersion
             }
         }
+
+        private val ALLOW_VIBRATIONS = booleanPreferencesKey("allow_vibrations")
+
+        fun allowVibrations(context: Context) = context.dataStore.data.map { it[ALLOW_VIBRATIONS] ?: true }
+
+        @Composable
+        fun rememberAllowVibrations() = rememberPreference(key = ALLOW_VIBRATIONS, defaultValue = true)
     }
 }
 
@@ -184,7 +198,7 @@ sealed class SettingsEntity(
 
     data class Header(
         override val title: String
-    ): SettingsEntity(
+    ) : SettingsEntity(
         title = title,
         type = SettingsType.Header
     )
@@ -214,7 +228,7 @@ sealed class SettingsEntity(
         override val screenPosition: Position = Position.Alone,
         override val isChecked: Boolean = false,
         override val onCheck: ((Boolean) -> Unit)? = null,
-    ): SettingsEntity(
+    ) : SettingsEntity(
         icon = icon,
         title = title,
         summary = summary,
@@ -238,7 +252,7 @@ sealed class SettingsEntity(
         override val valueMultiplier: Int = 1,
         override val seekSuffix: String? = null,
         override val onSeek: ((Float) -> Unit)? = null,
-    ): SettingsEntity(
+    ) : SettingsEntity(
         icon = icon,
         title = title,
         summary = summary,

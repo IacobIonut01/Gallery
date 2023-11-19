@@ -22,7 +22,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -36,7 +35,7 @@ import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaItem
 import com.dot.gallery.feature_node.domain.model.isHeaderKey
 import com.dot.gallery.feature_node.presentation.common.components.MediaComponent
-import com.dot.gallery.feature_node.presentation.util.vibrate
+import com.dot.gallery.feature_node.presentation.util.FeedbackManager
 import com.dot.gallery.ui.theme.Dimens
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -53,6 +52,7 @@ fun PickerMediaScreen(
     val state by mediaState.collectAsStateWithLifecycle()
     val gridState = rememberLazyGridState()
     val isCheckVisible = rememberSaveable { mutableStateOf(allowSelection) }
+    val feedbackManager = FeedbackManager.rememberFeedbackManager()
 
     /** Glide Preloading **/
     val preloadingData = rememberGlidePreloadingData(
@@ -91,7 +91,6 @@ fun PickerMediaScreen(
                     val title = item.text
                         .replace("Today", stringToday)
                         .replace("Yesterday", stringYesterday)
-                    val view = LocalView.current
                     StickyHeader(
                         date = title,
                         showAsBig = item.key.contains("big"),
@@ -99,7 +98,7 @@ fun PickerMediaScreen(
                         isChecked = isChecked
                     ) {
                         if (allowSelection) {
-                            view.vibrate()
+                            feedbackManager.vibrate()
                             scope.launch {
                                 isChecked.value = !isChecked.value
                                 if (isChecked.value) {
@@ -117,7 +116,6 @@ fun PickerMediaScreen(
                 is MediaItem.MediaViewItem -> {
                     val mediaIndex = state.media.indexOf(item.media).coerceAtLeast(0)
                     val (media, preloadRequestBuilder) = preloadingData[mediaIndex]
-                    val view = LocalView.current
                     val selectionState = remember { mutableStateOf(true) }
                     MediaComponent(
                         media = media,
@@ -125,7 +123,7 @@ fun PickerMediaScreen(
                         selectedMedia = selectedMedia,
                         preloadRequestBuilder = preloadRequestBuilder,
                         onItemLongClick = {
-                            view.vibrate()
+                            feedbackManager.vibrate()
                             if (allowSelection) {
                                 if (selectedMedia.contains(it)) selectedMedia.remove(it)
                                 else selectedMedia.add(it)
@@ -138,7 +136,7 @@ fun PickerMediaScreen(
                             }
                         },
                         onItemClick = {
-                            view.vibrate()
+                            feedbackManager.vibrate()
                             if (allowSelection) {
                                 if (selectedMedia.contains(it)) selectedMedia.remove(it)
                                 else selectedMedia.add(it)

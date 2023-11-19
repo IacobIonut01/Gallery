@@ -19,6 +19,7 @@ import com.dot.gallery.R
 import com.dot.gallery.core.Position
 import com.dot.gallery.core.Settings.Album.rememberHideTimelineOnAlbum
 import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
+import com.dot.gallery.core.Settings.Misc.rememberAllowVibrations
 import com.dot.gallery.core.Settings.Misc.rememberForceTheme
 import com.dot.gallery.core.Settings.Misc.rememberIsAmoledMode
 import com.dot.gallery.core.Settings.Misc.rememberIsDarkMode
@@ -91,6 +92,17 @@ class SettingsViewModel @Inject constructor() : ViewModel() {
                 summary = context.getString(R.string.secure_mode_summary),
                 isChecked = secureMode,
                 onCheck = { secureMode = it },
+                screenPosition = Position.Middle
+            )
+        }
+
+        var allowVibrations by rememberAllowVibrations()
+        val allowVibrationsPref = remember(allowVibrations) {
+            SwitchPreference(
+                title = context.getString(R.string.allow_vibrations),
+                summary = context.getString(R.string.allow_vibrations_summary),
+                isChecked = allowVibrations,
+                onCheck = { allowVibrations = it },
                 screenPosition = Position.Bottom
             )
         }
@@ -176,6 +188,7 @@ class SettingsViewModel @Inject constructor() : ViewModel() {
                 /** General Section Start **/
                 add(trashCanEnabledPref)
                 add(secureModePref)
+                add(allowVibrationsPref)
                 /** General Section End **/
             }
         }

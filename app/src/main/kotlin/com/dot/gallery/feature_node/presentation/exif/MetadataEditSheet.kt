@@ -1,7 +1,6 @@
 package com.dot.gallery.feature_node.presentation.exif
 
 import android.media.MediaScannerConnection
-import android.widget.Toast
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -54,7 +53,7 @@ import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.rememberExifAttributes
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
-import com.dot.gallery.feature_node.presentation.util.Error
+import com.dot.gallery.feature_node.presentation.util.toastError
 import com.dot.gallery.feature_node.presentation.util.rememberActivityResult
 import com.dot.gallery.feature_node.presentation.util.rememberExifInterface
 import com.dot.gallery.feature_node.presentation.util.writeRequest
@@ -77,7 +76,7 @@ fun MetadataEditSheet(
     val cr = remember(context) { context.contentResolver }
     var exifAttributes by rememberExifAttributes(exifInterface)
     var newLabel by remember { mutableStateOf(media.label) }
-    val errorToast = Toast::class.Error()
+    val errorToast = toastError()
     val request = rememberActivityResult {
         scope.launch {
             var done: Boolean

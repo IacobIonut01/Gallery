@@ -37,12 +37,11 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInParent
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.R
 import com.dot.gallery.feature_node.domain.model.MediaItem
-import com.dot.gallery.feature_node.presentation.util.vibrate
+import com.dot.gallery.feature_node.presentation.util.FeedbackManager.Companion.rememberFeedbackManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.abs
@@ -56,7 +55,7 @@ fun BoxScope.TimelineScroller(
     val scope = rememberCoroutineScope()
     val offsets = remember { mutableStateMapOf<Int, Float>() }
     var selectedIndex by remember { mutableIntStateOf(0) }
-    val view = LocalView.current
+    val feedbackManager = rememberFeedbackManager()
     fun scrollIfNeeded(offset: Float) {
         val index = offsets
             .mapValues { abs(it.value - offset) }
@@ -66,7 +65,7 @@ fun BoxScope.TimelineScroller(
         if (selectedIndex == index) return
         selectedIndex = index
         scope.launch {
-            view.vibrate()
+            feedbackManager.vibrate()
             gridState.scrollToItem(selectedIndex, scrollOffset = -250)
         }
     }

@@ -19,25 +19,65 @@ import android.view.accessibility.AccessibilityManager
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.dot.gallery.R
+import com.dot.gallery.core.Settings.Misc.allowVibrations
 import com.dot.gallery.feature_node.domain.model.Media
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlin.reflect.KClass
 
 @Composable
-fun KClass<Toast>.Error(message: String? = null): Toast {
+fun toastError(message: String? = null): Toast {
     val context = LocalContext.current
     return Toast.makeText(context, message ?: stringResource(id = R.string.error_toast), Toast.LENGTH_SHORT)
 }
 
-fun View.vibrate() = reallyPerformHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-fun View.vibrateStrong() = reallyPerformHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+class FeedbackManager(private val view: View, scope: CoroutineScope) {
+
+    private var isAvailable by mutableStateOf(true)
+
+    init {
+        scope.launch {
+            allowVibrations(view.context).collectLatest {
+                isAvailable = it
+            }
+        }
+    }
+
+    fun vibrate() {
+        if (isAvailable) {
+            view.reallyPerformHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+        }
+    }
+    fun vibrateStrong() {
+        if (isAvailable) {
+            view.reallyPerformHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+        }
+    }
+
+    companion object {
+        @Composable
+        fun rememberFeedbackManager(): FeedbackManager {
+            val view = LocalView.current
+            val scope = rememberCoroutineScope()
+            return remember(view, scope) {
+                FeedbackManager(view, scope)
+            }
+        }
+    }
+}
 
 @Suppress("DEPRECATION")
 private fun View.reallyPerformHapticFeedback(feedbackConstant: Int) {
