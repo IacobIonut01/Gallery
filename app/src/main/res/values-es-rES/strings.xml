@@ -147,6 +147,8 @@
     <string name="old_navbar_summary">Mostrar la antigua barra de navegación (con raíles para pantallas más grandes)</string>
     <string name="hide_timeline_for_albums">Ocultar la cronología de los álbumes</string>
     <string name="hide_timeline_for_album_summary">Oculta los encabezados de fecha al abrir un álbum</string>
+    <string name="allow_vibrations">Allow vibrations</string>
+    <string name="allow_vibrations_summary">Allow sending feedback as vibrations while performing some actions or gestures</string>
     <plurals name="item_count">
         <item quantity="one">%s Ítem</item>
         <item quantity="other">%s Ítems</item>
