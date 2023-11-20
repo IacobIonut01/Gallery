@@ -147,8 +147,8 @@
     <string name="old_navbar_summary">展示舊版的導覽列使用者介面（對於較大螢幕，配有軌道）</string>
     <string name="hide_timeline_for_albums">隱藏相簿中的時間軸</string>
     <string name="hide_timeline_for_album_summary">當您打開某個相簿時，將不會顯示日期標頭</string>
-    <string name="allow_vibrations">Allow vibrations</string>
-    <string name="allow_vibrations_summary">Allow sending feedback as vibrations while performing some actions or gestures</string>
+    <string name="allow_vibrations">允許振動</string>
+    <string name="allow_vibrations_summary">在執行某些動作或手勢時，允許以振動形式發送反饋訊息</string>
     <plurals name="item_count">
         <item quantity="other">%s 個項目</item>
     </plurals>
