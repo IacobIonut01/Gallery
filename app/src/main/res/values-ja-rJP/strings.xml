@@ -18,7 +18,7 @@
     <string name="favorites">お気に入り</string>
     <string name="no_media_title">ここには何もありません</string>
     <string name="no_media_cd">メディアが見つかりません</string>
-    <string name="empty_trash_title">Squeaky Clean</string>
+    <string name="empty_trash_title">ゴミ箱は空です</string>
     <string name="empty_trash_cd">ゴミ箱は空です</string>
     <string name="error_title">Something went wrong :(</string>
     <string name="error_cd">エラーが発生しました</string>
@@ -147,6 +147,8 @@
     <string name="old_navbar_summary">Show the old navigation bar UI (with rails for bigger screens)</string>
     <string name="hide_timeline_for_albums">Hide timeline for albums</string>
     <string name="hide_timeline_for_album_summary">Hides date headers when opening an album</string>
+    <string name="allow_vibrations">Allow vibrations</string>
+    <string name="allow_vibrations_summary">Allow sending feedback as vibrations while performing some actions or gestures</string>
     <plurals name="item_count">
         <item quantity="other">%s アイテム</item>
     </plurals>
