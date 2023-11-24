@@ -149,6 +149,8 @@
     <string name="hide_timeline_for_album_summary">當您打開某個相簿時，將不會顯示日期標頭</string>
     <string name="allow_vibrations">允許振動</string>
     <string name="allow_vibrations_summary">在執行某些動作或手勢時，允許以振動形式發送反饋訊息</string>
+    <string name="album_name">Album Name</string>
+    <string name="create_new_album">Create new album</string>
     <plurals name="item_count">
         <item quantity="other">%s 個項目</item>
     </plurals>
