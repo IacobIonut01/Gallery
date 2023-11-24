@@ -149,6 +149,8 @@
     <string name="hide_timeline_for_album_summary">Сакрива заглавља датума када отварате албум</string>
     <string name="allow_vibrations">Allow vibrations</string>
     <string name="allow_vibrations_summary">Allow sending feedback as vibrations while performing some actions or gestures</string>
+    <string name="album_name">Album Name</string>
+    <string name="create_new_album">Create new album</string>
     <plurals name="item_count">
         <item quantity="one">%s предмет</item>
         <item quantity="few">%s предмета</item>
