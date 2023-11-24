@@ -321,7 +321,9 @@ fun AddAlbumSheet(
                     },
                     textContainer = {
                         Text(text = stringResource(id = R.string.action_confirm))
-                    }
+                    },
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 )
 
                 Spacer(modifier = Modifier.navigationBarsPadding())
