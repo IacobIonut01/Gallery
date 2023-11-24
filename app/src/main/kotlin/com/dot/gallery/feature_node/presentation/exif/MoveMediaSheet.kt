@@ -1,12 +1,17 @@
 package com.dot.gallery.feature_node.presentation.exif
 
 import android.media.MediaScannerConnection
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -19,6 +24,8 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -28,6 +35,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -37,23 +45,26 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
-import com.dot.gallery.core.Constants.Animation.enterAnimation
-import com.dot.gallery.core.Constants.Animation.exitAnimation
+import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Settings.Album.rememberAlbumSize
 import com.dot.gallery.core.presentation.components.DragHandle
+import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.presentation.albums.AlbumsViewModel
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumComponent
+import com.dot.gallery.feature_node.presentation.common.components.OptionButton
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
-import com.dot.gallery.feature_node.presentation.util.toastError
 import com.dot.gallery.feature_node.presentation.util.rememberActivityResult
+import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
+import com.dot.gallery.feature_node.presentation.util.toastError
 import com.dot.gallery.feature_node.presentation.util.writeRequest
+import com.dot.gallery.ui.theme.Shapes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MoveMediaSheet(
     sheetState: AppBottomSheetState,
@@ -70,6 +81,8 @@ fun MoveMediaSheet(
     val handler = albumViewModel.handler
     var progress by remember(mediaList) { mutableFloatStateOf(0f) }
     var newPath by remember(mediaList) { mutableStateOf("") }
+
+    val newAlbumSheetState = rememberAppBottomSheetState()
 
     val request = rememberActivityResult {
         scope.launch {
@@ -133,22 +146,59 @@ fun MoveMediaSheet(
                         .fillMaxWidth()
                 )
 
+                AnimatedVisibility(
+                    visible = progress > 0f,
+                    enter = Constants.Animation.enterAnimation,
+                    exit = Constants.Animation.exitAnimation
+                ) {
+                    LinearProgressIndicator(
+                        progress = {
+                            progress
+                        },
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .fillMaxWidth(),
+                    )
+                }
+
                 val albumSize by rememberAlbumSize()
                 LazyVerticalGrid(
                     state = rememberLazyGridState(),
                     modifier = Modifier.padding(horizontal = 8.dp),
                     columns = GridCells.Adaptive(Dp(albumSize)),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(
+                        bottom = WindowInsets.navigationBars.getBottom(
+                            LocalDensity.current
+                        ).dp
+                    )
                 ) {
+                    item {
+                        AlbumComponent(
+                            album = Album.NewAlbum,
+                            isEnabled = true,
+                            onItemClick = {
+                                scope.launch(Dispatchers.Main) {
+                                    newAlbumSheetState.show()
+                                }
+                            },
+                            onTogglePinClick = null
+                        )
+                    }
                     items(
                         items = state.albums,
                         key = { item -> item.toString() }
                     ) { item ->
-                        val mediaVolume = (mediaList.getOrNull(0)?.volume ?: item.volume)
-                        val albumOwnership = item.relativePath.substringBeforeLast("Android/media/", "allow")
-                        val mediaOwnership = mediaList.getOrNull(0)?.relativePath?.substringBeforeLast("Android/media/", "allow") ?: albumOwnership
-                        val mediaAlbum = mediaList.getOrNull(0)?.albumLabel ?: item.label
+                        val mediaVolume = (mediaList.firstOrNull()?.volume ?: item.volume)
+                        val albumOwnership =
+                            item.relativePath.substringBeforeLast("Android/media/", "allow")
+                        val mediaOwnership =
+                            mediaList.firstOrNull()?.relativePath?.substringBeforeLast(
+                                "Android/media/",
+                                "allow"
+                            ) ?: albumOwnership
+                        val mediaAlbum = mediaList.firstOrNull()?.albumLabel ?: item.label
                         AlbumComponent(
                             album = item,
                             isEnabled = item.volume == mediaVolume
@@ -165,20 +215,116 @@ fun MoveMediaSheet(
                         )
                     }
                 }
-                AnimatedVisibility(
-                    visible = progress > 0f,
-                    enter = enterAnimation,
-                    exit = exitAnimation
-                ) {
-                    LinearProgressIndicator(
-                        progress = {
-                            progress
-                        },
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .fillMaxWidth(),
-                    )
+            }
+        }
+    }
+
+    AddAlbumSheet(
+        sheetState = newAlbumSheetState,
+        onFinish = { newAlbum ->
+            scope.launch(Dispatchers.Main) {
+                newPath = "Pictures/$newAlbum"
+                request.launch(mediaList.writeRequest(context.contentResolver))
+            }
+        },
+        onCancel = {
+            if (newAlbumSheetState.isVisible) {
+                scope.launch(Dispatchers.Main) {
+                    newAlbumSheetState.hide()
                 }
+            }
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AddAlbumSheet(
+    sheetState: AppBottomSheetState,
+    onFinish: (albumName: String) -> Unit,
+    onCancel: () -> Unit
+) {
+    var newAlbum: String by remember { mutableStateOf("") }
+    val scope = rememberCoroutineScope { Dispatchers.Main }
+
+    if (sheetState.isVisible) {
+        ModalBottomSheet(
+            sheetState = sheetState.sheetState,
+            onDismissRequest = {
+                scope.launch {
+                    sheetState.hide()
+                    onCancel()
+                }
+            },
+            dragHandle = { DragHandle() },
+            windowInsets = WindowInsets(
+                0,
+                WindowInsets.statusBars.getTop(LocalDensity.current),
+                0,
+                0
+            )
+        ) {
+            BackHandler {
+                scope.launch {
+                    sheetState.hide()
+                    onCancel()
+                }
+            }
+            Column(
+                modifier = Modifier
+                    .wrapContentHeight()
+                    .fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    text = stringResource(R.string.create_new_album),
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier
+                        .padding(24.dp)
+                        .fillMaxWidth()
+                )
+
+                TextField(
+                    modifier = Modifier
+                        .padding(horizontal = 24.dp)
+                        .fillMaxWidth(),
+                    value = newAlbum,
+                    onValueChange = { newValue ->
+                        newAlbum = newValue
+                    },
+                    label = {
+                        Text(text = stringResource(R.string.album_name))
+                    },
+                    singleLine = true,
+                    shape = Shapes.large,
+                    colors = TextFieldDefaults.colors(
+                        unfocusedIndicatorColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent,
+                        errorIndicatorColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OptionButton(
+                    modifier = Modifier
+                        .padding(horizontal = 24.dp),
+                    onClick = {
+                        scope.launch {
+                            sheetState.hide()
+                            onFinish(newAlbum)
+                        }
+                    },
+                    textContainer = {
+                        Text(text = stringResource(id = R.string.action_confirm))
+                    }
+                )
+
+                Spacer(modifier = Modifier.navigationBarsPadding())
             }
         }
     }

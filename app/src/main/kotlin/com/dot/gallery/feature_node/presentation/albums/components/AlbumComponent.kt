@@ -11,27 +11,33 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AddCircleOutline
+import androidx.compose.material.icons.outlined.SdCard
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,6 +58,7 @@ fun AlbumComponent(
     onItemClick: (Album) -> Unit,
     onTogglePinClick: ((Album) -> Unit)?
 ) {
+    val albumSize by rememberAlbumSize()
     val showDropDown = remember { mutableStateOf(false) }
     val pinTitle =
         if (album.isPinned) stringResource(R.string.unpin) else stringResource(R.string.pin)
@@ -74,14 +81,31 @@ fun AlbumComponent(
                 )
             }
         }
-        AlbumImage(
-            album = album,
-            isEnabled = isEnabled,
-            onItemClick = onItemClick,
-            onItemLongClick = if (onTogglePinClick != null) {
-                { showDropDown.value = !showDropDown.value }
-            } else null
-        )
+        Box(
+            modifier = Modifier
+                .aspectRatio(1f)
+                .size(albumSize.dp)
+        ) {
+            AlbumImage(
+                album = album,
+                isEnabled = isEnabled,
+                onItemClick = onItemClick,
+                onItemLongClick = if (onTogglePinClick != null) {
+                    { showDropDown.value = !showDropDown.value }
+                } else null
+            )
+            if (album.isOnSdcard) {
+                Icon(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .size(24.dp)
+                        .align(Alignment.BottomEnd),
+                    imageVector = Icons.Outlined.SdCard,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
         AutoResizeText(
             modifier = Modifier
                 .padding(top = 12.dp)
@@ -94,17 +118,23 @@ fun AlbumComponent(
                 max = 16.sp
             )
         )
-        AutoResizeText(
-            modifier = Modifier
-                .padding(top = 2.dp, bottom = 16.dp)
-                .padding(horizontal = 16.dp),
-            text = pluralStringResource(id = R.plurals.item_count, count = album.count.toInt(), album.count),
-            style = MaterialTheme.typography.labelMedium,
-            fontSizeRange = FontSizeRange(
-                min = 6.sp,
-                max = 12.sp
+        if (album.count > 0) {
+            AutoResizeText(
+                modifier = Modifier
+                    .padding(top = 2.dp, bottom = 16.dp)
+                    .padding(horizontal = 16.dp),
+                text = pluralStringResource(
+                    id = R.plurals.item_count,
+                    count = album.count.toInt(),
+                    album.count
+                ),
+                style = MaterialTheme.typography.labelMedium,
+                fontSizeRange = FontSizeRange(
+                    min = 6.sp,
+                    max = 12.sp
+                )
             )
-        )
+        }
 
     }
 }
@@ -121,32 +151,60 @@ fun AlbumImage(
     val isPressed = interactionSource.collectIsPressedAsState()
     val radius = if (isPressed.value) 32.dp else 16.dp
     val cornerRadius by animateDpAsState(targetValue = radius, label = "cornerRadius")
-    val albumSize by rememberAlbumSize()
     val feedbackManager = rememberFeedbackManager()
-    GlideImage(
-        modifier = Modifier
-            .aspectRatio(1f)
-            .size(Dp(albumSize))
-            .border(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.outlineVariant,
-                shape = RoundedCornerShape(cornerRadius)
-            )
-            .clip(RoundedCornerShape(cornerRadius))
-            .combinedClickable(
-                enabled = isEnabled,
-                interactionSource = interactionSource,
-                indication = rememberRipple(),
-                onClick = { onItemClick(album) },
-                onLongClick = {
-                    onItemLongClick?.let {
-                        feedbackManager.vibrate()
-                        it(album)
+    if (album.id == -200L && album.count == 0L) {
+        Icon(
+            imageVector = Icons.Outlined.AddCircleOutline,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier
+                .fillMaxSize()
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                    shape = RoundedCornerShape(cornerRadius)
+                )
+                .alpha(0.8f)
+                .clip(RoundedCornerShape(cornerRadius))
+                .combinedClickable(
+                    enabled = isEnabled,
+                    interactionSource = interactionSource,
+                    indication = rememberRipple(),
+                    onClick = { onItemClick(album) },
+                    onLongClick = {
+                        onItemLongClick?.let {
+                            feedbackManager.vibrate()
+                            it(album)
+                        }
                     }
-                }
-            ),
-        model = File(album.pathToThumbnail),
-        contentDescription = album.label,
-        contentScale = ContentScale.Crop,
-    )
+                )
+                .padding(48.dp)
+        )
+    } else {
+        GlideImage(
+            modifier = Modifier
+                .fillMaxSize()
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                    shape = RoundedCornerShape(cornerRadius)
+                )
+                .clip(RoundedCornerShape(cornerRadius))
+                .combinedClickable(
+                    enabled = isEnabled,
+                    interactionSource = interactionSource,
+                    indication = rememberRipple(),
+                    onClick = { onItemClick(album) },
+                    onLongClick = {
+                        onItemLongClick?.let {
+                            feedbackManager.vibrate()
+                            it(album)
+                        }
+                    }
+                ),
+            model = File(album.pathToThumbnail),
+            contentDescription = album.label,
+            contentScale = ContentScale.Crop,
+        )
+    }
 }
