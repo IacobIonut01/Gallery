@@ -149,6 +149,8 @@
     <string name="hide_timeline_for_album_summary">Hides date headers when opening an album</string>
     <string name="allow_vibrations">Allow vibrations</string>
     <string name="allow_vibrations_summary">Allow sending feedback as vibrations while performing some actions or gestures</string>
+    <string name="album_name">Album Name</string>
+    <string name="create_new_album">Create new album</string>
     <plurals name="item_count">
         <item quantity="one">%s položka</item>
         <item quantity="few">%s položky</item>
