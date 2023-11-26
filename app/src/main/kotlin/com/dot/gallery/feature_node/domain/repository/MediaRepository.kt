@@ -57,6 +57,11 @@ interface MediaRepository {
         trash: Boolean
     )
 
+    suspend fun copyMedia(
+        from: Media, 
+        path: String
+    ): Boolean
+
     suspend fun deleteMedia(
         result: ActivityResultLauncher<IntentSenderRequest>,
         mediaList: List<Media>

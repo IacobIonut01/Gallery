@@ -52,7 +52,8 @@ class StandaloneActivity : ComponentActivity() {
                         isStandalone = true,
                         mediaId = viewModel.mediaId,
                         mediaState = viewModel.mediaState,
-                        handler = viewModel.handler
+                        handler = viewModel.handler,
+                        refresh = {}
                     )
                 }
                 BackHandler {

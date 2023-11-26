@@ -18,13 +18,13 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
@@ -32,6 +32,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.DriveFileMove
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.CopyAll
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Share
@@ -61,6 +62,7 @@ import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Target.TARGET_FAVORITES
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
+import com.dot.gallery.feature_node.presentation.exif.CopyMediaSheet
 import com.dot.gallery.feature_node.presentation.exif.MoveMediaSheet
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialog
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialogAction
@@ -76,17 +78,20 @@ fun SelectionSheet(
     target: String?,
     selectedMedia: SnapshotStateList<Media>,
     selectionState: MutableState<Boolean>,
-    handler: MediaHandleUseCase
+    handler: MediaHandleUseCase,
+    refresh: () -> Unit
 ) {
     fun clearSelection() {
         selectedMedia.clear()
         selectionState.value = false
+        refresh()
     }
 
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val trashSheetState = rememberAppBottomSheetState()
     val moveSheetState = rememberAppBottomSheetState()
+    val copySheetState = rememberAppBottomSheetState()
     val result = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartIntentSenderForResult(),
         onResult = {
@@ -179,6 +184,16 @@ fun SelectionSheet(
                         handler.toggleFavorite(result = result, it)
                     }
                 }
+                // Copy Component
+                SelectionBarColumn(
+                    selectedMedia = selectedMedia,
+                    imageVector = Icons.Outlined.CopyAll,
+                    title = stringResource(R.string.copy)
+                ) {
+                    scope.launch {
+                        copySheetState.show()
+                    }
+                }
                 // Move Component
                 SelectionBarColumn(
                     selectedMedia = selectedMedia,
@@ -209,6 +224,12 @@ fun SelectionSheet(
         onFinish = ::clearSelection
     )
 
+    CopyMediaSheet(
+        sheetState = copySheetState,
+        mediaList = selectedMedia,
+        onFinish = ::clearSelection
+    )
+
     TrashDialog(
         appBottomSheetState = trashSheetState,
         data = selectedMedia,
@@ -219,7 +240,7 @@ fun SelectionSheet(
 }
 
 @Composable
-private fun SelectionBarColumn(
+private fun RowScope.SelectionBarColumn(
     selectedMedia: SnapshotStateList<Media>,
     imageVector: ImageVector,
     title: String,
@@ -230,7 +251,7 @@ private fun SelectionBarColumn(
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
             .height(80.dp)
-            .width(80.dp)
+            .weight(1f)
             .clickable {
                 onItemClick.invoke(selectedMedia)
             }

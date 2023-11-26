@@ -5,7 +5,6 @@
 
 package com.dot.gallery.feature_node.data.repository
 
-import android.annotation.SuppressLint
 import android.content.ContentResolver
 import android.content.ContentValues
 import android.content.Context
@@ -20,6 +19,7 @@ import com.dot.gallery.core.Resource
 import com.dot.gallery.core.contentFlowObserver
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
 import com.dot.gallery.feature_node.data.data_source.Query
+import com.dot.gallery.feature_node.data.data_types.copyMedia
 import com.dot.gallery.feature_node.data.data_types.findMedia
 import com.dot.gallery.feature_node.data.data_types.getAlbums
 import com.dot.gallery.feature_node.data.data_types.getMedia
@@ -37,7 +37,9 @@ import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.domain.util.MediaOrder
 import com.dot.gallery.feature_node.domain.util.OrderType
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia
-import com.dot.gallery.feature_node.presentation.picker.AllowedMedia.*
+import com.dot.gallery.feature_node.presentation.picker.AllowedMedia.BOTH
+import com.dot.gallery.feature_node.presentation.picker.AllowedMedia.PHOTOS
+import com.dot.gallery.feature_node.presentation.picker.AllowedMedia.VIDEOS
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.map
@@ -84,7 +86,6 @@ class MediaRepositoryImpl(
     override suspend fun removePinnedAlbum(pinnedAlbum: PinnedAlbum) =
         database.getPinnedDao().removePinnedAlbum(pinnedAlbum)
 
-    @SuppressLint("Range")
     override suspend fun getMediaById(mediaId: Long): Media? {
         val query = Query.MediaQuery().copy(
             bundle = Bundle().apply {
@@ -263,6 +264,14 @@ class MediaRepositoryImpl(
             .build()
         result.launch(senderRequest)
     }
+
+    override suspend fun copyMedia(
+        from: Media,
+        path: String
+    ): Boolean = context.contentResolver.copyMedia(
+        from = from,
+        path = path
+    )
 
     override suspend fun renameMedia(
         media: Media,

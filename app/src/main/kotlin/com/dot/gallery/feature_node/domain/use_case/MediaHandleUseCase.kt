@@ -68,6 +68,11 @@ class MediaHandleUseCase(
         }
     }
 
+    suspend fun copyMedia(
+        from: Media,
+        path: String
+    ): Boolean = repository.copyMedia(from, path)
+
     suspend fun deleteMedia(
         result: ActivityResultLauncher<IntentSenderRequest>,
         mediaList: List<Media>

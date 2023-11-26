@@ -45,11 +45,8 @@ open class MediaViewModel @Inject constructor(
 
     var groupByMonth: Boolean = false
 
-    /**
-     * Used in PhotosScreen to retrieve all media
-     */
-    fun launchInPhotosScreen() {
-        getMedia(-1, null)
+    fun refresh() {
+        getMedia(albumId, target)
     }
 
     @SuppressLint("ComposableNaming")

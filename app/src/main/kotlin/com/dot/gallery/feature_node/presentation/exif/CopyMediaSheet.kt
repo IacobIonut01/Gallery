@@ -1,6 +1,5 @@
 package com.dot.gallery.feature_node.presentation.exif
 
-import android.media.MediaScannerConnection
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -46,27 +45,26 @@ import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.presentation.albums.AlbumsViewModel
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumComponent
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
-import com.dot.gallery.feature_node.presentation.util.rememberActivityResult
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.toastError
-import com.dot.gallery.feature_node.presentation.util.writeRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MoveMediaSheet(
+fun CopyMediaSheet(
     sheetState: AppBottomSheetState,
     mediaList: List<Media>,
     onFinish: () -> Unit,
 ) {
-    val context = LocalContext.current
     val toastError = toastError()
     val albumViewModel = hiltViewModel<AlbumsViewModel>()
     albumViewModel.attachToLifecycle()
-
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val state by albumViewModel.albumsState.collectAsStateWithLifecycle()
     val handler = albumViewModel.handler
@@ -74,32 +72,30 @@ fun MoveMediaSheet(
     var newPath by remember(mediaList) { mutableStateOf("") }
 
     val newAlbumSheetState = rememberAppBottomSheetState()
+    val mutex = Mutex()
 
-    val request = rememberActivityResult {
-        scope.launch {
-            val done = async {
-                mediaList.forEachIndexed { index, it ->
-                    if (handler.moveMedia(media = it, newPath = newPath)) {
-                        MediaScannerConnection.scanFile(
-                            context,
-                            arrayOf(newPath),
-                            arrayOf(it.mimeType),
-                            null
-                        )
-                        progress = index.toFloat() / mediaList.size
-                    } else {
-                        return@async false
+    fun copyMedia(path: String) {
+        scope.launch(Dispatchers.IO) {
+            mutex.withLock {
+                newPath = path
+                async {
+                    mediaList.forEachIndexed { i, media ->
+                        val done = handler.copyMedia(media, newPath)
+                        if (done) {
+                            progress = (i + 1f)  / mediaList.size
+                        }
                     }
+                }.await()
+                if (progress == 1f) {
+                    sheetState.hide()
+                    progress = 0f
+                    onFinish()
+                } else {
+                    toastError.show()
+                    delay(1000)
+                    sheetState.hide()
+                    progress = 0f
                 }
-                return@async true
-            }
-            if (done.await()) {
-                sheetState.hide()
-                onFinish()
-            } else {
-                toastError.show()
-                delay(1000)
-                sheetState.hide()
             }
         }
     }
@@ -128,7 +124,7 @@ fun MoveMediaSheet(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = stringResource(R.string.move_to_another_album),
+                    text = stringResource(R.string.copy),
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -199,13 +195,9 @@ fun MoveMediaSheet(
                                 album = item,
                                 isEnabled = item.volume == mediaVolume
                                         && albumOwnership == "allow"
-                                        && mediaOwnership == "allow"
-                                        && item.label != mediaAlbum,
+                                        && mediaOwnership == "allow",
                                 onItemClick = { album ->
-                                    scope.launch(Dispatchers.Main) {
-                                        newPath = album.relativePath
-                                        request.launch(mediaList.writeRequest(context.contentResolver))
-                                    }
+                                    copyMedia(album.relativePath)
                                 },
                                 onTogglePinClick = null
                             )
@@ -219,10 +211,7 @@ fun MoveMediaSheet(
     AddAlbumSheet(
         sheetState = newAlbumSheetState,
         onFinish = { newAlbum ->
-            scope.launch(Dispatchers.Main) {
-                newPath = "Pictures/$newAlbum"
-                request.launch(mediaList.writeRequest(context.contentResolver))
-            }
+            copyMedia("Pictures/$newAlbum")
         },
         onCancel = {
             if (newAlbumSheetState.isVisible) {
@@ -233,4 +222,3 @@ fun MoveMediaSheet(
         }
     )
 }
-

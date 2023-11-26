@@ -53,9 +53,9 @@ import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.rememberExifAttributes
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
-import com.dot.gallery.feature_node.presentation.util.toastError
 import com.dot.gallery.feature_node.presentation.util.rememberActivityResult
 import com.dot.gallery.feature_node.presentation.util.rememberExifInterface
+import com.dot.gallery.feature_node.presentation.util.toastError
 import com.dot.gallery.feature_node.presentation.util.writeRequest
 import com.dot.gallery.ui.theme.Shapes
 import kotlinx.coroutines.Dispatchers
@@ -87,7 +87,7 @@ fun MetadataEditSheet(
             if (done) {
                 MediaScannerConnection.scanFile(
                     context,
-                    arrayOf(media.path.substringBeforeLast("/")),
+                    arrayOf(media.path),
                     arrayOf(media.mimeType),
                     null
                 )

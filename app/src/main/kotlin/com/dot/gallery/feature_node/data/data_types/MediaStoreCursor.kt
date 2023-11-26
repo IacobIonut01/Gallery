@@ -11,6 +11,7 @@ import android.content.ContentValues
 import android.database.Cursor
 import android.database.MergeCursor
 import android.os.Build
+import android.os.FileUtils
 import android.provider.MediaStore
 import androidx.exifinterface.media.ExifInterface
 import com.dot.gallery.core.Constants
@@ -19,7 +20,9 @@ import com.dot.gallery.feature_node.domain.model.ExifAttributes
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.presentation.util.getDate
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
+
 
 suspend fun ContentResolver.query(
     mediaQuery: Query
@@ -44,18 +47,57 @@ suspend fun ContentResolver.query(
     }
 }
 
+suspend fun ContentResolver.copyMedia(
+    from: Media,
+    path: String
+) = withContext(Dispatchers.IO) {
+    val contentValues = ContentValues().apply {
+        put(MediaStore.MediaColumns.DISPLAY_NAME, from.label)
+        put(MediaStore.MediaColumns.MIME_TYPE, from.mimeType)
+        put(MediaStore.MediaColumns.RELATIVE_PATH, path)
+        put(MediaStore.MediaColumns.IS_PENDING, 1)
+    }
+    val volumeUri =
+        if (from.isVideo) MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+        else MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+    try {
+        val outUri = insert(volumeUri, contentValues)
+        if (outUri != null) {
+            async {
+                openFileDescriptor(outUri, "w", null).use { target ->
+                    openFileDescriptor(from.uri, "r").use { from ->
+                        if (target != null && from != null) {
+                            FileUtils.copy(from.fileDescriptor, target.fileDescriptor)
+                        }
+                    }
+                }
+            }.await()
+            val updatedValues = ContentValues().apply {
+                put(MediaStore.MediaColumns.IS_PENDING, 0)
+                put(MediaStore.MediaColumns.DATE_MODIFIED, System.currentTimeMillis())
+            }
+
+            update(
+                outUri,
+                updatedValues,
+                null
+            ) > 0
+        } else false
+    } catch (e: Exception) {
+        e.printStackTrace()
+        false
+    }
+}
+
 suspend fun ContentResolver.updateMedia(
     media: Media,
     contentValues: ContentValues
 ): Boolean = withContext(Dispatchers.IO) {
-    val selection = "${MediaStore.MediaColumns._ID} = ?"
-    val selectionArgs = arrayOf(media.id.toString())
     return@withContext try {
         update(
             media.uri,
             contentValues,
-            selection,
-            selectionArgs
+            null
         ) > 0
     } catch (e: java.lang.Exception) {
         e.printStackTrace()

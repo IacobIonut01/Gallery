@@ -118,6 +118,7 @@ fun NavigationComp(
                 navigate = navPipe::navigate,
                 navigateUp = navPipe::navigateUp,
                 toggleNavbar = navPipe::toggleNavbar,
+                refresh = viewModel::refresh,
                 isScrolling = isScrolling,
                 searchBarActive = searchBarActive,
             )
@@ -228,6 +229,7 @@ fun NavigationComp(
                 navigate = navPipe::navigate,
                 navigateUp = navPipe::navigateUp,
                 toggleNavbar = navPipe::toggleNavbar,
+                refresh = viewModel::refresh,
                 isScrolling = isScrolling
             )
         }
@@ -264,7 +266,8 @@ fun NavigationComp(
                 paddingValues = paddingValues,
                 mediaId = mediaId,
                 mediaState = viewModel.mediaState,
-                handler = viewModel.handler
+                handler = viewModel.handler,
+                refresh = viewModel::refresh
             )
         }
         composable(
@@ -304,7 +307,8 @@ fun NavigationComp(
                 mediaId = mediaId,
                 target = target,
                 mediaState = viewModel.mediaState,
-                handler = viewModel.handler
+                handler = viewModel.handler,
+                refresh = viewModel::refresh
             )
         }
         composable(

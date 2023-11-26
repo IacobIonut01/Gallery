@@ -42,6 +42,7 @@ fun TimelineScreen(
     navigate: (route: String) -> Unit,
     navigateUp: () -> Unit,
     toggleNavbar: (Boolean) -> Unit,
+    refresh: () -> Unit,
     isScrolling: MutableState<Boolean>,
     searchBarActive: MutableState<Boolean> = mutableStateOf(false)
 ) {
@@ -81,6 +82,7 @@ fun TimelineScreen(
         navigate = navigate,
         navigateUp = navigateUp,
         toggleNavbar = toggleNavbar,
+        refresh = refresh,
         isScrolling = isScrolling,
         searchBarActive = searchBarActive
     ) { result ->

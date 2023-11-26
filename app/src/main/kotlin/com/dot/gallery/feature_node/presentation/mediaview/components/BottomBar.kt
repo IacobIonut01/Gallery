@@ -37,6 +37,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.DriveFileMove
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.CopyAll
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -84,6 +85,7 @@ import com.dot.gallery.core.Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION
 import com.dot.gallery.core.presentation.components.DragHandle
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
+import com.dot.gallery.feature_node.presentation.exif.CopyMediaSheet
 import com.dot.gallery.feature_node.presentation.exif.MetadataEditSheet
 import com.dot.gallery.feature_node.presentation.exif.MoveMediaSheet
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialog
@@ -120,6 +122,7 @@ fun BoxScope.MediaViewBottomBar(
     paddingValues: PaddingValues,
     currentMedia: Media?,
     currentIndex: Int = 0,
+    refresh: () -> Unit,
     onDeleteMedia: ((Int) -> Unit)? = null,
 ) {
     AnimatedVisibility(
@@ -162,7 +165,8 @@ fun BoxScope.MediaViewBottomBar(
         MediaInfoBottomSheet(
             media = it,
             state = bottomSheetState,
-            handler = handler
+            handler = handler,
+            refresh = refresh
         )
     }
 }
@@ -172,7 +176,8 @@ fun BoxScope.MediaViewBottomBar(
 fun MediaInfoBottomSheet(
     media: Media,
     state: AppBottomSheetState,
-    handler: MediaHandleUseCase
+    handler: MediaHandleUseCase,
+    refresh: () -> Unit
 ) {
     val scope = rememberCoroutineScope()
     val exifInterface = rememberExifInterface(media, true)
@@ -183,7 +188,10 @@ fun MediaInfoBottomSheet(
         if (state.isVisible) {
             ModalBottomSheet(
                 onDismissRequest = {
-                    scope.launch { state.hide() }
+                    scope.launch {
+                        state.hide()
+                        refresh()
+                    }
                 },
                 dragHandle = { DragHandle() },
                 shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
@@ -193,6 +201,7 @@ fun MediaInfoBottomSheet(
                 BackHandler {
                     scope.launch {
                         state.hide()
+                        refresh()
                     }
                 }
                 Column(
@@ -441,6 +450,8 @@ private fun MediaViewInfoActions(
         ShareButton(media, followTheme = true)
         // Use as or Open With
         OpenAsButton(media, followTheme = true)
+        // Copy
+        CopyButton(media, followTheme = true)
         // Move
         MoveButton(media, followTheme = true)
         // Edit
@@ -466,6 +477,31 @@ private fun MediaViewActions(
     if (showDeleteButton) {
         TrashButton(currentIndex, currentMedia, handler, false, onDeleteMedia)
     }
+}
+
+@Composable
+private fun CopyButton(
+    media: Media,
+    followTheme: Boolean = false
+) {
+    val copySheetState = rememberAppBottomSheetState()
+    val scope = rememberCoroutineScope()
+    BottomBarColumn(
+        currentMedia = media,
+        imageVector = Icons.Outlined.CopyAll,
+        followTheme = followTheme,
+        title = stringResource(R.string.copy)
+    ) {
+        scope.launch {
+            copySheetState.show()
+        }
+    }
+
+    CopyMediaSheet(
+        sheetState = copySheetState,
+        mediaList = listOf(media),
+        onFinish = {  }
+    )
 }
 
 @Composable

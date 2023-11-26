@@ -75,7 +75,8 @@ fun MediaViewScreen(
     mediaId: Long,
     target: String? = null,
     mediaState: StateFlow<MediaState>,
-    handler: MediaHandleUseCase
+    handler: MediaHandleUseCase,
+    refresh: () -> Unit
 ) {
     var runtimeMediaId by rememberSaveable(mediaId) { mutableLongStateOf(mediaId) }
     val state by mediaState.collectAsStateWithLifecycle()
@@ -152,7 +153,7 @@ fun MediaViewScreen(
             ),
             key = { index ->
                 if (state.media.isNotEmpty()) {
-                    state.media[index.coerceIn(0 until state.media.size)].toString()
+                    state.media[index.coerceIn(0 until state.media.size)].id
                 } else "empty"
             },
             pageSpacing = 16.dp,
@@ -273,7 +274,8 @@ fun MediaViewScreen(
                 showUI = showUI.value,
                 paddingValues = paddingValues,
                 currentMedia = currentMedia.value,
-                currentIndex = pagerState.currentPage
+                currentIndex = pagerState.currentPage,
+                refresh = refresh
             ) {
                 lastIndex = it
             }
