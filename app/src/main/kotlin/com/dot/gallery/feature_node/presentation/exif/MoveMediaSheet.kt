@@ -6,17 +6,20 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -139,16 +142,20 @@ fun MoveMediaSheet(
 
                 AnimatedVisibility(
                     visible = progress > 0f,
+                    modifier = Modifier
+                        .padding(32.dp)
+                        .padding(bottom = 64.dp)
+                        .navigationBarsPadding()
+                        .size(128.dp)
+                        .align(Alignment.CenterHorizontally),
                     enter = Constants.Animation.enterAnimation,
                     exit = Constants.Animation.exitAnimation
                 ) {
-                    LinearProgressIndicator(
+                    CircularProgressIndicator(
                         progress = {
                             progress
                         },
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .fillMaxWidth(),
+                        modifier = Modifier.fillMaxSize(),
                     )
                 }
 

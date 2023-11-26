@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -250,7 +251,7 @@ private fun RowScope.SelectionBarColumn(
     Column(
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
-            .height(80.dp)
+            .defaultMinSize(minHeight = 80.dp)
             .weight(1f)
             .clickable {
                 onItemClick.invoke(selectedMedia)
