@@ -151,6 +151,7 @@
     <string name="allow_vibrations_summary">Erlaube das Senden von Feedback als Vibrationen während bestimmter Aktionen oder Gesten</string>
     <string name="album_name">Album Name</string>
     <string name="create_new_album">Create new album</string>
+    <string name="copy">Copy</string>
     <plurals name="item_count">
         <item quantity="one">%s Datei</item>
         <item quantity="other">%s Dateien</item>
