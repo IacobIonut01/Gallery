@@ -20,7 +20,7 @@
     <string name="no_media_cd">メディアが見つかりません</string>
     <string name="empty_trash_title">ゴミ箱は空です</string>
     <string name="empty_trash_cd">ゴミ箱は空です</string>
-    <string name="error_title">Something went wrong :(</string>
+    <string name="error_title">問題が発生しました :(</string>
     <string name="error_cd">エラーが発生しました</string>
     <string name="copy_error">エラーをコピー</string>
     <string name="trash_restore">復元</string>
@@ -102,8 +102,9 @@
     <string name="set_wallpaper_error">Can\'t set wallpaper, no app available!</string>
     <string name="monthly_timeline_title">Monthly Timeline</string>
     <string name="monthly_timeline_summary">Group the timeline monthly instead of per date (Restarts the app)</string>
-    <string name="amoled_mode_title">Use Amoled Mode</string>
-    <string name="amoled_mode_summary">Higher contrast, best suited for Amoled Screens</string>
+    <string name="amoled_mode_title">AMOLED モードを使用</string>
+    <string name="amoled_mode_summary">高コントラスト
+AMOLED スクリーンに最適です</string>
     <string name="location_chip">場所: %s</string>
     <string name="media_details">詳細</string>
     <string name="album_card_size">アルバムカードのサイズ</string>
@@ -124,7 +125,7 @@
     <string name="remove_location">位置情報を削除</string>
     <string name="description">説明</string>
     <string name="move_to_another_album">Move to another album</string>
-    <string name="move">Move</string>
+    <string name="move">移動</string>
     <string name="some_permissions_are_not_granted">Some permissions are not granted!</string>
     <string name="get_started">始める</string>
     <string name="welcome">ようこそ</string>
@@ -149,9 +150,9 @@
     <string name="hide_timeline_for_album_summary">Hides date headers when opening an album</string>
     <string name="allow_vibrations">Allow vibrations</string>
     <string name="allow_vibrations_summary">Allow sending feedback as vibrations while performing some actions or gestures</string>
-    <string name="album_name">Album Name</string>
-    <string name="create_new_album">Create new album</string>
-    <string name="copy">Copy</string>
+    <string name="album_name">アルバム名</string>
+    <string name="create_new_album">新しいアルバムを作成</string>
+    <string name="copy">コピー</string>
     <plurals name="item_count">
         <item quantity="other">%s アイテム</item>
     </plurals>
