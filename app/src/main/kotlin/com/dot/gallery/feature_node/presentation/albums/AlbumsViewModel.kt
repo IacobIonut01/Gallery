@@ -140,7 +140,7 @@ class AlbumsViewModel @Inject constructor(
         }
     }
 
-    private fun getAlbums(mediaOrder: MediaOrder = MediaOrder.Date(OrderType.Descending)) {
+    fun getAlbums(mediaOrder: MediaOrder = MediaOrder.Date(OrderType.Descending)) {
         viewModelScope.launch(Dispatchers.IO) {
             mediaUseCases.getAlbumsUseCase(mediaOrder).flowOn(Dispatchers.IO).collectLatest { result ->
                 // Result data list

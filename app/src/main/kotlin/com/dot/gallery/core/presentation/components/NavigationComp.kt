@@ -35,6 +35,8 @@ import com.dot.gallery.core.Settings.Misc.rememberTimelineGroupByMonth
 import com.dot.gallery.core.presentation.components.util.permissionGranted
 import com.dot.gallery.feature_node.presentation.albums.AlbumsScreen
 import com.dot.gallery.feature_node.presentation.albums.AlbumsViewModel
+import com.dot.gallery.feature_node.presentation.blacklist.BlacklistScreen
+import com.dot.gallery.feature_node.presentation.blacklist.BlacklistViewModel
 import com.dot.gallery.feature_node.presentation.common.ChanneledViewModel
 import com.dot.gallery.feature_node.presentation.common.MediaViewModel
 import com.dot.gallery.feature_node.presentation.favorites.FavoriteScreen
@@ -333,6 +335,19 @@ fun NavigationComp(
             popExitTransition = { navigateUpAnimation },
         ) {
             AlbumSizeScreen(
+                navigateUp = navPipe::navigateUp
+            )
+        }
+        composable(
+            route = Screen.BlacklistScreen(),
+            enterTransition = { navigateInAnimation },
+            exitTransition = { navigateUpAnimation },
+            popEnterTransition = { navigateInAnimation },
+            popExitTransition = { navigateUpAnimation },
+        ) {
+            val blacklistViewModel = hiltViewModel<BlacklistViewModel>()
+            BlacklistScreen(
+                vm = blacklistViewModel,
                 navigateUp = navPipe::navigateUp
             )
         }

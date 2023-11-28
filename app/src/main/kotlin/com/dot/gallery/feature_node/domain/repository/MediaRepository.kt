@@ -10,6 +10,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import com.dot.gallery.core.Resource
 import com.dot.gallery.feature_node.domain.model.Album
+import com.dot.gallery.feature_node.domain.model.BlacklistedAlbum
 import com.dot.gallery.feature_node.domain.model.ExifAttributes
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.PinnedAlbum
@@ -27,11 +28,20 @@ interface MediaRepository {
 
     fun getTrashed(): Flow<Resource<List<Media>>>
 
-    fun getAlbums(mediaOrder: MediaOrder): Flow<Resource<List<Album>>>
+    fun getAlbums(
+        mediaOrder: MediaOrder,
+        ignoreBlacklisted: Boolean = false
+    ): Flow<Resource<List<Album>>>
 
     suspend fun insertPinnedAlbum(pinnedAlbum: PinnedAlbum)
 
     suspend fun removePinnedAlbum(pinnedAlbum: PinnedAlbum)
+
+    suspend fun addBlacklistedAlbum(blacklistedAlbum: BlacklistedAlbum)
+
+    suspend fun removeBlacklistedAlbum(blacklistedAlbum: BlacklistedAlbum)
+
+    fun getBlacklistedAlbums(): Flow<List<BlacklistedAlbum>>
 
     suspend fun getMediaById(mediaId: Long): Media?
 
@@ -81,6 +91,4 @@ interface MediaRepository {
         media: Media,
         exifAttributes: ExifAttributes
     ): Boolean
-
-
 }

@@ -115,6 +115,14 @@ class SettingsViewModel @Inject constructor() : ViewModel() {
             ) { navigate(Screen.AlbumSizeScreen.route) }
         }
 
+        val blacklistPref = remember {
+            Preference(
+                title = context.getString(R.string.blacklist),
+                summary = context.getString(R.string.blacklist_summary),
+                screenPosition = Position.Middle
+            ) { navigate(Screen.BlacklistScreen()) }
+        }
+
         var groupByMonth by rememberTimelineGroupByMonth()
         val groupByMonthPref = remember(groupByMonth) {
             SwitchPreference(
@@ -179,6 +187,7 @@ class SettingsViewModel @Inject constructor() : ViewModel() {
                 add(Header(title = context.getString(R.string.customization)))
                 /** Customization Section Start **/
                 add(albumSizePref)
+                add(blacklistPref)
                 add(groupByMonthPref)
                 add(allowBlurPref)
                 add(showOldNavbarPref)

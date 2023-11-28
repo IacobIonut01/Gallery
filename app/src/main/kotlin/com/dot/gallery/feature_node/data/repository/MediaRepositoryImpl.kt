@@ -30,6 +30,7 @@ import com.dot.gallery.feature_node.data.data_types.getMediaTrashed
 import com.dot.gallery.feature_node.data.data_types.updateMedia
 import com.dot.gallery.feature_node.data.data_types.updateMediaExif
 import com.dot.gallery.feature_node.domain.model.Album
+import com.dot.gallery.feature_node.domain.model.BlacklistedAlbum
 import com.dot.gallery.feature_node.domain.model.ExifAttributes
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.PinnedAlbum
@@ -53,7 +54,9 @@ class MediaRepositoryImpl(
      * TODO: Add media reordering
      */
     override fun getMedia(): Flow<Resource<List<Media>>> =
-        context.retrieveMedia { it.getMedia(mediaOrder = DEFAULT_ORDER) }
+        context.retrieveMedia {
+            it.getMedia(mediaOrder = DEFAULT_ORDER).removeBlacklisted()
+        }
 
     override fun getMediaByType(allowedMedia: AllowedMedia): Flow<Resource<List<Media>>> =
         context.retrieveMedia {
@@ -62,20 +65,29 @@ class MediaRepositoryImpl(
                 VIDEOS -> Query.VideoQuery()
                 BOTH -> Query.MediaQuery()
             }
-            it.getMedia(mediaQuery = query, mediaOrder = DEFAULT_ORDER)
+            it.getMedia(mediaQuery = query, mediaOrder = DEFAULT_ORDER).removeBlacklisted()
         }
 
     override fun getFavorites(mediaOrder: MediaOrder): Flow<Resource<List<Media>>> =
-        context.retrieveMedia { it.getMediaFavorite(mediaOrder = mediaOrder) }
+        context.retrieveMedia {
+            it.getMediaFavorite(mediaOrder = mediaOrder).removeBlacklisted()
+        }
 
     override fun getTrashed(): Flow<Resource<List<Media>>> =
-        context.retrieveMedia { it.getMediaTrashed() }
+        context.retrieveMedia {
+            it.getMediaTrashed().removeBlacklisted()
+        }
 
-    override fun getAlbums(mediaOrder: MediaOrder): Flow<Resource<List<Album>>> =
+    override fun getAlbums(mediaOrder: MediaOrder, ignoreBlacklisted: Boolean): Flow<Resource<List<Album>>> =
         context.retrieveAlbums {
             it.getAlbums(mediaOrder = mediaOrder).toMutableList().apply {
                 replaceAll { album ->
                     album.copy(isPinned = database.getPinnedDao().albumIsPinned(album.id))
+                }
+                if (!ignoreBlacklisted) {
+                    removeAll { album ->
+                        database.getBlacklistDao().albumIsBlacklisted(album.id)
+                    }
                 }
             }
         }
@@ -85,6 +97,15 @@ class MediaRepositoryImpl(
 
     override suspend fun removePinnedAlbum(pinnedAlbum: PinnedAlbum) =
         database.getPinnedDao().removePinnedAlbum(pinnedAlbum)
+
+    override suspend fun addBlacklistedAlbum(blacklistedAlbum: BlacklistedAlbum) =
+        database.getBlacklistDao().addBlacklistedAlbum(blacklistedAlbum)
+
+    override suspend fun removeBlacklistedAlbum(blacklistedAlbum: BlacklistedAlbum) =
+        database.getBlacklistDao().removeBlacklistedAlbum(blacklistedAlbum)
+
+    override fun getBlacklistedAlbums(): Flow<List<BlacklistedAlbum>> =
+        database.getBlacklistDao().getBlacklistedAlbums()
 
     override suspend fun getMediaById(mediaId: Long): Media? {
         val query = Query.MediaQuery().copy(
@@ -196,7 +217,10 @@ class MediaRepositoryImpl(
             }
         }
 
-    override fun getMediaListByUris(listOfUris: List<Uri>, reviewMode: Boolean): Flow<Resource<List<Media>>> =
+    override fun getMediaListByUris(
+        listOfUris: List<Uri>,
+        reviewMode: Boolean
+    ): Flow<Resource<List<Media>>> =
         context.retrieveMediaAsResource {
             var mediaList = it.getMediaListByUris(listOfUris)
             if (reviewMode) {
@@ -258,7 +282,9 @@ class MediaRepositoryImpl(
         mediaList: List<Media>
     ) {
         val intentSender =
-            MediaStore.createDeleteRequest(context.contentResolver, mediaList.map { it.uri }).intentSender
+            MediaStore.createDeleteRequest(
+                context.contentResolver,
+                mediaList.map { it.uri }).intentSender
         val senderRequest: IntentSenderRequest = IntentSenderRequest.Builder(intentSender)
             .setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION, 0)
             .build()
@@ -297,6 +323,11 @@ class MediaRepositoryImpl(
         exifAttributes = exifAttributes
     )
 
+    private fun List<Media>.removeBlacklisted(): List<Media> = toMutableList().apply {
+        removeAll { media ->
+            database.getBlacklistDao().albumIsBlacklisted(media.albumID)
+        }
+    }
 
     companion object {
         private val DEFAULT_ORDER = MediaOrder.Date(OrderType.Descending)

@@ -25,4 +25,5 @@ data class MediaUseCases(
     val mediaHandleUseCase = MediaHandleUseCase(repository, context)
     val insertPinnedAlbumUseCase = InsertPinnedAlbumUseCase(repository)
     val deletePinnedAlbumUseCase = DeletePinnedAlbumUseCase(repository)
+    val blacklistUseCase = BlacklistUseCase(repository)
 }
