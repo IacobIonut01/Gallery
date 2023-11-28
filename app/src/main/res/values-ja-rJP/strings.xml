@@ -18,9 +18,9 @@
     <string name="favorites">お気に入り</string>
     <string name="no_media_title">ここには何もありません</string>
     <string name="no_media_cd">メディアが見つかりません</string>
-    <string name="empty_trash_title">Squeaky Clean</string>
+    <string name="empty_trash_title">ゴミ箱は空です</string>
     <string name="empty_trash_cd">ゴミ箱は空です</string>
-    <string name="error_title">Something went wrong :(</string>
+    <string name="error_title">問題が発生しました :(</string>
     <string name="error_cd">エラーが発生しました</string>
     <string name="copy_error">エラーをコピー</string>
     <string name="trash_restore">復元</string>
@@ -102,8 +102,9 @@
     <string name="set_wallpaper_error">Can\'t set wallpaper, no app available!</string>
     <string name="monthly_timeline_title">Monthly Timeline</string>
     <string name="monthly_timeline_summary">Group the timeline monthly instead of per date (Restarts the app)</string>
-    <string name="amoled_mode_title">Use Amoled Mode</string>
-    <string name="amoled_mode_summary">Higher contrast, best suited for Amoled Screens</string>
+    <string name="amoled_mode_title">AMOLED モードを使用</string>
+    <string name="amoled_mode_summary">高コントラスト
+AMOLED スクリーンに最適です</string>
     <string name="location_chip">場所: %s</string>
     <string name="media_details">詳細</string>
     <string name="album_card_size">アルバムカードのサイズ</string>
@@ -114,7 +115,7 @@
     <string name="trashing_items">Trashing %1$s items..</string>
     <string name="deleting_items">Deleting %1$s items...</string>
     <string name="long_press_to_remove">Long press to remove</string>
-    <string name="dialog_from_trash">Restoring from Trash</string>
+    <string name="dialog_from_trash">ゴミ箱から復元</string>
     <string name="restoring_items">Restoring %1$s items..</string>
     <string name="trash_incompatible_title">Some items cannot be trashed!</string>
     <string name="trash_incompatible_summary">Such items will be deleted permanently instead.</string>
@@ -124,7 +125,7 @@
     <string name="remove_location">位置情報を削除</string>
     <string name="description">説明</string>
     <string name="move_to_another_album">Move to another album</string>
-    <string name="move">Move</string>
+    <string name="move">移動</string>
     <string name="some_permissions_are_not_granted">Some permissions are not granted!</string>
     <string name="get_started">始める</string>
     <string name="welcome">ようこそ</string>
@@ -141,12 +142,17 @@
     <string name="access_media_location_summary"><![CDATA[Allows the app to read location data of your images & videos]]></string>
     <string name="internet">インターネット</string>
     <string name="internet_summary"><![CDATA[Required to display Location Previews of your images & videos]]></string>
-    <string name="fancy_blur">Fancy Blur</string>
-    <string name="fancy_blur_summary">Blur background in Media View</string>
+    <string name="fancy_blur">ファンシーブラー</string>
+    <string name="fancy_blur_summary">メディアビューで背景をぼかします</string>
     <string name="old_navbar">マテリアルナビゲーションを使用</string>
     <string name="old_navbar_summary">Show the old navigation bar UI (with rails for bigger screens)</string>
     <string name="hide_timeline_for_albums">Hide timeline for albums</string>
     <string name="hide_timeline_for_album_summary">Hides date headers when opening an album</string>
+    <string name="allow_vibrations">バイブレーションを許可</string>
+    <string name="allow_vibrations_summary">特定のアクションやジェスチャーを実行する際に、振動でフィードバックできるようにします</string>
+    <string name="album_name">アルバム名</string>
+    <string name="create_new_album">新しいアルバムを作成</string>
+    <string name="copy">コピー</string>
     <plurals name="item_count">
         <item quantity="other">%s アイテム</item>
     </plurals>

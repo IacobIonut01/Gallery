@@ -147,6 +147,11 @@
     <string name="old_navbar_summary">Show the old navigation bar UI (with rails for bigger screens)</string>
     <string name="hide_timeline_for_albums">Hide timeline for albums</string>
     <string name="hide_timeline_for_album_summary">Hides date headers when opening an album</string>
+    <string name="allow_vibrations">Allow vibrations</string>
+    <string name="allow_vibrations_summary">Allow sending feedback as vibrations while performing some actions or gestures</string>
+    <string name="album_name">Album Name</string>
+    <string name="create_new_album">Create new album</string>
+    <string name="copy">Copy</string>
     <plurals name="item_count">
         <item quantity="one">%s položka</item>
         <item quantity="few">%s položky</item>

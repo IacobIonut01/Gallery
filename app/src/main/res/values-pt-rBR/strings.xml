@@ -147,6 +147,11 @@
     <string name="old_navbar_summary">Mostra a barra de navegação antiga da UI (com trilhos para telas maiores)</string>
     <string name="hide_timeline_for_albums">Ocultar a linha do tempo dos álbuns</string>
     <string name="hide_timeline_for_album_summary">Oculta os cabeçalhos de data ao abrir um álbum</string>
+    <string name="allow_vibrations">Allow vibrations</string>
+    <string name="allow_vibrations_summary">Allow sending feedback as vibrations while performing some actions or gestures</string>
+    <string name="album_name">Album Name</string>
+    <string name="create_new_album">Create new album</string>
+    <string name="copy">Copy</string>
     <plurals name="item_count">
         <item quantity="one">%s ítem</item>
         <item quantity="other">%s ítens</item>

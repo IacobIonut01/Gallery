@@ -61,7 +61,7 @@
     <string name="donate_url">https://www.paypal.com/paypalme/iacobionut01</string>
     <string name="github_url">https://github.com/IacobIonut01/Gallery</string>
     <string name="use_as">Utiliser comme</string>
-    <string name="set_as">Définir comme : </string>
+    <string name="set_as">"Définir comme : "</string>
     <string name="action_cancel">Annuler</string>
     <string name="action_confirm">Confirmer</string>
     <string name="action_confirmed">Confirmé</string>
@@ -147,6 +147,11 @@
     <string name="old_navbar_summary">Show the old navigation bar UI (with rails for bigger screens)</string>
     <string name="hide_timeline_for_albums">Masquer la chronologie dans les albums</string>
     <string name="hide_timeline_for_album_summary">Masque les en-têtes de date lors de l\'ouverture d\'un album</string>
+    <string name="allow_vibrations">Allow vibrations</string>
+    <string name="allow_vibrations_summary">Allow sending feedback as vibrations while performing some actions or gestures</string>
+    <string name="album_name">Album Name</string>
+    <string name="create_new_album">Create new album</string>
+    <string name="copy">Copy</string>
     <plurals name="item_count">
         <item quantity="one">%s élément</item>
         <item quantity="other">%s éléments</item>

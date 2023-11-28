@@ -145,8 +145,13 @@
     <string name="fancy_blur_summary">Hintergrund in der Medienansicht verwischen</string>
     <string name="old_navbar">Material Navigation verwenden</string>
     <string name="old_navbar_summary">Die alte Navigationsleiste UI anzeigen (mit Rails für größere Bildschirme)</string>
-    <string name="hide_timeline_for_albums">Hide timeline for albums</string>
-    <string name="hide_timeline_for_album_summary">Hides date headers when opening an album</string>
+    <string name="hide_timeline_for_albums">Zeitleiste für Alben ausblenden</string>
+    <string name="hide_timeline_for_album_summary">Blendet Datumsüberschriften beim Öffnen eines Albums aus</string>
+    <string name="allow_vibrations">Vibrationen zulassen</string>
+    <string name="allow_vibrations_summary">Erlaube das Senden von Feedback als Vibrationen während bestimmter Aktionen oder Gesten</string>
+    <string name="album_name">Album Name</string>
+    <string name="create_new_album">Create new album</string>
+    <string name="copy">Copy</string>
     <plurals name="item_count">
         <item quantity="one">%s Datei</item>
         <item quantity="other">%s Dateien</item>
