@@ -98,7 +98,11 @@ fun Long.getDate(
 
     return when (daysDifference.toInt()) {
         0 -> {
-            stringToday
+            if (currentDate.get(Calendar.DATE) != mediaDate.get(Calendar.DATE)) {
+                stringYesterday
+            } else {
+                stringToday
+            }
         }
 
         1 -> {
