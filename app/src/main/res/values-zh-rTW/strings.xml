@@ -151,15 +151,15 @@
     <string name="allow_vibrations_summary">在執行某些動作或手勢時，允許以振動形式發送反饋訊息</string>
     <string name="album_name">相簿名稱</string>
     <string name="create_new_album">建立新相簿</string>
-    <string name="copy">Copy</string>
-    <string name="blacklisted_albums">Blacklisted Albums</string>
-    <string name="blacklist">Blacklist</string>
-    <string name="select_an_album">Select an album</string>
-    <string name="blacklist_summary">Ignore albums from Gallery</string>
-    <string name="add_to_blacklist">Add to blacklist</string>
-    <string name="add_to_blacklist_summary">Remove an album from showing inside the Gallery</string>
-    <string name="remove_from_blacklist">Remove from blacklist</string>
-    <string name="remove_from_blacklist_summary">Remove from blacklist the album named %1$s</string>
+    <string name="copy">複製</string>
+    <string name="blacklisted_albums">已封鎖的相簿</string>
+    <string name="blacklist">黑名單</string>
+    <string name="select_an_album">選擇一個相簿</string>
+    <string name="blacklist_summary">忽略來自相冊的相簿</string>
+    <string name="add_to_blacklist">新增至黑名單</string>
+    <string name="add_to_blacklist_summary">從相冊中移除一個相簿</string>
+    <string name="remove_from_blacklist">從黑名單中移除</string>
+    <string name="remove_from_blacklist_summary">將名為 %1$s 的相簿從黑名單中移除</string>
     <plurals name="item_count">
         <item quantity="other">%s 個項目</item>
     </plurals>
