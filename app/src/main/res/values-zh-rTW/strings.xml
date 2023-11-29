@@ -152,6 +152,14 @@
     <string name="album_name">相簿名稱</string>
     <string name="create_new_album">建立新相簿</string>
     <string name="copy">Copy</string>
+    <string name="blacklisted_albums">Blacklisted Albums</string>
+    <string name="blacklist">Blacklist</string>
+    <string name="select_an_album">Select an album</string>
+    <string name="blacklist_summary">Ignore albums from Gallery</string>
+    <string name="add_to_blacklist">Add to blacklist</string>
+    <string name="add_to_blacklist_summary">Remove an album from showing inside the Gallery</string>
+    <string name="remove_from_blacklist">Remove from blacklist</string>
+    <string name="remove_from_blacklist_summary">Remove from blacklist the album named %1$s</string>
     <plurals name="item_count">
         <item quantity="other">%s 個項目</item>
     </plurals>
