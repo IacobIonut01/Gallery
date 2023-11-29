@@ -1,14 +1,34 @@
 # Gallery
-## An Android Gallery app built with Jetpack Compose
+> An Android Gallery app built with Jetpack Compose.
+> 
+> The goal of this project is to create and bring the Gallery app everyone wants, with the features everyone needs. FOSS
+
 ![Downloads](https://img.shields.io/github/downloads/IacobIonut01/Gallery/total?color=%23247EE0&label=Downloads)
 [![CI](https://github.com/IacobIonut01/Gallery/actions/workflows/release.yml/badge.svg?branch=v1)](https://github.com/IacobIonut01/Gallery/actions/workflows/release.yml)
 ![License](https://img.shields.io/github/license/IacobIonut01/Gallery?color=%23247EE0)
 [![Crowdin](https://badges.crowdin.net/gallery-compose/localized.svg)](https://crowdin.com/project/gallery-compose)
-[![IzzyOnDroid](https://img.shields.io/endpoint?url=https://apt.izzysoft.de/fdroid/api/v1/shield/com.dot.gallery)](https://apt.izzysoft.de/packages/com.dot.gallery/)
 ![GitHub Repo stars](https://img.shields.io/github/stars/IacobIonut01/Gallery?color=%23247EE0)
 
 ![](./screenshots/preview.png)
-[![](./screenshots/items/play_banner.png)](https://play.google.com/store/apps/details?id=com.dot.gallery.gplay)
 ![](./screenshots/items/support_banner.png)
 [![PayPal](./screenshots/items/support_paypal.png)](https://www.paypal.me/iacobionut01)
 [![Revolut](./screenshots/items/support_revolut.png)](https://revolut.me/somaldoaca)
+
+## Download
+[<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
+    alt="Get it on F-Droid"
+    height="80">](https://f-droid.org/packages/com.dot.gallery)
+[<img 
+    alt='Get it on Google Play'
+    src='https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png'
+    height="80" />](https://play.google.com/store/apps/details?id=com.dot.gallery.gplay&pcampaignid=pcampaignidMKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1)
+
+## Frequent Questions
+
+- Why Android 11 is the minimum version required?
+    - Some Media features and APIs require Android 11 as a minimum version [Trash feature, most APIs used in the app]
+- Will you support lower android versions?
+    - While this is not a priority right now, I do have in mind to include support for lower Android versions at a cost of reduced features. If anyone volntueers to do so before me can request a pull request.
+- Will you add [X] feature?
+    - Please open a new feature request under 'Issues' tab and if the feature will be considered useful and possible can be added.
+
