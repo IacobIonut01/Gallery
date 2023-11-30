@@ -1,0 +1,12 @@
+New Features
+    Added option to create new albums
+    Fixed rotate button
+    Added option to disable vibration feedback
+    Fixed video screen timeout
+    Added blacklist feature
+    Fixed today listing on timeline
+    Added move feature
+    Fixed moving files not updating the media
+    Added copy feature
+
+Full Changelog: https://github.com/IacobIonut01/Gallery/releases/tag/2.0.1-20111
