@@ -103,8 +103,7 @@
     <string name="monthly_timeline_title">Monthly Timeline</string>
     <string name="monthly_timeline_summary">Group the timeline monthly instead of per date (Restarts the app)</string>
     <string name="amoled_mode_title">AMOLED モードを使用</string>
-    <string name="amoled_mode_summary">高コントラスト
-AMOLED スクリーンに最適です</string>
+    <string name="amoled_mode_summary">高コントラストで、AMOLED スクリーンに最適です</string>
     <string name="location_chip">場所: %s</string>
     <string name="media_details">詳細</string>
     <string name="album_card_size">アルバムカードのサイズ</string>
