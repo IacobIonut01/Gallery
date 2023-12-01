@@ -25,18 +25,15 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.SheetValue
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberBottomSheetScaffoldState
-import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -53,7 +50,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dot.gallery.R
 import com.dot.gallery.core.Settings.Album.rememberAlbumSize
-import com.dot.gallery.core.presentation.components.DragHandle
 import com.dot.gallery.core.presentation.components.util.AutoResizeText
 import com.dot.gallery.core.presentation.components.util.FontSizeRange
 import com.dot.gallery.feature_node.domain.model.Album
@@ -100,66 +96,60 @@ fun AlbumSizeScreen(
             )
         )
     }
-    val bottomSheetState = rememberStandardBottomSheetState(
-        initialValue = SheetValue.Expanded,
-        skipHiddenState = true
-    )
-    val scaffoldState = rememberBottomSheetScaffoldState(bottomSheetState = bottomSheetState)
     var albumSize by rememberAlbumSize()
-    BottomSheetScaffold(
-        scaffoldState = scaffoldState,
-        sheetContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-        sheetContentColor = MaterialTheme.colorScheme.onSurface,
-        sheetShape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-        sheetPeekHeight = 64.dp,
-        sheetDragHandle = { DragHandle() },
-        sheetContent = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+    Scaffold(
+        bottomBar = {
+            Column(
+                modifier = Modifier.background(color = MaterialTheme.colorScheme.surface)
             ) {
-                Text(
-                    text = stringResource(R.string.change_album_size),
-                    style = MaterialTheme.typography.titleMedium
-                )
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.height(32.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    OutlinedButton(
-                        onClick = { albumSize = 178f },
-                        border = null,
-                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
-                    ) {
-                        Text(text = stringResource(R.string.reset))
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    val albumSizeStripped = remember(albumSize) { albumSize.toString().removeSuffix(".0") }
                     Text(
-                        text = stringResource(R.string.size_dp, albumSizeStripped),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier
-                            .background(
-                                color = MaterialTheme.colorScheme.primary,
-                                shape = RoundedCornerShape(100)
-                            )
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                        text = stringResource(R.string.change_album_size),
+                        style = MaterialTheme.typography.titleMedium
                     )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.height(32.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = { albumSize = 178f },
+                            border = null,
+                            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
+                        ) {
+                            Text(text = stringResource(R.string.reset))
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        val albumSizeStripped =
+                            remember(albumSize) { albumSize.toString().removeSuffix(".0") }
+                        Text(
+                            text = stringResource(R.string.size_dp, albumSizeStripped),
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier
+                                .background(
+                                    color = MaterialTheme.colorScheme.primary,
+                                    shape = RoundedCornerShape(100)
+                                )
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
                 }
+                Slider(
+                    value = albumSize,
+                    onValueChange = { albumSize = it.roundToInt().toFloat() },
+                    valueRange = 60f..300f,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                        .padding(bottom = 64.dp)
+                )
             }
-            Slider(
-                value = albumSize,
-                onValueChange = { albumSize = it.roundToInt().toFloat() },
-                valueRange = 60f..300f,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-                    .padding(bottom = 64.dp)
-            )
         },
         topBar = {
             TopAppBar(
