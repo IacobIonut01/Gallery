@@ -42,7 +42,6 @@ import com.dot.gallery.feature_node.presentation.common.MediaViewModel
 import com.dot.gallery.feature_node.presentation.favorites.FavoriteScreen
 import com.dot.gallery.feature_node.presentation.mediaview.MediaViewScreen
 import com.dot.gallery.feature_node.presentation.settings.SettingsScreen
-import com.dot.gallery.feature_node.presentation.settings.SettingsViewModel
 import com.dot.gallery.feature_node.presentation.settings.customization.albumsize.AlbumSizeScreen
 import com.dot.gallery.feature_node.presentation.setup.SetupScreen
 import com.dot.gallery.feature_node.presentation.timeline.TimelineScreen
@@ -320,11 +319,9 @@ fun NavigationComp(
             popEnterTransition = { navigateInAnimation },
             popExitTransition = { navigateUpAnimation },
         ) {
-            val viewModel = hiltViewModel<SettingsViewModel>()
             SettingsScreen(
                 navigateUp = navPipe::navigateUp,
-                navigate = navPipe::navigate,
-                viewModel = viewModel
+                navigate = navPipe::navigate
             )
         }
         composable(
