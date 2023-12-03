@@ -152,14 +152,13 @@
     <string name="album_name">相簿名稱</string>
     <string name="create_new_album">建立新相簿</string>
     <string name="copy">複製</string>
-    <string name="blacklisted_albums">隱藏的相簿</string>
-    <string name="blacklist">隱藏</string>
+    <string name="ignored_albums">Ignored Albums</string>
     <string name="select_an_album">選取一個相簿</string>
     <string name="blacklist_summary">在相片庫中隱藏相簿</string>
-    <string name="add_to_blacklist">隱藏</string>
-    <string name="add_to_blacklist_summary">不要在相片庫中顯示特定相簿</string>
-    <string name="remove_from_blacklist">取消隱藏</string>
-    <string name="remove_from_blacklist_summary">取消隱藏相簿 %1$s</string>
+    <string name="add_to_ignored">Add to ignored albums</string>
+    <string name="add_to_ignored_summary">Remove an album from showing inside the Gallery</string>
+    <string name="remove_from_ignored">Remove from ignored list</string>
+    <string name="remove_from_ignored_summary">Remove from the ignored list the album named %1$s</string>
     <plurals name="item_count">
         <item quantity="other">%s 個項目</item>
     </plurals>
