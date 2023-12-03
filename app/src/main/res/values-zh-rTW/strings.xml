@@ -14,10 +14,10 @@
     <string name="selected_s">%s 已選取</string>
     <string name="trash">垃圾桶</string>
     <string name="pause_video">暫停影片</string>
-    <string name="play_video">撥放影片</string>
-    <string name="favorites">我的最愛</string>
-    <string name="no_media_title">這裡似乎是空的</string>
-    <string name="no_media_cd">未找到任何媒體檔案</string>
+    <string name="play_video">播放影片</string>
+    <string name="favorites">收藏</string>
+    <string name="no_media_title">這裡空空如也</string>
+    <string name="no_media_cd">無可用媒體檔案</string>
     <string name="empty_trash_title">一塵不染</string>
     <string name="empty_trash_cd">垃圾桶已清空</string>
     <string name="error_title">出現問題了 QQ</string>
@@ -27,9 +27,9 @@
     <string name="trash_empty">清空</string>
     <string name="trash_delete">刪除</string>
     <string name="share">分享</string>
-    <string name="remove_selected">移除已選取項目</string>
+    <string name="remove_selected">移除選取項目</string>
     <string name="remove_all">全部移除</string>
-    <string name="empty_favorites_title">我的最愛目前沒有內容</string>
+    <string name="empty_favorites_title">無收藏內容</string>
     <string name="label">標籤</string>
     <string name="path">路徑</string>
     <string name="iso">" • 光感度（ISO）"</string>
