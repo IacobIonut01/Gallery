@@ -35,8 +35,8 @@ import com.dot.gallery.core.Settings.Misc.rememberTimelineGroupByMonth
 import com.dot.gallery.core.presentation.components.util.permissionGranted
 import com.dot.gallery.feature_node.presentation.albums.AlbumsScreen
 import com.dot.gallery.feature_node.presentation.albums.AlbumsViewModel
-import com.dot.gallery.feature_node.presentation.blacklist.BlacklistScreen
-import com.dot.gallery.feature_node.presentation.blacklist.BlacklistViewModel
+import com.dot.gallery.feature_node.presentation.ignored.IgnoredScreen
+import com.dot.gallery.feature_node.presentation.ignored.IgnoredViewModel
 import com.dot.gallery.feature_node.presentation.common.ChanneledViewModel
 import com.dot.gallery.feature_node.presentation.common.MediaViewModel
 import com.dot.gallery.feature_node.presentation.favorites.FavoriteScreen
@@ -342,9 +342,9 @@ fun NavigationComp(
             popEnterTransition = { navigateInAnimation },
             popExitTransition = { navigateUpAnimation },
         ) {
-            val blacklistViewModel = hiltViewModel<BlacklistViewModel>()
-            BlacklistScreen(
-                vm = blacklistViewModel,
+            val ignoredViewModel = hiltViewModel<IgnoredViewModel>()
+            IgnoredScreen(
+                vm = ignoredViewModel,
                 navigateUp = navPipe::navigateUp
             )
         }

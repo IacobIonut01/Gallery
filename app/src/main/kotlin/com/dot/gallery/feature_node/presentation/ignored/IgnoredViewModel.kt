@@ -1,4 +1,4 @@
-package com.dot.gallery.feature_node.presentation.blacklist
+package com.dot.gallery.feature_node.presentation.ignored
 
 import android.annotation.SuppressLint
 import androidx.compose.runtime.Composable
@@ -15,22 +15,22 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class BlacklistViewModel @Inject constructor(
+class IgnoredViewModel @Inject constructor(
     private val mediaUseCases: MediaUseCases
 ): ViewModel() {
 
-    private val _blacklistState = MutableStateFlow(BlacklistState())
-    val blacklistState = _blacklistState.asStateFlow()
+    private val _ignoredState = MutableStateFlow(IgnoredState())
+    val blacklistState = _ignoredState.asStateFlow()
 
     init {
-        getBlacklistedAlbums()
+        getIgnoredAlbums()
     }
 
     @SuppressLint("ComposableNaming")
     @Composable
     fun attachToLifecycle() {
         RepeatOnResume {
-            getBlacklistedAlbums()
+            getIgnoredAlbums()
         }
     }
 
@@ -46,10 +46,10 @@ class BlacklistViewModel @Inject constructor(
         }
     }
 
-    private fun getBlacklistedAlbums() {
+    private fun getIgnoredAlbums() {
         viewModelScope.launch {
             mediaUseCases.blacklistUseCase.blacklistedAlbums.collectLatest {
-                _blacklistState.tryEmit(BlacklistState(it))
+                _ignoredState.tryEmit(IgnoredState(it))
             }
         }
     }

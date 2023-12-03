@@ -164,7 +164,7 @@ fun rememberSettingsList(navigate: (String) -> Unit): SnapshotStateList<Settings
 
     val blacklistPref = remember {
         SettingsEntity.Preference(
-            title = context.getString(R.string.blacklist),
+            title = context.getString(R.string.ignored_albums),
             summary = context.getString(R.string.blacklist_summary),
             screenPosition = Position.Middle
         ) { navigate(Screen.BlacklistScreen()) }

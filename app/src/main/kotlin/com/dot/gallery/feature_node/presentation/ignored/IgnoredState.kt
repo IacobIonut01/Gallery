@@ -1,4 +1,4 @@
-package com.dot.gallery.feature_node.presentation.blacklist
+package com.dot.gallery.feature_node.presentation.ignored
 
 import android.os.Parcelable
 import androidx.compose.runtime.Immutable
@@ -8,6 +8,6 @@ import kotlinx.parcelize.Parcelize
 
 @Immutable
 @Parcelize
-data class BlacklistState(
+data class IgnoredState(
     val albums: List<BlacklistedAlbum> = emptyList()
 ): Parcelable

@@ -1,4 +1,4 @@
-package com.dot.gallery.feature_node.presentation.blacklist
+package com.dot.gallery.feature_node.presentation.ignored
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

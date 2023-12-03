@@ -1,4 +1,4 @@
-package com.dot.gallery.feature_node.presentation.blacklist
+package com.dot.gallery.feature_node.presentation.ignored
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,13 +42,13 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BlacklistScreen(
-    vm: BlacklistViewModel,
+fun IgnoredScreen(
+    vm: IgnoredViewModel,
     navigateUp: () -> Unit,
 ) {
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
-    val state by vm.blacklistState.collectAsStateWithLifecycle(BlacklistState())
+    val state by vm.blacklistState.collectAsStateWithLifecycle(IgnoredState())
     val selectAlbumState = rememberAppBottomSheetState()
     val scope = rememberCoroutineScope()
     var toBeRemoved by remember(state) {
@@ -59,7 +59,7 @@ fun BlacklistScreen(
             LargeTopAppBar(
                 title = {
                     Text(
-                        text = stringResource(R.string.blacklist),
+                        text = stringResource(R.string.ignored_albums),
                     )
                 },
                 navigationIcon = {
@@ -85,7 +85,7 @@ fun BlacklistScreen(
 
                 if (state.albums.isNotEmpty()) {
                     SettingsItem(
-                        item = SettingsEntity.Header(stringResource(R.string.blacklisted_albums))
+                        item = SettingsEntity.Header(stringResource(R.string.ignored_albums))
                     )
                 }
 
@@ -151,12 +151,12 @@ fun BlacklistScreen(
                 }
             },
             title = {
-                Text(text = stringResource(R.string.remove_from_blacklist))
+                Text(text = stringResource(R.string.remove_from_ignored))
             },
             text = {
                 Text(
                     text = stringResource(
-                        R.string.remove_from_blacklist_summary,
+                        R.string.remove_from_ignored_summary,
                         toBeRemoved!!.label
                     )
                 )
