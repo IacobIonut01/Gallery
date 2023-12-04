@@ -49,7 +49,7 @@
     <string name="pinned_albums_title">Albums épinglés</string>
     <string name="unpin">Désépingler</string>
     <string name="pin">Épingler</string>
-    <string name="nav_timeline">Photos</string>
+    <string name="nav_timeline">Chronologie</string>
     <string name="location_cd">Emplacement des médias</string>
     <string name="location_map_cd">Carte de localisation</string>
     <string name="app_dev">par %s</string>
