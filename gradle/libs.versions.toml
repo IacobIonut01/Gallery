@@ -1,6 +1,6 @@
 [versions]
 agp = "8.2.0"
-composeCompiler = "1.5.5"
+composeCompiler = "1.5.6"
 appcompat = "1.6.1"
 coilVersion = "2.5.0"
 fuzzywuzzy = "1.4.0"
@@ -8,9 +8,9 @@ glideCompose = "1.0.0-beta01"
 exifinterface = "1.3.6"
 glideSvg = "4.0.2"
 glideVersion = "4.16.0"
-kotlin = "1.9.20"
+kotlin = "1.9.21"
 kotlinCoroutinesVersion = "1.7.3"
-ksp = "1.9.20-1.0.14"
+ksp = "1.9.21-1.0.15"
 core-ktx = "1.12.0"
 junit = "4.13.2"
 androidx-test-ext-junit = "1.1.5"
@@ -18,7 +18,7 @@ espresso-core = "3.5.1"
 lifecycle-runtime = "2.6.2"
 activity-compose = "1.8.1"
 compose-bom = "2023.10.01"
-hilt = "2.48.1"
+hilt = "2.49"
 material = "1.10.0"
 material3 = "1.2.0-alpha12"
 media3Ui = "1.2.0"
@@ -120,6 +120,6 @@ kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kspAndroid = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 roomPlugin = { id = "androidx.room", version.ref = "room" }
 hiltAndroid = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
-baselineProfilePlugin = { id = "androidx.baselineprofile", version = "1.2.1" }
+baselineProfilePlugin = { id = "androidx.baselineprofile", version = "1.2.2" }
 [bundles]
 
