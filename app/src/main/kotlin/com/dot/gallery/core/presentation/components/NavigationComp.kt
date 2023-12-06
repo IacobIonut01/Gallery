@@ -35,11 +35,10 @@ import com.dot.gallery.core.Settings.Misc.rememberTimelineGroupByMonth
 import com.dot.gallery.core.presentation.components.util.permissionGranted
 import com.dot.gallery.feature_node.presentation.albums.AlbumsScreen
 import com.dot.gallery.feature_node.presentation.albums.AlbumsViewModel
-import com.dot.gallery.feature_node.presentation.ignored.IgnoredScreen
-import com.dot.gallery.feature_node.presentation.ignored.IgnoredViewModel
 import com.dot.gallery.feature_node.presentation.common.ChanneledViewModel
 import com.dot.gallery.feature_node.presentation.common.MediaViewModel
 import com.dot.gallery.feature_node.presentation.favorites.FavoriteScreen
+import com.dot.gallery.feature_node.presentation.ignored.IgnoredScreen
 import com.dot.gallery.feature_node.presentation.mediaview.MediaViewScreen
 import com.dot.gallery.feature_node.presentation.settings.SettingsScreen
 import com.dot.gallery.feature_node.presentation.settings.customization.albumsize.AlbumSizeScreen
@@ -63,7 +62,8 @@ fun NavigationComp(
     val bottomNavEntries = rememberNavigationItems()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     navBackStackEntry?.destination?.route?.let {
-        val shouldDisplayBottomBar = bottomNavEntries.find { item -> item.route == it && !searchBarActive.value } != null
+        val shouldDisplayBottomBar =
+            bottomNavEntries.find { item -> item.route == it && !searchBarActive.value } != null
         bottomBarState.value = shouldDisplayBottomBar
         systemBarFollowThemeState.value = !it.contains(Screen.MediaViewScreen.route)
     }
@@ -81,6 +81,17 @@ fun NavigationComp(
             Screen.TimelineScreen()
         } else Screen.SetupScreen()
     }
+
+    // Preloaded viewModels
+    val albumsViewModel = hiltViewModel<AlbumsViewModel>().apply {
+        attachToLifecycle()
+    }
+
+    val timelineViewModel = hiltViewModel<MediaViewModel>().apply {
+        groupByMonth = groupTimelineByMonth
+        attachToLifecycle()
+    }
+
     NavHost(
         navController = navController,
         startDestination = startDest
@@ -105,21 +116,17 @@ fun NavigationComp(
             popEnterTransition = { navigateInAnimation },
             popExitTransition = { navigateUpAnimation }
         ) {
-            val viewModel = hiltViewModel<MediaViewModel>().apply {
-                groupByMonth = groupTimelineByMonth
-            }
-            viewModel.attachToLifecycle()
             TimelineScreen(
                 paddingValues = paddingValues,
-                handler = viewModel.handler,
-                mediaState = viewModel.mediaState,
-                selectionState = viewModel.multiSelectState,
-                selectedMedia = viewModel.selectedPhotoState,
-                toggleSelection = viewModel::toggleSelection,
+                handler = timelineViewModel.handler,
+                mediaState = timelineViewModel.mediaState,
+                selectionState = timelineViewModel.multiSelectState,
+                selectedMedia = timelineViewModel.selectedPhotoState,
+                toggleSelection = timelineViewModel::toggleSelection,
                 navigate = navPipe::navigate,
                 navigateUp = navPipe::navigateUp,
                 toggleNavbar = navPipe::toggleNavbar,
-                refresh = viewModel::refresh,
+                refresh = timelineViewModel::refresh,
                 isScrolling = isScrolling,
                 searchBarActive = searchBarActive,
             )
@@ -178,13 +185,11 @@ fun NavigationComp(
             popEnterTransition = { navigateInAnimation },
             popExitTransition = { navigateUpAnimation }
         ) {
-            val viewModel = hiltViewModel<AlbumsViewModel>()
-            viewModel.attachToLifecycle()
             AlbumsScreen(
                 navigate = navPipe::navigate,
                 toggleNavbar = navPipe::toggleNavbar,
                 paddingValues = paddingValues,
-                viewModel = viewModel,
+                viewModel = albumsViewModel,
                 isScrolling = isScrolling,
                 searchBarActive = searchBarActive
             )
@@ -259,8 +264,10 @@ fun NavigationComp(
             val parentEntry = remember(backStackEntry) {
                 navController.getBackStackEntry(entryName)
             }
-            val viewModel = hiltViewModel<MediaViewModel>(parentEntry)
-            viewModel.attachToLifecycle()
+            val viewModel =
+                if (albumId != -1L) hiltViewModel<MediaViewModel>(parentEntry)
+                    .apply { attachToLifecycle() }
+                else timelineViewModel
             MediaViewScreen(
                 navigateUp = navPipe::navigateUp,
                 toggleRotate = toggleRotate,
@@ -342,9 +349,7 @@ fun NavigationComp(
             popEnterTransition = { navigateInAnimation },
             popExitTransition = { navigateUpAnimation },
         ) {
-            val ignoredViewModel = hiltViewModel<IgnoredViewModel>()
             IgnoredScreen(
-                vm = ignoredViewModel,
                 navigateUp = navPipe::navigateUp
             )
         }
