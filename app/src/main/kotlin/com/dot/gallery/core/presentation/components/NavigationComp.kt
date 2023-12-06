@@ -17,6 +17,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -31,7 +32,9 @@ import com.dot.gallery.core.Constants.Animation.navigateUpAnimation
 import com.dot.gallery.core.Constants.Target.TARGET_FAVORITES
 import com.dot.gallery.core.Constants.Target.TARGET_TRASH
 import com.dot.gallery.core.Settings.Album.rememberHideTimelineOnAlbum
+import com.dot.gallery.core.Settings.Misc.rememberLastScreen
 import com.dot.gallery.core.Settings.Misc.rememberTimelineGroupByMonth
+import com.dot.gallery.core.presentation.components.util.OnLifecycleEvent
 import com.dot.gallery.core.presentation.components.util.permissionGranted
 import com.dot.gallery.feature_node.presentation.albums.AlbumsScreen
 import com.dot.gallery.feature_node.presentation.albums.AlbumsViewModel
@@ -76,10 +79,19 @@ fun NavigationComp(
 
     val context = LocalContext.current
     var permissionState by remember { mutableStateOf(context.permissionGranted(Constants.PERMISSIONS)) }
-    val startDest = remember(permissionState) {
+    var lastStartScreen by rememberLastScreen()
+    val startDest = remember(permissionState, lastStartScreen) {
         if (permissionState) {
-            Screen.TimelineScreen()
+            lastStartScreen
         } else Screen.SetupScreen()
+    }
+    OnLifecycleEvent { _, event ->
+        if (event == Lifecycle.Event.ON_PAUSE) {
+            val currentDest = navController.currentDestination?.route ?: Screen.TimelineScreen()
+             if (currentDest == Screen.TimelineScreen() || currentDest == Screen.AlbumsScreen()) {
+                 lastStartScreen = currentDest
+             }
+        }
     }
 
     // Preloaded viewModels
