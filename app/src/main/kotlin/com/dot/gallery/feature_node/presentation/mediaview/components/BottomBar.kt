@@ -632,7 +632,12 @@ private fun TrashButton(
 ) {
     val state = rememberAppBottomSheetState()
     val scope = rememberCoroutineScope()
-    val result = rememberActivityResult()
+    val result = rememberActivityResult {
+        scope.launch {
+            state.hide()
+            onDeleteMedia?.invoke(index)
+        }
+    }
     BottomBarColumn(
         currentMedia = media,
         imageVector = Icons.Outlined.DeleteOutline,
@@ -650,7 +655,6 @@ private fun TrashButton(
         action = TrashDialogAction.TRASH
     ) {
         handler.trashMedia(result, it, true)
-        onDeleteMedia?.invoke(index)
     }
 }
 
