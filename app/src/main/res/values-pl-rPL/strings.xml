@@ -125,12 +125,12 @@
     <string name="description">Opis</string>
     <string name="move_to_another_album">Przenieś do innego albumu</string>
     <string name="move">Przenieś</string>
-    <string name="some_permissions_are_not_granted">Some permissions are not granted!</string>
+    <string name="some_permissions_are_not_granted">Nie przyznano niektórych uprawnień!</string>
     <string name="get_started">Get Started</string>
     <string name="welcome">Welcome</string>
     <string name="setup_summary">In order to access your media, it is required to grant the following permissions:</string>
-    <string name="required">Required</string>
-    <string name="optional">Optional</string>
+    <string name="required">Wymagane</string>
+    <string name="optional">Opcjonalne</string>
     <string name="permission_manage_media_title">• Manage Media</string>
     <string name="permission_manage_media_summary">"    • Automatically grants system confirmation dialogs when you request several changes to your media (Toggle Favorite, Manage Trash, Edit metadata etc)"</string>
     <string name="read_media_images">Read Media Images</string>
@@ -146,15 +146,15 @@
     <string name="old_navbar">Use Material Navigation</string>
     <string name="old_navbar_summary">Show the old navigation bar UI (with rails for bigger screens)</string>
     <string name="hide_timeline_for_albums">Hide timeline for albums</string>
-    <string name="hide_timeline_for_album_summary">Hides date headers when opening an album</string>
+    <string name="hide_timeline_for_album_summary">Chowa nagłówki dat przy otwieraniu albumu</string>
     <string name="allow_vibrations">Allow vibrations</string>
-    <string name="allow_vibrations_summary">Allow sending feedback as vibrations while performing some actions or gestures</string>
-    <string name="album_name">Album Name</string>
+    <string name="allow_vibrations_summary">Zezwalaj na wysyłanie informacji zwrotnych w postaci wibracji podczas wykonywania niektórych czynności lub gestów</string>
+    <string name="album_name">Nazwa albumu</string>
     <string name="create_new_album">Create new album</string>
-    <string name="copy">Copy</string>
+    <string name="copy">Kopiuj</string>
     <string name="ignored_albums">Ignored Albums</string>
-    <string name="select_an_album">Select an album</string>
-    <string name="blacklist_summary">Ignore albums from Gallery</string>
+    <string name="select_an_album">Wybierz album</string>
+    <string name="blacklist_summary">Wyklucz albumy z Galerii</string>
     <string name="add_to_ignored">Add to ignored albums</string>
     <string name="add_to_ignored_summary">Remove an album from showing inside the Gallery</string>
     <string name="remove_from_ignored">Remove from ignored list</string>
@@ -162,7 +162,7 @@
     <plurals name="item_count">
         <item quantity="one">%s pozycja</item>
         <item quantity="few">%s pozycjami</item>
-        <item quantity="many">%s pozycyj</item>
+        <item quantity="many">%s pozycji</item>
         <item quantity="other">%s pozycjach</item>
     </plurals>
 </resources>
