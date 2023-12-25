@@ -29,7 +29,7 @@ class StandaloneActivity : ComponentActivity() {
         val action = intent.action.toString()
         val isSecure = action.toLowerCase(Locale.current).contains("secure")
         val clipData = intent.clipData
-        val uriList = ArrayList<Uri>()
+        val uriList = mutableSetOf<Uri>()
         intent.data?.let(uriList::add)
         if (clipData != null) {
             for (i in 0 until clipData.itemCount) {
@@ -42,7 +42,7 @@ class StandaloneActivity : ComponentActivity() {
                 Scaffold { paddingValues ->
                     val viewModel = hiltViewModel<StandaloneViewModel>().apply {
                         reviewMode = action.contains("REVIEW")
-                        dataList = uriList
+                        dataList = uriList.toList()
                     }
 
                     MediaViewScreen(

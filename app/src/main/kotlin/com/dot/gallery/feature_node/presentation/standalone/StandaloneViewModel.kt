@@ -9,6 +9,7 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dot.gallery.core.MediaState
+import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -49,10 +50,20 @@ class StandaloneViewModel @Inject constructor(
                         if (data != null) {
                             mediaId = data.first().id
                             _mediaState.value = MediaState(media = data)
+                        } else {
+                            _mediaState.value = mediaFromUris()
                         }
                     }
             }
         }
+    }
+
+    private fun mediaFromUris(): MediaState {
+        val list = mutableListOf<Media>()
+        dataList.forEach {
+            Media.createFromUri(it)?.let { it1 -> list.add(it1) }
+        }
+        return MediaState(media = list)
     }
 
 }
