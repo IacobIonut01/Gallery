@@ -14,6 +14,7 @@ import com.dot.gallery.feature_node.presentation.util.getDate
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 import java.io.File
+import kotlin.random.Random
 
 @Immutable
 @Parcelize
@@ -115,6 +116,7 @@ data class Media(
                 formattedDate = timestamp.getDate(Constants.EXTENDED_DATE_FORMAT)
             }
             return Media(
+                id = Random(System.currentTimeMillis()).nextLong(),
                 label = uri.toString().substringAfterLast("/"),
                 uri = uri,
                 path = uri.path.toString(),
