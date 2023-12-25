@@ -25,6 +25,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.core.presentation.components.DragHandle
 import com.dot.gallery.feature_node.presentation.common.components.OptionPosition.ALONE
@@ -91,11 +93,17 @@ fun OptionLayout(
                 else TOP
             } else if (index == optionList.size - 1) BOTTOM
             else MIDDLE
+            val summary: (@Composable () -> Unit)? = if (item.summary.isNullOrBlank()) null else {
+                {
+                    Text(text = item.summary)
+                }
+            }
             OptionButton(
                 modifier = Modifier.fillMaxWidth(),
                 textContainer = {
                     Text(text = item.text)
                 },
+                summaryContainer = summary,
                 enabled = item.enabled,
                 containerColor = item.containerColor
                     ?: MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -114,37 +122,65 @@ fun OptionButton(
     containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
     contentColor: Color = MaterialTheme.colorScheme.onSurface,
     textContainer: @Composable () -> Unit,
+    summaryContainer: (@Composable () -> Unit)? = null,
     enabled: Boolean = true,
     position: OptionPosition = ALONE,
     onClick: () -> Unit
 ) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .defaultMinSize(minHeight = 56.dp)
-            .background(
-                color = containerColor,
-                shape = position.shape()
-            )
-            .clip(position.shape())
-            .clickable(
-                enabled = enabled,
-                onClick = onClick
-            )
-            .alpha(if (enabled) 1f else 0.4f)
-            .padding(16.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        ProvideTextStyle(
-            value = MaterialTheme.typography.bodyMedium.copy(color = contentColor)
+    val mod = modifier
+        .fillMaxWidth()
+        .defaultMinSize(minHeight = 56.dp)
+        .background(
+            color = containerColor,
+            shape = position.shape()
+        )
+        .clip(position.shape())
+        .clickable(
+            enabled = enabled,
+            onClick = onClick
+        )
+        .alpha(if (enabled) 1f else 0.4f)
+        .padding(16.dp)
+    if (summaryContainer != null) {
+        Column(
+            modifier = mod,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            textContainer()
+            ProvideTextStyle(
+                value = MaterialTheme.typography.labelLarge.copy(
+                    color = contentColor,
+                    fontWeight = FontWeight.Bold
+                )
+            ) {
+                textContainer()
+            }
+            ProvideTextStyle(
+                value = MaterialTheme.typography.labelMedium.copy(
+                    color = contentColor,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Normal
+                )
+            ) {
+                summaryContainer()
+            }
+        }
+    } else {
+        Box(
+            modifier = mod,
+            contentAlignment = Alignment.Center
+        ) {
+            ProvideTextStyle(
+                value = MaterialTheme.typography.bodyMedium.copy(color = contentColor)
+            ) {
+                textContainer()
+            }
         }
     }
 }
 
 data class OptionItem(
     val text: String,
+    val summary: String? = null,
     val onClick: () -> Unit,
     val enabled: Boolean = true,
     val containerColor: Color? = null,

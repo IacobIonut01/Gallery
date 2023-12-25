@@ -23,6 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
@@ -35,7 +36,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dot.gallery.BuildConfig
 import com.dot.gallery.R
+import com.dot.gallery.feature_node.presentation.support.SupportSheet
+import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import com.dot.gallery.ui.theme.GalleryTheme
+import kotlinx.coroutines.launch
 
 @Composable
 fun SettingsAppHeader() {
@@ -55,6 +59,10 @@ fun SettingsAppHeader() {
     val githubUrl = stringResource(R.string.github_url)
 
     val uriHandler = LocalUriHandler.current
+    val scope = rememberCoroutineScope()
+    val supportState = rememberAppBottomSheetState()
+
+    SupportSheet(state = supportState)
 
     Column(
         modifier = Modifier
@@ -94,7 +102,11 @@ fun SettingsAppHeader() {
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Button(
-                onClick = { uriHandler.openUri(donateUrl) },
+                onClick = {
+                    scope.launch {
+                        supportState.show()
+                    }
+                },
                 colors = ButtonDefaults.buttonColors(
                     contentColor = MaterialTheme.colorScheme.onPrimary,
                     disabledContentColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = .12f),
