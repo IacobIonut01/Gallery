@@ -159,6 +159,7 @@
     <string name="add_to_ignored_summary">Убрать альбом из отображения в Галерее</string>
     <string name="remove_from_ignored">Удалить из списка игнорируемых</string>
     <string name="remove_from_ignored_summary">Удалите из списка игнорируемых альбом с названием %1$s</string>
+    <string name="favorite">Favorite</string>
     <plurals name="item_count">
         <item quantity="one">%s пункт</item>
         <item quantity="few">%s пунктов</item>
