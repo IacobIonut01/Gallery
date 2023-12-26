@@ -174,7 +174,7 @@ fun SelectionSheet(
                 }
                 val favoriteTitle =
                     if (target == TARGET_FAVORITES) stringResource(id = R.string.remove_selected)
-                    else stringResource(id = R.string.favorites)
+                    else stringResource(id = R.string.favorite)
                 // Favorite Component
                 SelectionBarColumn(
                     selectedMedia = selectedMedia,

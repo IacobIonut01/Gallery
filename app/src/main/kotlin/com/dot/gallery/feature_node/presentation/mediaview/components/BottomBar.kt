@@ -568,7 +568,7 @@ private fun FavoriteButton(
             currentMedia = media,
             imageVector = favoriteIcon,
             followTheme = followTheme,
-            title = stringResource(id = R.string.favorites)
+            title = stringResource(R.string.favorite)
         ) {
             scope.launch {
                 handler.toggleFavorite(result = result, arrayListOf(it), it.favorite != 1)
