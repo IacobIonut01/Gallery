@@ -159,6 +159,7 @@
     <string name="add_to_ignored_summary">Supprimer l\'affichage d\'un album dans la galerie</string>
     <string name="remove_from_ignored">Supprimer de la liste d\'albums ignorés</string>
     <string name="remove_from_ignored_summary">Retirer l\'album nommé %1$s des albums ignorés</string>
+    <string name="favorite">Favorite</string>
     <plurals name="item_count">
         <item quantity="one">%s élément</item>
         <item quantity="other">%s éléments</item>
