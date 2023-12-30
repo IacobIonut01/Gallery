@@ -22,7 +22,7 @@
     <string name="empty_trash_cd">Il cestino è vuoto</string>
     <string name="error_title">Qualcosa è andato storto :(</string>
     <string name="error_cd">Si è verificato un errore</string>
-    <string name="copy_error">Copy error</string>
+    <string name="copy_error">Errore di copia</string>
     <string name="trash_restore">Ripristina</string>
     <string name="trash_empty">Svuota</string>
     <string name="trash_delete">Elimina</string>
