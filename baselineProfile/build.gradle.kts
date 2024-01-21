@@ -7,6 +7,14 @@ plugins {
 }
 
 android {
+    buildTypes {
+        create("staging") {
+        }
+        create("benchmarkStaging") {
+        }
+        create("nonMinifiedStaging") {
+        }
+    }
     namespace = "com.dot.baselineprofile"
     compileSdk = 34
 

@@ -10,6 +10,8 @@ import android.app.Activity.RESULT_OK
 import android.content.ContentResolver
 import android.content.Context
 import android.database.Cursor
+import android.graphics.Bitmap
+import android.graphics.Matrix
 import android.net.Uri
 import android.provider.MediaStore
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -26,6 +28,21 @@ import com.dot.gallery.feature_node.presentation.mediaview.components.retrieveMe
 import java.io.IOException
 
 val sdcardRegex = "^/storage/[A-Z0-9]+-[A-Z0-9]+/.*$".toRegex()
+
+fun Bitmap.flipHorizontally(): Bitmap {
+    val matrix = Matrix().apply { postScale(-1f, 1f, width / 2f, height / 2f) }
+    return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
+}
+
+fun Bitmap.flipVertically(): Bitmap {
+    val matrix = Matrix().apply { postScale(1f, -1f, width / 2f, height / 2f) }
+    return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
+}
+
+fun Bitmap.rotate(degrees: Float): Bitmap {
+    val matrix = Matrix().apply { postRotate(degrees) }
+    return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
+}
 
 fun List<Media>.canBeTrashed(): Boolean {
     return find { it.path.matches(sdcardRegex) } == null

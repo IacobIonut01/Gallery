@@ -107,6 +107,19 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".feature_node.presentation.edit.EditActivity"
+            android:exported="true">
+            <intent-filter android:label="@string/edit">
+                <action android:name="android.intent.action.EDIT"/>
+
+                <category android:name="android.intent.category.DEFAULT"/>
+
+                <data android:mimeType="image/*"/>
+                <data android:mimeType="vnd.android.cursor.dir/image"/>
+            </intent-filter>
+        </activity>
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${appProvider}"

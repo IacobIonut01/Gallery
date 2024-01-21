@@ -5,6 +5,7 @@
 
 package com.dot.gallery.feature_node.domain.repository
 
+import android.graphics.Bitmap
 import android.net.Uri
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
@@ -91,4 +92,22 @@ interface MediaRepository {
         media: Media,
         exifAttributes: ExifAttributes
     ): Boolean
+
+    fun saveImage(
+        bitmap: Bitmap,
+        format: Bitmap.CompressFormat,
+        mimeType: String,
+        relativePath: String,
+        displayName: String
+    ): Uri?
+
+    fun overrideImage(
+        uri: Uri,
+        bitmap: Bitmap,
+        format: Bitmap.CompressFormat,
+        mimeType: String,
+        relativePath: String,
+        displayName: String
+    ): Boolean
+
 }

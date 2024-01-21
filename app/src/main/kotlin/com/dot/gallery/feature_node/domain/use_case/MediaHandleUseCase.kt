@@ -6,6 +6,8 @@
 package com.dot.gallery.feature_node.domain.use_case
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.net.Uri
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import com.dot.gallery.core.Settings.Misc.getTrashEnabled
@@ -92,5 +94,22 @@ class MediaHandleUseCase(
         media: Media,
         exifAttributes: ExifAttributes
     ): Boolean = repository.updateMediaExif(media, exifAttributes)
+
+    fun saveImage(
+        bitmap: Bitmap,
+        format: Bitmap.CompressFormat,
+        mimeType: String,
+        relativePath: String,
+        displayName: String
+    ) = repository.saveImage(bitmap, format, mimeType, relativePath, displayName)
+
+    fun overrideImage(
+        uri: Uri,
+        bitmap: Bitmap,
+        format: Bitmap.CompressFormat,
+        mimeType: String,
+        relativePath: String,
+        displayName: String
+    ) = repository.overrideImage(uri, bitmap, format, mimeType, relativePath, displayName)
 
 }

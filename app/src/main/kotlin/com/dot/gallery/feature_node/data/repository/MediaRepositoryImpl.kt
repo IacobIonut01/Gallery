@@ -9,6 +9,7 @@ import android.content.ContentResolver
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
@@ -26,7 +27,8 @@ import com.dot.gallery.feature_node.data.data_types.getMedia
 import com.dot.gallery.feature_node.data.data_types.getMediaByUri
 import com.dot.gallery.feature_node.data.data_types.getMediaFavorite
 import com.dot.gallery.feature_node.data.data_types.getMediaListByUris
-import com.dot.gallery.feature_node.data.data_types.getMediaTrashed
+import com.dot.gallery.feature_node.data.data_types.overrideImage
+import com.dot.gallery.feature_node.data.data_types.saveImage
 import com.dot.gallery.feature_node.data.data_types.updateMedia
 import com.dot.gallery.feature_node.data.data_types.updateMediaExif
 import com.dot.gallery.feature_node.domain.model.Album
@@ -323,11 +325,22 @@ class MediaRepositoryImpl(
         exifAttributes = exifAttributes
     )
 
-    private fun List<Media>.removeBlacklisted(): List<Media> = toMutableList().apply {
-        removeAll { media ->
-            database.getBlacklistDao().albumIsBlacklisted(media.albumID)
-        }
-    }
+    override fun saveImage(
+        bitmap: Bitmap,
+        format: Bitmap.CompressFormat,
+        mimeType: String,
+        relativePath: String,
+        displayName: String
+    ) = context.contentResolver.saveImage(bitmap, format, mimeType, relativePath, displayName)
+
+    override fun overrideImage(
+        uri: Uri,
+        bitmap: Bitmap,
+        format: Bitmap.CompressFormat,
+        mimeType: String,
+        relativePath: String,
+        displayName: String
+    ) = context.contentResolver.overrideImage(uri, bitmap, format, mimeType, relativePath, displayName)
 
     companion object {
         private val DEFAULT_ORDER = MediaOrder.Date(OrderType.Descending)

@@ -1,5 +1,5 @@
 [versions]
-agp = "8.2.0"
+agp = "8.2.1"
 composeCompiler = "1.5.6"
 appcompat = "1.6.1"
 coilVersion = "2.5.0"
@@ -15,19 +15,19 @@ core-ktx = "1.12.0"
 junit = "4.13.2"
 androidx-test-ext-junit = "1.1.5"
 espresso-core = "3.5.1"
-lifecycle-runtime = "2.6.2"
+lifecycle-runtime = "2.7.0"
 activity-compose = "1.8.2"
 compose-bom = "2023.10.01"
 hilt = "2.50"
 material = "1.11.0"
-material3 = "1.2.0-beta01"
+material3 = "1.2.0-beta02"
 media3Ui = "1.2.0"
 media3Exoplayer = "1.2.0"
 navigation-runtime-ktx = "2.7.6"
 profileinstaller = "1.3.1"
 room = "2.6.1"
 accompanist = "0.32.0"
-datastore ="1.1.0-alpha07"
+datastore ="1.1.0-beta01"
 zoomable = "1.5.3"
 
 [libraries]
@@ -59,6 +59,8 @@ glide-svg = { module = "com.github.qoqa:glide-svg", version.ref = "glideSvg" }
 # Compose
 compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "compose-bom" }
 compose-activity = { group = "androidx.activity", name = "activity-compose", version.ref = "activity-compose" }
+compose-runtime = { group = "androidx.compose.runtime", name = "runtime" }
+compose-foundation = { group = "androidx.compose.foundation", name = "foundation" }
 compose-lifecycle-runtime = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycle-runtime" }
 compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
 compose-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }

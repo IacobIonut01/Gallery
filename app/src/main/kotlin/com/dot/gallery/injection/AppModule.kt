@@ -9,6 +9,8 @@ import android.app.Application
 import android.content.ContentResolver
 import android.content.Context
 import androidx.room.Room
+import coil.ImageLoader
+import coil.request.ImageRequest
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
 import com.dot.gallery.feature_node.data.repository.MediaRepositoryImpl
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
@@ -50,4 +52,13 @@ object AppModule {
     ): MediaRepository {
         return MediaRepositoryImpl(context, database)
     }
+
+    @Provides
+    @Singleton
+    fun getImageLoader(@ApplicationContext context: Context): ImageLoader = ImageLoader(context)
+
+    @Provides
+    fun getImageRequest(@ApplicationContext context: Context): ImageRequest.Builder =
+        ImageRequest.Builder(context)
+
 }

@@ -25,3 +25,5 @@ dependencyResolutionManagement {
 rootProject.name = "Gallery"
 include(":app")
 include(":baselineprofile")
+include(":libs:gesture")
+include(":libs:cropper")

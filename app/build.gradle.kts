@@ -102,6 +102,7 @@ android {
 
 dependencies {
     implementation(libs.androidx.profileinstaller)
+    implementation(project(":libs:cropper"))
     "baselineProfile"(project(mapOf("path" to ":baselineprofile")))
 
     // Core
