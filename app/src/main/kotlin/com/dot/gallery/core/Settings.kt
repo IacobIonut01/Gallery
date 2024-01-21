@@ -11,7 +11,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -21,7 +20,6 @@ import com.dot.gallery.core.Settings.PREFERENCE_NAME
 import com.dot.gallery.core.util.rememberPreference
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.ui.theme.Dimens
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = PREFERENCE_NAME)
@@ -136,22 +134,6 @@ object Settings {
 
         @Composable
         fun rememberOldNavbar() = rememberPreference(key = OLD_NAVBAR, defaultValue = false)
-
-        private val MEDIA_VERSION = stringPreferencesKey("media_version")
-
-        suspend fun getStoredMediaVersion(context: Context): String {
-            var version = "null"
-            context.dataStore.data.map { it[MEDIA_VERSION] ?: "null" }.collectLatest {
-                version = it
-            }
-            return version
-        }
-
-        suspend fun updateStoredMediaVersion(context: Context, newVersion: String) {
-            context.dataStore.edit {
-                it[MEDIA_VERSION] = newVersion
-            }
-        }
 
         private val ALLOW_VIBRATIONS = booleanPreferencesKey("allow_vibrations")
 
