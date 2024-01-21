@@ -18,13 +18,13 @@
     <string name="favorites">Избранное</string>
     <string name="no_media_title">Похоже, здесь пусто</string>
     <string name="no_media_cd">Медиафайлы отсутствуют</string>
-    <string name="empty_trash_title">Чисто, как в аптеке</string>
+    <string name="empty_trash_title">Кристально чисто</string>
     <string name="empty_trash_cd">Корзина пуста</string>
     <string name="error_title">Что-то пошло не так :(</string>
     <string name="error_cd">Произошла ошибка</string>
     <string name="copy_error">Скопировать ошибку</string>
     <string name="trash_restore">Восстановить</string>
-    <string name="trash_empty">Пусто</string>
+    <string name="trash_empty">Очистить</string>
     <string name="trash_delete">Удалить</string>
     <string name="share">Поделиться</string>
     <string name="remove_selected">Удалить выбранное</string>
