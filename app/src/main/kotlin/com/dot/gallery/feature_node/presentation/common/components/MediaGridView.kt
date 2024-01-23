@@ -93,7 +93,6 @@ fun MediaGridView(
     val preloadingData = rememberGlidePreloadingData(
         data = mediaState.media,
         preloadImageSize = Size(24f, 24f),
-        fixedVisibleItemCount = 4
     ) { media: Media, requestBuilder: RequestBuilder<Drawable> ->
         requestBuilder
             .signature(MediaKey(media.id, media.timestamp, media.mimeType, media.orientation))
@@ -139,7 +138,7 @@ fun MediaGridView(
                 if (allowHeaders) {
                     items(
                         items = mappedData,
-                        key = { if (it is MediaItem.MediaViewItem) it.media.id else it.key },
+                        key = { it.key },
                         contentType = { it.key.startsWith("media_") },
                         span = { item ->
                             GridItemSpan(if (item.key.isHeaderKey) maxLineSpan else 1)
@@ -256,19 +255,17 @@ fun MediaGridView(
         val stickyHeaderLastItem = remember { mutableStateOf<String?>(null) }
 
         val headers = remember(mappedData) {
-            mappedData.filterIsInstance<MediaItem.Header>()
+            mappedData.filterIsInstance<MediaItem.Header>().filter { !it.key.isBigHeaderKey }
         }
 
         val stickyHeaderItem by remember(mappedData) {
             derivedStateOf {
                 val firstItem = gridState.layoutInfo.visibleItemsInfo.firstOrNull()
-                var firstHeaderIndex =
-                    gridState.layoutInfo.visibleItemsInfo.firstOrNull { it.key.isHeaderKey }?.index
-                var item = firstHeaderIndex?.let(mappedData::getOrNull)
-                if (item != null && item.key.isBigHeaderKey) {
-                    firstHeaderIndex = firstHeaderIndex!! + 1
-                    item = firstHeaderIndex.let(mappedData::getOrNull)
-                }
+                val firstHeaderIndex = gridState.layoutInfo.visibleItemsInfo.firstOrNull {
+                    it.key.isHeaderKey && !it.key.toString().contains("big")
+                }?.index
+
+                val item = firstHeaderIndex?.let(mappedData::getOrNull)
                 stickyHeaderLastItem.apply {
                     if (item != null && item is MediaItem.Header) {
                         val newItem = item.text

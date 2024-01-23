@@ -25,10 +25,10 @@ sealed class MediaItem : Parcelable {
 }
 
 val Any.isHeaderKey: Boolean
-    get() = this is String && this.startsWith("header")
+    get() = this is String && this.startsWith("header_")
 
 val Any.isBigHeaderKey: Boolean
-    get() = this is String && isHeaderKey && this.contains("big")
+    get() = this is String && this.startsWith("header_big_")
 
 val Any.isIgnoredKey: Boolean
     get() = this is String && this == "aboveGrid"
