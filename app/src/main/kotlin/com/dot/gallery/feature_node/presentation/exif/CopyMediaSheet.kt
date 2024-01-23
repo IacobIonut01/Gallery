@@ -2,16 +2,15 @@ package com.dot.gallery.feature_node.presentation.exif
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -21,6 +20,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.ModalBottomSheetProperties
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -37,6 +37,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.SecureFlagPolicy
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
@@ -56,6 +57,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,9 +84,8 @@ fun CopyMediaSheet(
                 newPath = path
                 async {
                     mediaList.forEachIndexed { i, media ->
-                        val done = handler.copyMedia(media, newPath)
-                        if (done) {
-                            progress = (i + 1f)  / mediaList.size
+                        if (handler.copyMedia(media, newPath)) {
+                            progress = (i + 1f) / mediaList.size
                         }
                     }
                 }.await()
@@ -104,24 +105,34 @@ fun CopyMediaSheet(
     }
 
     if (sheetState.isVisible) {
+        val prop = remember(progress) {
+            val shouldDismiss = progress == 0f
+            ModalBottomSheetProperties(
+                securePolicy = SecureFlagPolicy.Inherit,
+                isFocusable = shouldDismiss,
+                shouldDismissOnBackPress = shouldDismiss
+            )
+        }
         ModalBottomSheet(
             sheetState = sheetState.sheetState,
             onDismissRequest = {
                 scope.launch {
-                    sheetState.hide()
+                    if (progress == 0f) {
+                        sheetState.hide()
+                    } else {
+                        sheetState.show()
+                    }
                 }
             },
+            properties = prop,
             dragHandle = { DragHandle() },
-            windowInsets = WindowInsets(
-                0,
-                WindowInsets.statusBars.getTop(LocalDensity.current),
-                0,
-                0
-            )
+            windowInsets = WindowInsets(0, 0, 0, 0)
         ) {
+
             Column(
                 modifier = Modifier
                     .wrapContentHeight()
+                    .navigationBarsPadding()
                     .fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -139,22 +150,26 @@ fun CopyMediaSheet(
                 AnimatedVisibility(
                     visible = progress > 0f,
                     modifier = Modifier
-                        .size(128.dp)
-                        .align(Alignment.CenterHorizontally)
                         .padding(32.dp)
-                        .padding(bottom = 48.dp)
-                        .navigationBarsPadding(),
+                        .align(Alignment.CenterHorizontally),
                     enter = Constants.Animation.enterAnimation,
                     exit = Constants.Animation.exitAnimation
                 ) {
-                    CircularProgressIndicator(
-                        progress = {
-                            progress
-                        },
-                        strokeWidth = 2.dp,
-                        strokeCap = StrokeCap.Round,
-                        modifier = Modifier.fillMaxSize(),
-                    )
+                    Box(
+                        modifier = Modifier
+                            .padding(bottom = 48.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            progress = {
+                                progress
+                            },
+                            strokeWidth = 4.dp,
+                            strokeCap = StrokeCap.Round,
+                            modifier = Modifier.size(128.dp),
+                        )
+                        Text(text = "${(progress * 100).roundToInt()}%")
+                    }
                 }
 
                 val albumSize by rememberAlbumSize()

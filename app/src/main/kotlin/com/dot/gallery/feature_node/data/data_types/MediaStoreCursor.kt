@@ -16,6 +16,7 @@ import android.os.Build
 import android.os.Environment
 import android.os.FileUtils
 import android.provider.MediaStore
+import android.util.Log
 import androidx.exifinterface.media.ExifInterface
 import com.dot.gallery.core.Constants
 import com.dot.gallery.feature_node.data.data_source.Query
@@ -71,7 +72,16 @@ suspend fun ContentResolver.copyMedia(
                 openFileDescriptor(outUri, "w", null).use { target ->
                     openFileDescriptor(from.uri, "r").use { from ->
                         if (target != null && from != null) {
-                            FileUtils.copy(from.fileDescriptor, target.fileDescriptor)
+                            try {
+                                FileUtils.copy(from.fileDescriptor, target.fileDescriptor)
+                            } catch (e: IOException) {
+                                if (e.message.toString().contains("ENOSPC")) {
+                                    Log.e(Constants.TAG, "No space left on device")
+                                } else {
+                                    Log.e(Constants.TAG, e.message.toString())
+                                }
+                                return@async
+                            }
                         }
                     }
                 }
