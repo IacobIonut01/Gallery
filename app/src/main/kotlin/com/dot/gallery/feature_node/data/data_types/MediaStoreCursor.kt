@@ -10,7 +10,10 @@ import android.content.ContentUris
 import android.content.ContentValues
 import android.database.Cursor
 import android.database.MergeCursor
+import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Build
+import android.os.Environment
 import android.os.FileUtils
 import android.provider.MediaStore
 import androidx.exifinterface.media.ExifInterface
@@ -22,6 +25,7 @@ import com.dot.gallery.feature_node.presentation.util.getDate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
+import java.io.IOException
 
 
 suspend fun ContentResolver.query(
@@ -86,6 +90,72 @@ suspend fun ContentResolver.copyMedia(
     } catch (e: Exception) {
         e.printStackTrace()
         false
+    }
+}
+
+
+fun ContentResolver.overrideImage(
+    uri: Uri,
+    bitmap: Bitmap,
+    format: Bitmap.CompressFormat = Bitmap.CompressFormat.PNG,
+    mimeType: String = "image/png",
+    relativePath: String = Environment.DIRECTORY_PICTURES,
+    displayName: String
+): Boolean {
+    val values = ContentValues().apply {
+        put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
+        put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
+        put(MediaStore.MediaColumns.RELATIVE_PATH, relativePath)
+        put(MediaStore.MediaColumns.IS_PENDING, 1)
+    }
+
+    return runCatching {
+        openOutputStream(uri)?.use { stream ->
+            if (!bitmap.compress(format, 95, stream))
+                throw IOException("Failed to save bitmap.")
+        } ?: throw IOException("Failed to open output stream.")
+        update(uri, values, null) > 0 && update(uri, ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 0) }, null) > 0
+    }.getOrElse {
+        throw it
+    }
+}
+
+fun ContentResolver.saveImage(
+    bitmap: Bitmap,
+    format: Bitmap.CompressFormat = Bitmap.CompressFormat.PNG,
+    mimeType: String = "image/png",
+    relativePath: String = Environment.DIRECTORY_PICTURES,
+    displayName: String
+): Uri? {
+    val values = ContentValues().apply {
+        put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
+        put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
+        put(
+            MediaStore.MediaColumns.RELATIVE_PATH,
+            if (relativePath.contains("DCIM") || relativePath.contains("Pictures")) relativePath
+            else Environment.DIRECTORY_PICTURES + "/Edited"
+        )
+    }
+
+    var uri: Uri? = null
+
+    return runCatching {
+        insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)?.also {
+            uri = it // Keep uri reference so it can be removed on failure
+
+            openOutputStream(it)?.use { stream ->
+                if (!bitmap.compress(format, 95, stream))
+                    throw IOException("Failed to save bitmap.")
+            } ?: throw IOException("Failed to open output stream.")
+
+        } ?: throw IOException("Failed to create new MediaStore record.")
+    }.getOrElse {
+        uri?.let { orphanUri ->
+            // Don't leave an orphan entry in the MediaStore
+            delete(orphanUri, null, null)
+        }
+
+        return null
     }
 }
 

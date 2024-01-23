@@ -42,7 +42,8 @@ class EditViewModel @Inject constructor(
 
     fun loadImage(uri: Uri) {
         viewModelScope.launch(Dispatchers.IO) {
-            mediaUseCases.getMediaListByUrisUseCase(listOf(uri), reviewMode = false).collectLatest { data ->
+            mediaUseCases.getMediaListByUrisUseCase(listOf(uri), reviewMode = false).collectLatest {
+                val data = it.data ?: emptyList()
                 _mediaRef.emit(data.firstOrNull())
                 loader.execute(
                     request.data(uri)

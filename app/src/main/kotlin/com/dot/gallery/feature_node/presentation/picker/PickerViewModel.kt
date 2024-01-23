@@ -4,6 +4,7 @@
  */
 package com.dot.gallery.feature_node.presentation.picker
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dot.gallery.core.AlbumState
@@ -48,7 +49,7 @@ open class PickerViewModel @Inject constructor(
 
     var albumId: Long = -1L
 
-    private val emptyAlbum = Album(id = -1, label = "All", pathToThumbnail = "", timestamp = 0, relativePath = "")
+    private val emptyAlbum = Album(id = -1, label = "All", uri = Uri.EMPTY, pathToThumbnail = "", timestamp = 0, relativePath = "")
 
     private fun getAlbums(allowedMedia: AllowedMedia) {
         viewModelScope.launch(Dispatchers.IO) {

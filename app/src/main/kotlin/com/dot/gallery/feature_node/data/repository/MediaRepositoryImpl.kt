@@ -27,6 +27,7 @@ import com.dot.gallery.feature_node.data.data_types.getMedia
 import com.dot.gallery.feature_node.data.data_types.getMediaByUri
 import com.dot.gallery.feature_node.data.data_types.getMediaFavorite
 import com.dot.gallery.feature_node.data.data_types.getMediaListByUris
+import com.dot.gallery.feature_node.data.data_types.getMediaTrashed
 import com.dot.gallery.feature_node.data.data_types.overrideImage
 import com.dot.gallery.feature_node.data.data_types.saveImage
 import com.dot.gallery.feature_node.data.data_types.updateMedia
@@ -341,6 +342,12 @@ class MediaRepositoryImpl(
         relativePath: String,
         displayName: String
     ) = context.contentResolver.overrideImage(uri, bitmap, format, mimeType, relativePath, displayName)
+
+    private fun List<Media>.removeBlacklisted(): List<Media> = toMutableList().apply {
+        removeAll { media ->
+            database.getBlacklistDao().albumIsBlacklisted(media.albumID)
+        }
+    }
 
     companion object {
         private val DEFAULT_ORDER = MediaOrder.Date(OrderType.Descending)

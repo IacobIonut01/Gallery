@@ -4,6 +4,7 @@
  */
 package com.dot.gallery.feature_node.presentation.settings.customization.albumsize
 
+import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -67,6 +68,7 @@ fun AlbumSizeScreen(
                 label = "Camera",
                 pathToThumbnail = "",
                 relativePath = "",
+                uri = Uri.EMPTY,
                 timestamp = 10,
                 count = 14
             ),
@@ -75,6 +77,7 @@ fun AlbumSizeScreen(
                 label = "Screenshots",
                 pathToThumbnail = "",
                 relativePath = "",
+                uri = Uri.EMPTY,
                 timestamp = 9,
                 count = 27
             ),
@@ -83,6 +86,7 @@ fun AlbumSizeScreen(
                 label = "Pictures",
                 pathToThumbnail = "",
                 relativePath = "",
+                uri = Uri.EMPTY,
                 timestamp = 8,
                 count = 10
             ),
@@ -91,6 +95,7 @@ fun AlbumSizeScreen(
                 label = "My Album",
                 pathToThumbnail = "",
                 relativePath = "",
+                uri = Uri.EMPTY,
                 timestamp = 8,
                 count = 104
             )
