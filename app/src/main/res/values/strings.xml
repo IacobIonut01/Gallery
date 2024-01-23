@@ -162,6 +162,7 @@
     <string name="override">Override</string>
     <string name="save_copy">Save Copy</string>
     <string name="favorite">Favorite</string>
+    <string name="allow_to_manage_media">Allow to Manage Media</string>
     <plurals name="item_count">
         <item quantity="one">%s item</item>
         <item quantity="other">%s items</item>

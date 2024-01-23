@@ -2,6 +2,7 @@ package com.dot.gallery.feature_node.presentation.setup
 
 import android.app.Activity
 import android.content.Context
+import android.os.Build
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -16,6 +17,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -43,6 +45,8 @@ import androidx.compose.ui.unit.dp
 import com.dot.gallery.BuildConfig
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants
+import com.dot.gallery.core.Settings.Misc.rememberIsMediaManager
+import com.dot.gallery.feature_node.presentation.util.launchManageMedia
 import com.dot.gallery.ui.theme.GalleryTheme
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
@@ -135,41 +139,7 @@ fun SetupScreen(
                     }
                 }
             )
-            Text(
-                text = buildAnnotatedString {
-                    val style = MaterialTheme.typography.bodyMedium.toSpanStyle()
-                    withStyle(style = style) {
-                        append(stringResource(R.string.setup_summary))
-                    }
-                    appendLine()
-                    appendLine()
-                    withStyle(style = style) {
-                        append(stringResource(R.string.required))
-                    }
-                    appendLine()
-                    context.requiredPermissionsList.forEach { (title, summary) ->
-                        withStyle(style = style.copy(fontWeight = FontWeight.Bold)) {
-                            append("• $title")
-                        }
-                        appendLine()
-                        withStyle(style = style) {
-                            append("    • $summary")
-                        }
-                        appendLine()
-                    }
-                    appendLine()
-                    withStyle(style = style) {
-                        append(stringResource(R.string.optional))
-                    }
-                    appendLine()
-                    withStyle(style = style.copy(fontWeight = FontWeight.Bold)) {
-                        append(stringResource(R.string.permission_manage_media_title))
-                    }
-                    appendLine()
-                    withStyle(style = style) {
-                        append(stringResource(R.string.permission_manage_media_summary))
-                    }
-                },
+            Column(
                 modifier = Modifier
                     .padding(horizontal = 24.dp)
                     .padding(bottom = 16.dp)
@@ -177,8 +147,66 @@ fun SetupScreen(
                         color = MaterialTheme.colorScheme.surfaceVariant,
                         shape = RoundedCornerShape(12.dp)
                     )
-                    .padding(16.dp)
-            )
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = buildAnnotatedString {
+                        val style = MaterialTheme.typography.bodyMedium.toSpanStyle()
+                        withStyle(style = style) {
+                            append(stringResource(R.string.setup_summary))
+                        }
+                        appendLine()
+                        appendLine()
+                        withStyle(style = style) {
+                            append(stringResource(R.string.required))
+                        }
+                        appendLine()
+                        context.requiredPermissionsList.forEach { (title, summary) ->
+                            withStyle(style = style.copy(fontWeight = FontWeight.Bold)) {
+                                append("• $title")
+                            }
+                            appendLine()
+                            withStyle(style = style) {
+                                append("    • $summary")
+                            }
+                            appendLine()
+                        }
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                            appendLine()
+                            withStyle(style = style) {
+                                append(stringResource(R.string.optional))
+                            }
+                            appendLine()
+                            withStyle(style = style.copy(fontWeight = FontWeight.Bold)) {
+                                append(stringResource(R.string.permission_manage_media_title))
+                            }
+                            appendLine()
+                            withStyle(style = style) {
+                                append(stringResource(R.string.permission_manage_media_summary))
+                            }
+                        }
+                    }
+                )
+                var useMediaManager by rememberIsMediaManager()
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !useMediaManager) {
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                context.launchManageMedia()
+                                useMediaManager = true
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                        )
+                    ) {
+                        Text(text = stringResource(R.string.allow_to_manage_media))
+                    }
+                }
+            }
         }
     }
 }
