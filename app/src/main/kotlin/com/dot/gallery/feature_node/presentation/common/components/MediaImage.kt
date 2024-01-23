@@ -115,7 +115,6 @@ fun MediaImage(
                         )
                     )
                     .format(DecodeFormat.PREFER_RGB_565)
-                    .override(250)
             }
         }
 
