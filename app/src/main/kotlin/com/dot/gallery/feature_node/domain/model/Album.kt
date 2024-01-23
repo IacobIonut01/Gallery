@@ -7,6 +7,7 @@ package com.dot.gallery.feature_node.domain.model
 import android.net.Uri
 import android.os.Parcelable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.toLowerCase
 import kotlinx.parcelize.IgnoredOnParcel
@@ -14,6 +15,7 @@ import kotlinx.parcelize.Parcelize
 
 @Immutable
 @Parcelize
+@Stable
 data class Album(
     val id: Long = 0,
     val label: String,

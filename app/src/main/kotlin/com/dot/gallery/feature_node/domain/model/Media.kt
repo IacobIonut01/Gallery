@@ -9,6 +9,7 @@ import android.net.Uri
 import android.os.Parcelable
 import android.webkit.MimeTypeMap
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import com.dot.gallery.core.Constants
 import com.dot.gallery.feature_node.presentation.util.getDate
 import kotlinx.parcelize.IgnoredOnParcel
@@ -18,6 +19,7 @@ import kotlin.random.Random
 
 @Immutable
 @Parcelize
+@Stable
 data class Media(
     val id: Long = 0,
     val label: String,
