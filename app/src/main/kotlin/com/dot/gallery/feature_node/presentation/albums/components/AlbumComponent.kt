@@ -49,7 +49,6 @@ import com.dot.gallery.core.presentation.components.util.AutoResizeText
 import com.dot.gallery.core.presentation.components.util.FontSizeRange
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.presentation.util.FeedbackManager.Companion.rememberFeedbackManager
-import java.io.File
 
 @Composable
 fun AlbumComponent(
@@ -202,7 +201,7 @@ fun AlbumImage(
                         }
                     }
                 ),
-            model = File(album.pathToThumbnail),
+            model = album.uri,
             contentDescription = album.label,
             contentScale = ContentScale.Crop,
         )

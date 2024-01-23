@@ -6,6 +6,7 @@
 package com.dot.gallery.feature_node.data.data_types
 
 import android.content.ContentResolver
+import android.content.ContentUris
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
@@ -39,7 +40,8 @@ suspend fun ContentResolver.getAlbums(
             moveToFirst()
             while (!isAfterLast) {
                 try {
-                    val id = getLong(getColumnIndexOrThrow(MediaStore.MediaColumns.BUCKET_ID))
+                    val albumId = getLong(getColumnIndexOrThrow(MediaStore.MediaColumns.BUCKET_ID))
+                    val id = getLong(getColumnIndexOrThrow(MediaStore.MediaColumns._ID))
                     val label: String? = try {
                         getString(getColumnIndexOrThrow(MediaStore.MediaColumns.BUCKET_DISPLAY_NAME))
                     } catch (e: Exception) {
@@ -51,15 +53,22 @@ suspend fun ContentResolver.getAlbums(
                         getString(getColumnIndexOrThrow(MediaStore.MediaColumns.RELATIVE_PATH))
                     val thumbnailDate =
                         getLong(getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_MODIFIED))
+                    val mimeType =
+                        getString(getColumnIndexOrThrow(MediaStore.MediaColumns.MIME_TYPE))
+                    val contentUri = if (mimeType.contains("image"))
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+                    else
+                        MediaStore.Video.Media.EXTERNAL_CONTENT_URI
                     val album = Album(
-                        id = id,
+                        id = albumId,
                         label = label ?: Build.MODEL,
+                        uri = ContentUris.withAppendedId(contentUri, id),
                         pathToThumbnail = thumbnailPath,
                         relativePath = thumbnailRelativePath,
                         timestamp = thumbnailDate,
                         count = 1
                     )
-                    val currentAlbum = albums.find { albm -> albm.id == id }
+                    val currentAlbum = albums.find { albm -> albm.id == albumId }
                     if (currentAlbum == null)
                         albums.add(album)
                     else {

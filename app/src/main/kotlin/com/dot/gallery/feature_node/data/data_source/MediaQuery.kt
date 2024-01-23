@@ -125,6 +125,7 @@ sealed class Query(
             MediaStore.MediaColumns.DATA,
             MediaStore.MediaColumns.RELATIVE_PATH,
             MediaStore.MediaColumns._ID,
+            MediaStore.MediaColumns.MIME_TYPE,
             MediaStore.MediaColumns.DATE_MODIFIED,
             MediaStore.MediaColumns.DATE_TAKEN
         )
