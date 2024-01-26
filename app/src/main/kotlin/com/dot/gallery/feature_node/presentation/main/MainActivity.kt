@@ -44,8 +44,8 @@ class MainActivity : ComponentActivity() {
             GalleryTheme {
                 val navController = rememberNavController()
                 val isScrolling = remember { mutableStateOf(false) }
-                val bottomBarState = rememberSaveable { (mutableStateOf(true)) }
-                val systemBarFollowThemeState = rememberSaveable { (mutableStateOf(true)) }
+                val bottomBarState = rememberSaveable { mutableStateOf(true) }
+                val systemBarFollowThemeState = rememberSaveable { mutableStateOf(true) }
                 val systemUiController = rememberSystemUiController()
                 systemUiController.systemBarsDarkContentEnabled =
                     systemBarFollowThemeState.value && !isSystemInDarkTheme()

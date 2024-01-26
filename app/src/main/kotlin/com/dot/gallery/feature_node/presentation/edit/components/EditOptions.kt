@@ -18,6 +18,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.toMutableStateList
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
@@ -41,7 +42,7 @@ fun EditOptions(
         modifier = modifier.fillMaxWidth(),
         contentPadding = PaddingValues(horizontal = 16.dp),
         userScrollEnabled = true,
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
+        horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally)
     ) {
         items(
             items = options
@@ -54,6 +55,7 @@ fun EditOptions(
                 ),
                 border = null,
                 shape = CircleShape,
+                enabled = it.isEnabled,
                 selected = selectedOption.value == it,
                 onClick = {
                     selectedOption.value = it
@@ -111,7 +113,8 @@ private fun Preview() {
 data class EditOption(
     val id: EditId,
     val title: String,
-    val isSelected: Boolean = false
+    val isSelected: Boolean = false,
+    val isEnabled: Boolean = true,
 ) : Parcelable
 
 @Parcelize

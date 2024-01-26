@@ -119,7 +119,7 @@ class StaticCropState internal constructor(
         if (fling) {
             resetTracking()
         }
-        resetWithAnimation(offset, zoom, rotation)
+        resetWithAnimation(pan = pan, zoom = zoom, rotation = rotation)
         drawAreaRect = updateImageDrawRectFromTransformation()
         animateTransformationToOverlayBounds(overlayRect, true)
         onAnimationEnd()

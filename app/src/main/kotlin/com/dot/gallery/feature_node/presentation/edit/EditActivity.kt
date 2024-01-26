@@ -1,5 +1,8 @@
 package com.dot.gallery.feature_node.presentation.edit
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -30,6 +33,13 @@ class EditActivity : ComponentActivity() {
                     onNavigateUp = ::finish
                 )
             }
+        }
+    }
+
+    companion object {
+
+        fun launchEditor(context: Context, uri: Uri) {
+            context.startActivity(Intent(context, EditActivity::class.java).apply { data = uri })
         }
     }
 

@@ -51,7 +51,6 @@ fun SettingsAppHeader() {
     val donateImage = painterResource(id = R.drawable.ic_donate)
     val donateTitle = stringResource(R.string.donate)
     val donateContentDesc = stringResource(R.string.donate_button_cd)
-    val donateUrl = stringResource(R.string.donate_url)
 
     val githubImage = painterResource(id = R.drawable.ic_github)
     val githubTitle = stringResource(R.string.github)

@@ -254,7 +254,7 @@ class DynamicCropState internal constructor(
         if (fling) {
             resetTracking()
         }
-        resetWithAnimation(pan, zoom, rotation)
+        resetWithAnimation(pan = pan, zoom = zoom, rotation = rotation)
 
         // We get target value on start instead of updating bounds after
         // gesture has finished

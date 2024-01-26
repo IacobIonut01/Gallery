@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
+import android.content.pm.ResolveInfo
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
@@ -29,19 +30,26 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import com.dot.gallery.BuildConfig
 import com.dot.gallery.R
 import com.dot.gallery.core.Settings.Misc.allowVibrations
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.presentation.edit.EditActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+
 @Composable
 fun toastError(message: String? = null): Toast {
     val context = LocalContext.current
-    return Toast.makeText(context, message ?: stringResource(id = R.string.error_toast), Toast.LENGTH_SHORT)
+    return Toast.makeText(
+        context,
+        message ?: stringResource(id = R.string.error_toast),
+        Toast.LENGTH_SHORT
+    )
 }
 
 class FeedbackManager(private val view: View, scope: CoroutineScope) {
@@ -61,6 +69,7 @@ class FeedbackManager(private val view: View, scope: CoroutineScope) {
             view.reallyPerformHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
         }
     }
+
     fun vibrateStrong() {
         if (isAvailable) {
             view.reallyPerformHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
@@ -126,8 +135,29 @@ fun Context.launchManageMedia() {
     startActivity(intent)
 }
 
-suspend fun Context.launchEditIntent(media: Media) =
-    withContext(Dispatchers.Default) {
+fun Context.getEditImageCapableApps(): List<ResolveInfo> {
+    val intent = Intent(Intent.ACTION_EDIT).apply {
+        setType("image/*")
+    }
+    val resolveInfoList = packageManager.queryIntentActivities(intent, 0)
+    return resolveInfoList.filterNot { it.activityInfo.packageName == BuildConfig.APPLICATION_ID }
+}
+
+fun Context.launchEditImageIntent(packageName: String, uri: Uri) {
+    val intent = Intent(Intent.ACTION_EDIT).apply {
+        addCategory(Intent.CATEGORY_DEFAULT)
+        setDataAndType(uri, "image/*")
+        putExtra("mimeType", "image/*")
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        setPackage(packageName)
+    }
+    startActivity(intent)
+}
+
+fun Context.launchEditIntent(media: Media) {
+    if (media.isImage) {
+        EditActivity.launchEditor(this@launchEditIntent, media.uri)
+    } else {
         val intent = Intent(Intent.ACTION_EDIT).apply {
             addCategory(Intent.CATEGORY_DEFAULT)
             setDataAndType(media.uri, media.mimeType)
@@ -136,6 +166,7 @@ suspend fun Context.launchEditIntent(media: Media) =
         }
         startActivity(Intent.createChooser(intent, getString(R.string.edit)))
     }
+}
 
 suspend fun Context.launchUseAsIntent(media: Media) =
     withContext(Dispatchers.Default) {

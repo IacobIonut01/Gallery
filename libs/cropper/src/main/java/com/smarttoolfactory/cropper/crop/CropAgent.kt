@@ -1,7 +1,6 @@
 package com.smarttoolfactory.cropper.crop
 
 import android.graphics.Bitmap
-import android.graphics.Matrix
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.BlendMode
@@ -39,7 +38,6 @@ class CropAgent {
         imageBitmap: ImageBitmap,
         cropRect: Rect,
         cropOutline: CropOutline,
-        cropRotation: Float,
         layoutDirection: LayoutDirection,
         density: Density,
     ): ImageBitmap {
@@ -49,7 +47,7 @@ class CropAgent {
                 cropRect.left.toInt(),
                 cropRect.top.toInt(),
                 cropRect.width.toInt(),
-                cropRect.height.toInt()
+                cropRect.height.toInt(),
             )
 
             val imageToCrop = croppedBitmap
@@ -104,7 +102,7 @@ class CropAgent {
                     val pathSize = getBounds().size
                     val rectSize = cropRect.size
 
-                    val matrix = Matrix()
+                    val matrix = android.graphics.Matrix()
                     matrix.postScale(
                         rectSize.width / pathSize.width,
                         cropRect.height / pathSize.height

@@ -12,6 +12,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -26,14 +27,16 @@ import com.dot.gallery.ui.theme.GalleryTheme
 fun EditBottomBar(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    canRevert: Boolean = false,
     onCancel: () -> Unit,
     onOverride: () -> Unit,
+    onRevert: () -> Unit,
     onSaveCopy: () -> Unit
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(16.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
             .navigationBarsPadding(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -50,6 +53,9 @@ fun EditBottomBar(
             /*OutlinedButton(onClick = onOverride, enabled = enabled) {
                 Text(text = stringResource(R.string.override))
             }*/
+            TextButton(onClick = onRevert, enabled = canRevert) {
+                Text(text = "Revert")
+            }
             Button(onClick = onSaveCopy, enabled = enabled) {
                 Text(text = stringResource(R.string.save_copy))
             }
@@ -69,6 +75,7 @@ private fun Preview() {
             EditBottomBar(
                 onCancel = { /*TODO*/ },
                 onOverride = { /*TODO*/ },
+                onRevert = {},
                 onSaveCopy = {}
             )
         }

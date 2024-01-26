@@ -129,15 +129,15 @@ open class TransformState(
      * Reset [pan], [zoom] and [rotation] with animation.
      */
     internal suspend fun resetWithAnimation(
-        pan: Offset,
-        zoom: Float,
-        rotation: Float,
+        pan: Offset = Offset.Zero,
+        zoom: Float = 1f,
+        rotation: Float = 0f,
         animationSpec: AnimationSpec<Float> = tween(400)
     ) = coroutineScope {
         launch { animatePanXto(pan.x, animationSpec) }
         launch { animatePanYto(pan.y, animationSpec) }
         launch { animateZoomTo(zoom, animationSpec) }
-        launch { animateRotationTo(0f, animationSpec) }
+        launch { animateRotationTo(rotation, animationSpec) }
     }
 
     internal suspend fun animatePanXto(
@@ -168,7 +168,7 @@ open class TransformState(
         }
     }
 
-    internal suspend fun animateRotationTo(
+    suspend fun animateRotationTo(
         rotation: Float,
         animationSpec: AnimationSpec<Float> = tween(400)
     ) {

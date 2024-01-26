@@ -583,14 +583,13 @@ private fun EditButton(
     followTheme: Boolean = false
 ) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     BottomBarColumn(
         currentMedia = media,
         imageVector = Icons.Outlined.Edit,
         followTheme = followTheme,
         title = stringResource(R.string.edit)
     ) {
-        scope.launch { context.launchEditIntent(it) }
+        context.launchEditIntent(it)
     }
 }
 

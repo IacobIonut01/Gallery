@@ -12,6 +12,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,6 +28,7 @@ fun CropOptions(
     onMirrorPressed: () -> Unit,
     onRotatePressed: () -> Unit,
     onAspectRationPressed: () -> Unit,
+    onCropPressed: () -> Unit
 ) {
     Row(
         modifier = modifier
@@ -55,6 +58,9 @@ fun CropOptions(
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+        TextButton(onClick = onCropPressed) {
+            Text(text = "Apply")
+        }
     }
 }
 
@@ -70,7 +76,8 @@ private fun Preview() {
             CropOptions(
                 onMirrorPressed = { },
                 onRotatePressed = { },
-                onAspectRationPressed = { }
+                onAspectRationPressed = { },
+                onCropPressed = {}
             )
         }
     }

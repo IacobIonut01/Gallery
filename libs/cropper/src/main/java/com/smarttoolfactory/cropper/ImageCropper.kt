@@ -21,7 +21,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
@@ -62,7 +61,6 @@ fun ImageCropper(
     cropProperties: CropProperties,
     filterQuality: FilterQuality = DrawScope.DefaultFilterQuality,
     crop: Boolean = false,
-    cropRotation: Float,
     onCropStart: () -> Unit,
     onCropSuccess: (ImageBitmap) -> Unit,
     backgroundModifier: Modifier = Modifier
@@ -125,7 +123,6 @@ fun ImageCropper(
                 imageHeightPx,
                 contentScale,
                 cropType,
-                cropRotation,
                 fixedAspectRatio
             )
 
@@ -160,7 +157,6 @@ fun ImageCropper(
             scaledImageBitmap,
             cropState.cropRect,
             cropOutline,
-            cropRotation,
             onCropStart,
             onCropSuccess
         )
@@ -185,7 +181,7 @@ fun ImageCropper(
         }
 
         ImageCropper(
-            modifier = imageModifier.rotate(cropRotation),
+            modifier = imageModifier,
             visible = visible,
             imageBitmap = imageBitmap,
             containerWidth = containerWidth,
@@ -305,7 +301,6 @@ private fun Crop(
     scaledImageBitmap: ImageBitmap,
     cropRect: Rect,
     cropOutline: CropOutline,
-    cropRotation: Float,
     onCropStart: () -> Unit,
     onCropSuccess: (ImageBitmap) -> Unit
 ) {
@@ -324,7 +319,6 @@ private fun Crop(
                         scaledImageBitmap,
                         cropRect,
                         cropOutline,
-                        cropRotation,
                         layoutDirection,
                         density
                     )
@@ -350,7 +344,6 @@ private fun getResetKeys(
     imageHeightPx: Int,
     contentScale: ContentScale,
     cropType: CropType,
-    cropRotation: Float,
     fixedAspectRatio: Boolean,
 ) = remember(
     scaledImageBitmap,
@@ -358,7 +351,6 @@ private fun getResetKeys(
     imageHeightPx,
     contentScale,
     cropType,
-    cropRotation,
     fixedAspectRatio,
 ) {
     arrayOf(
@@ -367,7 +359,6 @@ private fun getResetKeys(
         imageHeightPx,
         contentScale,
         cropType,
-        cropRotation,
         fixedAspectRatio,
     )
 }

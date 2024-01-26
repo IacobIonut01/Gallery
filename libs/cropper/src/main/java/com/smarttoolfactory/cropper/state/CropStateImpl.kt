@@ -319,7 +319,8 @@ abstract class CropState internal constructor(
 
         if (animate) {
             resetWithAnimation(
-                Offset(newPanX, newPanY), newZoom, rotation,
+                pan = Offset(newPanX, newPanY),
+                zoom = newZoom,
                 animationSpec = animationSpec
             )
         } else {

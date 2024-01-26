@@ -86,8 +86,9 @@ fun MainSearchBar(
         label = "elevation"
     )
     LaunchedEffect(LocalConfiguration.current, activeState) {
-        if (selectionState == null || !selectionState.value)
+        if (selectionState == null) {
             toggleNavbar(!activeState.value)
+        }
     }
 
     Box(
