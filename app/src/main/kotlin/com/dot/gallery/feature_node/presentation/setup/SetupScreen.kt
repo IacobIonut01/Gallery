@@ -106,6 +106,7 @@ fun SetupScreen(
     ) { paddingValues ->
         Column(
             modifier = Modifier
+                .fillMaxWidth()
                 .padding(paddingValues)
                 .padding(top = 24.dp)
                 .verticalScroll(state = rememberScrollState()),
