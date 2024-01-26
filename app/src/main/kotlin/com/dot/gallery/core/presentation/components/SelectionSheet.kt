@@ -168,6 +168,7 @@ fun SelectionSheet(
                 SelectionBarColumn(
                     selectedMedia = selectedMedia,
                     imageVector = Icons.Outlined.Share,
+                    tabletMode = tabletMode,
                     title = stringResource(R.string.share)
                 ) {
                     context.shareMedia(it)
@@ -179,6 +180,7 @@ fun SelectionSheet(
                 SelectionBarColumn(
                     selectedMedia = selectedMedia,
                     imageVector = Icons.Outlined.FavoriteBorder,
+                    tabletMode = tabletMode,
                     title = favoriteTitle
                 ) {
                     scope.launch {
@@ -189,6 +191,7 @@ fun SelectionSheet(
                 SelectionBarColumn(
                     selectedMedia = selectedMedia,
                     imageVector = Icons.Outlined.CopyAll,
+                    tabletMode = tabletMode,
                     title = stringResource(R.string.copy)
                 ) {
                     scope.launch {
@@ -199,6 +202,7 @@ fun SelectionSheet(
                 SelectionBarColumn(
                     selectedMedia = selectedMedia,
                     imageVector = Icons.AutoMirrored.Outlined.DriveFileMove,
+                    tabletMode = tabletMode,
                     title = stringResource(R.string.move)
                 ) {
                     scope.launch {
@@ -209,6 +213,7 @@ fun SelectionSheet(
                 SelectionBarColumn(
                     selectedMedia = selectedMedia,
                     imageVector = Icons.Outlined.DeleteOutline,
+                    tabletMode = tabletMode,
                     title = stringResource(id = R.string.trash)
                 ) {
                     scope.launch {
@@ -245,6 +250,7 @@ private fun RowScope.SelectionBarColumn(
     selectedMedia: SnapshotStateList<Media>,
     imageVector: ImageVector,
     title: String,
+    tabletMode: Boolean,
     onItemClick: (List<Media>) -> Unit
 ) {
     val tintColor = MaterialTheme.colorScheme.onSurface
@@ -252,7 +258,10 @@ private fun RowScope.SelectionBarColumn(
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
             .defaultMinSize(minHeight = 80.dp)
-            .weight(1f)
+            .then(
+                if (tabletMode) Modifier.defaultMinSize(minWidth = 80.dp)
+                else Modifier.weight(1f)
+            )
             .clickable {
                 onItemClick.invoke(selectedMedia)
             }
