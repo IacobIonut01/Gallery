@@ -20,8 +20,8 @@ android {
         applicationId = "com.dot.gallery"
         minSdk = 30
         targetSdk = 34
-        versionCode = 20111
-        versionName = "2.0.1"
+        versionCode = 21000
+        versionName = "2.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -185,6 +185,9 @@ dependencies {
 
     // Fuzzy Search
     implementation(libs.fuzzywuzzy)
+
+    // GPU Image
+    implementation(libs.gpuimage)
 
     // Tests
     testImplementation(libs.junit)
