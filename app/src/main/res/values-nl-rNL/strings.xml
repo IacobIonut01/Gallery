@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">Galerij</string>
     <string name="nav_albums">Albums</string>
-    <string name="searchbar_title"><![CDATA[Foto's en video's zoeken]]></string>
+    <string name="searchbar_title"><![CDATA[Foto\'s en video\'s zoeken]]></string>
     <string name="header_today">Vandaag</string>
     <string name="header_yesterday">Gisteren</string>
     <string name="request_permissions">Toestemming aanvragen</string>
