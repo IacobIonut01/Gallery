@@ -159,7 +159,10 @@
     <string name="add_to_ignored_summary">不要在相片庫中顯示特定相簿</string>
     <string name="remove_from_ignored">取消隱藏</string>
     <string name="remove_from_ignored_summary">取消隱藏相簿 %1$s</string>
+    <string name="override">Override</string>
+    <string name="save_copy">Save Copy</string>
     <string name="favorite">收藏</string>
+    <string name="allow_to_manage_media">Allow to Manage Media</string>
     <plurals name="item_count">
         <item quantity="other">%s 個項目</item>
     </plurals>
