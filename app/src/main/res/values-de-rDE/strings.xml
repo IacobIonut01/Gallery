@@ -159,7 +159,10 @@
     <string name="add_to_ignored_summary">Ein Album in der Galerie nicht mehr anzeigen</string>
     <string name="remove_from_ignored">Aus der Ignorierliste entfernen</string>
     <string name="remove_from_ignored_summary">Album %1$s aus der Ignorierliste entfernen</string>
+    <string name="override">Override</string>
+    <string name="save_copy">Save Copy</string>
     <string name="favorite">Favoriten</string>
+    <string name="allow_to_manage_media">Allow to Manage Media</string>
     <plurals name="item_count">
         <item quantity="one">%s Datei</item>
         <item quantity="other">%s Dateien</item>
