@@ -159,7 +159,10 @@
     <string name="add_to_ignored_summary">Remover um álbum da exibição na Galeria</string>
     <string name="remove_from_ignored">Remover da lista de ignorados</string>
     <string name="remove_from_ignored_summary">Remover da lista de ignorados o álbum chamado %1$s</string>
+    <string name="override">Override</string>
+    <string name="save_copy">Save Copy</string>
     <string name="favorite">Favorite</string>
+    <string name="allow_to_manage_media">Allow to Manage Media</string>
     <plurals name="item_count">
         <item quantity="one">%s ítem</item>
         <item quantity="other">%s ítens</item>
