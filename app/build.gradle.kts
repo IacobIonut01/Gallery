@@ -159,6 +159,7 @@ dependencies {
     implementation(libs.glide)
     implementation(libs.glide.avif)
     implementation(libs.glide.compose)
+    implementation(libs.jxl.coder.glide)
     ksp(libs.glide.compiler)
 
     // SVG Support for Glide
@@ -169,6 +170,7 @@ dependencies {
     implementation(libs.coil.svg)
     implementation(libs.coil.gif)
     implementation(libs.coil.video)
+    implementation(libs.jxl.coder.coil)
 
     // Exo Player
     implementation(libs.androidx.media3.exoplayer)

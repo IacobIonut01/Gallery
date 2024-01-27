@@ -14,6 +14,7 @@ import coil.decode.VideoFrameDecoder
 import coil.disk.DiskCache
 import coil.memory.MemoryCache
 import coil.request.CachePolicy
+import com.awxkee.jxlcoder.coil.JxlDecoder
 import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
@@ -25,6 +26,7 @@ class GalleryApp : Application(), ImageLoaderFactory {
                 add(VideoFrameDecoder.Factory())
                 add(SvgDecoder.Factory())
                 add(GifDecoder.Factory())
+                add(JxlDecoder.Factory())
             }
             .memoryCache {
                 MemoryCache.Builder(this)

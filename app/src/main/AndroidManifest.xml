@@ -84,6 +84,16 @@
                 <data android:mimeType="image/*"/>
                 <data android:mimeType="video/*"/>
 
+                <!-- Hacky way to open JPEG-XL files -->
+                <data android:mimeType="image/jxl"/>
+                <data android:host="*" />
+
+                <data android:mimeType="*/*" />
+                <data android:pathPattern=".*\\.jxl" />
+                <data android:pathPattern=".*\\..*\\.jxl" />
+                <data android:pathPattern=".*\\..*\\..*\\.jxl" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.jxl" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
             </intent-filter>

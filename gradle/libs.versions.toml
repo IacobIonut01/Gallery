@@ -9,6 +9,7 @@ exifinterface = "1.3.7"
 glideSvg = "4.0.2"
 glideVersion = "4.16.0"
 gpuimage = "2.1.0"
+jxlCoder = "1.8.1"
 kotlin = "1.9.22"
 kotlinCoroutinesVersion = "1.7.3"
 ksp = "1.9.22-1.0.17"
@@ -87,6 +88,8 @@ androidx-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navig
 
 # Room
 gpuimage = { module = "jp.co.cyberagent.android:gpuimage", version.ref = "gpuimage" }
+jxl-coder-coil = { module = "com.github.awxkee:jxl-coder-coil", version.ref = "jxlCoder" }
+jxl-coder-glide = { module = "com.github.awxkee:jxl-coder-glide", version.ref = "jxlCoder" }
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
