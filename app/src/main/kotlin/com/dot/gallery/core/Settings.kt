@@ -86,6 +86,12 @@ object Settings {
         fun rememberLastScreen() =
             rememberPreference(key = LAST_SCREEN, defaultValue = Screen.TimelineScreen.route)
 
+        private val FORCED_LAST_SCREEN = booleanPreferencesKey("forced_last_screen")
+
+        @Composable
+        fun rememberForcedLastScreen() =
+            rememberPreference(key = FORCED_LAST_SCREEN, defaultValue = false)
+
         private val MEDIA_GRID_SIZE = floatPreferencesKey("media_grid_size")
 
         @Composable
