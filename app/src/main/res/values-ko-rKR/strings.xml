@@ -163,6 +163,15 @@
     <string name="save_copy">Save Copy</string>
     <string name="favorite">Favorite</string>
     <string name="allow_to_manage_media">Allow to Manage Media</string>
+    <string name="set_default_launch_screen">Set default launch screen</string>
+    <string name="use_last_opened_screen">Use last opened screen</string>
+    <string name="timeline">Timeline</string>
+    <string name="albums">Albums</string>
+    <string name="launch_on_timeline">Launch on Timeline</string>
+    <string name="launch_on_albums">Launch on Albums</string>
+    <string name="launch_auto">Launch last screen when the app was closed</string>
+    <string name="set_default_screen">Set default screen</string>
+    <string name="done">Done</string>
     <plurals name="item_count">
         <item quantity="other">%s개 항목</item>
     </plurals>
