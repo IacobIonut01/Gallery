@@ -12,6 +12,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Camera
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.ImageSearch
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Photo
@@ -46,6 +47,7 @@ fun MediaInfoRow(
     label: String,
     content: String,
     icon: ImageVector,
+    trailingIcon: ImageVector? = null,
     contentDescription: String? = null,
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
@@ -76,6 +78,14 @@ fun MediaInfoRow(
         supportingContent = {
             Text(text = content)
         },
+        trailingContent = if (trailingIcon != null) {
+            {
+                Icon(
+                    imageVector = trailingIcon,
+                    contentDescription = contentDescription
+                )
+            }
+        } else null,
         leadingContent = {
             Icon(
                 imageVector = icon,
@@ -89,19 +99,22 @@ data class InfoRow(
     val label: String,
     val content: String,
     val icon: ImageVector,
+    val trailingIcon: ImageVector? = null,
     val contentDescription: String? = null,
     val onClick: (() -> Unit)? = null,
     val onLongClick: (() -> Unit)? = null,
 )
 
-fun Media.retrieveMetadata(context: Context, exifMetadata: ExifMetadata): List<InfoRow> {
+fun Media.retrieveMetadata(context: Context, exifMetadata: ExifMetadata, onLabelClick: () -> Unit): List<InfoRow> {
     val infoList = ArrayList<InfoRow>()
     if (trashed == 1) {
         infoList.apply {
             add(
                 InfoRow(
                     icon = Icons.Outlined.Photo,
+                    trailingIcon = Icons.Outlined.Edit,
                     label = context.getString(R.string.label),
+                    onClick = onLabelClick,
                     content = label
                 )
             )
@@ -139,7 +152,9 @@ fun Media.retrieveMetadata(context: Context, exifMetadata: ExifMetadata): List<I
             add(
                 InfoRow(
                     icon = Icons.Outlined.Photo,
+                    trailingIcon = Icons.Outlined.Edit,
                     label = context.getString(R.string.label),
+                    onClick = onLabelClick,
                     content = label
                 )
             )

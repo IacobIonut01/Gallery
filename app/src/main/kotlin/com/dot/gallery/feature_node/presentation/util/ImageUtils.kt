@@ -495,10 +495,10 @@ fun List<Media>.writeRequest(
 ) = IntentSenderRequest.Builder(MediaStore.createWriteRequest(contentResolver, map { it.uri })).build()
 
 @Composable
-fun rememberMediaInfo(media: Media, exifMetadata: ExifMetadata): List<InfoRow> {
+fun rememberMediaInfo(media: Media, exifMetadata: ExifMetadata, onLabelClick: () -> Unit): List<InfoRow> {
     val context = LocalContext.current
     return remember(media) {
-        media.retrieveMetadata(context, exifMetadata)
+        media.retrieveMetadata(context, exifMetadata, onLabelClick)
     }
 }
 

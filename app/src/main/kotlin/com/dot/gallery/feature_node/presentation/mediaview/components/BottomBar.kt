@@ -187,7 +187,16 @@ fun MediaInfoBottomSheet(
     val metadataState = rememberAppBottomSheetState()
     if (exifInterface != null) {
         val exifMetadata = rememberExifMetadata(media, exifInterface)
-        val mediaInfoList = rememberMediaInfo(media, exifMetadata)
+        val mediaInfoList = rememberMediaInfo(
+            media = media,
+            exifMetadata = exifMetadata,
+            onLabelClick = {
+                scope.launch {
+                    state.hide()
+                    metadataState.show()
+                }
+            }
+        )
         if (state.isVisible) {
             ModalBottomSheet(
                 onDismissRequest = {
@@ -234,7 +243,9 @@ fun MediaInfoBottomSheet(
                             MediaInfoRow(
                                 label = metadata.label,
                                 content = metadata.content,
-                                icon = metadata.icon
+                                icon = metadata.icon,
+                                trailingIcon = metadata.trailingIcon,
+                                onClick = metadata.onClick,
                             )
                         }
                     }
@@ -267,7 +278,8 @@ fun MediaInfoDateCaptionContainer(
                     color = MaterialTheme.colorScheme.surfaceContainerHigh,
                     shape = Shapes.large
                 )
-                .padding(all = 16.dp),
+                .padding(vertical = 16.dp)
+                .padding(start = 16.dp, end = 12.dp),
         ) {
             Column(
                 modifier = Modifier
@@ -305,9 +317,7 @@ fun MediaInfoDateCaptionContainer(
                         imageVector = Icons.Outlined.Edit,
                         contentDescription = stringResource(id = R.string.edit_cd),
                         tint = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier
-                            .size(40.dp)
-                            .padding(8.dp)
+                        modifier = Modifier.size(24.dp)
                     )
                 }
             }
@@ -383,7 +393,7 @@ fun MediaInfoChip(
                 onClick = onClick,
                 onLongClick = onLongClick
             )
-            .padding(horizontal = 12.dp, vertical = 6.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp),
         text = text,
         style = MaterialTheme.typography.bodyMedium,
         color = contentColor
@@ -426,7 +436,7 @@ fun MediaInfoMapPreview(exifMetadata: ExifMetadata) {
                     modifier = Modifier
                         .clip(Shapes.large)
                         .fillMaxWidth()
-                        .aspectRatio(1.78f)
+                        .aspectRatio(1.5f)
                         .clickable { context.launchMap(lat, long) }
                 )
                 Icon(
