@@ -1,0 +1,27 @@
+New Features
+    Gallery: Added the ability to use Albums as the start screen.
+    Settings: Added a new UI for Donations.
+    Gallery: Introduced an initial version of the Editor.
+    Editor: Improved the crop layout and added a Filters and More section.
+    Gallery: Added support for JPEG-XL images.
+    Gallery: Added the ability to set the launch screen in Settings.
+
+Improvements
+    AlbumSizeScreen: Slightly improved the UI.
+    Gallery: Preloaded timeline and albums viewmodels outside navigation for better performance.
+    MediaView: Dismissed trash sheet on action complete for better user experience.
+    Misc: Updated 'favorite' string for better clarity.
+    Gallery: Album thumbnails are now loaded from URI for better performance.
+    Media: Improved the Copy Sheet.
+    Gallery: Fixed Sticky Header.
+    SelectionSheet: Fixed layout on big screens for better user experience.
+    Gallery: Improved overall speed and reduced media parsing calls for better performance.
+    MediaView: Made file renaming more obvious for better user experience.
+
+Bug Fixes
+    Gallery: Fixed MediaStore Observer.
+    Gallery: Fixed miscellaneous issues.
+    Gallery: Moved Media Manager request to Setup to fix potential issues.
+    Gallery: Fixed various bugs and migrated to Coil for better performance and stability.
+
+Full Changelog: https://github.com/IacobIonut01/Gallery/releases/tag/2.1.0-21000

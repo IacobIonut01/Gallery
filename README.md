@@ -10,9 +10,7 @@
 ![GitHub Repo stars](https://img.shields.io/github/stars/IacobIonut01/Gallery?color=%23247EE0)
 
 ![](./screenshots/preview.png)
-![](./screenshots/items/support_banner.png)
-[![PayPal](./screenshots/items/support_paypal.png)](https://www.paypal.me/iacobionut01)
-[![Revolut](./screenshots/items/support_revolut.png)](https://revolut.me/somaldoaca)
+![(https://crowdin.com/project/gallery-compose](./screenshots/items/support_banner.png)
 
 ## Download
 [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
@@ -27,8 +25,14 @@
     src='./screenshots/items/get-it-on-github.png'
     height="80" />](https://github.com/IacobIonut01/Gallery/releases/latest)
 
+## Support
+- Translate the project using the link from above
+- Donations:
+    - Use the links on the right side of the repo (Sponsor me)
+    - More options available in-app (Settings -> Donate)
 ## Frequent Questions
-
+- Why Google Play version is 'Paid'?
+    - It's just another way to support the project while getting back autmatic updates via Google Play
 - Why Android 11 is the minimum version required?
     - Some Media features and APIs require Android 11 as a minimum version [Trash feature, most APIs used in the app]
 - Will you support lower android versions?
