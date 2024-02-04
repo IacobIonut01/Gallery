@@ -40,4 +40,4 @@ fun Context.contentFlowObserver(uris: Array<Uri>) = callbackFlow {
     awaitClose {
         contentResolver.unregisterContentObserver(observer)
     }
-}.onEach { if (!it) delay(1000) }.conflate()
+}.conflate().onEach { if (!it) delay(1000) }
