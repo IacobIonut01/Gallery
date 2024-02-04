@@ -50,6 +50,7 @@ coil-video = { module = "io.coil-kt.coil3:coil-video", version.ref = "coilVersio
 coil-gif = { module = "io.coil-kt.coil3:coil-gif", version.ref = "coilVersion" }
 coil-svg = { module = "io.coil-kt.coil3:coil-svg", version.ref = "coilVersion" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilVersion" }
+coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coilVersion" }
 
 # Glide
 glide-compiler = { module = "com.github.bumptech.glide:ksp", version.ref = "glideVersion" }
