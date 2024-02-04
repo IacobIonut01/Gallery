@@ -38,6 +38,9 @@ fun EditOptions(
     selectedOption: MutableState<EditOption>,
     options: SnapshotStateList<EditOption>
 ) {
+    val filteredOptions = remember(options.size) {
+        options.filter { it.isEnabled }
+    }
     LazyRow(
         modifier = modifier.fillMaxWidth(),
         contentPadding = PaddingValues(horizontal = 16.dp),
@@ -45,7 +48,7 @@ fun EditOptions(
         horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally)
     ) {
         items(
-            items = options
+            items = filteredOptions,
         ) {
             InputChip(
                 colors = InputChipDefaults.inputChipColors(
@@ -55,7 +58,6 @@ fun EditOptions(
                 ),
                 border = null,
                 shape = CircleShape,
-                enabled = it.isEnabled,
                 selected = selectedOption.value == it,
                 onClick = {
                     selectedOption.value = it

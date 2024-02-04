@@ -6,6 +6,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -60,7 +62,9 @@ fun ImageCropper(
     cropStyle: CropStyle = CropDefaults.style(),
     cropProperties: CropProperties,
     filterQuality: FilterQuality = DrawScope.DefaultFilterQuality,
+    colorFilter: ColorFilter? = null,
     crop: Boolean = false,
+    cropEnabled: Boolean = true,
     onCropStart: () -> Unit,
     onCropSuccess: (ImageBitmap) -> Unit,
     backgroundModifier: Modifier = Modifier
@@ -118,6 +122,7 @@ fun ImageCropper(
         // overlay aspect ratio changes
         val resetKeys =
             getResetKeys(
+                cropEnabled,
                 scaledImageBitmap,
                 imageWidthPx,
                 imageHeightPx,
@@ -183,6 +188,8 @@ fun ImageCropper(
         ImageCropper(
             modifier = imageModifier,
             visible = visible,
+            cropEnabled = cropEnabled,
+            colorFilter = colorFilter,
             imageBitmap = imageBitmap,
             containerWidth = containerWidth,
             containerHeight = containerHeight,
@@ -203,7 +210,9 @@ fun ImageCropper(
 private fun ImageCropper(
     modifier: Modifier,
     visible: Boolean,
+    cropEnabled: Boolean,
     imageBitmap: ImageBitmap,
+    colorFilter: ColorFilter? = null,
     containerWidth: Dp,
     containerHeight: Dp,
     imageWidthPx: Int,
@@ -228,7 +237,9 @@ private fun ImageCropper(
         ) {
             ImageCropperImpl(
                 modifier = modifier,
+                cropEnabled = cropEnabled,
                 imageBitmap = imageBitmap,
+                colorFilter = colorFilter,
                 containerWidth = containerWidth,
                 containerHeight = containerHeight,
                 imageWidthPx = imageWidthPx,
@@ -248,6 +259,8 @@ private fun ImageCropper(
 private fun ImageCropperImpl(
     modifier: Modifier,
     imageBitmap: ImageBitmap,
+    colorFilter: ColorFilter? = null,
+    cropEnabled: Boolean,
     containerWidth: Dp,
     containerHeight: Dp,
     imageWidthPx: Int,
@@ -265,6 +278,7 @@ private fun ImageCropperImpl(
         // Draw Image
         ImageDrawCanvas(
             modifier = modifier,
+            colorFilter = colorFilter,
             imageBitmap = imageBitmap,
             imageWidth = imageWidthPx,
             imageHeight = imageHeightPx
@@ -278,20 +292,25 @@ private fun ImageCropperImpl(
         val drawHandles = cropType == CropType.Dynamic
         val strokeWidth = cropStyle.strokeWidth
 
-        DrawingOverlay(
-            modifier = Modifier.size(containerWidth, containerHeight),
-            drawOverlay = drawOverlay,
-            rect = rectOverlay,
-            cropOutline = cropOutline,
-            drawGrid = drawGrid,
-            overlayColor = overlayColor,
-            handleColor = handleColor,
-            strokeWidth = strokeWidth,
-            drawHandles = drawHandles,
-            handleSize = handleSize,
-            transparentColor = transparentColor,
-        )
-
+        AnimatedVisibility(
+            visible = cropEnabled,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            DrawingOverlay(
+                modifier = Modifier.size(containerWidth, containerHeight),
+                drawOverlay = drawOverlay,
+                rect = rectOverlay,
+                cropOutline = cropOutline,
+                drawGrid = drawGrid,
+                overlayColor = overlayColor,
+                handleColor = handleColor,
+                strokeWidth = strokeWidth,
+                drawHandles = drawHandles,
+                handleSize = handleSize,
+                transparentColor = transparentColor,
+            )
+        }
     }
 }
 
@@ -339,6 +358,7 @@ private fun Crop(
 
 @Composable
 private fun getResetKeys(
+    cropEnabled: Boolean,
     scaledImageBitmap: ImageBitmap,
     imageWidthPx: Int,
     imageHeightPx: Int,
@@ -346,6 +366,7 @@ private fun getResetKeys(
     cropType: CropType,
     fixedAspectRatio: Boolean,
 ) = remember(
+    cropEnabled,
     scaledImageBitmap,
     imageWidthPx,
     imageHeightPx,
@@ -354,6 +375,7 @@ private fun getResetKeys(
     fixedAspectRatio,
 ) {
     arrayOf(
+        cropEnabled,
         scaledImageBitmap,
         imageWidthPx,
         imageHeightPx,

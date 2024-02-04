@@ -1,6 +1,7 @@
 package com.dot.gallery.feature_node.presentation.edit.components.filters
 
-import androidx.compose.foundation.Image
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -15,23 +16,25 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.bumptech.glide.integration.compose.GlideImage
 import com.dot.gallery.feature_node.domain.model.ImageFilter
 import com.dot.gallery.feature_node.presentation.edit.EditViewModel
 import com.dot.gallery.ui.theme.Shapes
 
 @Composable
 fun FilterSelector(
+    filters: List<ImageFilter>,
     viewModel: EditViewModel
 ) {
-    val filters by viewModel.filters.collectAsStateWithLifecycle()
     LazyRow(
         modifier = Modifier.fillMaxWidth(),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
@@ -45,42 +48,49 @@ fun FilterSelector(
                 imageFilter = it,
                 currentFilter = viewModel.currentFilter
             ) {
-                viewModel.applyFilter(it)
+                viewModel.addFilter(it)
             }
         }
     }
 }
 
+@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 fun FilterItem(
     imageFilter: ImageFilter,
     currentFilter: MutableState<ImageFilter?>,
     onFilterSelect: () -> Unit
 ) {
-    val isSelected = currentFilter.value == imageFilter ||
-            (currentFilter.value == null && imageFilter.name == "None")
+    val isSelected = remember (currentFilter.value) {
+        currentFilter.value?.name == imageFilter.name ||
+                currentFilter.value == null && imageFilter.name == "None"
+    }
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        val selectedModifier =
-            if (isSelected) {
-                Modifier.border(
-                    width = 4.dp,
-                    shape = Shapes.large,
-                    color = MaterialTheme.colorScheme.tertiary
-                )
-            } else Modifier
-        Image(
+        val widthAnimation by animateDpAsState(
+            targetValue = if (isSelected) 4.dp else 0.dp,
+            label = "widthAnimation"
+        )
+        val colorAnimation by animateColorAsState(
+            targetValue = if (isSelected) MaterialTheme.colorScheme.tertiary
+                else Color.Transparent, label = "colorAnimation"
+        )
+        GlideImage(
             modifier = Modifier
                 .size(92.dp)
                 .clip(Shapes.large)
-                .then(selectedModifier)
+                .border(
+                    width = widthAnimation,
+                    shape = Shapes.large,
+                    color = colorAnimation
+                )
                 .clickable(
                     enabled = !isSelected,
                     onClick = onFilterSelect
                 ),
-            bitmap = imageFilter.filterPreview.asImageBitmap(),
+            model = imageFilter.filterPreview,
             contentScale = ContentScale.Crop,
             contentDescription = imageFilter.name
         )
