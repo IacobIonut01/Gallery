@@ -24,8 +24,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
-import com.bumptech.glide.integration.compose.GlideImage
+import coil3.compose.AsyncImage
+import coil3.compose.LocalPlatformContext
+import coil3.request.CachePolicy
+import coil3.request.ImageRequest
 import com.dot.gallery.feature_node.domain.model.ImageFilter
 import com.dot.gallery.feature_node.presentation.edit.EditViewModel
 import com.dot.gallery.ui.theme.Shapes
@@ -54,7 +56,6 @@ fun FilterSelector(
     }
 }
 
-@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 fun FilterItem(
     imageFilter: ImageFilter,
@@ -77,7 +78,7 @@ fun FilterItem(
             targetValue = if (isSelected) MaterialTheme.colorScheme.tertiary
                 else Color.Transparent, label = "colorAnimation"
         )
-        GlideImage(
+        AsyncImage(
             modifier = Modifier
                 .size(92.dp)
                 .clip(Shapes.large)
@@ -90,7 +91,11 @@ fun FilterItem(
                     enabled = !isSelected,
                     onClick = onFilterSelect
                 ),
-            model = imageFilter.filterPreview,
+            model = ImageRequest.Builder(LocalPlatformContext.current)
+                .data(imageFilter.filterPreview)
+                .diskCachePolicy(CachePolicy.ENABLED)
+                .memoryCachePolicy(CachePolicy.ENABLED)
+                .build(),
             contentScale = ContentScale.Crop,
             contentDescription = imageFilter.name
         )

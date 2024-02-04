@@ -57,8 +57,10 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
-import com.bumptech.glide.integration.compose.GlideImage
+import coil3.compose.AsyncImage
+import coil3.compose.LocalPlatformContext
+import coil3.request.CachePolicy
+import coil3.request.ImageRequest
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
@@ -75,7 +77,7 @@ import com.dot.gallery.ui.theme.Shapes
 import kotlinx.coroutines.launch
 
 @OptIn(
-    ExperimentalMaterial3Api::class, ExperimentalGlideComposeApi::class,
+    ExperimentalMaterial3Api::class,
     ExperimentalFoundationApi::class
 )
 @Composable
@@ -289,9 +291,13 @@ fun TrashDialog(
                                     }
                                 )
                         ) {
-                            GlideImage(
+                            AsyncImage(
                                 modifier = Modifier.fillMaxSize(),
-                                model = it.uri,
+                                model = ImageRequest.Builder(LocalPlatformContext.current)
+                                    .data(it.uri)
+                                    .diskCachePolicy(CachePolicy.ENABLED)
+                                    .memoryCachePolicy(CachePolicy.ENABLED)
+                                    .build(),
                                 contentDescription = it.label,
                                 contentScale = ContentScale.Crop
                             )

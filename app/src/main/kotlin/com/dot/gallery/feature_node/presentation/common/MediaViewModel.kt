@@ -71,6 +71,19 @@ open class MediaViewModel @Inject constructor(
         }
     }
 
+    fun toggleCustomSelection(index: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val item = customMediaState.value.media[index]
+            val selectedPhoto = selectedPhotoState.find { it.id == item.id }
+            if (selectedPhoto != null) {
+                selectedPhotoState.remove(selectedPhoto)
+            } else {
+                selectedPhotoState.add(item)
+            }
+            multiSelectState.update(selectedPhotoState.isNotEmpty())
+        }
+    }
+
     fun toggleSelection(index: Int) {
         viewModelScope.launch(Dispatchers.IO) {
             val item = mediaState.value.media[index]

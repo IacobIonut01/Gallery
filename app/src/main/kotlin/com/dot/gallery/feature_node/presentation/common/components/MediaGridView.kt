@@ -5,7 +5,6 @@
 
 package com.dot.gallery.feature_node.presentation.common.components
 
-import android.graphics.drawable.Drawable
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
@@ -39,16 +38,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.bumptech.glide.RequestBuilder
-import com.bumptech.glide.integration.compose.rememberGlidePreloadingData
 import com.dot.gallery.R
-import com.dot.gallery.core.MediaKey
 import com.dot.gallery.core.MediaState
 import com.dot.gallery.core.presentation.components.StickyHeader
 import com.dot.gallery.core.presentation.components.util.StickyHeaderGrid
@@ -89,17 +84,6 @@ fun MediaGridView(
         if (showMonthlyHeader) mediaState.mappedMediaWithMonthly
         else mediaState.mappedMedia
     }
-
-    /** Glide Preloading **/
-    val preloadingData = rememberGlidePreloadingData(
-        data = mediaState.media,
-        preloadImageSize = Size(24f, 24f),
-    ) { media: Media, requestBuilder: RequestBuilder<Drawable> ->
-        requestBuilder
-            .signature(MediaKey(media.id, media.timestamp, media.mimeType))
-            .load(media.uri)
-    }
-    /** ************ **/
 
     /** Selection state handling **/
     BackHandler(
@@ -187,28 +171,22 @@ fun MediaGridView(
                             }
 
                             is MediaItem.MediaViewItem -> {
-                                val mediaIndex = remember(mediaState, item.media) {
-                                    mediaState.media.indexOf(item.media).coerceAtLeast(0)
-                                }
-                                val (media, preloadRequestBuilder) = preloadingData[mediaIndex]
                                 MediaComponent(
-                                    media = media,
+                                    media = item.media,
                                     selectionState = selectionState,
                                     selectedMedia = selectedMedia,
-                                    preloadRequestBuilder = preloadRequestBuilder,
-                                    onItemLongClick = {
-                                        if (allowSelection) {
-                                            feedbackManager.vibrate()
-                                            toggleSelection(mediaState.media.indexOf(it))
-                                        }
-                                    },
                                     onItemClick = {
                                         if (selectionState.value && allowSelection) {
                                             feedbackManager.vibrate()
                                             toggleSelection(mediaState.media.indexOf(it))
                                         } else onMediaClick(it)
                                     }
-                                )
+                                ) {
+                                    if (allowSelection) {
+                                        feedbackManager.vibrate()
+                                        toggleSelection(mediaState.media.indexOf(it))
+                                    }
+                                }
                             }
                         }
                     }
@@ -217,24 +195,22 @@ fun MediaGridView(
                         items = mediaState.media,
                         key = { _, item -> item.toString() },
                         contentType = { _, item -> item.mimeType }
-                    ) { index, _ ->
-                        val (media, preloadRequestBuilder) = preloadingData[index]
+                    ) { index, media ->
                         MediaComponent(
                             media = media,
                             selectionState = selectionState,
                             selectedMedia = selectedMedia,
-                            preloadRequestBuilder = preloadRequestBuilder,
-                            onItemLongClick = {
-                                if (allowSelection) {
-                                    feedbackManager.vibrate()
-                                    toggleSelection(index)
-                                }
-                            },
                             onItemClick = {
                                 if (selectionState.value && allowSelection) {
                                     feedbackManager.vibrate()
                                     toggleSelection(index)
                                 } else onMediaClick(it)
+                            },
+                            onItemLongClick = {
+                                if (allowSelection) {
+                                    feedbackManager.vibrate()
+                                    toggleSelection(index)
+                                }
                             }
                         )
                     }

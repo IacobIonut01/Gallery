@@ -74,8 +74,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.toUpperCase
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
-import com.bumptech.glide.integration.compose.GlideImage
+import coil3.compose.AsyncImage
+import coil3.compose.LocalPlatformContext
+import coil3.request.CachePolicy
+import coil3.request.ImageRequest
 import com.dot.gallery.BuildConfig
 import com.dot.gallery.R
 import com.dot.gallery.core.AlbumState
@@ -330,7 +332,10 @@ fun MediaInfoDateCaptionContainer(
                 val clipboardManager: ClipboardManager = LocalClipboardManager.current
                 var locationName by remember { mutableStateOf(exifMetadata.formattedCords!!) }
                 LaunchedEffect(geocoder) {
-                    geocoder?.getLocation(exifMetadata.gpsLatLong!![0], exifMetadata.gpsLatLong[1]) {address ->
+                    geocoder?.getLocation(
+                        exifMetadata.gpsLatLong!![0],
+                        exifMetadata.gpsLatLong[1]
+                    ) { address ->
                         address?.let {
                             val addressName = it.formattedAddress
                             if (addressName.isNotEmpty()) {
@@ -387,8 +392,7 @@ fun MediaInfoChip(
 
 @Suppress("KotlinConstantConditions")
 @OptIn(
-    ExperimentalCoroutinesApi::class,
-    ExperimentalGlideComposeApi::class
+    ExperimentalCoroutinesApi::class
 )
 @Composable
 fun MediaInfoMapPreview(exifMetadata: ExifMetadata) {
@@ -405,12 +409,18 @@ fun MediaInfoMapPreview(exifMetadata: ExifMetadata) {
                     .clip(Shapes.large)
                     .background(MaterialTheme.colorScheme.surface)
             ) {
-                GlideImage(
-                    model = MapBoxURL(
-                        latitude = lat,
-                        longitude = long,
-                        darkTheme = isSystemInDarkTheme()
-                    ),
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalPlatformContext.current)
+                        .data(
+                            MapBoxURL(
+                                latitude = lat,
+                                longitude = long,
+                                darkTheme = isSystemInDarkTheme()
+                            )
+                        )
+                        .diskCachePolicy(CachePolicy.ENABLED)
+                        .memoryCachePolicy(CachePolicy.ENABLED)
+                        .build(),
                     contentScale = ContentScale.FillWidth,
                     contentDescription = stringResource(R.string.location_map_cd),
                     modifier = Modifier
@@ -505,7 +515,7 @@ private fun CopyButton(
         mediaList = listOf(media),
         albumsState = albumsState,
         handler = handler,
-        onFinish = {  }
+        onFinish = { }
     )
 }
 
@@ -534,7 +544,7 @@ private fun MoveButton(
         mediaList = listOf(media),
         albumState = albumsState,
         handler = handler,
-        onFinish = {  }
+        onFinish = { }
     )
 }
 

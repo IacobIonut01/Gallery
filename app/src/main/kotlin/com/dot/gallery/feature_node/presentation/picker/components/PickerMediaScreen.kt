@@ -4,7 +4,6 @@
  */
 package com.dot.gallery.feature_node.presentation.picker.components
 
-import android.graphics.drawable.Drawable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -21,14 +20,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.bumptech.glide.RequestBuilder
-import com.bumptech.glide.integration.compose.rememberGlidePreloadingData
 import com.dot.gallery.R
-import com.dot.gallery.core.MediaKey
 import com.dot.gallery.core.MediaState
 import com.dot.gallery.core.presentation.components.StickyHeader
 import com.dot.gallery.feature_node.domain.model.Media
@@ -54,22 +49,6 @@ fun PickerMediaScreen(
     val isCheckVisible = rememberSaveable { mutableStateOf(allowSelection) }
     val feedbackManager = FeedbackManager.rememberFeedbackManager()
 
-    /** Glide Preloading **/
-    val preloadingData = rememberGlidePreloadingData(
-        data = state.media,
-        preloadImageSize = Size(50f, 50f)
-    ) { media: Media, requestBuilder: RequestBuilder<Drawable> ->
-        requestBuilder
-            .signature(
-                MediaKey(
-                    media.id,
-                    media.timestamp,
-                    media.mimeType
-                )
-            )
-            .load(media.uri)
-    }
-    /** ************ **/
     LazyVerticalGrid(
         state = gridState,
         modifier = Modifier.fillMaxSize(),
@@ -120,27 +99,11 @@ fun PickerMediaScreen(
                 }
 
                 is MediaItem.MediaViewItem -> {
-                    val mediaIndex = state.media.indexOf(item.media).coerceAtLeast(0)
-                    val (media, preloadRequestBuilder) = preloadingData[mediaIndex]
                     val selectionState = remember { mutableStateOf(true) }
                     MediaComponent(
-                        media = media,
+                        media = item.media,
                         selectionState = selectionState,
                         selectedMedia = selectedMedia,
-                        preloadRequestBuilder = preloadRequestBuilder,
-                        onItemLongClick = {
-                            feedbackManager.vibrate()
-                            if (allowSelection) {
-                                if (selectedMedia.contains(it)) selectedMedia.remove(it)
-                                else selectedMedia.add(it)
-                            } else if (!selectedMedia.contains(it) && selectedMedia.size == 1) {
-                                selectedMedia[0] = it
-                            } else if (selectedMedia.isEmpty()) {
-                                selectedMedia.add(it)
-                            } else {
-                                selectedMedia.remove(it)
-                            }
-                        },
                         onItemClick = {
                             feedbackManager.vibrate()
                             if (allowSelection) {
@@ -154,7 +117,19 @@ fun PickerMediaScreen(
                                 selectedMedia.remove(it)
                             }
                         }
-                    )
+                    ) {
+                        feedbackManager.vibrate()
+                        if (allowSelection) {
+                            if (selectedMedia.contains(it)) selectedMedia.remove(it)
+                            else selectedMedia.add(it)
+                        } else if (!selectedMedia.contains(it) && selectedMedia.size == 1) {
+                            selectedMedia[0] = it
+                        } else if (selectedMedia.isEmpty()) {
+                            selectedMedia.add(it)
+                        } else {
+                            selectedMedia.remove(it)
+                        }
+                    }
                 }
             }
         }

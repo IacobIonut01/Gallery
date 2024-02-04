@@ -48,14 +48,6 @@ object Settings {
             rememberPreference(key = HIDE_TIMELINE_ON_ALBUM, defaultValue = false)
     }
 
-    object Glide {
-        private val MAX_IMAGE_SIZE = intPreferencesKey("max_image_size")
-
-        @Composable
-        fun rememberMaxImageSize() =
-            rememberPreference(key = MAX_IMAGE_SIZE, defaultValue = 4096)
-    }
-
     object Search {
         private val HISTORY = stringSetPreferencesKey("search_history")
 

@@ -41,8 +41,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
-import com.bumptech.glide.integration.compose.GlideImage
+import coil3.compose.AsyncImage
+import coil3.compose.LocalPlatformContext
+import coil3.request.CachePolicy
+import coil3.request.ImageRequest
 import com.dot.gallery.R
 import com.dot.gallery.core.Settings.Album.rememberAlbumSize
 import com.dot.gallery.core.presentation.components.util.AutoResizeText
@@ -138,7 +140,7 @@ fun AlbumComponent(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalGlideComposeApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AlbumImage(
     album: Album,
@@ -180,7 +182,7 @@ fun AlbumImage(
                 .padding(48.dp)
         )
     } else {
-        GlideImage(
+        AsyncImage(
             modifier = Modifier
                 .fillMaxSize()
                 .border(
@@ -201,7 +203,11 @@ fun AlbumImage(
                         }
                     }
                 ),
-            model = album.uri,
+            model = ImageRequest.Builder(LocalPlatformContext.current)
+                .data(album.uri)
+                .diskCachePolicy(CachePolicy.ENABLED)
+                .memoryCachePolicy(CachePolicy.ENABLED)
+                .build(),
             contentDescription = album.label,
             contentScale = ContentScale.Crop,
         )

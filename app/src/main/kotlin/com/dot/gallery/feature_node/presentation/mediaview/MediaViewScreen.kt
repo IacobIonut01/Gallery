@@ -50,7 +50,6 @@ import com.dot.gallery.core.Constants.DEFAULT_LOW_VELOCITY_SWIPE_DURATION
 import com.dot.gallery.core.Constants.HEADER_DATE_FORMAT
 import com.dot.gallery.core.Constants.Target.TARGET_TRASH
 import com.dot.gallery.core.MediaState
-import com.dot.gallery.core.Settings.Glide.rememberMaxImageSize
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewAppBar
@@ -97,7 +96,6 @@ fun MediaViewScreen(
     val currentMedia = rememberSaveable { mutableStateOf<Media?>(null) }
 
     val showUI = rememberSaveable { mutableStateOf(true) }
-    val maxImageSize by rememberMaxImageSize()
     val windowInsetsController = rememberWindowInsetsController()
 
     var lastIndex by remember { mutableIntStateOf(-1) }
@@ -164,7 +162,7 @@ fun MediaViewScreen(
                 media = state.media[index],
                 scrollEnabled = scrollEnabled,
                 uiEnabled = showUI.value,
-                maxImageSize = maxImageSize,
+                maxImageSize = 4096,
                 playWhenReady = index == pagerState.currentPage,
                 onItemClick = {
                     showUI.value = !showUI.value

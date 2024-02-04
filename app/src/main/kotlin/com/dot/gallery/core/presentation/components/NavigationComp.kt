@@ -26,6 +26,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
+import coil3.annotation.ExperimentalCoilApi
+import coil3.compose.setSingletonImageLoaderFactory
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Constants.Animation.navigateInAnimation
@@ -35,6 +37,7 @@ import com.dot.gallery.core.Constants.Target.TARGET_TRASH
 import com.dot.gallery.core.Settings.Album.rememberHideTimelineOnAlbum
 import com.dot.gallery.core.Settings.Misc.rememberLastScreen
 import com.dot.gallery.core.Settings.Misc.rememberTimelineGroupByMonth
+import com.dot.gallery.core.presentation.components.util.ObserveCustomMediaState
 import com.dot.gallery.core.presentation.components.util.OnLifecycleEvent
 import com.dot.gallery.core.presentation.components.util.permissionGranted
 import com.dot.gallery.feature_node.presentation.albums.AlbumsScreen
@@ -50,7 +53,9 @@ import com.dot.gallery.feature_node.presentation.setup.SetupScreen
 import com.dot.gallery.feature_node.presentation.timeline.TimelineScreen
 import com.dot.gallery.feature_node.presentation.trashed.TrashedGridScreen
 import com.dot.gallery.feature_node.presentation.util.Screen
+import com.dot.gallery.feature_node.presentation.util.newImageLoader
 
+@OptIn(ExperimentalCoilApi::class)
 @Composable
 fun NavigationComp(
     navController: NavHostController,
@@ -110,6 +115,8 @@ fun NavigationComp(
     LaunchedEffect(groupTimelineByMonth) {
         timelineViewModel.groupByMonth = groupTimelineByMonth
     }
+
+    setSingletonImageLoaderFactory(::newImageLoader)
 
     NavHost(
         navController = navController,
@@ -181,19 +188,16 @@ fun NavigationComp(
             popEnterTransition = { navigateInAnimation },
             popExitTransition = { navigateUpAnimation }
         ) {
-            val viewModel = timelineViewModel.also {
-                it.getFavoriteMedia()
-            }
-            viewModel.attachToLifecycle()
+            timelineViewModel.ObserveCustomMediaState(MediaViewModel::getFavoriteMedia)
             FavoriteScreen(
                 paddingValues = paddingValues,
-                mediaState = viewModel.customMediaState,
+                mediaState = timelineViewModel.customMediaState,
                 albumState = albumsViewModel.albumsState,
-                handler = viewModel.handler,
-                selectionState = viewModel.multiSelectState,
-                selectedMedia = viewModel.selectedPhotoState,
-                toggleFavorite = viewModel::toggleFavorite,
-                toggleSelection = viewModel::toggleSelection,
+                handler = timelineViewModel.handler,
+                selectionState = timelineViewModel.multiSelectState,
+                selectedMedia = timelineViewModel.selectedPhotoState,
+                toggleFavorite = timelineViewModel::toggleFavorite,
+                toggleSelection = timelineViewModel::toggleCustomSelection,
                 navigate = navPipe::navigate,
                 navigateUp = navPipe::navigateUp,
                 toggleNavbar = navPipe::toggleNavbar
@@ -240,23 +244,23 @@ fun NavigationComp(
             val argumentAlbumId = remember(backStackEntry) {
                 backStackEntry.arguments?.getLong("albumId") ?: -1
             }
-            val viewModel: MediaViewModel = timelineViewModel.also {
-                it.getMediaFromAlbum(argumentAlbumId)
+            timelineViewModel.ObserveCustomMediaState {
+                getMediaFromAlbum(argumentAlbumId)
             }
             val hideTimeline by rememberHideTimelineOnAlbum()
             TimelineScreen(
                 paddingValues = paddingValues,
                 albumId = argumentAlbumId,
                 albumName = argumentAlbumName,
-                handler = viewModel.handler,
-                mediaState = viewModel.customMediaState,
+                handler = timelineViewModel.handler,
+                mediaState = timelineViewModel.customMediaState,
                 albumState = albumsViewModel.albumsState,
-                selectionState = viewModel.multiSelectState,
-                selectedMedia = viewModel.selectedPhotoState,
+                selectionState = timelineViewModel.multiSelectState,
+                selectedMedia = timelineViewModel.selectedPhotoState,
                 allowNavBar = false,
                 allowHeaders = !hideTimeline,
                 enableStickyHeaders = !hideTimeline,
-                toggleSelection = viewModel::toggleSelection,
+                toggleSelection = timelineViewModel::toggleCustomSelection,
                 navigate = navPipe::navigate,
                 navigateUp = navPipe::navigateUp,
                 toggleNavbar = navPipe::toggleNavbar,
@@ -286,6 +290,11 @@ fun NavigationComp(
             }
             val albumId: Long = remember(backStackEntry) {
                 backStackEntry.arguments?.getLong("albumId") ?: -1L
+            }
+            if (albumId != -1L) {
+                timelineViewModel.ObserveCustomMediaState {
+                    getMediaFromAlbum(albumId)
+                }
             }
             MediaViewScreen(
                 navigateUp = navPipe::navigateUp,
@@ -333,7 +342,7 @@ fun NavigationComp(
             }
             val viewModel = if (target == TARGET_FAVORITES) {
                 timelineViewModel.also {
-                    it.getFavoriteMedia()
+                    timelineViewModel.ObserveCustomMediaState(MediaViewModel::getFavoriteMedia)
                 }
             } else {
                 hiltViewModel<MediaViewModel>(parentEntry).also {

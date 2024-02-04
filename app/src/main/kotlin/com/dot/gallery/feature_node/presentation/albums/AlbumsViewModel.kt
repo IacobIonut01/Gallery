@@ -37,7 +37,6 @@ class AlbumsViewModel @Inject constructor(
     private val mediaUseCases: MediaUseCases
 ) : ViewModel() {
 
-    private var started = false
     private val _albumsState = MutableStateFlow(AlbumState())
     val albumsState = _albumsState.asStateFlow()
     private val _unPinnedAlbumsState = MutableStateFlow(AlbumState())
