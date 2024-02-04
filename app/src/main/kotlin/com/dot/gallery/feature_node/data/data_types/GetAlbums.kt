@@ -22,6 +22,7 @@ suspend fun ContentResolver.getAlbums(
     mediaOrder: MediaOrder = MediaOrder.Date(OrderType.Descending)
 ): List<Album> {
     return withContext(Dispatchers.IO) {
+        val timeStart = System.currentTimeMillis()
         val albums = ArrayList<Album>()
         val bundle = query.bundle ?: Bundle()
         val albumQuery = query.copy(
@@ -36,57 +37,58 @@ suspend fun ContentResolver.getAlbums(
                 )
             },
         )
-        with(query(albumQuery)) {
-            moveToFirst()
-            while (!isAfterLast) {
-                try {
-                    val albumId = getLong(getColumnIndexOrThrow(MediaStore.MediaColumns.BUCKET_ID))
-                    val id = getLong(getColumnIndexOrThrow(MediaStore.MediaColumns._ID))
-                    val label: String? = try {
-                        getString(getColumnIndexOrThrow(MediaStore.MediaColumns.BUCKET_DISPLAY_NAME))
-                    } catch (e: Exception) {
-                        Build.MODEL
-                    }
-                    val thumbnailPath =
-                        getString(getColumnIndexOrThrow(MediaStore.MediaColumns.DATA))
-                    val thumbnailRelativePath =
-                        getString(getColumnIndexOrThrow(MediaStore.MediaColumns.RELATIVE_PATH))
-                    val thumbnailDate =
-                        getLong(getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_MODIFIED))
-                    val mimeType =
-                        getString(getColumnIndexOrThrow(MediaStore.MediaColumns.MIME_TYPE))
-                    val contentUri = if (mimeType.contains("image"))
-                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-                    else
-                        MediaStore.Video.Media.EXTERNAL_CONTENT_URI
-                    val album = Album(
-                        id = albumId,
-                        label = label ?: Build.MODEL,
-                        uri = ContentUris.withAppendedId(contentUri, id),
-                        pathToThumbnail = thumbnailPath,
-                        relativePath = thumbnailRelativePath,
-                        timestamp = thumbnailDate,
-                        count = 1
-                    )
-                    val currentAlbum = albums.find { albm -> albm.id == albumId }
-                    if (currentAlbum == null)
-                        albums.add(album)
-                    else {
-                        val i = albums.indexOf(currentAlbum)
-                        albums[i].count++
-                        if (albums[i].timestamp <= thumbnailDate) {
-                            album.count = albums[i].count
-                            albums[i] = album
+        query(albumQuery).use {
+            with(it) {
+                while (moveToNext()) {
+                    try {
+                        val albumId = getLong(getColumnIndexOrThrow(MediaStore.MediaColumns.BUCKET_ID))
+                        val id = getLong(getColumnIndexOrThrow(MediaStore.MediaColumns._ID))
+                        val label: String? = try {
+                            getString(getColumnIndexOrThrow(MediaStore.MediaColumns.BUCKET_DISPLAY_NAME))
+                        } catch (e: Exception) {
+                            Build.MODEL
                         }
-                    }
+                        val thumbnailPath =
+                            getString(getColumnIndexOrThrow(MediaStore.MediaColumns.DATA))
+                        val thumbnailRelativePath =
+                            getString(getColumnIndexOrThrow(MediaStore.MediaColumns.RELATIVE_PATH))
+                        val thumbnailDate =
+                            getLong(getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_MODIFIED))
+                        val mimeType =
+                            getString(getColumnIndexOrThrow(MediaStore.MediaColumns.MIME_TYPE))
+                        val contentUri = if (mimeType.contains("image"))
+                            MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+                        else
+                            MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+                        val album = Album(
+                            id = albumId,
+                            label = label ?: Build.MODEL,
+                            uri = ContentUris.withAppendedId(contentUri, id),
+                            pathToThumbnail = thumbnailPath,
+                            relativePath = thumbnailRelativePath,
+                            timestamp = thumbnailDate,
+                            count = 1
+                        )
+                        val currentAlbum = albums.find { albm -> albm.id == albumId }
+                        if (currentAlbum == null)
+                            albums.add(album)
+                        else {
+                            val i = albums.indexOf(currentAlbum)
+                            albums[i].count++
+                            if (albums[i].timestamp <= thumbnailDate) {
+                                album.count = albums[i].count
+                                albums[i] = album
+                            }
+                        }
 
-                } catch (e: Exception) {
-                    e.printStackTrace()
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
                 }
-                moveToNext()
             }
-            close()
         }
-        return@withContext mediaOrder.sortAlbums(albums)
+        return@withContext mediaOrder.sortAlbums(albums).also {
+            println("Album parsing took: ${System.currentTimeMillis() - timeStart}ms")
+        }
     }
 }

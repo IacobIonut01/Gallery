@@ -75,11 +75,12 @@ suspend fun MutableStateFlow<MediaState>.collectMedia(
     groupByMonth: Boolean = false,
     withMonthHeader: Boolean = true
 ) {
-    val mappedData: ArrayList<MediaItem> = ArrayList()
-    val mappedDataWithMonthly: ArrayList<MediaItem> = ArrayList()
+    val timeStart = System.currentTimeMillis()
+    val mappedData = mutableListOf<MediaItem>()
+    val mappedDataWithMonthly = mutableListOf<MediaItem>()
     val monthHeaderList: MutableSet<String> = mutableSetOf()
     withContext(Dispatchers.IO) {
-        data.groupBy {
+        val groupedData = data.groupBy {
             if (groupByMonth) {
                 it.timestamp.getMonth()
             } else {
@@ -91,7 +92,8 @@ suspend fun MutableStateFlow<MediaState>.collectMedia(
                     /** Localized in composition */
                 )
             }
-        }.forEach { (date, data) ->
+        }
+        groupedData.forEach { (date, data) ->
             val dateHeader = MediaItem.Header("header_$date", date, data)
             val groupedMedia = data.map {
                 MediaItem.MediaViewItem("media_${it.id}_${it.label}", it)
@@ -127,6 +129,7 @@ suspend fun MutableStateFlow<MediaState>.collectMedia(
         }
     }
     withContext(Dispatchers.Main) {
+        println("-->Media mapping took: ${System.currentTimeMillis() - timeStart}ms")
         tryEmit(
             MediaState(
                 isLoading = false,

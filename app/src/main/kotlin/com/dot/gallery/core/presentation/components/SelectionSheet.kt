@@ -60,6 +60,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.R
+import com.dot.gallery.core.AlbumState
 import com.dot.gallery.core.Constants.Target.TARGET_FAVORITES
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
@@ -79,13 +80,12 @@ fun SelectionSheet(
     target: String?,
     selectedMedia: SnapshotStateList<Media>,
     selectionState: MutableState<Boolean>,
-    handler: MediaHandleUseCase,
-    refresh: () -> Unit
+    albumsState: AlbumState,
+    handler: MediaHandleUseCase
 ) {
     fun clearSelection() {
         selectedMedia.clear()
         selectionState.value = false
-        refresh()
     }
 
     val context = LocalContext.current
@@ -227,12 +227,16 @@ fun SelectionSheet(
     MoveMediaSheet(
         sheetState = moveSheetState,
         mediaList = selectedMedia,
+        albumState = albumsState,
+        handler = handler,
         onFinish = ::clearSelection
     )
 
     CopyMediaSheet(
         sheetState = copySheetState,
         mediaList = selectedMedia,
+        albumsState = albumsState,
+        handler = handler,
         onFinish = ::clearSelection
     )
 

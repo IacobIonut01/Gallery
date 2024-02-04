@@ -16,6 +16,7 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.dot.gallery.R
+import com.dot.gallery.core.AlbumState
 import com.dot.gallery.core.Constants.Target.TARGET_TRASH
 import com.dot.gallery.core.MediaState
 import com.dot.gallery.feature_node.domain.model.Media
@@ -32,6 +33,7 @@ fun TrashedGridScreen(
     albumName: String = stringResource(id = R.string.trash),
     handler: MediaHandleUseCase,
     mediaState: StateFlow<MediaState>,
+    albumState: StateFlow<AlbumState>,
     selectionState: MutableState<Boolean>,
     selectedMedia: SnapshotStateList<Media>,
     toggleSelection: (Int) -> Unit,
@@ -43,6 +45,7 @@ fun TrashedGridScreen(
     target = TARGET_TRASH,
     albumName = albumName,
     handler = handler,
+    albumState = albumState,
     mediaState = mediaState,
     selectionState = selectionState,
     selectedMedia = selectedMedia,

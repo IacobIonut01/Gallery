@@ -124,7 +124,11 @@ fun ContentResolver.overrideImage(
             if (!bitmap.compress(format, 95, stream))
                 throw IOException("Failed to save bitmap.")
         } ?: throw IOException("Failed to open output stream.")
-        update(uri, values, null) > 0 && update(uri, ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 0) }, null) > 0
+        update(uri, values, null) > 0 && update(
+            uri,
+            ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 0) },
+            null
+        ) > 0
     }.getOrElse {
         throw it
     }
@@ -238,8 +242,6 @@ fun Cursor.getMediaFromCursor(): Media {
     } catch (_: Exception) {
         null
     }
-    val orientation: Int =
-        getInt(getColumnIndexOrThrow(MediaStore.MediaColumns.ORIENTATION))
     val mimeType: String =
         getString(getColumnIndexOrThrow(MediaStore.MediaColumns.MIME_TYPE))
     val isFavorite: Int =
@@ -272,7 +274,6 @@ fun Cursor.getMediaFromCursor(): Media {
         duration = duration,
         favorite = isFavorite,
         trashed = isTrashed,
-        orientation = orientation,
         mimeType = mimeType
     )
 }

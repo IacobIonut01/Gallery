@@ -38,15 +38,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
+import com.dot.gallery.core.AlbumState
 import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Settings.Album.rememberAlbumSize
 import com.dot.gallery.core.presentation.components.DragHandle
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.presentation.albums.AlbumsViewModel
+import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumComponent
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.rememberActivityResult
@@ -63,16 +62,14 @@ import kotlinx.coroutines.launch
 fun MoveMediaSheet(
     sheetState: AppBottomSheetState,
     mediaList: List<Media>,
+    albumState: AlbumState,
+    handler: MediaHandleUseCase,
     onFinish: () -> Unit,
 ) {
     val context = LocalContext.current
     val toastError = toastError()
-    val albumViewModel = hiltViewModel<AlbumsViewModel>()
-    albumViewModel.attachToLifecycle()
 
     val scope = rememberCoroutineScope()
-    val state by albumViewModel.albumsState.collectAsStateWithLifecycle()
-    val handler = albumViewModel.handler
     var progress by remember(mediaList) { mutableFloatStateOf(0f) }
     var newPath by remember(mediaList) { mutableStateOf("") }
 
@@ -190,7 +187,7 @@ fun MoveMediaSheet(
                             )
                         }
                         items(
-                            items = state.albums,
+                            items = albumState.albums,
                             key = { item -> item.toString() }
                         ) { item ->
                             val mediaVolume = (mediaList.firstOrNull()?.volume ?: item.volume)

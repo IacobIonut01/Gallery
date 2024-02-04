@@ -37,6 +37,8 @@ open class MediaViewModel @Inject constructor(
     val multiSelectState = mutableStateOf(false)
     private val _mediaState = MutableStateFlow(MediaState())
     val mediaState = _mediaState.asStateFlow()
+    private val _customMediaState = MutableStateFlow(MediaState())
+    val customMediaState = _customMediaState.asStateFlow()
     val selectedPhotoState = mutableStateListOf<Media>()
     val handler = mediaUseCases.mediaHandleUseCase
 
@@ -44,10 +46,12 @@ open class MediaViewModel @Inject constructor(
     var target: String? = null
 
     var groupByMonth: Boolean = false
-
-    fun refresh() {
-        getMedia(albumId, target)
-    }
+        set(value) {
+            field = value
+            if (field != value) {
+                getMedia(albumId, target)
+            }
+        }
 
     @SuppressLint("ComposableNaming")
     @Composable
@@ -80,12 +84,53 @@ open class MediaViewModel @Inject constructor(
         }
     }
 
+    fun getMediaFromAlbum(albumId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val data = mediaState.value.media.filter { it.albumID == albumId }
+            val error = mediaState.value.error
+            if (error.isNotEmpty()) {
+                return@launch _customMediaState.emit(MediaState(isLoading = false, error = error))
+            }
+            if (data.isEmpty()) {
+                return@launch _customMediaState.emit(MediaState(isLoading = false))
+            }
+            _customMediaState.collectMedia(
+                data = data,
+                error = mediaState.value.error,
+                albumId = albumId,
+                groupByMonth = groupByMonth
+            )
+        }
+    }
+
+    fun getFavoriteMedia() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val data = mediaState.value.media.filter { it.isFavorite }
+            val error = mediaState.value.error
+            if (error.isNotEmpty()) {
+                return@launch _customMediaState.emit(MediaState(isLoading = false, error = error))
+            }
+            if (data.isEmpty()) {
+                return@launch _customMediaState.emit(MediaState(isLoading = false))
+            }
+            _customMediaState.collectMedia(
+                data = data,
+                error = mediaState.value.error,
+                albumId = -1L,
+                groupByMonth = groupByMonth
+            )
+        }
+    }
+
     private fun getMedia(albumId: Long = -1L, target: String? = null) {
         viewModelScope.launch(Dispatchers.IO) {
             mediaUseCases.mediaFlow(albumId, target).collectLatest { result ->
                 val data = result.data ?: emptyList()
                 val error = if (result is Resource.Error) result.message
                     ?: "An error occurred" else ""
+                if (error.isNotEmpty()) {
+                    return@collectLatest _mediaState.emit(MediaState(isLoading = false, error = error))
+                }
                 if (data.isEmpty()) {
                     return@collectLatest _mediaState.emit(MediaState(isLoading = false))
                 }

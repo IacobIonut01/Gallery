@@ -11,10 +11,10 @@ import java.nio.ByteBuffer
 import java.security.MessageDigest
 
 @Parcelize
-data class MediaKey(val id: Long, val timestamp: Long, val mimeType: String, val orientation: Int): Key, Parcelable {
+data class MediaKey(val id: Long, val timestamp: Long, val mimeType: String): Key, Parcelable {
 
     override fun updateDiskCacheKey(messageDigest: MessageDigest) {
-        val data = ByteBuffer.allocate(20).putLong(id).putLong(timestamp).putInt(orientation)
+        val data = ByteBuffer.allocate(20).putLong(id).putLong(timestamp)
         messageDigest.update(data)
         messageDigest.update(mimeType.toByteArray(Key.CHARSET))
     }

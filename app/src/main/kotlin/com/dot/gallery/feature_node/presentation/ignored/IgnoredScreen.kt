@@ -1,9 +1,10 @@
 package com.dot.gallery.feature_node.presentation.ignored
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Add
@@ -34,6 +35,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
+import com.dot.gallery.core.AlbumState
 import com.dot.gallery.core.Position
 import com.dot.gallery.core.SettingsEntity
 import com.dot.gallery.feature_node.domain.model.BlacklistedAlbum
@@ -45,9 +47,10 @@ import kotlinx.coroutines.launch
 @Composable
 fun IgnoredScreen(
     navigateUp: () -> Unit,
+    albumsState: AlbumState,
 ) {
-
     val vm = hiltViewModel<IgnoredViewModel>()
+    vm.attachToLifecycle()
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     val state by vm.blacklistState.collectAsStateWithLifecycle(IgnoredState())
@@ -81,17 +84,21 @@ fun IgnoredScreen(
                 .fillMaxSize()
                 .padding(paddingValues),
         ) {
-            Column(
+            LazyColumn(
                 modifier = Modifier.fillMaxSize()
             ) {
 
                 if (state.albums.isNotEmpty()) {
-                    SettingsItem(
-                        item = SettingsEntity.Header(stringResource(R.string.ignored_albums))
-                    )
+                    item {
+                        SettingsItem(
+                            item = SettingsEntity.Header(stringResource(R.string.ignored_albums))
+                        )
+                    }
                 }
-
-                state.albums.forEachIndexed { index, blacklistedAlbum ->
+                itemsIndexed(
+                    items = state.albums,
+                    key = { _, album -> album.id }
+                ) { index, blacklistedAlbum ->
                     val position = remember(state.albums) {
                         if (index == 0) {
                             if (state.albums.size == 1) Position.Alone
@@ -173,6 +180,7 @@ fun IgnoredScreen(
     SelectAlbumSheet(
         sheetState = selectAlbumState,
         blacklistedAlbums = state.albums,
+        albumState = albumsState,
         onSelect = {
             vm.addToBlacklist(BlacklistedAlbum(it.id, it.label))
         }

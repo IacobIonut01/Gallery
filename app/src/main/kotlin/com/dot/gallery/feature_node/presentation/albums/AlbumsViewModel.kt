@@ -29,7 +29,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -38,6 +37,7 @@ class AlbumsViewModel @Inject constructor(
     private val mediaUseCases: MediaUseCases
 ) : ViewModel() {
 
+    private var started = false
     private val _albumsState = MutableStateFlow(AlbumState())
     val albumsState = _albumsState.asStateFlow()
     private val _unPinnedAlbumsState = MutableStateFlow(AlbumState())
@@ -140,14 +140,15 @@ class AlbumsViewModel @Inject constructor(
         }
     }
 
-    fun getAlbums(mediaOrder: MediaOrder = MediaOrder.Date(OrderType.Descending)) {
+    private fun getAlbums(mediaOrder: MediaOrder = MediaOrder.Date(OrderType.Descending)) {
         viewModelScope.launch(Dispatchers.IO) {
-            mediaUseCases.getAlbumsUseCase(mediaOrder).flowOn(Dispatchers.IO).collectLatest { result ->
+            mediaUseCases.getAlbumsUseCase(mediaOrder).collectLatest { result ->
                 // Result data list
                 val data = result.data ?: emptyList()
                 val error =
                     if (result is Resource.Error) result.message ?: "An error occurred" else ""
                 val newAlbumState = AlbumState(error = error, albums = data)
+                if (data == albumsState.value.albums) return@collectLatest
                 val newUnPinnedAlbumState = AlbumState(error = error, albums = data.filter { !it.isPinned })
                 val newPinnedState = AlbumState(
                     error = error,

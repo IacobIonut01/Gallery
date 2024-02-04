@@ -27,8 +27,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.integration.compose.rememberGlidePreloadingData
-import com.bumptech.glide.signature.MediaStoreSignature
 import com.dot.gallery.R
+import com.dot.gallery.core.MediaKey
 import com.dot.gallery.core.MediaState
 import com.dot.gallery.core.presentation.components.StickyHeader
 import com.dot.gallery.feature_node.domain.model.Media
@@ -60,7 +60,13 @@ fun PickerMediaScreen(
         preloadImageSize = Size(50f, 50f)
     ) { media: Media, requestBuilder: RequestBuilder<Drawable> ->
         requestBuilder
-            .signature(MediaStoreSignature(media.mimeType, media.timestamp, media.orientation))
+            .signature(
+                MediaKey(
+                    media.id,
+                    media.timestamp,
+                    media.mimeType
+                )
+            )
             .load(media.uri)
     }
     /** ************ **/

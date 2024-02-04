@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -95,7 +96,7 @@ fun MediaGridView(
         preloadImageSize = Size(24f, 24f),
     ) { media: Media, requestBuilder: RequestBuilder<Drawable> ->
         requestBuilder
-            .signature(MediaKey(media.id, media.timestamp, media.mimeType, media.orientation))
+            .signature(MediaKey(media.id, media.timestamp, media.mimeType))
             .load(media.uri)
     }
     /** ************ **/
@@ -157,9 +158,11 @@ fun MediaGridView(
                                         isChecked.value = selectedMedia.containsAll(item.data)
                                     }
                                 }
-                                val title = item.text
-                                    .replace("Today", stringToday)
-                                    .replace("Yesterday", stringYesterday)
+                                val title = remember {
+                                    item.text
+                                        .replace("Today", stringToday)
+                                        .replace("Yesterday", stringYesterday)
+                                }
                                 StickyHeader(
                                     date = title,
                                     showAsBig = item.key.isBigHeaderKey,
@@ -184,8 +187,9 @@ fun MediaGridView(
                             }
 
                             is MediaItem.MediaViewItem -> {
-                                val mediaIndex =
+                                val mediaIndex = remember(mediaState, item.media) {
                                     mediaState.media.indexOf(item.media).coerceAtLeast(0)
+                                }
                                 val (media, preloadRequestBuilder) = preloadingData[mediaIndex]
                                 MediaComponent(
                                     media = media,
@@ -209,13 +213,12 @@ fun MediaGridView(
                         }
                     }
                 } else {
-                    items(
+                    itemsIndexed(
                         items = mediaState.media,
-                        key = { it.toString() },
-                        contentType = { it.mimeType }
-                    ) { origMedia ->
-                        val mediaIndex = mediaState.media.indexOf(origMedia).coerceAtLeast(0)
-                        val (media, preloadRequestBuilder) = preloadingData[mediaIndex]
+                        key = { _, item -> item.toString() },
+                        contentType = { _, item -> item.mimeType }
+                    ) { index, _ ->
+                        val (media, preloadRequestBuilder) = preloadingData[index]
                         MediaComponent(
                             media = media,
                             selectionState = selectionState,
@@ -224,13 +227,13 @@ fun MediaGridView(
                             onItemLongClick = {
                                 if (allowSelection) {
                                     feedbackManager.vibrate()
-                                    toggleSelection(mediaState.media.indexOf(it))
+                                    toggleSelection(index)
                                 }
                             },
                             onItemClick = {
                                 if (selectionState.value && allowSelection) {
                                     feedbackManager.vibrate()
-                                    toggleSelection(mediaState.media.indexOf(it))
+                                    toggleSelection(index)
                                 } else onMediaClick(it)
                             }
                         )

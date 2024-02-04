@@ -45,7 +45,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
 import com.dot.gallery.core.Settings.Album.rememberAlbumSize
@@ -63,7 +62,7 @@ fun AlbumsScreen(
     navigate: (route: String) -> Unit,
     toggleNavbar: (Boolean) -> Unit,
     paddingValues: PaddingValues,
-    viewModel: AlbumsViewModel = hiltViewModel(),
+    viewModel: AlbumsViewModel,
     isScrolling: MutableState<Boolean>,
     searchBarActive: MutableState<Boolean>
 ) {

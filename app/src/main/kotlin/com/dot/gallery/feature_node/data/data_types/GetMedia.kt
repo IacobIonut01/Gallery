@@ -18,20 +18,20 @@ suspend fun ContentResolver.getMedia(
     mediaOrder: MediaOrder = MediaOrder.Date(OrderType.Descending)
 ): List<Media> {
     return withContext(Dispatchers.IO) {
+        val timeStart = System.currentTimeMillis()
         val media = ArrayList<Media>()
-        with(query(mediaQuery)) {
-            moveToFirst()
-            while (!isAfterLast) {
+        query(mediaQuery).use { cursor ->
+            while (cursor.moveToNext()) {
                 try {
-                    media.add(getMediaFromCursor())
+                    media.add(cursor.getMediaFromCursor())
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
-                moveToNext()
             }
-            close()
         }
-        return@withContext mediaOrder.sortMedia(media)
+        return@withContext mediaOrder.sortMedia(media).also {
+            println("Media parsing took: ${System.currentTimeMillis() - timeStart}ms")
+        }
     }
 }
 

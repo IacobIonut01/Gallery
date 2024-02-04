@@ -13,12 +13,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import com.bumptech.glide.RequestBuilder
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.ui.theme.Shapes
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -31,6 +33,7 @@ fun LazyGridItemScope.MediaComponent(
     onItemLongClick: (Media) -> Unit,
 ) {
     val isSelected = remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
     MediaImage(
         media = media,
         preloadRequestBuilder = preloadRequestBuilder,
@@ -42,15 +45,19 @@ fun LazyGridItemScope.MediaComponent(
             .animateItemPlacement()
             .combinedClickable(
                 onClick = {
-                    onItemClick(media)
-                    if (selectionState.value) {
-                        isSelected.value = !isSelected.value
+                    scope.launch {
+                        onItemClick(media)
+                        if (selectionState.value) {
+                            isSelected.value = !isSelected.value
+                        }
                     }
                 },
                 onLongClick = {
-                    onItemLongClick(media)
-                    if (selectionState.value) {
-                        isSelected.value = !isSelected.value
+                    scope.launch {
+                        onItemLongClick(media)
+                        if (selectionState.value) {
+                            isSelected.value = !isSelected.value
+                        }
                     }
                 },
             )

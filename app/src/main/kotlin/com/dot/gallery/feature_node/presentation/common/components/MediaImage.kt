@@ -24,8 +24,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,10 +58,12 @@ fun MediaImage(
     isSelected: MutableState<Boolean>,
     modifier: Modifier = Modifier
 ) {
-    if (!selectionState.value) {
-        isSelected.value = false
-    } else {
-        isSelected.value = selectedMedia.find { it.id == media.id } != null
+    LaunchedEffect(selectionState.value) {
+        if (!selectionState.value) {
+            isSelected.value = false
+        } else {
+            isSelected.value = selectedMedia.find { it.id == media.id } != null
+        }
     }
     val selectedSize by animateDpAsState(
         if (isSelected.value) 12.dp else 0.dp, label = "selectedSize"
@@ -101,17 +105,16 @@ fun MediaImage(
             GlideImage(
                 modifier = Modifier
                     .fillMaxSize(),
-                model = media.uri,
-                contentDescription = media.label,
-                contentScale = ContentScale.Crop,
+                model = remember(media) { media.uri },
+                contentDescription = remember(media) { media.label },
+                contentScale =remember(media) {  ContentScale.Crop },
             ) {
                 it.thumbnail(preloadRequestBuilder)
                     .signature(
                         MediaKey(
                             media.id,
                             media.timestamp,
-                            media.mimeType,
-                            media.orientation
+                            media.mimeType
                         )
                     )
                     .format(DecodeFormat.PREFER_RGB_565)

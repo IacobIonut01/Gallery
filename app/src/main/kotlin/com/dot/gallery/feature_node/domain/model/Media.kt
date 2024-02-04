@@ -33,7 +33,6 @@ data class Media(
     val takenTimestamp: Long? = null,
     val fullDate: String,
     val mimeType: String,
-    val orientation: Int,
     val favorite: Int,
     val trashed: Int,
     val duration: String? = null,
@@ -129,8 +128,7 @@ data class Media(
                 fullDate = formattedDate,
                 mimeType = mimeType,
                 favorite = 0,
-                trashed = 0,
-                orientation = 0
+                trashed = 0
             )
         }
     }

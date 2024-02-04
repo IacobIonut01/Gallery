@@ -15,10 +15,12 @@ import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.toLowerCase
 import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.dot.gallery.core.AlbumState
 import com.dot.gallery.feature_node.presentation.mediaview.MediaViewScreen
 import com.dot.gallery.feature_node.presentation.util.toggleOrientation
 import com.dot.gallery.ui.theme.GalleryTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.MutableStateFlow
 
 @AndroidEntryPoint
 class StandaloneActivity : ComponentActivity() {
@@ -52,8 +54,8 @@ class StandaloneActivity : ComponentActivity() {
                         isStandalone = true,
                         mediaId = viewModel.mediaId,
                         mediaState = viewModel.mediaState,
-                        handler = viewModel.handler,
-                        refresh = {}
+                        albumsState = MutableStateFlow(AlbumState()),
+                        handler = viewModel.handler
                     )
                 }
                 BackHandler {

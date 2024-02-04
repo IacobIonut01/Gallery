@@ -15,6 +15,7 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.dot.gallery.R
+import com.dot.gallery.core.AlbumState
 import com.dot.gallery.core.MediaState
 import com.dot.gallery.core.presentation.components.EmptyMedia
 import com.dot.gallery.feature_node.domain.model.Media
@@ -30,6 +31,7 @@ fun TimelineScreen(
     albumName: String = stringResource(R.string.app_name),
     handler: MediaHandleUseCase,
     mediaState: StateFlow<MediaState>,
+    albumState: StateFlow<AlbumState>,
     selectionState: MutableState<Boolean>,
     selectedMedia: SnapshotStateList<Media>,
     allowNavBar: Boolean = true,
@@ -39,7 +41,6 @@ fun TimelineScreen(
     navigate: (route: String) -> Unit,
     navigateUp: () -> Unit,
     toggleNavbar: (Boolean) -> Unit,
-    refresh: () -> Unit,
     isScrolling: MutableState<Boolean>,
     searchBarActive: MutableState<Boolean> = mutableStateOf(false)
 ) {
@@ -50,12 +51,13 @@ fun TimelineScreen(
         albumName = albumName,
         handler = handler,
         mediaState = mediaState,
+        albumState = albumState,
         selectionState = selectionState,
         selectedMedia = selectedMedia,
         toggleSelection = toggleSelection,
         allowHeaders = allowHeaders,
-        enableStickyHeaders = enableStickyHeaders,
         showMonthlyHeader = true,
+        enableStickyHeaders = enableStickyHeaders,
         allowNavBar = allowNavBar,
         navActionsContent = { expandedDropDown: MutableState<Boolean>, _ ->
             TimelineNavActions(
@@ -73,7 +75,6 @@ fun TimelineScreen(
         navigate = navigate,
         navigateUp = navigateUp,
         toggleNavbar = toggleNavbar,
-        refresh = refresh,
         isScrolling = isScrolling,
         searchBarActive = searchBarActive
     ) { result ->

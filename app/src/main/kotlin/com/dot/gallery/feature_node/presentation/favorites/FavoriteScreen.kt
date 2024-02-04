@@ -16,6 +16,7 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.dot.gallery.R
+import com.dot.gallery.core.AlbumState
 import com.dot.gallery.core.Constants.Target.TARGET_FAVORITES
 import com.dot.gallery.core.MediaState
 import com.dot.gallery.feature_node.domain.model.Media
@@ -31,6 +32,7 @@ fun FavoriteScreen(
     albumName: String = stringResource(id = R.string.favorites),
     handler: MediaHandleUseCase,
     mediaState: StateFlow<MediaState>,
+    albumState: StateFlow<AlbumState>,
     selectionState: MutableState<Boolean>,
     selectedMedia: SnapshotStateList<Media>,
     toggleFavorite: (ActivityResultLauncher<IntentSenderRequest>, List<Media>, Boolean) -> Unit,
@@ -44,6 +46,7 @@ fun FavoriteScreen(
     albumName = albumName,
     handler = handler,
     mediaState = mediaState,
+    albumState = albumState,
     selectionState = selectionState,
     selectedMedia = selectedMedia,
     toggleSelection = toggleSelection,

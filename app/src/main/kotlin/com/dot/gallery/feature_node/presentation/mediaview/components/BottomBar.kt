@@ -78,6 +78,7 @@ import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.dot.gallery.BuildConfig
 import com.dot.gallery.R
+import com.dot.gallery.core.AlbumState
 import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
@@ -118,11 +119,11 @@ fun BoxScope.MediaViewBottomBar(
     showDeleteButton: Boolean = true,
     bottomSheetState: AppBottomSheetState,
     handler: MediaHandleUseCase,
+    albumsState: AlbumState,
     showUI: Boolean,
     paddingValues: PaddingValues,
     currentMedia: Media?,
     currentIndex: Int = 0,
-    refresh: () -> Unit,
     onDeleteMedia: ((Int) -> Unit)? = null,
 ) {
     AnimatedVisibility(
@@ -165,8 +166,8 @@ fun BoxScope.MediaViewBottomBar(
         MediaInfoBottomSheet(
             media = it,
             state = bottomSheetState,
-            handler = handler,
-            refresh = refresh
+            albumsState = albumsState,
+            handler = handler
         )
     }
 }
@@ -176,8 +177,8 @@ fun BoxScope.MediaViewBottomBar(
 fun MediaInfoBottomSheet(
     media: Media,
     state: AppBottomSheetState,
-    handler: MediaHandleUseCase,
-    refresh: () -> Unit
+    albumsState: AlbumState,
+    handler: MediaHandleUseCase
 ) {
     val scope = rememberCoroutineScope()
     val exifInterface = rememberExifInterface(media, true)
@@ -190,7 +191,6 @@ fun MediaInfoBottomSheet(
                 onDismissRequest = {
                     scope.launch {
                         state.hide()
-                        refresh()
                     }
                 },
                 dragHandle = { DragHandle() },
@@ -201,7 +201,6 @@ fun MediaInfoBottomSheet(
                 BackHandler {
                     scope.launch {
                         state.hide()
-                        refresh()
                     }
                 }
                 Column(
@@ -209,7 +208,7 @@ fun MediaInfoBottomSheet(
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState())
                 ) {
-                    MediaViewInfoActions(media)
+                    MediaViewInfoActions(media, albumsState, handler)
                     Spacer(modifier = Modifier.height(8.dp))
                     MediaInfoDateCaptionContainer(media, exifMetadata) {
                         scope.launch {
@@ -437,7 +436,9 @@ fun MediaInfoMapPreview(exifMetadata: ExifMetadata) {
 
 @Composable
 private fun MediaViewInfoActions(
-    media: Media
+    media: Media,
+    albumsState: AlbumState,
+    handler: MediaHandleUseCase
 ) {
     Row(
         modifier = Modifier
@@ -451,9 +452,9 @@ private fun MediaViewInfoActions(
         // Use as or Open With
         OpenAsButton(media, followTheme = true)
         // Copy
-        CopyButton(media, followTheme = true)
+        CopyButton(media, albumsState, handler, followTheme = true)
         // Move
-        MoveButton(media, followTheme = true)
+        MoveButton(media, albumsState, handler, followTheme = true)
         // Edit
         EditButton(media, followTheme = true)
     }
@@ -482,6 +483,8 @@ private fun MediaViewActions(
 @Composable
 private fun CopyButton(
     media: Media,
+    albumsState: AlbumState,
+    handler: MediaHandleUseCase,
     followTheme: Boolean = false
 ) {
     val copySheetState = rememberAppBottomSheetState()
@@ -500,6 +503,8 @@ private fun CopyButton(
     CopyMediaSheet(
         sheetState = copySheetState,
         mediaList = listOf(media),
+        albumsState = albumsState,
+        handler = handler,
         onFinish = {  }
     )
 }
@@ -507,6 +512,8 @@ private fun CopyButton(
 @Composable
 private fun MoveButton(
     media: Media,
+    albumsState: AlbumState,
+    handler: MediaHandleUseCase,
     followTheme: Boolean = false
 ) {
     val moveSheetState = rememberAppBottomSheetState()
@@ -525,6 +532,8 @@ private fun MoveButton(
     MoveMediaSheet(
         sheetState = moveSheetState,
         mediaList = listOf(media),
+        albumState = albumsState,
+        handler = handler,
         onFinish = {  }
     )
 }

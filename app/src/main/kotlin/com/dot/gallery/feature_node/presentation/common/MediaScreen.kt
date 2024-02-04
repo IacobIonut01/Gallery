@@ -30,6 +30,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.dot.gallery.core.AlbumState
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.Constants.Target.TARGET_TRASH
@@ -57,6 +58,7 @@ fun MediaScreen(
     target: String? = null,
     albumName: String,
     handler: MediaHandleUseCase,
+    albumState: StateFlow<AlbumState>,
     mediaState: StateFlow<MediaState>,
     selectionState: MutableState<Boolean>,
     selectedMedia: SnapshotStateList<Media>,
@@ -71,7 +73,6 @@ fun MediaScreen(
     navigate: (route: String) -> Unit,
     navigateUp: () -> Unit,
     toggleNavbar: (Boolean) -> Unit,
-    refresh: () -> Unit = {},
     isScrolling: MutableState<Boolean> = remember { mutableStateOf(false) },
     searchBarActive: MutableState<Boolean> = mutableStateOf(false),
     onActivityResult: (result: ActivityResult) -> Unit,
@@ -82,6 +83,7 @@ fun MediaScreen(
 
     /** STATES BLOCK **/
     val state by mediaState.collectAsStateWithLifecycle()
+    val albumsState by albumState.collectAsStateWithLifecycle()
     /** ************ **/
 
     /** Selection state handling **/
@@ -194,10 +196,10 @@ fun MediaScreen(
             SelectionSheet(
                 modifier = Modifier
                     .align(Alignment.BottomEnd),
-                selectedMedia = selectedMedia,
                 target = target,
+                selectedMedia = selectedMedia,
                 selectionState = selectionState,
-                refresh = refresh,
+                albumsState = albumsState,
                 handler = handler
             )
         }

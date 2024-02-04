@@ -61,6 +61,10 @@ class SearchViewModel @Inject constructor(
             withContext(Dispatchers.Main) {
                 lastQuery.value = query
             }
+            if (query.isEmpty()) {
+                _mediaState.tryEmit(MediaState(isLoading = false))
+                return@launch
+            }
             mediaUseCases.getMediaUseCase().flowOn(Dispatchers.IO).collectLatest { result ->
                 val mappedData = ArrayList<MediaItem>()
                 val monthHeaderList = ArrayList<String>()

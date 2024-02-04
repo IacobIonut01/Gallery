@@ -42,6 +42,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.dot.gallery.core.AlbumState
 import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
@@ -75,11 +76,12 @@ fun MediaViewScreen(
     mediaId: Long,
     target: String? = null,
     mediaState: StateFlow<MediaState>,
-    handler: MediaHandleUseCase,
-    refresh: () -> Unit
+    albumsState: StateFlow<AlbumState>,
+    handler: MediaHandleUseCase
 ) {
     var runtimeMediaId by rememberSaveable(mediaId) { mutableLongStateOf(mediaId) }
     val state by mediaState.collectAsStateWithLifecycle()
+    val albumState by albumsState.collectAsStateWithLifecycle()
     val initialPage = rememberSaveable(runtimeMediaId) {
         state.media.indexOfFirst { it.id == runtimeMediaId }.coerceAtLeast(0)
     }
@@ -274,8 +276,8 @@ fun MediaViewScreen(
                 showUI = showUI.value,
                 paddingValues = paddingValues,
                 currentMedia = currentMedia.value,
-                currentIndex = pagerState.currentPage,
-                refresh = refresh
+                albumsState = albumState,
+                currentIndex = pagerState.currentPage
             ) {
                 lastIndex = it
             }

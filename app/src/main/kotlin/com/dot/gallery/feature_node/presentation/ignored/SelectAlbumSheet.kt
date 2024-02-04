@@ -18,7 +18,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -28,14 +27,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
+import com.dot.gallery.core.AlbumState
 import com.dot.gallery.core.Settings
 import com.dot.gallery.core.presentation.components.DragHandle
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.BlacklistedAlbum
-import com.dot.gallery.feature_node.presentation.albums.AlbumsViewModel
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumComponent
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
 import kotlinx.coroutines.launch
@@ -45,15 +42,10 @@ import kotlinx.coroutines.launch
 fun SelectAlbumSheet(
     sheetState: AppBottomSheetState,
     blacklistedAlbums: List<BlacklistedAlbum>,
+    albumState: AlbumState,
     onSelect: (Album) -> Unit
 ) {
-    val albumViewModel = hiltViewModel<AlbumsViewModel>()
-    albumViewModel.attachToLifecycle()
-    val state by albumViewModel.albumsState.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
-    LaunchedEffect(blacklistedAlbums) {
-        albumViewModel.getAlbums()
-    }
     if (sheetState.isVisible) {
         ModalBottomSheet(
             sheetState = sheetState.sheetState,
@@ -101,7 +93,7 @@ fun SelectAlbumSheet(
                     )
                 ) {
                     items(
-                        items = state.albums,
+                        items = albumState.albums,
                         key = { item -> item.toString() }
                     ) { item ->
                         AlbumComponent(
