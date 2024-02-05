@@ -94,16 +94,6 @@ fun MainSearchBar(
         }
     }
 
-    val onClose: () -> Unit = remember {
-        {
-            scope.launch {
-                activeState.value = !activeState.value
-                if (query.isNotEmpty()) query = ""
-                vm.clearQuery()
-            }
-        }
-    }
-
     Box(
         modifier = Modifier
             .semantics { isTraversalGroup = true }
@@ -123,13 +113,7 @@ fun MainSearchBar(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .alpha(searchBarAlpha),
-            enabled = remember(
-                selectionState,
-                selectionState?.value,
-                isScrolling.value
-            ) {
-                (selectionState == null || !selectionState.value) && !isScrolling.value
-            },
+            enabled = (selectionState == null || !selectionState.value) && !isScrolling.value,
             query = query,
             onQueryChange = {
                 query = it
@@ -149,7 +133,15 @@ fun MainSearchBar(
             },
             tonalElevation = elevation,
             leadingIcon = {
-                IconButton(onClick = onClose) {
+                IconButton(
+                    enabled = selectionState == null,
+                    onClick = {
+                        scope.launch {
+                            activeState.value = !activeState.value
+                            if (query.isNotEmpty()) query = ""
+                            vm.clearQuery()
+                        }
+                    }) {
                     val leadingIcon = if (activeState.value)
                         Icons.AutoMirrored.Outlined.ArrowBack else Icons.Outlined.Search
                     Icon(

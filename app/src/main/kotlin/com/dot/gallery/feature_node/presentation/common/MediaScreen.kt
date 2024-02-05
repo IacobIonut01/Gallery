@@ -137,7 +137,7 @@ fun MediaScreen(
                         bottomPadding = paddingValues.calculateBottomPadding(),
                         navigate = navigate,
                         toggleNavbar = toggleNavbar,
-                        selectionState = selectionState,
+                        selectionState = if (selectedMedia.isNotEmpty()) selectionState else null,
                         isScrolling = isScrolling,
                         activeState = searchBarActive
                     ) {
