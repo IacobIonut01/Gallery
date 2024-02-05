@@ -70,25 +70,10 @@ fun NavigationComp(
     }
     val bottomNavEntries = rememberNavigationItems()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    var lastShouldDisplay by rememberSaveable {
-        mutableStateOf(false)
-    }
     val navPipe = hiltViewModel<ChanneledViewModel>()
     navPipe
         .initWithNav(navController, bottomBarState)
         .collectAsStateWithLifecycle(LocalLifecycleOwner.current)
-    LaunchedEffect(navBackStackEntry) {
-        navBackStackEntry?.destination?.route?.let {
-            val shouldDisplayBottomBar =
-                bottomNavEntries.find { item -> item.route == it } != null
-            if (lastShouldDisplay != shouldDisplayBottomBar) {
-                navPipe.toggleNavbar(isVisible = shouldDisplayBottomBar)
-                lastShouldDisplay = shouldDisplayBottomBar
-            }
-            systemBarFollowThemeState.value = !it.contains(Screen.MediaViewScreen.route)
-        }
-    }
-
     val groupTimelineByMonth by rememberTimelineGroupByMonth()
 
     val context = LocalContext.current
@@ -107,6 +92,21 @@ fun NavigationComp(
             if (currentDest == Screen.TimelineScreen() || currentDest == Screen.AlbumsScreen()) {
                 lastStartScreen = currentDest
             }
+        }
+    }
+
+    var lastShouldDisplay by rememberSaveable {
+        mutableStateOf(bottomNavEntries.find { item -> item.route == currentDest } != null)
+    }
+    LaunchedEffect(navBackStackEntry) {
+        navBackStackEntry?.destination?.route?.let {
+            val shouldDisplayBottomBar =
+                bottomNavEntries.find { item -> item.route == it } != null
+            if (lastShouldDisplay != shouldDisplayBottomBar) {
+                bottomBarState.value = shouldDisplayBottomBar
+                lastShouldDisplay = shouldDisplayBottomBar
+            }
+            systemBarFollowThemeState.value = !it.contains(Screen.MediaViewScreen.route)
         }
     }
 
