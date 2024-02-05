@@ -84,6 +84,19 @@
                 <data android:mimeType="image/*"/>
                 <data android:mimeType="video/*"/>
 
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <action android:name="com.android.camera.action.REVIEW" />
+                <action android:name="android.provider.action.REVIEW" />
+                <action android:name="android.provider.action.REVIEW_SECURE" />
+
+                <data android:scheme="content"/>
+                <data android:scheme="http"/>
+                <data android:scheme="file"/>
+
                 <!-- Hacky way to open JPEG-XL files -->
                 <data android:mimeType="image/jxl"/>
                 <data android:host="*" />
@@ -93,6 +106,7 @@
                 <data android:pathPattern=".*\\..*\\.jxl" />
                 <data android:pathPattern=".*\\..*\\..*\\.jxl" />
                 <data android:pathPattern=".*\\..*\\..*\\..*\\.jxl" />
+
 
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
