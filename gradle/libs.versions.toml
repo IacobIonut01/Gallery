@@ -1,5 +1,6 @@
 [versions]
 agp = "8.2.2"
+benchmarkMacroJunit4 = "1.2.3"
 composeCompiler = "1.5.8"
 appcompat = "1.6.1"
 coilVersion = "3.0.0-alpha04"
@@ -9,7 +10,7 @@ exifinterface = "1.3.7"
 glideSvg = "4.0.2"
 glideVersion = "4.16.0"
 gpuimage = "2.1.0"
-jxlCoder = "1.8.1"
+jxlCoder = "1.8.8"
 kotlin = "1.9.22"
 kotlinCoroutinesVersion = "1.7.3"
 ksp = "1.9.22-1.0.17"
@@ -28,12 +29,14 @@ media3Exoplayer = "1.2.1"
 navigation-runtime-ktx = "2.7.6"
 profileinstaller = "1.3.1"
 room = "2.6.1"
-accompanist = "0.32.0"
+accompanist = "0.34.0"
 datastore ="1.1.0-beta01"
-zoomable = "1.5.3"
+uiautomator = "2.2.0"
+zoomable = "1.6.0"
 
 [libraries]
 # AndroidX
+androidx-benchmark-macro-junit4 = { module = "androidx.benchmark:benchmark-macro-junit4", version.ref = "benchmarkMacroJunit4" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
 androidx-exifinterface = { module = "androidx.exifinterface:exifinterface", version.ref = "exifinterface" }
@@ -46,6 +49,7 @@ androidx-navigation-runtime-ktx = { module = "androidx.navigation:navigation-run
 androidx-profileinstaller = { module = "androidx.profileinstaller:profileinstaller", version.ref = "profileinstaller" }
 
 # Coil
+androidx-uiautomator = { module = "androidx.test.uiautomator:uiautomator", version.ref = "uiautomator" }
 coil-video = { module = "io.coil-kt.coil3:coil-video", version.ref = "coilVersion" }
 coil-gif = { module = "io.coil-kt.coil3:coil-gif", version.ref = "coilVersion" }
 coil-svg = { module = "io.coil-kt.coil3:coil-svg", version.ref = "coilVersion" }
@@ -128,6 +132,6 @@ kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kspAndroid = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 roomPlugin = { id = "androidx.room", version.ref = "room" }
 hiltAndroid = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
-baselineProfilePlugin = { id = "androidx.baselineprofile", version = "1.2.2" }
+baselineProfilePlugin = { id = "androidx.baselineprofile", version = "1.2.3" }
 [bundles]
 
