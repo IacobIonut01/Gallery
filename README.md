@@ -10,7 +10,7 @@
 ![GitHub Repo stars](https://img.shields.io/github/stars/IacobIonut01/Gallery?color=%23247EE0)
 
 ![](./screenshots/preview.png)
-![(https://crowdin.com/project/gallery-compose](./screenshots/items/support_banner.png)
+[![Crowdin](./screenshots/items/support_banner.png)](https://crowdin.com/project/gallery-compose)
 
 ## Download
 [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
