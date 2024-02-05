@@ -46,6 +46,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -94,13 +95,18 @@ fun AppBarContainer(
 ) {
     val backStackEntry = navController.currentBackStackEntryAsState()
     val bottomNavItems = rememberNavigationItems()
-    val useNavRail = windowSizeClass.widthSizeClass > WindowWidthSizeClass.Compact
+    val useNavRail = remember {
+        windowSizeClass.widthSizeClass > WindowWidthSizeClass.Compact
+    }
     val useOldNavbar by rememberOldNavbar()
 
     if (useOldNavbar) {
         Box {
+            val showNavRail by remember(useNavRail, bottomBarState.value) {
+                mutableStateOf(useNavRail && bottomBarState.value)
+            }
             AnimatedVisibility(
-                visible = useNavRail && bottomBarState.value,
+                visible = showNavRail,
                 enter = slideInHorizontally { it * -2 },
                 exit = slideOutHorizontally { it * -2 }
             ) {
@@ -111,7 +117,9 @@ fun AppBarContainer(
                 )
             }
             val animatedPadding by animateDpAsState(
-                targetValue = if (useNavRail && bottomBarState.value) 80.dp else 0.dp,
+                targetValue = remember(useNavRail, bottomBarState.value) {
+                    if (useNavRail && bottomBarState.value) 80.dp else 0.dp
+                },
                 label = "animatedPadding"
             )
             Box(
@@ -119,10 +127,12 @@ fun AppBarContainer(
             ) {
                 content()
             }
-
+            val showClassicNavbar by remember(useNavRail, isScrolling.value, bottomBarState.value) {
+                mutableStateOf(!useNavRail && bottomBarState.value && !isScrolling.value)
+            }
             AnimatedVisibility(
                 modifier = Modifier.align(Alignment.BottomCenter),
-                visible = !useNavRail && bottomBarState.value && !isScrolling.value,
+                visible = showClassicNavbar,
                 enter = slideInVertically { it * 2 },
                 exit = slideOutVertically { it * 2 },
                 content = {
@@ -137,11 +147,14 @@ fun AppBarContainer(
     } else {
         Box {
             content()
+            val showNavbar by remember(bottomBarState.value, isScrolling.value) {
+                mutableStateOf(bottomBarState.value && !isScrolling.value)
+            }
             AnimatedVisibility(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(bottom = paddingValues.calculateBottomPadding()),
-                visible = bottomBarState.value && !isScrolling.value,
+                visible = showNavbar,
                 enter = slideInVertically { it * 2 },
                 exit = slideOutVertically { it * 2 },
                 content = {

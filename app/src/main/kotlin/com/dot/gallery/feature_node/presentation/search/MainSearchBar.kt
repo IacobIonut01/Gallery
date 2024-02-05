@@ -36,6 +36,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -61,6 +62,7 @@ import com.dot.gallery.feature_node.presentation.search.components.SearchBarElev
 import com.dot.gallery.feature_node.presentation.search.components.SearchBarElevation.Expanded
 import com.dot.gallery.feature_node.presentation.search.components.SearchHistory
 import com.dot.gallery.feature_node.presentation.util.Screen
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,6 +83,7 @@ fun MainSearchBar(
         targetValue = if (selectionState != null && selectionState.value) 0.6f else 1f,
         label = "alpha"
     )
+    val scope = rememberCoroutineScope()
     val elevation by animateDpAsState(
         targetValue = if (activeState.value) Expanded() else Collapsed(),
         label = "elevation"
@@ -88,6 +91,16 @@ fun MainSearchBar(
     LaunchedEffect(LocalConfiguration.current, activeState.value) {
         if (selectionState == null) {
             toggleNavbar(!activeState.value)
+        }
+    }
+
+    val onClose: () -> Unit = remember {
+        {
+            scope.launch {
+                activeState.value = !activeState.value
+                if (query.isNotEmpty()) query = ""
+                vm.clearQuery()
+            }
         }
     }
 
@@ -103,14 +116,20 @@ fun MainSearchBar(
          * It is not yet possible because of the material3 compose limitations
          */
         val searchBarAlpha by animateFloatAsState(
-            targetValue = if (isScrolling.value) 0f else 1f,
+            targetValue = remember(isScrolling.value) { if (isScrolling.value) 0f else 1f },
             label = "searchBarAlpha"
         )
         SearchBar(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .alpha(searchBarAlpha),
-            enabled = (selectionState == null || !selectionState.value) && !isScrolling.value,
+            enabled = remember(
+                selectionState,
+                selectionState?.value,
+                isScrolling.value
+            ) {
+                (selectionState == null || !selectionState.value) && !isScrolling.value
+            },
             query = query,
             onQueryChange = {
                 query = it
@@ -119,7 +138,8 @@ fun MainSearchBar(
             },
             onSearch = {
                 if (it.isNotEmpty())
-                    historySet = historySet.toMutableSet().apply { add("${System.currentTimeMillis()}/$it") }
+                    historySet =
+                        historySet.toMutableSet().apply { add("${System.currentTimeMillis()}/$it") }
                 vm.queryMedia(it)
             },
             active = activeState.value,
@@ -129,11 +149,7 @@ fun MainSearchBar(
             },
             tonalElevation = elevation,
             leadingIcon = {
-                IconButton(onClick = {
-                    activeState.value = !activeState.value
-                    if (query.isNotEmpty()) query = ""
-                    vm.queryMedia(query)
-                }) {
+                IconButton(onClick = onClose) {
                     val leadingIcon = if (activeState.value)
                         Icons.AutoMirrored.Outlined.ArrowBack else Icons.Outlined.Search
                     Icon(
@@ -155,8 +171,9 @@ fun MainSearchBar(
             /**
              * Recent searches
              */
+            val lastQueryIsEmpty = remember(vm.lastQuery.value) { vm.lastQuery.value.isEmpty() }
             AnimatedVisibility(
-                visible = vm.lastQuery.value.isEmpty(),
+                visible = lastQueryIsEmpty,
                 enter = enterAnimation,
                 exit = exitAnimation
             ) {
@@ -170,11 +187,12 @@ fun MainSearchBar(
              * Searched content
              */
             AnimatedVisibility(
-                visible = vm.lastQuery.value.isNotEmpty(),
+                visible = !lastQueryIsEmpty,
                 enter = enterAnimation,
                 exit = exitAnimation
             ) {
-                if (state.media.isEmpty() && !state.isLoading) {
+                val mediaIsEmpty = remember(state) { state.media.isEmpty() && !state.isLoading }
+                if (mediaIsEmpty) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()

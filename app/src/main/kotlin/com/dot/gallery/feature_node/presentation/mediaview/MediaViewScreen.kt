@@ -111,7 +111,7 @@ fun MediaViewScreen(
     val scope = rememberCoroutineScope()
 
     val showInfo = remember(currentMedia.value) {
-        currentMedia.value?.trashed == 0 && !(currentMedia.value?.readUriOnly() ?: false)
+        currentMedia.value?.trashed == 0 && !(currentMedia.value?.readUriOnly ?: false)
     }
 
     LaunchedEffect(pagerState, state.media) {

@@ -15,7 +15,6 @@ import kotlinx.parcelize.Parcelize
 
 @Immutable
 @Parcelize
-@Stable
 data class Album(
     val id: Long = 0,
     val label: String,
@@ -29,9 +28,11 @@ data class Album(
 ) : Parcelable {
 
     @IgnoredOnParcel
+    @Stable
     val volume: String = pathToThumbnail.substringBeforeLast("/").removeSuffix(relativePath.removeSuffix("/"))
 
     @IgnoredOnParcel
+    @Stable
     val isOnSdcard: Boolean =
         volume.toLowerCase(Locale.current).matches(".*[0-9a-f]{4}-[0-9a-f]{4}".toRegex())
 

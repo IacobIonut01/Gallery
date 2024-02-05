@@ -308,7 +308,7 @@ fun MediaInfoDateCaptionContainer(
                 )
             }
 
-            if (!media.readUriOnly()) {
+            if (!media.readUriOnly) {
                 IconButton(
                     modifier = Modifier.align(Alignment.TopEnd),
                     onClick = onClickEditButton
@@ -592,7 +592,7 @@ private fun FavoriteButton(
             else Icons.Outlined.FavoriteBorder
         )
     }
-    if (!media.readUriOnly()) {
+    if (!media.readUriOnly) {
         BottomBarColumn(
             currentMedia = media,
             imageVector = favoriteIcon,

@@ -6,7 +6,9 @@
 package com.dot.gallery.feature_node.presentation.common.components
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyGridItemInfo
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -40,10 +43,14 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.dot.gallery.R
+import com.dot.gallery.core.Constants.Animation.enterAnimation
+import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.MediaState
 import com.dot.gallery.core.presentation.components.StickyHeader
 import com.dot.gallery.core.presentation.components.util.StickyHeaderGrid
@@ -57,7 +64,7 @@ import com.dot.gallery.feature_node.presentation.util.update
 import com.dot.gallery.ui.theme.Dimens
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun MediaGridView(
     mediaState: MediaState,
@@ -66,10 +73,10 @@ fun MediaGridView(
     searchBarPaddingTop: Dp = 0.dp,
     showSearchBar: Boolean = false,
     allowSelection: Boolean = false,
-    selectionState: MutableState<Boolean> = mutableStateOf(false),
-    selectedMedia: SnapshotStateList<Media> = mutableStateListOf(),
+    selectionState: MutableState<Boolean> = remember { mutableStateOf(false) },
+    selectedMedia: SnapshotStateList<Media> = remember { mutableStateListOf() } ,
     toggleSelection: (Int) -> Unit = {},
-    allowHeaders: Boolean = true,
+    allowHeaders: Boolean = remember { true },
     enableStickyHeaders: Boolean = false,
     showMonthlyHeader: Boolean = false,
     aboveGridContent: @Composable (() -> Unit)? = null,
@@ -128,64 +135,64 @@ fun MediaGridView(
                         span = { item ->
                             GridItemSpan(if (item.key.isHeaderKey) maxLineSpan else 1)
                         }
-                    ) { item ->
-                        when (item) {
-                            is MediaItem.Header -> {
-                                val isChecked = rememberSaveable { mutableStateOf(false) }
-                                if (allowSelection) {
-                                    LaunchedEffect(selectionState.value) {
-                                        // Uncheck if selectionState is set to false
-                                        isChecked.value = isChecked.value && selectionState.value
-                                    }
-                                    LaunchedEffect(selectedMedia.size) {
-                                        // Partial check of media items should not check the header
-                                        isChecked.value = selectedMedia.containsAll(item.data)
-                                    }
+                    ) { it ->
+                        val item = remember {
+                            if (it is MediaItem.Header) it
+                            else it as MediaItem.MediaViewItem
+                        }
+                        if (item is MediaItem.Header) {
+                            val isChecked = rememberSaveable { mutableStateOf(false) }
+                            if (allowSelection) {
+                                LaunchedEffect(selectionState.value) {
+                                    // Uncheck if selectionState is set to false
+                                    isChecked.value = isChecked.value && selectionState.value
                                 }
-                                val title = remember {
+                                LaunchedEffect(selectedMedia.size) {
+                                    // Partial check of media items should not check the header
+                                    isChecked.value = selectedMedia.containsAll(item.data)
+                                }
+                            }
+                            StickyHeader(
+                                date = remember {
                                     item.text
                                         .replace("Today", stringToday)
                                         .replace("Yesterday", stringYesterday)
-                                }
-                                StickyHeader(
-                                    date = title,
-                                    showAsBig = item.key.isBigHeaderKey,
-                                    isCheckVisible = selectionState,
-                                    isChecked = isChecked
-                                ) {
-                                    if (allowSelection) {
-                                        feedbackManager.vibrate()
-                                        scope.launch {
-                                            isChecked.value = !isChecked.value
-                                            if (isChecked.value) {
-                                                val toAdd = item.data.toMutableList().apply {
-                                                    // Avoid media from being added twice to selection
-                                                    removeIf { selectedMedia.contains(it) }
-                                                }
-                                                selectedMedia.addAll(toAdd)
-                                            } else selectedMedia.removeAll(item.data)
-                                            selectionState.update(selectedMedia.isNotEmpty())
-                                        }
+                                },
+                                showAsBig = remember { item.key.isBigHeaderKey },
+                                isCheckVisible = selectionState,
+                                isChecked = isChecked
+                            ) {
+                                if (allowSelection) {
+                                    feedbackManager.vibrate()
+                                    scope.launch {
+                                        isChecked.value = !isChecked.value
+                                        if (isChecked.value) {
+                                            val toAdd = item.data.toMutableList().apply {
+                                                // Avoid media from being added twice to selection
+                                                removeIf { selectedMedia.contains(it) }
+                                            }
+                                            selectedMedia.addAll(toAdd)
+                                        } else selectedMedia.removeAll(item.data)
+                                        selectionState.update(selectedMedia.isNotEmpty())
                                     }
                                 }
                             }
-
-                            is MediaItem.MediaViewItem -> {
-                                MediaComponent(
-                                    media = item.media,
-                                    selectionState = selectionState,
-                                    selectedMedia = selectedMedia,
-                                    onItemClick = {
-                                        if (selectionState.value && allowSelection) {
-                                            feedbackManager.vibrate()
-                                            toggleSelection(mediaState.media.indexOf(it))
-                                        } else onMediaClick(it)
-                                    }
-                                ) {
-                                    if (allowSelection) {
+                        } else {
+                            MediaImage(
+                                modifier = Modifier.animateItemPlacement(),
+                                media = (item as MediaItem.MediaViewItem).media,
+                                selectionState = selectionState,
+                                selectedMedia = selectedMedia,
+                                onItemClick = {
+                                    if (selectionState.value && allowSelection) {
                                         feedbackManager.vibrate()
                                         toggleSelection(mediaState.media.indexOf(it))
-                                    }
+                                    } else onMediaClick(it)
+                                }
+                            ) {
+                                if (allowSelection) {
+                                    feedbackManager.vibrate()
+                                    toggleSelection(mediaState.media.indexOf(it))
                                 }
                             }
                         }
@@ -194,9 +201,10 @@ fun MediaGridView(
                     itemsIndexed(
                         items = mediaState.media,
                         key = { _, item -> item.toString() },
-                        contentType = { _, item -> item.mimeType }
+                        contentType = { _, item -> item.isImage }
                     ) { index, media ->
-                        MediaComponent(
+                        MediaImage(
+                            modifier = Modifier.animateItemPlacement(),
                             media = media,
                             selectionState = selectionState,
                             selectedMedia = selectedMedia,
@@ -264,45 +272,59 @@ fun MediaGridView(
             }
         }
         val searchBarPadding by animateDpAsState(
-            targetValue = if (showSearchBar && !isScrolling.value) {
-                SearchBarDefaults.InputFieldHeight + searchBarPaddingTop + 8.dp
-            } else if (showSearchBar && isScrolling.value) searchBarPaddingTop else 0.dp,
+            targetValue = remember(isScrolling.value, showSearchBar, searchBarPaddingTop) {
+                if (showSearchBar && !isScrolling.value) {
+                    SearchBarDefaults.InputFieldHeight + searchBarPaddingTop + 8.dp
+                } else if (showSearchBar && isScrolling.value) searchBarPaddingTop else 0.dp
+            },
             label = "searchBarPadding"
         )
+
+        val density = LocalDensity.current
+        val searchBarOffset = remember(density, showSearchBar, searchBarPadding) {
+            with(density) {
+                return@with if (showSearchBar)
+                    28.sp.roundToPx() + searchBarPadding.roundToPx() else 0
+            }
+        }
+        val headerMatcher: (LazyGridItemInfo) -> Boolean = remember {
+            { item -> item.key.isHeaderKey || item.key.isIgnoredKey }
+        }
+        val headerOffset by rememberHeaderOffset(gridState, headerMatcher, searchBarOffset)
         StickyHeaderGrid(
             modifier = Modifier.fillMaxSize(),
-            lazyState = gridState,
-            headerMatcher = { item -> item.key.isHeaderKey || item.key.isIgnoredKey },
             showSearchBar = showSearchBar,
-            searchBarPadding = searchBarPadding,
+            headerOffset = headerOffset,
             stickyHeader = {
-                if (mediaState.media.isNotEmpty()) {
-                    stickyHeaderItem?.let {
-                        Text(
-                            text = it,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier
-                                .background(
-                                    Brush.verticalGradient(
-                                        listOf(
-                                            // 3.dp is the elevation the LargeTopAppBar use
-                                            MaterialTheme.colorScheme.surfaceColorAtElevation(
-                                                3.dp
-                                            ),
-                                            Color.Transparent
-                                        )
+                val show = remember(mediaState, stickyHeaderItem) { mediaState.media.isNotEmpty() && stickyHeaderItem != null }
+                AnimatedVisibility(
+                    visible = show,
+                    enter = enterAnimation,
+                    exit = exitAnimation
+                ) {
+                    Text(
+                        text = stickyHeaderItem.toString(),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier
+                            .background(
+                                Brush.verticalGradient(
+                                    listOf(
+                                        // 3.dp is the elevation the LargeTopAppBar use
+                                        MaterialTheme.colorScheme.surfaceColorAtElevation(
+                                            3.dp
+                                        ),
+                                        Color.Transparent
                                     )
                                 )
-                                .padding(horizontal = 16.dp)
-                                .padding(top = 24.dp + searchBarPadding, bottom = 24.dp)
-                                .fillMaxWidth()
-                        )
-                    }
+                            )
+                            .padding(horizontal = 16.dp)
+                            .padding(top = 24.dp + searchBarPadding, bottom = 24.dp)
+                            .fillMaxWidth()
+                    )
                 }
-            },
-            content = { mediaGrid() }
-        )
+            }
+        ) { mediaGrid() }
     } else mediaGrid()
 
 

@@ -186,10 +186,14 @@ fun MediaScreen(
                 navigate(Screen.MediaViewScreen.route + "?mediaId=${it.id}&$param")
             }
             /** Error State Handling Block **/
-            if (state.error.isNotEmpty())
+            val showError = remember(state) { state.error.isNotEmpty() }
+            AnimatedVisibility(visible = showError) {
                 Error(errorMessage = state.error)
-            else if (!state.isLoading && state.media.isEmpty())
+            }
+            val showEmpty = remember(state) { state.media.isEmpty() && !state.isLoading }
+            AnimatedVisibility(visible = showEmpty) {
                 emptyContent.invoke()
+            }
             /** ************ **/
         }
         if (target != TARGET_TRASH) {

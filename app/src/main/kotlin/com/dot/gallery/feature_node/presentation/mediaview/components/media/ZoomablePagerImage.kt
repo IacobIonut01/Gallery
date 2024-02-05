@@ -52,8 +52,8 @@ fun ZoomablePagerImage(
     val painter = rememberAsyncImagePainter(
         model = ImageRequest.Builder(LocalPlatformContext.current)
             .data(media.uri)
-            .diskCachePolicy(CachePolicy.ENABLED)
             .memoryCachePolicy(CachePolicy.ENABLED)
+            .placeholderMemoryCacheKey(media.toString())
             .size(maxImageSize)
             .build(),
         contentScale = ContentScale.Fit,

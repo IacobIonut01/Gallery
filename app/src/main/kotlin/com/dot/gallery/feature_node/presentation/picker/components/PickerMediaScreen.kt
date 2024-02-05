@@ -4,6 +4,7 @@
  */
 package com.dot.gallery.feature_node.presentation.picker.components
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -29,12 +30,13 @@ import com.dot.gallery.core.presentation.components.StickyHeader
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaItem
 import com.dot.gallery.feature_node.domain.model.isHeaderKey
-import com.dot.gallery.feature_node.presentation.common.components.MediaComponent
+import com.dot.gallery.feature_node.presentation.common.components.MediaImage
 import com.dot.gallery.feature_node.presentation.util.FeedbackManager
 import com.dot.gallery.ui.theme.Dimens
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun PickerMediaScreen(
     mediaState: StateFlow<MediaState>,
@@ -100,7 +102,8 @@ fun PickerMediaScreen(
 
                 is MediaItem.MediaViewItem -> {
                     val selectionState = remember { mutableStateOf(true) }
-                    MediaComponent(
+                    MediaImage(
+                        modifier = Modifier.animateItemPlacement(),
                         media = item.media,
                         selectionState = selectionState,
                         selectedMedia = selectedMedia,
