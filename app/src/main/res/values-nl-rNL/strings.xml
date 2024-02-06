@@ -172,6 +172,7 @@
     <string name="launch_auto">Start laatste scherm wanneer de app werd gesloten</string>
     <string name="set_default_screen">Opstartscherm instellen</string>
     <string name="done">Klaar</string>
+    <string name="toggle_audio_cd">Toggle audio</string>
     <plurals name="item_count">
         <item quantity="one">%s item</item>
         <item quantity="other">%s items</item>
