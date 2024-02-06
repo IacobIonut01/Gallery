@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.VolumeMute
+import androidx.compose.material.icons.automirrored.outlined.VolumeUp
 import androidx.compose.material.icons.filled.PauseCircleFilled
 import androidx.compose.material.icons.filled.PlayCircleFilled
 import androidx.compose.material.icons.outlined.ScreenRotation
@@ -28,12 +30,19 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -68,6 +77,33 @@ fun VideoPlayerController(
                 .fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            var isMuted by rememberSaveable(isPlaying) { mutableStateOf(player.volume == 0f) }
+            var currentVolume by rememberSaveable(player) { mutableFloatStateOf(player.volume) }
+            LaunchedEffect(LocalConfiguration.current, player.currentMediaItem) {
+                player.volume = if (isMuted) 0f else currentVolume
+            }
+            IconButton(
+                onClick = {
+                    if (isMuted) {
+                        player.volume = currentVolume
+                        isMuted = false
+                    } else {
+                        currentVolume = player.volume
+                        player.volume = 0f
+                        isMuted = true
+                    }
+                },
+                modifier = Modifier
+                    .align(Alignment.End)
+            ) {
+                Icon(
+                    imageVector = if (isMuted) Icons.AutoMirrored.Outlined.VolumeMute else Icons.AutoMirrored.Outlined.VolumeUp,
+                    tint = Color.White,
+                    contentDescription = stringResource(
+                        R.string.toggle_audio_cd
+                    )
+                )
+            }
             IconButton(
                 onClick = { toggleRotate() },
                 modifier = Modifier

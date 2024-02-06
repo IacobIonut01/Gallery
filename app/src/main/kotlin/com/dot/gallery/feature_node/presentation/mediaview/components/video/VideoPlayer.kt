@@ -17,11 +17,12 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -51,9 +52,9 @@ fun VideoPlayer(
     onItemClick: () -> Unit
 ) {
 
-    var totalDuration by remember { mutableStateOf(0L) }
-    val currentTime = rememberSaveable { mutableStateOf(0L) }
-    var bufferedPercentage by remember { mutableStateOf(0) }
+    var totalDuration by remember { mutableLongStateOf(0L) }
+    val currentTime = rememberSaveable { mutableLongStateOf(0L) }
+    var bufferedPercentage by remember { mutableIntStateOf(0) }
     val isPlaying = rememberSaveable { mutableStateOf(playWhenReady) }
     var lastPlayingState by rememberSaveable { mutableStateOf(isPlaying.value) }
     val context = LocalContext.current
@@ -123,12 +124,10 @@ fun VideoPlayer(
 
     val configuration = LocalConfiguration.current
     LaunchedEffect(configuration) {
-        snapshotFlow { configuration.orientation }.collect {
-            if (exoPlayer.currentPosition != currentTime.value) {
-                exoPlayer.seekTo(currentTime.value)
-                isPlaying.value = lastPlayingState
-            }
+        if (exoPlayer.currentPosition != currentTime.longValue) {
+            exoPlayer.seekTo(currentTime.longValue)
         }
+        isPlaying.value = lastPlayingState
     }
 
     LaunchedEffect(isPlaying.value) {
@@ -142,7 +141,7 @@ fun VideoPlayer(
     if (isPlaying.value) {
         LaunchedEffect(Unit) {
             while (true) {
-                currentTime.value = exoPlayer.currentPosition.coerceAtLeast(0L)
+                currentTime.longValue = exoPlayer.currentPosition.coerceAtLeast(0L)
                 bufferedPercentage = exoPlayer.bufferedPercentage
                 delay(1.seconds / 30)
             }
