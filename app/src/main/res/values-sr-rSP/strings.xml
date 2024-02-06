@@ -172,6 +172,7 @@
     <string name="launch_auto">Launch last screen when the app was closed</string>
     <string name="set_default_screen">Set default screen</string>
     <string name="done">Done</string>
+    <string name="toggle_audio_cd">Toggle audio</string>
     <plurals name="item_count">
         <item quantity="one">%s предмет</item>
         <item quantity="few">%s предмета</item>
