@@ -31,6 +31,8 @@ import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import com.dot.gallery.core.Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION
 import com.dot.gallery.core.Settings
+import com.dot.gallery.core.presentation.components.util.LocalBatteryStatus
+import com.dot.gallery.core.presentation.components.util.ProvideBatteryStatus
 import com.dot.gallery.feature_node.domain.model.Media
 import net.engawapg.lib.zoomable.rememberZoomState
 import net.engawapg.lib.zoomable.zoomable
@@ -68,22 +70,25 @@ fun ZoomablePagerImage(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        val allowBlur by Settings.Misc.rememberAllowBlur()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && allowBlur) {
-            val blurAlpha by animateFloatAsState(
-                animationSpec = tween(DEFAULT_TOP_BAR_ANIMATION_DURATION),
-                targetValue = if (uiEnabled) 0.7f else 0f,
-                label = "blurAlpha"
-            )
-            Image(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .alpha(blurAlpha)
-                    .blur(100.dp),
-                painter = painter,
-                contentDescription = null,
-                contentScale = ContentScale.Crop
-            )
+        ProvideBatteryStatus {
+            val allowBlur by Settings.Misc.rememberAllowBlur()
+            val isPowerSavingMode = LocalBatteryStatus.current.isPowerSavingMode
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && allowBlur && !isPowerSavingMode) {
+                val blurAlpha by animateFloatAsState(
+                    animationSpec = tween(DEFAULT_TOP_BAR_ANIMATION_DURATION),
+                    targetValue = if (uiEnabled) 0.7f else 0f,
+                    label = "blurAlpha"
+                )
+                Image(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .alpha(blurAlpha)
+                        .blur(100.dp),
+                    painter = painter,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop
+                )
+            }
         }
         Image(
             modifier = modifier
