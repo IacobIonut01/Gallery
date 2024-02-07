@@ -1,0 +1,13 @@
+New Features
+    Gallery: Added video player audio toggle button
+    Gallery: Automatically disable blur on battery saver
+
+Improvements
+    Gallery: Reduced lag for some devices
+
+Bug Fixes
+    Gallery: Fixed classic navigation bar colors
+    Gallery: Fixed some edge cases when navigation bar is showing incorrectly
+    Gallery: Fix missing 'Open as' for media
+
+Full Changelog: https://github.com/IacobIonut01/Gallery/releases/tag/2.1.0-21009
