@@ -103,7 +103,7 @@
     <string name="monthly_timeline_title">Měsíční časová osa</string>
     <string name="monthly_timeline_summary">Seskupit časovou osu měsíčně místo podle data (restartuje aplikaci)</string>
     <string name="amoled_mode_title">Použít Amoled režim</string>
-    <string name="amoled_mode_summary">Higher contrast, best suited for Amoled Screens</string>
+    <string name="amoled_mode_summary">Vyšší kontrast, vhodné pro Amoled obrazovky</string>
     <string name="location_chip">Poloha: %s</string>
     <string name="media_details">Podrobnosti</string>
     <string name="album_card_size">Velikost karty alba</string>
