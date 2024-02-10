@@ -126,14 +126,14 @@ fun NavigationComp(
 
     NavHost(
         navController = navController,
-        startDestination = startDest
+        startDestination = startDest,
+        enterTransition = { navigateInAnimation },
+        exitTransition = { navigateUpAnimation },
+        popEnterTransition = { navigateInAnimation },
+        popExitTransition = { navigateUpAnimation }
     ) {
         composable(
             route = Screen.SetupScreen(),
-            enterTransition = { navigateInAnimation },
-            exitTransition = { navigateUpAnimation },
-            popEnterTransition = { navigateInAnimation },
-            popExitTransition = { navigateUpAnimation }
         ) {
             navPipe.toggleNavbar(false)
             SetupScreen {
@@ -142,11 +142,7 @@ fun NavigationComp(
             }
         }
         composable(
-            route = Screen.TimelineScreen.route,
-            enterTransition = { navigateInAnimation },
-            exitTransition = { navigateUpAnimation },
-            popEnterTransition = { navigateInAnimation },
-            popExitTransition = { navigateUpAnimation }
+            route = Screen.TimelineScreen()
         ) {
             TimelineScreen(
                 paddingValues = paddingValues,
@@ -164,11 +160,7 @@ fun NavigationComp(
             )
         }
         composable(
-            route = Screen.TrashedScreen.route,
-            enterTransition = { navigateInAnimation },
-            exitTransition = { navigateUpAnimation },
-            popEnterTransition = { navigateInAnimation },
-            popExitTransition = { navigateUpAnimation }
+            route = Screen.TrashedScreen()
         ) {
             val viewModel = hiltViewModel<MediaViewModel>()
                 .apply { target = TARGET_TRASH }
@@ -188,11 +180,7 @@ fun NavigationComp(
             )
         }
         composable(
-            route = Screen.FavoriteScreen.route,
-            enterTransition = { navigateInAnimation },
-            exitTransition = { navigateUpAnimation },
-            popEnterTransition = { navigateInAnimation },
-            popExitTransition = { navigateUpAnimation }
+            route = Screen.FavoriteScreen()
         ) {
             timelineViewModel.ObserveCustomMediaState(MediaViewModel::getFavoriteMedia)
             FavoriteScreen(
@@ -210,11 +198,7 @@ fun NavigationComp(
             )
         }
         composable(
-            route = Screen.AlbumsScreen.route,
-            enterTransition = { navigateInAnimation },
-            exitTransition = { navigateUpAnimation },
-            popEnterTransition = { navigateInAnimation },
-            popExitTransition = { navigateUpAnimation }
+            route = Screen.AlbumsScreen()
         ) {
             AlbumsScreen(
                 navigate = navPipe::navigate,
@@ -226,12 +210,7 @@ fun NavigationComp(
             )
         }
         composable(
-            route = Screen.AlbumViewScreen.route +
-                    "?albumId={albumId}&albumName={albumName}",
-            enterTransition = { navigateInAnimation },
-            exitTransition = { navigateUpAnimation },
-            popEnterTransition = { navigateInAnimation },
-            popExitTransition = { navigateUpAnimation },
+            route = Screen.AlbumViewScreen.albumAndName(),
             arguments = listOf(
                 navArgument(name = "albumId") {
                     type = NavType.LongType
@@ -274,12 +253,7 @@ fun NavigationComp(
             )
         }
         composable(
-            route = Screen.MediaViewScreen.route +
-                    "?mediaId={mediaId}&albumId={albumId}",
-            enterTransition = { navigateInAnimation },
-            exitTransition = { navigateUpAnimation },
-            popEnterTransition = { navigateInAnimation },
-            popExitTransition = { navigateUpAnimation },
+            route = Screen.MediaViewScreen.idAndAlbum(),
             arguments = listOf(
                 navArgument(name = "mediaId") {
                     type = NavType.LongType
@@ -313,12 +287,7 @@ fun NavigationComp(
             )
         }
         composable(
-            route = Screen.MediaViewScreen.route +
-                    "?mediaId={mediaId}&target={target}",
-            enterTransition = { navigateInAnimation },
-            exitTransition = { navigateUpAnimation },
-            popEnterTransition = { navigateInAnimation },
-            popExitTransition = { navigateUpAnimation },
+            route = Screen.MediaViewScreen.idAndTarget(),
             arguments = listOf(
                 navArgument(name = "mediaId") {
                     type = NavType.LongType
@@ -367,11 +336,7 @@ fun NavigationComp(
             )
         }
         composable(
-            route = Screen.SettingsScreen.route,
-            enterTransition = { navigateInAnimation },
-            exitTransition = { navigateUpAnimation },
-            popEnterTransition = { navigateInAnimation },
-            popExitTransition = { navigateUpAnimation },
+            route = Screen.SettingsScreen()
         ) {
             SettingsScreen(
                 navigateUp = navPipe::navigateUp,
@@ -379,22 +344,14 @@ fun NavigationComp(
             )
         }
         composable(
-            route = Screen.AlbumSizeScreen.route,
-            enterTransition = { navigateInAnimation },
-            exitTransition = { navigateUpAnimation },
-            popEnterTransition = { navigateInAnimation },
-            popExitTransition = { navigateUpAnimation },
+            route = Screen.AlbumSizeScreen()
         ) {
             AlbumSizeScreen(
                 navigateUp = navPipe::navigateUp
             )
         }
         composable(
-            route = Screen.BlacklistScreen(),
-            enterTransition = { navigateInAnimation },
-            exitTransition = { navigateUpAnimation },
-            popEnterTransition = { navigateInAnimation },
-            popExitTransition = { navigateUpAnimation },
+            route = Screen.BlacklistScreen()
         ) {
             val albumsState by albumsViewModel.albumsState.collectAsStateWithLifecycle()
             IgnoredScreen(
