@@ -34,8 +34,13 @@ import com.dot.gallery.core.Settings
 import com.dot.gallery.core.presentation.components.util.LocalBatteryStatus
 import com.dot.gallery.core.presentation.components.util.ProvideBatteryStatus
 import com.dot.gallery.feature_node.domain.model.Media
+import me.saket.telephoto.zoomable.ZoomSpec
+import me.saket.telephoto.zoomable.ZoomableImage
+import me.saket.telephoto.zoomable.ZoomableImageSource
+import me.saket.telephoto.zoomable.coil3.coil3
+import me.saket.telephoto.zoomable.rememberZoomableImageState
+import me.saket.telephoto.zoomable.rememberZoomableState
 import net.engawapg.lib.zoomable.rememberZoomState
-import net.engawapg.lib.zoomable.zoomable
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -44,19 +49,18 @@ fun ZoomablePagerImage(
     media: Media,
     scrollEnabled: MutableState<Boolean>,
     uiEnabled: Boolean,
-    maxScale: Float = 25f,
-    maxImageSize: Int,
+    maxScale: Float = 10f,
     onItemClick: () -> Unit
 ) {
     val zoomState = rememberZoomState(
-        maxScale = maxScale
+        maxScale = maxScale,
     )
     val painter = rememberAsyncImagePainter(
         model = ImageRequest.Builder(LocalPlatformContext.current)
             .data(media.uri)
             .memoryCachePolicy(CachePolicy.ENABLED)
             .placeholderMemoryCacheKey(media.toString())
-            .size(maxImageSize)
+            .size(4096)
             .build(),
         contentScale = ContentScale.Fit,
         filterQuality = FilterQuality.None,
@@ -64,9 +68,17 @@ fun ZoomablePagerImage(
             zoomState.setContentSize(it.painter.intrinsicSize)
         }
     )
+    val zoomableState = rememberZoomableState(
+        zoomSpec = ZoomSpec(
+            maxZoomFactor = maxScale
+        )
+    )
+    val state = rememberZoomableImageState(
+        zoomableState = zoomableState
+    )
 
-    LaunchedEffect(zoomState.scale) {
-        scrollEnabled.value = zoomState.scale == 1f
+    LaunchedEffect(zoomableState.zoomFraction) {
+        scrollEnabled.value = (zoomableState.zoomFraction ?: 0f) == 0.0f
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -90,7 +102,8 @@ fun ZoomablePagerImage(
                 )
             }
         }
-        Image(
+
+        ZoomableImage(
             modifier = modifier
                 .fillMaxSize()
                 .combinedClickable(
@@ -98,11 +111,14 @@ fun ZoomablePagerImage(
                     indication = null,
                     onDoubleClick = {},
                     onClick = onItemClick
-                )
-                .zoomable(
-                    zoomState = zoomState,
                 ),
-            painter = painter,
+            state = state,
+            image = ZoomableImageSource.coil3(
+                model = ImageRequest.Builder(LocalPlatformContext.current)
+                    .data(media.uri)
+                    .placeholderMemoryCacheKey(media.toString())
+                    .build()
+            ),
             contentScale = ContentScale.Fit,
             contentDescription = media.label
         )

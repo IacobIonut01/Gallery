@@ -162,7 +162,6 @@ fun MediaViewScreen(
                 media = state.media[index],
                 scrollEnabled = scrollEnabled,
                 uiEnabled = showUI.value,
-                maxImageSize = 4096,
                 playWhenReady = index == pagerState.currentPage,
                 onItemClick = {
                     showUI.value = !showUI.value

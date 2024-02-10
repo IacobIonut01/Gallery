@@ -19,7 +19,6 @@ fun MediaPreviewComponent(
     media: Media,
     scrollEnabled: MutableState<Boolean>,
     uiEnabled: Boolean,
-    maxImageSize: Int,
     playWhenReady: Boolean,
     onItemClick: () -> Unit,
     videoController: @Composable (ExoPlayer, MutableState<Boolean>, MutableState<Long>, Long, Int) -> Unit,
@@ -40,7 +39,6 @@ fun MediaPreviewComponent(
                 media = media,
                 scrollEnabled = scrollEnabled,
                 uiEnabled = uiEnabled,
-                maxImageSize = maxImageSize,
                 onItemClick = onItemClick
             )
         }
