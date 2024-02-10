@@ -127,7 +127,7 @@ fun MediaImage(
                     .data(media.uri)
                     .memoryCachePolicy(CachePolicy.ENABLED)
                     .memoryCacheKey(media.toString())
-                    .scale(Scale.FIT)
+                    .scale(Scale.FILL)
                     .build(),
                 modelEqualityDelegate = MediaEqualityDelegate(),
                 contentDescription = media.label,
