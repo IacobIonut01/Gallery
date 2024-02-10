@@ -89,7 +89,6 @@ fun MediaViewScreen(
         initialPageOffsetFraction = 0f,
         pageCount = state.media::size
     )
-    val scrollEnabled = rememberSaveable { mutableStateOf(true) }
     val bottomSheetState = rememberAppBottomSheetState()
 
     val currentDate = rememberSaveable { mutableStateOf("") }
@@ -143,7 +142,6 @@ fun MediaViewScreen(
                     }
                 },
             state = pagerState,
-            userScrollEnabled = scrollEnabled.value,
             flingBehavior = PagerDefaults.flingBehavior(
                 state = pagerState,
                 lowVelocityAnimationSpec = tween(
@@ -160,7 +158,6 @@ fun MediaViewScreen(
         ) { index ->
             MediaPreviewComponent(
                 media = state.media[index],
-                scrollEnabled = scrollEnabled,
                 uiEnabled = showUI.value,
                 maxImageSize = 4096,
                 playWhenReady = index == pagerState.currentPage,

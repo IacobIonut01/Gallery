@@ -15,8 +15,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -34,6 +32,7 @@ import com.dot.gallery.core.Settings
 import com.dot.gallery.core.presentation.components.util.LocalBatteryStatus
 import com.dot.gallery.core.presentation.components.util.ProvideBatteryStatus
 import com.dot.gallery.feature_node.domain.model.Media
+import net.engawapg.lib.zoomable.ScrollGesturePropagation
 import net.engawapg.lib.zoomable.rememberZoomState
 import net.engawapg.lib.zoomable.zoomable
 
@@ -42,7 +41,6 @@ import net.engawapg.lib.zoomable.zoomable
 fun ZoomablePagerImage(
     modifier: Modifier = Modifier,
     media: Media,
-    scrollEnabled: MutableState<Boolean>,
     uiEnabled: Boolean,
     maxScale: Float = 25f,
     maxImageSize: Int,
@@ -64,10 +62,6 @@ fun ZoomablePagerImage(
             zoomState.setContentSize(it.painter.intrinsicSize)
         }
     )
-
-    LaunchedEffect(zoomState.scale) {
-        scrollEnabled.value = zoomState.scale == 1f
-    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         ProvideBatteryStatus {
@@ -101,6 +95,7 @@ fun ZoomablePagerImage(
                 )
                 .zoomable(
                     zoomState = zoomState,
+                    scrollGesturePropagation = ScrollGesturePropagation.NotZoomed
                 ),
             painter = painter,
             contentScale = ContentScale.Fit,
