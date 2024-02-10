@@ -18,7 +18,6 @@ import com.dot.gallery.feature_node.presentation.mediaview.components.video.Vide
 fun MediaPreviewComponent(
     media: Media,
     uiEnabled: Boolean,
-    maxImageSize: Int,
     playWhenReady: Boolean,
     onItemClick: () -> Unit,
     videoController: @Composable (ExoPlayer, MutableState<Boolean>, MutableState<Long>, Long, Int) -> Unit,
@@ -38,7 +37,6 @@ fun MediaPreviewComponent(
             ZoomablePagerImage(
                 media = media,
                 uiEnabled = uiEnabled,
-                maxImageSize = maxImageSize,
                 onItemClick = onItemClick
             )
         }

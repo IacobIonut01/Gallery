@@ -82,6 +82,7 @@ android {
     kotlinOptions {
         jvmTarget = "17"
         freeCompilerArgs += listOf("-P", "plugin:androidx.compose.compiler.plugins.kotlin:experimentalStrongSkipping=true")
+        freeCompilerArgs += "-Xcontext-receivers"
     }
     buildFeatures {
         compose = true
@@ -135,6 +136,7 @@ dependencies {
     implementation(libs.accompanist.systemuicontroller)
     implementation(libs.accompanist.permissions)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.accompanist.drawablepainter)
 
     // Android MDC - Material
     implementation(libs.material)
@@ -195,6 +197,9 @@ dependencies {
 
     // Pinch to zoom
     implementation(libs.pinchzoomgrid)
+
+    // Subsampling
+    implementation(libs.zoomable.image.coil)
 
     // Tests
     testImplementation(libs.junit)

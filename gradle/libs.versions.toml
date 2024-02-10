@@ -32,8 +32,10 @@ profileinstaller = "1.3.1"
 room = "2.6.1"
 accompanist = "0.34.0"
 datastore ="1.1.0-beta01"
+subSamplingImage = "0.8.0"
 uiautomator = "2.2.0"
 zoomable = "1.6.0"
+zoomableImageCoil = "0.8.0"
 
 [libraries]
 # AndroidX
@@ -107,8 +109,10 @@ datastore-prefs = { group = "androidx.datastore", name = "datastore-preferences"
 # Accompanists
 accompanist-systemuicontroller = { group = "com.google.accompanist", name = "accompanist-systemuicontroller", version.ref = "accompanist" }
 accompanist-permissions = { group = "com.google.accompanist", name = "accompanist-permissions", version.ref = "accompanist" }
+accompanist-drawablepainter = { module = "com.google.accompanist:accompanist-drawablepainter", version.ref = "accompanist" }
 
 # Zoomable
+sub-sampling-image = { module = "me.saket.telephoto:sub-sampling-image", version.ref = "subSamplingImage" }
 zoomable = { module = "net.engawapg.lib:zoomable", version.ref = "zoomable" }
 
 # Kotlinx
@@ -125,6 +129,7 @@ fuzzywuzzy = { module = "me.xdrop:fuzzywuzzy", version.ref = "fuzzywuzzy" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidx-test-ext-junit" }
 espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso-core" }
+zoomable-image-coil = { module = "me.saket.telephoto:zoomable-image-coil", version.ref = "zoomableImageCoil" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

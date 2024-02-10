@@ -159,7 +159,6 @@ fun MediaViewScreen(
             MediaPreviewComponent(
                 media = state.media[index],
                 uiEnabled = showUI.value,
-                maxImageSize = 4096,
                 playWhenReady = index == pagerState.currentPage,
                 onItemClick = {
                     showUI.value = !showUI.value
