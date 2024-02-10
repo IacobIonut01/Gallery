@@ -28,6 +28,7 @@ import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
 import coil3.request.CachePolicy
 import coil3.request.ImageRequest
+import coil3.size.Scale
 import com.dot.gallery.feature_node.domain.model.ImageFilter
 import com.dot.gallery.feature_node.presentation.edit.EditViewModel
 import com.dot.gallery.ui.theme.Shapes
@@ -93,8 +94,8 @@ fun FilterItem(
                 ),
             model = ImageRequest.Builder(LocalPlatformContext.current)
                 .data(imageFilter.filterPreview)
-                .diskCachePolicy(CachePolicy.ENABLED)
                 .memoryCachePolicy(CachePolicy.ENABLED)
+                .scale(Scale.FIT)
                 .build(),
             contentScale = ContentScale.Crop,
             contentDescription = imageFilter.name
