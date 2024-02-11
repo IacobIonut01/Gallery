@@ -11,6 +11,7 @@
 
 ![](./screenshots/preview.png)
 [![Crowdin](./screenshots/items/support_banner.png)](https://crowdin.com/project/gallery-compose)
+[![Community](./screenshots/items/community_banner.png)](https://t.me/GalleryCompose)
 
 ## Download
 [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
