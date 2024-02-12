@@ -8,11 +8,11 @@
     <string name="request_permissions">Request permissions</string>
     <string name="filter">Filter</string>
     <string name="filter_recent">Senaste</string>
-    <string name="filter_nameAZ">Namn (A-Z)</string>
-    <string name="filter_nameZA">Namn (Z-A)</string>
-    <string name="filter_old">Äldre</string>
+    <string name="filter_nameAZ">Namn (A-Ö)</string>
+    <string name="filter_nameZA">Namn (Ö-A)</string>
+    <string name="filter_old">Äldsta</string>
     <string name="selected_s">Selected %s</string>
-    <string name="trash">Papperskorg</string>
+    <string name="trash">Ta bort</string>
     <string name="pause_video">Pause video</string>
     <string name="play_video">Play video</string>
     <string name="favorites">Favoriter</string>
