@@ -108,7 +108,7 @@
     <string name="media_details">Detaljer</string>
     <string name="album_card_size">Album Card Size</string>
     <string name="edit_metadata">Redigera metadata</string>
-    <string name="dialog_to_trash">Moving to Trash</string>
+    <string name="dialog_to_trash">Flyttar till papperskorgen</string>
     <string name="dialog_delete">Deleting Permanently</string>
     <string name="s_items">%1$s items</string>
     <string name="trashing_items">Trashing %1$s items..</string>
