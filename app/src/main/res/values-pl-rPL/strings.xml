@@ -138,7 +138,7 @@
     <string name="read_media_videos">Read Media Videos</string>
     <string name="read_media_videos_summary">Allows the app to show your videos</string>
     <string name="access_media_location">Access Media Location</string>
-    <string name="access_media_location_summary"><![CDATA[Allows the app to read location data of your images & videos]]></string>
+    <string name="access_media_location_summary"><![CDATA[Umożliwia aplikacji odczytywanie danych lokalizacji zdjęć i filmów.]]></string>
     <string name="internet">Internet</string>
     <string name="internet_summary"><![CDATA[Required to display Location Previews of your images & videos]]></string>
     <string name="fancy_blur">Fancy Blur</string>
@@ -147,7 +147,7 @@
     <string name="old_navbar_summary">Show the old navigation bar UI (with rails for bigger screens)</string>
     <string name="hide_timeline_for_albums">Hide timeline for albums</string>
     <string name="hide_timeline_for_album_summary">Chowa nagłówki dat przy otwieraniu albumu</string>
-    <string name="allow_vibrations">Allow vibrations</string>
+    <string name="allow_vibrations">Zezwól na wibracje</string>
     <string name="allow_vibrations_summary">Zezwalaj na wysyłanie informacji zwrotnych w postaci wibracji podczas wykonywania niektórych czynności lub gestów</string>
     <string name="album_name">Nazwa albumu</string>
     <string name="create_new_album">Stwórz nowy album</string>
@@ -159,9 +159,9 @@
     <string name="add_to_ignored_summary">Remove an album from showing inside the Gallery</string>
     <string name="remove_from_ignored">Remove from ignored list</string>
     <string name="remove_from_ignored_summary">Remove from the ignored list the album named %1$s</string>
-    <string name="override">Override</string>
-    <string name="save_copy">Save Copy</string>
-    <string name="favorite">Favorite</string>
+    <string name="override">Nadpisz</string>
+    <string name="save_copy">Zapisz kopię</string>
+    <string name="favorite">Ulubione</string>
     <string name="allow_to_manage_media">Allow to Manage Media</string>
     <string name="set_default_launch_screen">Set default launch screen</string>
     <string name="use_last_opened_screen">Use last opened screen</string>
