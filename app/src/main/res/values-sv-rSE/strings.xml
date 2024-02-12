@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Gallery</string>
-    <string name="nav_albums">Albums</string>
+    <string name="app_name">Galleri</string>
+    <string name="nav_albums">Album</string>
     <string name="searchbar_title"><![CDATA[Search photos & videos]]></string>
     <string name="header_today">Today</string>
     <string name="header_yesterday">Yesterday</string>
@@ -142,7 +142,7 @@
     <string name="internet">Internet</string>
     <string name="internet_summary"><![CDATA[Required to display Location Previews of your images & videos]]></string>
     <string name="fancy_blur">Tjusig oskärpa</string>
-    <string name="fancy_blur_summary">Gör bakgrunden oskarp i mediavyn</string>
+    <string name="fancy_blur_summary">Gör bakgrunden oskarp i medievyn</string>
     <string name="old_navbar">Use Material Navigation</string>
     <string name="old_navbar_summary">Show the old navigation bar UI (with rails for bigger screens)</string>
     <string name="hide_timeline_for_albums">Hide timeline for albums</string>
