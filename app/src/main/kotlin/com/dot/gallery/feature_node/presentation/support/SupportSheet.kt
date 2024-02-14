@@ -127,10 +127,38 @@ fun SupportSheet(
                 }
             ),
             OptionItem(
-                text = "XLR",
+                text = "XLM",
                 summary = "GAHXB7JI4QEZW2ZM4CA6PQ37Y3636UXWWXDHAZLHCJV5HGXYWQJBIE5Q",
                 onClick = {
                     clipboard.setText(AnnotatedString("GAHXB7JI4QEZW2ZM4CA6PQ37Y3636UXWWXDHAZLHCJV5HGXYWQJBIE5Q"))
+                }
+            ),
+            OptionItem(
+                text = "INJ",
+                summary = "inj1wpl0p627s98qtmadl57n0q6qrna735g72dner7",
+                onClick = {
+                    clipboard.setText(AnnotatedString("inj1wpl0p627s98qtmadl57n0q6qrna735g72dner7"))
+                }
+            ),
+            OptionItem(
+                text = "SUI",
+                summary = "0xe135452c381f3298e0ddb17c3e1ede8e1d6aaefb3bc3734219dd6d14ce2177ce",
+                onClick = {
+                    clipboard.setText(AnnotatedString("0xe135452c381f3298e0ddb17c3e1ede8e1d6aaefb3bc3734219dd6d14ce2177ce"))
+                }
+            ),
+            OptionItem(
+                text = "SEI",
+                summary = "sei1t5c9dmjdempk7hklw0mm4wkxwzauncvqsgs3l4",
+                onClick = {
+                    clipboard.setText(AnnotatedString("sei1t5c9dmjdempk7hklw0mm4wkxwzauncvqsgs3l4"))
+                }
+            ),
+            OptionItem(
+                text = "HBAR",
+                summary = "0.0.4688681-szsjz",
+                onClick = {
+                    clipboard.setText(AnnotatedString("0.0.4688681-szsjz"))
                 }
             )
         )
