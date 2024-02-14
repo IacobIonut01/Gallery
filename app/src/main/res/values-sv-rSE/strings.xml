@@ -44,7 +44,7 @@
     <string name="settings_title">Inställningar</string>
     <string name="settings_general">Allmänt</string>
     <string name="settings_trash_title">Använd papperskorg</string>
-    <string name="settings_trash_summary">Store deleted media for 30 days.\nDeleting media will result in a permanent loss if disabled.</string>
+    <string name="settings_trash_summary">Spara raderade medier i 30 dagar.\nRadering av medier kommer att leda till permanent förlust om inaktiverad.</string>
     <string name="move_album_to_trash">Move album to trash</string>
     <string name="pinned_albums_title">Pinned Albums</string>
     <string name="unpin">Unpin</string>
@@ -90,14 +90,14 @@
     <string name="allow">Tillåt</string>
     <string name="all">Alla</string>
     <string name="secure_mode_title">Säkert läge</string>
-    <string name="secure_mode_summary">Hide the app preview when you exit it</string>
+    <string name="secure_mode_summary">Dölj förhandsgranskningen av appen när du lämnar den</string>
     <string name="rotate_screen_cd">Rotate Screen</string>
     <string name="size_dp">%1$sdp</string>
     <string name="change_album_size">Ändra albumkortsstorlek</string>
     <string name="reset">Återställ</string>
     <string name="customization">Anpassning</string>
     <string name="album_card_size_title">Albumkortsstorlek</string>
-    <string name="album_card_size_summary">Manually pick your album card size</string>
+    <string name="album_card_size_summary">Välj din albumkortsstorlek manuellt</string>
     <string name="set_wallpaper">Bakgrundsbild</string>
     <string name="set_wallpaper_error">Can\'t set wallpaper, no app available!</string>
     <string name="monthly_timeline_title">Monthly Timeline</string>
@@ -145,8 +145,8 @@
     <string name="fancy_blur_summary">Gör bakgrunden oskarp i medievyn</string>
     <string name="old_navbar">Use Material Navigation</string>
     <string name="old_navbar_summary">Show the old navigation bar UI (with rails for bigger screens)</string>
-    <string name="hide_timeline_for_albums">Hide timeline for albums</string>
-    <string name="hide_timeline_for_album_summary">Hides date headers when opening an album</string>
+    <string name="hide_timeline_for_albums">Dölj tidslinje för album</string>
+    <string name="hide_timeline_for_album_summary">Döljer datumrubriker när ett album öppnas</string>
     <string name="allow_vibrations">Tillåt vibrationer</string>
     <string name="allow_vibrations_summary">Tillåt att återkoppling skickas som vibrationer när vissa handlingar eller gester utförs</string>
     <string name="album_name">Albumnamn</string>
@@ -154,7 +154,7 @@
     <string name="copy">Kopiera</string>
     <string name="ignored_albums">Ignorerade album</string>
     <string name="select_an_album">Välj ett album</string>
-    <string name="blacklist_summary">Ignore albums from Gallery</string>
+    <string name="blacklist_summary">Ignorera album från galleriet</string>
     <string name="add_to_ignored">Add to ignored albums</string>
     <string name="add_to_ignored_summary">Remove an album from showing inside the Gallery</string>
     <string name="remove_from_ignored">Remove from ignored list</string>
