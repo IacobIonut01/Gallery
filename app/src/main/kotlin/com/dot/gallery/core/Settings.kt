@@ -7,11 +7,15 @@ package com.dot.gallery.core
 
 import android.content.Context
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.edit
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
@@ -19,8 +23,8 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.dot.gallery.core.Settings.PREFERENCE_NAME
 import com.dot.gallery.core.util.rememberPreference
 import com.dot.gallery.feature_node.presentation.util.Screen
-import com.dot.gallery.ui.theme.Dimens
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = PREFERENCE_NAME)
 
@@ -35,11 +39,35 @@ object Settings {
         fun rememberLastSort() =
             rememberPreference(key = LAST_SORT, defaultValue = 0)
 
-        private val ALBUM_SIZE = floatPreferencesKey("album_size")
-
         @Composable
-        fun rememberAlbumSize() =
-            rememberPreference(key = ALBUM_SIZE, defaultValue = Dimens.Album.size.value)
+        fun rememberAlbumGridSize(): MutableState<Int> {
+            val scope = rememberCoroutineScope()
+            val context = LocalContext.current
+            val prefs = remember(context) {
+                context.getSharedPreferences("ui_settings", Context.MODE_PRIVATE)
+            }
+            var storedSize = remember(prefs) {
+                prefs.getInt("album_grid_size", 3)
+            }
+
+            return remember(storedSize) {
+                object : MutableState<Int> {
+                    override var value: Int
+                        get() = storedSize
+                        set(value) {
+                            scope.launch {
+                                prefs.edit {
+                                    putInt("album_grid_size", value)
+                                    storedSize = value
+                                }
+                            }
+                        }
+
+                    override fun component1() = value
+                    override fun component2(): (Int) -> Unit = { value = it }
+                }
+            }
+        }
 
         private val HIDE_TIMELINE_ON_ALBUM = booleanPreferencesKey("hide_timeline_on_album")
 
@@ -84,11 +112,35 @@ object Settings {
         fun rememberForcedLastScreen() =
             rememberPreference(key = FORCED_LAST_SCREEN, defaultValue = false)
 
-        private val MEDIA_GRID_SIZE = floatPreferencesKey("media_grid_size")
-
         @Composable
-        fun rememberMediaGridSize() =
-            rememberPreference(key = MEDIA_GRID_SIZE, defaultValue = Dimens.Photo().value)
+        fun rememberGridSize(): MutableState<Int> {
+            val scope = rememberCoroutineScope()
+            val context = LocalContext.current
+            val prefs = remember(context) {
+                context.getSharedPreferences("ui_settings", Context.MODE_PRIVATE)
+            }
+            var storedSize = remember(prefs) {
+                prefs.getInt("media_grid_size", 3)
+            }
+
+            return remember(storedSize) {
+                object : MutableState<Int> {
+                    override var value: Int
+                        get() = storedSize
+                        set(value) {
+                            scope.launch {
+                                prefs.edit {
+                                    putInt("media_grid_size", value)
+                                    storedSize = value
+                                }
+                            }
+                        }
+
+                    override fun component1() = value
+                    override fun component2(): (Int) -> Unit = { value = it }
+                }
+            }
+        }
 
         private val FORCE_THEME = booleanPreferencesKey("force_theme")
 

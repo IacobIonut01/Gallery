@@ -107,6 +107,7 @@ fun PickerMediaScreen(
                         media = item.media,
                         selectionState = selectionState,
                         selectedMedia = selectedMedia,
+                        canClick = true,
                         onItemClick = {
                             feedbackManager.vibrate()
                             if (allowSelection) {

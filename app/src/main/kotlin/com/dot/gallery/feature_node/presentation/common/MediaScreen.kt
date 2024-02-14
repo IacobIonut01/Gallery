@@ -23,6 +23,8 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,11 +32,15 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.dokar.pinchzoomgrid.PinchZoomGridLayout
+import com.dokar.pinchzoomgrid.rememberPinchZoomGridState
 import com.dot.gallery.core.AlbumState
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.Constants.Target.TARGET_TRASH
+import com.dot.gallery.core.Constants.cellsList
 import com.dot.gallery.core.MediaState
+import com.dot.gallery.core.Settings.Misc.rememberGridSize
 import com.dot.gallery.core.presentation.components.Error
 import com.dot.gallery.core.presentation.components.LoadingMedia
 import com.dot.gallery.core.presentation.components.NavigationActions
@@ -78,8 +84,23 @@ fun MediaScreen(
     onActivityResult: (result: ActivityResult) -> Unit,
 ) {
     val showSearchBar = remember { albumId == -1L && target == null }
-    val scrollBehavior =
-        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+    var canScroll by rememberSaveable { mutableStateOf(true) }
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
+        state = rememberTopAppBarState(),
+        canScroll = { canScroll },
+        flingAnimationSpec = null
+    )
+    var lastCellIndex by rememberGridSize()
+
+    val pinchState = rememberPinchZoomGridState(
+        cellsList = cellsList,
+        initialCellsIndex = lastCellIndex
+    )
+
+    LaunchedEffect(pinchState.isZooming) {
+        canScroll = !pinchState.isZooming
+        lastCellIndex = cellsList.indexOf(pinchState.currentCells)
+    }
 
     /** STATES BLOCK **/
     val state by mediaState.collectAsStateWithLifecycle()
@@ -93,7 +114,6 @@ fun MediaScreen(
         }
     }
     /** ************  **/
-
     Box {
         Scaffold(
             modifier = Modifier
@@ -149,52 +169,55 @@ fun MediaScreen(
                 }
             }
         ) { it ->
-            AnimatedVisibility(
-                visible = state.isLoading,
-                enter = enterAnimation,
-                exit = exitAnimation
-            ) {
-                LoadingMedia(
+            PinchZoomGridLayout(state = pinchState) {
+                AnimatedVisibility(
+                    visible = state.isLoading,
+                    enter = enterAnimation,
+                    exit = exitAnimation
+                ) {
+                    LoadingMedia(
+                        paddingValues = PaddingValues(
+                            top = it.calculateTopPadding(),
+                            bottom = paddingValues.calculateBottomPadding() + 16.dp + 64.dp
+                        )
+                    )
+                }
+                MediaGridView(
+                    mediaState = state,
+                    allowSelection = true,
+                    showSearchBar = showSearchBar,
+                    searchBarPaddingTop = paddingValues.calculateTopPadding(),
+                    enableStickyHeaders = enableStickyHeaders,
                     paddingValues = PaddingValues(
                         top = it.calculateTopPadding(),
                         bottom = paddingValues.calculateBottomPadding() + 16.dp + 64.dp
-                    )
-                )
+                    ),
+                    canScroll = canScroll,
+                    selectionState = selectionState,
+                    selectedMedia = selectedMedia,
+                    allowHeaders = allowHeaders,
+                    showMonthlyHeader = showMonthlyHeader,
+                    toggleSelection = toggleSelection,
+                    aboveGridContent = aboveGridContent,
+                    isScrolling = isScrolling
+                ) {
+                    val albumRoute = "albumId=$albumId"
+                    val targetRoute = "target=$target"
+                    val param =
+                        if (target != null) targetRoute else albumRoute
+                    navigate(Screen.MediaViewScreen.route + "?mediaId=${it.id}&$param")
+                }
+                /** Error State Handling Block **/
+                val showError = remember(state) { state.error.isNotEmpty() }
+                AnimatedVisibility(visible = showError) {
+                    Error(errorMessage = state.error)
+                }
+                val showEmpty = remember(state) { state.media.isEmpty() && !state.isLoading }
+                AnimatedVisibility(visible = showEmpty) {
+                    emptyContent.invoke()
+                }
+                /** ************ **/
             }
-            MediaGridView(
-                mediaState = state,
-                allowSelection = true,
-                showSearchBar = showSearchBar,
-                searchBarPaddingTop = paddingValues.calculateTopPadding(),
-                enableStickyHeaders = enableStickyHeaders,
-                paddingValues = PaddingValues(
-                    top = it.calculateTopPadding(),
-                    bottom = paddingValues.calculateBottomPadding() + 16.dp + 64.dp
-                ),
-                selectionState = selectionState,
-                selectedMedia = selectedMedia,
-                allowHeaders = allowHeaders,
-                showMonthlyHeader = showMonthlyHeader,
-                toggleSelection = toggleSelection,
-                aboveGridContent = aboveGridContent,
-                isScrolling = isScrolling
-            ) {
-                val albumRoute = "albumId=$albumId"
-                val targetRoute = "target=$target"
-                val param =
-                    if (target != null) targetRoute else albumRoute
-                navigate(Screen.MediaViewScreen.route + "?mediaId=${it.id}&$param")
-            }
-            /** Error State Handling Block **/
-            val showError = remember(state) { state.error.isNotEmpty() }
-            AnimatedVisibility(visible = showError) {
-                Error(errorMessage = state.error)
-            }
-            val showEmpty = remember(state) { state.media.isEmpty() && !state.isLoading }
-            AnimatedVisibility(visible = showEmpty) {
-                emptyContent.invoke()
-            }
-            /** ************ **/
         }
         if (target != TARGET_TRASH) {
             SelectionSheet(

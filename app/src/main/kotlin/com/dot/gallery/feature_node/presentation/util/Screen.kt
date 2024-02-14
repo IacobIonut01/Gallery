@@ -25,7 +25,6 @@ sealed class Screen(val route: String) {
     data object FavoriteScreen : Screen("favorite_screen")
 
     data object SettingsScreen : Screen("settings_screen")
-    data object AlbumSizeScreen: Screen("album_size_screen")
     data object BlacklistScreen : Screen("blacklist_screen")
 
     data object SetupScreen: Screen("setup_screen")

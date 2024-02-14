@@ -48,7 +48,6 @@ import com.dot.gallery.feature_node.presentation.favorites.FavoriteScreen
 import com.dot.gallery.feature_node.presentation.ignored.IgnoredScreen
 import com.dot.gallery.feature_node.presentation.mediaview.MediaViewScreen
 import com.dot.gallery.feature_node.presentation.settings.SettingsScreen
-import com.dot.gallery.feature_node.presentation.settings.customization.albumsize.AlbumSizeScreen
 import com.dot.gallery.feature_node.presentation.setup.SetupScreen
 import com.dot.gallery.feature_node.presentation.timeline.TimelineScreen
 import com.dot.gallery.feature_node.presentation.trashed.TrashedGridScreen
@@ -341,13 +340,6 @@ fun NavigationComp(
             SettingsScreen(
                 navigateUp = navPipe::navigateUp,
                 navigate = navPipe::navigate
-            )
-        }
-        composable(
-            route = Screen.AlbumSizeScreen()
-        ) {
-            AlbumSizeScreen(
-                navigateUp = navPipe::navigateUp
             )
         }
         composable(

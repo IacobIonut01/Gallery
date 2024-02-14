@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
@@ -35,13 +34,13 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.SecureFlagPolicy
 import com.dot.gallery.R
 import com.dot.gallery.core.AlbumState
 import com.dot.gallery.core.Constants
-import com.dot.gallery.core.Settings.Album.rememberAlbumSize
+import com.dot.gallery.core.Constants.albumCellsList
+import com.dot.gallery.core.Settings.Album.rememberAlbumGridSize
 import com.dot.gallery.core.presentation.components.DragHandle
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.Media
@@ -169,7 +168,7 @@ fun CopyMediaSheet(
                     }
                 }
 
-                val albumSize by rememberAlbumSize()
+                val albumSize by rememberAlbumGridSize()
                 AnimatedVisibility(
                     visible = progress == 0f,
                     enter = Constants.Animation.enterAnimation,
@@ -178,7 +177,7 @@ fun CopyMediaSheet(
                     LazyVerticalGrid(
                         state = rememberLazyGridState(),
                         modifier = Modifier.padding(horizontal = 8.dp),
-                        columns = GridCells.Adaptive(Dp(albumSize)),
+                        columns = albumCellsList[albumSize],
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         contentPadding = PaddingValues(

@@ -13,6 +13,7 @@ import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.lazy.grid.GridCells
 
 object Constants {
 
@@ -104,4 +105,22 @@ object Constants {
         const val TARGET_FAVORITES = "favorites"
         const val TARGET_TRASH = "trash"
     }
+
+    val cellsList = listOf(
+        GridCells.Fixed(7),
+        GridCells.Fixed(6),
+        GridCells.Fixed(5),
+        GridCells.Fixed(4),
+        GridCells.Fixed(3),
+        GridCells.Fixed(2),
+        GridCells.Fixed(1),
+    )
+
+    val albumCellsList = listOf(
+        GridCells.Fixed(5),
+        GridCells.Fixed(4),
+        GridCells.Fixed(3),
+        GridCells.Fixed(2),
+        GridCells.Fixed(1),
+    )
 }

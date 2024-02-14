@@ -52,9 +52,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.dokar.pinchzoomgrid.PinchZoomGridLayout
+import com.dokar.pinchzoomgrid.rememberPinchZoomGridState
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
+import com.dot.gallery.core.Constants.cellsList
+import com.dot.gallery.core.Settings.Misc.rememberGridSize
 import com.dot.gallery.core.Settings.Search.rememberSearchHistory
 import com.dot.gallery.core.presentation.components.LoadingMedia
 import com.dot.gallery.feature_node.presentation.common.components.MediaGridView
@@ -208,10 +212,25 @@ fun MainSearchBar(
                     val pd = PaddingValues(
                         bottom = bottomPadding + 16.dp
                     )
-                    Box {
+                    var canScroll by rememberSaveable { mutableStateOf(true) }
+                    var lastCellIndex by rememberGridSize()
+                    val pinchState = rememberPinchZoomGridState(
+                        cellsList = cellsList,
+                        initialCellsIndex = lastCellIndex
+                    )
+
+                    LaunchedEffect(pinchState.currentCells) {
+                        lastCellIndex = cellsList.indexOf(pinchState.currentCells)
+                    }
+                    LaunchedEffect(pinchState.isZooming) {
+                        canScroll = !pinchState.isZooming
+                    }
+
+                    PinchZoomGridLayout(state = pinchState) {
                         MediaGridView(
                             mediaState = state,
                             paddingValues = pd,
+                            canScroll = canScroll,
                             isScrolling = remember { mutableStateOf(false) }
                         ) {
                             navigate(Screen.MediaViewScreen.route + "?mediaId=${it.id}")

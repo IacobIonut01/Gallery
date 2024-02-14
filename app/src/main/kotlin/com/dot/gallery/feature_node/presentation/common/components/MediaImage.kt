@@ -50,7 +50,6 @@ import com.dot.gallery.core.presentation.components.CheckBox
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaEqualityDelegate
 import com.dot.gallery.feature_node.presentation.mediaview.components.video.VideoDurationHeader
-import com.dot.gallery.ui.theme.Dimens
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -59,6 +58,7 @@ fun MediaImage(
     media: Media,
     selectionState: MutableState<Boolean>,
     selectedMedia: SnapshotStateList<Media>,
+    canClick: Boolean,
     onItemClick: (Media) -> Unit,
     onItemLongClick: (Media) -> Unit,
 ) {
@@ -88,6 +88,7 @@ fun MediaImage(
     Box(
         modifier = modifier
             .combinedClickable(
+                enabled = canClick,
                 onClick = {
                     onItemClick(media)
                     if (selectionState.value) {
@@ -102,7 +103,6 @@ fun MediaImage(
                 },
             )
             .aspectRatio(1f)
-            .size(Dimens.Photo())
     ) {
         Box(
             modifier = Modifier

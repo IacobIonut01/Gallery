@@ -38,6 +38,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -46,7 +47,6 @@ import coil3.compose.LocalPlatformContext
 import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import com.dot.gallery.R
-import com.dot.gallery.core.Settings.Album.rememberAlbumSize
 import com.dot.gallery.core.presentation.components.util.AutoResizeText
 import com.dot.gallery.core.presentation.components.util.FontSizeRange
 import com.dot.gallery.feature_node.domain.model.Album
@@ -54,17 +54,17 @@ import com.dot.gallery.feature_node.presentation.util.FeedbackManager.Companion.
 
 @Composable
 fun AlbumComponent(
+    modifier: Modifier = Modifier,
     album: Album,
     isEnabled: Boolean = true,
     onItemClick: (Album) -> Unit,
     onTogglePinClick: ((Album) -> Unit)?
 ) {
-    val albumSize by rememberAlbumSize()
     val showDropDown = remember { mutableStateOf(false) }
     val pinTitle =
         if (album.isPinned) stringResource(R.string.unpin) else stringResource(R.string.pin)
     Column(
-        modifier = Modifier
+        modifier = modifier
             .alpha(if (isEnabled) 1f else 0.4f)
             .padding(horizontal = 8.dp),
     ) {
@@ -85,7 +85,6 @@ fun AlbumComponent(
         Box(
             modifier = Modifier
                 .aspectRatio(1f)
-                .size(albumSize.dp)
         ) {
             AlbumImage(
                 album = album,
@@ -114,6 +113,8 @@ fun AlbumComponent(
             text = album.label,
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurface,
+            overflow = TextOverflow.Ellipsis,
+            maxLines = 1,
             fontSizeRange = FontSizeRange(
                 min = 10.sp,
                 max = 16.sp
@@ -129,6 +130,8 @@ fun AlbumComponent(
                     count = album.count.toInt(),
                     album.count
                 ),
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 1,
                 style = MaterialTheme.typography.labelMedium,
                 fontSizeRange = FontSizeRange(
                     min = 6.sp,

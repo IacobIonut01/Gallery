@@ -193,6 +193,9 @@ dependencies {
     // GPU Image
     implementation(libs.gpuimage)
 
+    // Pinch to zoom
+    implementation(libs.pinchzoomgrid)
+
     // Tests
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)

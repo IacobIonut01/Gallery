@@ -291,19 +291,11 @@ fun rememberSettingsList(
         )
     }
 
-    val albumSizePref = remember {
-        SettingsEntity.Preference(
-            title = context.getString(R.string.album_card_size_title),
-            summary = context.getString(R.string.album_card_size_summary),
-            screenPosition = Position.Top
-        ) { navigate(Screen.AlbumSizeScreen.route) }
-    }
-
     val blacklistPref = remember {
         SettingsEntity.Preference(
             title = context.getString(R.string.ignored_albums),
             summary = context.getString(R.string.blacklist_summary),
-            screenPosition = Position.Middle
+            screenPosition = Position.Top
         ) { navigate(Screen.BlacklistScreen()) }
     }
 
@@ -404,7 +396,6 @@ fun rememberSettingsList(
             add(SettingsEntity.Header(title = context.getString(R.string.customization)))
             /** Customization Section Start **/
             /** Customization Section Start **/
-            add(albumSizePref)
             add(blacklistPref)
             add(groupByMonthPref)
             add(allowBlurPref)

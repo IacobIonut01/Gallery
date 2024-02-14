@@ -29,19 +29,20 @@ import com.dot.gallery.core.Constants.Animation.exitAnimation
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun StickyHeader(
+    modifier: Modifier = Modifier,
     date: String,
     showAsBig: Boolean = false,
     isCheckVisible: MutableState<Boolean>,
     isChecked: MutableState<Boolean>,
     onChecked: (() -> Unit)? = null
 ) {
-    val smallModifier = Modifier
+    val smallModifier = modifier
         .padding(
             horizontal = 16.dp,
             vertical = 24.dp
         )
         .fillMaxWidth()
-    val bigModifier = Modifier
+    val bigModifier = modifier
         .padding(horizontal = 16.dp)
         .padding(top = 80.dp)
     val bigTextStyle = MaterialTheme.typography.headlineMedium.copy(

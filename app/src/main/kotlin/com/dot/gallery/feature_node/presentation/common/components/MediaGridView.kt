@@ -16,14 +16,11 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridItemInfo
-import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.itemsIndexed
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBarDefaults
@@ -48,6 +45,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.dokar.pinchzoomgrid.PinchZoomGridScope
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
@@ -61,21 +59,20 @@ import com.dot.gallery.feature_node.domain.model.isHeaderKey
 import com.dot.gallery.feature_node.domain.model.isIgnoredKey
 import com.dot.gallery.feature_node.presentation.util.FeedbackManager
 import com.dot.gallery.feature_node.presentation.util.update
-import com.dot.gallery.ui.theme.Dimens
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun MediaGridView(
+fun PinchZoomGridScope.MediaGridView(
     mediaState: MediaState,
     paddingValues: PaddingValues = PaddingValues(0.dp),
-    gridState: LazyGridState = rememberLazyGridState(),
     searchBarPaddingTop: Dp = 0.dp,
     showSearchBar: Boolean = false,
     allowSelection: Boolean = false,
     selectionState: MutableState<Boolean> = remember { mutableStateOf(false) },
-    selectedMedia: SnapshotStateList<Media> = remember { mutableStateListOf() } ,
+    selectedMedia: SnapshotStateList<Media> = remember { mutableStateListOf() },
     toggleSelection: (Int) -> Unit = {},
+    canScroll: Boolean = true,
     allowHeaders: Boolean = remember { true },
     enableStickyHeaders: Boolean = false,
     showMonthlyHeader: Boolean = false,
@@ -113,8 +110,9 @@ fun MediaGridView(
             LazyVerticalGrid(
                 state = gridState,
                 modifier = Modifier.fillMaxSize(),
-                columns = GridCells.Adaptive(Dimens.Photo()),
+                columns = gridCells,
                 contentPadding = paddingValues,
+                userScrollEnabled = canScroll,
                 horizontalArrangement = Arrangement.spacedBy(1.dp),
                 verticalArrangement = Arrangement.spacedBy(1.dp),
             ) {
@@ -130,8 +128,8 @@ fun MediaGridView(
                 if (allowHeaders) {
                     items(
                         items = mappedData,
-                        key = { it.key },
-                        contentType = { it.key.startsWith("media_") },
+                        key = { item -> item.key },
+                        contentType = { item -> item.key.startsWith("media_") },
                         span = { item ->
                             GridItemSpan(if (item.key.isHeaderKey) maxLineSpan else 1)
                         }
@@ -153,6 +151,7 @@ fun MediaGridView(
                                 }
                             }
                             StickyHeader(
+                                modifier = Modifier.pinchItem(key = it.key),
                                 date = remember {
                                     item.text
                                         .replace("Today", stringToday)
@@ -179,10 +178,13 @@ fun MediaGridView(
                             }
                         } else {
                             MediaImage(
-                                modifier = Modifier.animateItemPlacement(),
+                                modifier = Modifier
+                                    .animateItemPlacement()
+                                    .pinchItem(key = it.key),
                                 media = (item as MediaItem.MediaViewItem).media,
                                 selectionState = selectionState,
                                 selectedMedia = selectedMedia,
+                                canClick = canScroll,
                                 onItemClick = {
                                     if (selectionState.value && allowSelection) {
                                         feedbackManager.vibrate()
@@ -204,10 +206,13 @@ fun MediaGridView(
                         contentType = { _, item -> item.isImage }
                     ) { index, media ->
                         MediaImage(
-                            modifier = Modifier.animateItemPlacement(),
+                            modifier = Modifier
+                                .animateItemPlacement()
+                                .pinchItem(key = media.toString()),
                             media = media,
                             selectionState = selectionState,
                             selectedMedia = selectedMedia,
+                            canClick = canScroll,
                             onItemClick = {
                                 if (selectionState.value && allowSelection) {
                                     feedbackManager.vibrate()
@@ -296,7 +301,10 @@ fun MediaGridView(
             showSearchBar = showSearchBar,
             headerOffset = headerOffset,
             stickyHeader = {
-                val show = remember(mediaState, stickyHeaderItem) { mediaState.media.isNotEmpty() && stickyHeaderItem != null }
+                val show = remember(
+                    mediaState,
+                    stickyHeaderItem
+                ) { mediaState.media.isNotEmpty() && stickyHeaderItem != null }
                 AnimatedVisibility(
                     visible = show,
                     enter = enterAnimation,
