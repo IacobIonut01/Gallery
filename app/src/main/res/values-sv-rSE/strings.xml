@@ -101,7 +101,7 @@
     <string name="set_wallpaper">Bakgrundsbild</string>
     <string name="set_wallpaper_error">Can\'t set wallpaper, no app available!</string>
     <string name="monthly_timeline_title">Månatlig tidslinje</string>
-    <string name="monthly_timeline_summary">Group the timeline monthly instead of per date (Restarts the app)</string>
+    <string name="monthly_timeline_summary">Gruppera tidslinjen månadsvis i stället för efter datum (startar om appen)</string>
     <string name="amoled_mode_title">Använd amoled-läge</string>
     <string name="amoled_mode_summary">Högre kontrast, bäst lämpad för amoled-skärmar</string>
     <string name="location_chip">Location: %s</string>
