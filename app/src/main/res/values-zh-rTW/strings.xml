@@ -163,16 +163,16 @@
     <string name="save_copy">儲存副本</string>
     <string name="favorite">收藏</string>
     <string name="allow_to_manage_media">允許管理媒體檔案</string>
-    <string name="set_default_launch_screen">Set default launch screen</string>
-    <string name="use_last_opened_screen">Use last opened screen</string>
-    <string name="timeline">Timeline</string>
-    <string name="albums">Albums</string>
-    <string name="launch_on_timeline">Launch on Timeline</string>
-    <string name="launch_on_albums">Launch on Albums</string>
-    <string name="launch_auto">Launch last screen when the app was closed</string>
-    <string name="set_default_screen">Set default screen</string>
-    <string name="done">Done</string>
-    <string name="toggle_audio_cd">Toggle audio</string>
+    <string name="set_default_launch_screen">設定預設啟動螢幕</string>
+    <string name="use_last_opened_screen">使用上次開啟的螢幕</string>
+    <string name="timeline">時間軸</string>
+    <string name="albums">相簿</string>
+    <string name="launch_on_timeline">在時間軸上啟動</string>
+    <string name="launch_on_albums">在專輯中推出</string>
+    <string name="launch_auto">應用程式關閉時啟動最後一個螢幕</string>
+    <string name="set_default_screen">設定預設啟動螢幕</string>
+    <string name="done">完畢</string>
+    <string name="toggle_audio_cd">切換音訊</string>
     <plurals name="item_count">
         <item quantity="other">%s 個項目</item>
     </plurals>
