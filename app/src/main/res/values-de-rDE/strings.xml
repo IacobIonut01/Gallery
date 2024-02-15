@@ -156,7 +156,7 @@
     <string name="select_an_album">Album auswählen</string>
     <string name="blacklist_summary">Alben in der Galerie verstecken</string>
     <string name="add_to_ignored">Zu ignorierten Alben hinzufügen</string>
-    <string name="add_to_ignored_summary">Ein Album in der Galerie nicht mehr anzeigen</string>
+    <string name="add_to_ignored_summary">Ein Album nicht mehr in der Galerie anzeigen</string>
     <string name="remove_from_ignored">Aus der Ignorierliste entfernen</string>
     <string name="remove_from_ignored_summary">Album %1$s aus der Ignorierliste entfernen</string>
     <string name="override">Überschreiben</string>
