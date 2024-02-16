@@ -22,7 +22,7 @@
     <string name="empty_trash_cd">Papperskorgen är tom</string>
     <string name="error_title">Something went wrong :(</string>
     <string name="error_cd">Ett fel uppstod</string>
-    <string name="copy_error">Copy error</string>
+    <string name="copy_error">Kopieringsfel</string>
     <string name="trash_restore">Återställ</string>
     <string name="trash_empty">Töm</string>
     <string name="trash_delete">Radera</string>
@@ -118,7 +118,7 @@
     <string name="restoring_items">Restoring %1$s items..</string>
     <string name="trash_incompatible_title">Some items cannot be trashed!</string>
     <string name="trash_incompatible_summary">Such items will be deleted permanently instead.</string>
-    <string name="error_toast">An error occurred!</string>
+    <string name="error_toast">Ett fel uppstod!</string>
     <string name="beta">Beta</string>
     <string name="remove_metadata">Ta bort metadata</string>
     <string name="remove_location">Ta bort plats</string>
@@ -169,7 +169,7 @@
     <string name="albums">Album</string>
     <string name="launch_on_timeline">Starta på tidslinje</string>
     <string name="launch_on_albums">Starta på album</string>
-    <string name="launch_auto">Launch last screen when the app was closed</string>
+    <string name="launch_auto">Starta på senaste skärmen när appen stängdes</string>
     <string name="set_default_screen">Ange förvald skärm</string>
     <string name="done">Klar</string>
     <string name="toggle_audio_cd">Toggle audio</string>
