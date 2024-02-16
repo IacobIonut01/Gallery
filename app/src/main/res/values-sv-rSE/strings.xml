@@ -167,8 +167,8 @@
     <string name="use_last_opened_screen">Använd senast öppnad skärm</string>
     <string name="timeline">Tidslinje</string>
     <string name="albums">Album</string>
-    <string name="launch_on_timeline">Launch on Timeline</string>
-    <string name="launch_on_albums">Launch on Albums</string>
+    <string name="launch_on_timeline">Starta på tidslinje</string>
+    <string name="launch_on_albums">Starta på album</string>
     <string name="launch_auto">Launch last screen when the app was closed</string>
     <string name="set_default_screen">Ange förvald skärm</string>
     <string name="done">Klar</string>
