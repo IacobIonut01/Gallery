@@ -51,12 +51,11 @@ fun VideoPlayer(
     videoController: @Composable (ExoPlayer, MutableState<Boolean>, MutableState<Long>, Long, Int) -> Unit,
     onItemClick: () -> Unit
 ) {
-
-    var totalDuration by remember { mutableLongStateOf(0L) }
+    var totalDuration by rememberSaveable { mutableLongStateOf(0L) }
     val currentTime = rememberSaveable { mutableLongStateOf(0L) }
-    var bufferedPercentage by remember { mutableIntStateOf(0) }
-    val isPlaying = rememberSaveable { mutableStateOf(playWhenReady) }
-    var lastPlayingState by rememberSaveable { mutableStateOf(isPlaying.value) }
+    var bufferedPercentage by rememberSaveable { mutableIntStateOf(0) }
+    val isPlaying = rememberSaveable(playWhenReady) { mutableStateOf(playWhenReady) }
+    var lastPlayingState by rememberSaveable(isPlaying.value) { mutableStateOf(isPlaying.value) }
     val context = LocalContext.current
 
     val exoPlayer = remember(context) {
@@ -122,20 +121,14 @@ fun VideoPlayer(
         }
     }
 
-    val configuration = LocalConfiguration.current
-    LaunchedEffect(configuration) {
+    LaunchedEffect(LocalConfiguration.current, isPlaying.value) {
         if (exoPlayer.currentPosition != currentTime.longValue) {
             exoPlayer.seekTo(currentTime.longValue)
         }
-        isPlaying.value = lastPlayingState
-    }
 
-    LaunchedEffect(isPlaying.value) {
-        if (isPlaying.value) {
-            exoPlayer.play()
-        } else {
-            exoPlayer.pause()
-        }
+        delay(50)
+
+        exoPlayer.playWhenReady = isPlaying.value
     }
 
     if (isPlaying.value) {

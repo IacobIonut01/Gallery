@@ -63,6 +63,7 @@ import com.dot.gallery.feature_node.presentation.util.rememberWindowInsetsContro
 import com.dot.gallery.feature_node.presentation.util.toggleSystemBars
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -156,10 +157,18 @@ fun MediaViewScreen(
             },
             pageSpacing = 16.dp,
         ) { index ->
+            var playWhenReady by rememberSaveable { mutableStateOf(false) }
+            LaunchedEffect(Unit) {
+                snapshotFlow { pagerState.currentPage }
+                    .collectLatest { currentPage ->
+                        playWhenReady = currentPage == index
+                    }
+            }
+
             MediaPreviewComponent(
                 media = state.media[index],
                 uiEnabled = showUI.value,
-                playWhenReady = index == pagerState.currentPage,
+                playWhenReady = playWhenReady,
                 onItemClick = {
                     showUI.value = !showUI.value
                     windowInsetsController.toggleSystemBars(showUI.value)
