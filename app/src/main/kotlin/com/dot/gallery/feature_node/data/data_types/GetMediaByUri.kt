@@ -6,6 +6,7 @@
 package com.dot.gallery.feature_node.data.data_types
 
 import android.content.ContentResolver
+import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
@@ -14,7 +15,7 @@ import com.dot.gallery.feature_node.domain.model.Media
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-suspend fun ContentResolver.getMediaByUri(uri: Uri): Media? {
+suspend fun Context.getMediaByUri(uri: Uri): Media? {
     return withContext(Dispatchers.IO) {
         var media: Media? = null
         val mediaQuery = MediaQuery().copy(
@@ -29,7 +30,7 @@ suspend fun ContentResolver.getMediaByUri(uri: Uri): Media? {
                 )
             }
         )
-        with(query(mediaQuery)) {
+        with(contentResolver.query(mediaQuery)) {
             moveToFirst()
             while (!isAfterLast) {
                 try {
@@ -44,14 +45,14 @@ suspend fun ContentResolver.getMediaByUri(uri: Uri): Media? {
             close()
         }
         if (media == null) {
-            media = Media.createFromUri(uri)
+            media = Media.createFromUri(this@getMediaByUri, uri)
         }
 
         return@withContext media
     }
 }
 
-suspend fun ContentResolver.getMediaListByUris(list: List<Uri>): List<Media> {
+suspend fun Context.getMediaListByUris(list: List<Uri>): List<Media> {
     return withContext(Dispatchers.IO) {
         val mediaList = ArrayList<Media>()
         val mediaQuery = MediaQuery().copy(
@@ -66,10 +67,10 @@ suspend fun ContentResolver.getMediaListByUris(list: List<Uri>): List<Media> {
                 )
             }
         )
-        mediaList.addAll(getMedia(mediaQuery))
+        mediaList.addAll(contentResolver.getMedia(mediaQuery))
         if (mediaList.isEmpty()) {
             for (uri in list) {
-                Media.createFromUri(uri)?.let { mediaList.add(it) }
+                Media.createFromUri(this@getMediaListByUris, uri)?.let { mediaList.add(it) }
             }
         }
         mediaList

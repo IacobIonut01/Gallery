@@ -197,7 +197,7 @@ class MediaRepositoryImpl(
         isSecure: Boolean
     ): Flow<Resource<List<Media>>> =
         context.retrieveMediaAsResource {
-            val media = it.getMediaByUri(Uri.parse(uriAsString))
+            val media = context.getMediaByUri(Uri.parse(uriAsString))
             /** return@retrieveMediaAsResource */
             if (media == null) {
                 Resource.Error(message = "Media could not be opened")
@@ -225,7 +225,7 @@ class MediaRepositoryImpl(
         reviewMode: Boolean
     ): Flow<Resource<List<Media>>> =
         context.retrieveMediaAsResource {
-            var mediaList = it.getMediaListByUris(listOfUris)
+            var mediaList = context.getMediaListByUris(listOfUris)
             if (reviewMode) {
                 val query = Query.MediaQuery().copy(
                     bundle = Bundle().apply {

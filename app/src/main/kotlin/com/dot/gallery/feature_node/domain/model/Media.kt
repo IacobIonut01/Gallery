@@ -5,6 +5,8 @@
 
 package com.dot.gallery.feature_node.domain.model
 
+import android.content.Context
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Parcelable
 import android.webkit.MimeTypeMap
@@ -41,6 +43,7 @@ data class Media(
     @IgnoredOnParcel
     @Stable
     val isVideo: Boolean = mimeType.startsWith("video/") && duration != null
+
     @IgnoredOnParcel
     @Stable
     val isImage: Boolean = mimeType.startsWith("image/")
@@ -48,6 +51,7 @@ data class Media(
     @IgnoredOnParcel
     @Stable
     val isTrashed: Boolean = trashed == 1
+
     @IgnoredOnParcel
     @Stable
     val isFavorite: Boolean = favorite == 1
@@ -103,7 +107,8 @@ data class Media(
      */
     @IgnoredOnParcel
     @Stable
-    val isRaw: Boolean = mimeType.isNotBlank() && (mimeType.startsWith("image/x-") || mimeType.startsWith("image/vnd."))
+    val isRaw: Boolean =
+        mimeType.isNotBlank() && (mimeType.startsWith("image/x-") || mimeType.startsWith("image/vnd."))
 
     @IgnoredOnParcel
     @Stable
@@ -114,10 +119,22 @@ data class Media(
     val volume: String = path.substringBeforeLast("/").removeSuffix(relativePath.removeSuffix("/"))
 
     companion object {
-        fun createFromUri(uri: Uri): Media? {
+        fun createFromUri(context: Context, uri: Uri): Media? {
             if (uri.path == null) return null
             val extension = uri.toString().substringAfterLast(".")
-            val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension).toString()
+            var mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension).toString()
+            var duration: String? = null
+            val retriever = MediaMetadataRetriever().apply {
+                setDataSource(context, uri)
+            }
+            val hasVideo = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_VIDEO)
+            val isVideo = "yes" == hasVideo
+            if (isVideo) {
+                duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+            }
+            if (mimeType.isEmpty()) {
+                mimeType = if (isVideo) "video/*" else "image/*"
+            }
             var timestamp = 0L
             uri.path?.let { File(it) }?.let {
                 timestamp = try {
@@ -131,7 +148,7 @@ data class Media(
                 formattedDate = timestamp.getDate(Constants.EXTENDED_DATE_FORMAT)
             }
             return Media(
-                id = Random(System.currentTimeMillis()).nextLong(),
+                id = Random(System.currentTimeMillis()).nextLong(-1000, 25600000),
                 label = uri.toString().substringAfterLast("/"),
                 uri = uri,
                 path = uri.path.toString(),
@@ -141,6 +158,7 @@ data class Media(
                 timestamp = timestamp,
                 fullDate = formattedDate,
                 mimeType = mimeType,
+                duration = duration,
                 favorite = 0,
                 trashed = 0
             )
