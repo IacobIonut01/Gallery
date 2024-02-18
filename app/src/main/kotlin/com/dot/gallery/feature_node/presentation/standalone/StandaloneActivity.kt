@@ -15,8 +15,11 @@ import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.toLowerCase
 import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil3.annotation.ExperimentalCoilApi
+import coil3.compose.setSingletonImageLoaderFactory
 import com.dot.gallery.core.AlbumState
 import com.dot.gallery.feature_node.presentation.mediaview.MediaViewScreen
+import com.dot.gallery.feature_node.presentation.util.newImageLoader
 import com.dot.gallery.feature_node.presentation.util.toggleOrientation
 import com.dot.gallery.ui.theme.GalleryTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -25,6 +28,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 @AndroidEntryPoint
 class StandaloneActivity : ComponentActivity() {
 
+    @OptIn(ExperimentalCoilApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -40,6 +44,7 @@ class StandaloneActivity : ComponentActivity() {
         }
         setShowWhenLocked(isSecure)
         setContent {
+            setSingletonImageLoaderFactory(::newImageLoader)
             GalleryTheme(darkTheme = true) {
                 Scaffold { paddingValues ->
                     val viewModel = hiltViewModel<StandaloneViewModel>().apply {
