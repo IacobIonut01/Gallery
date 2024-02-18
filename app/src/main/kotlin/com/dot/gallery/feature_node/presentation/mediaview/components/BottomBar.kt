@@ -75,9 +75,6 @@ import androidx.compose.ui.text.toUpperCase
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
-import coil3.compose.LocalPlatformContext
-import coil3.request.CachePolicy
-import coil3.request.ImageRequest
 import com.dot.gallery.BuildConfig
 import com.dot.gallery.R
 import com.dot.gallery.core.AlbumState
@@ -420,17 +417,11 @@ fun MediaInfoMapPreview(exifMetadata: ExifMetadata) {
                     .background(MaterialTheme.colorScheme.surface)
             ) {
                 AsyncImage(
-                    model = ImageRequest.Builder(LocalPlatformContext.current)
-                        .data(
-                            MapBoxURL(
-                                latitude = lat,
-                                longitude = long,
-                                darkTheme = isSystemInDarkTheme()
-                            )
-                        )
-                        .diskCachePolicy(CachePolicy.ENABLED)
-                        .memoryCachePolicy(CachePolicy.ENABLED)
-                        .build(),
+                    model = MapBoxURL(
+                        latitude = lat,
+                        longitude = long,
+                        darkTheme = isSystemInDarkTheme()
+                    ),
                     contentScale = ContentScale.FillWidth,
                     contentDescription = stringResource(R.string.location_map_cd),
                     modifier = Modifier
