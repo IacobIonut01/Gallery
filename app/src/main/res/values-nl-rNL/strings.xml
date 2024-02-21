@@ -131,8 +131,8 @@
     <string name="setup_summary">Om toegang te krijgen tot je media is het nodig om de volgende rechten toe te kennen:</string>
     <string name="required">Vereist</string>
     <string name="optional">Optioneel</string>
-    <string name="permission_manage_media_title">• Media beheren</string>
-    <string name="permission_manage_media_summary">"    • Geeft automatisch systeembevestigingsdialogen wanneer je verschillende wijzigingen aan je media aanvraagt (Favoriet schakelen, Prullenbak beheren, Metagegevens bewerken, enzovoort)"</string>
+    <string name="permission_manage_media_title">Media beheren</string>
+    <string name="permission_manage_media_summary">"Geeft automatisch systeembevestigingsdialogen wanneer je verschillende wijzigingen aan je media aanvraagt (Favoriet schakelen, Prullenbak beheren, Metagegevens bewerken, enzovoort)"</string>
     <string name="read_media_images">Lees media beelden</string>
     <string name="read_media_images_summary">Hiermee kan de app je afbeeldingen tonen</string>
     <string name="read_media_videos">Lees mediavideo\'s</string>

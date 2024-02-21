@@ -131,8 +131,8 @@
     <string name="setup_summary">为了访问您的媒体，需要授予以下权限：</string>
     <string name="required">必需</string>
     <string name="optional">可选</string>
-    <string name="permission_manage_media_title">- 管理媒体</string>
-    <string name="permission_manage_media_summary">"    - 当你要求对媒体进行多项更改时（切换收藏、管理垃圾箱、编辑元数据等），系统会自动发出确认对话框。"</string>
+    <string name="permission_manage_media_title">管理媒体</string>
+    <string name="permission_manage_media_summary">"当你要求对媒体进行多项更改时（切换收藏、管理垃圾箱、编辑元数据等），系统会自动发出确认对话框。"</string>
     <string name="read_media_images">阅读媒体图片</string>
     <string name="read_media_images_summary">允许应用程序显示您的图像</string>
     <string name="read_media_videos">浏览媒体视频</string>
