@@ -19,7 +19,7 @@
     <string name="no_media_title">Verkar vara tomt här</string>
     <string name="no_media_cd">Inga medier hittades</string>
     <string name="empty_trash_title">Skinande rent</string>
-    <string name="empty_trash_cd">Skräpkorgen är tom</string>
+    <string name="empty_trash_cd">Skräp är tom</string>
     <string name="error_title">Något gick fel :(</string>
     <string name="error_cd">Ett fel uppstod</string>
     <string name="copy_error">Kopieringsfel</string>
@@ -45,7 +45,7 @@
     <string name="settings_general">Allmänt</string>
     <string name="settings_trash_title">Använd skräpkorg</string>
     <string name="settings_trash_summary">Spara raderade medier i 30 dagar.\nRadering av medier kommer att leda till permanent förlust om inaktiverad.</string>
-    <string name="move_album_to_trash">Flytta album till skräpkorgen</string>
+    <string name="move_album_to_trash">Flytta album till skräp</string>
     <string name="pinned_albums_title">Fästa album</string>
     <string name="unpin">Lossa</string>
     <string name="pin">Fäst</string>
@@ -108,7 +108,7 @@
     <string name="media_details">Detaljer</string>
     <string name="album_card_size">Albumkortsstorlek</string>
     <string name="edit_metadata">Redigera metadata</string>
-    <string name="dialog_to_trash">Flyttar till skräpkorgen</string>
+    <string name="dialog_to_trash">Flyttar till skräp</string>
     <string name="dialog_delete">Permanent radering</string>
     <string name="s_items">%1$s objekt</string>
     <string name="trashing_items">Trashing %1$s items..</string>
@@ -133,7 +133,7 @@
     <string name="optional">Valfri</string>
     <string name="permission_manage_media_title">Manage Media</string>
     <string name="permission_manage_media_summary">"Automatically grants system confirmation dialogs when you request several changes to your media (Toggle Favorite, Manage Trash, Edit metadata etc)"</string>
-    <string name="read_media_images">Read Media Images</string>
+    <string name="read_media_images">Läs mediebilder</string>
     <string name="read_media_images_summary">Allows the app to show your images</string>
     <string name="read_media_videos">Read Media Videos</string>
     <string name="read_media_videos_summary">Allows the app to show your videos</string>
