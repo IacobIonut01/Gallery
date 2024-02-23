@@ -26,9 +26,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
+import coil3.annotation.ExperimentalCoilApi
+import coil3.compose.setSingletonImageLoaderFactory
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants
 import com.dot.gallery.feature_node.presentation.picker.components.PickerScreen
+import com.dot.gallery.feature_node.presentation.util.newImageLoader
 import com.dot.gallery.ui.theme.GalleryTheme
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
@@ -37,6 +40,7 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class PickerActivity : ComponentActivity() {
 
+    @OptIn(ExperimentalCoilApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -54,6 +58,7 @@ class PickerActivity : ComponentActivity() {
             else getString(R.string.photos_and_videos)
         }
         setContent {
+            setSingletonImageLoaderFactory(::newImageLoader)
             GalleryTheme {
                 PickerRootScreen(title, type.allowedMedia, allowMultiple)
             }
