@@ -92,14 +92,14 @@
     <string name="secure_mode_title">Säkert läge</string>
     <string name="secure_mode_summary">Dölj förhandsgranskningen av appen när du lämnar den</string>
     <string name="rotate_screen_cd">Rotera skärm</string>
-    <string name="size_dp">%1$sdp</string>
+    <string name="size_dp">%1$s dp</string>
     <string name="change_album_size">Ändra albumkortsstorlek</string>
     <string name="reset">Återställ</string>
     <string name="customization">Anpassning</string>
     <string name="album_card_size_title">Albumkortsstorlek</string>
     <string name="album_card_size_summary">Välj din albumkortsstorlek manuellt</string>
     <string name="set_wallpaper">Bakgrundsbild</string>
-    <string name="set_wallpaper_error">Can\'t set wallpaper, no app available!</string>
+    <string name="set_wallpaper_error">Kan inte ställa in bakgrundsbild, ingen app tillgänglig!</string>
     <string name="monthly_timeline_title">Månatlig tidslinje</string>
     <string name="monthly_timeline_summary">Gruppera tidslinjen månadsvis i stället för efter datum (startar om appen)</string>
     <string name="amoled_mode_title">Använd amoled-läge</string>
@@ -116,8 +116,8 @@
     <string name="long_press_to_remove">Långtryck för att ta bort</string>
     <string name="dialog_from_trash">Restoring from Trash</string>
     <string name="restoring_items">Restoring %1$s items..</string>
-    <string name="trash_incompatible_title">Some items cannot be trashed!</string>
-    <string name="trash_incompatible_summary">Such items will be deleted permanently instead.</string>
+    <string name="trash_incompatible_title">Vissa objekt kan inte slängas!</string>
+    <string name="trash_incompatible_summary">Dessa objekt kommer i stället att raderas permanent.</string>
     <string name="error_toast">Ett fel uppstod!</string>
     <string name="beta">Beta</string>
     <string name="remove_metadata">Ta bort metadata</string>
@@ -125,7 +125,7 @@
     <string name="description">Beskrivning</string>
     <string name="move_to_another_album">Flytta till ett annat album</string>
     <string name="move">Flytta</string>
-    <string name="some_permissions_are_not_granted">Some permissions are not granted!</string>
+    <string name="some_permissions_are_not_granted">Vissa behörigheter är inte beviljade!</string>
     <string name="get_started">Kom igång</string>
     <string name="welcome">Välkommen</string>
     <string name="setup_summary">In order to access your media, it is required to grant the following permissions:</string>
@@ -174,7 +174,7 @@
     <string name="done">Klar</string>
     <string name="toggle_audio_cd">Toggle audio</string>
     <plurals name="item_count">
-        <item quantity="one">%s item</item>
-        <item quantity="other">%s items</item>
+        <item quantity="one">%s objekt</item>
+        <item quantity="other">%s objekt</item>
     </plurals>
 </resources>
