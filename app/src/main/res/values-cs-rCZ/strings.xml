@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">Galerie</string>
     <string name="nav_albums">Alba</string>
-    <string name="searchbar_title"><![CDATA[Hledat fotky & videa]]></string>
+    <string name="searchbar_title"><![CDATA[Hledat fotky a videa]]></string>
     <string name="header_today">Dnes</string>
     <string name="header_yesterday">Včera</string>
     <string name="request_permissions">Požádat o oprávnění</string>
@@ -102,7 +102,7 @@
     <string name="set_wallpaper_error">Nelze nastavit jako pozadí, není k dispozici žádná aplikace!</string>
     <string name="monthly_timeline_title">Měsíční časová osa</string>
     <string name="monthly_timeline_summary">Seskupit časovou osu měsíčně místo podle data (restartuje aplikaci)</string>
-    <string name="amoled_mode_title">Použít Amoled režim</string>
+    <string name="amoled_mode_title">Použít režim Amoled</string>
     <string name="amoled_mode_summary">Vyšší kontrast, vhodné pro Amoled obrazovky</string>
     <string name="location_chip">Poloha: %s</string>
     <string name="media_details">Podrobnosti</string>
@@ -129,8 +129,8 @@
     <string name="get_started">Get Started</string>
     <string name="welcome">Vítejte</string>
     <string name="setup_summary">In order to access your media, it is required to grant the following permissions:</string>
-    <string name="required">Požadované</string>
-    <string name="optional">Volitelný</string>
+    <string name="required">Vyžadované</string>
+    <string name="optional">Volitelné</string>
     <string name="permission_manage_media_title">Manage Media</string>
     <string name="permission_manage_media_summary">"Automatically grants system confirmation dialogs when you request several changes to your media (Toggle Favorite, Manage Trash, Edit metadata etc)"</string>
     <string name="read_media_images">Read Media Images</string>
@@ -138,7 +138,7 @@
     <string name="read_media_videos">Read Media Videos</string>
     <string name="read_media_videos_summary">Allows the app to show your videos</string>
     <string name="access_media_location">Přístup k umístění médií</string>
-    <string name="access_media_location_summary"><![CDATA[Umožňuje aplikaci číst údaje o poloze vašich snímků & videí]]></string>
+    <string name="access_media_location_summary"><![CDATA[Umožňuje aplikaci číst údaje o poloze vašich snímků a videí]]></string>
     <string name="internet">Internet</string>
     <string name="internet_summary"><![CDATA[Required to display Location Previews of your images & videos]]></string>
     <string name="fancy_blur">Fancy Blur</string>
@@ -152,7 +152,7 @@
     <string name="album_name">Název alba</string>
     <string name="create_new_album">Vytvořit nové album</string>
     <string name="copy">Kopírovat</string>
-    <string name="ignored_albums">Ignorovaná Alba</string>
+    <string name="ignored_albums">Ignorovaná alba</string>
     <string name="select_an_album">Vybrat album</string>
     <string name="blacklist_summary">Ignore albums from Gallery</string>
     <string name="add_to_ignored">Přidat do ignorovaných albumů</string>
