@@ -124,16 +124,21 @@ data class Media(
             val extension = uri.toString().substringAfterLast(".")
             var mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension).toString()
             var duration: String? = null
-            val retriever = MediaMetadataRetriever().apply {
-                setDataSource(context, uri)
-            }
-            val hasVideo = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_VIDEO)
-            val isVideo = "yes" == hasVideo
-            if (isVideo) {
-                duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
-            }
-            if (mimeType.isEmpty()) {
-                mimeType = if (isVideo) "video/*" else "image/*"
+            try {
+                val retriever = MediaMetadataRetriever().apply {
+                    setDataSource(context, uri)
+                }
+                val hasVideo =
+                    retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_VIDEO)
+                val isVideo = "yes" == hasVideo
+                if (isVideo) {
+                    duration =
+                        retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+                }
+                if (mimeType.isEmpty()) {
+                    mimeType = if (isVideo) "video/*" else "image/*"
+                }
+            } catch (_: Exception) {
             }
             var timestamp = 0L
             uri.path?.let { File(it) }?.let {
