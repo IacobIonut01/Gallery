@@ -100,8 +100,8 @@
     <string name="album_card_size_summary">Tilpass storleiken på albumomslag</string>
     <string name="set_wallpaper">Bakgrunnsbilete</string>
     <string name="set_wallpaper_error">Klarte ikkje bruka som bakgrunnsbilete: ingen tilgjengelege appar.</string>
-    <string name="monthly_timeline_title">Monthly Timeline</string>
-    <string name="monthly_timeline_summary">Group the timeline monthly instead of per date (Restarts the app)</string>
+    <string name="monthly_timeline_title">Månadleg tidslinje</string>
+    <string name="monthly_timeline_summary">Grupper tidslinja etter månad i staden for dato (tek omstart av appen)</string>
     <string name="amoled_mode_title">Use Amoled Mode</string>
     <string name="amoled_mode_summary">Higher contrast, best suited for Amoled Screens</string>
     <string name="location_chip">Location: %s</string>
