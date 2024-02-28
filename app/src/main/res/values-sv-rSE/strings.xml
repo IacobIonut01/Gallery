@@ -172,7 +172,7 @@
     <string name="launch_auto">Starta på senaste skärmen när appen stängdes</string>
     <string name="set_default_screen">Ange förvald skärm</string>
     <string name="done">Klar</string>
-    <string name="toggle_audio_cd">Toggle audio</string>
+    <string name="toggle_audio_cd">Växla ljud</string>
     <plurals name="item_count">
         <item quantity="one">%s objekt</item>
         <item quantity="other">%s objekt</item>
