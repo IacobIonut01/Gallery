@@ -155,10 +155,10 @@
     <string name="ignored_albums">Ignorerade album</string>
     <string name="select_an_album">Välj ett album</string>
     <string name="blacklist_summary">Ignorera album från galleriet</string>
-    <string name="add_to_ignored">Add to ignored albums</string>
-    <string name="add_to_ignored_summary">Remove an album from showing inside the Gallery</string>
-    <string name="remove_from_ignored">Remove from ignored list</string>
-    <string name="remove_from_ignored_summary">Remove from the ignored list the album named %1$s</string>
+    <string name="add_to_ignored">Lägg till i ignorerade album</string>
+    <string name="add_to_ignored_summary">Ta bort ett album från att visas inne i galleriet</string>
+    <string name="remove_from_ignored">Ta bort från ignorerade-lista</string>
+    <string name="remove_from_ignored_summary">Ta bort albumet med namnet %1$s från ignorerade-listan</string>
     <string name="override">Åsidosätt</string>
     <string name="save_copy">Spara kopia</string>
     <string name="favorite">Favorit</string>
