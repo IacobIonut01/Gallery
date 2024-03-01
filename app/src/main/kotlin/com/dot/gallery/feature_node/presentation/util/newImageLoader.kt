@@ -17,7 +17,7 @@ fun newImageLoader(
     return ImageLoader.Builder(context)
         .components {
             // SVGs
-            add(SvgDecoder.Factory())
+            add(SvgDecoder.Factory(false))
             // Temporarily disabled
             add(JxlDecoder.Factory())
             addPlatformComponents()
@@ -25,7 +25,7 @@ fun newImageLoader(
         .memoryCache {
             MemoryCache.Builder()
                 // Set the max size to 25% of the app's available memory.
-                .maxSizePercent(context, percent = 0.25)
+                .maxSizePercent(context, percent = 0.5)
                 .build()
         }
         .diskCache {

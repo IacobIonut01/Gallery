@@ -40,8 +40,6 @@ android {
 }
 
 dependencies {
-    implementation(libs.androidx.core.ktx)
-
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.foundation)
     implementation(libs.compose.ui)

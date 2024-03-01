@@ -1,6 +1,5 @@
 package com.dot.gallery.feature_node.presentation.search.components
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material.icons.Icons

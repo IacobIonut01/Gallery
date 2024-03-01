@@ -26,7 +26,7 @@ import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
+import coil.load
 import com.dot.gallery.R
 import com.dot.gallery.feature_node.domain.model.Album
 import com.google.android.material.carousel.CarouselLayoutManager
@@ -97,10 +97,7 @@ private class PinnedAlbumsAdapter(
                 GradientDrawable.Orientation.BOTTOM_TOP,
                 intArrayOf(containerColor, Color.TRANSPARENT)
             )
-            Glide
-                .with(albumImage.context)
-                .load(album.pathToThumbnail)
-                .into(albumImage)
+            albumImage.load(album.uri)
             albumImage.isClickable = true
             albumImage.setOnClickListener {
                 onAlbumClick.invoke(album)

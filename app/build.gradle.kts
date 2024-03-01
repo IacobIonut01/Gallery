@@ -103,19 +103,17 @@ android {
 }
 
 dependencies {
-    implementation(libs.androidx.profileinstaller)
+    runtimeOnly(libs.androidx.profileinstaller)
     implementation(project(":libs:cropper"))
     "baselineProfile"(project(mapOf("path" to ":baselineprofile")))
 
     // Core
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
-    implementation(libs.androidx.navigation.runtime.ktx)
 
     // Core - Lifecycle
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.compose.lifecycle.runtime)
-    implementation(libs.androidx.lifecycle.livedata.ktx)
 
     // Compose
     implementation(libs.compose.activity)
@@ -123,7 +121,6 @@ dependencies {
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.graphics)
     implementation(libs.compose.ui.tooling.preview)
-    implementation(libs.compose.ui.util)
     implementation(libs.compose.material.icons.extended)
 
     // Compose - Shimmer
@@ -143,7 +140,7 @@ dependencies {
 
     // Kotlin - Coroutines
     implementation(libs.kotlinx.coroutines.core)
-    implementation(libs.kotlinx.coroutines.android)
+    runtimeOnly(libs.kotlinx.coroutines.android)
 
     // Dagger - Hilt
     implementation(libs.androidx.hilt.navigation.compose)
@@ -157,16 +154,6 @@ dependencies {
 
     // Kotlin Extensions and Coroutines support for Room
     implementation(libs.room.ktx)
-
-    // Glide
-    implementation(libs.glide)
-    implementation(libs.glide.avif)
-    implementation(libs.glide.compose)
-    implementation(libs.jxl.coder.glide)
-    ksp(libs.glide.compiler)
-
-    // SVG Support for Glide
-    implementation(libs.glide.svg)
 
     // Coil
     implementation(libs.coil.compose)
@@ -204,11 +191,9 @@ dependencies {
     // Tests
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)
-    androidTestImplementation(libs.espresso.core)
     androidTestImplementation(platform(libs.compose.bom))
-    androidTestImplementation(libs.compose.ui.test.junit4)
     debugImplementation(libs.compose.ui.tooling)
-    debugImplementation(libs.compose.ui.test.manifest)
+    debugRuntimeOnly(libs.compose.ui.test.manifest)
 }
 
 fun getApiKey(): String {
