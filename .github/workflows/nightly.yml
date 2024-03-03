@@ -40,8 +40,17 @@ jobs:
 
   build_maps:
     runs-on: ubuntu-latest
+    outputs:
+      versionCode: ${{ steps.versioncode.outputs.versionCode }}
+      versionName: ${{ steps.versionname.outputs.versionName }}
     steps:
       - uses: actions/checkout@v4
+      - name: Get versionCode
+        id: versioncode
+        run: echo "versionCode=$(grep 'versionCode' app/build.gradle.kts | awk '{ print $3 }')" >> $GITHUB_OUTPUT
+      - name: Get versionName
+        id: versionname
+        run: echo "versionName=$(grep 'versionName' app/build.gradle.kts | head -1 | awk -F\" '{ print $2 }')" >> $GITHUB_OUTPUT
       - uses: actions/setup-java@v4
         with:
           distribution: 'adopt'
@@ -86,11 +95,10 @@ jobs:
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
-          name: Nightly Release ${{ github.ref }}
+          name: Nightly Release ${{ needs.build_maps.outputs.versionName }}-${{ needs.build_maps.outputs.versionCode }}
           prerelease: true
-          tag_name: ${{ github.ref }}
+          tag_name: ${{ needs.build_maps.outputs.versionName }}-${{ needs.build_maps.outputs.versionCode }}-nightly
           files: |
-            ./Gallery Release (No Maps).apk
-            ./Gallery Release (Maps).apk
+            ./**/Gallery-*.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

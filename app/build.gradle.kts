@@ -27,7 +27,10 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
-        archivesName.set("Gallery-${versionName}_$gitHeadVersion")
+        archivesName.set("Gallery-${versionName}-$versionCode")
+        if (getApiKey() == "\"DEBUG\"") {
+            archivesName.set("${archivesName.get()}-nomaps")
+        }
     }
 
     lint.baseline = file("lint-baseline.xml")
