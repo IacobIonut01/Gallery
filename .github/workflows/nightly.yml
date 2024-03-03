@@ -1,0 +1,96 @@
+name: Nightly CI
+
+on:
+  push:
+   branches:
+    - main
+
+jobs:
+  build_nomaps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Strip internet permission
+        run: chmod +x ./strip_permission.sh && ./strip_permission.sh
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'adopt'
+          cache: 'gradle'
+          java-version: 17
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Make Gradle executable
+        run: chmod +x ./gradlew
+      - name: Build Release APK
+        run: ./gradlew assembleRelease
+      - uses: r0adkll/sign-android-release@v1
+        id: signed_release_nomaps
+        with:
+          releaseDirectory: app/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+        env:
+          BUILD_TOOLS_VERSION: "34.0.0"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Gallery Release (No Maps)
+          path: ${{steps.signed_release_nomaps.outputs.signedReleaseFile}}
+
+  build_maps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'adopt'
+          cache: 'gradle'
+          java-version: 17
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Make Gradle executable
+        run: chmod +x ./gradlew
+      - name: Load Maps Token
+        env:
+          MAPS_TOKEN: $
+        run: echo MAPS_TOKEN=\"$MAPS_TOKEN\" > ./api.properties
+      - name: Build Release APK
+        run: ./gradlew assembleRelease
+      - uses: r0adkll/sign-android-release@v1
+        id: signed_release_maps
+        with:
+          releaseDirectory: app/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+        env:
+          BUILD_TOOLS_VERSION: "34.0.0"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Gallery Release (Maps)
+          path: ${{steps.signed_release_maps.outputs.signedReleaseFile}}
+
+  release:
+    needs: [build_nomaps, build_maps]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: Gallery Release (No Maps)
+      - uses: actions/download-artifact@v4
+        with:
+          name: Gallery Release (Maps)
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Nightly Release ${{ github.ref }}
+          prerelease: true
+          tag_name: ${{ github.ref }}
+          files: |
+            ./Gallery Release (No Maps).apk
+            ./Gallery Release (Maps).apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
