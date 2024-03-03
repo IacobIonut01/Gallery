@@ -194,8 +194,7 @@ fun CopyMediaSheet(
                                     scope.launch(Dispatchers.Main) {
                                         newAlbumSheetState.show()
                                     }
-                                },
-                                onTogglePinClick = null
+                                }
                             )
                         }
                         items(
@@ -217,8 +216,7 @@ fun CopyMediaSheet(
                                         && mediaOwnership == "allow",
                                 onItemClick = { album ->
                                     copyMedia(album.relativePath)
-                                },
-                                onTogglePinClick = null
+                                }
                             )
                         }
                     }

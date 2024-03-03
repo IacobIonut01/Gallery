@@ -8,7 +8,6 @@ package com.dot.gallery.feature_node.presentation.mediaview.components.media
 import android.os.Build
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -38,7 +37,6 @@ import me.saket.telephoto.zoomable.rememberZoomableImageState
 import me.saket.telephoto.zoomable.rememberZoomableState
 import net.engawapg.lib.zoomable.rememberZoomState
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ZoomablePagerImage(
     modifier: Modifier = Modifier,

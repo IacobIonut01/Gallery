@@ -46,17 +46,14 @@ fun TimelineNavActions(
     navigate: (route: String) -> Unit,
     navigateUp: () -> Unit
 ) {
-    fun clearSelection() {
-        selectedMedia.clear()
-        selectionState.value = false
-    }
     val state by mediaState.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val result = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartIntentSenderForResult(),
         onResult = {
             if (it.resultCode == Activity.RESULT_OK) {
-                clearSelection()
+                selectedMedia.clear()
+                selectionState.value = false
             }
         }
     )
@@ -154,7 +151,7 @@ fun TimelineNavActions(
         onDismiss = {
             expandedDropDown.value = false
         },
-        optionList, settingsOption
+        optionList = arrayOf(optionList, settingsOption)
     )
 }
 

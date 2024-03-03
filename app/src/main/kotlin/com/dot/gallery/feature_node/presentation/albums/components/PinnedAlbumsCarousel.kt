@@ -14,12 +14,27 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.updateLayoutParams
@@ -27,10 +42,16 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
+import coil3.compose.AsyncImage
 import com.dot.gallery.R
 import com.dot.gallery.feature_node.domain.model.Album
+import com.dot.gallery.feature_node.presentation.common.components.OptionItem
+import com.dot.gallery.feature_node.presentation.common.components.OptionSheet
+import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
+import com.dot.gallery.ui.theme.Shapes
 import com.google.android.material.carousel.CarouselLayoutManager
 import com.google.android.material.carousel.MaskableFrameLayout
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 @Composable
@@ -40,6 +61,9 @@ fun CarouselPinnedAlbums(
     onAlbumClick: (Album) -> Unit,
     onAlbumLongClick: (Album) -> Unit
 ) {
+    val scope = rememberCoroutineScope()
+    val appBottomSheetState = rememberAppBottomSheetState()
+    var currentAlbum: Album? by remember { mutableStateOf(null) }
     val primaryTextColor = MaterialTheme.colorScheme.onSurface.toArgb()
     val secondaryTextColor = MaterialTheme.colorScheme.onSurfaceVariant.toArgb()
     val containerColor = MaterialTheme.colorScheme.surface.toArgb()
@@ -60,7 +84,12 @@ fun CarouselPinnedAlbums(
                 clipToPadding = false
                 adapter = PinnedAlbumsAdapter(
                     onAlbumClick = onAlbumClick,
-                    onAlbumLongClick = onAlbumLongClick,
+                    onAlbumLongClick = { album ->
+                        currentAlbum = album
+                        scope.launch {
+                            appBottomSheetState.show()
+                        }
+                    },
                     maxWidth = maxCarouselWidth,
                     primaryTextColor = primaryTextColor,
                     secondaryTextColor = secondaryTextColor,
@@ -71,6 +100,74 @@ fun CarouselPinnedAlbums(
         },
         update = {
             (it.adapter as PinnedAlbumsAdapter).submitList(albumList)
+        }
+    )
+
+    val unpinTitle = stringResource(R.string.unpin)
+    val tertiaryContainer = MaterialTheme.colorScheme.tertiaryContainer
+    val onTertiaryContainer = MaterialTheme.colorScheme.onTertiaryContainer
+    val optionList = remember {
+        mutableListOf(
+            OptionItem(
+                text = unpinTitle,
+                containerColor = tertiaryContainer,
+                contentColor = onTertiaryContainer,
+                onClick = {
+                    scope.launch {
+                        appBottomSheetState.hide()
+                        currentAlbum?.let {
+                            onAlbumLongClick(it)
+                            currentAlbum = null
+                        }
+                    }
+                }
+            )
+        )
+    }
+
+    OptionSheet(
+        state = appBottomSheetState,
+        optionList = arrayOf(optionList),
+        headerContent = {
+            if (currentAlbum != null) {
+                AsyncImage(
+                    modifier = Modifier
+                        .size(98.dp)
+                        .clip(Shapes.large),
+                    contentScale = ContentScale.Crop,
+                    model = currentAlbum!!.uri,
+                    contentDescription = currentAlbum!!.label
+                )
+                Text(
+                    text = buildAnnotatedString {
+                        withStyle(
+                            style = SpanStyle(
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontStyle = MaterialTheme.typography.titleLarge.fontStyle,
+                                fontSize = MaterialTheme.typography.titleLarge.fontSize,
+                                letterSpacing = MaterialTheme.typography.titleLarge.letterSpacing
+                            )
+                        ) {
+                            append(currentAlbum!!.label)
+                        }
+                        append("\n")
+                        withStyle(
+                            style = SpanStyle(
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontStyle = MaterialTheme.typography.bodyMedium.fontStyle,
+                                fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                                letterSpacing = MaterialTheme.typography.bodyMedium.letterSpacing
+                            )
+                        ) {
+                            append(stringResource(R.string.s_items, currentAlbum!!.count))
+                        }
+                    },
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth()
+                )
+            }
         }
     )
 }

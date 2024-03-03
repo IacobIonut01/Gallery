@@ -181,8 +181,7 @@ fun MoveMediaSheet(
                                     scope.launch(Dispatchers.Main) {
                                         newAlbumSheetState.show()
                                     }
-                                },
-                                onTogglePinClick = null
+                                }
                             )
                         }
                         items(
@@ -209,8 +208,7 @@ fun MoveMediaSheet(
                                         newPath = album.relativePath
                                         request.launch(mediaList.writeRequest(context.contentResolver))
                                     }
-                                },
-                                onTogglePinClick = null
+                                }
                             )
                         }
                     }

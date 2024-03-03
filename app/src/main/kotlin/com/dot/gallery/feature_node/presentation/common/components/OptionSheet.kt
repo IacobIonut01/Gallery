@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -41,6 +42,7 @@ import kotlinx.coroutines.launch
 fun OptionSheet(
     state: AppBottomSheetState,
     onDismiss: (() -> Unit)? = null,
+    headerContent: @Composable (ColumnScope.() -> Unit)? = null,
     vararg optionList: List<OptionItem>
 ) {
     val scope = rememberCoroutineScope()
@@ -67,6 +69,7 @@ fun OptionSheet(
                     .padding(horizontal = 32.dp, vertical = 16.dp)
                     .navigationBarsPadding()
             ) {
+                headerContent?.invoke(this)
                 optionList.forEach { list ->
                     OptionLayout(
                         modifier = Modifier.fillMaxWidth(),

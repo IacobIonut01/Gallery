@@ -103,8 +103,7 @@ fun SelectAlbumSheet(
                                     onSelect(album)
                                 }
                             },
-                            isEnabled = blacklistedAlbums.firstOrNull { it.id == item.id } == null,
-                            onTogglePinClick = null
+                            isEnabled = blacklistedAlbums.firstOrNull { it.id == item.id } == null
                         )
                     }
                 }
