@@ -160,7 +160,7 @@
     <string name="remove_from_ignored">Supprimer de la liste d\'albums ignorés</string>
     <string name="remove_from_ignored_summary">Retirer l\'album nommé %1$s des albums ignorés</string>
     <string name="override">Override</string>
-    <string name="save_copy">Save Copy</string>
+    <string name="save_copy">Enregistrer la copie</string>
     <string name="favorite">Favorite</string>
     <string name="allow_to_manage_media">Allow to Manage Media</string>
     <string name="set_default_launch_screen">Set default launch screen</string>
@@ -170,8 +170,8 @@
     <string name="launch_on_timeline">Launch on Timeline</string>
     <string name="launch_on_albums">Launch on Albums</string>
     <string name="launch_auto">Launch last screen when the app was closed</string>
-    <string name="set_default_screen">Set default screen</string>
-    <string name="done">Done</string>
+    <string name="set_default_screen">Définir l\'écran par défaut</string>
+    <string name="done">Terminé</string>
     <string name="toggle_audio_cd">Toggle audio</string>
     <plurals name="item_count">
         <item quantity="one">%s élément</item>
