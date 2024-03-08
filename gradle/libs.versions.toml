@@ -30,7 +30,7 @@ room = "2.6.1"
 accompanist = "0.34.0"
 datastore ="1.1.0-beta01"
 uiautomator = "2.3.0"
-zoomable = "1.6.0"
+zoomable = "1.6.1"
 zoomableImageCoil = "0.8.0"
 
 [libraries]
