@@ -173,6 +173,8 @@
     <string name="set_default_screen">Set default screen</string>
     <string name="done">Done</string>
     <string name="toggle_audio_cd">Toggle audio</string>
+    <string name="auto">Auto</string>
+    <string name="change_playback_speed_cd">Change playback speed</string>
     <plurals name="item_count">
         <item quantity="one">%s položka</item>
         <item quantity="few">%s položky</item>
