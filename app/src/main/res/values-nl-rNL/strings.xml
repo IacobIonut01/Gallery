@@ -173,6 +173,8 @@
     <string name="set_default_screen">Opstartscherm instellen</string>
     <string name="done">Klaar</string>
     <string name="toggle_audio_cd">Schakel audio</string>
+    <string name="auto">Auto</string>
+    <string name="change_playback_speed_cd">Change playback speed</string>
     <plurals name="item_count">
         <item quantity="one">%s item</item>
         <item quantity="other">%s items</item>
