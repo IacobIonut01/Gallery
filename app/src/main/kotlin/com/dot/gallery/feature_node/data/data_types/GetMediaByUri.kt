@@ -61,6 +61,7 @@ suspend fun Context.getMediaListByUris(list: List<Uri>): List<Media> {
                     ContentResolver.QUERY_ARG_SQL_SELECTION,
                     MediaStore.MediaColumns._ID + "=?"
                 )
+                putInt(MediaStore.QUERY_ARG_MATCH_TRASHED, MediaStore.MATCH_INCLUDE)
                 putStringArray(
                     ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS,
                     list.map { it.toString().substringAfterLast("/") }.toTypedArray()

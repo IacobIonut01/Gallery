@@ -11,8 +11,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.material3.Scaffold
-import androidx.compose.ui.text.intl.Locale
-import androidx.compose.ui.text.toLowerCase
 import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.annotation.ExperimentalCoilApi
@@ -33,7 +31,7 @@ class StandaloneActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         val action = intent.action.toString()
-        val isSecure = action.toLowerCase(Locale.current).contains("secure")
+        val isSecure = action.lowercase().contains("secure")
         val clipData = intent.clipData
         val uriList = mutableSetOf<Uri>()
         intent.data?.let(uriList::add)
@@ -48,7 +46,7 @@ class StandaloneActivity : ComponentActivity() {
             GalleryTheme(darkTheme = true) {
                 Scaffold { paddingValues ->
                     val viewModel = hiltViewModel<StandaloneViewModel>().apply {
-                        reviewMode = action.contains("REVIEW")
+                        reviewMode = action.lowercase().contains("review")
                         dataList = uriList.toList()
                     }
 

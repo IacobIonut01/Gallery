@@ -233,13 +233,14 @@ class MediaRepositoryImpl(
                             ContentResolver.QUERY_ARG_SQL_SELECTION,
                             MediaStore.MediaColumns.BUCKET_ID + "= ?"
                         )
+                        putInt(MediaStore.QUERY_ARG_MATCH_TRASHED, MediaStore.MATCH_INCLUDE)
                         putStringArray(
                             ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS,
                             arrayOf(mediaList.first().albumID.toString())
                         )
                     }
                 )
-                mediaList = it.getMedia(query)
+                mediaList = it.getMedia(query).filter { media -> !media.isTrashed }
             }
             if (mediaList.isEmpty()) {
                 Resource.Error(message = "Media could not be opened")
