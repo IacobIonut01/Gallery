@@ -173,6 +173,8 @@
     <string name="set_default_screen">設定預設啟動螢幕</string>
     <string name="done">完畢</string>
     <string name="toggle_audio_cd">切換音訊</string>
+    <string name="auto">Auto</string>
+    <string name="change_playback_speed_cd">Change playback speed</string>
     <plurals name="item_count">
         <item quantity="other">%s 個項目</item>
     </plurals>
