@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.DriveFileMove
@@ -298,11 +299,13 @@ fun MediaInfoDateCaptionContainer(
                         "$lensDesc\n$imageCapt"
                     } else lensDesc ?: (imageCapt ?: defaultDesc)
                 }
-                Text(
-                    text = imageDesc,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                SelectionContainer {
+                    Text(
+                        text = imageDesc,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
 
             if (!media.readUriOnly) {
