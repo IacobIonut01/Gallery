@@ -173,6 +173,8 @@
     <string name="set_default_screen">Standard-Bildschirm auswählen</string>
     <string name="done">Fertig</string>
     <string name="toggle_audio_cd">Audio umschalten</string>
+    <string name="auto">Auto</string>
+    <string name="change_playback_speed_cd">Change playback speed</string>
     <plurals name="item_count">
         <item quantity="one">%s Datei</item>
         <item quantity="other">%s Dateien</item>
