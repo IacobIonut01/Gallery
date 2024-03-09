@@ -6,6 +6,7 @@
 package com.dot.gallery.feature_node.presentation.mediaview.components.video
 
 import android.annotation.SuppressLint
+import android.media.MediaMetadataRetriever
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.FrameLayout
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -48,7 +49,7 @@ import kotlin.time.Duration.Companion.seconds
 fun VideoPlayer(
     media: Media,
     playWhenReady: Boolean,
-    videoController: @Composable (ExoPlayer, MutableState<Boolean>, MutableState<Long>, Long, Int) -> Unit,
+    videoController: @Composable (ExoPlayer, MutableState<Boolean>, MutableState<Long>, Long, Int, Float) -> Unit,
     onItemClick: () -> Unit
 ) {
     var totalDuration by rememberSaveable { mutableLongStateOf(0L) }
@@ -57,6 +58,17 @@ fun VideoPlayer(
     val isPlaying = rememberSaveable(playWhenReady) { mutableStateOf(playWhenReady) }
     var lastPlayingState by rememberSaveable(isPlaying.value) { mutableStateOf(isPlaying.value) }
     val context = LocalContext.current
+
+    val metadata = remember(media) {
+        MediaMetadataRetriever().apply {
+            setDataSource(context, media.uri)
+        }
+    }
+    val frameRate = remember(metadata) {
+        metadata.extractMetadata(
+            MediaMetadataRetriever.METADATA_KEY_CAPTURE_FRAMERATE
+        )?.toFloat() ?: 60f
+    }
 
     val exoPlayer = remember(context) {
         ExoPlayer.Builder(context)
@@ -89,7 +101,14 @@ fun VideoPlayer(
                     }
                 }
             )
-            videoController(exoPlayer, isPlaying, currentTime, totalDuration, bufferedPercentage)
+            videoController(
+                exoPlayer,
+                isPlaying,
+                currentTime,
+                totalDuration,
+                bufferedPercentage,
+                frameRate
+            )
         }
     ) {
         exoPlayer.addListener(

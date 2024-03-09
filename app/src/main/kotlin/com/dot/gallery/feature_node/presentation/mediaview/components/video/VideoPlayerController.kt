@@ -23,9 +23,13 @@ import androidx.compose.material.icons.automirrored.outlined.VolumeUp
 import androidx.compose.material.icons.filled.PauseCircleFilled
 import androidx.compose.material.icons.filled.PlayCircleFilled
 import androidx.compose.material.icons.outlined.ScreenRotation
+import androidx.compose.material.icons.outlined.Speed
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
@@ -35,6 +39,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -43,12 +48,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.media3.exoplayer.ExoPlayer
 import com.dot.gallery.R
+import com.dot.gallery.feature_node.domain.model.PlaybackSpeed
 import com.dot.gallery.feature_node.presentation.util.formatMinSec
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -62,6 +69,7 @@ fun VideoPlayerController(
     totalTime: Long,
     buffer: Int,
     toggleRotate: () -> Unit,
+    frameRate: Float
 ) {
     val scope = rememberCoroutineScope()
     Box(
@@ -81,6 +89,63 @@ fun VideoPlayerController(
             var currentVolume by rememberSaveable(player) { mutableFloatStateOf(player.volume) }
             LaunchedEffect(LocalConfiguration.current, player.currentMediaItem) {
                 player.volume = if (isMuted) 0f else currentVolume
+            }
+            var auto by rememberSaveable { mutableStateOf(false) }
+            var showMenu by rememberSaveable { mutableStateOf(false) }
+            var playbackSpeed by rememberSaveable { mutableFloatStateOf(1f) }
+            val ctx = LocalContext.current
+            val playbackSpeeds = remember {
+                listOf(
+                    PlaybackSpeed(1f / (frameRate / 30f), ctx.getString(R.string.auto), true),
+                    PlaybackSpeed(0.125f, "0.125x"),
+                    PlaybackSpeed(0.25f, "0.25x"),
+                    PlaybackSpeed(0.5f, "0.5x"),
+                    PlaybackSpeed(1f, "1x"),
+                    PlaybackSpeed(2f, "2x")
+                )
+            }
+            LaunchedEffect(playbackSpeed) {
+                player.setPlaybackSpeed(playbackSpeed)
+                showMenu = false
+            }
+            IconButton(
+                onClick = {
+                    showMenu = !showMenu
+                },
+                modifier = Modifier
+                    .align(Alignment.End)
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Speed,
+                    tint = Color.White,
+                    contentDescription = stringResource(R.string.change_playback_speed_cd)
+                )
+            }
+
+            DropdownMenu(
+                expanded = showMenu,
+                onDismissRequest = {
+                    showMenu = false
+                }
+            ) {
+                playbackSpeeds.forEach { speed ->
+                    DropdownMenuItem(
+                        onClick = {
+                            playbackSpeed = speed.speed
+                            auto = speed.isAuto
+                        },
+                        leadingIcon = {
+                            RadioButton(
+                                selected = playbackSpeed == speed.speed && !speed.isAuto,
+                                onClick = {
+                                    playbackSpeed = speed.speed
+                                    auto = speed.isAuto
+                                }
+                            )
+                        },
+                        text = { Text(text = speed.label) }
+                    )
+                }
             }
             IconButton(
                 onClick = {

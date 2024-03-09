@@ -20,7 +20,7 @@ fun MediaPreviewComponent(
     uiEnabled: Boolean,
     playWhenReady: Boolean,
     onItemClick: () -> Unit,
-    videoController: @Composable (ExoPlayer, MutableState<Boolean>, MutableState<Long>, Long, Int) -> Unit,
+    videoController: @Composable (ExoPlayer, MutableState<Boolean>, MutableState<Long>, Long, Int, Float) -> Unit,
 ) {
     Box(
         modifier = Modifier

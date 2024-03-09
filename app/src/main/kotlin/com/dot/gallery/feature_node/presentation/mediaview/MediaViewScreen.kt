@@ -173,7 +173,7 @@ fun MediaViewScreen(
                     showUI.value = !showUI.value
                     windowInsetsController.toggleSystemBars(showUI.value)
                 }
-            ) { player, isPlaying, currentTime, totalTime, buffer ->
+            ) { player, isPlaying, currentTime, totalTime, buffer, frameRate ->
                 Box(
                     modifier = Modifier.fillMaxSize()
                 ) {
@@ -246,7 +246,8 @@ fun MediaViewScreen(
                             currentTime = currentTime,
                             totalTime = totalTime,
                             buffer = buffer,
-                            toggleRotate = toggleRotate
+                            toggleRotate = toggleRotate,
+                            frameRate = frameRate
                         )
                     }
                 }
@@ -273,7 +274,9 @@ fun MediaViewScreen(
             }
         } else {
             MediaViewBottomBar(
-                showDeleteButton = !isStandalone,
+                showDeleteButton = remember(currentMedia.value) {
+                    currentMedia.value?.readUriOnly == false
+                },
                 bottomSheetState = bottomSheetState,
                 handler = handler,
                 showUI = showUI.value,
