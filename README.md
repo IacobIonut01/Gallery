@@ -4,7 +4,7 @@
 > The goal of this project is to create and bring the Gallery app everyone wants, with the features everyone needs. FOSS
 
 ![Downloads](https://img.shields.io/github/downloads/IacobIonut01/Gallery/total?color=%23247EE0&label=Downloads)
-[![CI](https://github.com/IacobIonut01/Gallery/actions/workflows/release.yml/badge.svg?branch=v1)](https://github.com/IacobIonut01/Gallery/actions/workflows/release.yml)
+[![CI](https://github.com/IacobIonut01/Gallery/actions/workflows/nightly.yml/badge.svg?branch=main)](https://github.com/IacobIonut01/Gallery/actions/workflows/nightly.yml)
 ![License](https://img.shields.io/github/license/IacobIonut01/Gallery?color=%23247EE0)
 [![Crowdin](https://badges.crowdin.net/gallery-compose/localized.svg)](https://crowdin.com/project/gallery-compose)
 ![GitHub Repo stars](https://img.shields.io/github/stars/IacobIonut01/Gallery?color=%23247EE0)
