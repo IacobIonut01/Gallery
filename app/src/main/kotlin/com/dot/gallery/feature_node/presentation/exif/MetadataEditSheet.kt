@@ -1,6 +1,7 @@
 package com.dot.gallery.feature_node.presentation.exif
 
 import android.media.MediaScannerConnection
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -55,6 +56,7 @@ import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.rememberActivityResult
 import com.dot.gallery.feature_node.presentation.util.rememberExifInterface
+import com.dot.gallery.feature_node.presentation.util.rememberExifMetadata
 import com.dot.gallery.feature_node.presentation.util.toastError
 import com.dot.gallery.feature_node.presentation.util.writeRequest
 import com.dot.gallery.ui.theme.Shapes
@@ -181,33 +183,37 @@ fun MetadataEditSheet(
                             selectedLeadingIconColor = MaterialTheme.colorScheme.onTertiary
                         )
                     )
-                    FilterChip(
-                        selected = shouldRemoveLocation,
-                        onClick = {
-                            shouldRemoveMetadata = false
-                            shouldRemoveLocation = !shouldRemoveLocation
-                        },
-                        label = {
-                            Text(text = stringResource(R.string.remove_location))
-                        },
-                        leadingIcon = {
-                            Icon(
-                                modifier = Modifier.size(18.dp),
-                                imageVector = Icons.Outlined.GpsOff,
-                                contentDescription = null
+                    val exifMetadata = exifInterface?.let { rememberExifMetadata(media, it) }
+                    AnimatedVisibility(visible = exifMetadata?.gpsLatLong != null) {
+                        FilterChip(
+                            selected = shouldRemoveLocation,
+                            onClick = {
+                                shouldRemoveMetadata = false
+                                shouldRemoveLocation = !shouldRemoveLocation
+                            },
+                            label = {
+                                Text(text = stringResource(R.string.remove_location))
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    modifier = Modifier.size(18.dp),
+                                    imageVector = Icons.Outlined.GpsOff,
+                                    contentDescription = null
+                                )
+                            },
+                            enabled = exifMetadata?.gpsLatLong != null,
+                            shape = RoundedCornerShape(100),
+                            border = null,
+                            colors = FilterChipDefaults.filterChipColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                labelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                iconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                                selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary
                             )
-                        },
-                        shape = RoundedCornerShape(100),
-                        border = null,
-                        colors = FilterChipDefaults.filterChipColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            labelColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                            iconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                            selectedContainerColor = MaterialTheme.colorScheme.primary,
-                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
-                            selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary
                         )
-                    )
+                    }
                     Spacer(Modifier.width(8.dp))
                 }
 
