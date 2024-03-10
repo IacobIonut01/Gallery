@@ -17,7 +17,7 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.dot.gallery"
+        applicationId = "com.dot.gallery.gplay"
         minSdk = 30
         targetSdk = 34
         versionCode = 21107
@@ -62,6 +62,14 @@ android {
             signingConfig = signingConfigs.getByName("debug")
             buildConfigField("String", "MAPS_TOKEN", getApiKey())
             buildConfigField("String", "CONTENT_AUTHORITY", "\"com.dot.gallery.media_provider\"")
+        }
+        create("gplay") {
+            initWith(getByName("release"))
+            ndk.debugSymbolLevel = "FULL"
+            manifestPlaceholders += mapOf(
+                "appProvider" to "com.dot.gallery.media_provider.gplay"
+            )
+            buildConfigField("String", "CONTENT_AUTHORITY", "\"com.dot.gallery.media_provider.gplay\"")
         }
         create("staging") {
             initWith(getByName("release"))

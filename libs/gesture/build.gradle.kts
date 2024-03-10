@@ -17,6 +17,10 @@ android {
             isMinifyEnabled = false
             isShrinkResources = false
         }
+        create("gplay") {
+            initWith(getByName("release"))
+            ndk.debugSymbolLevel = "FULL"
+        }
     }
 
     compileOptions {
