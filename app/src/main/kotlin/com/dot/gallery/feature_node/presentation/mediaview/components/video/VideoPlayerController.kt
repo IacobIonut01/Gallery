@@ -83,7 +83,8 @@ fun VideoPlayerController(
                 .padding(horizontal = 16.dp)
                 .padding(bottom = paddingValues.calculateBottomPadding() + 72.dp)
                 .fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.End
         ) {
             var isMuted by rememberSaveable(isPlaying) { mutableStateOf(player.volume == 0f) }
             var currentVolume by rememberSaveable(player) { mutableFloatStateOf(player.volume) }
@@ -108,42 +109,43 @@ fun VideoPlayerController(
                 player.setPlaybackSpeed(playbackSpeed)
                 showMenu = false
             }
-            IconButton(
-                onClick = {
-                    showMenu = !showMenu
-                },
-                modifier = Modifier
-                    .align(Alignment.End)
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Speed,
-                    tint = Color.White,
-                    contentDescription = stringResource(R.string.change_playback_speed_cd)
-                )
-            }
 
-            DropdownMenu(
-                expanded = showMenu,
-                onDismissRequest = {
-                    showMenu = false
+            Box(contentAlignment = Alignment.TopEnd) {
+                DropdownMenu(
+                    expanded = showMenu,
+                    onDismissRequest = {
+                        showMenu = false
+                    }
+                ) {
+                    playbackSpeeds.forEach { speed ->
+                        DropdownMenuItem(
+                            modifier = Modifier.padding(end = 16.dp),
+                            onClick = {
+                                playbackSpeed = speed.speed
+                                auto = speed.isAuto
+                            },
+                            leadingIcon = {
+                                RadioButton(
+                                    selected = playbackSpeed == speed.speed && !speed.isAuto,
+                                    onClick = {
+                                        playbackSpeed = speed.speed
+                                        auto = speed.isAuto
+                                    }
+                                )
+                            },
+                            text = { Text(text = speed.label) }
+                        )
+                    }
                 }
-            ) {
-                playbackSpeeds.forEach { speed ->
-                    DropdownMenuItem(
-                        onClick = {
-                            playbackSpeed = speed.speed
-                            auto = speed.isAuto
-                        },
-                        leadingIcon = {
-                            RadioButton(
-                                selected = playbackSpeed == speed.speed && !speed.isAuto,
-                                onClick = {
-                                    playbackSpeed = speed.speed
-                                    auto = speed.isAuto
-                                }
-                            )
-                        },
-                        text = { Text(text = speed.label) }
+                IconButton(
+                    onClick = {
+                        showMenu = !showMenu
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Speed,
+                        tint = Color.White,
+                        contentDescription = stringResource(R.string.change_playback_speed_cd)
                     )
                 }
             }
@@ -157,9 +159,7 @@ fun VideoPlayerController(
                         player.volume = 0f
                         isMuted = true
                     }
-                },
-                modifier = Modifier
-                    .align(Alignment.End)
+                }
             ) {
                 Icon(
                     imageVector = if (isMuted) Icons.AutoMirrored.Outlined.VolumeMute else Icons.AutoMirrored.Outlined.VolumeUp,
@@ -170,9 +170,7 @@ fun VideoPlayerController(
                 )
             }
             IconButton(
-                onClick = { toggleRotate() },
-                modifier = Modifier
-                    .align(Alignment.End)
+                onClick = { toggleRotate() }
             ) {
                 Icon(
                     imageVector = Icons.Outlined.ScreenRotation,
