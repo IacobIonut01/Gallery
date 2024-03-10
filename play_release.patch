@@ -1,0 +1,72 @@
+From 92a17b8339522adffa019d78dac3664e0265e630 Mon Sep 17 00:00:00 2001
+From: IacobIonut01 <paulionut2003@gmail.com>
+Date: Sun, 10 Mar 2024 19:11:18 +0200
+Subject: [PATCH] Add google play release flavor
+
+---
+ app/build.gradle.kts          | 10 +++++++++-
+ libs/cropper/build.gradle.kts |  4 ++++
+ libs/gesture/build.gradle.kts |  4 ++++
+ 3 files changed, 17 insertions(+), 1 deletion(-)
+
+diff --git a/app/build.gradle.kts b/app/build.gradle.kts
+index edabd18..e30d6eb 100644
+--- a/app/build.gradle.kts
++++ b/app/build.gradle.kts
+@@ -17,7 +17,7 @@ android {
+     compileSdk = 34
+ 
+     defaultConfig {
+-        applicationId = "com.dot.gallery"
++        applicationId = "com.dot.gallery.gplay"
+         minSdk = 30
+         targetSdk = 34
+         versionCode = 21009
+@@ -60,6 +60,14 @@ android {
+             buildConfigField("String", "MAPS_TOKEN", getApiKey())
+             buildConfigField("String", "CONTENT_AUTHORITY", "\"com.dot.gallery.media_provider\"")
+         }
++        create("gplay") {
++            initWith(getByName("release"))
++            ndk.debugSymbolLevel = "FULL"
++            manifestPlaceholders += mapOf(
++                "appProvider" to "com.dot.gallery.media_provider.gplay"
++            )
++            buildConfigField("String", "CONTENT_AUTHORITY", "\"com.dot.gallery.media_provider.gplay\"")
++        }
+         create("staging") {
+             initWith(getByName("release"))
+             isMinifyEnabled = false
+diff --git a/libs/cropper/build.gradle.kts b/libs/cropper/build.gradle.kts
+index c13dee6..789946a 100644
+--- a/libs/cropper/build.gradle.kts
++++ b/libs/cropper/build.gradle.kts
+@@ -19,6 +19,10 @@ android {
+             isMinifyEnabled = false
+             isShrinkResources = false
+         }
++        create("gplay") {
++            initWith(getByName("release"))
++            ndk.debugSymbolLevel = "FULL"
++        }
+     }
+ 
+     compileOptions {
+diff --git a/libs/gesture/build.gradle.kts b/libs/gesture/build.gradle.kts
+index 4390ba5..ae65f3e 100644
+--- a/libs/gesture/build.gradle.kts
++++ b/libs/gesture/build.gradle.kts
+@@ -17,6 +17,10 @@ android {
+             isMinifyEnabled = false
+             isShrinkResources = false
+         }
++        create("gplay") {
++            initWith(getByName("release"))
++            ndk.debugSymbolLevel = "FULL"
++        }
+     }
+ 
+     compileOptions {
+-- 
+2.42.0
+

@@ -16,6 +16,8 @@ jobs:
           java-version: 17
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
       - name: Make Gradle executable
         run: chmod +x ./gradlew
       - name: Build Release APK
@@ -55,6 +57,8 @@ jobs:
           java-version: 17
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
       - name: Make Gradle executable
         run: chmod +x ./gradlew
       - name: Load Maps Token
@@ -77,6 +81,36 @@ jobs:
         with:
           name: Gallery Release (Maps)
           path: ${{steps.signed_release_maps.outputs.signedReleaseFile}}
+      - name: Apply Google Play patch
+        id: gplay_patcher
+        run: git config --global user.email "paulionut2003@gmail.com" &&
+          git config --global user.name "IacobIonut01" &&
+          git am -3 play_release.patch
+      - name: Build Google Play Bundle
+        run: ./gradlew bundleGplay
+      - uses: r0adkll/sign-android-release@v1
+        id: signed_release_bundle
+        with:
+          releaseDirectory: app/build/outputs/bundle/gplay
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+        env:
+          BUILD_TOOLS_VERSION: "34.0.0"
+      - uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
+          packageName: com.dot.gallery.gplay
+          releaseFiles: ${{steps.signed_release_bundle.outputs.signedReleaseFile}}
+          track: production
+          releaseName: ${{ steps.versioncode.outputs.versionCode }}-${{ steps.versionname.outputs.versionName }} Release
+          mappingFile: app/build/outputs/mapping/gplay/mapping.txt
+          debugSymbols: app/intermediates/merged_native_libs/gplay/out/lib
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Gallery Release (GPlay Bundle)
+          path: ${{steps.signed_release_bundle.outputs.signedReleaseFile}}
 
   release:
     needs: [build_nomaps, build_maps]
