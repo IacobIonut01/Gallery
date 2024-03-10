@@ -1,9 +1,6 @@
-name: Nightly CI
+name: Release CI
 
-on:
-  push:
-   branches:
-    - main
+on: workflow_dispatch
 
 jobs:
   build_nomaps:
@@ -97,9 +94,9 @@ jobs:
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
-          name: ${{ needs.build_maps.outputs.versionName }}-${{ needs.build_maps.outputs.versionCode }} Nightly Release
-          prerelease: true
-          tag_name: ${{ needs.build_maps.outputs.versionName }}-${{ needs.build_maps.outputs.versionCode }}-nightly
+          name: ${{ needs.build_maps.outputs.versionName }}-${{ needs.build_maps.outputs.versionCode }} Release
+          prerelease: false
+          tag_name: ${{ needs.build_maps.outputs.versionName }}-${{ needs.build_maps.outputs.versionCode }}
           files: |
             ./**/Gallery-*.apk
         env:
