@@ -159,34 +159,26 @@ fun Media.retrieveMetadata(context: Context, exifMetadata: ExifMetadata, onLabel
                 )
             )
             val formattedFileSize = File(path).formattedFileSize(context)
-            if (exifMetadata.imageWidth != 0 && exifMetadata.imageHeight != 0) {
+            val contentString = StringBuilder()
+            contentString.append(formattedFileSize)
+            if (mimeType.contains("video")) {
+                contentString.append(" • ${duration.formatMinSec()}")
+            } else if (exifMetadata.imageWidth != 0 && exifMetadata.imageHeight != 0) {
                 val width = exifMetadata.imageWidth
                 val height = exifMetadata.imageHeight
                 val imageMp = exifMetadata.imageMp
-                val contentString = StringBuilder()
-                contentString.append(formattedFileSize)
                 if (imageMp > "0") contentString.append(" • $imageMp MP")
                 if (width > 0 && height > 0) contentString.append(" • $width x $height")
-                add(
-                    InfoRow(
-                        icon = Icons.Outlined.ImageSearch,
-                        label = context.getString(R.string.metadata),
-                        content = contentString.toString()
-                    )
-                )
             }
-            if (mimeType.contains("video")) {
-                val contentString = StringBuilder()
-                contentString.append(formattedFileSize)
-                contentString.append(" • ${duration.formatMinSec()}")
-                add(
-                    InfoRow(
-                        icon = Icons.Outlined.VideoFile,
-                        label = context.getString(R.string.metadata),
-                        content = contentString.toString()
-                    )
+            val icon = if (mimeType.contains("video")) Icons.Outlined.VideoFile else Icons.Outlined.ImageSearch
+            add(
+                InfoRow(
+                    icon = icon,
+                    label = context.getString(R.string.metadata),
+                    content = contentString.toString()
                 )
-            }
+            )
+
 
             add(
                 InfoRow(
