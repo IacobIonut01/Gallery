@@ -92,7 +92,7 @@ jobs:
         run: find . -name "Gallery-*.apk" -exec bash -c 'mv "$1" "${1//-release-signed/}"' _ {} \;
       - name: Create Release
         id: create_release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           name: ${{ needs.build_maps.outputs.versionName }}-${{ needs.build_maps.outputs.versionCode }} Release
           prerelease: false
