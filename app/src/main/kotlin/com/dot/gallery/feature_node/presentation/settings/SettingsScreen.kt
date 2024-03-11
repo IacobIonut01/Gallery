@@ -138,7 +138,7 @@ fun SettingsScreen(
                             )
                         )
                     ) {
-
+                        val scope = rememberCoroutineScope()
                         Text(
                             text = stringResource(R.string.set_default_launch_screen),
                             modifier = Modifier.padding(vertical = 16.dp),
@@ -154,9 +154,10 @@ fun SettingsScreen(
                                 modifier = Modifier
                                     .clip(Shapes.large)
                                     .clickable {
-                                        forcedLastScreen = false
-                                        lastScreen = Screen.TimelineScreen()
-                                        showLaunchScreenDialog.value = false
+                                        scope.launch {
+                                            forcedLastScreen = false
+                                            lastScreen = Screen.TimelineScreen()
+                                        }
                                     },
                                 colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                                 headlineContent = {
@@ -165,7 +166,12 @@ fun SettingsScreen(
                                 trailingContent = {
                                     RadioButton(
                                         selected = !forcedLastScreen,
-                                        onClick = null
+                                        onClick = {
+                                            scope.launch {
+                                                forcedLastScreen = false
+                                                lastScreen = Screen.TimelineScreen()
+                                            }
+                                        }
                                     )
                                 }
                             )
@@ -173,9 +179,10 @@ fun SettingsScreen(
                                 modifier = Modifier
                                     .clip(Shapes.large)
                                     .clickable {
-                                        forcedLastScreen = true
-                                        lastScreen = Screen.TimelineScreen()
-                                        showLaunchScreenDialog.value = false
+                                        scope.launch {
+                                            forcedLastScreen = true
+                                            lastScreen = Screen.TimelineScreen()
+                                        }
                                     },
                                 colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                                 headlineContent = {
@@ -184,7 +191,12 @@ fun SettingsScreen(
                                 trailingContent = {
                                     RadioButton(
                                         selected = forcedLastScreen && lastScreen == Screen.TimelineScreen(),
-                                        onClick = null
+                                        onClick = {
+                                            scope.launch {
+                                                forcedLastScreen = true
+                                                lastScreen = Screen.TimelineScreen()
+                                            }
+                                        }
                                     )
                                 }
                             )
@@ -192,9 +204,10 @@ fun SettingsScreen(
                                 modifier = Modifier
                                     .clip(Shapes.large)
                                     .clickable {
-                                        forcedLastScreen = true
-                                        lastScreen = Screen.AlbumsScreen()
-                                        showLaunchScreenDialog.value = false
+                                        scope.launch {
+                                            forcedLastScreen = true
+                                            lastScreen = Screen.AlbumsScreen()
+                                        }
                                     },
                                 colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                                 headlineContent = {
@@ -203,7 +216,12 @@ fun SettingsScreen(
                                 trailingContent = {
                                     RadioButton(
                                         selected = forcedLastScreen && lastScreen == Screen.AlbumsScreen(),
-                                        onClick = null
+                                        onClick = {
+                                            scope.launch {
+                                                forcedLastScreen = true
+                                                lastScreen = Screen.AlbumsScreen()
+                                            }
+                                        }
                                     )
                                 }
                             )

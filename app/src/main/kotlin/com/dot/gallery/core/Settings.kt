@@ -104,7 +104,7 @@ object Settings {
 
         @Composable
         fun rememberLastScreen() =
-            rememberPreference(key = LAST_SCREEN, defaultValue = Screen.TimelineScreen.route)
+            rememberPreference(key = LAST_SCREEN, defaultValue = Screen.TimelineScreen())
 
         private val FORCED_LAST_SCREEN = booleanPreferencesKey("forced_last_screen")
 
