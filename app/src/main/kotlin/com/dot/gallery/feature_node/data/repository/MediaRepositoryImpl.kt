@@ -34,6 +34,7 @@ import com.dot.gallery.feature_node.data.data_types.updateMedia
 import com.dot.gallery.feature_node.data.data_types.updateMediaExif
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.BlacklistedAlbum
+import com.dot.gallery.feature_node.domain.model.CustomAlbum
 import com.dot.gallery.feature_node.domain.model.ExifAttributes
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.PinnedAlbum
@@ -94,6 +95,10 @@ class MediaRepositoryImpl(
                 }
             }
         }
+
+    override fun getCustomAlbums(mediaOrder: MediaOrder): Flow<List<CustomAlbum>> {
+        return database.getCustomAlbumDao().getCustomAlbums()
+    }
 
     override suspend fun insertPinnedAlbum(pinnedAlbum: PinnedAlbum) =
         database.getPinnedDao().insertPinnedAlbum(pinnedAlbum)

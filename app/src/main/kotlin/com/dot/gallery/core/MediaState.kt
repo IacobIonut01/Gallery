@@ -8,6 +8,7 @@ package com.dot.gallery.core
 import android.os.Parcelable
 import androidx.compose.runtime.Immutable
 import com.dot.gallery.feature_node.domain.model.Album
+import com.dot.gallery.feature_node.domain.model.CustomAlbum
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaItem
 import kotlinx.parcelize.Parcelize
@@ -29,4 +30,10 @@ data class MediaState(
 data class AlbumState(
     val albums: List<Album> = emptyList(),
     val error: String = ""
+) : Parcelable
+
+@Immutable
+@Parcelize
+data class CustomAlbumState(
+    val albums: List<CustomAlbum> = emptyList()
 ) : Parcelable

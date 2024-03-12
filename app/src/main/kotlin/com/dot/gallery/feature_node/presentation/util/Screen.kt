@@ -8,6 +8,7 @@ package com.dot.gallery.feature_node.presentation.util
 sealed class Screen(val route: String) {
     data object TimelineScreen : Screen("timeline_screen")
     data object AlbumsScreen : Screen("albums_screen")
+    data object CustomAlbumsScreen : Screen("custom_albums_screen")
 
     data object AlbumViewScreen : Screen("album_view_screen") {
 

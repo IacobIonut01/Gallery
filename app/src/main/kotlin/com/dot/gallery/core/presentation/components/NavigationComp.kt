@@ -42,6 +42,8 @@ import com.dot.gallery.core.presentation.components.util.OnLifecycleEvent
 import com.dot.gallery.core.presentation.components.util.permissionGranted
 import com.dot.gallery.feature_node.presentation.albums.AlbumsScreen
 import com.dot.gallery.feature_node.presentation.albums.AlbumsViewModel
+import com.dot.gallery.feature_node.presentation.albums.CustomAlbumsScreen
+import com.dot.gallery.feature_node.presentation.albums.CustomAlbumsViewModel
 import com.dot.gallery.feature_node.presentation.common.ChanneledViewModel
 import com.dot.gallery.feature_node.presentation.common.MediaViewModel
 import com.dot.gallery.feature_node.presentation.favorites.FavoriteScreen
@@ -111,6 +113,10 @@ fun NavigationComp(
 
     // Preloaded viewModels
     val albumsViewModel = hiltViewModel<AlbumsViewModel>().apply {
+        attachToLifecycle()
+    }
+
+    val customAlbumsViewModel = hiltViewModel<CustomAlbumsViewModel>().apply {
         attachToLifecycle()
     }
 
@@ -204,6 +210,18 @@ fun NavigationComp(
                 toggleNavbar = navPipe::toggleNavbar,
                 paddingValues = paddingValues,
                 viewModel = albumsViewModel,
+                isScrolling = isScrolling,
+                searchBarActive = searchBarActive
+            )
+        }
+        composable(
+                route = Screen.CustomAlbumsScreen()
+                ) {
+            CustomAlbumsScreen(
+                navigate = navPipe::navigate,
+                toggleNavbar = navPipe::toggleNavbar,
+                paddingValues = paddingValues,
+                viewModel = customAlbumsViewModel,
                 isScrolling = isScrolling,
                 searchBarActive = searchBarActive
             )

@@ -12,6 +12,7 @@ import androidx.activity.result.IntentSenderRequest
 import com.dot.gallery.core.Resource
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.BlacklistedAlbum
+import com.dot.gallery.feature_node.domain.model.CustomAlbum
 import com.dot.gallery.feature_node.domain.model.ExifAttributes
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.PinnedAlbum
@@ -33,6 +34,11 @@ interface MediaRepository {
         mediaOrder: MediaOrder,
         ignoreBlacklisted: Boolean = false
     ): Flow<Resource<List<Album>>>
+
+    fun getCustomAlbums(
+        mediaOrder: MediaOrder
+    ): Flow<List<CustomAlbum>>
+
 
     suspend fun insertPinnedAlbum(pinnedAlbum: PinnedAlbum)
 

@@ -68,6 +68,7 @@ import com.dot.gallery.feature_node.presentation.util.Screen
 fun rememberNavigationItems(): List<NavigationItem> {
     val timelineTitle = stringResource(R.string.nav_timeline)
     val albumsTitle = stringResource(R.string.nav_albums)
+    val customAlbumsTitle = stringResource(R.string.nav_customalbums)
     return remember {
         listOf(
             NavigationItem(
@@ -78,6 +79,11 @@ fun rememberNavigationItems(): List<NavigationItem> {
             NavigationItem(
                 name = albumsTitle,
                 route = Screen.AlbumsScreen.route,
+                icon = Icons.Outlined.PhotoAlbum,
+            ),
+            NavigationItem(
+                name = customAlbumsTitle,
+                route = Screen.CustomAlbumsScreen.route,
                 icon = Icons.Outlined.PhotoAlbum,
             )
         )
