@@ -173,8 +173,8 @@
     <string name="set_default_screen">设置默认屏幕</string>
     <string name="done">完成</string>
     <string name="toggle_audio_cd">切换音频</string>
-    <string name="auto">Auto</string>
-    <string name="change_playback_speed_cd">Change playback speed</string>
+    <string name="auto">自动</string>
+    <string name="change_playback_speed_cd">改变播放速度</string>
     <plurals name="item_count">
         <item quantity="other">%s 个项目</item>
     </plurals>
