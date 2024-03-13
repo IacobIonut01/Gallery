@@ -115,8 +115,8 @@ class MediaRepositoryImpl(
         database.getCustomAlbumDao().addCustomAlbumItem(CustomAlbumItem(mediaid, customAlbum.id))
     }
 
-    override fun getMediaForAlbum(customAlbum: CustomAlbum): Flow<List<CustomAlbumItem>> {
-        return database.getCustomAlbumDao().getCustomAlbumItemsForAlbum(customAlbum.id)
+    override fun getMediaForAlbum(customAlbumId: Long): List<CustomAlbumItem> {
+        return database.getCustomAlbumDao().getCustomAlbumItemsForAlbum(customAlbumId)
     }
 
     override suspend fun insertPinnedAlbum(pinnedAlbum: PinnedAlbum) =

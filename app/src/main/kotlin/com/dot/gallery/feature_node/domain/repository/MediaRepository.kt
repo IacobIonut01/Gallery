@@ -46,7 +46,7 @@ interface MediaRepository {
 
     suspend fun addMediaToAlbum(customAlbum: CustomAlbum, mediaid: Long)
 
-    fun getMediaForAlbum(customAlbum: CustomAlbum): Flow<List<CustomAlbumItem>>
+    fun getMediaForAlbum(customAlbumId: Long): List<CustomAlbumItem>
 
     suspend fun insertPinnedAlbum(pinnedAlbum: PinnedAlbum)
 

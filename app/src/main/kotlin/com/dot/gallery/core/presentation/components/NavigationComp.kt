@@ -270,6 +270,50 @@ fun NavigationComp(
             )
         }
         composable(
+            route = Screen.CustomAlbumViewScreen.albumAndName(),
+            arguments = listOf(
+                navArgument(name = "customAlbumId") {
+                    type = NavType.LongType
+                    defaultValue = -1
+                },
+                navArgument(name = "customAlbumName") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                }
+            )
+        ) { backStackEntry ->
+            val appName = stringResource(id = R.string.app_name)
+            val argumentAlbumName = remember(backStackEntry) {
+                backStackEntry.arguments?.getString("customAlbumName") ?: appName
+            }
+            val argumentAlbumId = remember(backStackEntry) {
+                backStackEntry.arguments?.getLong("customAlbumId") ?: -1
+            }
+            timelineViewModel.ObserveCustomMediaState {
+                getMediaFromCustomAlbum(argumentAlbumId)
+            }
+
+            val hideTimeline by rememberHideTimelineOnAlbum()
+            TimelineScreen(
+                paddingValues = paddingValues,
+                albumId = argumentAlbumId,
+                albumName = argumentAlbumName,
+                handler = timelineViewModel.handler,
+                mediaState = timelineViewModel.customMediaState,
+                albumState = albumsViewModel.albumsState,
+                selectionState = timelineViewModel.multiSelectState,
+                selectedMedia = timelineViewModel.selectedPhotoState,
+                allowNavBar = false,
+                allowHeaders = !hideTimeline,
+                enableStickyHeaders = !hideTimeline,
+                toggleSelection = timelineViewModel::toggleCustomSelection,
+                navigate = navPipe::navigate,
+                navigateUp = navPipe::navigateUp,
+                toggleNavbar = navPipe::toggleNavbar,
+                isScrolling = isScrolling
+            )
+        }
+        composable(
             route = Screen.MediaViewScreen.idAndAlbum(),
             arguments = listOf(
                 navArgument(name = "mediaId") {

@@ -3,6 +3,7 @@ package com.dot.gallery.feature_node.data.data_source
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
+import androidx.room.MapInfo
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Upsert
@@ -33,8 +34,9 @@ interface CustomAlbumDao {
     fun getCustomAlbumItems(): Flow<List<CustomAlbumItem>>
 
 
+    @MapInfo(keyColumn = "albumId", valueColumn = "id")
     @Query("SELECT * FROM customalbum_items WHERE albumId = :customAlbumId")
-    fun getCustomAlbumItemsForAlbum(customAlbumId: Long): Flow<List<CustomAlbumItem>>
+    fun getCustomAlbumItemsForAlbum(customAlbumId: Long): List<CustomAlbumItem>
 
 
 

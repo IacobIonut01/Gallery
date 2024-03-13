@@ -40,7 +40,6 @@ import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.Constants.Target.TARGET_TRASH
 import com.dot.gallery.core.Constants.cellsList
-import com.dot.gallery.core.CustomAlbumState
 import com.dot.gallery.core.MediaState
 import com.dot.gallery.core.Settings.Misc.rememberGridSize
 import com.dot.gallery.core.presentation.components.Error
@@ -50,7 +49,6 @@ import com.dot.gallery.core.presentation.components.NavigationButton
 import com.dot.gallery.core.presentation.components.SelectionSheet
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
-import com.dot.gallery.feature_node.presentation.albums.CustomAlbumsViewModel
 import com.dot.gallery.feature_node.presentation.common.components.MediaGridView
 import com.dot.gallery.feature_node.presentation.common.components.TwoLinedDateToolbarTitle
 import com.dot.gallery.feature_node.presentation.search.MainSearchBar

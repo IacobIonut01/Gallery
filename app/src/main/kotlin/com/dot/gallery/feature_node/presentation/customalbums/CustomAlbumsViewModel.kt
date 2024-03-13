@@ -46,7 +46,7 @@ class CustomAlbumsViewModel @Inject constructor(
     val handler = mediaUseCases.mediaHandleUseCase
 
     fun onAlbumClick(navigate: (String) -> Unit): (CustomAlbum) -> Unit = { album ->
-        navigate(Screen.AlbumViewScreen.route + "?albumId=${album.id}&albumName=${album.label}")
+        navigate(Screen.CustomAlbumViewScreen.route + "?customAlbumId=${album.id}&customAlbumName=${album.label}")
     }
 
     val onAlbumLongClick: (CustomAlbum) -> Unit = { album ->

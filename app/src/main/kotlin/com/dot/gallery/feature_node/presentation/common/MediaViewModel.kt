@@ -116,6 +116,32 @@ open class MediaViewModel @Inject constructor(
         }
     }
 
+    fun getMediaFromCustomAlbum(customAlbumId: Long) {
+
+
+        viewModelScope.launch(Dispatchers.IO) {
+            val albumContent = hashMapOf<Long, Long>()
+            mediaUseCases.customAlbumsUseCase.getMediaForAlbum(customAlbumId).forEach {
+                albumContent[it.id] = it.albumId
+            }
+
+            val data = mediaState.value.media.filter { albumContent.containsKey(it.id)}
+            val error = mediaState.value.error
+            if (error.isNotEmpty()) {
+                return@launch _customMediaState.emit(MediaState(isLoading = false, error = error))
+            }
+            if (data.isEmpty()) {
+                return@launch _customMediaState.emit(MediaState(isLoading = false))
+            }
+            _customMediaState.collectMedia(
+                data = data,
+                error = mediaState.value.error,
+                albumId = albumId,
+                groupByMonth = groupByMonth
+            )
+        }
+    }
+
     fun getFavoriteMedia() {
         viewModelScope.launch(Dispatchers.IO) {
             val data = mediaState.value.media.filter { it.isFavorite }

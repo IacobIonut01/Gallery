@@ -15,6 +15,12 @@ sealed class Screen(val route: String) {
         fun albumAndName() = "$route?albumId={albumId}&albumName={albumName}"
 
     }
+
+    data object CustomAlbumViewScreen : Screen("custom_album_view_screen") {
+
+        fun albumAndName() = "$route?customAlbumId={customAlbumId}&customAlbumName={customAlbumName}"
+
+    }
     data object MediaViewScreen : Screen("media_screen") {
 
         fun idAndTarget() = "$route?mediaId={mediaId}&target={target}"

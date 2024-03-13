@@ -29,6 +29,6 @@ class CustomAlbumsUseCase(
 
     suspend fun addMediaToAlbum(customAlbum: CustomAlbum, mediaid: Long) = repository.addMediaToAlbum(customAlbum, mediaid)
 
-    fun getMediaForAlbum(customAlbum: CustomAlbum) = repository.getMediaForAlbum(customAlbum)
+    fun getMediaForAlbum(customAlbumId: Long) = repository.getMediaForAlbum(customAlbumId)
 
 }
