@@ -182,6 +182,9 @@
     <string name="custom_album_dialog_input_description">Please enter the title of your album</string>
     <string name="custom_album_dialog_input_title">Albumname</string>
     <string name="customalbum_delete">Delete this album</string>
+    <string name="delete_custom_album_dialog_title">Delete this album</string>
+    <string name="delete_custom_album_dialog_description">Deleting %1$s will not delete any images inside that album. You cant restore a deleted album!</string>
+    <string name="delete_custom_album_dialog_action_delete">Delete!</string>
     <plurals name="item_count">
         <item quantity="one">%s item</item>
         <item quantity="other">%s items</item>

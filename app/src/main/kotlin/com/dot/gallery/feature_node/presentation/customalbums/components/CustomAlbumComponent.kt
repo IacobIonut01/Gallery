@@ -28,8 +28,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
@@ -53,6 +55,7 @@ import com.dot.gallery.core.presentation.components.util.FontSizeRange
 import com.dot.gallery.feature_node.domain.model.CustomAlbum
 import com.dot.gallery.feature_node.presentation.common.components.OptionItem
 import com.dot.gallery.feature_node.presentation.common.components.OptionSheet
+import com.dot.gallery.feature_node.presentation.customalbums.dialogs.DeleteCustomAlbumDialog
 import com.dot.gallery.feature_node.presentation.util.FeedbackManager.Companion.rememberFeedbackManager
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import com.dot.gallery.ui.theme.Shapes
@@ -81,6 +84,26 @@ fun CustomAlbumComponent(
             val ignoredTitle = stringResource(id = R.string.add_to_ignored)
             val tertiaryContainer = MaterialTheme.colorScheme.tertiaryContainer
             val onTertiaryContainer = MaterialTheme.colorScheme.onTertiaryContainer
+
+            var showDialog by remember { mutableStateOf(false) }
+            if (showDialog) {
+                DeleteCustomAlbumDialog(
+                    album,
+                    onConfirmation = {
+                        scope.launch {
+                            if (onDeleteCustomAlbum != null) {
+                                onDeleteCustomAlbum(album)
+                                appBottomSheetState.hide()
+                            }
+                        }
+                        showDialog = false
+                    },
+                    onDismiss = {
+                        showDialog = false
+                    }
+                )
+            }
+
             val optionList = remember {
                 mutableListOf(
                     OptionItem(
@@ -97,12 +120,7 @@ fun CustomAlbumComponent(
                     OptionItem(
                         text = deleteTitle,
                         onClick = {
-                            scope.launch {
-                                appBottomSheetState.hide()
-                                if (onDeleteCustomAlbum != null) {
-                                    onDeleteCustomAlbum(album)
-                                }
-                            }
+                            showDialog = true
                         }
                     )
                 )
