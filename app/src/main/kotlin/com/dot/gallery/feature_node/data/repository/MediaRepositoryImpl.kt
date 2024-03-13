@@ -47,13 +47,9 @@ import com.dot.gallery.feature_node.presentation.picker.AllowedMedia
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia.BOTH
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia.PHOTOS
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia.VIDEOS
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
 
 class MediaRepositoryImpl(
     private val context: Context,
@@ -106,8 +102,9 @@ class MediaRepositoryImpl(
         return database.getCustomAlbumDao().getCustomAlbums()
     }
 
-    override suspend fun createCustomAlbum(album: CustomAlbum){
-        database.getCustomAlbumDao().addCustomAlbum(album)
+    override suspend fun createCustomAlbum(album: CustomAlbum): CustomAlbum {
+        val id = database.getCustomAlbumDao().addCustomAlbum(album)
+        return CustomAlbum(id = id, label = album.label, timestamp = album.timestamp)
     }
 
     override suspend fun deleteCustomAlbum(album: CustomAlbum){

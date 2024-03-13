@@ -16,7 +16,10 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
@@ -33,6 +36,7 @@ import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.presentation.albums.CustomAlbumsViewModel
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumComponent
 import com.dot.gallery.feature_node.presentation.customalbums.components.CustomAlbumComponent
+import com.dot.gallery.feature_node.presentation.customalbums.dialogs.NewCustomAlbumDialog
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -83,6 +87,29 @@ fun AddtoCustomAlbumSheet(
                 )
 
 
+                var showDialog by remember { mutableStateOf(false) }
+                if (showDialog) {
+                    NewCustomAlbumDialog(
+                        onConfirmation = {
+                            scope.launch(Dispatchers.IO) {
+                                val album = customAlbumsViewModel.createAndReturnNewAlbum(it)
+                                showDialog = false
+                                scope.launch(Dispatchers.Main) {
+                                    async {
+                                        mediaList.forEach { media ->
+                                            customAlbumsViewModel.addMediaToAlbum(album, media.id)
+                                        }
+                                    }.await()
+                                    sheetState.hide()
+                                }
+                            }
+                        },
+                        onDismiss = {
+                            showDialog = false
+                        }
+                    )
+                }
+
                 val albumSize by rememberAlbumGridSize()
                 LazyVerticalGrid(
                     state = rememberLazyGridState(),
@@ -97,7 +124,7 @@ fun AddtoCustomAlbumSheet(
                             isEnabled = true,
                             onItemClick = {
                                 scope.launch(Dispatchers.Main) {
-
+                                    showDialog = true
                                 }
                             }
                         )
@@ -110,13 +137,12 @@ fun AddtoCustomAlbumSheet(
                             album = item,
                             onItemClick = {
                                 scope.launch(Dispatchers.Main) {
-                                    println("Add to Album ${it.label}")
                                     async {
                                         mediaList.forEach { media ->
                                             customAlbumsViewModel.addMediaToAlbum(it, media.id)
-                                            println("--add media ${media.label}")
                                         }
                                     }.await()
+                                    sheetState.hide()
                                 }
                             }
                         )

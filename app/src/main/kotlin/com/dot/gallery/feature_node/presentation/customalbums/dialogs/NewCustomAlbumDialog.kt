@@ -40,7 +40,8 @@ fun NewCustomAlbumDialog(
                 OutlinedTextField(
                     value = textfield,
                     onValueChange = { textfield = it },
-                    label = { Text(text = stringResource(id = R.string.custom_album_dialog_input_title)) }
+                    label = { Text(text = stringResource(id = R.string.custom_album_dialog_input_title)) },
+                    singleLine = true
                 )
 
             }

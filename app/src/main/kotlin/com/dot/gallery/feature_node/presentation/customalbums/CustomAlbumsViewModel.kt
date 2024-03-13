@@ -103,10 +103,14 @@ class CustomAlbumsViewModel @Inject constructor(
         // todo
     }
 
-    fun createNewAlbum(name: String){
+    fun createNewAlbum(name: String) {
         viewModelScope.launch( Dispatchers.IO ) {
             mediaUseCases.customAlbumsUseCase.add(CustomAlbum(label = name, timestamp = System.currentTimeMillis()))
         }
+    }
+
+    suspend fun createAndReturnNewAlbum(name: String): CustomAlbum {
+        return  mediaUseCases.customAlbumsUseCase.add(CustomAlbum(label = name, timestamp = System.currentTimeMillis()))
     }
 
     val onAlbumDelete: (CustomAlbum) -> Unit = { album ->

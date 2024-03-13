@@ -21,7 +21,9 @@ class CustomAlbumsUseCase(
     ): Flow<List<CustomAlbum>> = repository.getCustomAlbums(mediaOrder)
 
 
-    suspend fun add(customAlbum: CustomAlbum) = repository.createCustomAlbum(customAlbum)
+    suspend fun add(customAlbum: CustomAlbum): CustomAlbum {
+        return repository.createCustomAlbum(customAlbum)
+    }
 
     suspend fun delete(customAlbum: CustomAlbum) = repository.deleteCustomAlbum(customAlbum)
 

@@ -21,7 +21,7 @@ interface CustomAlbumDao {
     fun getCustomAlbums(): Flow<List<CustomAlbum>>
 
     @Upsert
-    suspend fun addCustomAlbum(album: CustomAlbum)
+    suspend fun addCustomAlbum(album: CustomAlbum): Long
 
     @Delete
     suspend fun deleteCustomAlbum(album: CustomAlbum)

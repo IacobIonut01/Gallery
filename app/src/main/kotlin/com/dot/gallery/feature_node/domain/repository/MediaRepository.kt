@@ -40,7 +40,7 @@ interface MediaRepository {
         mediaOrder: MediaOrder
     ): Flow<List<CustomAlbum>>
 
-    suspend fun createCustomAlbum(album: CustomAlbum)
+    suspend fun createCustomAlbum(album: CustomAlbum): CustomAlbum
 
     suspend fun deleteCustomAlbum(album: CustomAlbum)
 
