@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AddPhotoAlternate
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.MoreVert
@@ -54,6 +55,7 @@ import com.dot.gallery.core.presentation.components.Error
 import com.dot.gallery.core.presentation.components.FilterButton
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumComponent
 import com.dot.gallery.feature_node.presentation.customalbums.components.CustomAlbumComponent
+import com.dot.gallery.feature_node.presentation.customalbums.dialogs.NewCustomAlbumDialog
 import com.dot.gallery.feature_node.presentation.search.MainSearchBar
 import com.dot.gallery.feature_node.presentation.util.Screen
 
@@ -179,6 +181,34 @@ fun CustomAlbumsScreen(
                             Spacer(modifier = Modifier.size(8.dp))
                             Text(
                                 text = stringResource(id = R.string.favorites)
+                            )
+                        }
+
+                        var showDialog by remember { mutableStateOf(false) }
+                        if (showDialog) {
+                            NewCustomAlbumDialog(
+                                onConfirmation = {
+                                    viewModel.createNewAlbum(it)
+                                    showDialog = false
+                                },
+                                onDismiss = {
+                                    showDialog = false
+                                }
+                            )
+                        }
+                        Button(
+                            modifier = Modifier.weight(1f),
+                            onClick = {
+                                showDialog = true
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.AddPhotoAlternate,
+                                contentDescription = stringResource(id = R.string.new_custom_album)
+                            )
+                            Spacer(modifier = Modifier.size(8.dp))
+                            Text(
+                                text = stringResource(id = R.string.new_custom_album)
                             )
                         }
                     }

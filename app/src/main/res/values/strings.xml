@@ -66,6 +66,7 @@
     <string name="action_cancel">Cancel</string>
     <string name="action_confirm">Confirm</string>
     <string name="action_confirmed">Confirmed</string>
+    <string name="action_add">Add</string>
     <string name="history_recent_title">Recent</string>
     <string name="history_suggestions_title">Suggestions</string>
     <string name="no_media_found">No media found</string>
@@ -176,6 +177,10 @@
     <string name="toggle_audio_cd">Toggle audio</string>
     <string name="auto">Auto</string>
     <string name="change_playback_speed_cd">Change playback speed</string>
+    <string name="new_custom_album">New…</string>
+    <string name="custom_album_dialog_newalbum">Create a new Album!</string>
+    <string name="custom_album_dialog_input_description">Please enter the title of your album</string>
+    <string name="custom_album_dialog_input_title">Albumname</string>
     <plurals name="item_count">
         <item quantity="one">%s item</item>
         <item quantity="other">%s items</item>

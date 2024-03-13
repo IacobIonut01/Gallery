@@ -39,6 +39,9 @@ interface MediaRepository {
         mediaOrder: MediaOrder
     ): Flow<List<CustomAlbum>>
 
+    suspend fun createCustomAlbum(album: CustomAlbum)
+
+    suspend fun deleteCustomAlbum(album: CustomAlbum)
 
     suspend fun insertPinnedAlbum(pinnedAlbum: PinnedAlbum)
 

@@ -14,9 +14,9 @@ interface CustomAlbumDao {
     fun getCustomAlbums(): Flow<List<CustomAlbum>>
 
     @Upsert
-    suspend fun addBlacklistedAlbum(album: CustomAlbum)
+    suspend fun addCustomAlbum(album: CustomAlbum)
 
     @Delete
-    suspend fun removeBlacklistedAlbum(album: CustomAlbum)
+    suspend fun deleteCustomAlbum(album: CustomAlbum)
 
 }

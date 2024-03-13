@@ -104,9 +104,15 @@ class CustomAlbumsViewModel @Inject constructor(
         // todo
     }
 
+    fun createNewAlbum(name: String){
+        viewModelScope.launch( Dispatchers.IO ) {
+            mediaUseCases.customAlbumsUseCase.add(CustomAlbum(label = name, timestamp = System.currentTimeMillis()))
+        }
+    }
+
     private fun getCustomAlbums(mediaOrder: MediaOrder = MediaOrder.Date(OrderType.Descending)) {
         viewModelScope.launch(Dispatchers.IO) {
-            mediaUseCases.getCustomAlbumsUseCase(mediaOrder).collect{ result ->
+            mediaUseCases.customAlbumsUseCase(mediaOrder).collect{ result ->
                 // Result data list
 
                 val newAlbumState = CustomAlbumState(result)

@@ -25,13 +25,4 @@ data class CustomAlbum(
 
     @IgnoredOnParcel
     @Ignore var count: Long = 0
-
-    companion object {
-
-        val NewAlbum = CustomAlbum(
-            id = -200,
-            label = "New Album",
-            timestamp = 0
-        )
-    }
 }

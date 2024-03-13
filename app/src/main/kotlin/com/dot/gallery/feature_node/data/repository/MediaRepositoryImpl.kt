@@ -16,6 +16,7 @@ import android.provider.MediaStore
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import androidx.core.app.ActivityOptionsCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dot.gallery.core.Resource
 import com.dot.gallery.core.contentFlowObserver
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
@@ -45,9 +46,13 @@ import com.dot.gallery.feature_node.presentation.picker.AllowedMedia
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia.BOTH
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia.PHOTOS
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia.VIDEOS
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 
 class MediaRepositoryImpl(
     private val context: Context,
@@ -98,6 +103,14 @@ class MediaRepositoryImpl(
 
     override fun getCustomAlbums(mediaOrder: MediaOrder): Flow<List<CustomAlbum>> {
         return database.getCustomAlbumDao().getCustomAlbums()
+    }
+
+    override suspend fun createCustomAlbum(album: CustomAlbum){
+        database.getCustomAlbumDao().addCustomAlbum(album)
+    }
+
+    override suspend fun deleteCustomAlbum(album: CustomAlbum){
+        database.getCustomAlbumDao().deleteCustomAlbum(album)
     }
 
     override suspend fun insertPinnedAlbum(pinnedAlbum: PinnedAlbum) =
