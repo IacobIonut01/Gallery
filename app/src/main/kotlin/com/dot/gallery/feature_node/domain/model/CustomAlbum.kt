@@ -20,9 +20,6 @@ data class CustomAlbum(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val label: String,
     val timestamp: Long,
-    val isPinned: Boolean = false
-) : Parcelable {
-
-    @IgnoredOnParcel
-    @Ignore var count: Long = 0
-}
+    val isPinned: Boolean = false,
+    var count: Long = 0
+) : Parcelable

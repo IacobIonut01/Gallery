@@ -13,7 +13,11 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface CustomAlbumDao {
 
-    @Query("SELECT * FROM customalbum")
+    // this query returns all custom albums, and counts their mediaitems.
+    @Query("SELECT id, label, timestamp, isPinned, tmptable.count as count FROM customalbum " +
+            "LEFT JOIN " +
+            "(SELECT customalbum_items.albumId, COUNT(*) as count FROM customalbum_items GROUP BY customalbum_items.albumId) as tmptable " +
+            "ON customalbum.id = tmptable.albumId")
     fun getCustomAlbums(): Flow<List<CustomAlbum>>
 
     @Upsert
