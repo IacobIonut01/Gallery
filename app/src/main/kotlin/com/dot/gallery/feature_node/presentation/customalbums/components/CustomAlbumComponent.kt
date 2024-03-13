@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AddCircleOutline
-import androidx.compose.material.icons.outlined.SdCard
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -31,7 +30,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
@@ -52,7 +50,6 @@ import coil3.request.ImageRequest
 import com.dot.gallery.R
 import com.dot.gallery.core.presentation.components.util.AutoResizeText
 import com.dot.gallery.core.presentation.components.util.FontSizeRange
-import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.CustomAlbum
 import com.dot.gallery.feature_node.presentation.common.components.OptionItem
 import com.dot.gallery.feature_node.presentation.common.components.OptionSheet
@@ -68,6 +65,7 @@ fun CustomAlbumComponent(
     isEnabled: Boolean = true,
     onItemClick: (CustomAlbum) -> Unit,
     onTogglePinClick: ((CustomAlbum) -> Unit)? = null,
+    onDeleteCustomAlbum: ((CustomAlbum) -> Unit)? = null,
     onToggleIgnoreClick: ((CustomAlbum) -> Unit)? = null
 ) {
     val scope = rememberCoroutineScope()
@@ -79,6 +77,7 @@ fun CustomAlbumComponent(
     ) {
         if (onTogglePinClick != null) {
             val pinTitle = stringResource(R.string.pin)
+            val deleteTitle = stringResource(R.string.customalbum_delete)
             val ignoredTitle = stringResource(id = R.string.add_to_ignored)
             val tertiaryContainer = MaterialTheme.colorScheme.tertiaryContainer
             val onTertiaryContainer = MaterialTheme.colorScheme.onTertiaryContainer
@@ -92,6 +91,17 @@ fun CustomAlbumComponent(
                             scope.launch {
                                 appBottomSheetState.hide()
                                 onTogglePinClick(album)
+                            }
+                        }
+                    ),
+                    OptionItem(
+                        text = deleteTitle,
+                        onClick = {
+                            scope.launch {
+                                appBottomSheetState.hide()
+                                if (onDeleteCustomAlbum != null) {
+                                    onDeleteCustomAlbum(album)
+                                }
                             }
                         }
                     )

@@ -110,6 +110,13 @@ class CustomAlbumsViewModel @Inject constructor(
         }
     }
 
+    val onAlbumDelete: (CustomAlbum) -> Unit = { album ->
+        viewModelScope.launch( Dispatchers.IO ) {
+            mediaUseCases.customAlbumsUseCase.delete(album)
+        }
+    }
+
+
     private fun getCustomAlbums(mediaOrder: MediaOrder = MediaOrder.Date(OrderType.Descending)) {
         viewModelScope.launch(Dispatchers.IO) {
             mediaUseCases.customAlbumsUseCase(mediaOrder).collect{ result ->

@@ -51,9 +51,7 @@ import com.dot.gallery.core.Constants.albumCellsList
 import com.dot.gallery.core.Settings.Album.rememberAlbumGridSize
 import com.dot.gallery.core.Settings.Album.rememberLastSort
 import com.dot.gallery.core.presentation.components.EmptyMedia
-import com.dot.gallery.core.presentation.components.Error
 import com.dot.gallery.core.presentation.components.FilterButton
-import com.dot.gallery.feature_node.presentation.albums.components.AlbumComponent
 import com.dot.gallery.feature_node.presentation.customalbums.components.CustomAlbumComponent
 import com.dot.gallery.feature_node.presentation.customalbums.dialogs.NewCustomAlbumDialog
 import com.dot.gallery.feature_node.presentation.search.MainSearchBar
@@ -251,7 +249,8 @@ fun CustomAlbumsScreen(
                         modifier = Modifier.pinchItem(key = item.toString()),
                         album = item,
                         onItemClick = viewModel.onAlbumClick(navigate),
-                        onTogglePinClick = viewModel.onAlbumLongClick
+                        onTogglePinClick = viewModel.onAlbumLongClick,
+                        onDeleteCustomAlbum = viewModel.onAlbumDelete
                     )
                 }
             }
