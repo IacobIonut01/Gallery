@@ -14,11 +14,10 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dot.gallery.R
-import com.dot.gallery.core.AlbumState
 import com.dot.gallery.core.CustomAlbumState
-import com.dot.gallery.core.Resource
 import com.dot.gallery.core.Settings
 import com.dot.gallery.core.presentation.components.FilterOption
+import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.CustomAlbum
 import com.dot.gallery.feature_node.domain.use_case.MediaUseCases
 import com.dot.gallery.feature_node.domain.util.MediaOrder
@@ -29,7 +28,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.count
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -97,7 +96,7 @@ class CustomAlbumsViewModel @Inject constructor(
     }
 
     private fun updateOrder(mediaOrder: MediaOrder) {
-
+        getCustomAlbums(mediaOrder)
     }
 
     private fun toggleAlbumPin(album: CustomAlbum, isPinned: Boolean = true) {
@@ -117,8 +116,18 @@ class CustomAlbumsViewModel @Inject constructor(
     }
 
 
+
+    fun addMediaToAlbum(customAlbum: CustomAlbum, mediaid: Long){
+        viewModelScope.launch( Dispatchers.IO ) {
+            mediaUseCases.customAlbumsUseCase.addMediaToAlbum(customAlbum, mediaid)
+        }
+    }
+
+
     private fun getCustomAlbums(mediaOrder: MediaOrder = MediaOrder.Date(OrderType.Descending)) {
         viewModelScope.launch(Dispatchers.IO) {
+
+
             mediaUseCases.customAlbumsUseCase(mediaOrder).collect{ result ->
                 // Result data list
 

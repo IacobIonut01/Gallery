@@ -13,6 +13,7 @@ import com.dot.gallery.core.Resource
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.BlacklistedAlbum
 import com.dot.gallery.feature_node.domain.model.CustomAlbum
+import com.dot.gallery.feature_node.domain.model.CustomAlbumItem
 import com.dot.gallery.feature_node.domain.model.ExifAttributes
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.PinnedAlbum
@@ -42,6 +43,10 @@ interface MediaRepository {
     suspend fun createCustomAlbum(album: CustomAlbum)
 
     suspend fun deleteCustomAlbum(album: CustomAlbum)
+
+    suspend fun addMediaToAlbum(customAlbum: CustomAlbum, mediaid: Long)
+
+    fun getMediaForAlbum(customAlbum: CustomAlbum): Flow<List<CustomAlbumItem>>
 
     suspend fun insertPinnedAlbum(pinnedAlbum: PinnedAlbum)
 

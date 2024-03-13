@@ -194,7 +194,7 @@ fun AlbumsScreen(
                                     .pinchItem(key = "pinnedAlbums")
                                     .padding(horizontal = 8.dp)
                                     .padding(bottom = 24.dp),
-                                text = stringResource(R.string.pinned_albums_title),
+                                text = stringResource(R.string.pinned_folder_title),
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.Medium
                             )

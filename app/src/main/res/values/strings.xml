@@ -46,6 +46,7 @@
     <string name="settings_trash_title">Use trash can</string>
     <string name="settings_trash_summary">Store deleted media for 30 days.\nDeleting media will result in a permanent loss if disabled.</string>
     <string name="move_album_to_trash">Move album to trash</string>
+    <string name="pinned_folder_title">Pinned Folder</string>
     <string name="pinned_albums_title">Pinned Albums</string>
     <string name="unpin">Unpin</string>
     <string name="pin">Pin</string>
@@ -125,7 +126,7 @@
     <string name="remove_metadata">Remove Metadata</string>
     <string name="remove_location">Remove Location</string>
     <string name="description">Description</string>
-    <string name="move_to_another_album">Move to another album</string>
+    <string name="move_to_another_album">Move to another folder</string>
     <string name="move">Move</string>
     <string name="some_permissions_are_not_granted">Some permissions are not granted!</string>
     <string name="get_started">Get Started</string>
@@ -185,6 +186,7 @@
     <string name="delete_custom_album_dialog_title">Delete this album</string>
     <string name="delete_custom_album_dialog_description">Deleting %1$s will not delete any images inside that album. You cant restore a deleted album!</string>
     <string name="delete_custom_album_dialog_action_delete">Delete!</string>
+    <string name="add_to_custom_album">Add to album</string>
     <plurals name="item_count">
         <item quantity="one">%s item</item>
         <item quantity="other">%s items</item>

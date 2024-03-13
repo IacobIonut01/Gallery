@@ -24,4 +24,9 @@ class CustomAlbumsUseCase(
     suspend fun add(customAlbum: CustomAlbum) = repository.createCustomAlbum(customAlbum)
 
     suspend fun delete(customAlbum: CustomAlbum) = repository.deleteCustomAlbum(customAlbum)
+
+    suspend fun addMediaToAlbum(customAlbum: CustomAlbum, mediaid: Long) = repository.addMediaToAlbum(customAlbum, mediaid)
+
+    fun getMediaForAlbum(customAlbum: CustomAlbum) = repository.getMediaForAlbum(customAlbum)
+
 }

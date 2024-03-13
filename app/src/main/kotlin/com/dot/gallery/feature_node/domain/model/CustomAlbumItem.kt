@@ -14,20 +14,10 @@ import kotlinx.parcelize.Parcelize
 
 
 
-@Entity(tableName = "customalbum_items")
+@Entity(tableName = "customalbum_items", primaryKeys = ["id","albumId"])
 @Immutable
 @Parcelize
 data class CustomAlbumItem(
-    @PrimaryKey(autoGenerate = false)
     val id: Long = 0,
     val albumId: Long = 0
-) : Parcelable {
-
-    companion object {
-
-        val CustomAlbumItem = CustomAlbumItem(
-            id = -200,
-            albumId = -200
-        )
-    }
-}
+) : Parcelable
