@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">Gallery</string>
-    <string name="nav_albums">Albums</string>
+    <string name="nav_albums">Folder</string>
     <string name="nav_customalbums">Your Albums</string>
     <string name="searchbar_title"><![CDATA[Search photos & videos]]></string>
     <string name="header_today">Today</string>
