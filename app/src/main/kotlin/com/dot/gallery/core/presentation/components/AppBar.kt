@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.Photo
 import androidx.compose.material.icons.outlined.PhotoAlbum
 import androidx.compose.material3.Icon
@@ -79,7 +80,7 @@ fun rememberNavigationItems(): List<NavigationItem> {
             NavigationItem(
                 name = albumsTitle,
                 route = Screen.AlbumsScreen.route,
-                icon = Icons.Outlined.PhotoAlbum,
+                icon = Icons.Outlined.Folder,
             ),
             NavigationItem(
                 name = customAlbumsTitle,
