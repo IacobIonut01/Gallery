@@ -159,11 +159,11 @@
     <string name="add_to_ignored_summary">Supprimer l\'affichage d\'un album dans la galerie</string>
     <string name="remove_from_ignored">Supprimer de la liste d\'albums ignorés</string>
     <string name="remove_from_ignored_summary">Retirer l\'album nommé %1$s des albums ignorés</string>
-    <string name="override">Override</string>
+    <string name="override">Annulation</string>
     <string name="save_copy">Enregistrer la copie</string>
-    <string name="favorite">Favorite</string>
-    <string name="allow_to_manage_media">Allow to Manage Media</string>
-    <string name="set_default_launch_screen">Set default launch screen</string>
+    <string name="favorite">Favoris</string>
+    <string name="allow_to_manage_media">Autoriser la gestion des médias</string>
+    <string name="set_default_launch_screen">Définir l\'écran par défaut</string>
     <string name="use_last_opened_screen">Use last opened screen</string>
     <string name="timeline">Timeline</string>
     <string name="albums">Albums</string>
