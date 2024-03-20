@@ -191,6 +191,9 @@ dependencies {
     // Subsampling
     implementation(libs.zoomable.image.coil)
 
+    // Splashscreen
+    implementation("androidx.core:core-splashscreen:1.0.1")
+
     // Tests
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)
