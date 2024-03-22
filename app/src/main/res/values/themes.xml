@@ -4,4 +4,12 @@
     <style name="Theme.Gallery" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
     </style>
+
+    <style name="Theme.Gallery.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splashColorBackground</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.Gallery</item>
+    </style>
+
 </resources>
+
