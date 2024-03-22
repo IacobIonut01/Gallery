@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.Photo
 import androidx.compose.material.icons.outlined.PhotoAlbum
 import androidx.compose.material3.Icon
@@ -68,6 +69,7 @@ import com.dot.gallery.feature_node.presentation.util.Screen
 fun rememberNavigationItems(): List<NavigationItem> {
     val timelineTitle = stringResource(R.string.nav_timeline)
     val albumsTitle = stringResource(R.string.nav_albums)
+    val customAlbumsTitle = stringResource(R.string.nav_customalbums)
     return remember {
         listOf(
             NavigationItem(
@@ -78,6 +80,11 @@ fun rememberNavigationItems(): List<NavigationItem> {
             NavigationItem(
                 name = albumsTitle,
                 route = Screen.AlbumsScreen.route,
+                icon = Icons.Outlined.Folder,
+            ),
+            NavigationItem(
+                name = customAlbumsTitle,
+                route = Screen.CustomAlbumsScreen.route,
                 icon = Icons.Outlined.PhotoAlbum,
             )
         )

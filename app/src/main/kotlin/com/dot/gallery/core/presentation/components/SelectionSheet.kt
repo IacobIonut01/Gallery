@@ -36,6 +36,7 @@ import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.CopyAll
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.PhotoAlbum
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -59,11 +60,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.dot.gallery.R
 import com.dot.gallery.core.AlbumState
 import com.dot.gallery.core.Constants.Target.TARGET_FAVORITES
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
+import com.dot.gallery.feature_node.presentation.albums.CustomAlbumsViewModel
+import com.dot.gallery.feature_node.presentation.exif.AddtoCustomAlbumSheet
 import com.dot.gallery.feature_node.presentation.exif.CopyMediaSheet
 import com.dot.gallery.feature_node.presentation.exif.MoveMediaSheet
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialog
@@ -90,6 +94,7 @@ fun SelectionSheet(
 
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val addAlbumState = rememberAppBottomSheetState()
     val trashSheetState = rememberAppBottomSheetState()
     val moveSheetState = rememberAppBottomSheetState()
     val copySheetState = rememberAppBottomSheetState()
@@ -220,6 +225,19 @@ fun SelectionSheet(
                         trashSheetState.show()
                     }
                 }
+
+
+                // Custom Album Component
+                SelectionBarColumn(
+                    selectedMedia = selectedMedia,
+                    imageVector = Icons.Outlined.PhotoAlbum,
+                    tabletMode = tabletMode,
+                    title = stringResource(id = R.string.add_to_custom_album)
+                ) {
+                    scope.launch {
+                        addAlbumState.show()
+                    }
+                }
             }
         }
     }
@@ -247,6 +265,18 @@ fun SelectionSheet(
     ) {
         handler.trashMedia(result, it, true)
     }
+
+
+    val customAlbumsViewModel = hiltViewModel<CustomAlbumsViewModel>().apply {
+        attachToLifecycle()
+    }
+    AddtoCustomAlbumSheet(
+        sheetState = addAlbumState,
+        mediaList = selectedMedia,
+        customAlbumsViewModel = customAlbumsViewModel
+    )
+
+
 }
 
 @Composable

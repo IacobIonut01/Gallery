@@ -16,6 +16,7 @@ import android.provider.MediaStore
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import androidx.core.app.ActivityOptionsCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dot.gallery.core.Resource
 import com.dot.gallery.core.contentFlowObserver
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
@@ -34,6 +35,8 @@ import com.dot.gallery.feature_node.data.data_types.updateMedia
 import com.dot.gallery.feature_node.data.data_types.updateMediaExif
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.BlacklistedAlbum
+import com.dot.gallery.feature_node.domain.model.CustomAlbum
+import com.dot.gallery.feature_node.domain.model.CustomAlbumItem
 import com.dot.gallery.feature_node.domain.model.ExifAttributes
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.PinnedAlbum
@@ -94,6 +97,27 @@ class MediaRepositoryImpl(
                 }
             }
         }
+
+    override fun getCustomAlbums(mediaOrder: MediaOrder): Flow<List<CustomAlbum>> {
+        return database.getCustomAlbumDao().getCustomAlbums()
+    }
+
+    override suspend fun createCustomAlbum(album: CustomAlbum): CustomAlbum {
+        val id = database.getCustomAlbumDao().addCustomAlbum(album)
+        return CustomAlbum(id = id, label = album.label, timestamp = album.timestamp)
+    }
+
+    override suspend fun deleteCustomAlbum(album: CustomAlbum){
+        database.getCustomAlbumDao().deleteCustomAlbum(album)
+    }
+
+    override suspend fun addMediaToAlbum(customAlbum: CustomAlbum, mediaid: Long) {
+        database.getCustomAlbumDao().addCustomAlbumItem(CustomAlbumItem(mediaid, customAlbum.id))
+    }
+
+    override fun getMediaForAlbum(customAlbumId: Long): List<CustomAlbumItem> {
+        return database.getCustomAlbumDao().getCustomAlbumItemsForAlbum(customAlbumId)
+    }
 
     override suspend fun insertPinnedAlbum(pinnedAlbum: PinnedAlbum) =
         database.getPinnedDao().insertPinnedAlbum(pinnedAlbum)

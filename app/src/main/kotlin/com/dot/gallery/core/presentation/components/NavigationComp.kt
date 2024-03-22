@@ -42,6 +42,8 @@ import com.dot.gallery.core.presentation.components.util.OnLifecycleEvent
 import com.dot.gallery.core.presentation.components.util.permissionGranted
 import com.dot.gallery.feature_node.presentation.albums.AlbumsScreen
 import com.dot.gallery.feature_node.presentation.albums.AlbumsViewModel
+import com.dot.gallery.feature_node.presentation.albums.CustomAlbumsScreen
+import com.dot.gallery.feature_node.presentation.albums.CustomAlbumsViewModel
 import com.dot.gallery.feature_node.presentation.common.ChanneledViewModel
 import com.dot.gallery.feature_node.presentation.common.MediaViewModel
 import com.dot.gallery.feature_node.presentation.favorites.FavoriteScreen
@@ -111,6 +113,10 @@ fun NavigationComp(
 
     // Preloaded viewModels
     val albumsViewModel = hiltViewModel<AlbumsViewModel>().apply {
+        attachToLifecycle()
+    }
+
+    val customAlbumsViewModel = hiltViewModel<CustomAlbumsViewModel>().apply {
         attachToLifecycle()
     }
 
@@ -209,6 +215,18 @@ fun NavigationComp(
             )
         }
         composable(
+                route = Screen.CustomAlbumsScreen()
+                ) {
+            CustomAlbumsScreen(
+                navigate = navPipe::navigate,
+                toggleNavbar = navPipe::toggleNavbar,
+                paddingValues = paddingValues,
+                viewModel = customAlbumsViewModel,
+                isScrolling = isScrolling,
+                searchBarActive = searchBarActive
+            )
+        }
+        composable(
             route = Screen.AlbumViewScreen.albumAndName(),
             arguments = listOf(
                 navArgument(name = "albumId") {
@@ -231,6 +249,50 @@ fun NavigationComp(
             timelineViewModel.ObserveCustomMediaState {
                 getMediaFromAlbum(argumentAlbumId)
             }
+            val hideTimeline by rememberHideTimelineOnAlbum()
+            TimelineScreen(
+                paddingValues = paddingValues,
+                albumId = argumentAlbumId,
+                albumName = argumentAlbumName,
+                handler = timelineViewModel.handler,
+                mediaState = timelineViewModel.customMediaState,
+                albumState = albumsViewModel.albumsState,
+                selectionState = timelineViewModel.multiSelectState,
+                selectedMedia = timelineViewModel.selectedPhotoState,
+                allowNavBar = false,
+                allowHeaders = !hideTimeline,
+                enableStickyHeaders = !hideTimeline,
+                toggleSelection = timelineViewModel::toggleCustomSelection,
+                navigate = navPipe::navigate,
+                navigateUp = navPipe::navigateUp,
+                toggleNavbar = navPipe::toggleNavbar,
+                isScrolling = isScrolling
+            )
+        }
+        composable(
+            route = Screen.CustomAlbumViewScreen.albumAndName(),
+            arguments = listOf(
+                navArgument(name = "customAlbumId") {
+                    type = NavType.LongType
+                    defaultValue = -1
+                },
+                navArgument(name = "customAlbumName") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                }
+            )
+        ) { backStackEntry ->
+            val appName = stringResource(id = R.string.app_name)
+            val argumentAlbumName = remember(backStackEntry) {
+                backStackEntry.arguments?.getString("customAlbumName") ?: appName
+            }
+            val argumentAlbumId = remember(backStackEntry) {
+                backStackEntry.arguments?.getLong("customAlbumId") ?: -1
+            }
+            timelineViewModel.ObserveCustomMediaState {
+                getMediaFromCustomAlbum(argumentAlbumId)
+            }
+
             val hideTimeline by rememberHideTimelineOnAlbum()
             TimelineScreen(
                 paddingValues = paddingValues,

@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AddPhotoAlternate
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.MoreVert
@@ -50,19 +51,18 @@ import com.dot.gallery.core.Constants.albumCellsList
 import com.dot.gallery.core.Settings.Album.rememberAlbumGridSize
 import com.dot.gallery.core.Settings.Album.rememberLastSort
 import com.dot.gallery.core.presentation.components.EmptyMedia
-import com.dot.gallery.core.presentation.components.Error
 import com.dot.gallery.core.presentation.components.FilterButton
-import com.dot.gallery.feature_node.presentation.albums.components.AlbumComponent
-import com.dot.gallery.feature_node.presentation.albums.components.CarouselPinnedAlbums
+import com.dot.gallery.feature_node.presentation.customalbums.components.CustomAlbumComponent
+import com.dot.gallery.feature_node.presentation.customalbums.dialogs.NewCustomAlbumDialog
 import com.dot.gallery.feature_node.presentation.search.MainSearchBar
 import com.dot.gallery.feature_node.presentation.util.Screen
 
 @Composable
-fun AlbumsScreen(
+fun CustomAlbumsScreen(
     navigate: (route: String) -> Unit,
     toggleNavbar: (Boolean) -> Unit,
     paddingValues: PaddingValues,
-    viewModel: AlbumsViewModel,
+    viewModel: CustomAlbumsViewModel,
     isScrolling: MutableState<Boolean>,
     searchBarActive: MutableState<Boolean>
 ) {
@@ -181,6 +181,34 @@ fun AlbumsScreen(
                                 text = stringResource(id = R.string.favorites)
                             )
                         }
+
+                        var showDialog by remember { mutableStateOf(false) }
+                        if (showDialog) {
+                            NewCustomAlbumDialog(
+                                onConfirmation = {
+                                    viewModel.createNewAlbum(it)
+                                    showDialog = false
+                                },
+                                onDismiss = {
+                                    showDialog = false
+                                }
+                            )
+                        }
+                        Button(
+                            modifier = Modifier.weight(1f),
+                            onClick = {
+                                showDialog = true
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.AddPhotoAlternate,
+                                contentDescription = stringResource(id = R.string.new_custom_album)
+                            )
+                            Spacer(modifier = Modifier.size(8.dp))
+                            Text(
+                                text = stringResource(id = R.string.new_custom_album)
+                            )
+                        }
                     }
                 }
                 if (pinnedState.albums.isNotEmpty()) {
@@ -194,14 +222,9 @@ fun AlbumsScreen(
                                     .pinchItem(key = "pinnedAlbums")
                                     .padding(horizontal = 8.dp)
                                     .padding(bottom = 24.dp),
-                                text = stringResource(R.string.pinned_folder_title),
+                                text = stringResource(R.string.pinned_albums_title),
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.Medium
-                            )
-                            CarouselPinnedAlbums(
-                                albumList = pinnedState.albums,
-                                onAlbumClick = viewModel.onAlbumClick(navigate),
-                                onAlbumLongClick = viewModel.onAlbumLongClick
                             )
                         }
                     }
@@ -217,23 +240,23 @@ fun AlbumsScreen(
                         )
                     }
                 }
+
                 items(
                     items = state.albums,
                     key = { item -> item.toString() }
                 ) { item ->
-                    AlbumComponent(
+                    CustomAlbumComponent(
                         modifier = Modifier.pinchItem(key = item.toString()),
                         album = item,
                         onItemClick = viewModel.onAlbumClick(navigate),
-                        onTogglePinClick = viewModel.onAlbumLongClick
+                        onTogglePinClick = viewModel.onAlbumLongClick,
+                        onDeleteCustomAlbum = viewModel.onAlbumDelete
                     )
                 }
             }
         }
         /** Error State Handling Block **/
-        if (state.error.isNotEmpty()) {
-            Error(errorMessage = state.error)
-        } else if (state.albums.isEmpty() && pinnedState.albums.isEmpty()) {
+        if (state.albums.isEmpty() && pinnedState.albums.isEmpty()) {
             EmptyMedia(modifier = Modifier.fillMaxSize())
         }
         /** ************ **/
