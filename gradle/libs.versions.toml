@@ -94,7 +94,6 @@ room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 datastore-prefs = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 
 # Accompanists
-accompanist-systemuicontroller = { group = "com.google.accompanist", name = "accompanist-systemuicontroller", version.ref = "accompanist" }
 accompanist-permissions = { group = "com.google.accompanist", name = "accompanist-permissions", version.ref = "accompanist" }
 accompanist-drawablepainter = { module = "com.google.accompanist:accompanist-drawablepainter", version.ref = "accompanist" }
 

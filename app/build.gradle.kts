@@ -133,7 +133,6 @@ dependencies {
     implementation(libs.compose.material3.window.size)
 
     // Compose - Accompanists
-    implementation(libs.accompanist.systemuicontroller)
     implementation(libs.accompanist.permissions)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.accompanist.drawablepainter)
