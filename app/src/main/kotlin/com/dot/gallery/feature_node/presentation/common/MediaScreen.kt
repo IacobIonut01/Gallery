@@ -212,7 +212,7 @@ fun MediaScreen(
                 AnimatedVisibility(visible = showError) {
                     Error(errorMessage = state.error)
                 }
-                val showEmpty = remember(state) { state.media.isEmpty() && !state.isLoading }
+                val showEmpty = remember(state) { state.media.isEmpty() && !state.isLoading && !showError }
                 AnimatedVisibility(visible = showEmpty) {
                     emptyContent.invoke()
                 }
