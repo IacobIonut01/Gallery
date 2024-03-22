@@ -174,7 +174,7 @@
     <string name="done">Klar</string>
     <string name="toggle_audio_cd">Växla ljud</string>
     <string name="auto">Auto</string>
-    <string name="change_playback_speed_cd">Change playback speed</string>
+    <string name="change_playback_speed_cd">Ändra uppspelningshastighet</string>
     <plurals name="item_count">
         <item quantity="one">%s objekt</item>
         <item quantity="other">%s objekt</item>
