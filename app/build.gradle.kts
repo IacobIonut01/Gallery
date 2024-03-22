@@ -191,6 +191,8 @@ dependencies {
     // Subsampling
     implementation(libs.zoomable.image.coil)
 
+    implementation(project(":libs:compose-recyclerview"))
+
     // Tests
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)

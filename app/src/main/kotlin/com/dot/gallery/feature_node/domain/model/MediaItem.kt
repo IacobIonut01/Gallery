@@ -7,6 +7,7 @@ package com.dot.gallery.feature_node.domain.model
 import android.os.Parcelable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
+import androidx.recyclerview.widget.DiffUtil.ItemCallback
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
@@ -28,7 +29,21 @@ sealed class MediaItem : Parcelable {
         val media: Media
     ) : MediaItem()
 
+    companion object {
+        class DiffCallback : ItemCallback<MediaItem>() {
+            override fun areItemsTheSame(oldItem: MediaItem, newItem: MediaItem): Boolean {
+                return oldItem.key == newItem.key
+            }
+
+            override fun areContentsTheSame(oldItem: MediaItem, newItem: MediaItem): Boolean {
+                return oldItem == newItem
+            }
+        }
+    }
+
 }
+
+
 
 val Any.isHeaderKey: Boolean
     get() = this is String && this.startsWith("header_")

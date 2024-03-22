@@ -6,31 +6,14 @@
 package com.dot.gallery.feature_node.presentation.common.components
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.LazyGridItemInfo
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SearchBarDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,27 +21,24 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.dokar.pinchzoomgrid.PinchZoomGridScope
 import com.dot.gallery.R
-import com.dot.gallery.core.Constants.Animation.enterAnimation
-import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.MediaState
 import com.dot.gallery.core.presentation.components.StickyHeader
-import com.dot.gallery.core.presentation.components.util.StickyHeaderGrid
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaItem
 import com.dot.gallery.feature_node.domain.model.isBigHeaderKey
-import com.dot.gallery.feature_node.domain.model.isHeaderKey
-import com.dot.gallery.feature_node.domain.model.isIgnoredKey
 import com.dot.gallery.feature_node.presentation.util.FeedbackManager
 import com.dot.gallery.feature_node.presentation.util.update
+import com.example.compose_recyclerview.ComposeRecyclerView
+import com.example.compose_recyclerview.adapter.ComposeRecyclerViewAdapter
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -103,11 +83,13 @@ fun PinchZoomGridScope.MediaGridView(
 
     @Composable
     fun mediaGrid() {
-        LaunchedEffect(gridState.isScrollInProgress) {
+        /*LaunchedEffect(gridState.isScrollInProgress) {
             isScrolling.value = gridState.isScrollInProgress
-        }
+        }*/
         Box {
-            LazyVerticalGrid(
+
+
+            /*LazyVerticalGrid(
                 state = gridState,
                 modifier = Modifier.fillMaxSize(),
                 columns = gridCells,
@@ -236,14 +218,165 @@ fun PinchZoomGridScope.MediaGridView(
                     mappedData = mappedData,
                     paddingValues = paddingValues
                 )
+            }*/
+        }
+    }
+
+    val items = remember(allowHeaders, mappedData, mediaState) {
+        if (allowHeaders) mappedData else mediaState.media
+    }
+    val context = LocalContext.current
+    val layoutManager = remember {
+        GridLayoutManager(context, 4).apply {
+            spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
+                override fun getSpanSize(position: Int): Int {
+                    return items.getOrNull(position)?.let {
+                        if (it is MediaItem.Header) 4 else 1
+                    } ?: 1
+                }
             }
         }
     }
 
-    if (enableStickyHeaders) {
-        /**
-         * Remember last known header item
-         */
+    val density = LocalDensity.current
+    val topPadding = remember(paddingValues, density) {
+        with(density) {
+            paddingValues.calculateTopPadding().roundToPx()
+        }
+    }
+    val bottomPadding = remember(paddingValues, density) {
+        with(density) {
+            paddingValues.calculateBottomPadding().roundToPx()
+        }
+    }
+
+    ComposeRecyclerView(
+        modifier = Modifier.fillMaxSize(),
+        items = items,
+        itemBuilder = { item, index ->
+            when (item) {
+                is MediaItem -> {
+                    when (item) {
+                        is MediaItem.Header -> {
+                            val isChecked = rememberSaveable { mutableStateOf(false) }
+                            if (allowSelection) {
+                                LaunchedEffect(selectionState.value) {
+                                    // Uncheck if selectionState is set to false
+                                    isChecked.value = isChecked.value && selectionState.value
+                                }
+                                LaunchedEffect(selectedMedia.size) {
+                                    // Partial check of media items should not check the header
+                                    isChecked.value = selectedMedia.containsAll(item.data)
+                                }
+                            }
+                            StickyHeader(
+                                modifier = Modifier,
+                                date = remember {
+                                    item.text
+                                        .replace("Today", stringToday)
+                                        .replace("Yesterday", stringYesterday)
+                                },
+                                showAsBig = remember { item.key.isBigHeaderKey },
+                                isCheckVisible = selectionState,
+                                isChecked = isChecked
+                            ) {
+                                if (allowSelection) {
+                                    feedbackManager.vibrate()
+                                    scope.launch {
+                                        isChecked.value = !isChecked.value
+                                        if (isChecked.value) {
+                                            val toAdd = item.data.toMutableList().apply {
+                                                // Avoid media from being added twice to selection
+                                                removeIf { selectedMedia.contains(it) }
+                                            }
+                                            selectedMedia.addAll(toAdd)
+                                        } else selectedMedia.removeAll(item.data)
+                                        selectionState.update(selectedMedia.isNotEmpty())
+                                    }
+                                }
+                            }
+                            return@ComposeRecyclerView
+                        }
+
+                        is MediaItem.MediaViewItem -> {
+                            MediaImage(
+                                modifier = Modifier,
+                                media = item.media,
+                                selectionState = selectionState,
+                                selectedMedia = selectedMedia,
+                                canClick = canScroll,
+                                onItemClick = {
+                                    if (selectionState.value && allowSelection) {
+                                        feedbackManager.vibrate()
+                                        toggleSelection(mediaState.media.indexOf(it))
+                                    } else onMediaClick(it)
+                                }
+                            ) {
+                                if (allowSelection) {
+                                    feedbackManager.vibrate()
+                                    toggleSelection(mediaState.media.indexOf(it))
+                                }
+                            }
+
+                            return@ComposeRecyclerView
+                        }
+                    }
+                }
+
+                is Media -> {
+                    MediaImage(
+                        modifier = Modifier,
+                        media = item,
+                        selectionState = selectionState,
+                        selectedMedia = selectedMedia,
+                        canClick = canScroll,
+                        onItemClick = {
+                            if (selectionState.value && allowSelection) {
+                                feedbackManager.vibrate()
+                                toggleSelection(index)
+                            } else onMediaClick(it)
+                        },
+                        onItemLongClick = {
+                            if (allowSelection) {
+                                feedbackManager.vibrate()
+                                toggleSelection(index)
+                            }
+                        }
+                    )
+                    return@ComposeRecyclerView
+                }
+            }
+        },
+        itemTypeBuilder = object : ComposeRecyclerViewAdapter.ItemTypeBuilder {
+            override fun getItemType(position: Int): Int {
+                return when (items.getOrNull(position)) {
+                    is MediaItem.Header -> 4
+                    else -> 1
+                }
+            }
+        },
+        onCreate = {
+            it.clipToPadding = false
+            it.setPadding(
+                it.paddingLeft,
+                topPadding,
+                it.paddingRight,
+                bottomPadding
+            )
+            it.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                    super.onScrollStateChanged(recyclerView, newState)
+                    isScrolling.value = newState != RecyclerView.SCROLL_STATE_IDLE
+                }
+            })
+        }
+    )
+
+    /*    if (enableStickyHeaders) {
+            */
+    /**
+     * Remember last known header item
+     *//*
         val stickyHeaderLastItem = remember { mutableStateOf<String?>(null) }
 
         val headers = remember(mappedData) {
@@ -333,7 +466,7 @@ fun PinchZoomGridScope.MediaGridView(
                 }
             }
         ) { mediaGrid() }
-    } else mediaGrid()
+    } else mediaGrid()*/
 
 
 }
