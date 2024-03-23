@@ -11,9 +11,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -46,7 +47,11 @@ import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -90,6 +95,7 @@ fun SelectionSheet(
 
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    var shouldMoveToTrash by rememberSaveable { mutableStateOf(true) }
     val trashSheetState = rememberAppBottomSheetState()
     val moveSheetState = rememberAppBottomSheetState()
     val copySheetState = rememberAppBottomSheetState()
@@ -101,6 +107,7 @@ fun SelectionSheet(
                 if (trashSheetState.isVisible) {
                     scope.launch {
                         trashSheetState.hide()
+                        shouldMoveToTrash = true
                     }
                 }
             }
@@ -214,12 +221,20 @@ fun SelectionSheet(
                     selectedMedia = selectedMedia,
                     imageVector = Icons.Outlined.DeleteOutline,
                     tabletMode = tabletMode,
-                    title = stringResource(id = R.string.trash)
-                ) {
-                    scope.launch {
-                        trashSheetState.show()
+                    title = stringResource(id = R.string.trash),
+                    onItemLongClick = {
+                        scope.launch {
+                            shouldMoveToTrash = false
+                            trashSheetState.show()
+                        }
+                    },
+                    onItemClick = {
+                        scope.launch {
+                            shouldMoveToTrash = true
+                            trashSheetState.show()
+                        }
                     }
-                }
+                )
             }
         }
     }
@@ -243,19 +258,25 @@ fun SelectionSheet(
     TrashDialog(
         appBottomSheetState = trashSheetState,
         data = selectedMedia,
-        action = TrashDialogAction.TRASH
+        action = if (shouldMoveToTrash) TrashDialogAction.TRASH else TrashDialogAction.DELETE,
     ) {
-        handler.trashMedia(result, it, true)
+        if (shouldMoveToTrash) {
+            handler.trashMedia(result, it, true)
+        } else {
+            handler.deleteMedia(result, it)
+        }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun RowScope.SelectionBarColumn(
     selectedMedia: SnapshotStateList<Media>,
     imageVector: ImageVector,
     title: String,
     tabletMode: Boolean,
-    onItemClick: (List<Media>) -> Unit
+    onItemLongClick: ((List<Media>) -> Unit)? = null,
+    onItemClick: (List<Media>) -> Unit,
 ) {
     val tintColor = MaterialTheme.colorScheme.onSurface
     Column(
@@ -266,9 +287,14 @@ private fun RowScope.SelectionBarColumn(
                 if (tabletMode) Modifier.defaultMinSize(minWidth = 80.dp)
                 else Modifier.weight(1f)
             )
-            .clickable {
-                onItemClick.invoke(selectedMedia)
-            }
+            .combinedClickable(
+                onClick = {
+                    onItemClick.invoke(selectedMedia)
+                },
+                onLongClick = {
+                    onItemLongClick?.invoke(selectedMedia)
+                }
+            )
             .padding(top = 12.dp, bottom = 16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally

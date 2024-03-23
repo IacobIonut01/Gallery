@@ -55,6 +55,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -652,11 +653,13 @@ private fun TrashButton(
     followTheme: Boolean = false,
     onDeleteMedia: ((Int) -> Unit)?
 ) {
+    var shouldMoveToTrash by rememberSaveable { mutableStateOf(true) }
     val state = rememberAppBottomSheetState()
     val scope = rememberCoroutineScope()
     val result = rememberActivityResult {
         scope.launch {
             state.hide()
+            shouldMoveToTrash = true
             onDeleteMedia?.invoke(index)
         }
     }
@@ -664,28 +667,42 @@ private fun TrashButton(
         currentMedia = media,
         imageVector = Icons.Outlined.DeleteOutline,
         followTheme = followTheme,
-        title = stringResource(id = R.string.trash)
-    ) {
-        scope.launch {
-            state.show()
+        title = stringResource(id = R.string.trash),
+        onItemLongClick = {
+            shouldMoveToTrash = false
+            scope.launch {
+                state.show()
+            }
+        },
+        onItemClick = {
+            shouldMoveToTrash = true
+            scope.launch {
+                state.show()
+            }
         }
-    }
+    )
 
     TrashDialog(
         appBottomSheetState = state,
         data = listOf(media),
-        action = TrashDialogAction.TRASH
+        action = if (shouldMoveToTrash) TrashDialogAction.TRASH else TrashDialogAction.DELETE
     ) {
-        handler.trashMedia(result, it, true)
+        if (shouldMoveToTrash) {
+            handler.trashMedia(result, it, true)
+        } else {
+            handler.deleteMedia(result, it)
+        }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun BottomBarColumn(
     currentMedia: Media?,
     imageVector: ImageVector,
     title: String,
     followTheme: Boolean = false,
+    onItemLongClick: ((Media) -> Unit)? = null,
     onItemClick: (Media) -> Unit
 ) {
     val tintColor = if (followTheme) MaterialTheme.colorScheme.onSurface else Color.White
@@ -696,11 +713,18 @@ fun BottomBarColumn(
                 minWidth = 90.dp,
                 minHeight = 80.dp
             )
-            .clickable {
-                currentMedia?.let {
-                    onItemClick.invoke(it)
+            .combinedClickable(
+                onLongClick = {
+                    currentMedia?.let {
+                        onItemLongClick?.invoke(it)
+                    }
+                },
+                onClick = {
+                    currentMedia?.let {
+                        onItemClick.invoke(it)
+                    }
                 }
-            }
+            )
             .padding(top = 12.dp, bottom = 16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
