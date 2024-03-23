@@ -149,9 +149,9 @@
     <string name="hide_timeline_for_album_summary">Hides date headers when opening an album</string>
     <string name="allow_vibrations">Allow vibrations</string>
     <string name="allow_vibrations_summary">Allow sending feedback as vibrations while performing some actions or gestures</string>
-    <string name="album_name">Album Name</string>
+    <string name="album_name">Nome dell\'album</string>
     <string name="create_new_album">Create new album</string>
-    <string name="copy">Copy</string>
+    <string name="copy">Copia</string>
     <string name="ignored_albums">Ignored Albums</string>
     <string name="select_an_album">Select an album</string>
     <string name="blacklist_summary">Ignore albums from Gallery</string>
