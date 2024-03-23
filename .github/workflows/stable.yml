@@ -45,7 +45,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: Gallery Release (No Maps)
-          path: app/build/outputs/apk/release/Gallery-${{ steps.versioncode.outputs.versionCode }}-${{ steps.versionname.outputs.versionName }}-release.apk
+          path: app/build/outputs/apk/release/Gallery-${{ steps.versionname.outputs.versionName }}-${{ steps.versioncode.outputs.versionCode }}-release.apk
 
   build_maps:
     runs-on: ubuntu-latest
@@ -91,7 +91,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: Gallery Release (Maps)
-          path: app/build/outputs/apk/release/Gallery-${{ steps.versioncode.outputs.versionCode }}-${{ steps.versionname.outputs.versionName }}-release.apk
+          path: app/build/outputs/apk/release/Gallery-${{ steps.versionname.outputs.versionName }}-${{ steps.versioncode.outputs.versionCode }}-release.apk
       - name: Apply Google Play patch
         id: gplay_patcher
         run: git config --global user.email "paulionut2003@gmail.com" &&
@@ -108,15 +108,15 @@ jobs:
         with:
           serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
           packageName: com.dot.gallery.gplay
-          releaseFiles: app/build/outputs/bundle/gplay/Gallery-${{ steps.versioncode.outputs.versionCode }}-${{ steps.versionname.outputs.versionName }}-gplay.aab
+          releaseFiles: app/build/outputs/bundle/gplay/Gallery-${{ steps.versionname.outputs.versionName }}-${{ steps.versioncode.outputs.versionCode }}-gplay.aab
           track: production
-          releaseName: ${{ steps.versioncode.outputs.versionCode }}-${{ steps.versionname.outputs.versionName }} Release
+          releaseName: ${{ steps.versionname.outputs.versionName }}-${{ steps.versioncode.outputs.versionCode }} Release
           mappingFile: app/build/outputs/mapping/gplay/mapping.txt
           debugSymbols: app/intermediates/merged_native_libs/gplay/mergeGplayNativeLibs/out/lib
       - uses: actions/upload-artifact@v4
         with:
           name: Gallery Release (GPlay Bundle)
-          path: app/build/outputs/bundle/gplay/Gallery-${{ steps.versioncode.outputs.versionCode }}-${{ steps.versionname.outputs.versionName }}-gplay.aab
+          path: app/build/outputs/bundle/gplay/Gallery-${{ steps.versionname.outputs.versionName }}-${{ steps.versioncode.outputs.versionCode }}-gplay.aab
 
   release:
     needs: [build_nomaps, build_maps]
