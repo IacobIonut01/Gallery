@@ -45,7 +45,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: Gallery Release (No Maps)
-          path: app/build/outputs/apk/release/Gallery-${{ steps.versionname.outputs.versionName }}-${{ steps.versioncode.outputs.versionCode }}-release.apk
+          path: app/build/**/*.apk
 
   build_maps:
     runs-on: ubuntu-latest
@@ -91,7 +91,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: Gallery Release (Maps)
-          path: app/build/outputs/apk/release/Gallery-${{ steps.versionname.outputs.versionName }}-${{ steps.versioncode.outputs.versionCode }}-release.apk
+          path: app/build/**/*.apk
       - name: Apply Google Play patch
         id: gplay_patcher
         run: git config --global user.email "paulionut2003@gmail.com" &&
