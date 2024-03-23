@@ -85,7 +85,8 @@ jobs:
         id: gplay_patcher
         run: git config --global user.email "paulionut2003@gmail.com" &&
           git config --global user.name "IacobIonut01" &&
-          git am -3 play_release.patch
+          git fetch https://github.com/IacobIonut01/Gallery.git main_play &&
+          git cherry-pick e63cd751baa1dc733222d5a3ce135cb7bc52868b
       - name: Build Google Play Bundle
         run: ./gradlew bundleGplay
       - uses: r0adkll/sign-android-release@v1
