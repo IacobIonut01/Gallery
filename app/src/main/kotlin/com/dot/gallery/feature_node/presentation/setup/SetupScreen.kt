@@ -3,6 +3,7 @@ package com.dot.gallery.feature_node.presentation.setup
 import android.app.Activity
 import android.content.Context
 import android.os.Build
+import android.os.Environment
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -46,6 +47,7 @@ import com.dot.gallery.BuildConfig
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Settings.Misc.rememberIsMediaManager
+import com.dot.gallery.feature_node.presentation.util.launchManageFiles
 import com.dot.gallery.feature_node.presentation.util.launchManageMedia
 import com.dot.gallery.ui.theme.GalleryTheme
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -187,24 +189,51 @@ fun SetupScreen(
                             withStyle(style = style) {
                                 append(stringResource(R.string.permission_manage_media_summary))
                             }
+                            appendLine()
+                            withStyle(style = style.copy(fontWeight = FontWeight.Bold)) {
+                                append(stringResource(R.string.permission_manage_files_title))
+                            }
+                            appendLine()
+                            withStyle(style = style) {
+                                append(stringResource(R.string.permission_manage_files_summary))
+                            }
                         }
                     }
                 )
-                var useMediaManager by rememberIsMediaManager()
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !useMediaManager) {
-                    Button(
-                        onClick = {
-                            scope.launch {
-                                context.launchManageMedia()
-                                useMediaManager = true
-                            }
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                        )
-                    ) {
-                        Text(text = stringResource(R.string.allow_to_manage_media))
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    var useMediaManager by rememberIsMediaManager()
+                    var isStorageManager by remember { mutableStateOf(Environment.isExternalStorageManager()) }
+                    if (!useMediaManager) {
+                        Button(
+                            onClick = {
+                                scope.launch {
+                                    context.launchManageMedia()
+                                    useMediaManager = true
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                            )
+                        ) {
+                            Text(text = stringResource(R.string.allow_to_manage_media))
+                        }
+                    }
+                    if (!isStorageManager) {
+                        Button(
+                            onClick = {
+                                scope.launch {
+                                    context.launchManageFiles()
+                                    isStorageManager = true
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                            )
+                        ) {
+                            Text(text = stringResource(R.string.allow_to_manage_files))
+                        }
                     }
                 }
             }

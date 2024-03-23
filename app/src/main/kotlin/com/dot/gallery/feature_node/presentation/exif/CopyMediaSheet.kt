@@ -1,5 +1,6 @@
 package com.dot.gallery.feature_node.presentation.exif
 
+import android.os.Environment
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -209,11 +210,14 @@ fun CopyMediaSheet(
                                     "Android/media/",
                                     "allow"
                                 ) ?: albumOwnership
+                            val isStorageManager = Environment.isExternalStorageManager()
                             AlbumComponent(
                                 album = item,
-                                isEnabled = item.volume == mediaVolume
+                                isEnabled = isStorageManager || (item.volume == mediaVolume
                                         && albumOwnership == "allow"
-                                        && mediaOwnership == "allow",
+                                        && mediaOwnership == "allow"
+                                        && (item.relativePath.contains("Pictures")
+                                        || item.relativePath.contains("DCIM"))),
                                 onItemClick = { album ->
                                     copyMedia(album.relativePath)
                                 }
@@ -228,7 +232,11 @@ fun CopyMediaSheet(
     AddAlbumSheet(
         sheetState = newAlbumSheetState,
         onFinish = { newAlbum ->
-            copyMedia("Pictures/$newAlbum")
+            if (Environment.isExternalStorageManager()) {
+                copyMedia(newAlbum)
+            } else {
+                copyMedia("Pictures/$newAlbum")
+            }
         },
         onCancel = {
             if (newAlbumSheetState.isVisible) {

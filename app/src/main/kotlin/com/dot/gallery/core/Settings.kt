@@ -6,6 +6,9 @@
 package com.dot.gallery.core
 
 import android.content.Context
+import android.os.Build
+import android.provider.MediaStore
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.remember
@@ -87,9 +90,14 @@ object Settings {
     object Misc {
         private val USER_CHOICE_MEDIA_MANAGER = booleanPreferencesKey("use_media_manager")
 
+        @RequiresApi(Build.VERSION_CODES.S)
         @Composable
         fun rememberIsMediaManager() =
-            rememberPreference(key = USER_CHOICE_MEDIA_MANAGER, defaultValue = false)
+            rememberPreference(
+                key = USER_CHOICE_MEDIA_MANAGER, defaultValue = MediaStore.canManageMedia(
+                    LocalContext.current
+                )
+            )
 
         private val ENABLE_TRASH = booleanPreferencesKey("enable_trashcan")
 
@@ -187,10 +195,12 @@ object Settings {
 
         private val ALLOW_VIBRATIONS = booleanPreferencesKey("allow_vibrations")
 
-        fun allowVibrations(context: Context) = context.dataStore.data.map { it[ALLOW_VIBRATIONS] ?: true }
+        fun allowVibrations(context: Context) =
+            context.dataStore.data.map { it[ALLOW_VIBRATIONS] ?: true }
 
         @Composable
-        fun rememberAllowVibrations() = rememberPreference(key = ALLOW_VIBRATIONS, defaultValue = true)
+        fun rememberAllowVibrations() =
+            rememberPreference(key = ALLOW_VIBRATIONS, defaultValue = true)
     }
 }
 

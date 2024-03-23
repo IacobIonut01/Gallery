@@ -1,6 +1,7 @@
 package com.dot.gallery.feature_node.presentation.exif
 
 import android.media.MediaScannerConnection
+import android.os.Environment
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -197,12 +198,15 @@ fun MoveMediaSheet(
                                     "allow"
                                 ) ?: albumOwnership
                             val mediaAlbum = mediaList.firstOrNull()?.albumLabel ?: item.label
+                            val isStorageManager = Environment.isExternalStorageManager()
                             AlbumComponent(
                                 album = item,
-                                isEnabled = item.volume == mediaVolume
+                                isEnabled = isStorageManager || (item.volume == mediaVolume
                                         && albumOwnership == "allow"
                                         && mediaOwnership == "allow"
-                                        && item.label != mediaAlbum,
+                                        && item.label != mediaAlbum
+                                        && (item.relativePath.contains("Pictures")
+                                        || item.relativePath.contains("DCIM"))),
                                 onItemClick = { album ->
                                     scope.launch(Dispatchers.Main) {
                                         newPath = album.relativePath
@@ -221,7 +225,7 @@ fun MoveMediaSheet(
         sheetState = newAlbumSheetState,
         onFinish = { newAlbum ->
             scope.launch(Dispatchers.Main) {
-                newPath = "Pictures/$newAlbum"
+                newPath = if (Environment.isExternalStorageManager()) newAlbum else "Pictures/$newAlbum"
                 request.launch(mediaList.writeRequest(context.contentResolver))
             }
         },

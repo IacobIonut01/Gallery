@@ -1,5 +1,6 @@
 package com.dot.gallery.feature_node.presentation.exif
 
+import android.os.Environment
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -85,6 +86,28 @@ fun AddAlbumSheet(
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier
                         .padding(24.dp)
+                        .fillMaxWidth()
+                )
+
+                val isStorageManager = remember {
+                    Environment.isExternalStorageManager()
+                }
+                val location = remember(isStorageManager, newAlbum) {
+                    if (!isStorageManager) {
+                        "Pictures/$newAlbum"
+                    } else {
+                        newAlbum
+                    }
+                }
+
+                Text(
+                    text = stringResource(R.string.location_new_album, location),
+                    textAlign = TextAlign.Start,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .padding(horizontal = 24.dp)
+                        .padding(vertical = 8.dp)
                         .fillMaxWidth()
                 )
 

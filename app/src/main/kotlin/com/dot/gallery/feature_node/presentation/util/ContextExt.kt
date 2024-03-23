@@ -135,6 +135,15 @@ fun Context.launchManageMedia() {
     startActivity(intent)
 }
 
+@RequiresApi(Build.VERSION_CODES.S)
+fun Context.launchManageFiles() {
+    val intent = Intent().apply {
+        action = Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION
+        data = Uri.fromParts("package", packageName, null)
+    }
+    startActivity(intent)
+}
+
 fun Context.getEditImageCapableApps(): List<ResolveInfo> {
     val intent = Intent(Intent.ACTION_EDIT).apply {
         setType("image/*")
