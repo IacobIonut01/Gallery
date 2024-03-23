@@ -112,7 +112,7 @@ jobs:
           track: production
           releaseName: ${{ steps.versionname.outputs.versionName }}-${{ steps.versioncode.outputs.versionCode }} Release
           mappingFile: app/build/outputs/mapping/gplay/mapping.txt
-          debugSymbols: app/intermediates/merged_native_libs/gplay/mergeGplayNativeLibs/out/lib
+          debugSymbols: app/build/intermediates/merged_native_libs/gplay/mergeGplayNativeLibs/out/lib
       - uses: actions/upload-artifact@v4
         with:
           name: Gallery Release (GPlay Bundle)
