@@ -30,8 +30,7 @@
         (OPTIONAL)
         Requested to create albums outside Internal Storage/Pictures or Internal Storage/DCIM
     -->
-    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
-        tools:ignore="ScopedStorage" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>
 
     <queries>
         <intent>

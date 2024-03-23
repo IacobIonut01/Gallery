@@ -20,7 +20,7 @@ android {
         applicationId = "com.dot.gallery"
         minSdk = 30
         targetSdk = 34
-        versionCode = 21107
+        versionCode = 21108
         versionName = "2.1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -69,6 +69,7 @@ android {
                 )
             )
             signingConfig = signingConfigs.getByName("release")
+            buildConfigField("Boolean", "ALLOW_ALL_FILES_ACCESS", allowAllFilesAccess)
             buildConfigField("String", "MAPS_TOKEN", getApiKey())
             buildConfigField("String", "CONTENT_AUTHORITY", "\"com.dot.gallery.media_provider\"")
         }
@@ -221,6 +222,19 @@ fun getApiKey(): String {
         "\"DEBUG\""
     }
 }
+
+val allowAllFilesAccess: String
+    get() {
+        val fl = rootProject.file("app.properties")
+
+        return try {
+            val properties = Properties()
+            properties.load(FileInputStream(fl))
+            properties.getProperty("ALL_FILES_ACCESS")
+        } catch (e: Exception) {
+            "true"
+        }
+    }
 
 @Suppress("UnstableApiUsage")
 val gitHeadVersion: String

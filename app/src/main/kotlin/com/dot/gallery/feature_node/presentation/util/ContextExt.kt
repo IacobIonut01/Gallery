@@ -2,6 +2,8 @@
  * Original from
  * https://stackoverflow.com/a/70853761/12978728
  */
+@file:Suppress("KotlinConstantConditions")
+
 package com.dot.gallery.feature_node.presentation.util
 
 import android.app.Activity
@@ -134,6 +136,9 @@ fun Context.launchManageMedia() {
     }
     startActivity(intent)
 }
+
+val isManageFilesAllowed: Boolean
+    get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && BuildConfig.ALLOW_ALL_FILES_ACCESS
 
 @RequiresApi(Build.VERSION_CODES.S)
 fun Context.launchManageFiles() {

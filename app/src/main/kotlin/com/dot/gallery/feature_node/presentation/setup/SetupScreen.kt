@@ -47,6 +47,7 @@ import com.dot.gallery.BuildConfig
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Settings.Misc.rememberIsMediaManager
+import com.dot.gallery.feature_node.presentation.util.isManageFilesAllowed
 import com.dot.gallery.feature_node.presentation.util.launchManageFiles
 import com.dot.gallery.feature_node.presentation.util.launchManageMedia
 import com.dot.gallery.ui.theme.GalleryTheme
@@ -189,13 +190,15 @@ fun SetupScreen(
                             withStyle(style = style) {
                                 append(stringResource(R.string.permission_manage_media_summary))
                             }
-                            appendLine()
-                            withStyle(style = style.copy(fontWeight = FontWeight.Bold)) {
-                                append(stringResource(R.string.permission_manage_files_title))
-                            }
-                            appendLine()
-                            withStyle(style = style) {
-                                append(stringResource(R.string.permission_manage_files_summary))
+                            if (isManageFilesAllowed) {
+                                appendLine()
+                                withStyle(style = style.copy(fontWeight = FontWeight.Bold)) {
+                                    append(stringResource(R.string.permission_manage_files_title))
+                                }
+                                appendLine()
+                                withStyle(style = style) {
+                                    append(stringResource(R.string.permission_manage_files_summary))
+                                }
                             }
                         }
                     }
@@ -219,7 +222,7 @@ fun SetupScreen(
                             Text(text = stringResource(R.string.allow_to_manage_media))
                         }
                     }
-                    if (!isStorageManager) {
+                    if (!isStorageManager && isManageFilesAllowed) {
                         Button(
                             onClick = {
                                 scope.launch {
