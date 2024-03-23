@@ -5,8 +5,17 @@ on: workflow_dispatch
 jobs:
   build_nomaps:
     runs-on: ubuntu-latest
+    outputs:
+      versionCode: ${{ steps.versioncode.outputs.versionCode }}
+      versionName: ${{ steps.versionname.outputs.versionName }}
     steps:
       - uses: actions/checkout@v4
+      - name: Get versionCode
+        id: versioncode
+        run: echo "versionCode=$(grep 'versionCode' app/build.gradle.kts | awk '{ print $3 }')" >> $GITHUB_OUTPUT
+      - name: Get versionName
+        id: versionname
+        run: echo "versionName=$(grep 'versionName' app/build.gradle.kts | head -1 | awk -F\" '{ print $2 }')" >> $GITHUB_OUTPUT
       - name: Strip internet permission
         run: chmod +x ./strip_permission.sh && ./strip_permission.sh
       - uses: actions/setup-java@v4
@@ -20,22 +29,23 @@ jobs:
         uses: gradle/gradle-build-action@v2
       - name: Make Gradle executable
         run: chmod +x ./gradlew
+      - name: Decode Keystore
+        id: decode_keystore
+        uses: timheuer/base64-to-file@v1
+        with:
+          fileName: 'release_key.jks'
+          fileDir: 'app/'
+          encodedString: ${{ secrets.SIGNING_KEY }}
       - name: Build Release APK
         run: ./gradlew assembleRelease
-      - uses: r0adkll/sign-android-release@v1
-        id: signed_release_nomaps
-        with:
-          releaseDirectory: app/build/outputs/apk/release
-          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
-          alias: ${{ secrets.ALIAS }}
-          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
-          keyPassword: ${{ secrets.KEY_PASSWORD }}
-        env:
-          BUILD_TOOLS_VERSION: "34.0.0"
+        env: 
+          SIGNING_KEY_ALIAS: ${{ secrets.ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          SIGNING_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
       - uses: actions/upload-artifact@v4
         with:
           name: Gallery Release (No Maps)
-          path: ${{steps.signed_release_nomaps.outputs.signedReleaseFile}}
+          path: app/build/outputs/apk/release/Gallery-${{ steps.versioncode.outputs.versionCode }}-${{ steps.versionname.outputs.versionName }}-release.apk
 
   build_maps:
     runs-on: ubuntu-latest
@@ -65,22 +75,23 @@ jobs:
         env:
           MAPS_TOKEN: $
         run: echo MAPS_TOKEN=\"$MAPS_TOKEN\" > ./api.properties
+      - name: Decode Keystore
+        id: decode_keystore
+        uses: timheuer/base64-to-file@v1
+        with:
+          fileName: 'release_key.jks'
+          fileDir: 'app/'
+          encodedString: ${{ secrets.SIGNING_KEY }}
       - name: Build Release APK
         run: ./gradlew assembleRelease
-      - uses: r0adkll/sign-android-release@v1
-        id: signed_release_maps
-        with:
-          releaseDirectory: app/build/outputs/apk/release
-          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
-          alias: ${{ secrets.ALIAS }}
-          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
-          keyPassword: ${{ secrets.KEY_PASSWORD }}
-        env:
-          BUILD_TOOLS_VERSION: "34.0.0"
+        env: 
+          SIGNING_KEY_ALIAS: ${{ secrets.ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          SIGNING_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
       - uses: actions/upload-artifact@v4
         with:
           name: Gallery Release (Maps)
-          path: ${{steps.signed_release_maps.outputs.signedReleaseFile}}
+          path: app/build/outputs/apk/release/Gallery-${{ steps.versioncode.outputs.versionCode }}-${{ steps.versionname.outputs.versionName }}-release.apk
       - name: Apply Google Play patch
         id: gplay_patcher
         run: git config --global user.email "paulionut2003@gmail.com" &&
@@ -89,29 +100,23 @@ jobs:
           git cherry-pick e63cd751baa1dc733222d5a3ce135cb7bc52868b
       - name: Build Google Play Bundle
         run: ./gradlew bundleGplay
-      - uses: r0adkll/sign-android-release@v1
-        id: signed_release_bundle
-        with:
-          releaseDirectory: app/build/outputs/bundle/gplay
-          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
-          alias: ${{ secrets.ALIAS }}
-          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
-          keyPassword: ${{ secrets.KEY_PASSWORD }}
-        env:
-          BUILD_TOOLS_VERSION: "34.0.0"
+        env: 
+          SIGNING_KEY_ALIAS: ${{ secrets.ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          SIGNING_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
       - uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
           packageName: com.dot.gallery.gplay
-          releaseFiles: ${{steps.signed_release_bundle.outputs.signedReleaseFile}}
+          releaseFiles: app/build/outputs/bundle/gplay/Gallery-${{ steps.versioncode.outputs.versionCode }}-${{ steps.versionname.outputs.versionName }}-gplay.aab
           track: production
           releaseName: ${{ steps.versioncode.outputs.versionCode }}-${{ steps.versionname.outputs.versionName }} Release
           mappingFile: app/build/outputs/mapping/gplay/mapping.txt
-          debugSymbols: app/intermediates/merged_native_libs/gplay/out/lib
+          debugSymbols: app/intermediates/merged_native_libs/gplay/mergeGplayNativeLibs/out/lib
       - uses: actions/upload-artifact@v4
         with:
           name: Gallery Release (GPlay Bundle)
-          path: ${{steps.signed_release_bundle.outputs.signedReleaseFile}}
+          path: app/build/outputs/bundle/gplay/Gallery-${{ steps.versioncode.outputs.versionCode }}-${{ steps.versionname.outputs.versionName }}-gplay.aab
 
   release:
     needs: [build_nomaps, build_maps]
@@ -124,7 +129,7 @@ jobs:
         with:
           name: Gallery Release (Maps)
       - name: Remove apk release suffix
-        run: find . -name "Gallery-*.apk" -exec bash -c 'mv "$1" "${1//-release-signed/}"' _ {} \;
+        run: find . -name "Gallery-*.apk" -exec bash -c 'mv "$1" "${1//-release/}"' _ {} \;
       - name: Create Release
         id: create_release
         uses: softprops/action-gh-release@v2

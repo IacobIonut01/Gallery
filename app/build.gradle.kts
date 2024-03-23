@@ -35,6 +35,15 @@ android {
 
     lint.baseline = file("lint-baseline.xml")
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("release_key.jks")
+            storePassword = System.getenv("SIGNING_STORE_PASSWORD")
+            keyAlias = System.getenv("SIGNING_KEY_ALIAS")
+            keyPassword = System.getenv("SIGNING_KEY_PASSWORD")
+        }
+    }
+
     buildTypes {
         getByName("debug") {
             buildConfigField("String", "MAPS_TOKEN", getApiKey())
@@ -59,7 +68,7 @@ android {
                     "proguard-rules.pro"
                 )
             )
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
             buildConfigField("String", "MAPS_TOKEN", getApiKey())
             buildConfigField("String", "CONTENT_AUTHORITY", "\"com.dot.gallery.media_provider\"")
         }
