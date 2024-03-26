@@ -32,7 +32,7 @@ accompanist = "0.34.0"
 datastore = "1.1.0-beta02"
 uiautomator = "2.3.0"
 zoomable = "1.6.1"
-zoomableImageCoil = "0.8.0"
+zoomableImageCoil = "0.9.0"
 
 [libraries]
 # AndroidX
