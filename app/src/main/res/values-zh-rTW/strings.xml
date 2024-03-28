@@ -159,7 +159,26 @@
     <string name="add_to_ignored_summary">不要在相片庫中顯示特定相簿</string>
     <string name="remove_from_ignored">取消隱藏</string>
     <string name="remove_from_ignored_summary">取消隱藏相簿 %1$s</string>
+    <string name="override">覆寫</string>
+    <string name="save_copy">儲存副本</string>
     <string name="favorite">收藏</string>
+    <string name="allow_to_manage_media">允許管理媒體檔案</string>
+    <string name="set_default_launch_screen">設定預設啟動螢幕</string>
+    <string name="use_last_opened_screen">使用上次開啟的螢幕</string>
+    <string name="timeline">時間軸</string>
+    <string name="albums">相簿</string>
+    <string name="launch_on_timeline">在時間軸上啟動</string>
+    <string name="launch_on_albums">在專輯中推出</string>
+    <string name="launch_auto">應用程式關閉時啟動最後一個螢幕</string>
+    <string name="set_default_screen">設定預設啟動螢幕</string>
+    <string name="done">完畢</string>
+    <string name="toggle_audio_cd">切換音訊</string>
+    <string name="auto">自動</string>
+    <string name="change_playback_speed_cd">更改播放速度</string>
+    <string name="location_new_album">位置：內部儲存空間/%1$s</string>
+    <string name="permission_manage_files_title">- 管理所有檔案</string>
+    <string name="permission_manage_files_summary">"    - 允許此應用程式建立、修改和刪除裝置上的檔案和相簿。（包含 Pictures 和 DCIM 資料夾以外的所有資料夾）"</string>
+    <string name="allow_to_manage_files">允許管理所有檔案</string>
     <plurals name="item_count">
         <item quantity="other">%s 個項目</item>
     </plurals>
