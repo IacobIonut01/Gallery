@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">图库</string>
-    <string name="nav_albums">相册</string>
+    <string name="nav_albums">专辑</string>
     <string name="searchbar_title"><![CDATA[搜索图片和视频]]></string>
     <string name="header_today">今天</string>
     <string name="header_yesterday">昨天</string>
@@ -175,10 +175,10 @@
     <string name="toggle_audio_cd">切换音频</string>
     <string name="auto">自动</string>
     <string name="change_playback_speed_cd">改变播放速度</string>
-    <string name="location_new_album">Location: Internal-Storage/%1$s</string>
-    <string name="permission_manage_files_title">• Manage All Files</string>
-    <string name="permission_manage_files_summary">"    • Allows the app to create, modify, and delete files and albums that were previously restricted by the system. (Includes albums outside Pictures and DCIM folders and the ones from the SD Card"</string>
-    <string name="allow_to_manage_files">Allow to Manage All Files</string>
+    <string name="location_new_album">位置：内部存储/%1$s</string>
+    <string name="permission_manage_files_title">- 管理所有文件</string>
+    <string name="permission_manage_files_summary">"    - 允许应用程序创建、修改和删除之前受系统限制的文件和相册。(包括图片和 DCIM 文件夹以外的相册以及 SD 卡中的相册"</string>
+    <string name="allow_to_manage_files">允许管理所有文件</string>
     <plurals name="item_count">
         <item quantity="other">%s 个项目</item>
     </plurals>
