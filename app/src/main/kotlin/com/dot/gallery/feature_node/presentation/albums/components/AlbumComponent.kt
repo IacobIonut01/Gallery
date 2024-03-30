@@ -7,6 +7,7 @@ package com.dot.gallery.feature_node.presentation.albums.components
 
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -45,14 +46,16 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
+import coil3.compose.rememberAsyncImagePainter
 import coil3.request.CachePolicy
 import coil3.request.ImageRequest
+import coil3.size.Scale
 import com.dot.gallery.R
 import com.dot.gallery.core.presentation.components.util.AutoResizeText
 import com.dot.gallery.core.presentation.components.util.FontSizeRange
 import com.dot.gallery.feature_node.domain.model.Album
+import com.dot.gallery.feature_node.domain.model.MediaEqualityDelegate
 import com.dot.gallery.feature_node.presentation.common.components.OptionItem
 import com.dot.gallery.feature_node.presentation.common.components.OptionSheet
 import com.dot.gallery.feature_node.presentation.util.FeedbackManager.Companion.rememberFeedbackManager
@@ -71,6 +74,16 @@ fun AlbumComponent(
 ) {
     val scope = rememberCoroutineScope()
     val appBottomSheetState = rememberAppBottomSheetState()
+    val painter = rememberAsyncImagePainter(
+        model = ImageRequest.Builder(LocalPlatformContext.current)
+            .data(album.uri)
+            .memoryCachePolicy(CachePolicy.ENABLED)
+            .placeholderMemoryCacheKey(album.toString())
+            .scale(Scale.FIT)
+            .build(),
+        modelEqualityDelegate = MediaEqualityDelegate(),
+        contentScale = ContentScale.FillBounds
+    )
     Column(
         modifier = modifier
             .alpha(if (isEnabled) 1f else 0.4f)
@@ -116,12 +129,12 @@ fun AlbumComponent(
                 state = appBottomSheetState,
                 optionList = arrayOf(optionList),
                 headerContent = {
-                    AsyncImage(
+                    Image(
                         modifier = Modifier
                             .size(98.dp)
                             .clip(Shapes.large),
                         contentScale = ContentScale.Crop,
-                        model = album.uri,
+                        painter = painter,
                         contentDescription = album.label
                     )
                     Text(
@@ -263,7 +276,17 @@ fun AlbumImage(
                 .padding(48.dp)
         )
     } else {
-        AsyncImage(
+        val painter = rememberAsyncImagePainter(
+            model = ImageRequest.Builder(LocalPlatformContext.current)
+                .data(album.uri)
+                .memoryCachePolicy(CachePolicy.ENABLED)
+                .placeholderMemoryCacheKey(album.toString())
+                .scale(Scale.FIT)
+                .build(),
+            modelEqualityDelegate = MediaEqualityDelegate(),
+            contentScale = ContentScale.FillBounds
+        )
+        Image(
             modifier = Modifier
                 .fillMaxSize()
                 .border(
@@ -284,11 +307,7 @@ fun AlbumImage(
                         }
                     }
                 ),
-            model = ImageRequest.Builder(LocalPlatformContext.current)
-                .data(album.uri)
-                .diskCachePolicy(CachePolicy.ENABLED)
-                .memoryCachePolicy(CachePolicy.ENABLED)
-                .build(),
+            painter = painter,
             contentDescription = album.label,
             contentScale = ContentScale.Crop,
         )

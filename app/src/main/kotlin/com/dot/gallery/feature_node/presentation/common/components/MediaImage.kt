@@ -45,6 +45,7 @@ import coil3.compose.LocalPlatformContext
 import coil3.compose.rememberAsyncImagePainter
 import coil3.request.CachePolicy
 import coil3.request.ImageRequest
+import coil3.size.Scale
 import com.dot.gallery.core.Constants.Animation
 import com.dot.gallery.core.presentation.components.CheckBox
 import com.dot.gallery.feature_node.domain.model.Media
@@ -90,6 +91,7 @@ fun MediaImage(
             .data(media.uri)
             .memoryCachePolicy(CachePolicy.ENABLED)
             .placeholderMemoryCacheKey(media.toString())
+            .scale(Scale.FIT)
             .build(),
         modelEqualityDelegate = MediaEqualityDelegate(),
         contentScale = ContentScale.FillBounds,

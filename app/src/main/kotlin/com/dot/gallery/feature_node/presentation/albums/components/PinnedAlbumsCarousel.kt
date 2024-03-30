@@ -41,8 +41,10 @@ import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import coil.load
+import coil3.load
+import coil3.size.Scale
 import coil3.compose.AsyncImage
+import coil3.request.CachePolicy
 import com.dot.gallery.R
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.presentation.common.components.OptionItem
@@ -194,7 +196,11 @@ private class PinnedAlbumsAdapter(
                 GradientDrawable.Orientation.BOTTOM_TOP,
                 intArrayOf(containerColor, Color.TRANSPARENT)
             )
-            albumImage.load(album.uri)
+            albumImage.load(album.uri) {
+                scale(Scale.FIT)
+                memoryCachePolicy(CachePolicy.ENABLED)
+                placeholderMemoryCacheKey(album.toString())
+            }
             albumImage.isClickable = true
             albumImage.setOnClickListener {
                 onAlbumClick.invoke(album)
