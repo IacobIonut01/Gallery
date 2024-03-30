@@ -22,6 +22,7 @@ import com.dot.gallery.core.MediaState
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.common.MediaScreen
+import com.dot.gallery.feature_node.presentation.common.MediaViewModel
 import com.dot.gallery.feature_node.presentation.trashed.components.AutoDeleteFooter
 import com.dot.gallery.feature_node.presentation.trashed.components.EmptyTrash
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashedNavActions
@@ -31,6 +32,7 @@ import kotlinx.coroutines.flow.StateFlow
 fun TrashedGridScreen(
     paddingValues: PaddingValues,
     albumName: String = stringResource(id = R.string.trash),
+    vm: MediaViewModel,
     handler: MediaHandleUseCase,
     mediaState: StateFlow<MediaState>,
     albumState: StateFlow<AlbumState>,
@@ -43,6 +45,7 @@ fun TrashedGridScreen(
 ) = MediaScreen(
     paddingValues = paddingValues,
     target = TARGET_TRASH,
+    vm = vm,
     albumName = albumName,
     handler = handler,
     albumState = albumState,

@@ -31,7 +31,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInParent
@@ -80,7 +79,7 @@ fun BoxScope.TimelineScroller(
     val configuration = LocalConfiguration.current
     val height = remember(configuration) { configuration.screenHeightDp }
     val headerList =
-        remember(mappedData) { mappedData.filterIsInstance(MediaItem.Header::class.java) }
+        remember(mappedData) { mappedData.filterIsInstance<MediaItem.Header>() }
     val bottomPadding = remember { 32 /*dp*/ }
 
     /**
@@ -142,9 +141,9 @@ fun BoxScope.TimelineScroller(
             .padding(top = 32.dp, bottom = bottomPadding.dp)
             .graphicsLayer {
                 translationY = offsets[selectedIndex] ?: 0f
+                alpha = scrollAlpha
             }
             .size(48.dp)
-            .alpha(scrollAlpha)
             .background(
                 color = MaterialTheme.colorScheme.tertiary,
                 shape = RoundedCornerShape(
@@ -170,7 +169,9 @@ fun BoxScope.TimelineScroller(
             .align(Alignment.TopEnd)
             .fillMaxHeight()
             .verticalScroll(state = rememberScrollState())
-            .alpha(scrollAlpha)
+            .graphicsLayer {
+                alpha = scrollAlpha
+            }
             .pointerInput(Unit) {
                 detectVerticalDragGestures(
                     onDragStart = {

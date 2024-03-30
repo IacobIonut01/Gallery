@@ -144,6 +144,7 @@ fun NavigationComp(
             route = Screen.TimelineScreen()
         ) {
             TimelineScreen(
+                vm = timelineViewModel,
                 paddingValues = paddingValues,
                 handler = timelineViewModel.handler,
                 mediaState = timelineViewModel.mediaState,
@@ -166,6 +167,7 @@ fun NavigationComp(
                 .apply { groupByMonth = groupTimelineByMonth }
             viewModel.attachToLifecycle()
             TrashedGridScreen(
+                vm = viewModel,
                 paddingValues = paddingValues,
                 mediaState = viewModel.mediaState,
                 albumState = albumsViewModel.albumsState,
@@ -183,6 +185,7 @@ fun NavigationComp(
         ) {
             timelineViewModel.ObserveCustomMediaState(MediaViewModel::getFavoriteMedia)
             FavoriteScreen(
+                vm = timelineViewModel,
                 paddingValues = paddingValues,
                 mediaState = timelineViewModel.customMediaState,
                 albumState = albumsViewModel.albumsState,
@@ -200,6 +203,7 @@ fun NavigationComp(
             route = Screen.AlbumsScreen()
         ) {
             AlbumsScreen(
+                mediaViewModel = timelineViewModel,
                 navigate = navPipe::navigate,
                 toggleNavbar = navPipe::toggleNavbar,
                 paddingValues = paddingValues,
@@ -233,6 +237,7 @@ fun NavigationComp(
             }
             val hideTimeline by rememberHideTimelineOnAlbum()
             TimelineScreen(
+                vm = timelineViewModel,
                 paddingValues = paddingValues,
                 albumId = argumentAlbumId,
                 albumName = argumentAlbumName,

@@ -310,8 +310,11 @@ fun PinchZoomGridScope.MediaGridView(
                     enter = enterAnimation,
                     exit = exitAnimation
                 ) {
+                    val text by remember(stickyHeaderItem) {
+                        derivedStateOf { stickyHeaderItem ?: "" }
+                    }
                     Text(
-                        text = stickyHeaderItem.toString(),
+                        text = text,
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier

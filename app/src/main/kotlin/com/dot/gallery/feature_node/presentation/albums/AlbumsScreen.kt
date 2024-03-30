@@ -54,12 +54,14 @@ import com.dot.gallery.core.presentation.components.Error
 import com.dot.gallery.core.presentation.components.FilterButton
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumComponent
 import com.dot.gallery.feature_node.presentation.albums.components.CarouselPinnedAlbums
+import com.dot.gallery.feature_node.presentation.common.MediaViewModel
 import com.dot.gallery.feature_node.presentation.search.MainSearchBar
 import com.dot.gallery.feature_node.presentation.util.Screen
 
 @Composable
 fun AlbumsScreen(
     navigate: (route: String) -> Unit,
+    mediaViewModel: MediaViewModel,
     toggleNavbar: (Boolean) -> Unit,
     paddingValues: PaddingValues,
     viewModel: AlbumsViewModel,
@@ -89,6 +91,7 @@ fun AlbumsScreen(
     Scaffold(
         topBar = {
             MainSearchBar(
+                mediaViewModel = mediaViewModel,
                 bottomPadding = paddingValues.calculateBottomPadding(),
                 navigate = navigate,
                 toggleNavbar = toggleNavbar,

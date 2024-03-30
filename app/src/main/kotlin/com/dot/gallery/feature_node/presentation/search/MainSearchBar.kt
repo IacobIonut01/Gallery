@@ -50,7 +50,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dokar.pinchzoomgrid.PinchZoomGridLayout
 import com.dokar.pinchzoomgrid.rememberPinchZoomGridState
@@ -61,6 +60,7 @@ import com.dot.gallery.core.Constants.cellsList
 import com.dot.gallery.core.Settings.Misc.rememberGridSize
 import com.dot.gallery.core.Settings.Search.rememberSearchHistory
 import com.dot.gallery.core.presentation.components.LoadingMedia
+import com.dot.gallery.feature_node.presentation.common.MediaViewModel
 import com.dot.gallery.feature_node.presentation.common.components.MediaGridView
 import com.dot.gallery.feature_node.presentation.search.components.SearchBarElevation.Collapsed
 import com.dot.gallery.feature_node.presentation.search.components.SearchBarElevation.Expanded
@@ -71,6 +71,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainSearchBar(
+    mediaViewModel: MediaViewModel,
     bottomPadding: Dp,
     selectionState: MutableState<Boolean>? = null,
     navigate: (String) -> Unit,
@@ -80,9 +81,14 @@ fun MainSearchBar(
     menuItems: @Composable (RowScope.() -> Unit)? = null,
 ) {
     var historySet by rememberSearchHistory()
-    val vm = hiltViewModel<SearchViewModel>()
     var query by rememberSaveable { mutableStateOf("") }
-    val state by vm.mediaState.collectAsStateWithLifecycle()
+    val mediaState by mediaViewModel.mediaState.collectAsStateWithLifecycle()
+    LaunchedEffect(mediaState) {
+        if (query.isNotEmpty()) {
+            mediaViewModel.queryMedia(query)
+        }
+    }
+    val state by mediaViewModel.searchMediaState.collectAsStateWithLifecycle()
     val alpha by animateFloatAsState(
         targetValue = if (selectionState != null && selectionState.value) 0.6f else 1f,
         label = "alpha"
@@ -121,14 +127,14 @@ fun MainSearchBar(
             query = query,
             onQueryChange = {
                 query = it
-                if (it != vm.lastQuery.value && vm.lastQuery.value.isNotEmpty())
-                    vm.clearQuery()
+                if (it != mediaViewModel.lastQuery.value && mediaViewModel.lastQuery.value.isNotEmpty())
+                    mediaViewModel.clearQuery()
             },
             onSearch = {
                 if (it.isNotEmpty())
                     historySet =
                         historySet.toMutableSet().apply { add("${System.currentTimeMillis()}/$it") }
-                vm.queryMedia(it)
+                mediaViewModel.queryMedia(it)
             },
             active = activeState.value,
             onActiveChange = { activeState.value = it },
@@ -143,7 +149,7 @@ fun MainSearchBar(
                         scope.launch {
                             activeState.value = !activeState.value
                             if (query.isNotEmpty()) query = ""
-                            vm.clearQuery()
+                            mediaViewModel.clearQuery()
                         }
                     }) {
                     val leadingIcon = if (activeState.value)
@@ -167,7 +173,7 @@ fun MainSearchBar(
             /**
              * Recent searches
              */
-            val lastQueryIsEmpty = remember(vm.lastQuery.value) { vm.lastQuery.value.isEmpty() }
+            val lastQueryIsEmpty = remember(mediaViewModel.lastQuery.value) { mediaViewModel.lastQuery.value.isEmpty() }
             AnimatedVisibility(
                 visible = lastQueryIsEmpty,
                 enter = enterAnimation,
@@ -175,7 +181,7 @@ fun MainSearchBar(
             ) {
                 SearchHistory {
                     query = it
-                    vm.queryMedia(it)
+                    mediaViewModel.queryMedia(it)
                 }
             }
 
@@ -251,13 +257,13 @@ fun MainSearchBar(
     }
 
     BackHandler(activeState.value) {
-        if (vm.lastQuery.value.isEmpty()) {
+        if (mediaViewModel.lastQuery.value.isEmpty()) {
             activeState.value = false
             query = ""
-            vm.queryMedia(query)
+            mediaViewModel.queryMedia(query)
         } else {
             query = ""
-            vm.clearQuery()
+            mediaViewModel.clearQuery()
         }
     }
 }

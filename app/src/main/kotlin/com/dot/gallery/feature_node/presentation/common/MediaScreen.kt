@@ -63,6 +63,7 @@ fun MediaScreen(
     albumId: Long = -1L,
     target: String? = null,
     albumName: String,
+    vm: MediaViewModel,
     handler: MediaHandleUseCase,
     albumState: StateFlow<AlbumState>,
     mediaState: StateFlow<MediaState>,
@@ -154,6 +155,7 @@ fun MediaScreen(
                     )
                 } else {
                     MainSearchBar(
+                        mediaViewModel = vm,
                         bottomPadding = paddingValues.calculateBottomPadding(),
                         navigate = navigate,
                         toggleNavbar = toggleNavbar,

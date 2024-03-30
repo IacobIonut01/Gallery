@@ -21,6 +21,7 @@ import com.dot.gallery.core.presentation.components.EmptyMedia
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.common.MediaScreen
+import com.dot.gallery.feature_node.presentation.common.MediaViewModel
 import com.dot.gallery.feature_node.presentation.timeline.components.TimelineNavActions
 import kotlinx.coroutines.flow.StateFlow
 
@@ -29,6 +30,7 @@ fun TimelineScreen(
     paddingValues: PaddingValues,
     albumId: Long = -1L,
     albumName: String = stringResource(R.string.app_name),
+    vm: MediaViewModel,
     handler: MediaHandleUseCase,
     mediaState: StateFlow<MediaState>,
     albumState: StateFlow<AlbumState>,
@@ -48,6 +50,7 @@ fun TimelineScreen(
         paddingValues = paddingValues,
         albumId = albumId,
         target = null,
+        vm = vm,
         albumName = albumName,
         handler = handler,
         mediaState = mediaState,

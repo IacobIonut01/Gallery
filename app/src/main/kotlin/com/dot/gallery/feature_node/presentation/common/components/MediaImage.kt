@@ -38,13 +38,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
+import coil3.compose.rememberAsyncImagePainter
 import coil3.request.CachePolicy
 import coil3.request.ImageRequest
-import coil3.size.Scale
 import com.dot.gallery.core.Constants.Animation
 import com.dot.gallery.core.presentation.components.CheckBox
 import com.dot.gallery.feature_node.domain.model.Media
@@ -85,6 +85,16 @@ fun MediaImage(
         targetValue = if (isSelected) primaryContainerColor else Color.Transparent,
         label = "strokeColor"
     )
+    val painter = rememberAsyncImagePainter(
+        model = ImageRequest.Builder(LocalPlatformContext.current)
+            .data(media.uri)
+            .memoryCachePolicy(CachePolicy.ENABLED)
+            .placeholderMemoryCacheKey(media.toString())
+            .build(),
+        modelEqualityDelegate = MediaEqualityDelegate(),
+        contentScale = ContentScale.FillBounds,
+        filterQuality = FilterQuality.None
+    )
     Box(
         modifier = modifier
             .combinedClickable(
@@ -120,23 +130,19 @@ fun MediaImage(
                     color = strokeColor
                 )
         ) {
-            AsyncImage(
+            Image(
                 modifier = Modifier
                     .fillMaxSize(),
-                model = ImageRequest.Builder(LocalPlatformContext.current)
-                    .data(media.uri)
-                    .memoryCachePolicy(CachePolicy.ENABLED)
-                    .memoryCacheKey(media.toString())
-                    .scale(Scale.FILL)
-                    .build(),
-                modelEqualityDelegate = MediaEqualityDelegate(),
+                painter = painter,
                 contentDescription = media.label,
                 contentScale = ContentScale.Crop,
             )
         }
 
         AnimatedVisibility(
-            visible = media.duration != null,
+            visible = remember(media) {
+                media.duration != null
+            },
             enter = Animation.enterAnimation,
             exit = Animation.exitAnimation,
             modifier = Modifier.align(Alignment.TopEnd)
@@ -150,7 +156,9 @@ fun MediaImage(
         }
 
         AnimatedVisibility(
-            visible = media.isFavorite,
+            visible = remember(media) {
+                media.isFavorite
+            },
             enter = Animation.enterAnimation,
             exit = Animation.exitAnimation,
             modifier = Modifier
