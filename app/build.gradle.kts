@@ -20,8 +20,8 @@ android {
         applicationId = "com.dot.gallery"
         minSdk = 30
         targetSdk = 34
-        versionCode = 21108
-        versionName = "2.1.1"
+        versionCode = 21204
+        versionName = "2.1.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
