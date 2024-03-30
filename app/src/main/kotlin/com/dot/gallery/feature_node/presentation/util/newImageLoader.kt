@@ -12,7 +12,7 @@ import coil3.memory.MemoryCache
 import coil3.request.crossfade
 import coil3.size.Precision
 import coil3.svg.SvgDecoder
-import coil3.video.VideoFrameDecoder
+import com.dot.gallery.core.coil.VideoFrameDecoder2
 
 fun newImageLoader(
     context: PlatformContext
@@ -49,5 +49,5 @@ private fun ComponentRegistry.Builder.addPlatformComponents() {
     // GIFs
     add(AnimatedImageDecoder.Factory())
     // Video frames
-    add(VideoFrameDecoder.Factory())
+    add(VideoFrameDecoder2.Factory())
 }
