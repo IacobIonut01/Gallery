@@ -6,7 +6,7 @@
     <string name="header_today">Oggi</string>
     <string name="header_yesterday">Ieri</string>
     <string name="request_permissions">Richiedi autorizzazioni</string>
-    <string name="filter">Filter</string>
+    <string name="filter"></string>
     <string name="filter_recent">Data più recente</string>
     <string name="filter_nameAZ">Nome (A-Z)</string>
     <string name="filter_nameZA">Nome (Z-A)</string>
@@ -39,7 +39,7 @@
     <string name="metadata">Metadati</string>
     <string name="select_all">Seleziona tutto</string>
     <string name="unselect_all">Deseleziona tutto</string>
-    <string name="drop_down_cd">Drop down</string>
+    <string name="drop_down_cd">Elenca</string>
     <string name="back_cd">Indietro</string>
     <string name="settings_title">Impostazioni</string>
     <string name="settings_general">Generali</string>
@@ -50,8 +50,8 @@
     <string name="unpin">Sblocca dall\'alto</string>
     <string name="pin">Fissa in alto</string>
     <string name="nav_timeline">Cronologia</string>
-    <string name="location_cd">Media Location</string>
-    <string name="location_map_cd">Location Map</string>
+    <string name="location_cd">Percorso dei media</string>
+    <string name="location_map_cd">Percorso</string>
     <string name="app_dev">di %s</string>
     <string name="app_dev_name">IacobIonut01</string>
     <string name="donate">Dona</string>
@@ -91,13 +91,13 @@
     <string name="all">Tutto</string>
     <string name="secure_mode_title">Modalità sicura</string>
     <string name="secure_mode_summary">Nascondi l\'anteprima dell\'app quando esci</string>
-    <string name="rotate_screen_cd">Rotate Screen</string>
+    <string name="rotate_screen_cd">Ruota Schermo</string>
     <string name="size_dp">%1$sdp</string>
-    <string name="change_album_size">Change Album Card Size</string>
+    <string name="change_album_size">Cambia le dimensioni del riquadro dell\'album</string>
     <string name="reset">Resetta</string>
     <string name="customization">Personalizzazione</string>
-    <string name="album_card_size_title">Album Card Size</string>
-    <string name="album_card_size_summary">Manually pick your album card size</string>
+    <string name="album_card_size_title">Dimensioni del riquadro dell\'album</string>
+    <string name="album_card_size_summary">Scegli la dimensione del riquadro dell\'album</string>
     <string name="set_wallpaper">Sfondo</string>
     <string name="set_wallpaper_error">Impossibile impostare lo sfondo, nessuna app disponibile</string>
     <string name="monthly_timeline_title">Monthly Timeline</string>
