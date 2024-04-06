@@ -179,6 +179,7 @@
     <string name="permission_manage_files_title">• Manage All Files</string>
     <string name="permission_manage_files_summary">"    • Allows the app to create, modify, and delete files and albums that were previously restricted by the system. (Includes albums outside Pictures and DCIM folders and the ones from the SD Card"</string>
     <string name="allow_to_manage_files">Allow to Manage All Files</string>
+    <string name="nav_search">Search</string>
     <plurals name="item_count">
         <item quantity="one">%s item</item>
         <item quantity="other">%s items</item>

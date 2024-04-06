@@ -30,6 +30,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Photo
 import androidx.compose.material.icons.outlined.PhotoAlbum
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -68,6 +69,7 @@ import com.dot.gallery.feature_node.presentation.util.Screen
 fun rememberNavigationItems(): List<NavigationItem> {
     val timelineTitle = stringResource(R.string.nav_timeline)
     val albumsTitle = stringResource(R.string.nav_albums)
+    val searchTitle = stringResource(R.string.nav_search)
     return remember {
         listOf(
             NavigationItem(
@@ -79,6 +81,11 @@ fun rememberNavigationItems(): List<NavigationItem> {
                 name = albumsTitle,
                 route = Screen.AlbumsScreen.route,
                 icon = Icons.Outlined.PhotoAlbum,
+            ),
+            NavigationItem(
+                name = searchTitle,
+                route = Screen.SearchScreen.route,
+                icon = Icons.Outlined.Search,
             )
         )
     }

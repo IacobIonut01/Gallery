@@ -117,6 +117,9 @@ fun NavigationComp(
     val timelineViewModel = hiltViewModel<MediaViewModel>().apply {
         attachToLifecycle()
     }
+    val searchViewModel = hiltViewModel<MediaViewModel>().apply {
+        attachToLifecycle()
+    }
     LaunchedEffect(groupTimelineByMonth) {
         timelineViewModel.groupByMonth = groupTimelineByMonth
     }
@@ -354,6 +357,18 @@ fun NavigationComp(
             IgnoredScreen(
                 navigateUp = navPipe::navigateUp,
                 albumsState = albumsState
+            )
+        }
+        composable(
+            route = Screen.SearchScreen()
+        ) {
+            com.dot.gallery.feature_node.presentation.search.SearchScreen(
+                navigate = navPipe::navigate,
+                paddingValues = paddingValues,
+                isScrolling = isScrolling,
+                mediaViewModel = searchViewModel,
+                toggleNavbar = navPipe::toggleNavbar,
+                searchBarActive = searchBarActive
             )
         }
     }

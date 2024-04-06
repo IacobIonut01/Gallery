@@ -9,6 +9,8 @@ sealed class Screen(val route: String) {
     data object TimelineScreen : Screen("timeline_screen")
     data object AlbumsScreen : Screen("albums_screen")
 
+    data object SearchScreen : Screen("search_screen")
+
     data object AlbumViewScreen : Screen("album_view_screen") {
 
         fun albumAndName() = "$route?albumId={albumId}&albumName={albumName}"
