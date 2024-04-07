@@ -6,7 +6,7 @@
     <string name="header_today">Oggi</string>
     <string name="header_yesterday">Ieri</string>
     <string name="request_permissions">Richiedi autorizzazioni</string>
-    <string name="filter"></string>
+    <string name="filter">Filtra</string>
     <string name="filter_recent">Data più recente</string>
     <string name="filter_nameAZ">Nome (A-Z)</string>
     <string name="filter_nameZA">Nome (Z-A)</string>
@@ -16,7 +16,7 @@
     <string name="pause_video">Pausa</string>
     <string name="play_video">Riproduci</string>
     <string name="favorites">Preferiti</string>
-    <string name="no_media_title">Sembra vuoto qui</string>
+    <string name="no_media_title">Sembra che non ci sia niente qui.</string>
     <string name="no_media_cd">Nessun contenuto multimediale trovato</string>
     <string name="empty_trash_title">Lindo e pinto</string>
     <string name="empty_trash_cd">Il cestino è vuoto</string>
@@ -47,7 +47,7 @@
     <string name="settings_trash_summary">Conserva i contenuti multimediali eliminati per 30 giorni.\nSe disattivato, l\'eliminazione dei contenuti sarà definitiva.</string>
     <string name="move_album_to_trash">Sposta l\'album nel cestino</string>
     <string name="pinned_albums_title">Album fissati in alto</string>
-    <string name="unpin">Sblocca dall\'alto</string>
+    <string name="unpin">Rimuovi elemento fissato</string>
     <string name="pin">Fissa in alto</string>
     <string name="nav_timeline">Cronologia</string>
     <string name="location_cd">Percorso dei media</string>
@@ -56,8 +56,8 @@
     <string name="app_dev_name">IacobIonut01</string>
     <string name="donate">Dona</string>
     <string name="github">GitHub</string>
-    <string name="donate_button_cd">Tasto \"dona\"</string>
-    <string name="github_button_cd">Tasto \"Github\"</string>
+    <string name="donate_button_cd">Tasto per le donazioni</string>
+    <string name="github_button_cd">Tasto Github</string>
     <string name="donate_url">https://www.paypal.com/paypalme/iacobionut01</string>
     <string name="github_url">https://github.com/IacobIonut01/Gallery</string>
     <string name="use_as">Usa come</string>
@@ -102,7 +102,7 @@
     <string name="set_wallpaper_error">Impossibile impostare lo sfondo, nessuna app disponibile</string>
     <string name="monthly_timeline_title">Ordinamento per mese</string>
     <string name="monthly_timeline_summary">Raggruppa le foto per mese invece che per giorno (riavvia l\'app)</string>
-    <string name="amoled_mode_title">Usa la modalità Amoled </string>
+    <string name="amoled_mode_title">Usa la modalità Amoled</string>
     <string name="amoled_mode_summary">Contrasto più elevato, adatto agli schermi AMOLED</string>
     <string name="location_chip">Posizione: %s</string>
     <string name="media_details">Dettagli</string>
@@ -148,7 +148,7 @@
     <string name="hide_timeline_for_albums">Nascondi le date per gli album</string>
     <string name="hide_timeline_for_album_summary">Nasconde le date quando si apre un album</string>
     <string name="allow_vibrations">Consenti la vibrazione</string>
-    <string name="allow_vibrations_summary">Consenti il feedback di vibrazione quando si fanno certe azioni o gesti</string>
+    <string name="allow_vibrations_summary">Consenti il feedback di vibrazione quando si compiono certe azioni o gesti</string>
     <string name="album_name">Nome dell\'album</string>
     <string name="create_new_album">Crea un nuovo album</string>
     <string name="copy">Copia</string>
@@ -165,9 +165,9 @@
     <string name="allow_to_manage_media">Consenti la gestione dei media</string>
     <string name="set_default_launch_screen">Imposta la schermata di avvio predefinita</string>
     <string name="use_last_opened_screen">Usa l\'ultima schermata aperta</string>
-    <string name="timeline">Cronologia</string>
+    <string name="timeline">Data</string>
     <string name="albums">Album</string>
-    <string name="launch_on_timeline">Avvia nella schermata della timeline</string>
+    <string name="launch_on_timeline">Avvia nella schermata con i file ordinati per data</string>
     <string name="launch_on_albums">Avvia nella schermata degli album</string>
     <string name="launch_auto">Avvia nell\'ultima schermata usata</string>
     <string name="set_default_screen">Imposta la schermata predefinita</string>
@@ -177,8 +177,8 @@
     <string name="change_playback_speed_cd">Cambia la velocità di riproduzione</string>
     <string name="location_new_album">Posizione: Memoria interna/%1$s</string>
     <string name="permission_manage_files_title">• Gestisci tutti i file</string>
-    <string name="permission_manage_files_summary">"    • Allows the app to create, modify, and delete files and albums that were previously restricted by the system. (Includes albums outside Pictures and DCIM folders and the ones from the SD Card"</string>
-    <string name="allow_to_manage_files">Allow to Manage All Files</string>
+    <string name="permission_manage_files_summary">"    • Consente all'app di creare, modificare ed eliminare file e album che erano precedentemente gestiti dal sistema. (Compresi gli album fuori dalla cartella Pictures e DCIM, compresi i file sulla scheda SD)"</string>
+    <string name="allow_to_manage_files">Consenti la gestione di tutti i file</string>
     <plurals name="item_count">
         <item quantity="one">%s elemento</item>
         <item quantity="other">%s elementi</item>
