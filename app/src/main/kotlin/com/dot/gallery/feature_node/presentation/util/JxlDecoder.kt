@@ -58,7 +58,7 @@ class JxlDecoder(
         val sourceData = source.source.source().readByteArray()
         if (options.size == Size.ORIGINAL) {
             val originalImage =
-                JxlCoder().decode(
+                JxlCoder.decode(
                     sourceData,
                     preferredColorConfig = PreferredColorConfig.DEFAULT
                 )
@@ -76,7 +76,7 @@ class JxlDecoder(
         }
 
         val originalImage =
-            JxlCoder().decodeSampled(
+            JxlCoder.decodeSampled(
                 sourceData,
                 dstWidth,
                 dstHeight,

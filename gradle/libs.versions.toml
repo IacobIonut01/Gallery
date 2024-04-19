@@ -1,6 +1,6 @@
 [versions]
-agp = "8.3.1"
-benchmarkMacroJunit4 = "1.2.3"
+agp = "8.3.2"
+benchmarkMacroJunit4 = "1.2.4"
 composeCompiler = "1.5.11"
 appcompat = "1.6.1"
 coilVersion = "3.0.0-alpha06"
@@ -8,28 +8,28 @@ coreSplashscreen = "1.0.1"
 fuzzywuzzy = "1.4.0"
 exifinterface = "1.3.7"
 gpuimage = "2.1.0"
-jxlCoder = "1.11.1"
+jxlCoder = "2.1.10"
 kotlin = "1.9.23"
 kotlinCoroutinesVersion = "1.8.0"
 ksp = "1.9.23-1.0.19"
-core-ktx = "1.12.0"
+core-ktx = "1.13.0"
 junit = "4.13.2"
 androidx-test-ext-junit = "1.1.5"
 espresso-core = "3.5.1"
 lifecycle-runtime = "2.7.0"
-activity-compose = "1.8.2"
-compose-bom = "2024.03.00"
+activity-compose = "1.9.0"
+compose-bom = "2024.04.01"
 hilt = "2.51"
 material = "1.11.0"
 material3 = "1.2.1"
-media3Ui = "1.3.0"
-media3Exoplayer = "1.3.0"
+media3Ui = "1.3.1"
+media3Exoplayer = "1.3.1"
 navigation-runtime-ktx = "2.7.7"
 pinchzoomgrid = "0.0.5"
 profileinstaller = "1.3.1"
 room = "2.6.1"
 accompanist = "0.34.0"
-datastore = "1.1.0-beta02"
+datastore = "1.1.0"
 uiautomator = "2.3.0"
 zoomable = "1.6.1"
 zoomableImageCoil = "0.9.0"
@@ -70,7 +70,7 @@ compose-ui = { group = "androidx.compose.ui", name = "ui" }
 compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
 
 # Compose-shimmer
-compose-shimmer = { group = "com.valentinilk.shimmer", name = "compose-shimmer", version = "1.2.0"}
+compose-shimmer = { group = "com.valentinilk.shimmer", name = "compose-shimmer", version = "1.3.0"}
 
 # Compose Tests
 compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
@@ -124,6 +124,6 @@ kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kspAndroid = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 roomPlugin = { id = "androidx.room", version.ref = "room" }
 hiltAndroid = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
-baselineProfilePlugin = { id = "androidx.baselineprofile", version = "1.2.3" }
+baselineProfilePlugin = { id = "androidx.baselineprofile", version.ref = "benchmarkMacroJunit4" }
 [bundles]
 
