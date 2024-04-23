@@ -42,7 +42,7 @@ fun ZoomablePagerImage(
     modifier: Modifier = Modifier,
     media: Media,
     uiEnabled: Boolean,
-    maxScale: Float = 10f,
+    maxScale: Float = 2f,
     onItemClick: () -> Unit
 ) {
     val zoomState = rememberZoomState(
