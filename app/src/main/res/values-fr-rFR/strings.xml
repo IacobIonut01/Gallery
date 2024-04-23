@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Galerie</string>
+    <string name="app_name">Galerie d\'images</string>
     <string name="nav_albums">Albums</string>
     <string name="searchbar_title"><![CDATA[Rechercher des photos et vidéos]]></string>
     <string name="header_today">Aujourd\'hui</string>
@@ -11,7 +11,7 @@
     <string name="filter_nameAZ">Nom (A-Z)</string>
     <string name="filter_nameZA">Nom (Z-A)</string>
     <string name="filter_old">Ancien</string>
-    <string name="selected_s">%s sélectionné(s)</string>
+    <string name="selected_s">Selectionné : %s</string>
     <string name="trash">Corbeille</string>
     <string name="pause_video">Mettre en pause</string>
     <string name="play_video">Lire la vidéo</string>
@@ -175,10 +175,10 @@
     <string name="toggle_audio_cd">Basculer l\'audio</string>
     <string name="auto">Automatique</string>
     <string name="change_playback_speed_cd">Modifier la vitesse de lecture</string>
-    <string name="location_new_album">Location: Internal-Storage/%1$s</string>
-    <string name="permission_manage_files_title">• Manage All Files</string>
-    <string name="permission_manage_files_summary">"    • Allows the app to create, modify, and delete files and albums that were previously restricted by the system. (Includes albums outside Pictures and DCIM folders and the ones from the SD Card"</string>
-    <string name="allow_to_manage_files">Allow to Manage All Files</string>
+    <string name="location_new_album">Destination : stockage interne/%1$s</string>
+    <string name="permission_manage_files_title">- Gérer tous les fichiers</string>
+    <string name="permission_manage_files_summary">"    - Permet à l'application de créer, modifier et supprimer des fichiers et des albums qui étaient auparavant restreints par le système. (Inclut les albums en dehors des dossiers Images et DCIM et ceux de la carte SD"</string>
+    <string name="allow_to_manage_files">Autoriser la gestion de tous les fichiers</string>
     <plurals name="item_count">
         <item quantity="one">%s élément</item>
         <item quantity="other">%s éléments</item>
