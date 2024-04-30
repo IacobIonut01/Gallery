@@ -39,7 +39,7 @@
     <string name="metadata">Метаданные</string>
     <string name="select_all">Выбрать все</string>
     <string name="unselect_all">Отменить выбор</string>
-    <string name="drop_down_cd">Опуститься</string>
+    <string name="drop_down_cd">Опустить</string>
     <string name="back_cd">Назад</string>
     <string name="settings_title">Настройки</string>
     <string name="settings_general">Основные</string>
@@ -84,14 +84,14 @@
     <string name="photo">Фото</string>
     <string name="video">Видео</string>
     <string name="close">Закрыть</string>
-    <string name="manage_media_title">Разрешите Галерее управлять Вашими медиафайлами</string>
+    <string name="manage_media_title">Разрешите Gallery управлять Вашими медиафайлами</string>
     <string name="manage_media_summary">Эта опция пропускает дополнительные диалоги подтверждения при выполнении различных действий, например добавления в избранные.</string>
     <string name="skip">Пропустить</string>
     <string name="allow">Разрешить</string>
     <string name="all">Все</string>
     <string name="secure_mode_title">Безопасный режим</string>
     <string name="secure_mode_summary">Скрывает содержимое при выходе</string>
-    <string name="rotate_screen_cd">Повернуть Экран</string>
+    <string name="rotate_screen_cd">Повернуть экран</string>
     <string name="size_dp">%1$sdp</string>
     <string name="change_album_size">Поменять размер альбомных карточек</string>
     <string name="reset">Сбросить</string>
