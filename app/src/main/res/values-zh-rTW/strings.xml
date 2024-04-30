@@ -177,7 +177,7 @@
     <string name="change_playback_speed_cd">更改播放速度</string>
     <string name="location_new_album">位置：內部儲存空間/%1$s</string>
     <string name="permission_manage_files_title">- 管理所有檔案</string>
-    <string name="permission_manage_files_summary">"    - 允許此應用程式建立、修改和刪除裝置上的檔案和相簿。（包含 Pictures 和 DCIM 資料夾以外的所有資料夾）"</string>
+    <string name="permission_manage_files_summary">"允許此應用程式建立、修改和刪除裝置上的檔案和相簿。（包含 Pictures 和 DCIM 資料夾以外的所有資料夾）"</string>
     <string name="allow_to_manage_files">允許管理所有檔案</string>
     <plurals name="item_count">
         <item quantity="other">%s 個項目</item>

@@ -177,7 +177,7 @@
     <string name="change_playback_speed_cd">Modifier la vitesse de lecture</string>
     <string name="location_new_album">Destination : stockage interne/%1$s</string>
     <string name="permission_manage_files_title">- Gérer tous les fichiers</string>
-    <string name="permission_manage_files_summary">"    - Permet à l'application de créer, modifier et supprimer des fichiers et des albums qui étaient auparavant restreints par le système. (Inclut les albums en dehors des dossiers Images et DCIM et ceux de la carte SD"</string>
+    <string name="permission_manage_files_summary">"Permet à l'application de créer, modifier et supprimer des fichiers et des albums qui étaient auparavant restreints par le système. (Inclut les albums en dehors des dossiers Images et DCIM et ceux de la carte SD"</string>
     <string name="allow_to_manage_files">Autoriser la gestion de tous les fichiers</string>
     <plurals name="item_count">
         <item quantity="one">%s élément</item>
