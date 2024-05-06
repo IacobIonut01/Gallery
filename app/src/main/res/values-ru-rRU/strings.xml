@@ -28,7 +28,7 @@
     <string name="trash_delete">Удалить</string>
     <string name="share">Поделиться</string>
     <string name="remove_selected">Удалить выбранное</string>
-    <string name="remove_all">Удалить все</string>
+    <string name="remove_all">Удалить всё</string>
     <string name="empty_favorites_title">У вас нет избранных файлов</string>
     <string name="label">Имя файла</string>
     <string name="path">Путь</string>
@@ -37,7 +37,7 @@
     <string name="mb">МБ</string>
     <string name="gb">ГБ</string>
     <string name="metadata">Метаданные</string>
-    <string name="select_all">Выбрать все</string>
+    <string name="select_all">Выбрать всё</string>
     <string name="unselect_all">Отменить выбор</string>
     <string name="drop_down_cd">Опустить</string>
     <string name="back_cd">Назад</string>
