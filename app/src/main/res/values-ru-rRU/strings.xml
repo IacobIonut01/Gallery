@@ -44,7 +44,7 @@
     <string name="settings_title">Настройки</string>
     <string name="settings_general">Основные</string>
     <string name="settings_trash_title">Использовать корзину</string>
-    <string name="settings_trash_summary">Хранит удаленные медиафайлы в памяти на 30 дней.\nВ случае отключения, медиафайлы будут немедленно удалены навсегда.</string>
+    <string name="settings_trash_summary">Хранить удалённые медиафайлы 30 дней.\nЕсли отключить, медиафайлы будут удаляться навсегда.</string>
     <string name="move_album_to_trash">Отправить альбом в корзину</string>
     <string name="pinned_albums_title">Закреплённые альбомы</string>
     <string name="unpin">Открепить</string>
@@ -78,14 +78,14 @@
     <string name="trash_deletion_warning">Перемещённые Вами в корзину фотографии и видео будут полностью удалены через 30 дней.</string>
     <string name="open_with">Открыть в</string>
     <string name="select">Выбрать</string>
-    <string name="photos_and_videos">Фото и Видео</string>
+    <string name="photos_and_videos">Фото и видео</string>
     <string name="photos">Фото</string>
     <string name="videos">Видео</string>
     <string name="photo">Фото</string>
     <string name="video">Видео</string>
     <string name="close">Закрыть</string>
-    <string name="manage_media_title">Разрешите Gallery управлять Вашими медиафайлами</string>
-    <string name="manage_media_summary">Эта опция пропускает дополнительные диалоги подтверждения при выполнении различных действий, например добавления в избранные.</string>
+    <string name="manage_media_title">Разрешите Галерее управлять вашими медиафайлами</string>
+    <string name="manage_media_summary">Эта опция пропускает дополнительные диалоговые окна о необходимости подтверждения при выполнении различных действий. Например, при добавлении в избранное.</string>
     <string name="skip">Пропустить</string>
     <string name="allow">Разрешить</string>
     <string name="all">Все</string>
