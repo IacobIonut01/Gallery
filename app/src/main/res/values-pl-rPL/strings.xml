@@ -16,7 +16,7 @@
     <string name="pause_video">Wstrzymaj film</string>
     <string name="play_video">Odtwórz film</string>
     <string name="favorites">Ulubione</string>
-    <string name="no_media_title">Wydaje się, że tu pusto masz</string>
+    <string name="no_media_title">Wygląda, że jest tu pusto</string>
     <string name="no_media_cd">Nie znaleziono nośników</string>
     <string name="empty_trash_title">Kompletnie czysty</string>
     <string name="empty_trash_cd">Kosz jest pusty</string>
@@ -44,7 +44,7 @@
     <string name="settings_title">Ustawienia</string>
     <string name="settings_general">Ogólne</string>
     <string name="settings_trash_title">Użyj kosza</string>
-    <string name="settings_trash_summary">Przechowywanie usuniętych nośników przez 30 dni.\nUsunięcie nośnika spowoduje jego trwałą utratę, jeśli jest wyłączony.</string>
+    <string name="settings_trash_summary">Przechowuje usunięte zdjęcia i filmy przez 30 dni.\nUsunięcie ich spowoduje ich trwałą utratę, jeśli jest wyłączony.</string>
     <string name="move_album_to_trash">Przenieś album do kosza</string>
     <string name="pinned_albums_title">Przypięte albumy</string>
     <string name="unpin">Odepnij</string>
