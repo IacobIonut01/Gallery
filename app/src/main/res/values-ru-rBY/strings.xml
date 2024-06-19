@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Gallery</string>
-    <string name="nav_albums">Albums</string>
-    <string name="searchbar_title"><![CDATA[Search photos & videos]]></string>
-    <string name="header_today">Today</string>
-    <string name="header_yesterday">Yesterday</string>
-    <string name="request_permissions">Request permissions</string>
-    <string name="filter">Filter</string>
-    <string name="filter_recent">Recent</string>
-    <string name="filter_nameAZ">Name (A-Z)</string>
-    <string name="filter_nameZA">Name (Z-A)</string>
+    <string name="app_name">Галерэя</string>
+    <string name="nav_albums">Альбомы</string>
+    <string name="searchbar_title"><![CDATA[Пошук фатаграфій і відэа]]></string>
+    <string name="header_today">Сёння</string>
+    <string name="header_yesterday">Учора</string>
+    <string name="request_permissions">Запытаць дазволу</string>
+    <string name="filter">Фільтр</string>
+    <string name="filter_recent">Нядаўнія</string>
+    <string name="filter_nameAZ">Назва (А-Я)</string>
+    <string name="filter_nameZA">Назва (Я-А)</string>
     <string name="filter_old">Old</string>
     <string name="selected_s">Selected %s</string>
     <string name="trash">Trash</string>
