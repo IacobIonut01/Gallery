@@ -1,5 +1,5 @@
 [versions]
-agp = "8.3.2"
+agp = "8.5.0"
 benchmarkMacroJunit4 = "1.2.4"
 composeCompiler = "1.5.11"
 appcompat = "1.6.1"
