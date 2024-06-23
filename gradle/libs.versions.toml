@@ -1,26 +1,26 @@
 [versions]
 agp = "8.3.2"
 benchmarkMacroJunit4 = "1.2.4"
-composeCompiler = "1.5.11"
-appcompat = "1.6.1"
+biometric = "1.2.0-alpha05"
+appcompat = "1.7.0"
 coilVersion = "3.0.0-alpha06"
 coreSplashscreen = "1.0.1"
 fuzzywuzzy = "1.4.0"
 exifinterface = "1.3.7"
 gpuimage = "2.1.0"
 jxlCoder = "2.1.10"
-kotlin = "1.9.23"
-kotlinCoroutinesVersion = "1.8.0"
-ksp = "1.9.23-1.0.19"
-core-ktx = "1.13.0"
+kotlin = "2.0.0"
+kotlinCoroutinesVersion = "1.8.1"
+ksp = "2.0.0-1.0.21"
+core-ktx = "1.13.1"
 junit = "4.13.2"
 androidx-test-ext-junit = "1.1.5"
 espresso-core = "3.5.1"
-lifecycle-runtime = "2.7.0"
+lifecycle-runtime = "2.8.2"
 activity-compose = "1.9.0"
-compose-bom = "2024.04.01"
+compose-bom = "2024.06.00"
 hilt = "2.51"
-material = "1.11.0"
+material = "1.12.0"
 material3 = "1.2.1"
 media3Ui = "1.3.1"
 media3Exoplayer = "1.3.1"
@@ -29,14 +29,17 @@ pinchzoomgrid = "0.0.5"
 profileinstaller = "1.3.1"
 room = "2.6.1"
 accompanist = "0.34.0"
-datastore = "1.1.0"
+datastore = "1.1.1"
+securityCrypto = "1.1.0-alpha06"
 uiautomator = "2.3.0"
 zoomable = "1.6.1"
-zoomableImageCoil = "0.9.0"
+zoomableImageCoil = "0.11.2"
+composealpha = "1.7.0-beta03"
 
 [libraries]
 # AndroidX
 androidx-benchmark-macro-junit4 = { module = "androidx.benchmark:benchmark-macro-junit4", version.ref = "benchmarkMacroJunit4" }
+androidx-biometric = { module = "androidx.biometric:biometric", version.ref = "biometric" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
 androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreen" }
@@ -48,6 +51,7 @@ androidx-navigation-compose = { module = "androidx.navigation:navigation-compose
 androidx-profileinstaller = { module = "androidx.profileinstaller:profileinstaller", version.ref = "profileinstaller" }
 
 # Coil
+androidx-security-crypto = { module = "androidx.security:security-crypto", version.ref = "securityCrypto" }
 androidx-uiautomator = { module = "androidx.test.uiautomator:uiautomator", version.ref = "uiautomator" }
 coil-video = { module = "io.coil-kt.coil3:coil-video", version.ref = "coilVersion" }
 coil-gif = { module = "io.coil-kt.coil3:coil-gif", version.ref = "coilVersion" }
@@ -61,12 +65,12 @@ compose-activity = { group = "androidx.activity", name = "activity-compose", ver
 compose-runtime = { group = "androidx.compose.runtime", name = "runtime" }
 compose-foundation = { group = "androidx.compose.foundation", name = "foundation" }
 compose-lifecycle-runtime = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycle-runtime" }
-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
+compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version = "composealpha" }
 compose-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
 compose-material3-window-size = { group = "androidx.compose.material3", name = "material3-window-size-class", version.ref = "material3" }
 compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 compose-ui-tooling-preview = { group = "androidx.compose.ui", name= "ui-tooling-preview" }
-compose-ui = { group = "androidx.compose.ui", name = "ui" }
+compose-ui = { group = "androidx.compose.ui", name = "ui", version.ref = "composealpha" }
 compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
 
 # Compose-shimmer
@@ -74,7 +78,6 @@ compose-shimmer = { group = "com.valentinilk.shimmer", name = "compose-shimmer",
 
 # Compose Tests
 compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 
 # Dagger
 dagger-hilt = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
@@ -125,5 +128,6 @@ kspAndroid = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 roomPlugin = { id = "androidx.room", version.ref = "room" }
 hiltAndroid = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 baselineProfilePlugin = { id = "androidx.baselineprofile", version.ref = "benchmarkMacroJunit4" }
+kotlin-compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 [bundles]
 

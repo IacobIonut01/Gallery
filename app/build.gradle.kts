@@ -1,4 +1,3 @@
-import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.util.archivesName
 import java.io.FileInputStream
 import java.util.Properties
 
@@ -9,6 +8,7 @@ plugins {
     alias(libs.plugins.roomPlugin)
     alias(libs.plugins.hiltAndroid)
     alias(libs.plugins.baselineProfilePlugin)
+    alias(libs.plugins.kotlin.compose.compiler)
     id("kotlin-parcelize")
 }
 
@@ -20,16 +20,16 @@ android {
         applicationId = "com.dot.gallery"
         minSdk = 30
         targetSdk = 34
-        versionCode = 21204
-        versionName = "2.1.2"
+        versionCode = 30000
+        versionName = "3.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
-        archivesName.set("Gallery-${versionName}-$versionCode")
+        base.archivesName.set("Gallery-${versionName}-$versionCode")
         if (getApiKey() == "\"DEBUG\"") {
-            archivesName.set("${archivesName.get()}-nomaps")
+            base.archivesName.set("${base.archivesName.get()}-nomaps")
         }
     }
 
@@ -95,15 +95,15 @@ android {
     }
     kotlinOptions {
         jvmTarget = "17"
-        freeCompilerArgs += listOf("-P", "plugin:androidx.compose.compiler.plugins.kotlin:experimentalStrongSkipping=true")
         freeCompilerArgs += "-Xcontext-receivers"
     }
     buildFeatures {
         compose = true
         buildConfig = true
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
+    composeCompiler {
+        enableStrongSkippingMode = true
+        includeSourceInformation = true
     }
     packaging {
         resources {
@@ -203,6 +203,10 @@ dependencies {
 
     // Splashscreen
     implementation(libs.androidx.core.splashscreen)
+
+    // Jetpack Security
+    implementation(libs.androidx.security.crypto)
+    implementation(libs.androidx.biometric)
 
     // Tests
     testImplementation(libs.junit)

@@ -9,3 +9,5 @@
 .cxx
 local.properties
 api.properties
+/.kotlin
+/.vscode

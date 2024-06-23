@@ -1,8 +1,7 @@
-@file:Suppress("UnstableApiUsage")
-
 plugins {
-    id("com.android.library")
-    id("org.jetbrains.kotlin.android")
+    alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.kotlinAndroid)
+    alias(libs.plugins.kotlin.compose.compiler)
 }
 
 android {
@@ -30,8 +29,9 @@ android {
         jvmTarget = "17"
     }
 
-    composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
+    composeCompiler {
+        enableStrongSkippingMode = true
+        includeSourceInformation = true
     }
 
     buildFeatures {
