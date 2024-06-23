@@ -3,7 +3,7 @@ name: Nightly CI
 on:
   push:
    branches:
-    - main
+    - nightly
 
 jobs:
   build_nomaps:
@@ -48,7 +48,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: Gallery Release (No Maps)
-          path: app/build/**/*.apk
+          path: app/build/**/*.apk 
 
   build_maps:
     runs-on: ubuntu-latest
@@ -108,6 +108,8 @@ jobs:
           name: Gallery Release (Maps)
       - name: Remove apk release suffix
         run: find . -name "Gallery-*.apk" -exec bash -c 'mv "$1" "${1//-release/}"' _ {} \;
+      - name: Generate SHA256
+        run: find . -name "Gallery-*.apk" -exec bash -c 'sha256sum "$1" | awk '{print $1}' > "${file}.sha256' _ {} \;
       - name: Create Release
         id: create_release
         uses: softprops/action-gh-release@v2
@@ -117,5 +119,6 @@ jobs:
           tag_name: ${{ needs.build_maps.outputs.versionName }}-${{ needs.build_maps.outputs.versionCode }}-nightly
           files: |
             ./**/Gallery-*.apk
+            ./**/Gallery-*.apk.sha256
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
