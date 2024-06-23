@@ -131,8 +131,8 @@
     <string name="setup_summary">欲瀏覽您的媒體，請授予下列權限：</string>
     <string name="required">必要</string>
     <string name="optional">可選</string>
-    <string name="permission_manage_media_title">• 媒體管理</string>
-    <string name="permission_manage_media_summary">"    • 進行媒體相關操作時（如標記為收藏、管理垃圾桶、編輯相關資訊等），自動授予相片庫所需權限"</string>
+    <string name="permission_manage_media_title">媒體管理</string>
+    <string name="permission_manage_media_summary">"進行媒體相關操作時（如標記為收藏、管理垃圾桶、編輯相關資訊等），自動授予相片庫所需權限"</string>
     <string name="read_media_images">讀取圖片檔案</string>
     <string name="read_media_images_summary">允許讀取儲存空間中的圖片檔案</string>
     <string name="read_media_videos">讀取影片檔案</string>

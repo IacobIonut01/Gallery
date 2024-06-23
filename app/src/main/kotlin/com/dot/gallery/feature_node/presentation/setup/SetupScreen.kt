@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.os.Build
 import android.os.Environment
+import android.provider.MediaStore
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -15,10 +16,8 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -38,7 +37,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
@@ -47,6 +45,9 @@ import com.dot.gallery.BuildConfig
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Settings.Misc.rememberIsMediaManager
+import com.dot.gallery.feature_node.presentation.common.components.OptionItem
+import com.dot.gallery.feature_node.presentation.common.components.OptionLayout
+import com.dot.gallery.feature_node.presentation.util.RepeatOnResume
 import com.dot.gallery.feature_node.presentation.util.isManageFilesAllowed
 import com.dot.gallery.feature_node.presentation.util.launchManageFiles
 import com.dot.gallery.feature_node.presentation.util.launchManageMedia
@@ -146,98 +147,75 @@ fun SetupScreen(
             Column(
                 modifier = Modifier
                     .padding(horizontal = 24.dp)
-                    .padding(bottom = 16.dp)
-                    .background(
-                        color = MaterialTheme.colorScheme.surfaceVariant,
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .padding(bottom = 16.dp),
             ) {
                 Text(
-                    text = buildAnnotatedString {
-                        val style = MaterialTheme.typography.bodyMedium.toSpanStyle()
-                        withStyle(style = style) {
-                            append(stringResource(R.string.setup_summary))
-                        }
-                        appendLine()
-                        appendLine()
-                        withStyle(style = style) {
-                            append(stringResource(R.string.required))
-                        }
-                        appendLine()
-                        context.requiredPermissionsList.forEach { (title, summary) ->
-                            withStyle(style = style.copy(fontWeight = FontWeight.Bold)) {
-                                append("• $title")
-                            }
-                            appendLine()
-                            withStyle(style = style) {
-                                append("    • $summary")
-                            }
-                            appendLine()
-                        }
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                            appendLine()
-                            withStyle(style = style) {
-                                append(stringResource(R.string.optional))
-                            }
-                            appendLine()
-                            withStyle(style = style.copy(fontWeight = FontWeight.Bold)) {
-                                append(stringResource(R.string.permission_manage_media_title))
-                            }
-                            appendLine()
-                            withStyle(style = style) {
-                                append(stringResource(R.string.permission_manage_media_summary))
-                            }
-                            if (isManageFilesAllowed) {
-                                appendLine()
-                                withStyle(style = style.copy(fontWeight = FontWeight.Bold)) {
-                                    append(stringResource(R.string.permission_manage_files_title))
-                                }
-                                appendLine()
-                                withStyle(style = style) {
-                                    append(stringResource(R.string.permission_manage_files_summary))
-                                }
-                            }
-                        }
+                    modifier = Modifier
+                        .padding(bottom = 16.dp)
+                        .padding(horizontal = 16.dp),
+                    text = stringResource(R.string.required)
+                )
+                OptionLayout(
+                    modifier = Modifier.fillMaxWidth(),
+                    optionList = context.requiredPermissionsList.map { (title, summary) ->
+                        OptionItem(
+                            text = title,
+                            summary = summary,
+                            enabled = true,
+                            onClick = {  }
+                        )
                     }
                 )
+
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     var useMediaManager by rememberIsMediaManager()
                     var isStorageManager by remember { mutableStateOf(Environment.isExternalStorageManager()) }
-                    if (!useMediaManager) {
-                        Button(
-                            onClick = {
-                                scope.launch {
-                                    context.launchManageMedia()
-                                    useMediaManager = true
-                                }
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                            )
-                        ) {
-                            Text(text = stringResource(R.string.allow_to_manage_media))
-                        }
+                    RepeatOnResume {
+                        isStorageManager = Environment.isExternalStorageManager()
+                        useMediaManager = MediaStore.canManageMedia(context)
                     }
-                    if (!isStorageManager && isManageFilesAllowed) {
-                        Button(
-                            onClick = {
-                                scope.launch {
-                                    context.launchManageFiles()
-                                    isStorageManager = true
-                                }
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+
+                    Text(
+                        modifier = Modifier.padding(16.dp),
+                        text = stringResource(R.string.optional)
+                    )
+                    val grantedString = stringResource(R.string.granted)
+                    val secondaryContainer = MaterialTheme.colorScheme.secondaryContainer
+                    val onSecondaryContainer = MaterialTheme.colorScheme.onSecondaryContainer
+                    val optionsList = remember(useMediaManager, isStorageManager) {
+                        listOf(
+                            OptionItem(
+                                text = context.getString(R.string.permission_manage_media_title),
+                                summary = if (!useMediaManager) context.getString(R.string.permission_manage_media_summary) else grantedString,
+                                enabled = !useMediaManager,
+                                onClick = {
+                                    scope.launch {
+                                        context.launchManageMedia()
+                                    }
+                                },
+                                containerColor = secondaryContainer,
+                                contentColor = onSecondaryContainer
+                            ),
+                            OptionItem(
+                                text = context.getString(R.string.permission_manage_files_title),
+                                summary = if (!isStorageManager && isManageFilesAllowed) context.getString(R.string.permission_manage_files_summary) else grantedString,
+                                enabled = !isStorageManager && isManageFilesAllowed,
+                                onClick = {
+                                    scope.launch {
+                                        context.launchManageFiles()
+                                    }
+                                },
+
+                                containerColor = secondaryContainer,
+                                contentColor = onSecondaryContainer
                             )
-                        ) {
-                            Text(text = stringResource(R.string.allow_to_manage_files))
-                        }
+                        )
                     }
+
+                    OptionLayout(
+                        modifier = Modifier.fillMaxWidth(),
+                        optionList = optionsList
+                    )
                 }
             }
         }

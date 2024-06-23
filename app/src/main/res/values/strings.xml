@@ -131,8 +131,8 @@
     <string name="setup_summary">In order to access your media, it is required to grant the following permissions:</string>
     <string name="required">Required</string>
     <string name="optional">Optional</string>
-    <string name="permission_manage_media_title">• Manage Media</string>
-    <string name="permission_manage_media_summary">"    • Automatically grants system confirmation dialogs when you request several changes to your media (Toggle Favorite, Manage Trash, Edit metadata etc)"</string>
+    <string name="permission_manage_media_title">Manage Media</string>
+    <string name="permission_manage_media_summary">"Automatically grants system confirmation dialogs when you request several changes to your media (Toggle Favorite, Manage Trash, Edit metadata etc)"</string>
     <string name="read_media_images">Read Media Images</string>
     <string name="read_media_images_summary">Allows the app to show your images</string>
     <string name="read_media_videos">Read Media Videos</string>
@@ -176,8 +176,8 @@
     <string name="auto">Auto</string>
     <string name="change_playback_speed_cd">Change playback speed</string>
     <string name="location_new_album">Location: Internal-Storage/%1$s</string>
-    <string name="permission_manage_files_title">• Manage All Files</string>
-    <string name="permission_manage_files_summary">"    • Allows the app to create, modify, and delete files and albums that were previously restricted by the system. (Includes albums outside Pictures and DCIM folders and the ones from the SD Card"</string>
+    <string name="permission_manage_files_title">Manage All Files</string>
+    <string name="permission_manage_files_summary">"Allows the app to create, modify, and delete files and albums that were previously restricted by the system. (Includes albums outside Pictures and DCIM folders and the ones from the SD Card"</string>
     <string name="allow_to_manage_files">Allow to Manage All Files</string>
     <string name="vault">Vault</string>
     <string name="tools">Tools</string>

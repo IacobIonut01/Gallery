@@ -132,7 +132,7 @@
     <string name="required">Requis</string>
     <string name="optional">Optionnel</string>
     <string name="permission_manage_media_title">Gérer les médias</string>
-    <string name="permission_manage_media_summary">"    • Accepter automatiquement les confirmations du système quand vous modifiez vos médias (mettre en favori, gérer la corbeille, modifier les métadonnées, etc.)"</string>
+    <string name="permission_manage_media_summary">"Accepter automatiquement les confirmations du système quand vous modifiez vos médias (mettre en favori, gérer la corbeille, modifier les métadonnées, etc.)"</string>
     <string name="read_media_images">Lire les images</string>
     <string name="read_media_images_summary">Permet à l\'application de monter vos images</string>
     <string name="read_media_videos">Lire les vidéos</string>
