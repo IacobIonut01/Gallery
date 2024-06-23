@@ -114,8 +114,7 @@ fun PinchZoomGridScope.MediaGridView(
                 contentPadding = paddingValues,
                 userScrollEnabled = canScroll,
                 horizontalArrangement = Arrangement.spacedBy(1.dp),
-                verticalArrangement = Arrangement.spacedBy(1.dp),
-                flingBehavior = maxScrollFlingBehavior()
+                verticalArrangement = Arrangement.spacedBy(1.dp)
             ) {
                 if (aboveGridContent != null) {
                     item(
