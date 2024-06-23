@@ -21,7 +21,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.InputChip
@@ -49,12 +48,12 @@ import com.dot.gallery.feature_node.presentation.picker.AllowedMedia
 import com.dot.gallery.feature_node.presentation.picker.PickerViewModel
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PickerScreen(
     allowedMedia: AllowedMedia,
     allowSelection: Boolean,
-    sendMediaAsResult: (List<Uri>) -> Unit
+    sendMediaAsResult: (List<Uri>) -> Unit,
+    sendMediaAsMediaResult: (List<Media>) -> Unit
 ) {
     val scope = rememberCoroutineScope()
     var selectedAlbumIndex by remember { mutableLongStateOf(-1) }
@@ -106,7 +105,7 @@ fun PickerScreen(
             PickerMediaScreen(
                 mediaState = mediaVM.mediaState,
                 selectedMedia = selectedMedia,
-                allowSelection = allowSelection
+                allowSelection = allowSelection,
             )
             androidx.compose.animation.AnimatedVisibility(
                 modifier = Modifier
@@ -145,6 +144,7 @@ fun PickerScreen(
                         if (enabled) {
                             scope.launch {
                                 sendMediaAsResult(selectedMedia.map { it.uri })
+                                sendMediaAsMediaResult(selectedMedia)
                             }
                         }
                     },

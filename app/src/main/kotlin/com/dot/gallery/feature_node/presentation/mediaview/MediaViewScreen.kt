@@ -51,6 +51,7 @@ import com.dot.gallery.core.Constants.HEADER_DATE_FORMAT
 import com.dot.gallery.core.Constants.Target.TARGET_TRASH
 import com.dot.gallery.core.MediaState
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.model.Vault
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewAppBar
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewBottomBar
@@ -77,7 +78,9 @@ fun MediaViewScreen(
     target: String? = null,
     mediaState: StateFlow<MediaState>,
     albumsState: StateFlow<AlbumState>,
-    handler: MediaHandleUseCase
+    handler: MediaHandleUseCase,
+    vaults: List<Vault>,
+    addMedia: (Vault, Media) -> Unit
 ) {
     var runtimeMediaId by rememberSaveable(mediaId) { mutableLongStateOf(mediaId) }
     val state by mediaState.collectAsStateWithLifecycle()
@@ -283,7 +286,9 @@ fun MediaViewScreen(
                 paddingValues = paddingValues,
                 currentMedia = currentMedia.value,
                 albumsState = albumState,
-                currentIndex = pagerState.currentPage
+                currentIndex = pagerState.currentPage,
+                addMedia = addMedia,
+                vaults = vaults
             ) {
                 lastIndex = it
             }

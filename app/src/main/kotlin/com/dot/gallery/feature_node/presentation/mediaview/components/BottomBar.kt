@@ -42,6 +42,7 @@ import androidx.compose.material.icons.outlined.CopyAll
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -86,6 +87,7 @@ import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION
 import com.dot.gallery.core.presentation.components.DragHandle
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.model.Vault
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.exif.CopyMediaSheet
 import com.dot.gallery.feature_node.presentation.exif.MetadataEditSheet
@@ -110,6 +112,7 @@ import com.dot.gallery.feature_node.presentation.util.rememberExifMetadata
 import com.dot.gallery.feature_node.presentation.util.rememberGeocoder
 import com.dot.gallery.feature_node.presentation.util.rememberMediaInfo
 import com.dot.gallery.feature_node.presentation.util.shareMedia
+import com.dot.gallery.feature_node.presentation.vault.components.SelectVaultSheet
 import com.dot.gallery.ui.theme.BlackScrim
 import com.dot.gallery.ui.theme.Shapes
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -125,6 +128,8 @@ fun BoxScope.MediaViewBottomBar(
     paddingValues: PaddingValues,
     currentMedia: Media?,
     currentIndex: Int = 0,
+    vaults: List<Vault>,
+    addMedia: (Vault, Media) -> Unit,
     onDeleteMedia: ((Int) -> Unit)? = null,
 ) {
     AnimatedVisibility(
@@ -168,7 +173,9 @@ fun BoxScope.MediaViewBottomBar(
             media = it,
             state = bottomSheetState,
             albumsState = albumsState,
-            handler = handler
+            handler = handler,
+            vaults = vaults,
+            addMedia = addMedia
         )
     }
 }
@@ -179,7 +186,9 @@ fun MediaInfoBottomSheet(
     media: Media,
     state: AppBottomSheetState,
     albumsState: AlbumState,
-    handler: MediaHandleUseCase
+    vaults: List<Vault>,
+    handler: MediaHandleUseCase,
+    addMedia: (Vault, Media) -> Unit
 ) {
     val scope = rememberCoroutineScope()
     val exifInterface = rememberExifInterface(media, true)
@@ -218,7 +227,7 @@ fun MediaInfoBottomSheet(
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState())
                 ) {
-                    MediaViewInfoActions(media, albumsState, handler)
+                    MediaViewInfoActions(media, albumsState, vaults, handler, addMedia)
                     Spacer(modifier = Modifier.height(8.dp))
                     MediaInfoDateCaptionContainer(media, exifMetadata) {
                         scope.launch {
@@ -453,7 +462,9 @@ fun MediaInfoMapPreview(exifMetadata: ExifMetadata) {
 private fun MediaViewInfoActions(
     media: Media,
     albumsState: AlbumState,
-    handler: MediaHandleUseCase
+    vaults: List<Vault>,
+    handler: MediaHandleUseCase,
+    addMedia: (Vault, Media) -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -464,6 +475,8 @@ private fun MediaViewInfoActions(
     ) {
         // Share Component
         ShareButton(media, followTheme = true)
+        // Hide
+        HideButton(media, vaults = vaults, addMedia = addMedia, followTheme = true)
         // Use as or Open With
         OpenAsButton(media, followTheme = true)
         // Copy
@@ -493,6 +506,38 @@ private fun MediaViewActions(
     if (showDeleteButton) {
         TrashButton(currentIndex, currentMedia, handler, false, onDeleteMedia)
     }
+}
+
+@Composable
+private fun HideButton(
+    media: Media,
+    vaults: List<Vault>,
+    addMedia: (Vault, Media) -> Unit,
+    followTheme: Boolean = false
+) {
+    val sheetState = rememberAppBottomSheetState()
+    val scope = rememberCoroutineScope()
+    BottomBarColumn(
+        currentMedia = media,
+        imageVector = Icons.Outlined.Lock,
+        followTheme = followTheme,
+        enabled = vaults.isNotEmpty(),
+        title = stringResource(R.string.hide)
+    ) {
+        scope.launch {
+            sheetState.show()
+        }
+    }
+
+    SelectVaultSheet(
+        state = sheetState,
+        vaults = vaults,
+        onVaultSelected = { vault ->
+            scope.launch {
+                addMedia(vault, media)
+            }
+        }
+    )
 }
 
 @Composable
@@ -701,11 +746,13 @@ fun BottomBarColumn(
     currentMedia: Media?,
     imageVector: ImageVector,
     title: String,
+    enabled: Boolean = true,
     followTheme: Boolean = false,
     onItemLongClick: ((Media) -> Unit)? = null,
     onItemClick: (Media) -> Unit
 ) {
-    val tintColor = if (followTheme) MaterialTheme.colorScheme.onSurface else Color.White
+    val alpha = if (enabled) 1f else 0.5f
+    val tintColor = if (followTheme) MaterialTheme.colorScheme.onSurface.copy(alpha = alpha) else Color.White.copy(alpha = alpha)
     Column(
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
@@ -714,6 +761,7 @@ fun BottomBarColumn(
                 minHeight = 80.dp
             )
             .combinedClickable(
+                enabled = enabled,
                 onLongClick = {
                     currentMedia?.let {
                         onItemLongClick?.invoke(it)
@@ -743,7 +791,7 @@ fun BottomBarColumn(
             fontWeight = FontWeight.Medium,
             style = MaterialTheme.typography.bodyMedium,
             color = tintColor,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
     }
 }
