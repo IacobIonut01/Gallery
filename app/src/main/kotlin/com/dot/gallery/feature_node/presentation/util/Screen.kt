@@ -29,5 +29,14 @@ sealed class Screen(val route: String) {
 
     data object SetupScreen: Screen("setup_screen")
 
+    data object VaultScreen : Screen("vault_screen")
+    data object EncryptedMediaViewScreen : Screen("encrypted_media_view_screen") {
+        fun id() = "$route?mediaId={mediaId}"
+
+        fun id(id: Long) = "$route?mediaId=$id"
+    }
+
+    data object LibraryScreen : Screen("library_screen")
+
     operator fun invoke() = route
 }

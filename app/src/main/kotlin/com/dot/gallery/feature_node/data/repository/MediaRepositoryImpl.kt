@@ -10,15 +10,20 @@ import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.provider.MediaStore
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import androidx.core.app.ActivityOptionsCompat
 import com.dot.gallery.core.Resource
 import com.dot.gallery.core.contentFlowObserver
+import com.dot.gallery.core.fileFlowObserver
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
+import com.dot.gallery.feature_node.data.data_source.KeychainHolder
+import com.dot.gallery.feature_node.data.data_source.KeychainHolder.Companion.VAULT_INFO_FILE_NAME
 import com.dot.gallery.feature_node.data.data_source.Query
 import com.dot.gallery.feature_node.data.data_types.copyMedia
 import com.dot.gallery.feature_node.data.data_types.findMedia
@@ -34,9 +39,12 @@ import com.dot.gallery.feature_node.data.data_types.updateMedia
 import com.dot.gallery.feature_node.data.data_types.updateMediaExif
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.BlacklistedAlbum
+import com.dot.gallery.feature_node.domain.model.EncryptedMedia
 import com.dot.gallery.feature_node.domain.model.ExifAttributes
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.PinnedAlbum
+import com.dot.gallery.feature_node.domain.model.Vault
+import com.dot.gallery.feature_node.domain.model.toEncryptedMedia
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.domain.util.MediaOrder
 import com.dot.gallery.feature_node.domain.util.OrderType
@@ -44,13 +52,20 @@ import com.dot.gallery.feature_node.presentation.picker.AllowedMedia
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia.BOTH
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia.PHOTOS
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia.VIDEOS
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.IOException
+import java.io.Serializable
 
 class MediaRepositoryImpl(
     private val context: Context,
-    private val database: InternalDatabase
+    private val database: InternalDatabase,
+    private val keychainHolder: KeychainHolder
 ) : MediaRepository {
 
     /**
@@ -81,7 +96,10 @@ class MediaRepositoryImpl(
             it.getMediaTrashed().removeBlacklisted()
         }
 
-    override fun getAlbums(mediaOrder: MediaOrder, ignoreBlacklisted: Boolean): Flow<Resource<List<Album>>> =
+    override fun getAlbums(
+        mediaOrder: MediaOrder,
+        ignoreBlacklisted: Boolean
+    ): Flow<Resource<List<Album>>> =
         context.retrieveAlbums {
             it.getAlbums(mediaOrder = mediaOrder).toMutableList().apply {
                 replaceAll { album ->
@@ -344,6 +362,156 @@ class MediaRepositoryImpl(
         displayName: String
     ) = context.contentResolver.overrideImage(uri, bitmap, format, mimeType, relativePath, displayName)
 
+    override fun getVaults(): Flow<Resource<List<Vault>>> =
+        context.retrieveInternalFiles {
+            with(keychainHolder) {
+                filesDir.listFiles()
+                    ?.filter { it.isDirectory && File(it, VAULT_INFO_FILE_NAME).exists() }
+                    ?.mapNotNull {
+                        try {
+                            File(it, VAULT_INFO_FILE_NAME).decrypt() as Vault
+                        } catch (e: Exception) {
+                            null
+                        }
+                    }
+                    ?: emptyList()
+            }
+        }
+
+
+    override suspend fun createVault(
+        vault: Vault,
+        onSuccess: () -> Unit,
+        onFailed: (reason: String) -> Unit
+    ) {
+        var collected = false
+        getVaults().collectLatest {
+            if (!collected) {
+                collected = true
+                val alreadyExists = it.data?.contains(vault) ?: false
+                if (alreadyExists) {
+                    onFailed("Vault \"${vault.name}\" exists")
+                } else {
+                    keychainHolder.writeVaultInfo(vault, onSuccess)
+                }
+            }
+        }
+    }
+
+    override suspend fun deleteVault(
+        vault: Vault,
+        onSuccess: () -> Unit,
+        onFailed: (reason: String) -> Unit
+    ) {
+        try {
+            with(keychainHolder) { vaultFolder(vault).deleteRecursively() }
+        } catch (e: IOException) {
+            e.printStackTrace()
+            onFailed("Failed to delete vault ${vault.name} (${vault.uuid})")
+            return
+        }
+        onSuccess()
+    }
+
+    override fun getEncryptedMedia(vault: Vault): Flow<Resource<List<EncryptedMedia>>> =
+        context.retrieveInternalFiles {
+            with(keychainHolder) {
+                vaultFolder(vault).listFiles()?.filter {
+                    it.name.endsWith("enc")
+                }?.mapNotNull {
+                    try {
+                        val id = it.nameWithoutExtension.toLong()
+                        vault.mediaFile(id).decrypt<EncryptedMedia>()
+                    } catch (e: Exception) {
+                        null
+                    }
+                } ?: emptyList()
+            }
+        }
+
+    override suspend fun addMedia(vault: Vault, media: Media): Boolean =
+        withContext(Dispatchers.IO) {
+            with(keychainHolder) {
+                keychainHolder.checkVaultFolder(vault)
+                val output = vault.mediaFile(media.id)
+                if (output.exists()) output.delete()
+                val encryptedMedia =
+                    getBytes(media.uri)?.let { bytes -> media.toEncryptedMedia(bytes) }
+                return@withContext try {
+                    encryptedMedia?.let {
+                        output.encrypt(it)
+                    }
+                    true
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    false
+                }
+            }
+        }
+
+    override suspend fun restoreMedia(vault: Vault, media: EncryptedMedia): Boolean =
+        withContext(Dispatchers.IO) {
+            with(keychainHolder) {
+                checkVaultFolder(vault)
+                return@withContext try {
+                    val output = vault.mediaFile(media.id)
+                    val bitmap = BitmapFactory.decodeByteArray(media.bytes, 0, media.bytes.size)
+                    val restored = saveImage(
+                        bitmap = bitmap,
+                        displayName = media.label,
+                        mimeType = "image/png",
+                        format = Bitmap.CompressFormat.PNG,
+                        relativePath = Environment.DIRECTORY_PICTURES + "/Restored"
+                    ) != null
+                    val deleted = if (restored) output.delete() else false
+                    restored && deleted
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    false
+                }
+            }
+        }
+
+    override suspend fun deleteEncryptedMedia(vault: Vault, media: EncryptedMedia): Boolean =
+        withContext(Dispatchers.IO) {
+            with(keychainHolder) {
+                checkVaultFolder(vault)
+                return@withContext try {
+                    vault.mediaFile(media.id).delete()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    false
+                }
+            }
+        }
+
+    override suspend fun deleteAllEncryptedMedia(
+        vault: Vault,
+        onSuccess: () -> Unit,
+        onFailed: (failedFiles: List<File>) -> Unit
+    ): Boolean = withContext(Dispatchers.IO) {
+        with(keychainHolder) {
+            checkVaultFolder(vault)
+            val failedFiles = mutableListOf<File>()
+            val files = vaultFolder(vault).listFiles()
+            files?.forEach { file ->
+                try {
+                    file.delete()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    failedFiles.add(file)
+                }
+            }
+            if (failedFiles.isEmpty()) {
+                onSuccess()
+                true
+            } else {
+                onFailed(failedFiles)
+                false
+            }
+        }
+    }
+
     private fun List<Media>.removeBlacklisted(): List<Media> = toMutableList().apply {
         removeAll { media ->
             database.getBlacklistDao().albumIsBlacklisted(media.albumID)
@@ -385,6 +553,15 @@ class MediaRepositoryImpl(
 
         private fun Context.retrieveAlbums(dataBody: suspend (ContentResolver) -> List<Album>) =
             contentFlowObserver(URIs).map {
+                try {
+                    Resource.Success(data = dataBody.invoke(contentResolver))
+                } catch (e: Exception) {
+                    Resource.Error(message = e.localizedMessage ?: "An error occurred")
+                }
+            }.conflate()
+
+        private fun <T : Serializable> Context.retrieveInternalFiles(dataBody: suspend (ContentResolver) -> List<T>) =
+            fileFlowObserver().map {
                 try {
                     Resource.Success(data = dataBody.invoke(contentResolver))
                 } catch (e: Exception) {

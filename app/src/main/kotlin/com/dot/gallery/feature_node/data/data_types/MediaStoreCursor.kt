@@ -11,6 +11,7 @@ import android.content.ContentValues
 import android.database.Cursor
 import android.database.MergeCursor
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -132,6 +133,17 @@ fun ContentResolver.overrideImage(
     }.getOrElse {
         throw it
     }
+}
+
+fun ContentResolver.restoreImage(
+    byteArray: ByteArray,
+    format: Bitmap.CompressFormat = Bitmap.CompressFormat.PNG,
+    mimeType: String = "image/png",
+    relativePath: String = Environment.DIRECTORY_PICTURES + "/Restored",
+    displayName: String
+): Uri? {
+    val bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size)
+    return saveImage(bitmap, format, mimeType, relativePath, displayName)
 }
 
 fun ContentResolver.saveImage(

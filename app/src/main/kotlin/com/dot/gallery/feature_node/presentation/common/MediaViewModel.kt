@@ -16,7 +16,9 @@ import androidx.lifecycle.viewModelScope
 import com.dot.gallery.core.MediaState
 import com.dot.gallery.core.Resource
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.model.Vault
 import com.dot.gallery.feature_node.domain.use_case.MediaUseCases
+import com.dot.gallery.feature_node.domain.use_case.VaultUseCases
 import com.dot.gallery.feature_node.presentation.util.RepeatOnResume
 import com.dot.gallery.feature_node.presentation.util.collectMedia
 import com.dot.gallery.feature_node.presentation.util.mediaFlow
@@ -33,7 +35,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 open class MediaViewModel @Inject constructor(
-    private val mediaUseCases: MediaUseCases
+    private val mediaUseCases: MediaUseCases,
+    private val vaultUseCases: VaultUseCases
 ) : ViewModel() {
 
     var lastQuery = mutableStateOf("")
@@ -47,6 +50,9 @@ open class MediaViewModel @Inject constructor(
     val searchMediaState = _searchMediaState.asStateFlow()
     val selectedPhotoState = mutableStateListOf<Media>()
     val handler = mediaUseCases.mediaHandleUseCase
+
+    private val _vaults = MutableStateFlow<List<Vault>>(emptyList())
+    val vaults = _vaults.asStateFlow()
 
     var albumId: Long = -1L
     var target: String? = null
@@ -64,6 +70,12 @@ open class MediaViewModel @Inject constructor(
     fun attachToLifecycle() {
         RepeatOnResume {
             getMedia(albumId, target)
+        }
+    }
+
+    fun addMedia(vault: Vault, media: Media) {
+        viewModelScope.launch(Dispatchers.IO) {
+            vaultUseCases.addMedia(vault, media)
         }
     }
 
@@ -193,6 +205,11 @@ open class MediaViewModel @Inject constructor(
                     albumId = albumId,
                     groupByMonth = groupByMonth,
                 )
+            }
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            vaultUseCases.getVaults().collectLatest {
+                _vaults.emit(it)
             }
         }
     }

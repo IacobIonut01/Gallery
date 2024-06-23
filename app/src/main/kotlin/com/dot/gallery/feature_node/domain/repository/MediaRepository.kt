@@ -12,12 +12,15 @@ import androidx.activity.result.IntentSenderRequest
 import com.dot.gallery.core.Resource
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.BlacklistedAlbum
+import com.dot.gallery.feature_node.domain.model.EncryptedMedia
 import com.dot.gallery.feature_node.domain.model.ExifAttributes
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.PinnedAlbum
+import com.dot.gallery.feature_node.domain.model.Vault
 import com.dot.gallery.feature_node.domain.util.MediaOrder
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia
 import kotlinx.coroutines.flow.Flow
+import java.io.File
 
 interface MediaRepository {
 
@@ -48,7 +51,10 @@ interface MediaRepository {
 
     fun getMediaByAlbumId(albumId: Long): Flow<Resource<List<Media>>>
 
-    fun getMediaByAlbumIdWithType(albumId: Long, allowedMedia: AllowedMedia): Flow<Resource<List<Media>>>
+    fun getMediaByAlbumIdWithType(
+        albumId: Long,
+        allowedMedia: AllowedMedia
+    ): Flow<Resource<List<Media>>>
 
     fun getAlbumsWithType(allowedMedia: AllowedMedia): Flow<Resource<List<Album>>>
 
@@ -69,7 +75,7 @@ interface MediaRepository {
     )
 
     suspend fun copyMedia(
-        from: Media, 
+        from: Media,
         path: String
     ): Boolean
 
@@ -108,6 +114,34 @@ interface MediaRepository {
         mimeType: String,
         relativePath: String,
         displayName: String
+    ): Boolean
+
+    fun getVaults(): Flow<Resource<List<Vault>>>
+
+    suspend fun createVault(
+        vault: Vault,
+        onSuccess: () -> Unit,
+        onFailed: (reason: String) -> Unit
+    )
+
+    suspend fun deleteVault(
+        vault: Vault,
+        onSuccess: () -> Unit,
+        onFailed: (reason: String) -> Unit
+    )
+
+    fun getEncryptedMedia(vault: Vault): Flow<Resource<List<EncryptedMedia>>>
+
+    suspend fun addMedia(vault: Vault, media: Media): Boolean
+
+    suspend fun restoreMedia(vault: Vault, media: EncryptedMedia): Boolean
+
+    suspend fun deleteEncryptedMedia(vault: Vault, media: EncryptedMedia): Boolean
+
+    suspend fun deleteAllEncryptedMedia(
+        vault: Vault,
+        onSuccess: () -> Unit,
+        onFailed: (failedFiles: List<File>) -> Unit
     ): Boolean
 
 }

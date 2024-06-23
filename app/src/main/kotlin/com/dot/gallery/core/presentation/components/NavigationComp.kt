@@ -5,6 +5,7 @@
 
 package com.dot.gallery.core.presentation.components
 
+import android.os.Build
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -15,10 +16,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -46,6 +47,7 @@ import com.dot.gallery.feature_node.presentation.common.ChanneledViewModel
 import com.dot.gallery.feature_node.presentation.common.MediaViewModel
 import com.dot.gallery.feature_node.presentation.favorites.FavoriteScreen
 import com.dot.gallery.feature_node.presentation.ignored.IgnoredScreen
+import com.dot.gallery.feature_node.presentation.library.LibraryScreen
 import com.dot.gallery.feature_node.presentation.mediaview.MediaViewScreen
 import com.dot.gallery.feature_node.presentation.settings.SettingsScreen
 import com.dot.gallery.feature_node.presentation.setup.SetupScreen
@@ -53,6 +55,9 @@ import com.dot.gallery.feature_node.presentation.timeline.TimelineScreen
 import com.dot.gallery.feature_node.presentation.trashed.TrashedGridScreen
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.feature_node.presentation.util.newImageLoader
+import com.dot.gallery.feature_node.presentation.vault.VaultScreen
+import com.dot.gallery.feature_node.presentation.vault.VaultViewModel
+import com.dot.gallery.feature_node.presentation.vault.encryptedmediaview.EncryptedMediaViewScreen
 
 @OptIn(ExperimentalCoilApi::class)
 @Composable
@@ -97,6 +102,10 @@ fun NavigationComp(
     var lastShouldDisplay by rememberSaveable {
         mutableStateOf(bottomNavEntries.find { item -> item.route == currentDest } != null)
     }
+    val shouldSkipAuth = rememberSaveable {
+        mutableStateOf(false)
+    }
+
     LaunchedEffect(navBackStackEntry) {
         navBackStackEntry?.destination?.route?.let {
             val shouldDisplayBottomBar =
@@ -104,6 +113,12 @@ fun NavigationComp(
             if (lastShouldDisplay != shouldDisplayBottomBar) {
                 bottomBarState.value = shouldDisplayBottomBar
                 lastShouldDisplay = shouldDisplayBottomBar
+            }
+            if (it != Screen.VaultScreen()) {
+                shouldSkipAuth.value = false
+            }
+            if (it.contains(Screen.EncryptedMediaViewScreen())) {
+                shouldSkipAuth.value = true
             }
             systemBarFollowThemeState.value = !it.contains(Screen.MediaViewScreen.route)
         }
@@ -117,6 +132,7 @@ fun NavigationComp(
     val timelineViewModel = hiltViewModel<MediaViewModel>().apply {
         attachToLifecycle()
     }
+    val vaults by timelineViewModel.vaults.collectAsStateWithLifecycle()
     LaunchedEffect(groupTimelineByMonth) {
         timelineViewModel.groupByMonth = groupTimelineByMonth
     }
@@ -287,7 +303,9 @@ fun NavigationComp(
                 mediaId = mediaId,
                 mediaState = if (albumId != -1L) timelineViewModel.customMediaState else timelineViewModel.mediaState,
                 albumsState = albumsViewModel.albumsState,
-                handler = timelineViewModel.handler
+                handler = timelineViewModel.handler,
+                addMedia = timelineViewModel::addMedia,
+                vaults = vaults
             )
         }
         composable(
@@ -328,6 +346,7 @@ fun NavigationComp(
                     it.attachToLifecycle()
                 }
             }
+            val vaults by viewModel.vaults.collectAsStateWithLifecycle()
             MediaViewScreen(
                 navigateUp = navPipe::navigateUp,
                 toggleRotate = toggleRotate,
@@ -336,7 +355,9 @@ fun NavigationComp(
                 target = target,
                 mediaState = if (target == TARGET_FAVORITES) viewModel.customMediaState else viewModel.mediaState,
                 albumsState = albumsViewModel.albumsState,
-                handler = viewModel.handler
+                handler = viewModel.handler,
+                addMedia = viewModel::addMedia,
+                vaults = vaults
             )
         }
         composable(
@@ -356,5 +377,59 @@ fun NavigationComp(
                 albumsState = albumsState
             )
         }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            composable(
+                route = Screen.VaultScreen()
+            ) {
+                val vm = hiltViewModel<VaultViewModel>()
+
+                VaultScreen(
+                    shouldSkipAuth = shouldSkipAuth,
+                    navigateUp = navPipe::navigateUp,
+                    navigate = navPipe::navigate,
+                    vm = vm
+                )
+            }
+            composable(
+                route = Screen.EncryptedMediaViewScreen.id(),
+                arguments = listOf(
+                    navArgument("mediaId") {
+                        type = NavType.LongType
+                    }
+                )
+            ) { backStackEntry ->
+                val parentEntry = remember(backStackEntry) {
+                    navController.getBackStackEntry(Screen.VaultScreen())
+                }
+                val mediaId =
+                    backStackEntry.arguments?.getLong("mediaId")
+                val vm = hiltViewModel<VaultViewModel>(parentEntry)
+                EncryptedMediaViewScreen(
+                    navigateUp = navPipe::navigateUp,
+                    toggleRotate = toggleRotate,
+                    paddingValues = paddingValues,
+                    mediaId = mediaId ?: -1,
+                    mediaState = vm.mediaState,
+                    vault = vm.currentVault,
+                    restoreMedia = vm::restoreMedia,
+                    deleteMedia = vm::deleteMedia
+                )
+            }
+        }
+
+        composable(
+            route = Screen.LibraryScreen()
+        ) {
+            LibraryScreen(
+                navigate = navPipe::navigate,
+                mediaViewModel = timelineViewModel,
+                toggleNavbar = navPipe::toggleNavbar,
+                paddingValues = paddingValues,
+                isScrolling = isScrolling,
+                searchBarActive = searchBarActive
+            )
+        }
+
     }
 }

@@ -12,9 +12,11 @@ import androidx.room.Room
 import coil.ImageLoader
 import coil.request.ImageRequest
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
+import com.dot.gallery.feature_node.data.data_source.KeychainHolder
 import com.dot.gallery.feature_node.data.repository.MediaRepositoryImpl
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.domain.use_case.MediaUseCases
+import com.dot.gallery.feature_node.domain.use_case.VaultUseCases
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -40,17 +42,30 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun provideKeychainHolder(@ApplicationContext context: Context): KeychainHolder {
+        return KeychainHolder(context)
+    }
+
+    @Provides
+    @Singleton
     fun provideMediaUseCases(repository: MediaRepository, @ApplicationContext context: Context): MediaUseCases {
         return MediaUseCases(context, repository)
     }
 
     @Provides
     @Singleton
+    fun provideVaultUseCases(repository: MediaRepository): VaultUseCases {
+        return VaultUseCases(repository)
+    }
+
+    @Provides
+    @Singleton
     fun provideMediaRepository(
         @ApplicationContext context: Context,
-        database: InternalDatabase
+        database: InternalDatabase,
+        keychainHolder: KeychainHolder
     ): MediaRepository {
-        return MediaRepositoryImpl(context, database)
+        return MediaRepositoryImpl(context, database, keychainHolder)
     }
 
     @Provides

@@ -8,6 +8,7 @@ package com.dot.gallery.core
 import android.content.Context
 import android.database.ContentObserver
 import android.net.Uri
+import android.os.FileObserver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.awaitClose
@@ -41,3 +42,23 @@ fun Context.contentFlowObserver(uris: Array<Uri>) = callbackFlow {
         contentResolver.unregisterContentObserver(observer)
     }
 }.conflate().onEach { if (!it) delay(1000) }
+
+
+private var observerFileJob: Job? = null
+fun Context.fileFlowObserver() = callbackFlow {
+    val observer = object : FileObserver(filesDir, CREATE or DELETE or MODIFY or MOVED_FROM or MOVED_TO) {
+        override fun onEvent(event: Int, path: String?) {
+            observerFileJob?.cancel()
+            observerFileJob = launch(Dispatchers.IO) {
+                send(true)
+            }
+        }
+    }
+    observer.startWatching()
+    observerFileJob = launch(Dispatchers.IO) {
+        send(true)
+    }
+    awaitClose {
+        observer.stopWatching()
+    }
+}

@@ -29,7 +29,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Photo
-import androidx.compose.material.icons.outlined.PhotoAlbum
+import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -63,13 +63,15 @@ import com.dot.gallery.R
 import com.dot.gallery.core.Settings.Misc.rememberOldNavbar
 import com.dot.gallery.feature_node.presentation.util.NavigationItem
 import com.dot.gallery.feature_node.presentation.util.Screen
+import com.dot.gallery.ui.core.icons.Albums
 
 @Composable
 fun rememberNavigationItems(): List<NavigationItem> {
     val timelineTitle = stringResource(R.string.nav_timeline)
     val albumsTitle = stringResource(R.string.nav_albums)
+    val libraryTitle = stringResource(R.string.library)
     return remember {
-        listOf(
+        mutableListOf(
             NavigationItem(
                 name = timelineTitle,
                 route = Screen.TimelineScreen.route,
@@ -78,7 +80,12 @@ fun rememberNavigationItems(): List<NavigationItem> {
             NavigationItem(
                 name = albumsTitle,
                 route = Screen.AlbumsScreen.route,
-                icon = Icons.Outlined.PhotoAlbum,
+                icon = com.dot.gallery.ui.core.Icons.Albums,
+            ),
+            NavigationItem(
+                name = libraryTitle,
+                route = Screen.LibraryScreen(),
+                icon = Icons.Outlined.PhotoLibrary
             )
         )
     }

@@ -30,6 +30,27 @@ sealed class MediaItem : Parcelable {
 
 }
 
+@Parcelize
+@Immutable
+sealed class EncryptedMediaItem : Parcelable {
+    @Stable
+    abstract val key: String
+
+    @Immutable
+    data class Header(
+        override val key: String,
+        val text: String,
+        val data: List<EncryptedMedia>
+    ) : EncryptedMediaItem()
+
+    @Immutable
+    data class MediaViewItem(
+        override val key: String,
+        val media: EncryptedMedia
+    ) : EncryptedMediaItem()
+
+}
+
 val Any.isHeaderKey: Boolean
     get() = this is String && this.startsWith("header_")
 

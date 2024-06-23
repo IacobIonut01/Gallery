@@ -10,9 +10,12 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.getValue
 import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.annotation.ExperimentalCoilApi
 import coil3.compose.setSingletonImageLoaderFactory
 import com.dot.gallery.core.AlbumState
@@ -30,6 +33,7 @@ class StandaloneActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
+        enableEdgeToEdge()
         val action = intent.action.toString()
         val isSecure = action.lowercase().contains("secure")
         val clipData = intent.clipData
@@ -49,7 +53,7 @@ class StandaloneActivity : ComponentActivity() {
                         reviewMode = action.lowercase().contains("review")
                         dataList = uriList.toList()
                     }
-
+                    val vaults by viewModel.vaults.collectAsStateWithLifecycle()
                     MediaViewScreen(
                         navigateUp = { finish() },
                         toggleRotate = ::toggleOrientation,
@@ -58,7 +62,9 @@ class StandaloneActivity : ComponentActivity() {
                         mediaId = viewModel.mediaId,
                         mediaState = viewModel.mediaState,
                         albumsState = MutableStateFlow(AlbumState()),
-                        handler = viewModel.handler
+                        handler = viewModel.handler,
+                        addMedia = viewModel::addMedia,
+                        vaults = vaults
                     )
                 }
                 BackHandler {

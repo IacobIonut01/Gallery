@@ -11,7 +11,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dot.gallery.core.MediaState
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.model.Vault
 import com.dot.gallery.feature_node.domain.use_case.MediaUseCases
+import com.dot.gallery.feature_node.domain.use_case.VaultUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -26,7 +28,8 @@ import javax.inject.Inject
 class StandaloneViewModel @Inject constructor(
     @ApplicationContext
     private val applicationContext: Context,
-    private val mediaUseCases: MediaUseCases
+    private val mediaUseCases: MediaUseCases,
+    private val vaultUseCases: VaultUseCases
 ) : ViewModel() {
 
     private val _mediaState = MutableStateFlow(MediaState())
@@ -44,6 +47,16 @@ class StandaloneViewModel @Inject constructor(
 
     var mediaId: Long = -1
 
+
+    private val _vaults = MutableStateFlow<List<Vault>>(emptyList())
+    val vaults = _vaults.asStateFlow()
+
+    fun addMedia(vault: Vault, media: Media) {
+        viewModelScope.launch(Dispatchers.IO) {
+            vaultUseCases.addMedia(vault, media)
+        }
+    }
+
     private fun getMedia(clipDataUriList: List<Uri> = emptyList()) {
         viewModelScope.launch(Dispatchers.IO) {
             if (clipDataUriList.isNotEmpty()) {
@@ -58,6 +71,11 @@ class StandaloneViewModel @Inject constructor(
                             _mediaState.value = mediaFromUris()
                         }
                     }
+            }
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            vaultUseCases.getVaults().collectLatest {
+                _vaults.emit(it)
             }
         }
     }
