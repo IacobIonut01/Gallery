@@ -1,18 +1,22 @@
 package com.dot.gallery.feature_node.presentation.vault
 
+import android.app.Activity
 import android.os.Build
+import android.view.WindowManager
 import androidx.annotation.RequiresApi
 import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
 import androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL
 import androidx.biometric.BiometricPrompt.PromptInfo
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
@@ -28,6 +32,14 @@ fun VaultScreen(
     navigate: (route: String) -> Unit,
     vm: VaultViewModel
 ) {
+    val window = (LocalContext.current as Activity).window
+
+    DisposableEffect(Unit) {
+        window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        onDispose {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        }
+    }
 
     val vaults by vm.vaults.collectAsStateWithLifecycle()
     val currentVault by vm.currentVault.collectAsStateWithLifecycle()

@@ -5,6 +5,8 @@
 
 package com.dot.gallery.feature_node.presentation.vault.encryptedmediaview
 
+import android.app.Activity
+import android.view.WindowManager
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutLinearInEasing
@@ -23,6 +25,7 @@ import androidx.compose.foundation.pager.PagerDefaults
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -76,6 +79,14 @@ fun EncryptedMediaViewScreen(
     restoreMedia: (Vault, EncryptedMedia) -> Unit,
     deleteMedia: (Vault, EncryptedMedia) -> Unit
 ) {
+    val window = (LocalContext.current as Activity).window
+
+    DisposableEffect(Unit) {
+        window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        onDispose {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        }
+    }
     var runtimeMediaId by rememberSaveable(mediaId) { mutableLongStateOf(mediaId) }
     val state by mediaState.collectAsStateWithLifecycle()
     val initialPage = rememberSaveable(runtimeMediaId) {
