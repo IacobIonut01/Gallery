@@ -35,6 +35,7 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableLongState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -65,7 +66,7 @@ fun VideoPlayerController(
     paddingValues: PaddingValues,
     player: ExoPlayer,
     isPlaying: MutableState<Boolean>,
-    currentTime: MutableState<Long>,
+    currentTime: MutableLongState,
     totalTime: Long,
     buffer: Int,
     toggleRotate: () -> Unit,
@@ -209,13 +210,14 @@ fun VideoPlayerController(
                     )
                     Slider(
                         modifier = Modifier.fillMaxWidth(),
-                        value = currentTime.value.toFloat(),
+                        value = currentTime.longValue.toFloat(),
                         onValueChange = {
                             scope.launch {
-                                currentTime.value = it.toLong()
-                                player.seekTo(it.toLong())
-                                delay(50)
-                                player.play()
+                                if (player.currentPosition != it.toLong()) {
+                                    player.seekTo(it.toLong())
+                                    delay(50)
+                                    player.play()
+                                }
                             }
                         },
                         valueRange = 0f..totalTime.toFloat(),

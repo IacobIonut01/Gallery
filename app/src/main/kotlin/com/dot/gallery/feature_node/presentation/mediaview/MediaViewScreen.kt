@@ -64,7 +64,6 @@ import com.dot.gallery.feature_node.presentation.util.rememberWindowInsetsContro
 import com.dot.gallery.feature_node.presentation.util.toggleSystemBars
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -161,9 +160,9 @@ fun MediaViewScreen(
             pageSpacing = 16.dp,
         ) { index ->
             var playWhenReady by rememberSaveable { mutableStateOf(false) }
-            LaunchedEffect(Unit) {
+            LaunchedEffect(pagerState) {
                 snapshotFlow { pagerState.currentPage }
-                    .collectLatest { currentPage ->
+                    .collect { currentPage ->
                         playWhenReady = currentPage == index
                     }
             }
