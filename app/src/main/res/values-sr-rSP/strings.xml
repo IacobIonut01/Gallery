@@ -174,11 +174,11 @@
     <string name="done">Готово</string>
     <string name="toggle_audio_cd">Укључи/искључи аудио</string>
     <string name="auto">Аутоматски</string>
-    <string name="change_playback_speed_cd">Change playback speed</string>
-    <string name="location_new_album">Location: Internal-Storage/%1$s</string>
-    <string name="permission_manage_files_title">Manage All Files</string>
-    <string name="permission_manage_files_summary">"Allows the app to create, modify, and delete files and albums that were previously restricted by the system. (Includes albums outside Pictures and DCIM folders and the ones from the SD Card"</string>
-    <string name="allow_to_manage_files">Allow to Manage All Files</string>
+    <string name="change_playback_speed_cd">Промени брзину репродукције</string>
+    <string name="location_new_album">Локација: Интерна меморија/%1$s</string>
+    <string name="permission_manage_files_title">Управљање свим фајловима</string>
+    <string name="permission_manage_files_summary">"Дозвољава апликацији да прави, мења и брише фајлове и албуме које је систем претходно ограничио. (Обухвата албуме изван фолдера Слике и DCIM и оне са SD картице)"</string>
+    <string name="allow_to_manage_files">Дозволи управљање свим фајловима</string>
     <plurals name="item_count">
         <item quantity="one">%s предмет</item>
         <item quantity="few">%s предмета</item>
