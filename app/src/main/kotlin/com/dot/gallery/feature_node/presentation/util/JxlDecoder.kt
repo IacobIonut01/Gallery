@@ -30,7 +30,7 @@ package com.dot.gallery.feature_node.presentation.util
 
 import coil3.ImageLoader
 import coil3.annotation.ExperimentalCoilApi
-import coil3.asCoilImage
+import coil3.asImage
 import coil3.decode.DecodeResult
 import coil3.decode.Decoder
 import coil3.fetch.SourceFetchResult
@@ -63,7 +63,7 @@ class JxlDecoder(
                     preferredColorConfig = PreferredColorConfig.DEFAULT
                 )
             return@runInterruptible DecodeResult(
-                image = originalImage.asCoilImage(),
+                image = originalImage.asImage(),
                 isSampled = false
             )
         }
@@ -85,7 +85,7 @@ class JxlDecoder(
                 JxlResizeFilter.BILINEAR,
             )
         DecodeResult(
-            image = originalImage.asCoilImage(),
+            image = originalImage.asImage(),
             isSampled = true
         )
     }

@@ -2,7 +2,6 @@
 
 package me.saket.telephoto.zoomable.coil3
 
-import android.content.ContentResolver
 import android.content.res.Resources
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
@@ -13,36 +12,44 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import coil3.Image
 import coil3.ImageLoader
 import coil3.annotation.ExperimentalCoilApi
+import coil3.asDrawable
 import coil3.compose.LocalPlatformContext
 import coil3.decode.DataSource
+import coil3.gif.AnimatedImageDecoder
 import coil3.imageLoader
 import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import coil3.request.ImageResult
+import coil3.request.Options
 import coil3.request.SuccessResult
 import coil3.request.transitionFactory
 import coil3.size.Dimension
+import coil3.size.Precision
 import coil3.size.SizeResolver
+import coil3.svg.SvgDecoder
 import coil3.transition.CrossfadeTransition
+import com.dot.gallery.feature_node.presentation.util.JxlDecoder
+import com.github.awxkee.avifcoil.decoder.HeifDecoder3
 import com.google.accompanist.drawablepainter.DrawablePainter
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import me.saket.telephoto.subsamplingimage.ImageBitmapOptions
 import me.saket.telephoto.subsamplingimage.SubSamplingImageSource
-import me.saket.telephoto.subsamplingimage.asAssetPathOrNull
 import me.saket.telephoto.zoomable.ZoomableImageSource
 import me.saket.telephoto.zoomable.ZoomableImageSource.ResolveResult
-import me.saket.telephoto.zoomable.coil3.Resolver.ImageSourceFactory
+import me.saket.telephoto.zoomable.coil3.Resolver.ImageSourceCreationResult.EligibleForSubSampling
+import me.saket.telephoto.zoomable.coil3.Resolver.ImageSourceCreationResult.ImageDeletedOnlyFromDiskCache
 import me.saket.telephoto.zoomable.internal.RememberWorker
 import me.saket.telephoto.zoomable.internal.copy
-import okio.Path.Companion.toPath
+import java.io.File
 import kotlin.math.roundToInt
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -97,6 +104,16 @@ internal class Resolver(
 
   @OptIn(ExperimentalCoilApi::class)
   override suspend fun work() {
+    val imageLoader = imageLoader
+        .newBuilder()
+        .components {
+            add(HeifDecoder3.Factory(request.context))
+            // SVGs
+            add(SvgDecoder.Factory(false))
+            add(JxlDecoder.Factory())
+            // GIFs
+            add(AnimatedImageDecoder.Factory())
+        }.build()
     val result = imageLoader.execute(
       request.newBuilder()
         .size(request.defined.sizeResolver ?: sizeResolver)
@@ -120,10 +137,24 @@ internal class Resolver(
             )
           }
         )
+        // Increase memory cache hit rate because the image will anyway fit the canvas
+        // size at draw time.
+        .precision(
+          when (request.defined.precision) {
+            Precision.EXACT -> request.precision
+            else -> Precision.INEXACT
+          }
+        )
         .build()
     )
 
-    val imageSource = result.toSubSamplingImageSource()
+    val imageSource = when (val it = result.toSubSamplingImageSource()) {
+      null -> null
+      is EligibleForSubSampling -> it.source
+      is ImageDeletedOnlyFromDiskCache -> {
+        return
+      }
+    }
     resolved = resolved.copy(
       crossfadeDuration = result.crossfadeDuration(),
       delegate = if (result is SuccessResult && imageSource != null) {
@@ -139,36 +170,6 @@ internal class Resolver(
     )
   }
 
-  private suspend fun ImageResult.toSubSamplingImageSource(): SubSamplingImageSource? {
-    val result = this
-    val sourceFactory = if (result is SuccessResult && result.asDrawable() is BitmapDrawable) {
-      when {
-        // Prefer reading of images directly from files whenever possible because
-        // it is significantly faster than reading from their input streams.
-        result.diskCacheKey != null -> {
-          val diskCache = imageLoader.diskCache!!
-          val snapshot = diskCache.openSnapshot(result.diskCacheKey!!) ?: error("Coil returned a null cache snapshot")
-          ImageSourceFactory { SubSamplingImageSource.file(snapshot.data, preview = it, onClose = snapshot::close) }
-        }
-
-        result.dataSource.let { it == DataSource.DISK || it == DataSource.MEMORY_CACHE } -> {
-          val requestData = result.request.data
-          requestData.asUriOrNull()?.toSourceFactory()
-            ?: requestData.asResourceIdOrNull()?.toSourceFactory()
-            ?: return null
-        }
-
-        else -> return null
-      }
-    } else {
-      return null
-    }
-
-    val preview = result.asBitmap()?.asImageBitmap()
-    val source = sourceFactory.create(preview)
-    return if (source?.canBeSubSampled() == true) source else null
-  }
-
   @OptIn(ExperimentalCoilApi::class)
   private fun ImageResult.asDrawable() = image?.asDrawable(request.context.resources)
 
@@ -178,9 +179,58 @@ internal class Resolver(
   @OptIn(ExperimentalCoilApi::class)
   private fun Image.asPainter(resources: Resources) = asDrawable(resources).asPainter()
 
-  fun interface ImageSourceFactory {
-    suspend fun create(preview: ImageBitmap?): SubSamplingImageSource?
+  private sealed interface ImageSourceCreationResult {
+    data class EligibleForSubSampling(val source: SubSamplingImageSource) : ImageSourceCreationResult
+
+    /** Image was deleted from the disk cache, but is still present in the memory cache. */
+    data object ImageDeletedOnlyFromDiskCache : ImageSourceCreationResult
   }
+
+  @OptIn(ExperimentalCoilApi::class)
+  private suspend fun ImageResult.toSubSamplingImageSource(): ImageSourceCreationResult? {
+    val result = this
+    val source = if (result is SuccessResult && result.asDrawable() is BitmapDrawable) {
+      val preview = result.asBitmap()?.asImageBitmap()
+      when {
+        // Prefer reading of images directly from files whenever possible because
+        // it is significantly faster than reading from their input streams.
+        result.diskCacheKey != null -> {
+          val diskCache = imageLoader.diskCache!!
+          val snapshot = withContext(Dispatchers.IO) {  // IO because openSnapshot() can delete files.
+            diskCache.openSnapshot(result.diskCacheKey!!)
+          }
+          if (snapshot == null) {
+            return when (result.dataSource) {
+              DataSource.MEMORY_CACHE -> ImageDeletedOnlyFromDiskCache
+              else -> error("Coil returned an image that is missing from its disk cache")
+            }
+          }
+          SubSamplingImageSource.file(snapshot.data, preview, onClose = snapshot::close)
+        }
+        result.dataSource.let { it == DataSource.DISK || it == DataSource.MEMORY_CACHE } -> {
+          // Possible reasons for reaching this code path:
+          // - Locally stored images such as assets, resource, etc.
+          // - Remote image that wasn't saved to disk because of a "no-store" HTTP header.
+          result.request.mapRequestDataToUriOrNull()?.let { uri ->
+            SubSamplingImageSource.contentUriOrNull(uri, preview)
+          }
+        }
+
+        else -> {
+          // Image wasn't saved to the disk. Telephoto won't be able to load this image in its full
+          // quality. It'll attempt to display the bitmap directly as a fallback, but that can
+          // potentially cause an OutOfMemoryError when the bitmap is drawn.
+          return null
+        }
+      }
+    } else {
+      return null
+    }
+    return if (source?.canBeSubSampled() == true) EligibleForSubSampling(
+      source
+    ) else null
+  }
+
 
   private fun ImageResult.crossfadeDuration(): Duration {
     val transitionFactory = request.transitionFactory
@@ -194,51 +244,14 @@ internal class Resolver(
     }
   }
 
-  private fun Any.asUriOrNull(): Uri? {
-    return when (this) {
-      is String -> Uri.parse(this)
-      is Uri -> this
+  private fun ImageRequest.mapRequestDataToUriOrNull(): Uri? {
+    val dummyOptions = Options(request.context) // Good enough for mappers that only use the context.
+    return when (val mapped = imageLoader.components.map(data, dummyOptions)) {
+      is Uri -> mapped
+      is File -> Uri.parse(mapped.path)
       else -> null
     }
   }
-
-  private fun Uri.toSourceFactory(): ImageSourceFactory {
-    // Assets must be evaluated before files because they share the same scheme.
-    this.asAssetPathOrNull()?.let { assetPath ->
-      return ImageSourceFactory { SubSamplingImageSource.asset(assetPath.path, preview = it) }
-    }
-
-    val filePath = when {
-      // File URIs without a scheme are invalid but have had historic support
-      // from many image loaders, including Coil. Telephoto is forced to support
-      // them because it promises to be a drop-in replacement for AsyncImage().
-      // https://github.com/saket/telephoto/issues/19
-      scheme == null && path?.startsWith('/') == true && pathSegments.isNotEmpty() -> toString().toPath()
-      scheme == ContentResolver.SCHEME_FILE -> path?.toPath()
-      else -> null
-    }
-    if (filePath != null) {
-      return ImageSourceFactory { SubSamplingImageSource.file(filePath, preview = it) }
-    }
-
-    return ImageSourceFactory { SubSamplingImageSource.contentUri(this, preview = it) }
-  }
-
-  @JvmInline
-  value class ResourceId(val id: Int)
-
-  private fun Any.asResourceIdOrNull(): ResourceId? {
-    if (this is Int) {
-      runCatching {
-        request.context.resources.getResourceEntryName(this)
-        return ResourceId(this)
-      }
-    }
-    return null
-  }
-
-  private fun ResourceId.toSourceFactory() =
-    ImageSourceFactory { SubSamplingImageSource.resource(id, preview = it) }
 
   private fun Drawable.asPainter(): Painter {
     return DrawablePainter(mutate())

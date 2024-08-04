@@ -29,6 +29,7 @@ import com.dot.gallery.core.Settings
 import com.dot.gallery.core.presentation.components.util.LocalBatteryStatus
 import com.dot.gallery.core.presentation.components.util.ProvideBatteryStatus
 import com.dot.gallery.feature_node.domain.model.Media
+import me.saket.telephoto.zoomable.DoubleClickToZoomListener
 import me.saket.telephoto.zoomable.ZoomSpec
 import me.saket.telephoto.zoomable.ZoomableImage
 import me.saket.telephoto.zoomable.ZoomableImageSource
@@ -104,7 +105,8 @@ fun ZoomablePagerImage(
                     .build()
             ),
             contentScale = ContentScale.Fit,
-            contentDescription = media.label
+            contentDescription = media.label,
+            onDoubleClick = DoubleClickToZoomListener.cycle(3f)
         )
     }
 

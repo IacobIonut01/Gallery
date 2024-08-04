@@ -10,7 +10,7 @@ import androidx.core.graphics.createBitmap
 import androidx.core.graphics.drawable.toDrawable
 import coil3.ImageLoader
 import coil3.annotation.ExperimentalCoilApi
-import coil3.asCoilImage
+import coil3.asImage
 import coil3.decode.ContentMetadata
 import coil3.decode.DecodeResult
 import coil3.decode.DecodeUtils
@@ -19,6 +19,7 @@ import coil3.decode.ImageSource
 import coil3.fetch.SourceFetchResult
 import coil3.request.Options
 import coil3.request.bitmapConfig
+import coil3.size.Precision
 import coil3.size.Size
 import coil3.size.pxOrElse
 import coil3.svg.internal.MIME_TYPE_SVG
@@ -46,7 +47,7 @@ class ThumbnailDecoder(
 
 
         return DecodeResult(
-            image = normalizedBitmap.toDrawable(options.context.resources).asCoilImage(),
+            image = normalizedBitmap.toDrawable(options.context.resources).asImage(),
             isSampled = true,
         )
     }
@@ -91,7 +92,7 @@ class ThumbnailDecoder(
     }
 
     private fun isSizeValid(bitmap: Bitmap, options: Options, size: Size): Boolean {
-        if (options.allowInexactSize) return true
+        if (options.precision == Precision.INEXACT) return true
         val multiplier = DecodeUtils.computeSizeMultiplier(
             srcWidth = bitmap.width,
             srcHeight = bitmap.height,
