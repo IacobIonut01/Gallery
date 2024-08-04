@@ -26,6 +26,7 @@ material = "1.12.0"
 material3 = "1.2.1"
 media3Exoplayer = "1.4.0"
 navigation-runtime-ktx = "2.7.7"
+nextlib = "0.7.1"
 pinchzoomgrid = "0.0.5"
 profileinstaller = "1.3.1"
 room = "2.6.1"
@@ -94,6 +95,8 @@ androidx-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navig
 # Room
 gpuimage = { module = "jp.co.cyberagent.android:gpuimage", version.ref = "gpuimage" }
 jxl-coder-coil = { module = "com.github.awxkee:jxl-coder-coil", version.ref = "jxlCoder" }
+nextlib-mediainfo = { module = "com.github.anilbeesetti.nextlib:nextlib-mediainfo", version.ref = "nextlib" }
+nextlib-media3ext = { module = "com.github.anilbeesetti.nextlib:nextlib-media3ext", version.ref = "nextlib" }
 pinchzoomgrid = { module = "io.github.dokar3:pinchzoomgrid", version.ref = "pinchzoomgrid" }
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }

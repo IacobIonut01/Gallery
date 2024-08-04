@@ -36,11 +36,12 @@ import androidx.media3.exoplayer.ExoPlayer
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.feature_node.domain.model.Media
+import io.github.anilbeesetti.nextlib.media3ext.ffdecoder.NextRenderersFactory
 import io.sanghun.compose.video.RepeatMode
 import io.sanghun.compose.video.uri.VideoPlayerMediaItem
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.seconds
-import io.sanghun.compose.video.VideoPlayer as SanghunComposeVideoVideoPlayer
+import io.sanghun.compose.video.VideoPlayer2 as SanghunComposeVideoVideoPlayer
 
 @OptIn(ExperimentalFoundationApi::class)
 @androidx.annotation.OptIn(UnstableApi::class)
@@ -114,6 +115,11 @@ fun VideoPlayer(
                 enablePip = false,
                 handleAudioFocus = true,
                 repeatMode = RepeatMode.ONE,
+                playerBuilder = {
+                    val renderersFactory = NextRenderersFactory(context)
+                        .setEnableDecoderFallback(true)
+                    setRenderersFactory(renderersFactory)
+                },
                 playerInstance = {
                     exoPlayer = this
                     addListener(
