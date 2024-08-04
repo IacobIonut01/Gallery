@@ -175,6 +175,7 @@ dependencies {
     implementation(libs.coil.video)
     implementation(libs.jxl.coder.coil)
     implementation(libs.coil.network.okhttp)
+    implementation(libs.avif.coder.coil)
 
     // Exo Player
     implementation(libs.androidx.media3.exoplayer)
