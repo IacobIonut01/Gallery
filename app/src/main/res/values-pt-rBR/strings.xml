@@ -24,7 +24,7 @@
     <string name="error_cd">Ocorreu um erro</string>
     <string name="copy_error">Erro ao copiar</string>
     <string name="trash_restore">Restaurar</string>
-    <string name="trash_empty">Vazio</string>
+    <string name="trash_empty">Esvaziar</string>
     <string name="trash_delete">Deletar</string>
     <string name="share">Compartilhar</string>
     <string name="remove_selected">Remover selecionado</string>
