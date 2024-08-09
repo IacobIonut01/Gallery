@@ -237,7 +237,7 @@ fun Cursor.getMediaFromCursor(): Media {
         getString(getColumnIndexOrThrow(MediaStore.MediaColumns.DISPLAY_NAME))
     val albumID: Long =
         getLong(getColumnIndexOrThrow(MediaStore.MediaColumns.BUCKET_ID))
-    val albumLabel: String = try {
+    val albumLabel: String? = try {
         getString(getColumnIndexOrThrow(MediaStore.MediaColumns.BUCKET_DISPLAY_NAME))
     } catch (_: Exception) {
         Build.MODEL
@@ -278,7 +278,7 @@ fun Cursor.getMediaFromCursor(): Media {
         path = path,
         relativePath = relativePath,
         albumID = albumID,
-        albumLabel = albumLabel,
+        albumLabel = albumLabel ?: Build.MODEL,
         timestamp = modifiedTimestamp,
         takenTimestamp = takenTimestamp,
         expiryTimestamp = expiryTimestamp,
