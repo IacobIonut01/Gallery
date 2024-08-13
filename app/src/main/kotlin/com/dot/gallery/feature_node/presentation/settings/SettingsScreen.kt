@@ -309,6 +309,7 @@ fun rememberSettingsList(
         )
     }
 
+
     val blacklistPref = remember {
         SettingsEntity.Preference(
             title = context.getString(R.string.ignored_albums),

@@ -140,15 +140,18 @@ fun VideoPlayer(
         }
     }
 
-    LaunchedEffect(LocalConfiguration.current, isPlaying.value) {
-        if (exoPlayer.currentPosition != currentTime.longValue) {
-            exoPlayer.seekTo(currentTime.longValue)
+
+        LaunchedEffect(LocalConfiguration.current, isPlaying.value) {
+            if (exoPlayer.currentPosition != currentTime.longValue) {
+                exoPlayer.seekTo(currentTime.longValue)
+            }
+            delay(50)
+
+            exoPlayer.playWhenReady = isPlaying.value
+
         }
 
-        delay(50)
 
-        exoPlayer.playWhenReady = isPlaying.value
-    }
 
     if (isPlaying.value) {
         LaunchedEffect(Unit) {

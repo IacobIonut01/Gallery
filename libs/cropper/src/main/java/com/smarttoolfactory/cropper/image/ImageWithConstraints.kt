@@ -205,6 +205,7 @@ private fun ImageImpl(
 ) {
     val bitmapWidth = imageBitmap.width
     val bitmapHeight = imageBitmap.height
+    
 
     Canvas(modifier = modifier.clipToBounds()) {
 

@@ -10,6 +10,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.Scaffold
 import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -41,6 +42,7 @@ class StandaloneActivity : ComponentActivity() {
             }
         }
         setShowWhenLocked(isSecure)
+        enableEdgeToEdge()
         setContent {
             setSingletonImageLoaderFactory(::newImageLoader)
             GalleryTheme(darkTheme = true) {
