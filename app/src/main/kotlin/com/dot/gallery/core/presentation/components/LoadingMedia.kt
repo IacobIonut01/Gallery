@@ -33,7 +33,9 @@ import com.valentinilk.shimmer.shimmer
 @Composable
 fun LoadingMedia(
     modifier: Modifier = Modifier,
-    paddingValues: PaddingValues
+    paddingValues: PaddingValues,
+    shouldShimmer: Boolean = true,
+    topContent: @Composable (() -> Unit)? = null,
 ) {
     val gridState = rememberLazyGridState()
     val gridSize by rememberGridSize()
@@ -41,12 +43,17 @@ fun LoadingMedia(
         state = gridState,
         modifier = modifier
             .fillMaxSize()
-            .shimmer(),
+            .then(if (shouldShimmer) Modifier.shimmer() else Modifier),
         columns = cellsList[gridSize],
         contentPadding = paddingValues,
         horizontalArrangement = Arrangement.spacedBy(1.dp),
         verticalArrangement = Arrangement.spacedBy(1.dp),
     ) {
+        if (topContent != null) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                topContent()
+            }
+        }
         item(span = { GridItemSpan(maxLineSpan) }) {
             Box(
                 modifier = Modifier
@@ -73,31 +80,33 @@ fun LoadingMedia(
                     )
             )
         }
-        item(span = { GridItemSpan(maxLineSpan) }) {
-            Box(
-                modifier = Modifier
-                    .padding(horizontal = 24.dp, vertical = 24.dp)
-            ) {
-                Spacer(
+        if (shouldShimmer) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                Box(
                     modifier = Modifier
-                        .height(24.dp)
-                        .fillMaxWidth(0.35f)
+                        .padding(horizontal = 24.dp, vertical = 24.dp)
+                ) {
+                    Spacer(
+                        modifier = Modifier
+                            .height(24.dp)
+                            .fillMaxWidth(0.35f)
+                            .background(
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                                shape = RoundedCornerShape(100)
+                            )
+                    )
+                }
+            }
+            items(count = 25) {
+                Box(
+                    modifier = Modifier
+                        .aspectRatio(1f)
+                        .size(Dimens.Photo())
                         .background(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                            shape = RoundedCornerShape(100)
+                            color = MaterialTheme.colorScheme.surfaceVariant
                         )
                 )
             }
-        }
-        items(count = 25) {
-            Box(
-                modifier = Modifier
-                    .aspectRatio(1f)
-                    .size(Dimens.Photo())
-                    .background(
-                        color = MaterialTheme.colorScheme.surfaceVariant
-                    )
-            )
         }
     }
 }

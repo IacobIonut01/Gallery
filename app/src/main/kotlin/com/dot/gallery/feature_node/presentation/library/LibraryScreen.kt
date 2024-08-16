@@ -14,9 +14,9 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.DeleteOutline
-import androidx.compose.material.icons.outlined.EditNote
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
@@ -193,21 +193,20 @@ fun LibraryScreen(
                             Button(
                                 modifier = Modifier.weight(1f),
                                 onClick = {
-                                    //navigate(Screen.FavoriteScreen.route)
+                                    navigate(Screen.IgnoredScreen())
                                 },
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = MaterialTheme.colorScheme.tertiary,
                                     contentColor = MaterialTheme.colorScheme.onTertiary
-                                ),
-                                enabled = false
+                                )
                             ) {
                                 Icon(
-                                    imageVector = Icons.Outlined.EditNote,
-                                    contentDescription = stringResource(R.string.tools)
+                                    imageVector = Icons.Outlined.VisibilityOff,
+                                    contentDescription = stringResource(R.string.ignored_albums)
                                 )
                                 Spacer(modifier = Modifier.size(8.dp))
                                 Text(
-                                    text = stringResource(id = R.string.tools)
+                                    text = stringResource(id = R.string.ignored_albums)
                                 )
                             }
                         }

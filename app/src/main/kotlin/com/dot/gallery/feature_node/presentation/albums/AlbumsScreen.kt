@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -28,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dokar.pinchzoomgrid.PinchZoomGridLayout
@@ -39,6 +41,8 @@ import com.dot.gallery.core.Settings.Album.rememberLastSort
 import com.dot.gallery.core.presentation.components.EmptyMedia
 import com.dot.gallery.core.presentation.components.Error
 import com.dot.gallery.core.presentation.components.FilterButton
+import com.dot.gallery.core.presentation.components.FilterKind
+import com.dot.gallery.feature_node.domain.util.MediaOrder
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumComponent
 import com.dot.gallery.feature_node.presentation.albums.components.CarouselPinnedAlbums
 import com.dot.gallery.feature_node.presentation.common.MediaViewModel
@@ -55,10 +59,10 @@ fun AlbumsScreen(
     isScrolling: MutableState<Boolean>,
     searchBarActive: MutableState<Boolean>
 ) {
+    val mediaState by mediaViewModel.mediaState.collectAsStateWithLifecycle()
     val state by viewModel.unPinnedAlbumsState.collectAsStateWithLifecycle()
     val pinnedState by viewModel.pinnedAlbumState.collectAsStateWithLifecycle()
     val filterOptions = viewModel.rememberFilters()
-    val albumSortSetting by rememberLastSort()
     var lastCellIndex by rememberAlbumGridSize()
 
     val pinchState = rememberPinchZoomGridState(
@@ -70,9 +74,15 @@ fun AlbumsScreen(
         lastCellIndex = albumCellsList.indexOf(pinchState.currentCells)
     }
 
-    LaunchedEffect(state.albums, albumSortSetting) {
-        val filterOption = filterOptions.first { it.selected }
-        filterOption.onClick(filterOption.mediaOrder)
+    val lastSort by rememberLastSort()
+    LaunchedEffect(lastSort) {
+        val selectedFilter = filterOptions.first { it.filterKind == lastSort.kind }
+        selectedFilter.onClick(
+            when (selectedFilter.filterKind) {
+                FilterKind.DATE -> MediaOrder.Date(lastSort.orderType)
+                FilterKind.NAME -> MediaOrder.Label(lastSort.orderType)
+            }
+        )
     }
 
     Scaffold(
@@ -155,6 +165,25 @@ fun AlbumsScreen(
                         onItemClick = viewModel.onAlbumClick(navigate),
                         onTogglePinClick = viewModel.onAlbumLongClick
                     )
+                }
+
+                if (state.albums.isNotEmpty()) {
+                    item(
+                        span = { GridItemSpan(maxLineSpan) },
+                        key = "albumDetails"
+                    ) {
+                        Text(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .pinchItem(key = "albumDetails")
+                                .padding(horizontal = 8.dp)
+                                .padding(vertical = 24.dp),
+                            text = stringResource(R.string.images_videos, mediaState.media.size),
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Medium,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
         }

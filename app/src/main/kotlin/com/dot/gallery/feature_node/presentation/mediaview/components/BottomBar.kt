@@ -77,7 +77,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.toUpperCase
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil3.compose.AsyncImage
 import com.dot.gallery.BuildConfig
 import com.dot.gallery.R
 import com.dot.gallery.core.AlbumState
@@ -115,6 +114,7 @@ import com.dot.gallery.feature_node.presentation.util.shareMedia
 import com.dot.gallery.feature_node.presentation.vault.components.SelectVaultSheet
 import com.dot.gallery.ui.theme.BlackScrim
 import com.dot.gallery.ui.theme.Shapes
+import com.github.panpf.sketch.AsyncImage
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 
@@ -215,7 +215,7 @@ fun MediaInfoBottomSheet(
                 dragHandle = { DragHandle() },
                 shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
                 sheetState = state.sheetState,
-                windowInsets = WindowInsets(0, 0, 0, 0)
+                contentWindowInsets = { WindowInsets(0, 0, 0, 0) }
             ) {
                 BackHandler {
                     scope.launch {
@@ -430,7 +430,7 @@ fun MediaInfoMapPreview(exifMetadata: ExifMetadata) {
                     .background(MaterialTheme.colorScheme.surface)
             ) {
                 AsyncImage(
-                    model = MapBoxURL(
+                    uri = MapBoxURL(
                         latitude = lat,
                         longitude = long,
                         darkTheme = isSystemInDarkTheme()
@@ -476,7 +476,9 @@ private fun MediaViewInfoActions(
         // Share Component
         ShareButton(media, followTheme = true)
         // Hide
-        HideButton(media, vaults = vaults, addMedia = addMedia, followTheme = true)
+        if (!media.isVideo) {
+            HideButton(media, vaults = vaults, addMedia = addMedia, followTheme = true)
+        }
         // Use as or Open With
         OpenAsButton(media, followTheme = true)
         // Copy
@@ -624,10 +626,15 @@ private fun FavoriteButton(
     followTheme: Boolean = false
 ) {
     val scope = rememberCoroutineScope()
-    val result = rememberActivityResult()
-    val favoriteIcon by remember(media) {
+    var lastFavorite = remember(media) { media.isFavorite }
+    val result = rememberActivityResult(
+        onResultOk = {
+            lastFavorite = !lastFavorite
+        }
+    )
+    val favoriteIcon by remember(lastFavorite) {
         mutableStateOf(
-            if (media.isFavorite)
+            if (lastFavorite)
                 Icons.Filled.Favorite
             else Icons.Outlined.FavoriteBorder
         )

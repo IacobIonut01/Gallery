@@ -24,6 +24,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -41,7 +42,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.core.AlbumState
 import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Constants.Animation.enterAnimation
@@ -63,9 +63,9 @@ import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetStat
 import com.dot.gallery.feature_node.presentation.util.rememberWindowInsetsController
 import com.dot.gallery.feature_node.presentation.util.toggleSystemBars
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
+@Stable
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MediaViewScreen(
@@ -75,22 +75,20 @@ fun MediaViewScreen(
     isStandalone: Boolean = false,
     mediaId: Long,
     target: String? = null,
-    mediaState: StateFlow<MediaState>,
-    albumsState: StateFlow<AlbumState>,
+    mediaState: MediaState,
+    albumsState: AlbumState,
     handler: MediaHandleUseCase,
     vaults: List<Vault>,
     addMedia: (Vault, Media) -> Unit
 ) {
     var runtimeMediaId by rememberSaveable(mediaId) { mutableLongStateOf(mediaId) }
-    val state by mediaState.collectAsStateWithLifecycle()
-    val albumState by albumsState.collectAsStateWithLifecycle()
     val initialPage = rememberSaveable(runtimeMediaId) {
-        state.media.indexOfFirst { it.id == runtimeMediaId }.coerceAtLeast(0)
+        mediaState.media.indexOfFirst { it.id == runtimeMediaId }.coerceAtLeast(0)
     }
     val pagerState = rememberPagerState(
         initialPage = initialPage,
         initialPageOffsetFraction = 0f,
-        pageCount = state.media::size
+        pageCount = mediaState.media::size
     )
     val bottomSheetState = rememberAppBottomSheetState()
 
@@ -101,14 +99,17 @@ fun MediaViewScreen(
     val windowInsetsController = rememberWindowInsetsController()
 
     var lastIndex by remember { mutableIntStateOf(-1) }
-    val updateContent: (Int) -> Unit = { page ->
-        if (state.media.isNotEmpty()) {
-            val index = if (page == -1) 0 else page
-            if (lastIndex != -1)
-                runtimeMediaId = state.media[lastIndex.coerceAtMost(state.media.size - 1)].id
-            currentDate.value = state.media[index].timestamp.getDate(HEADER_DATE_FORMAT)
-            currentMedia.value = state.media[index]
-        } else if (!isStandalone) navigateUp()
+    val updateContent: (Int) -> Unit = remember {
+        { page ->
+            if (mediaState.media.isNotEmpty()) {
+                val index = if (page == -1) 0 else page
+                if (lastIndex != -1)
+                    runtimeMediaId =
+                        mediaState.media[lastIndex.coerceAtMost(mediaState.media.size - 1)].id
+                currentDate.value = mediaState.media[index].timestamp.getDate(HEADER_DATE_FORMAT)
+                currentMedia.value = mediaState.media[index]
+            } else if (!isStandalone) navigateUp()
+        }
     }
     val scope = rememberCoroutineScope()
 
@@ -116,7 +117,7 @@ fun MediaViewScreen(
         currentMedia.value?.trashed == 0 && !(currentMedia.value?.readUriOnly ?: false)
     }
 
-    LaunchedEffect(pagerState, state.media) {
+    LaunchedEffect(pagerState, mediaState.media) {
         snapshotFlow { pagerState.currentPage }.collect { page ->
             updateContent(page)
         }
@@ -147,14 +148,14 @@ fun MediaViewScreen(
             state = pagerState,
             flingBehavior = PagerDefaults.flingBehavior(
                 state = pagerState,
-                lowVelocityAnimationSpec = tween(
+                snapAnimationSpec = tween(
                     easing = FastOutLinearInEasing,
                     durationMillis = DEFAULT_LOW_VELOCITY_SWIPE_DURATION
                 )
             ),
             key = { index ->
-                if (state.media.isNotEmpty()) {
-                    state.media[index.coerceIn(0 until state.media.size)].id
+                if (mediaState.media.isNotEmpty()) {
+                    mediaState.media[index.coerceIn(0 until mediaState.media.size)].id
                 } else "empty"
             },
             pageSpacing = 16.dp,
@@ -166,9 +167,12 @@ fun MediaViewScreen(
                         playWhenReady = currentPage == index
                     }
             }
+            val media = remember(index, mediaState) {
+                mediaState.media[index]
+            }
 
             MediaPreviewComponent(
-                media = state.media[index],
+                media = media,
                 uiEnabled = showUI.value,
                 playWhenReady = playWhenReady,
                 onItemClick = {
@@ -196,8 +200,8 @@ fun MediaViewScreen(
                                 indication = null,
                                 onDoubleClick = {
                                     scope.launch {
-                                        currentTime.value += 10 * 1000
-                                        player.seekTo(currentTime.value)
+                                        currentTime.longValue += 10 * 1000
+                                        player.seekTo(currentTime.longValue)
                                         delay(100)
                                         player.play()
                                     }
@@ -222,8 +226,8 @@ fun MediaViewScreen(
                                 indication = null,
                                 onDoubleClick = {
                                     scope.launch {
-                                        currentTime.value -= 10 * 1000
-                                        player.seekTo(currentTime.value)
+                                        currentTime.longValue -= 10 * 1000
+                                        player.seekTo(currentTime.longValue)
                                         delay(100)
                                         player.play()
                                     }
@@ -258,13 +262,20 @@ fun MediaViewScreen(
         MediaViewAppBar(
             showUI = showUI.value,
             showInfo = showInfo,
-            showDate = currentMedia.value?.timestamp != 0L,
+            showDate = remember(currentMedia) {
+                currentMedia.value?.timestamp != 0L
+            },
             currentDate = currentDate.value,
             bottomSheetState = bottomSheetState,
             paddingValues = paddingValues,
             onGoBack = navigateUp
         )
-        if (target == TARGET_TRASH) {
+        AnimatedVisibility(
+            modifier = Modifier.align(Alignment.BottomCenter),
+            visible = target == TARGET_TRASH,
+            enter = enterAnimation,
+            exit = exitAnimation
+        ) {
             TrashedViewBottomBar(
                 handler = handler,
                 showUI = showUI.value,
@@ -274,7 +285,13 @@ fun MediaViewScreen(
             ) {
                 lastIndex = it
             }
-        } else {
+        }
+        AnimatedVisibility(
+            modifier = Modifier.align(Alignment.BottomCenter),
+            visible = target != TARGET_TRASH,
+            enter = enterAnimation,
+            exit = exitAnimation
+        ) {
             MediaViewBottomBar(
                 showDeleteButton = remember(currentMedia.value) {
                     currentMedia.value?.readUriOnly == false
@@ -284,7 +301,7 @@ fun MediaViewScreen(
                 showUI = showUI.value,
                 paddingValues = paddingValues,
                 currentMedia = currentMedia.value,
-                albumsState = albumState,
+                albumsState = albumsState,
                 currentIndex = pagerState.currentPage,
                 addMedia = addMedia,
                 vaults = vaults

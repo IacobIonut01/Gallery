@@ -2,6 +2,7 @@ package com.dot.gallery.feature_node.presentation.edit.components.filters
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -22,16 +23,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
-import coil3.compose.LocalPlatformContext
-import coil3.request.CachePolicy
-import coil3.request.ImageRequest
-import coil3.size.Scale
+import androidx.core.graphics.drawable.toDrawable
 import com.dot.gallery.feature_node.domain.model.ImageFilter
 import com.dot.gallery.feature_node.presentation.edit.EditViewModel
 import com.dot.gallery.ui.theme.Shapes
+import com.google.accompanist.drawablepainter.rememberDrawablePainter
 
 @Composable
 fun FilterSelector(
@@ -79,7 +78,7 @@ fun FilterItem(
             targetValue = if (isSelected) MaterialTheme.colorScheme.tertiary
                 else Color.Transparent, label = "colorAnimation"
         )
-        AsyncImage(
+        Image(
             modifier = Modifier
                 .size(92.dp)
                 .clip(Shapes.large)
@@ -92,11 +91,7 @@ fun FilterItem(
                     enabled = !isSelected,
                     onClick = onFilterSelect
                 ),
-            model = ImageRequest.Builder(LocalPlatformContext.current)
-                .data(imageFilter.filterPreview)
-                .memoryCachePolicy(CachePolicy.ENABLED)
-                .scale(Scale.FIT)
-                .build(),
+            painter = rememberDrawablePainter(imageFilter.filterPreview.toDrawable(LocalContext.current.resources)),
             contentScale = ContentScale.Crop,
             contentDescription = imageFilter.name
         )

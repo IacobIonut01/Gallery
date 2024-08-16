@@ -113,14 +113,16 @@ object Constants {
         GridCells.Fixed(4),
         GridCells.Fixed(3),
         GridCells.Fixed(2),
-        GridCells.Fixed(1),
+        GridCells.Fixed(1)
     )
 
     val albumCellsList = listOf(
+        GridCells.Fixed(7),
+        GridCells.Fixed(6),
         GridCells.Fixed(5),
         GridCells.Fixed(4),
         GridCells.Fixed(3),
         GridCells.Fixed(2),
-        GridCells.Fixed(1),
+        GridCells.Fixed(1)
     )
 }

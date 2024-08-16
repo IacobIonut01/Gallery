@@ -9,6 +9,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -57,6 +58,7 @@ import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.Constants.cellsList
+import com.dot.gallery.core.Settings.Misc.rememberAutoHideSearchBar
 import com.dot.gallery.core.Settings.Misc.rememberGridSize
 import com.dot.gallery.core.Settings.Search.rememberSearchHistory
 import com.dot.gallery.core.presentation.components.LoadingMedia
@@ -103,6 +105,10 @@ fun MainSearchBar(
             toggleNavbar(!activeState.value)
         }
     }
+    val hideSearchBarSetting by rememberAutoHideSearchBar()
+    val shouldHide by remember(isScrolling.value, hideSearchBarSetting) {
+        mutableStateOf(if (hideSearchBarSetting) isScrolling.value else false)
+    }
 
     Box(
         modifier = Modifier
@@ -116,144 +122,158 @@ fun MainSearchBar(
          * It is not yet possible because of the material3 compose limitations
          */
         val searchBarAlpha by animateFloatAsState(
-            targetValue = remember(isScrolling.value) { if (isScrolling.value) 0f else 1f },
+            targetValue = remember(shouldHide) { if (shouldHide) 0f else 1f },
             label = "searchBarAlpha"
         )
+        val onActiveChange: (Boolean) -> Unit = { activeState.value = it }
+        val colors = SearchBarDefaults.colors(
+            dividerColor = Color.Transparent,
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        )
+        /**
+         * Searched content
+         */
         SearchBar(
+            inputField = {
+                SearchBarDefaults.InputField(
+                    query = query,
+                    onQueryChange = {
+                        query = it
+                        if (it != mediaViewModel.lastQuery.value && mediaViewModel.lastQuery.value.isNotEmpty())
+                            mediaViewModel.clearQuery()
+                    },
+                    onSearch = {
+                        if (it.isNotEmpty())
+                            historySet =
+                                historySet.toMutableSet().apply { add("${System.currentTimeMillis()}/$it") }
+                        mediaViewModel.queryMedia(it)
+                    },
+                    expanded = activeState.value,
+                    onExpandedChange = onActiveChange,
+                    enabled = (selectionState == null || !selectionState.value) && !shouldHide,
+                    placeholder = {
+                        Text(text = stringResource(id = R.string.searchbar_title))
+                    },
+                    leadingIcon = {
+                        IconButton(
+                            enabled = selectionState == null,
+                            onClick = {
+                                scope.launch {
+                                    activeState.value = !activeState.value
+                                    if (query.isNotEmpty()) query = ""
+                                    mediaViewModel.clearQuery()
+                                }
+                            }) {
+                            val leadingIcon = if (activeState.value)
+                                Icons.AutoMirrored.Outlined.ArrowBack else Icons.Outlined.Search
+                            Icon(
+                                imageVector = leadingIcon,
+                                modifier = Modifier.fillMaxHeight(),
+                                contentDescription = null
+                            )
+                        }
+                    },
+                    trailingIcon = {
+                        Row {
+                            if (!activeState.value) menuItems?.invoke(this)
+                        }
+                    },
+                    interactionSource = remember { MutableInteractionSource() },
+                )
+            },
+            expanded = activeState.value,
+            onExpandedChange = onActiveChange,
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .alpha(searchBarAlpha),
-            enabled = (selectionState == null || !selectionState.value) && !isScrolling.value,
-            query = query,
-            onQueryChange = {
-                query = it
-                if (it != mediaViewModel.lastQuery.value && mediaViewModel.lastQuery.value.isNotEmpty())
-                    mediaViewModel.clearQuery()
-            },
-            onSearch = {
-                if (it.isNotEmpty())
-                    historySet =
-                        historySet.toMutableSet().apply { add("${System.currentTimeMillis()}/$it") }
-                mediaViewModel.queryMedia(it)
-            },
-            active = activeState.value,
-            onActiveChange = { activeState.value = it },
-            placeholder = {
-                Text(text = stringResource(id = R.string.searchbar_title))
-            },
+            colors = colors,
             tonalElevation = elevation,
-            leadingIcon = {
-                IconButton(
-                    enabled = selectionState == null,
-                    onClick = {
-                        scope.launch {
-                            activeState.value = !activeState.value
-                            if (query.isNotEmpty()) query = ""
-                            mediaViewModel.clearQuery()
-                        }
-                    }) {
-                    val leadingIcon = if (activeState.value)
-                        Icons.AutoMirrored.Outlined.ArrowBack else Icons.Outlined.Search
-                    Icon(
-                        imageVector = leadingIcon,
-                        modifier = Modifier.fillMaxHeight(),
-                        contentDescription = null
-                    )
+            content = {
+                /**
+                 * Recent searches
+                 */
+                val lastQueryIsEmpty =
+                    remember(mediaViewModel.lastQuery.value) { mediaViewModel.lastQuery.value.isEmpty() }
+                AnimatedVisibility(
+                    visible = lastQueryIsEmpty,
+                    enter = enterAnimation,
+                    exit = exitAnimation
+                ) {
+                    SearchHistory {
+                        query = it
+                        mediaViewModel.queryMedia(it)
+                    }
                 }
-            },
-            trailingIcon = {
-                Row {
-                    if (!activeState.value) menuItems?.invoke(this)
-                }
-            },
-            colors = SearchBarDefaults.colors(
-                dividerColor = Color.Transparent
-            )
-        ) {
-            /**
-             * Recent searches
-             */
-            val lastQueryIsEmpty = remember(mediaViewModel.lastQuery.value) { mediaViewModel.lastQuery.value.isEmpty() }
-            AnimatedVisibility(
-                visible = lastQueryIsEmpty,
-                enter = enterAnimation,
-                exit = exitAnimation
-            ) {
-                SearchHistory {
-                    query = it
-                    mediaViewModel.queryMedia(it)
-                }
-            }
 
-            /**
-             * Searched content
-             */
-            AnimatedVisibility(
-                visible = !lastQueryIsEmpty,
-                enter = enterAnimation,
-                exit = exitAnimation
-            ) {
-                val mediaIsEmpty = remember(state) { state.media.isEmpty() && !state.isLoading }
-                if (mediaIsEmpty) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 72.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.ImageSearch,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
+                /**
+                 * Searched content
+                 */
+                AnimatedVisibility(
+                    visible = !lastQueryIsEmpty,
+                    enter = enterAnimation,
+                    exit = exitAnimation
+                ) {
+                    val mediaIsEmpty = remember(state) { state.media.isEmpty() && !state.isLoading }
+                    if (mediaIsEmpty) {
+                        Column(
                             modifier = Modifier
-                                .size(64.dp)
-                        )
-                        Text(
-                            text = stringResource(R.string.no_media_found),
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    }
-                } else {
-                    val pd = PaddingValues(
-                        bottom = bottomPadding + 16.dp
-                    )
-                    var canScroll by rememberSaveable { mutableStateOf(true) }
-                    var lastCellIndex by rememberGridSize()
-                    val pinchState = rememberPinchZoomGridState(
-                        cellsList = cellsList,
-                        initialCellsIndex = lastCellIndex
-                    )
-
-                    LaunchedEffect(pinchState.currentCells) {
-                        lastCellIndex = cellsList.indexOf(pinchState.currentCells)
-                    }
-                    LaunchedEffect(pinchState.isZooming) {
-                        canScroll = !pinchState.isZooming
-                    }
-
-                    PinchZoomGridLayout(state = pinchState) {
-                        MediaGridView(
-                            mediaState = state,
-                            paddingValues = pd,
-                            canScroll = canScroll,
-                            isScrolling = remember { mutableStateOf(false) }
+                                .fillMaxWidth()
+                                .padding(top = 72.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            navigate(Screen.MediaViewScreen.route + "?mediaId=${it.id}")
+                            Icon(
+                                imageVector = Icons.Outlined.ImageSearch,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier
+                                    .size(64.dp)
+                            )
+                            Text(
+                                text = stringResource(R.string.no_media_found),
+                                style = MaterialTheme.typography.titleMedium
+                            )
                         }
-                        androidx.compose.animation.AnimatedVisibility(
-                            visible = state.isLoading,
-                            enter = enterAnimation,
-                            exit = exitAnimation
-                        ) {
-                            LoadingMedia(paddingValues = pd)
-                        }
-                    }
+                    } else {
+                        val pd = PaddingValues(
+                            bottom = bottomPadding + 16.dp
+                        )
+                        var canScroll by rememberSaveable { mutableStateOf(true) }
+                        var lastCellIndex by rememberGridSize()
+                        val pinchState = rememberPinchZoomGridState(
+                            cellsList = cellsList,
+                            initialCellsIndex = lastCellIndex
+                        )
 
+                        LaunchedEffect(pinchState.currentCells) {
+                            lastCellIndex = cellsList.indexOf(pinchState.currentCells)
+                        }
+                        LaunchedEffect(pinchState.isZooming) {
+                            canScroll = !pinchState.isZooming
+                        }
+
+                        PinchZoomGridLayout(state = pinchState) {
+                            MediaGridView(
+                                mediaState = state,
+                                paddingValues = pd,
+                                canScroll = canScroll,
+                                isScrolling = remember { mutableStateOf(false) }
+                            ) {
+                                navigate(Screen.MediaViewScreen.route + "?mediaId=${it.id}")
+                            }
+                            androidx.compose.animation.AnimatedVisibility(
+                                visible = state.isLoading,
+                                enter = enterAnimation,
+                                exit = exitAnimation
+                            ) {
+                                LoadingMedia(paddingValues = pd)
+                            }
+                        }
+
+                    }
                 }
-            }
-
-        }
+            },
+        )
     }
 
     BackHandler(activeState.value) {

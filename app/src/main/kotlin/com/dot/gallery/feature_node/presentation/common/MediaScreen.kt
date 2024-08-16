@@ -75,7 +75,7 @@ fun MediaScreen(
     enableStickyHeaders: Boolean = true,
     allowNavBar: Boolean = false,
     navActionsContent: @Composable() (RowScope.(expandedDropDown: MutableState<Boolean>, result: ActivityResultLauncher<IntentSenderRequest>) -> Unit),
-    emptyContent: @Composable () -> Unit,
+    emptyContent: @Composable (PaddingValues) -> Unit,
     aboveGridContent: @Composable() (() -> Unit)? = null,
     navigate: (route: String) -> Unit,
     navigateUp: () -> Unit,
@@ -216,7 +216,10 @@ fun MediaScreen(
                 }
                 val showEmpty = remember(state) { state.media.isEmpty() && !state.isLoading && !showError }
                 AnimatedVisibility(visible = showEmpty) {
-                    emptyContent.invoke()
+                    emptyContent.invoke(PaddingValues(
+                        top = it.calculateTopPadding(),
+                        bottom = paddingValues.calculateBottomPadding() + 16.dp + 64.dp
+                    ))
                 }
                 /** ************ **/
             }

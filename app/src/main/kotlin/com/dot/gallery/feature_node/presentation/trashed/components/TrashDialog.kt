@@ -57,10 +57,6 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
-import coil3.compose.LocalPlatformContext
-import coil3.request.CachePolicy
-import coil3.request.ImageRequest
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
@@ -74,6 +70,7 @@ import com.dot.gallery.feature_node.presentation.util.FeedbackManager.Companion.
 import com.dot.gallery.feature_node.presentation.util.canBeTrashed
 import com.dot.gallery.feature_node.presentation.util.mediaPair
 import com.dot.gallery.ui.theme.Shapes
+import com.github.panpf.sketch.AsyncImage
 import kotlinx.coroutines.launch
 
 @OptIn(
@@ -108,7 +105,7 @@ fun TrashDialog(
                 }
             },
             dragHandle = { DragHandle() },
-            windowInsets = WindowInsets(0, 0, 0, 0)
+            contentWindowInsets = { WindowInsets(0, 0, 0, 0) }
         ) {
             val tertiaryContainer = MaterialTheme.colorScheme.tertiaryContainer
             val tertiaryOnContainer = MaterialTheme.colorScheme.onTertiaryContainer
@@ -263,7 +260,7 @@ fun TrashDialog(
                         val feedbackManager = rememberFeedbackManager()
                         Box(
                             modifier = Modifier
-                                .animateItemPlacement()
+                                .animateItem()
                                 .size(width = 80.dp, height = 120.dp)
                                 .clip(shape)
                                 .border(
@@ -293,11 +290,7 @@ fun TrashDialog(
                         ) {
                             AsyncImage(
                                 modifier = Modifier.fillMaxSize(),
-                                model = ImageRequest.Builder(LocalPlatformContext.current)
-                                    .data(it.uri)
-                                    .diskCachePolicy(CachePolicy.ENABLED)
-                                    .memoryCachePolicy(CachePolicy.ENABLED)
-                                    .build(),
+                                uri = it.uri.toString(),
                                 contentDescription = it.label,
                                 contentScale = ContentScale.Crop
                             )

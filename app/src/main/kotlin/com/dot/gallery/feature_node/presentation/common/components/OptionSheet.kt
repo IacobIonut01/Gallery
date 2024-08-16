@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -57,8 +56,7 @@ fun OptionSheet(
             },
             containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
             tonalElevation = 0.dp,
-            dragHandle = { DragHandle() },
-            windowInsets = WindowInsets(0, 0, 0, 0)
+            dragHandle = { DragHandle() }
         ) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(16.dp),

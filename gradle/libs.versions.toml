@@ -4,12 +4,13 @@ avifCoderCoil = "1.8.0"
 benchmarkMacroJunit4 = "1.2.4"
 biometric = "1.2.0-alpha05"
 appcompat = "1.7.0"
-coilVersion = "3.0.0-alpha08"
 composeVideo = "1.2.0"
+core = "1.8.0"
 coreSplashscreen = "1.0.1"
 fuzzywuzzy = "1.4.0"
 exifinterface = "1.3.7"
 gpuimage = "2.1.0"
+graphicsShapes = "1.0.0-rc01"
 jxlCoder = "2.1.10"
 kotlin = "2.0.0"
 kotlinCoroutinesVersion = "1.8.1"
@@ -23,7 +24,7 @@ activity-compose = "1.9.1"
 compose-bom = "2024.06.00"
 hilt = "2.51"
 material = "1.12.0"
-material3 = "1.2.1"
+material3 = "1.3.0-beta05"
 media3Exoplayer = "1.4.0"
 navigation-runtime-ktx = "2.7.7"
 pinchzoomgrid = "0.0.5"
@@ -32,10 +33,11 @@ room = "2.6.1"
 accompanist = "0.34.0"
 datastore = "1.1.1"
 securityCrypto = "1.1.0-alpha06"
+sketch = "4.0.0-alpha06"
 uiautomator = "2.3.0"
-zoomable = "1.6.1"
-zoomableImageCoil = "0.12.1"
-composealpha = "1.7.0-beta06"
+composealpha = "1.7.0-beta07"
+kotlinxSerializationJson = "1.7.0"
+zoomimageViewSketch = "1.1.0-alpha05"
 
 [libraries]
 # AndroidX
@@ -45,6 +47,7 @@ androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = 
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
 androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreen" }
 androidx-exifinterface = { module = "androidx.exifinterface:exifinterface", version.ref = "exifinterface" }
+androidx-graphics-shapes = { module = "androidx.graphics:graphics-shapes", version.ref = "graphicsShapes" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle-runtime" }
 androidx-media3-exoplayer-dash = { module = "androidx.media3:media3-exoplayer-dash", version.ref = "media3Exoplayer" }
 androidx-media3-exoplayer-hls = { module = "androidx.media3:media3-exoplayer-hls", version.ref = "media3Exoplayer" }
@@ -58,11 +61,6 @@ androidx-profileinstaller = { module = "androidx.profileinstaller:profileinstall
 androidx-security-crypto = { module = "androidx.security:security-crypto", version.ref = "securityCrypto" }
 androidx-uiautomator = { module = "androidx.test.uiautomator:uiautomator", version.ref = "uiautomator" }
 avif-coder-coil = { module = "com.github.awxkee:avif-coder-coil", version.ref = "avifCoderCoil" }
-coil-video = { module = "io.coil-kt.coil3:coil-video", version.ref = "coilVersion" }
-coil-gif = { module = "io.coil-kt.coil3:coil-gif", version.ref = "coilVersion" }
-coil-svg = { module = "io.coil-kt.coil3:coil-svg", version.ref = "coilVersion" }
-coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilVersion" }
-coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coilVersion" }
 
 # Compose
 compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "compose-bom" }
@@ -86,6 +84,7 @@ compose-shimmer = { group = "com.valentinilk.shimmer", name = "compose-shimmer",
 compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 
 # Dagger
+core = { module = "com.composables:core", version.ref = "core" }
 dagger-hilt = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
 dagger-hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
 androidx-hilt-compiler = { group = "androidx.hilt", name = "hilt-compiler", version = "1.2.0" }
@@ -107,7 +106,13 @@ accompanist-permissions = { group = "com.google.accompanist", name = "accompanis
 accompanist-drawablepainter = { module = "com.google.accompanist:accompanist-drawablepainter", version.ref = "accompanist" }
 
 # Zoomable
-zoomable = { module = "net.engawapg.lib:zoomable", version.ref = "zoomable" }
+sketch-animated = { module = "io.github.panpf.sketch4:sketch-animated", version.ref = "sketch" }
+sketch-compose = { module = "io.github.panpf.sketch4:sketch-compose", version.ref = "sketch" }
+sketch-extensions-compose = { module = "io.github.panpf.sketch4:sketch-extensions-compose", version.ref = "sketch" }
+sketch-http-ktor = { module = "io.github.panpf.sketch4:sketch-http-ktor", version.ref = "sketch" }
+sketch-svg = { module = "io.github.panpf.sketch4:sketch-svg", version.ref = "sketch" }
+sketch-video = { module = "io.github.panpf.sketch4:sketch-video-ffmpeg", version.ref = "sketch" }
+sketch-view = { module = "io.github.panpf.sketch4:sketch-view", version.ref = "sketch" }
 
 # Kotlinx
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinCoroutinesVersion" }
@@ -123,7 +128,9 @@ fuzzywuzzy = { module = "me.xdrop:fuzzywuzzy", version.ref = "fuzzywuzzy" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidx-test-ext-junit" }
 espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso-core" }
-zoomable-image-coil = { module = "me.saket.telephoto:zoomable-image-coil", version.ref = "zoomableImageCoil" }
+
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+zoomimage-sketch = { module = "io.github.panpf.zoomimage:zoomimage-compose-sketch", version.ref = "zoomimageViewSketch" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
@@ -135,5 +142,6 @@ roomPlugin = { id = "androidx.room", version.ref = "room" }
 hiltAndroid = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 baselineProfilePlugin = { id = "androidx.baselineprofile", version.ref = "benchmarkMacroJunit4" }
 kotlin-compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 [bundles]
 

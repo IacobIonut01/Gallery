@@ -17,6 +17,7 @@ import com.dot.gallery.R
 import com.dot.gallery.core.AlbumState
 import com.dot.gallery.core.Resource
 import com.dot.gallery.core.Settings
+import com.dot.gallery.core.presentation.components.FilterKind
 import com.dot.gallery.core.presentation.components.FilterOption
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.use_case.MediaUseCases
@@ -39,6 +40,8 @@ class AlbumsViewModel @Inject constructor(
 
     private val _albumsState = MutableStateFlow(AlbumState())
     val albumsState = _albumsState.asStateFlow()
+    private val _unfilteredAlbums = MutableStateFlow(AlbumState())
+    val unfilteredAlbums = _unfilteredAlbums.asStateFlow()
     private val _unPinnedAlbumsState = MutableStateFlow(AlbumState())
     val unPinnedAlbumsState = _unPinnedAlbumsState.asStateFlow()
     private val _pinnedAlbumState = MutableStateFlow(AlbumState())
@@ -67,29 +70,14 @@ class AlbumsViewModel @Inject constructor(
         return remember(lastValue) {
             mutableStateListOf(
                 FilterOption(
-                    titleRes = R.string.filter_recent,
-                    mediaOrder = MediaOrder.Date(OrderType.Descending),
-                    onClick = { updateOrder(it) },
-                    selected = lastValue == 0
+                    titleRes = R.string.filter_type_date,
+                    filterKind = FilterKind.DATE,
+                    onClick = { updateOrder(it) }
                 ),
                 FilterOption(
-                    titleRes = R.string.filter_old,
-                    mediaOrder = MediaOrder.Date(OrderType.Ascending),
-                    onClick = { updateOrder(it) },
-                    selected = lastValue == 1
-                ),
-
-                FilterOption(
-                    titleRes = R.string.filter_nameAZ,
-                    mediaOrder = MediaOrder.Label(OrderType.Ascending),
-                    onClick = { updateOrder(it) },
-                    selected = lastValue == 2
-                ),
-                FilterOption(
-                    titleRes = R.string.filter_nameZA,
-                    mediaOrder = MediaOrder.Label(OrderType.Descending),
-                    onClick = { updateOrder(it) },
-                    selected = lastValue == 3
+                    titleRes = R.string.filter_type_name,
+                    filterKind = FilterKind.NAME,
+                    onClick = { updateOrder(it) }
                 )
             )
         }
@@ -160,6 +148,21 @@ class AlbumsViewModel @Inject constructor(
                 }
                 if (albumsState.value != newAlbumState) {
                     _albumsState.emit(newAlbumState)
+                }
+                if (unfilteredAlbums.value != newAlbumState) {
+                    _unfilteredAlbums.emit(newAlbumState)
+                }
+            }
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            mediaUseCases.getAlbumsUseCase(mediaOrder, ignoreBlacklisted = true).collectLatest { result ->
+                val data = result.data ?: emptyList()
+                val error =
+                    if (result is Resource.Error) result.message ?: "An error occurred" else ""
+                val newAlbumState = AlbumState(error = error, albums = data)
+                if (data == unfilteredAlbums.value.albums) return@collectLatest
+                if (unfilteredAlbums.value != newAlbumState) {
+                    _unfilteredAlbums.emit(newAlbumState)
                 }
             }
         }

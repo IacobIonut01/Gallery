@@ -19,12 +19,12 @@ import com.dot.gallery.R
 import com.dot.gallery.core.AlbumState
 import com.dot.gallery.core.Constants.Target.TARGET_TRASH
 import com.dot.gallery.core.MediaState
+import com.dot.gallery.core.presentation.components.EmptyMedia
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.common.MediaScreen
 import com.dot.gallery.feature_node.presentation.common.MediaViewModel
 import com.dot.gallery.feature_node.presentation.trashed.components.AutoDeleteFooter
-import com.dot.gallery.feature_node.presentation.trashed.components.EmptyTrash
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashedNavActions
 import kotlinx.coroutines.flow.StateFlow
 
@@ -59,7 +59,7 @@ fun TrashedGridScreen(
                           _: ActivityResultLauncher<IntentSenderRequest> ->
         TrashedNavActions(handler, mediaState, selectedMedia, selectionState)
     },
-    emptyContent = { EmptyTrash(Modifier.fillMaxSize()) },
+    emptyContent = { padding -> EmptyMedia(Modifier.fillMaxSize(), padding) },
     aboveGridContent = { AutoDeleteFooter() },
     navigate = navigate,
     navigateUp = navigateUp,

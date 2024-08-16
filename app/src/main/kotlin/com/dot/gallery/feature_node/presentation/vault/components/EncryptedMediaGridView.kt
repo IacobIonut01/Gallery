@@ -180,7 +180,7 @@ fun PinchZoomGridScope.EncryptedMediaGridView(
                         } else {
                             EncryptedMediaImage(
                                 modifier = Modifier
-                                    .animateItemPlacement()
+                                    .animateItem()
                                     .pinchItem(key = it.key),
                                 media = (item as EncryptedMediaItem.MediaViewItem).media,
                                 selectionState = selectionState,
@@ -208,7 +208,7 @@ fun PinchZoomGridScope.EncryptedMediaGridView(
                     ) { index, media ->
                         EncryptedMediaImage(
                             modifier = Modifier
-                                .animateItemPlacement()
+                                .animateItem()
                                 .pinchItem(key = media.toString()),
                             media = media,
                             selectionState = selectionState,

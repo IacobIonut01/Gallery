@@ -49,7 +49,10 @@ fun VaultScreen(
         onSuccess = {
             isAuthenticated = true
         },
-        onFailed = { isAuthenticated = false },
+        onFailed = {
+            isAuthenticated = false
+            navigateUp()
+        },
         biometricPromptInfo = PromptInfo.Builder()
             .setAllowedAuthenticators(BIOMETRIC_STRONG or DEVICE_CREDENTIAL)
             .setTitle(stringResource(R.string.biometric_authentication))

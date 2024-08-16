@@ -4,7 +4,7 @@ import android.annotation.SuppressLint
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.dot.gallery.feature_node.domain.model.BlacklistedAlbum
+import com.dot.gallery.feature_node.domain.model.IgnoredAlbum
 import com.dot.gallery.feature_node.domain.use_case.MediaUseCases
 import com.dot.gallery.feature_node.presentation.util.RepeatOnResume
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -34,22 +34,16 @@ class IgnoredViewModel @Inject constructor(
         }
     }
 
-    fun addToBlacklist(blacklistedAlbum: BlacklistedAlbum) {
+    fun removeFromBlacklist(ignoredAlbum: IgnoredAlbum) {
         viewModelScope.launch {
-            mediaUseCases.blacklistUseCase.addToBlacklist(blacklistedAlbum)
-        }
-    }
-
-    fun removeFromBlacklist(blacklistedAlbum: BlacklistedAlbum) {
-        viewModelScope.launch {
-            mediaUseCases.blacklistUseCase.removeFromBlacklist(blacklistedAlbum)
+            mediaUseCases.blacklistUseCase.removeFromBlacklist(ignoredAlbum)
         }
     }
 
     private fun getIgnoredAlbums() {
         viewModelScope.launch {
             mediaUseCases.blacklistUseCase.blacklistedAlbums.collectLatest {
-                _ignoredState.tryEmit(IgnoredState(it))
+                _ignoredState.emit(IgnoredState(it))
             }
         }
     }

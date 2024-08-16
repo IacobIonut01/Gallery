@@ -12,7 +12,6 @@ import android.os.Parcelable
 import android.webkit.MimeTypeMap
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
-import coil3.compose.EqualityDelegate
 import com.dot.gallery.core.Constants
 import com.dot.gallery.feature_node.presentation.util.getDate
 import kotlinx.parcelize.IgnoredOnParcel
@@ -37,6 +36,7 @@ data class Media(
     val mimeType: String,
     val favorite: Int,
     val trashed: Int,
+    val size: Long,
     val duration: String? = null,
 ) : Parcelable {
 
@@ -165,21 +165,9 @@ data class Media(
                 mimeType = mimeType,
                 duration = duration,
                 favorite = 0,
+                size = 0,
                 trashed = 0
             )
         }
     }
-}
-
-/**
- * Since the media object is stable, we can use a custom equality delegate
- * to avoid the default equals and hashCode implementation and ensure that
- * the object is always considered equal to another object of the same type
- * regardless of its properties.
- * This is avoiding unnecessary recompositions of the painter in the MediaImage
- */
-class MediaEqualityDelegate : EqualityDelegate {
-    override fun equals(self: Any?, other: Any?): Boolean = true
-
-    override fun hashCode(self: Any?): Int = 31
 }

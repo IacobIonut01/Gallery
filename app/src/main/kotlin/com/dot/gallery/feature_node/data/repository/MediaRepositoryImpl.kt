@@ -20,6 +20,7 @@ import androidx.activity.result.IntentSenderRequest
 import androidx.core.app.ActivityOptionsCompat
 import com.dot.gallery.core.Resource
 import com.dot.gallery.core.contentFlowObserver
+import com.dot.gallery.core.contentFlowWithDatabase
 import com.dot.gallery.core.fileFlowObserver
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
 import com.dot.gallery.feature_node.data.data_source.KeychainHolder
@@ -38,9 +39,9 @@ import com.dot.gallery.feature_node.data.data_types.saveImage
 import com.dot.gallery.feature_node.data.data_types.updateMedia
 import com.dot.gallery.feature_node.data.data_types.updateMediaExif
 import com.dot.gallery.feature_node.domain.model.Album
-import com.dot.gallery.feature_node.domain.model.BlacklistedAlbum
 import com.dot.gallery.feature_node.domain.model.EncryptedMedia
 import com.dot.gallery.feature_node.domain.model.ExifAttributes
+import com.dot.gallery.feature_node.domain.model.IgnoredAlbum
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.PinnedAlbum
 import com.dot.gallery.feature_node.domain.model.Vault
@@ -72,12 +73,12 @@ class MediaRepositoryImpl(
      * TODO: Add media reordering
      */
     override fun getMedia(): Flow<Resource<List<Media>>> =
-        context.retrieveMedia {
+        context.retrieveMedia(database) {
             it.getMedia(mediaOrder = DEFAULT_ORDER).removeBlacklisted()
         }
 
     override fun getMediaByType(allowedMedia: AllowedMedia): Flow<Resource<List<Media>>> =
-        context.retrieveMedia {
+        context.retrieveMedia(database) {
             val query = when (allowedMedia) {
                 PHOTOS -> Query.PhotoQuery()
                 VIDEOS -> Query.VideoQuery()
@@ -87,12 +88,12 @@ class MediaRepositoryImpl(
         }
 
     override fun getFavorites(mediaOrder: MediaOrder): Flow<Resource<List<Media>>> =
-        context.retrieveMedia {
+        context.retrieveMedia(database) {
             it.getMediaFavorite(mediaOrder = mediaOrder).removeBlacklisted()
         }
 
     override fun getTrashed(): Flow<Resource<List<Media>>> =
-        context.retrieveMedia {
+        context.retrieveMedia(database) {
             it.getMediaTrashed().removeBlacklisted()
         }
 
@@ -100,17 +101,12 @@ class MediaRepositoryImpl(
         mediaOrder: MediaOrder,
         ignoreBlacklisted: Boolean
     ): Flow<Resource<List<Album>>> =
-        context.retrieveAlbums {
-            it.getAlbums(mediaOrder = mediaOrder).toMutableList().apply {
+        context.retrieveAlbums(database) { cr ->
+            cr.getAlbums(mediaOrder = mediaOrder).toMutableList().apply {
                 replaceAll { album ->
                     album.copy(isPinned = database.getPinnedDao().albumIsPinned(album.id))
                 }
-                if (!ignoreBlacklisted) {
-                    removeAll { album ->
-                        database.getBlacklistDao().albumIsBlacklisted(album.id)
-                    }
-                }
-            }
+            }.removeBlacklisted(ignoreBlacklisted)
         }
 
     override suspend fun insertPinnedAlbum(pinnedAlbum: PinnedAlbum) =
@@ -119,13 +115,13 @@ class MediaRepositoryImpl(
     override suspend fun removePinnedAlbum(pinnedAlbum: PinnedAlbum) =
         database.getPinnedDao().removePinnedAlbum(pinnedAlbum)
 
-    override suspend fun addBlacklistedAlbum(blacklistedAlbum: BlacklistedAlbum) =
-        database.getBlacklistDao().addBlacklistedAlbum(blacklistedAlbum)
+    override suspend fun addBlacklistedAlbum(ignoredAlbum: IgnoredAlbum) =
+        database.getBlacklistDao().addBlacklistedAlbum(ignoredAlbum)
 
-    override suspend fun removeBlacklistedAlbum(blacklistedAlbum: BlacklistedAlbum) =
-        database.getBlacklistDao().removeBlacklistedAlbum(blacklistedAlbum)
+    override suspend fun removeBlacklistedAlbum(ignoredAlbum: IgnoredAlbum) =
+        database.getBlacklistDao().removeBlacklistedAlbum(ignoredAlbum)
 
-    override fun getBlacklistedAlbums(): Flow<List<BlacklistedAlbum>> =
+    override fun getBlacklistedAlbums(): Flow<List<IgnoredAlbum>> =
         database.getBlacklistDao().getBlacklistedAlbums()
 
     override suspend fun getMediaById(mediaId: Long): Media? {
@@ -145,7 +141,7 @@ class MediaRepositoryImpl(
     }
 
     override fun getMediaByAlbumId(albumId: Long): Flow<Resource<List<Media>>> =
-        context.retrieveMedia {
+        context.retrieveMedia(database) {
             val query = Query.MediaQuery().copy(
                 bundle = Bundle().apply {
                     putString(
@@ -166,7 +162,7 @@ class MediaRepositoryImpl(
         albumId: Long,
         allowedMedia: AllowedMedia
     ): Flow<Resource<List<Media>>> =
-        context.retrieveMedia {
+        context.retrieveMedia(database) {
             val query = Query.MediaQuery().copy(
                 bundle = Bundle().apply {
                     val mimeType = when (allowedMedia) {
@@ -189,7 +185,7 @@ class MediaRepositoryImpl(
         }
 
     override fun getAlbumsWithType(allowedMedia: AllowedMedia): Flow<Resource<List<Album>>> =
-        context.retrieveAlbums {
+        context.retrieveAlbums(database) {
             val query = Query.AlbumQuery().copy(
                 bundle = Bundle().apply {
                     val mimeType = when (allowedMedia) {
@@ -513,8 +509,14 @@ class MediaRepositoryImpl(
     }
 
     private fun List<Media>.removeBlacklisted(): List<Media> = toMutableList().apply {
-        removeAll { media ->
-            database.getBlacklistDao().albumIsBlacklisted(media.albumID)
+        val blacklistedAlbums = database.getBlacklistDao().getBlacklistedAlbumsSync()
+        removeAll { media -> blacklistedAlbums.any {  it.matchesMedia(media) } }
+    }
+
+    private fun MutableList<Album>.removeBlacklisted(ignoreBlacklisted: Boolean): List<Album> = apply {
+        if (!ignoreBlacklisted) {
+            val blacklistedAlbums = database.getBlacklistDao().getBlacklistedAlbumsSync()
+            removeAll { album -> blacklistedAlbums.any { it.matchesAlbum(album) } }
         }
     }
 
@@ -542,8 +544,8 @@ class MediaRepositoryImpl(
                 }
             }.conflate()
 
-        private fun Context.retrieveMedia(dataBody: suspend (ContentResolver) -> List<Media>) =
-            contentFlowObserver(URIs).map {
+        private fun Context.retrieveMedia(database: InternalDatabase, dataBody: suspend (ContentResolver) -> List<Media>) =
+            contentFlowWithDatabase(URIs, database).map {
                 try {
                     Resource.Success(data = dataBody.invoke(contentResolver))
                 } catch (e: Exception) {
@@ -551,8 +553,8 @@ class MediaRepositoryImpl(
                 }
             }.conflate()
 
-        private fun Context.retrieveAlbums(dataBody: suspend (ContentResolver) -> List<Album>) =
-            contentFlowObserver(URIs).map {
+        private fun Context.retrieveAlbums(database: InternalDatabase, dataBody: suspend (ContentResolver) -> List<Album>) =
+            contentFlowWithDatabase(URIs, database).map {
                 try {
                     Resource.Success(data = dataBody.invoke(contentResolver))
                 } catch (e: Exception) {

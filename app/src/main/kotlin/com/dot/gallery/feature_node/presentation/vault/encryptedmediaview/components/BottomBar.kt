@@ -139,7 +139,7 @@ fun EncryptedMediaInfoBottomSheet(
             dragHandle = { DragHandle() },
             shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
             sheetState = state.sheetState,
-            windowInsets = WindowInsets(0, 0, 0, 0)
+            contentWindowInsets = { WindowInsets(0, 0, 0, 0) }
         ) {
             BackHandler {
                 scope.launch {

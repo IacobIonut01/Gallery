@@ -178,7 +178,7 @@ fun SupportSheet(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
             tonalElevation = 0.dp,
             dragHandle = { DragHandle() },
-            windowInsets = WindowInsets(0, 0, 0, 0)
+            contentWindowInsets = { WindowInsets(0, 0, 0, 0) }
         ) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(16.dp),

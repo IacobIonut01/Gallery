@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -43,8 +44,7 @@ import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -60,6 +60,9 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.dot.gallery.R
+import com.dot.gallery.core.Constants.Animation.enterAnimation
+import com.dot.gallery.core.Constants.Animation.exitAnimation
+import com.dot.gallery.core.Settings.Misc.rememberAutoHideNavBar
 import com.dot.gallery.core.Settings.Misc.rememberOldNavbar
 import com.dot.gallery.feature_node.presentation.util.NavigationItem
 import com.dot.gallery.feature_node.presentation.util.Screen
@@ -91,27 +94,30 @@ fun rememberNavigationItems(): List<NavigationItem> {
     }
 }
 
+@Stable
 @Composable
 fun AppBarContainer(
     windowSizeClass: WindowSizeClass,
     navController: NavController,
-    bottomBarState: MutableState<Boolean>,
+    bottomBarState: Boolean,
     paddingValues: PaddingValues,
-    isScrolling: MutableState<Boolean>,
+    isScrolling: Boolean,
     content: @Composable () -> Unit,
 ) {
-    val backStackEntry = navController.currentBackStackEntryAsState()
+    val backStackEntry by navController.currentBackStackEntryAsState()
     val bottomNavItems = rememberNavigationItems()
-    val useNavRail = remember {
-        windowSizeClass.widthSizeClass > WindowWidthSizeClass.Compact
+    val useNavRail by remember(windowSizeClass) {
+        mutableStateOf(windowSizeClass.widthSizeClass > WindowWidthSizeClass.Compact)
     }
     val useOldNavbar by rememberOldNavbar()
 
-    if (useOldNavbar) {
-        Box {
-            val showNavRail by remember(useNavRail, bottomBarState.value) {
-                mutableStateOf(useNavRail && bottomBarState.value)
-            }
+    AnimatedVisibility(
+        visible = useOldNavbar,
+        enter = enterAnimation,
+        exit = exitAnimation
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            val showNavRail = remember(useNavRail, bottomBarState) { useNavRail && bottomBarState }
             AnimatedVisibility(
                 visible = showNavRail,
                 enter = slideInHorizontally { it * -2 },
@@ -124,8 +130,8 @@ fun AppBarContainer(
                 )
             }
             val animatedPadding by animateDpAsState(
-                targetValue = remember(useNavRail, bottomBarState.value) {
-                    if (useNavRail && bottomBarState.value) 80.dp else 0.dp
+                targetValue = remember(useNavRail, bottomBarState) {
+                    if (useNavRail && bottomBarState) 80.dp else 0.dp
                 },
                 label = "animatedPadding"
             )
@@ -134,8 +140,9 @@ fun AppBarContainer(
             ) {
                 content()
             }
-            val showClassicNavbar by remember(useNavRail, isScrolling.value, bottomBarState.value) {
-                mutableStateOf(!useNavRail && bottomBarState.value && !isScrolling.value)
+            val hideNavBarSetting by rememberAutoHideNavBar()
+            val showClassicNavbar by remember(useNavRail, isScrolling, bottomBarState, hideNavBarSetting) {
+                mutableStateOf(!useNavRail && bottomBarState && (!isScrolling || !hideNavBarSetting))
             }
             AnimatedVisibility(
                 modifier = Modifier.align(Alignment.BottomCenter),
@@ -151,11 +158,17 @@ fun AppBarContainer(
                 }
             )
         }
-    } else {
-        Box {
+    }
+    AnimatedVisibility(
+        visible = !useOldNavbar,
+        enter = enterAnimation,
+        exit = exitAnimation
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
             content()
-            val showNavbar by remember(bottomBarState.value, isScrolling.value) {
-                mutableStateOf(bottomBarState.value && !isScrolling.value)
+            val hideNavBarSetting by rememberAutoHideNavBar()
+            val showNavbar by remember(bottomBarState, isScrolling, hideNavBarSetting) {
+                mutableStateOf(bottomBarState && (!isScrolling || !hideNavBarSetting))
             }
             AnimatedVisibility(
                 modifier = Modifier
@@ -200,7 +213,7 @@ private fun navigate(navController: NavController, route: String) {
 @Composable
 fun GalleryNavBar(
     modifier: Modifier,
-    backStackEntry: State<NavBackStackEntry?>,
+    backStackEntry: NavBackStackEntry?,
     navigationItems: List<NavigationItem>,
     onClick: (route: String) -> Unit,
 ) {
@@ -216,7 +229,9 @@ fun GalleryNavBar(
         verticalAlignment = Alignment.CenterVertically
     ) {
         navigationItems.forEach { item ->
-            val selected = item.route == backStackEntry.value?.destination?.route
+            val selected = remember(item, backStackEntry) {
+                item.route == backStackEntry?.destination?.route
+            }
             GalleryNavBarItem(
                 navItem = item,
                 isSelected = selected,
@@ -226,30 +241,32 @@ fun GalleryNavBar(
     }
 }
 
+@Stable
+@Composable
+private fun Label(item: NavigationItem) = Text(
+    text = item.name,
+    fontWeight = FontWeight.Medium,
+    style = MaterialTheme.typography.bodyMedium,
+)
+
+@Stable
+@Composable
+private fun Icon(item: NavigationItem) = Icon(
+    imageVector = item.icon,
+    contentDescription = item.name,
+)
+
 @Composable
 fun ClassicNavBar(
-    backStackEntry: State<NavBackStackEntry?>,
+    backStackEntry: NavBackStackEntry?,
     navigationItems: List<NavigationItem>,
     onClick: (route: String) -> Unit
 ) {
-    val label: @Composable (item: NavigationItem) -> Unit = {
-        Text(
-            text = it.name,
-            fontWeight = FontWeight.Medium,
-            style = MaterialTheme.typography.bodyMedium,
-        )
-    }
-    val icon: @Composable (item: NavigationItem) -> Unit = {
-        Icon(
-            imageVector = it.icon,
-            contentDescription = "${it.name} Icon",
-        )
-    }
     NavigationBar(
         containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
     ) {
         navigationItems.forEach { item ->
-            val selected = item.route == backStackEntry.value?.destination?.route
+            val selected = item.route == backStackEntry?.destination?.route
             NavigationBarItem(
                 selected = selected,
                 colors = NavigationBarItemDefaults.colors(
@@ -264,8 +281,8 @@ fun ClassicNavBar(
                         onClick(item.route)
                     }
                 },
-                label = { label(item) },
-                icon = { icon(item) }
+                label = { Label(item) },
+                icon = { Icon(item) }
             )
         }
     }
@@ -273,29 +290,16 @@ fun ClassicNavBar(
 
 @Composable
 private fun ClassicNavigationRail(
-    backStackEntry: State<NavBackStackEntry?>,
+    backStackEntry: NavBackStackEntry?,
     navigationItems: List<NavigationItem>,
     onClick: (route: String) -> Unit
 ) {
-    val label: @Composable (item: NavigationItem) -> Unit = {
-        Text(
-            text = it.name,
-            fontWeight = FontWeight.Medium,
-            style = MaterialTheme.typography.bodyMedium,
-        )
-    }
-    val icon: @Composable (item: NavigationItem) -> Unit = {
-        Icon(
-            imageVector = it.icon,
-            contentDescription = "${it.name} Icon",
-        )
-    }
     NavigationRail(
         containerColor = MaterialTheme.colorScheme.surface
     ) {
         Spacer(Modifier.weight(1f))
         navigationItems.forEach { item ->
-            val selected = item.route == backStackEntry.value?.destination?.route
+            val selected = item.route == backStackEntry?.destination?.route
             NavigationRailItem(
                 selected = selected,
                 colors = NavigationRailItemDefaults.colors(
@@ -307,8 +311,8 @@ private fun ClassicNavigationRail(
                         onClick(item.route)
                     }
                 },
-                label = { label(item) },
-                icon = { icon(item) }
+                label = { Label(item) },
+                icon = { Label(item) }
             )
         }
         Spacer(Modifier.weight(1f))

@@ -16,20 +16,15 @@ import androidx.compose.runtime.getValue
 import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil3.annotation.ExperimentalCoilApi
-import coil3.compose.setSingletonImageLoaderFactory
 import com.dot.gallery.core.AlbumState
 import com.dot.gallery.feature_node.presentation.mediaview.MediaViewScreen
-import com.dot.gallery.feature_node.presentation.util.newImageLoader
 import com.dot.gallery.feature_node.presentation.util.toggleOrientation
 import com.dot.gallery.ui.theme.GalleryTheme
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.MutableStateFlow
 
 @AndroidEntryPoint
 class StandaloneActivity : ComponentActivity() {
 
-    @OptIn(ExperimentalCoilApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -46,7 +41,6 @@ class StandaloneActivity : ComponentActivity() {
         }
         setShowWhenLocked(isSecure)
         setContent {
-            setSingletonImageLoaderFactory(::newImageLoader)
             GalleryTheme(darkTheme = true) {
                 Scaffold { paddingValues ->
                     val viewModel = hiltViewModel<StandaloneViewModel>().apply {
@@ -54,14 +48,15 @@ class StandaloneActivity : ComponentActivity() {
                         dataList = uriList.toList()
                     }
                     val vaults by viewModel.vaults.collectAsStateWithLifecycle()
+                    val mediaState by viewModel.mediaState.collectAsStateWithLifecycle()
                     MediaViewScreen(
                         navigateUp = { finish() },
                         toggleRotate = ::toggleOrientation,
                         paddingValues = paddingValues,
                         isStandalone = true,
                         mediaId = viewModel.mediaId,
-                        mediaState = viewModel.mediaState,
-                        albumsState = MutableStateFlow(AlbumState()),
+                        mediaState = mediaState,
+                        albumsState = AlbumState(),
                         handler = viewModel.handler,
                         addMedia = viewModel::addMedia,
                         vaults = vaults

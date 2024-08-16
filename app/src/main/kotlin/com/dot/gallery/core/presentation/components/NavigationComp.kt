@@ -6,10 +6,13 @@
 package com.dot.gallery.core.presentation.components
 
 import android.os.Build
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.NonRestartableComposable
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -27,8 +30,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
-import coil3.annotation.ExperimentalCoilApi
-import coil3.compose.setSingletonImageLoaderFactory
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Constants.Animation.navigateInAnimation
@@ -47,6 +48,7 @@ import com.dot.gallery.feature_node.presentation.common.ChanneledViewModel
 import com.dot.gallery.feature_node.presentation.common.MediaViewModel
 import com.dot.gallery.feature_node.presentation.favorites.FavoriteScreen
 import com.dot.gallery.feature_node.presentation.ignored.IgnoredScreen
+import com.dot.gallery.feature_node.presentation.ignored.setup.IgnoredSetup
 import com.dot.gallery.feature_node.presentation.library.LibraryScreen
 import com.dot.gallery.feature_node.presentation.mediaview.MediaViewScreen
 import com.dot.gallery.feature_node.presentation.settings.SettingsScreen
@@ -54,12 +56,12 @@ import com.dot.gallery.feature_node.presentation.setup.SetupScreen
 import com.dot.gallery.feature_node.presentation.timeline.TimelineScreen
 import com.dot.gallery.feature_node.presentation.trashed.TrashedGridScreen
 import com.dot.gallery.feature_node.presentation.util.Screen
-import com.dot.gallery.feature_node.presentation.util.newImageLoader
 import com.dot.gallery.feature_node.presentation.vault.VaultScreen
 import com.dot.gallery.feature_node.presentation.vault.VaultViewModel
 import com.dot.gallery.feature_node.presentation.vault.encryptedmediaview.EncryptedMediaViewScreen
 
-@OptIn(ExperimentalCoilApi::class)
+@Stable
+@NonRestartableComposable
 @Composable
 fun NavigationComp(
     navController: NavHostController,
@@ -81,7 +83,7 @@ fun NavigationComp(
     val groupTimelineByMonth by rememberTimelineGroupByMonth()
 
     val context = LocalContext.current
-    var permissionState by remember { mutableStateOf(context.permissionGranted(Constants.PERMISSIONS)) }
+    var permissionState = remember { context.permissionGranted(Constants.PERMISSIONS) }
     var lastStartScreen by rememberLastScreen()
     val startDest = remember(permissionState, lastStartScreen) {
         if (permissionState) {
@@ -92,7 +94,7 @@ fun NavigationComp(
         navController.currentDestination?.route ?: lastStartScreen
     }
     OnLifecycleEvent { _, event ->
-        if (event == Lifecycle.Event.ON_PAUSE) {
+        if (event == Lifecycle.Event.ON_STOP) {
             if (currentDest == Screen.TimelineScreen() || currentDest == Screen.AlbumsScreen()) {
                 lastStartScreen = currentDest
             }
@@ -137,8 +139,6 @@ fun NavigationComp(
         timelineViewModel.groupByMonth = groupTimelineByMonth
     }
 
-    setSingletonImageLoaderFactory(::newImageLoader)
-
     NavHost(
         navController = navController,
         startDestination = startDest,
@@ -150,7 +150,9 @@ fun NavigationComp(
         composable(
             route = Screen.SetupScreen(),
         ) {
-            navPipe.toggleNavbar(false)
+            LaunchedEffect(Unit) {
+                navPipe.toggleNavbar(false)
+            }
             SetupScreen {
                 permissionState = true
                 navPipe.navigate(Screen.TimelineScreen())
@@ -291,18 +293,22 @@ fun NavigationComp(
             val albumId: Long = remember(backStackEntry) {
                 backStackEntry.arguments?.getLong("albumId") ?: -1L
             }
-            if (albumId != -1L) {
+            AnimatedVisibility(albumId != -1L) {
                 timelineViewModel.ObserveCustomMediaState {
                     getMediaFromAlbum(albumId)
                 }
             }
+            val mediaState by remember(albumId) {
+                if (albumId != -1L) timelineViewModel.customMediaState else timelineViewModel.mediaState
+            }.collectAsStateWithLifecycle()
+            val albumsState by albumsViewModel.albumsState.collectAsStateWithLifecycle()
             MediaViewScreen(
                 navigateUp = navPipe::navigateUp,
                 toggleRotate = toggleRotate,
                 paddingValues = paddingValues,
                 mediaId = mediaId,
-                mediaState = if (albumId != -1L) timelineViewModel.customMediaState else timelineViewModel.mediaState,
-                albumsState = albumsViewModel.albumsState,
+                mediaState = mediaState,
+                albumsState = albumsState,
                 handler = timelineViewModel.handler,
                 addMedia = timelineViewModel::addMedia,
                 vaults = vaults
@@ -338,23 +344,27 @@ fun NavigationComp(
                 navController.getBackStackEntry(entryName)
             }
             val viewModel = if (target == TARGET_FAVORITES) {
-                timelineViewModel.also {
-                    timelineViewModel.ObserveCustomMediaState(MediaViewModel::getFavoriteMedia)
+                timelineViewModel.apply {
+                    ObserveCustomMediaState(MediaViewModel::getFavoriteMedia)
                 }
             } else {
-                hiltViewModel<MediaViewModel>(parentEntry).also {
-                    it.attachToLifecycle()
+                hiltViewModel<MediaViewModel>(parentEntry).apply {
+                    attachToLifecycle()
                 }
             }
-            val vaults by viewModel.vaults.collectAsStateWithLifecycle()
+            val mediaState by remember(target) {
+                if (target == TARGET_FAVORITES) viewModel.customMediaState else viewModel.mediaState
+            }.collectAsStateWithLifecycle()
+            val albumsState by albumsViewModel.albumsState.collectAsStateWithLifecycle()
+
             MediaViewScreen(
                 navigateUp = navPipe::navigateUp,
                 toggleRotate = toggleRotate,
                 paddingValues = paddingValues,
                 mediaId = mediaId,
                 target = target,
-                mediaState = if (target == TARGET_FAVORITES) viewModel.customMediaState else viewModel.mediaState,
-                albumsState = albumsViewModel.albumsState,
+                mediaState = mediaState,
+                albumsState = albumsState,
                 handler = viewModel.handler,
                 addMedia = viewModel::addMedia,
                 vaults = vaults
@@ -369,12 +379,23 @@ fun NavigationComp(
             )
         }
         composable(
-            route = Screen.BlacklistScreen()
+            route = Screen.IgnoredScreen()
         ) {
-            val albumsState by albumsViewModel.albumsState.collectAsStateWithLifecycle()
+            val albumsState by albumsViewModel.unfilteredAlbums.collectAsStateWithLifecycle()
             IgnoredScreen(
                 navigateUp = navPipe::navigateUp,
+                startSetup = { navPipe.navigate(Screen.IgnoredSetupScreen()) },
                 albumsState = albumsState
+            )
+        }
+
+        composable(
+            route = Screen.IgnoredSetupScreen()
+        ) {
+            val albumsState by albumsViewModel.unfilteredAlbums.collectAsStateWithLifecycle()
+            IgnoredSetup(
+                onCancel = navPipe::navigateUp,
+                albumState = albumsState
             )
         }
 
@@ -402,8 +423,9 @@ fun NavigationComp(
                 val parentEntry = remember(backStackEntry) {
                     navController.getBackStackEntry(Screen.VaultScreen())
                 }
-                val mediaId =
+                val mediaId = remember(backStackEntry) {
                     backStackEntry.arguments?.getLong("mediaId")
+                }
                 val vm = hiltViewModel<VaultViewModel>(parentEntry)
                 EncryptedMediaViewScreen(
                     navigateUp = navPipe::navigateUp,

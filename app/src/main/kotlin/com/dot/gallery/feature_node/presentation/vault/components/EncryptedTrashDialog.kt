@@ -48,10 +48,6 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
-import coil3.compose.LocalPlatformContext
-import coil3.request.CachePolicy
-import coil3.request.ImageRequest
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
@@ -64,6 +60,8 @@ import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialogA
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.FeedbackManager.Companion.rememberFeedbackManager
 import com.dot.gallery.ui.theme.Shapes
+import com.github.panpf.sketch.AsyncImage
+import com.github.panpf.sketch.fetch.newBase64Uri
 import kotlinx.coroutines.launch
 
 @OptIn(
@@ -98,7 +96,7 @@ fun EncryptedTrashDialog(
                 }
             },
             dragHandle = { DragHandle() },
-            windowInsets = WindowInsets(0, 0, 0, 0)
+            contentWindowInsets = { WindowInsets(0, 0, 0, 0) }
         ) {
             val tertiaryContainer = MaterialTheme.colorScheme.tertiaryContainer
             val tertiaryOnContainer = MaterialTheme.colorScheme.onTertiaryContainer
@@ -216,7 +214,7 @@ fun EncryptedTrashDialog(
                         val feedbackManager = rememberFeedbackManager()
                         Box(
                             modifier = Modifier
-                                .animateItemPlacement()
+                                .animateItem()
                                 .size(width = 80.dp, height = 120.dp)
                                 .clip(shape)
                                 .border(
@@ -246,11 +244,7 @@ fun EncryptedTrashDialog(
                         ) {
                             AsyncImage(
                                 modifier = Modifier.fillMaxSize(),
-                                model = ImageRequest.Builder(LocalPlatformContext.current)
-                                    .data(it.bytes)
-                                    .diskCachePolicy(CachePolicy.ENABLED)
-                                    .memoryCachePolicy(CachePolicy.ENABLED)
-                                    .build(),
+                                uri = newBase64Uri(it.mimeType, it.bytes),
                                 contentDescription = it.label,
                                 contentScale = ContentScale.Crop
                             )

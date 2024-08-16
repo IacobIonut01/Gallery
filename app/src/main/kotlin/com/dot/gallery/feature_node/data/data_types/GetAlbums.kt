@@ -54,6 +54,8 @@ suspend fun ContentResolver.getAlbums(
                             getString(getColumnIndexOrThrow(MediaStore.MediaColumns.RELATIVE_PATH))
                         val thumbnailDate =
                             getLong(getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_MODIFIED))
+                        val size =
+                            getLong(getColumnIndexOrThrow(MediaStore.MediaColumns.SIZE))
                         val mimeType =
                             getString(getColumnIndexOrThrow(MediaStore.MediaColumns.MIME_TYPE))
                         val contentUri = if (mimeType.contains("image"))
@@ -67,6 +69,7 @@ suspend fun ContentResolver.getAlbums(
                             pathToThumbnail = thumbnailPath,
                             relativePath = thumbnailRelativePath,
                             timestamp = thumbnailDate,
+                            size = size,
                             count = 1
                         )
                         val currentAlbum = albums.find { albm -> albm.id == albumId }
@@ -75,6 +78,7 @@ suspend fun ContentResolver.getAlbums(
                         else {
                             val i = albums.indexOf(currentAlbum)
                             albums[i].count++
+                            albums[i].size += size
                             if (albums[i].timestamp <= thumbnailDate) {
                                 album.count = albums[i].count
                                 albums[i] = album

@@ -254,6 +254,8 @@ fun Cursor.getMediaFromCursor(): Media {
     } catch (_: Exception) {
         null
     }
+    val size: Long =
+        getLong(getColumnIndexOrThrow(MediaStore.MediaColumns.SIZE))
     val mimeType: String =
         getString(getColumnIndexOrThrow(MediaStore.MediaColumns.MIME_TYPE))
     val isFavorite: Int =
@@ -286,6 +288,7 @@ fun Cursor.getMediaFromCursor(): Media {
         duration = duration,
         favorite = isFavorite,
         trashed = isTrashed,
+        size = size,
         mimeType = mimeType
     )
 }

@@ -7,6 +7,7 @@ package com.dot.gallery.feature_node.presentation.mediaview.components.video
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.VolumeMute
 import androidx.compose.material.icons.automirrored.outlined.VolumeUp
@@ -26,6 +28,7 @@ import androidx.compose.material.icons.outlined.ScreenRotation
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -46,6 +49,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalConfiguration
@@ -53,6 +57,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.media3.exoplayer.ExoPlayer
 import com.dot.gallery.R
@@ -60,7 +65,9 @@ import com.dot.gallery.feature_node.domain.model.PlaybackSpeed
 import com.dot.gallery.feature_node.presentation.util.formatMinSec
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.math.max
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VideoPlayerController(
     paddingValues: PaddingValues,
@@ -181,6 +188,7 @@ fun VideoPlayerController(
                     )
                 )
             }
+            var sliderValue by rememberSaveable(currentTime.longValue) { mutableFloatStateOf(currentTime.longValue.toFloat()) }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -188,46 +196,89 @@ fun VideoPlayerController(
             ) {
                 Text(
                     modifier = Modifier.width(52.dp),
-                    text = currentTime.value.formatMinSec(),
+                    text = max(sliderValue, currentTime.longValue.toFloat()).toLong().formatMinSec(),
                     fontWeight = FontWeight.Medium,
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.White,
                     textAlign = TextAlign.Center
                 )
                 Box(Modifier.weight(1f)) {
+                    val disabledColors = SliderDefaults.colors(
+                        disabledThumbColor = Color.Transparent,
+                        disabledInactiveTrackColor = Color.DarkGray.copy(alpha = 0.4f),
+                        disabledActiveTrackColor = Color.Gray.copy(alpha = 0.8f),
+                        disabledActiveTickColor = Color.Transparent
+                    )
                     Slider(
                         modifier = Modifier.fillMaxWidth(),
                         value = buffer.toFloat(),
                         enabled = false,
                         onValueChange = {},
+                        thumb = {
+                            SliderDefaults.Thumb(
+                                interactionSource = remember { MutableInteractionSource() },
+                                thumbSize = DpSize(0.dp, 0.dp),
+                                colors = disabledColors,
+                                enabled = false
+                            )
+                        },
+                        track = {
+                            SliderDefaults.Track(
+                                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(100)),
+                                sliderState = it,
+                                colors = disabledColors,
+                                drawStopIndicator = null,
+                                drawTick = { _, _ -> },
+                                enabled = false,
+                                thumbTrackGapSize = 0.dp
+                            )
+                        },
                         valueRange = 0f..100f,
-                        colors =
-                        SliderDefaults.colors(
-                            disabledThumbColor = Color.Transparent,
-                            disabledInactiveTrackColor = Color.DarkGray.copy(alpha = 0.4f),
-                            disabledActiveTrackColor = Color.Gray
-                        )
+                        colors = disabledColors
+                    )
+                    val activeColors = SliderDefaults.colors(
+                        thumbColor = Color.White,
+                        activeTrackColor = Color.White,
+                        activeTickColor = Color.Transparent,
+                        inactiveTrackColor = Color.Transparent
                     )
                     Slider(
                         modifier = Modifier.fillMaxWidth(),
-                        value = currentTime.longValue.toFloat(),
+                        value = sliderValue,
+                        thumb = {
+                            SliderDefaults.Thumb(
+                                interactionSource = remember { MutableInteractionSource() },
+                                thumbSize = DpSize(0.dp, 0.dp),
+                                colors = activeColors,
+                            )
+                        },
+                        track = {
+                            SliderDefaults.Track(
+                                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(100)),
+                                sliderState = it,
+                                colors = activeColors,
+                                drawStopIndicator = null,
+                                drawTick = { _, _ -> },
+                                thumbTrackGapSize = 0.dp
+                            )
+                        },
                         onValueChange = {
+                            if (player.isPlaying) {
+                                player.pause()
+                            }
+                            sliderValue = it
+                        },
+                        onValueChangeFinished = {
                             scope.launch {
-                                if (player.currentPosition != it.toLong()) {
-                                    player.seekTo(it.toLong())
+                                if (player.currentPosition != sliderValue.toLong()) {
+                                    player.seekTo(sliderValue.toLong())
                                     delay(50)
                                     player.play()
                                 }
                             }
                         },
                         valueRange = 0f..totalTime.toFloat(),
-                        colors =
-                        SliderDefaults.colors(
-                            thumbColor = Color.White,
-                            activeTrackColor = Color.White,
-                            activeTickColor = Color.White,
-                            inactiveTrackColor = Color.Transparent
-                        )
+                        colors = activeColors
                     )
                 }
                 Text(

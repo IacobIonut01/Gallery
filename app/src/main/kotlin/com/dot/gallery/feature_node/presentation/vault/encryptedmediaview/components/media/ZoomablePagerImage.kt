@@ -19,55 +19,29 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import coil3.compose.LocalPlatformContext
-import coil3.compose.rememberAsyncImagePainter
-import coil3.request.CachePolicy
-import coil3.request.ImageRequest
-import coil3.size.Scale
 import com.dot.gallery.core.Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION
 import com.dot.gallery.core.Settings
 import com.dot.gallery.core.presentation.components.util.LocalBatteryStatus
 import com.dot.gallery.core.presentation.components.util.ProvideBatteryStatus
 import com.dot.gallery.feature_node.domain.model.EncryptedMedia
-import me.saket.telephoto.zoomable.ZoomSpec
-import me.saket.telephoto.zoomable.ZoomableImage
-import me.saket.telephoto.zoomable.ZoomableImageSource
-import me.saket.telephoto.zoomable.coil3.coil3
-import me.saket.telephoto.zoomable.rememberZoomableImageState
-import me.saket.telephoto.zoomable.rememberZoomableState
-import net.engawapg.lib.zoomable.rememberZoomState
+import com.github.panpf.sketch.fetch.newBase64Uri
+import com.github.panpf.sketch.request.ComposableImageRequest
+import com.github.panpf.zoomimage.SketchZoomAsyncImage
 
 @Composable
 fun ZoomablePagerImage(
     modifier: Modifier = Modifier,
     media: EncryptedMedia,
     uiEnabled: Boolean,
-    maxScale: Float = 10f,
     onItemClick: () -> Unit
 ) {
-    val zoomState = rememberZoomState(
-        maxScale = maxScale,
-    )
-    val painter = rememberAsyncImagePainter(
-        model = ImageRequest.Builder(LocalPlatformContext.current)
-            .data(media.bytes)
-            .memoryCachePolicy(CachePolicy.ENABLED)
-            .placeholderMemoryCacheKey(media.toString())
-            .scale(Scale.FILL)
-            .build(),
+    val painter = com.github.panpf.sketch.rememberAsyncImagePainter(
+        request = ComposableImageRequest(newBase64Uri(mimeType = media.mimeType, imageData = media.bytes)) {
+            memoryCachePolicy(com.github.panpf.sketch.cache.CachePolicy.ENABLED)
+            crossfade()
+        },
         contentScale = ContentScale.Fit,
         filterQuality = FilterQuality.None,
-        onSuccess = {
-            zoomState.setContentSize(it.painter.intrinsicSize)
-        }
-    )
-    val zoomableState = rememberZoomableState(
-        zoomSpec = ZoomSpec(
-            maxZoomFactor = maxScale
-        )
-    )
-    val state = rememberZoomableImageState(
-        zoomableState = zoomableState
     )
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -92,16 +66,10 @@ fun ZoomablePagerImage(
             }
         }
 
-        ZoomableImage(
+        SketchZoomAsyncImage(
             modifier = modifier.fillMaxSize(),
-            onClick = { onItemClick() },
-            state = state,
-            image = ZoomableImageSource.coil3(
-                model = ImageRequest.Builder(LocalPlatformContext.current)
-                    .data(media.bytes)
-                    .placeholderMemoryCacheKey(media.toString())
-                    .build()
-            ),
+            onTap = { onItemClick() },
+            uri = newBase64Uri(mimeType = media.mimeType, imageData = media.bytes),
             contentScale = ContentScale.Fit,
             contentDescription = media.label
         )

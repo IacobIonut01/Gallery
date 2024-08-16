@@ -74,7 +74,7 @@ fun TimelineScreen(
                 navigateUp = navigateUp
             )
         },
-        emptyContent = { EmptyMedia(Modifier.fillMaxSize()) },
+        emptyContent = { padding -> EmptyMedia(Modifier.fillMaxSize(), padding) },
         navigate = navigate,
         navigateUp = navigateUp,
         toggleNavbar = toggleNavbar,

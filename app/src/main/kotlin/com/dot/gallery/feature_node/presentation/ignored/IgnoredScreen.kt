@@ -1,13 +1,21 @@
 package com.dot.gallery.feature_node.presentation.ignored
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.PhotoAlbum
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -25,11 +33,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -38,15 +48,16 @@ import com.dot.gallery.R
 import com.dot.gallery.core.AlbumState
 import com.dot.gallery.core.Position
 import com.dot.gallery.core.SettingsEntity
-import com.dot.gallery.feature_node.domain.model.BlacklistedAlbum
+import com.dot.gallery.feature_node.domain.model.IgnoredAlbum
 import com.dot.gallery.feature_node.presentation.settings.components.SettingsItem
-import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
-import kotlinx.coroutines.launch
+import com.dot.gallery.ui.core.icons.RegularExpression
+import com.dot.gallery.ui.core.Icons as GalleryIcons
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun IgnoredScreen(
     navigateUp: () -> Unit,
+    startSetup: () -> Unit,
     albumsState: AlbumState,
 ) {
     val vm = hiltViewModel<IgnoredViewModel>()
@@ -54,11 +65,10 @@ fun IgnoredScreen(
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     val state by vm.blacklistState.collectAsStateWithLifecycle(IgnoredState())
-    val selectAlbumState = rememberAppBottomSheetState()
-    val scope = rememberCoroutineScope()
     var toBeRemoved by remember(state) {
-        mutableStateOf<BlacklistedAlbum?>(null)
+        mutableStateOf<IgnoredAlbum?>(null)
     }
+    val context = LocalContext.current
     Scaffold(
         topBar = {
             LargeTopAppBar(
@@ -87,11 +97,28 @@ fun IgnoredScreen(
             LazyColumn(
                 modifier = Modifier.fillMaxSize()
             ) {
-
-                if (state.albums.isNotEmpty()) {
+                item {
+                    Text(
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .background(
+                                color = MaterialTheme.colorScheme.surfaceContainer,
+                                shape = RoundedCornerShape(24.dp)
+                            )
+                            .padding(16.dp),
+                        text = stringResource(R.string.ignored_albums_text),
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center
+                    )
+                }
+                if (state.albums.isEmpty()) {
+                    item {
+                        NoIgnoredAlbums()
+                    }
+                } else {
                     item {
                         SettingsItem(
-                            item = SettingsEntity.Header(stringResource(R.string.ignored_albums))
+                            item = SettingsEntity.Header(stringResource(R.string.created))
                         )
                     }
                 }
@@ -106,9 +133,27 @@ fun IgnoredScreen(
                         } else if (index == state.albums.size - 1) Position.Bottom
                         else Position.Middle
                     }
+                    val wildcardSummary: String = remember(blacklistedAlbum, albumsState) {
+                        if (blacklistedAlbum.wildcard != null) {
+                            context.getString(
+                                R.string.wildcard_summary_first,
+                                blacklistedAlbum.wildcard,
+                                blacklistedAlbum.matchedAlbums.joinToString()
+                            )
+                        } else context.getString(
+                            R.string.matched_albums,
+                            blacklistedAlbum.matchedAlbums.joinToString()
+                        )
+                    }
                     SettingsItem(
                         item = SettingsEntity.Preference(
+                            icon = remember(blacklistedAlbum) {
+                                if (blacklistedAlbum.wildcard != null) {
+                                    GalleryIcons.RegularExpression
+                                } else Icons.Outlined.PhotoAlbum
+                            },
                             title = blacklistedAlbum.label,
+                            summary = wildcardSummary,
                             screenPosition = position,
                             onClick = {
                                 toBeRemoved = blacklistedAlbum
@@ -120,9 +165,7 @@ fun IgnoredScreen(
 
             FloatingActionButton(
                 onClick = {
-                    scope.launch {
-                        selectAlbumState.show()
-                    }
+                    startSetup()
                 },
                 modifier = Modifier
                     .padding(32.dp)
@@ -176,15 +219,44 @@ fun IgnoredScreen(
             )
         )
     }
+}
 
-    SelectAlbumSheet(
-        sheetState = selectAlbumState,
-        blacklistedAlbums = state.albums,
-        albumState = albumsState,
-        onSelect = {
-            vm.addToBlacklist(BlacklistedAlbum(it.id, it.label))
+@Composable
+fun NoIgnoredAlbums(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp),
+    ) {
+        val alphas = floatArrayOf(0.6f, 0.4f, 0.2f)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(RoundedCornerShape(12.dp)),
+            verticalArrangement = Arrangement.spacedBy(1.dp)
+        ) {
+            alphas.forEach {
+                Spacer(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = it),
+                            shape = RoundedCornerShape(2.dp)
+                        )
+                        .clip(RoundedCornerShape(2.dp))
+                )
+            }
         }
-    )
 
+        Text(
+            text = stringResource(R.string.no_ignored_albums),
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        )
+    }
 }
 

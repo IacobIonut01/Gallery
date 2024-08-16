@@ -24,6 +24,7 @@ sealed class Query(
             MediaStore.MediaColumns.DATE_TAKEN,
             MediaStore.MediaColumns.BUCKET_DISPLAY_NAME,
             MediaStore.MediaColumns.DURATION,
+            MediaStore.MediaColumns.SIZE,
             MediaStore.MediaColumns.MIME_TYPE,
             MediaStore.MediaColumns.IS_FAVORITE,
             MediaStore.MediaColumns.IS_TRASHED
@@ -41,6 +42,7 @@ sealed class Query(
             MediaStore.MediaColumns.DATE_EXPIRES,
             MediaStore.MediaColumns.BUCKET_DISPLAY_NAME,
             MediaStore.MediaColumns.DURATION,
+            MediaStore.MediaColumns.SIZE,
             MediaStore.MediaColumns.MIME_TYPE,
             MediaStore.MediaColumns.IS_FAVORITE,
             MediaStore.MediaColumns.IS_TRASHED
@@ -69,6 +71,7 @@ sealed class Query(
             MediaStore.MediaColumns.DATE_TAKEN,
             MediaStore.MediaColumns.BUCKET_DISPLAY_NAME,
             MediaStore.MediaColumns.DURATION,
+            MediaStore.MediaColumns.SIZE,
             MediaStore.MediaColumns.MIME_TYPE,
             MediaStore.MediaColumns.IS_FAVORITE,
             MediaStore.MediaColumns.IS_TRASHED
@@ -95,6 +98,7 @@ sealed class Query(
             MediaStore.MediaColumns.DATE_MODIFIED,
             MediaStore.MediaColumns.BUCKET_DISPLAY_NAME,
             MediaStore.MediaColumns.DURATION,
+            MediaStore.MediaColumns.SIZE,
             MediaStore.MediaColumns.MIME_TYPE,
             MediaStore.MediaColumns.ORIENTATION,
             MediaStore.MediaColumns.IS_FAVORITE,
@@ -120,6 +124,7 @@ sealed class Query(
             MediaStore.MediaColumns.DATA,
             MediaStore.MediaColumns.RELATIVE_PATH,
             MediaStore.MediaColumns._ID,
+            MediaStore.MediaColumns.SIZE,
             MediaStore.MediaColumns.MIME_TYPE,
             MediaStore.MediaColumns.DATE_MODIFIED,
             MediaStore.MediaColumns.DATE_TAKEN

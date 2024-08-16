@@ -10,13 +10,14 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableLongState
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.NonRestartableComposable
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -24,7 +25,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
@@ -42,8 +42,10 @@ import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.seconds
 import io.sanghun.compose.video.VideoPlayer as SanghunComposeVideoVideoPlayer
 
+@Stable
 @OptIn(ExperimentalFoundationApi::class)
 @androidx.annotation.OptIn(UnstableApi::class)
+@NonRestartableComposable
 @Composable
 fun VideoPlayer(
     media: Media,
@@ -73,94 +75,91 @@ fun VideoPlayer(
         mutableStateOf<ExoPlayer?>(null)
     }
 
-    Box {
-        var showPlayer by remember {
-            mutableStateOf(false)
-        }
-        val lifecycleOwner = LocalLifecycleOwner.current
-        DisposableEffect(lifecycleOwner) {
-            val observer = LifecycleEventObserver { _, event ->
-                if (event == Lifecycle.Event.ON_RESUME) {
-                    showPlayer = true
-                }
-                if (event == Lifecycle.Event.ON_PAUSE) {
-                    showPlayer = false
-                }
+    var showPlayer by remember {
+        mutableStateOf(false)
+    }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                showPlayer = true
             }
-            lifecycleOwner.lifecycle.addObserver(observer)
-            onDispose {
-                lifecycleOwner.lifecycle.removeObserver(observer)
+            if (event == Lifecycle.Event.ON_PAUSE) {
+                showPlayer = false
             }
         }
-        LaunchedEffect(showPlayer) {
-            if (showPlayer) {
-                delay(100)
-                exoPlayer?.playWhenReady = true
-                exoPlayer?.seekTo(currentTime.longValue)
-            }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
         }
-
+    }
+    LaunchedEffect(showPlayer) {
         if (showPlayer) {
-            SanghunComposeVideoVideoPlayer(
-                mediaItems = listOf(
-                    VideoPlayerMediaItem.StorageMediaItem(
-                        storageUri = media.uri,
-                        mimeType = media.mimeType
-                    )
-                ),
-                handleLifecycle = true,
-                autoPlay = true,
-                usePlayerController = false,
-                enablePip = false,
-                handleAudioFocus = true,
-                repeatMode = RepeatMode.ONE,
-                playerInstance = {
-                    exoPlayer = this
-                    addListener(
-                        object : Player.Listener {
-                            override fun onEvents(player: Player, events: Player.Events) {
-                                totalDuration = duration.coerceAtLeast(0L)
-                                lastPlayingState = isPlaying.value
-                                isPlaying.value = player.isPlaying
-                            }
-                        }
-                    )
-                },
-                modifier = Modifier
-                    .fillMaxSize()
-                    .align(Alignment.Center)
-                    .combinedClickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = onItemClick,
-                    ),
-            )
+            delay(100)
+            exoPlayer?.playWhenReady = true
+            exoPlayer?.seekTo(currentTime.longValue)
         }
-        AnimatedVisibility(
-            visible = exoPlayer != null,
-            enter = enterAnimation,
-            exit = exitAnimation
-        ) {
-            LaunchedEffect(isPlaying.value) {
-                exoPlayer!!.playWhenReady = isPlaying.value
-            }
-            if (isPlaying.value) {
-                LaunchedEffect(Unit) {
-                    while (true) {
-                        bufferedPercentage = exoPlayer!!.bufferedPercentage
-                        currentTime.longValue = exoPlayer!!.currentPosition
-                        delay(1.seconds / 30)
+    }
+
+    if (showPlayer) {
+        SanghunComposeVideoVideoPlayer(
+            mediaItems = listOf(
+                VideoPlayerMediaItem.StorageMediaItem(
+                    storageUri = media.uri,
+                    mimeType = media.mimeType
+                )
+            ),
+            handleLifecycle = true,
+            autoPlay = true,
+            usePlayerController = false,
+            enablePip = false,
+            handleAudioFocus = true,
+            repeatMode = RepeatMode.ONE,
+            playerInstance = {
+                exoPlayer = this
+                addListener(
+                    object : Player.Listener {
+                        override fun onEvents(player: Player, events: Player.Events) {
+                            totalDuration = duration.coerceAtLeast(0L)
+                            lastPlayingState = isPlaying.value
+                            isPlaying.value = player.isPlaying
+                        }
                     }
+                )
+            },
+            modifier = Modifier
+                .fillMaxSize()
+                .combinedClickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onItemClick,
+                ),
+        )
+    }
+    AnimatedVisibility(
+        visible = exoPlayer != null,
+        enter = enterAnimation,
+        exit = exitAnimation
+    ) {
+        LaunchedEffect(isPlaying.value) {
+            exoPlayer!!.playWhenReady = isPlaying.value
+        }
+        if (isPlaying.value) {
+            LaunchedEffect(Unit) {
+                while (true) {
+                    bufferedPercentage = exoPlayer!!.bufferedPercentage
+                    currentTime.longValue = exoPlayer!!.currentPosition
+                    delay(1.seconds / 30)
                 }
             }
-            videoController(
-                exoPlayer!!,
-                isPlaying,
-                currentTime,
-                totalDuration,
-                bufferedPercentage,
-                frameRate
-            )
         }
+        videoController(
+            exoPlayer!!,
+            isPlaying,
+            currentTime,
+            totalDuration,
+            bufferedPercentage,
+            frameRate
+        )
     }
 }

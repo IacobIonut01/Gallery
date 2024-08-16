@@ -21,8 +21,21 @@ import java.io.File
 import java.io.FileOutputStream
 import java.math.RoundingMode
 import java.text.DecimalFormat
+import java.util.Locale
 import java.util.UUID
+import kotlin.math.log10
 import kotlin.math.min
+import kotlin.math.pow
+
+fun formatSize(size: Long): String {
+    if (size <= 0) return "0 B"
+
+    val units = arrayOf("B", "KB", "MB", "GB", "TB")
+    val digitGroups = (log10(size.toDouble()) / log10(1024.0)).toInt()
+
+    val formattedSize = size / 1024.0.pow(digitGroups.toDouble())
+    return String.format(Locale.getDefault(), "%.2f %s", formattedSize, units[digitGroups])
+}
 
 fun File.formattedFileSize(context: Context): String {
     var fileSize = this.length().toDouble() / 1024.0

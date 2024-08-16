@@ -8,7 +8,6 @@ package com.dot.gallery.feature_node.presentation.common.components
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,6 +28,7 @@ import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -50,6 +50,7 @@ import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.MediaState
+import com.dot.gallery.core.Settings.Misc.rememberAutoHideSearchBar
 import com.dot.gallery.core.presentation.components.StickyHeader
 import com.dot.gallery.core.presentation.components.util.StickyHeaderGrid
 import com.dot.gallery.feature_node.domain.model.Media
@@ -61,7 +62,8 @@ import com.dot.gallery.feature_node.presentation.util.FeedbackManager
 import com.dot.gallery.feature_node.presentation.util.update
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@Stable
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PinchZoomGridScope.MediaGridView(
     mediaState: MediaState,
@@ -179,7 +181,7 @@ fun PinchZoomGridScope.MediaGridView(
                         } else {
                             MediaImage(
                                 modifier = Modifier
-                                    .animateItemPlacement()
+                                    .animateItem()
                                     .pinchItem(key = it.key),
                                 media = (item as MediaItem.MediaViewItem).media,
                                 selectionState = selectionState,
@@ -207,7 +209,7 @@ fun PinchZoomGridScope.MediaGridView(
                     ) { index, media ->
                         MediaImage(
                             modifier = Modifier
-                                .animateItemPlacement()
+                                .animateItem()
                                 .pinchItem(key = media.toString()),
                             media = media,
                             selectionState = selectionState,
@@ -276,9 +278,11 @@ fun PinchZoomGridScope.MediaGridView(
                 }.value
             }
         }
+
+        val hideSearchBarSetting by rememberAutoHideSearchBar()
         val searchBarPadding by animateDpAsState(
-            targetValue = remember(isScrolling.value, showSearchBar, searchBarPaddingTop) {
-                if (showSearchBar && !isScrolling.value) {
+            targetValue = remember(isScrolling.value, showSearchBar, searchBarPaddingTop, hideSearchBarSetting) {
+                if (showSearchBar && (!isScrolling.value || !hideSearchBarSetting)) {
                     SearchBarDefaults.InputFieldHeight + searchBarPaddingTop + 8.dp
                 } else if (showSearchBar && isScrolling.value) searchBarPaddingTop else 0.dp
             },

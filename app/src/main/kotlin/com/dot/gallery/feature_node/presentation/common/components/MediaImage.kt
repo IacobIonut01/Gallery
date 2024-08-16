@@ -27,6 +27,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,20 +39,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import coil3.compose.LocalPlatformContext
-import coil3.compose.rememberAsyncImagePainter
-import coil3.request.CachePolicy
-import coil3.request.ImageRequest
-import coil3.size.Scale
 import com.dot.gallery.core.Constants.Animation
 import com.dot.gallery.core.presentation.components.CheckBox
 import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.model.MediaEqualityDelegate
 import com.dot.gallery.feature_node.presentation.mediaview.components.video.VideoDurationHeader
+import com.github.panpf.sketch.AsyncImage
+import com.github.panpf.sketch.request.ComposableImageRequest
+import com.github.panpf.sketch.resize.Scale
 
+@Stable
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MediaImage(
@@ -85,17 +83,6 @@ fun MediaImage(
     val strokeColor by animateColorAsState(
         targetValue = if (isSelected) primaryContainerColor else Color.Transparent,
         label = "strokeColor"
-    )
-    val painter = rememberAsyncImagePainter(
-        model = ImageRequest.Builder(LocalPlatformContext.current)
-            .data(media.uri)
-            .memoryCachePolicy(CachePolicy.ENABLED)
-            .placeholderMemoryCacheKey(media.toString())
-            .scale(Scale.FIT)
-            .build(),
-        modelEqualityDelegate = MediaEqualityDelegate(),
-        contentScale = ContentScale.FillBounds,
-        filterQuality = FilterQuality.None
     )
     Box(
         modifier = modifier
@@ -132,10 +119,12 @@ fun MediaImage(
                     color = strokeColor
                 )
         ) {
-            Image(
+            AsyncImage(
                 modifier = Modifier
                     .fillMaxSize(),
-                painter = painter,
+                request = ComposableImageRequest(media.uri.toString()) {
+                    scale(Scale.CENTER_CROP)
+                },
                 contentDescription = media.label,
                 contentScale = ContentScale.Crop,
             )

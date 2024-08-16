@@ -106,7 +106,6 @@ fun CopyMediaSheet(
             val shouldDismiss = progress == 0f
             ModalBottomSheetProperties(
                 securePolicy = SecureFlagPolicy.Inherit,
-                isFocusable = shouldDismiss,
                 shouldDismissOnBackPress = shouldDismiss
             )
         }
@@ -123,7 +122,7 @@ fun CopyMediaSheet(
             },
             properties = prop,
             dragHandle = { DragHandle() },
-            windowInsets = WindowInsets(0, 0, 0, 0)
+            contentWindowInsets = { WindowInsets(0, 0, 0, 0) }
         ) {
 
             Column(

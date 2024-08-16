@@ -23,6 +23,7 @@ data class Album(
     val relativePath: String,
     val timestamp: Long,
     var count: Long = 0,
+    var size: Long = 0,
     val selected: Boolean = false,
     val isPinned: Boolean = false,
 ) : Parcelable {
@@ -44,8 +45,7 @@ data class Album(
             uri = Uri.EMPTY,
             pathToThumbnail = "",
             relativePath = "",
-            timestamp = 0,
-            count = 0,
+            timestamp = 0
         )
     }
 }

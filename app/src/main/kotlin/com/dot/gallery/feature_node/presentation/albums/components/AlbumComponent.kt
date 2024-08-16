@@ -7,7 +7,7 @@ package com.dot.gallery.feature_node.presentation.albums.components
 
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -23,7 +23,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AddCircleOutline
 import androidx.compose.material.icons.outlined.SdCard
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -46,21 +45,17 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil3.compose.LocalPlatformContext
-import coil3.compose.rememberAsyncImagePainter
-import coil3.request.CachePolicy
-import coil3.request.ImageRequest
-import coil3.size.Scale
 import com.dot.gallery.R
 import com.dot.gallery.core.presentation.components.util.AutoResizeText
 import com.dot.gallery.core.presentation.components.util.FontSizeRange
 import com.dot.gallery.feature_node.domain.model.Album
-import com.dot.gallery.feature_node.domain.model.MediaEqualityDelegate
 import com.dot.gallery.feature_node.presentation.common.components.OptionItem
 import com.dot.gallery.feature_node.presentation.common.components.OptionSheet
 import com.dot.gallery.feature_node.presentation.util.FeedbackManager.Companion.rememberFeedbackManager
+import com.dot.gallery.feature_node.presentation.util.formatSize
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import com.dot.gallery.ui.theme.Shapes
+import com.github.panpf.sketch.AsyncImage
 import kotlinx.coroutines.launch
 
 @Composable
@@ -74,16 +69,6 @@ fun AlbumComponent(
 ) {
     val scope = rememberCoroutineScope()
     val appBottomSheetState = rememberAppBottomSheetState()
-    val painter = rememberAsyncImagePainter(
-        model = ImageRequest.Builder(LocalPlatformContext.current)
-            .data(album.uri)
-            .memoryCachePolicy(CachePolicy.ENABLED)
-            .placeholderMemoryCacheKey(album.toString())
-            .scale(Scale.FIT)
-            .build(),
-        modelEqualityDelegate = MediaEqualityDelegate(),
-        contentScale = ContentScale.FillBounds
-    )
     Column(
         modifier = modifier
             .alpha(if (isEnabled) 1f else 0.4f)
@@ -129,12 +114,12 @@ fun AlbumComponent(
                 state = appBottomSheetState,
                 optionList = arrayOf(optionList),
                 headerContent = {
-                    Image(
+                    AsyncImage(
                         modifier = Modifier
                             .size(98.dp)
                             .clip(Shapes.large),
                         contentScale = ContentScale.Crop,
-                        painter = painter,
+                        uri = album.uri.toString(),
                         contentDescription = album.label
                     )
                     Text(
@@ -220,7 +205,7 @@ fun AlbumComponent(
                     id = R.plurals.item_count,
                     count = album.count.toInt(),
                     album.count
-                ),
+                ) + " (${formatSize(album.size)})",
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1,
                 style = MaterialTheme.typography.labelMedium,
@@ -264,7 +249,7 @@ fun AlbumImage(
                 .combinedClickable(
                     enabled = isEnabled,
                     interactionSource = interactionSource,
-                    indication = rememberRipple(),
+                    indication = LocalIndication.current,
                     onClick = { onItemClick(album) },
                     onLongClick = {
                         onItemLongClick?.let {
@@ -276,17 +261,7 @@ fun AlbumImage(
                 .padding(48.dp)
         )
     } else {
-        val painter = rememberAsyncImagePainter(
-            model = ImageRequest.Builder(LocalPlatformContext.current)
-                .data(album.uri)
-                .memoryCachePolicy(CachePolicy.ENABLED)
-                .placeholderMemoryCacheKey(album.toString())
-                .scale(Scale.FIT)
-                .build(),
-            modelEqualityDelegate = MediaEqualityDelegate(),
-            contentScale = ContentScale.FillBounds
-        )
-        Image(
+        AsyncImage(
             modifier = Modifier
                 .fillMaxSize()
                 .border(
@@ -298,7 +273,7 @@ fun AlbumImage(
                 .combinedClickable(
                     enabled = isEnabled,
                     interactionSource = interactionSource,
-                    indication = rememberRipple(),
+                    indication = LocalIndication.current,
                     onClick = { onItemClick(album) },
                     onLongClick = {
                         onItemLongClick?.let {
@@ -307,7 +282,7 @@ fun AlbumImage(
                         }
                     }
                 ),
-            painter = painter,
+            uri = album.uri.toString(),
             contentDescription = album.label,
             contentScale = ContentScale.Crop,
         )

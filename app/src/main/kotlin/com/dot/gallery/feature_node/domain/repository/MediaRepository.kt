@@ -11,7 +11,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import com.dot.gallery.core.Resource
 import com.dot.gallery.feature_node.domain.model.Album
-import com.dot.gallery.feature_node.domain.model.BlacklistedAlbum
+import com.dot.gallery.feature_node.domain.model.IgnoredAlbum
 import com.dot.gallery.feature_node.domain.model.EncryptedMedia
 import com.dot.gallery.feature_node.domain.model.ExifAttributes
 import com.dot.gallery.feature_node.domain.model.Media
@@ -41,11 +41,11 @@ interface MediaRepository {
 
     suspend fun removePinnedAlbum(pinnedAlbum: PinnedAlbum)
 
-    suspend fun addBlacklistedAlbum(blacklistedAlbum: BlacklistedAlbum)
+    suspend fun addBlacklistedAlbum(ignoredAlbum: IgnoredAlbum)
 
-    suspend fun removeBlacklistedAlbum(blacklistedAlbum: BlacklistedAlbum)
+    suspend fun removeBlacklistedAlbum(ignoredAlbum: IgnoredAlbum)
 
-    fun getBlacklistedAlbums(): Flow<List<BlacklistedAlbum>>
+    fun getBlacklistedAlbums(): Flow<List<IgnoredAlbum>>
 
     suspend fun getMediaById(mediaId: Long): Media?
 

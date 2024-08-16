@@ -10,7 +10,6 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
@@ -34,19 +33,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import coil3.compose.LocalPlatformContext
-import coil3.compose.rememberAsyncImagePainter
-import coil3.request.CachePolicy
-import coil3.request.ImageRequest
-import coil3.size.Scale
 import com.dot.gallery.core.Constants.Animation
 import com.dot.gallery.core.presentation.components.CheckBox
 import com.dot.gallery.feature_node.domain.model.EncryptedMedia
-import com.dot.gallery.feature_node.domain.model.MediaEqualityDelegate
 import com.dot.gallery.feature_node.presentation.vault.encryptedmediaview.components.video.VideoDurationHeader
+import com.github.panpf.sketch.AsyncImage
+import com.github.panpf.sketch.cache.CachePolicy
+import com.github.panpf.sketch.fetch.newBase64Uri
+import com.github.panpf.sketch.request.ComposableImageRequest
+import com.github.panpf.sketch.resize.Scale
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -81,17 +78,6 @@ fun EncryptedMediaImage(
     val strokeColor by animateColorAsState(
         targetValue = if (isSelected) primaryContainerColor else Color.Transparent,
         label = "strokeColor"
-    )
-    val painter = rememberAsyncImagePainter(
-        model = ImageRequest.Builder(LocalPlatformContext.current)
-            .data(media.bytes)
-            .memoryCachePolicy(CachePolicy.ENABLED)
-            .placeholderMemoryCacheKey(media.toString())
-            .scale(Scale.FIT)
-            .build(),
-        modelEqualityDelegate = MediaEqualityDelegate(),
-        contentScale = ContentScale.FillBounds,
-        filterQuality = FilterQuality.None
     )
     Box(
         modifier = modifier
@@ -128,10 +114,14 @@ fun EncryptedMediaImage(
                     color = strokeColor
                 )
         ) {
-            Image(
+            AsyncImage(
                 modifier = Modifier
                     .fillMaxSize(),
-                painter = painter,
+                request = ComposableImageRequest(newBase64Uri(mimeType = media.mimeType, imageData = media.bytes)) {
+                    memoryCachePolicy(CachePolicy.ENABLED)
+                    scale(Scale.CENTER_CROP)
+                    crossfade()
+                },
                 contentDescription = media.label,
                 contentScale = ContentScale.Crop,
             )

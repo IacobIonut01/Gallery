@@ -10,17 +10,18 @@ plugins {
     alias(libs.plugins.baselineProfilePlugin)
     alias(libs.plugins.kotlin.compose.compiler)
     id("kotlin-parcelize")
+    alias(libs.plugins.kotlinSerialization)
 }
 
 android {
     namespace = "com.dot.gallery"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.dot.gallery"
         minSdk = 30
-        targetSdk = 34
-        versionCode = 30013
+        targetSdk = 35
+        versionCode = 30024
         versionName = "3.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -136,6 +137,7 @@ dependencies {
     implementation(libs.compose.ui.graphics)
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.compose.material.icons.extended)
+    implementation(libs.androidx.graphics.shapes)
 
     // Compose - Shimmer
     implementation(libs.compose.shimmer)
@@ -155,6 +157,8 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     runtimeOnly(libs.kotlinx.coroutines.android)
 
+    implementation(libs.kotlinx.serialization.json)
+
     // Dagger - Hilt
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.dagger.hilt)
@@ -169,13 +173,17 @@ dependencies {
     implementation(libs.room.ktx)
 
     // Coil
-    implementation(libs.coil.compose)
-    implementation(libs.coil.svg)
-    implementation(libs.coil.gif)
-    implementation(libs.coil.video)
     implementation(libs.jxl.coder.coil)
-    implementation(libs.coil.network.okhttp)
     implementation(libs.avif.coder.coil)
+
+    // Sketch
+    implementation(libs.sketch.compose)
+    implementation(libs.sketch.view)
+    implementation(libs.sketch.animated)
+    implementation(libs.sketch.extensions.compose)
+    implementation(libs.sketch.http.ktor)
+    implementation(libs.sketch.svg)
+    implementation(libs.sketch.video)
 
     // Exo Player
     implementation(libs.androidx.media3.exoplayer)
@@ -187,9 +195,6 @@ dependencies {
 
     // Exif Interface
     implementation(libs.androidx.exifinterface)
-
-    // Zoomable
-    implementation(libs.zoomable)
 
     // Datastore Preferences
     implementation(libs.datastore.prefs)
@@ -204,7 +209,7 @@ dependencies {
     implementation(libs.pinchzoomgrid)
 
     // Subsampling
-    implementation(libs.zoomable.image.coil)
+    implementation(libs.zoomimage.sketch)
 
     // Splashscreen
     implementation(libs.androidx.core.splashscreen)
@@ -212,6 +217,9 @@ dependencies {
     // Jetpack Security
     implementation(libs.androidx.security.crypto)
     implementation(libs.androidx.biometric)
+
+    // Composables - Core
+    implementation(libs.core)
 
     // Tests
     testImplementation(libs.junit)

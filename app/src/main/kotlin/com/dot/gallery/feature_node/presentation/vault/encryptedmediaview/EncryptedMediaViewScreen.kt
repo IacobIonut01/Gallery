@@ -53,6 +53,7 @@ import com.dot.gallery.core.Constants.HEADER_DATE_FORMAT
 import com.dot.gallery.core.EncryptedMediaState
 import com.dot.gallery.feature_node.domain.model.EncryptedMedia
 import com.dot.gallery.feature_node.domain.model.Vault
+import com.dot.gallery.feature_node.presentation.mediaview.components.video.VideoPlayerController
 import com.dot.gallery.feature_node.presentation.util.getDate
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.rememberWindowInsetsController
@@ -60,7 +61,6 @@ import com.dot.gallery.feature_node.presentation.util.toggleSystemBars
 import com.dot.gallery.feature_node.presentation.vault.encryptedmediaview.components.EncryptedMediaViewAppBar
 import com.dot.gallery.feature_node.presentation.vault.encryptedmediaview.components.EncryptedMediaViewBottomBar
 import com.dot.gallery.feature_node.presentation.vault.encryptedmediaview.components.media.MediaPreviewComponent
-import com.dot.gallery.feature_node.presentation.vault.encryptedmediaview.components.video.VideoPlayerController
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -149,7 +149,7 @@ fun EncryptedMediaViewScreen(
             state = pagerState,
             flingBehavior = PagerDefaults.flingBehavior(
                 state = pagerState,
-                lowVelocityAnimationSpec = tween(
+                snapAnimationSpec = tween(
                     easing = FastOutLinearInEasing,
                     durationMillis = DEFAULT_LOW_VELOCITY_SWIPE_DURATION
                 )

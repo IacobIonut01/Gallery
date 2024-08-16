@@ -59,6 +59,8 @@ import androidx.compose.ui.window.DialogProperties
 import com.dot.gallery.R
 import com.dot.gallery.core.Position
 import com.dot.gallery.core.Settings
+import com.dot.gallery.core.Settings.Misc.rememberAutoHideNavBar
+import com.dot.gallery.core.Settings.Misc.rememberAutoHideSearchBar
 import com.dot.gallery.core.Settings.Misc.rememberForcedLastScreen
 import com.dot.gallery.core.Settings.Misc.rememberLastScreen
 import com.dot.gallery.core.SettingsEntity
@@ -309,14 +311,6 @@ fun rememberSettingsList(
         )
     }
 
-    val blacklistPref = remember {
-        SettingsEntity.Preference(
-            title = context.getString(R.string.ignored_albums),
-            summary = context.getString(R.string.blacklist_summary),
-            screenPosition = Position.Top
-        ) { navigate(Screen.BlacklistScreen()) }
-    }
-
     var groupByMonth by Settings.Misc.rememberTimelineGroupByMonth()
     val groupByMonthPref = remember(groupByMonth) {
         SettingsEntity.SwitchPreference(
@@ -330,7 +324,7 @@ fun rememberSettingsList(
                     context.restartApplication()
                 }
             },
-            screenPosition = Position.Middle
+            screenPosition = Position.Top
         )
     }
 
@@ -354,7 +348,7 @@ fun rememberSettingsList(
             summary = context.getString(R.string.old_navbar_summary),
             isChecked = showOldNavbar,
             onCheck = { showOldNavbar = it },
-            screenPosition = Position.Middle
+            screenPosition = Position.Top
         )
     }
 
@@ -390,6 +384,30 @@ fun rememberSettingsList(
         )
     }
 
+    var autoHideSearchSetting by rememberAutoHideSearchBar()
+
+    val autoHideSearch = remember(autoHideSearchSetting) {
+        SettingsEntity.SwitchPreference(
+            title = context.getString(R.string.auto_hide_searchbar),
+            summary = context.getString(R.string.auto_hide_searchbar_summary),
+            isChecked = autoHideSearchSetting,
+            onCheck = { autoHideSearchSetting = it },
+            screenPosition = Position.Middle
+        )
+    }
+
+    var autoHideNavigationSetting by rememberAutoHideNavBar()
+
+    val autoHideNavigation = remember(autoHideNavigationSetting) {
+        SettingsEntity.SwitchPreference(
+            title = context.getString(R.string.auto_hide_navigationbar),
+            summary = context.getString(R.string.auto_hide_navigationbar_summary),
+            isChecked = autoHideNavigationSetting,
+            onCheck = { autoHideNavigationSetting = it },
+            screenPosition = Position.Bottom
+        )
+    }
+
     return remember(
         arrayOf(
             forceTheme,
@@ -411,25 +429,32 @@ fun rememberSettingsList(
             add(amoledModePref)
             /** ********************* **/
             /** ********************* **/
-            add(SettingsEntity.Header(title = context.getString(R.string.customization)))
-            /** Customization Section Start **/
-            /** Customization Section Start **/
-            add(blacklistPref)
-            add(groupByMonthPref)
-            add(allowBlurPref)
-            add(showOldNavbarPref)
-            add(hideTimelineOnAlbumPref)
-            add(forcedLastScreenPref)
-            /** ********************* **/
-            /** ********************* **/
             add(SettingsEntity.Header(title = context.getString(R.string.settings_general)))
             /** General Section Start **/
             /** General Section Start **/
             add(trashCanEnabledPref)
             add(secureModePref)
             add(allowVibrationsPref)
-            /** General Section End **/
-            /** General Section End **/
+            /** ********************* **/
+            /** ********************* **/
+            add(SettingsEntity.Header(title = context.getString(R.string.customization)))
+            /** Customization Section Start **/
+            /** Customization Section Start **/
+            add(groupByMonthPref)
+            add(allowBlurPref)
+            add(hideTimelineOnAlbumPref)
+            add(forcedLastScreenPref)
+            /** ********************* **/
+            /** ********************* **/
+            /** Navigation Section Start **/
+            /** Navigation Section Start **/
+            add(SettingsEntity.Header(title = context.getString(R.string.navigation)))
+            add(showOldNavbarPref)
+            add(autoHideSearch)
+            add(autoHideNavigation)
+            /** ********************* **/
+            /** ********************* **/
+
         }
     }
 }

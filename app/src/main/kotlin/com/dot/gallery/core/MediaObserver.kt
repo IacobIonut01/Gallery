@@ -9,12 +9,14 @@ import android.content.Context
 import android.database.ContentObserver
 import android.net.Uri
 import android.os.FileObserver
+import com.dot.gallery.feature_node.data.data_source.InternalDatabase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.conflate
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
@@ -42,6 +44,11 @@ fun Context.contentFlowObserver(uris: Array<Uri>) = callbackFlow {
         contentResolver.unregisterContentObserver(observer)
     }
 }.conflate().onEach { if (!it) delay(1000) }
+
+fun Context.contentFlowWithDatabase(uris: Array<Uri>, database: InternalDatabase) = merge(
+    contentFlowObserver(uris),
+    database.getBlacklistDao().getBlacklistedAlbums()
+)
 
 
 private var observerFileJob: Job? = null

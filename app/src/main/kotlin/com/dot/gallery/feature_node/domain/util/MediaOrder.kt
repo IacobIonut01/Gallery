@@ -8,10 +8,19 @@ package com.dot.gallery.feature_node.domain.util
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.Media
 
-sealed class MediaOrder(private val orderType: OrderType) {
+sealed class MediaOrder(val orderType: OrderType) {
     class Label(orderType: OrderType) : MediaOrder(orderType)
     class Date(orderType: OrderType) : MediaOrder(orderType)
     class Expiry(orderType: OrderType = OrderType.Descending): MediaOrder(orderType)
+
+    fun flipOrder(): MediaOrder {
+        return this.copy(
+            orderType = when (orderType) {
+                OrderType.Ascending -> OrderType.Descending
+                OrderType.Descending -> OrderType.Ascending
+            }
+        )
+    }
 
     fun copy(orderType: OrderType): MediaOrder {
         return when (this) {
