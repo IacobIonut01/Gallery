@@ -25,8 +25,6 @@ import com.github.panpf.sketch.source.ResourceDataSource
 import com.github.panpf.sketch.transform.AnimatedTransformation
 import com.github.panpf.sketch.transform.flag
 import com.github.panpf.sketch.util.Size
-import okio.BufferedSource
-import okio.ByteString.Companion.toByteString
 import okio.buffer
 import java.nio.ByteBuffer
 
@@ -45,10 +43,11 @@ class SketchJxlDecoder(
             get() = "JxlDecoder"
 
         override fun create(requestContext: RequestContext, fetchResult: FetchResult): Decoder? {
-            val source = fetchResult.dataSource.openSource().buffer()
-            return if (isJXL(source))
+            return if (fetchResult.mimeType in AVAILABLE_MIME_TYPES) {
                 SketchJxlDecoder(requestContext, fetchResult.dataSource)
-            else null
+            } else {
+                null
+            }
         }
 
         override fun equals(other: Any?): Boolean {
@@ -62,29 +61,11 @@ class SketchJxlDecoder(
 
         override fun toString(): String = key
 
-        private fun isJXL(source: BufferedSource): Boolean {
-            return source.rangeEquals(0, MAGIC_1) || source.rangeEquals(
-                0,
-                MAGIC_2
+        companion object {
+            private val AVAILABLE_MIME_TYPES = listOf(
+                "image/jxl"
             )
         }
-
-        companion object {
-            private val MAGIC_1 = byteArrayOf(0xFF.toByte(), 0x0A).toByteString()
-            private val MAGIC_2 = byteArrayOf(
-                0x0.toByte(),
-                0x0.toByte(),
-                0x0.toByte(),
-                0x0C.toByte(),
-                0x4A,
-                0x58,
-                0x4C,
-                0x20,
-                0x0D,
-                0x0A,
-                0x87.toByte(),
-                0x0A
-            ).toByteString()    }
     }
 
     override suspend fun decode(): Result<DecodeResult> = kotlin.runCatching {
