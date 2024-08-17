@@ -4,7 +4,6 @@
  */
 package com.dot.gallery.feature_node.presentation.picker.components
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -36,7 +35,6 @@ import com.dot.gallery.ui.theme.Dimens
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun PickerMediaScreen(
     mediaState: StateFlow<MediaState>,

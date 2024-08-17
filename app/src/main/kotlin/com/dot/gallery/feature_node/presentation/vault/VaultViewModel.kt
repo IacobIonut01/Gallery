@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dot.gallery.core.EncryptedMediaState
@@ -95,7 +96,7 @@ open class VaultViewModel @Inject constructor(
     @SuppressLint("ComposableNaming")
     @Composable
     fun attachToLifecycle() {
-        RepeatOnResume {
+        LaunchedEffect(Unit) {
             getMedia(_currentVault.value)
         }
     }

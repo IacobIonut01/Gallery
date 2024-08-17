@@ -7,6 +7,7 @@ package com.dot.gallery.feature_node.presentation.albums
 
 import android.annotation.SuppressLint
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
@@ -23,7 +24,6 @@ import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.use_case.MediaUseCases
 import com.dot.gallery.feature_node.domain.util.MediaOrder
 import com.dot.gallery.feature_node.domain.util.OrderType
-import com.dot.gallery.feature_node.presentation.util.RepeatOnResume
 import com.dot.gallery.feature_node.presentation.util.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -59,7 +59,7 @@ class AlbumsViewModel @Inject constructor(
     @SuppressLint("ComposableNaming")
     @Composable
     fun attachToLifecycle() {
-        RepeatOnResume {
+        LaunchedEffect(Unit) {
             getAlbums()
         }
     }

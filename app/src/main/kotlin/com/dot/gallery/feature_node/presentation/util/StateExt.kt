@@ -130,8 +130,6 @@ suspend fun MutableStateFlow<MediaState>.collectMedia(
                 }
             }
         }
-    }
-    withContext(Dispatchers.Main) {
         println("-->Media mapping took: ${System.currentTimeMillis() - timeStart}ms")
         emit(
             MediaState(
@@ -210,8 +208,6 @@ suspend fun MutableStateFlow<EncryptedMediaState>.collectEncryptedMedia(
                 }
             }
         }
-    }
-    withContext(Dispatchers.Main) {
         println("-->Media mapping took: ${System.currentTimeMillis() - timeStart}ms")
         emit(
             EncryptedMediaState(

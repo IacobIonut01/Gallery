@@ -2,6 +2,7 @@ package com.dot.gallery.feature_node.presentation.ignored.setup
 
 import android.annotation.SuppressLint
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -39,7 +40,7 @@ class IgnoredSetupViewModel @Inject constructor(
     @SuppressLint("ComposableNaming")
     @Composable
     fun attachToLifecycle() {
-        RepeatOnResume {
+        LaunchedEffect(Unit) {
             getIgnoredAlbums()
         }
     }
