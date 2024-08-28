@@ -49,7 +49,7 @@
     <string name="pinned_albums_title">Album fissati in alto</string>
     <string name="unpin">Rimuovi elemento fissato</string>
     <string name="pin">Fissa in alto</string>
-    <string name="nav_timeline">Cronologia</string>
+    <string name="nav_timeline">Storico</string>
     <string name="location_cd">Percorso dei media</string>
     <string name="location_map_cd">Posizione</string>
     <string name="app_dev">di %s</string>
@@ -99,7 +99,7 @@
     <string name="album_card_size_title">Dimensioni del riquadro dell\'album</string>
     <string name="album_card_size_summary">Scegli la dimensione del riquadro dell\'album</string>
     <string name="set_wallpaper">Sfondo</string>
-    <string name="set_wallpaper_error">Impossibile impostare lo sfondo, nessuna app disponibile</string>
+    <string name="set_wallpaper_error">Impossibile impostare lo sfondo, nessuna app disponibile!</string>
     <string name="monthly_timeline_title">Ordinamento per mese</string>
     <string name="monthly_timeline_summary">Raggruppa le foto per mese invece che per giorno (riavvia l\'app)</string>
     <string name="amoled_mode_title">Usa la modalità Amoled</string>
