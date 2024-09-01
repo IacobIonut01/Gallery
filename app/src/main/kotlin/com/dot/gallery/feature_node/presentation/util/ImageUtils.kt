@@ -22,10 +22,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ShareCompat
 import androidx.exifinterface.media.ExifInterface
+import com.dot.gallery.feature_node.domain.model.EncryptedMedia
 import com.dot.gallery.feature_node.domain.model.ImageFilter
+import com.dot.gallery.feature_node.domain.model.InfoRow
 import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.presentation.mediaview.components.InfoRow
 import com.dot.gallery.feature_node.presentation.mediaview.components.retrieveMetadata
+import com.dot.gallery.feature_node.presentation.vault.encryptedmediaview.components.video.UriByteDataHelper
 import jp.co.cyberagent.android.gpuimage.GPUImage
 import jp.co.cyberagent.android.gpuimage.filter.GPUImageColorMatrixFilter
 import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter
@@ -495,7 +497,7 @@ fun List<Media>.writeRequest(
 ) = IntentSenderRequest.Builder(MediaStore.createWriteRequest(contentResolver, map { it.uri })).build()
 
 @Composable
-fun rememberMediaInfo(media: Media, exifMetadata: ExifMetadata, onLabelClick: () -> Unit): List<InfoRow> {
+fun rememberMediaInfo(media: Media, exifMetadata: ExifMetadata?, onLabelClick: () -> Unit): List<InfoRow> {
     val context = LocalContext.current
     return remember(media) {
         media.retrieveMetadata(context, exifMetadata, onLabelClick)
@@ -503,9 +505,9 @@ fun rememberMediaInfo(media: Media, exifMetadata: ExifMetadata, onLabelClick: ()
 }
 
 @Composable
-fun rememberExifMetadata(media: Media, exifInterface: ExifInterface): ExifMetadata {
-    return remember(media) {
-        ExifMetadata(exifInterface)
+fun rememberExifMetadata(media: Media, exifInterface: ExifInterface?): ExifMetadata? {
+    return remember(media, exifInterface) {
+        exifInterface?.let { ExifMetadata(it) }
     }
 }
 
@@ -551,6 +553,14 @@ fun Context.shareMedia(media: Media) {
         .IntentBuilder(this)
         .setType(media.mimeType)
         .addStream(media.uri)
+        .startChooser()
+}
+
+fun Context.shareMedia(media: EncryptedMedia) {
+    ShareCompat
+        .IntentBuilder(this)
+        .setType(media.mimeType)
+        .addStream(UriByteDataHelper.getUri(this, media.bytes, media.fileExtension, media.duration != null))
         .startChooser()
 }
 

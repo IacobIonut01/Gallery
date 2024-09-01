@@ -132,7 +132,7 @@
     <string name="required">Необходимое</string>
     <string name="optional">Необязательное</string>
     <string name="permission_manage_media_title">- Управление медиа</string>
-    <string name="permission_manage_media_summary">"    • Автоматически выдает системные диалоги подтверждения, когда вы запрашиваете несколько изменений в медиафайлах (переключение избранного, управление корзиной, редактирование метаданных и т. д.)"</string>
+    <string name="permission_manage_media_summary">"Автоматически выдает системные диалоги подтверждения, когда вы запрашиваете несколько изменений в медиафайлах (переключение избранного, управление корзиной, редактирование метаданных и т. д.)"</string>
     <string name="read_media_images">Чтение изображений</string>
     <string name="read_media_images_summary">Позволяет приложению отображать ваши изображения</string>
     <string name="read_media_videos">Чтение видео</string>

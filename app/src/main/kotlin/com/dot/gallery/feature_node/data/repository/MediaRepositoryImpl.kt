@@ -10,90 +10,118 @@ import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
-import android.os.Bundle
+import android.os.Environment
 import android.provider.MediaStore
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import androidx.core.app.ActivityOptionsCompat
+import androidx.work.WorkManager
 import com.dot.gallery.core.Resource
-import com.dot.gallery.core.contentFlowObserver
+import com.dot.gallery.core.fileFlowObserver
+import com.dot.gallery.core.updateDatabase
+import com.dot.gallery.core.util.MediaStoreBuckets
+import com.dot.gallery.core.util.ext.copyMedia
+import com.dot.gallery.core.util.ext.mapAsResource
+import com.dot.gallery.core.util.ext.overrideImage
+import com.dot.gallery.core.util.ext.saveImage
+import com.dot.gallery.core.util.ext.updateMedia
+import com.dot.gallery.core.util.ext.updateMediaExif
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
-import com.dot.gallery.feature_node.data.data_source.Query
-import com.dot.gallery.feature_node.data.data_types.copyMedia
-import com.dot.gallery.feature_node.data.data_types.findMedia
-import com.dot.gallery.feature_node.data.data_types.getAlbums
-import com.dot.gallery.feature_node.data.data_types.getMedia
-import com.dot.gallery.feature_node.data.data_types.getMediaByUri
-import com.dot.gallery.feature_node.data.data_types.getMediaFavorite
-import com.dot.gallery.feature_node.data.data_types.getMediaListByUris
-import com.dot.gallery.feature_node.data.data_types.getMediaTrashed
-import com.dot.gallery.feature_node.data.data_types.overrideImage
-import com.dot.gallery.feature_node.data.data_types.saveImage
-import com.dot.gallery.feature_node.data.data_types.updateMedia
-import com.dot.gallery.feature_node.data.data_types.updateMediaExif
+import com.dot.gallery.feature_node.data.data_source.KeychainHolder
+import com.dot.gallery.feature_node.data.data_source.KeychainHolder.Companion.VAULT_INFO_FILE_NAME
+import com.dot.gallery.feature_node.data.data_source.mediastore.quries.AlbumsFlow
+import com.dot.gallery.feature_node.data.data_source.mediastore.quries.MediaFlow
+import com.dot.gallery.feature_node.data.data_source.mediastore.quries.MediaUriFlow
 import com.dot.gallery.feature_node.domain.model.Album
-import com.dot.gallery.feature_node.domain.model.BlacklistedAlbum
+import com.dot.gallery.feature_node.domain.model.EncryptedMedia
 import com.dot.gallery.feature_node.domain.model.ExifAttributes
+import com.dot.gallery.feature_node.domain.model.IgnoredAlbum
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.PinnedAlbum
+import com.dot.gallery.feature_node.domain.model.TimelineSettings
+import com.dot.gallery.feature_node.domain.model.Vault
+import com.dot.gallery.feature_node.domain.model.toEncryptedMedia
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.domain.util.MediaOrder
-import com.dot.gallery.feature_node.domain.util.OrderType
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia.BOTH
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia.PHOTOS
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia.VIDEOS
+import com.dot.gallery.feature_node.presentation.util.printError
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.conflate
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.Serializable
 
 class MediaRepositoryImpl(
     private val context: Context,
-    private val database: InternalDatabase
+    private val workManager: WorkManager,
+    private val database: InternalDatabase,
+    private val keychainHolder: KeychainHolder
 ) : MediaRepository {
+
+    private val contentResolver = context.contentResolver
+
+    override suspend fun updateInternalDatabase() {
+        workManager.updateDatabase()
+    }
 
     /**
      * TODO: Add media reordering
      */
     override fun getMedia(): Flow<Resource<List<Media>>> =
-        context.retrieveMedia {
-            it.getMedia(mediaOrder = DEFAULT_ORDER).removeBlacklisted()
-        }
+        MediaFlow(
+            contentResolver = contentResolver,
+            buckedId = MediaStoreBuckets.MEDIA_STORE_BUCKET_TIMELINE.id
+        ).flowData().map {
+            Resource.Success(it)
+        }.flowOn(Dispatchers.IO)
 
     override fun getMediaByType(allowedMedia: AllowedMedia): Flow<Resource<List<Media>>> =
-        context.retrieveMedia {
-            val query = when (allowedMedia) {
-                PHOTOS -> Query.PhotoQuery()
-                VIDEOS -> Query.VideoQuery()
-                BOTH -> Query.MediaQuery()
-            }
-            it.getMedia(mediaQuery = query, mediaOrder = DEFAULT_ORDER).removeBlacklisted()
-        }
+        MediaFlow(
+            contentResolver = contentResolver,
+            buckedId = when (allowedMedia) {
+                PHOTOS -> MediaStoreBuckets.MEDIA_STORE_BUCKET_PHOTOS.id
+                VIDEOS -> MediaStoreBuckets.MEDIA_STORE_BUCKET_VIDEOS.id
+                BOTH -> MediaStoreBuckets.MEDIA_STORE_BUCKET_TIMELINE.id
+            },
+            mimeType = allowedMedia.toStringAny()
+        ).flowData().map {
+            Resource.Success(it)
+        }.flowOn(Dispatchers.IO)
 
     override fun getFavorites(mediaOrder: MediaOrder): Flow<Resource<List<Media>>> =
-        context.retrieveMedia {
-            it.getMediaFavorite(mediaOrder = mediaOrder).removeBlacklisted()
-        }
+        MediaFlow(
+            contentResolver = contentResolver,
+            buckedId = MediaStoreBuckets.MEDIA_STORE_BUCKET_FAVORITES.id
+        ).flowData().map {
+            Resource.Success(it)
+        }.flowOn(Dispatchers.IO)
 
     override fun getTrashed(): Flow<Resource<List<Media>>> =
-        context.retrieveMedia {
-            it.getMediaTrashed().removeBlacklisted()
-        }
+        MediaFlow(
+            contentResolver = contentResolver,
+            buckedId = MediaStoreBuckets.MEDIA_STORE_BUCKET_TRASH.id
+        ).flowData().map { Resource.Success(it) }.flowOn(Dispatchers.IO)
 
-    override fun getAlbums(mediaOrder: MediaOrder, ignoreBlacklisted: Boolean): Flow<Resource<List<Album>>> =
-        context.retrieveAlbums {
-            it.getAlbums(mediaOrder = mediaOrder).toMutableList().apply {
-                replaceAll { album ->
-                    album.copy(isPinned = database.getPinnedDao().albumIsPinned(album.id))
-                }
-                if (!ignoreBlacklisted) {
-                    removeAll { album ->
-                        database.getBlacklistDao().albumIsBlacklisted(album.id)
+    override fun getAlbums(mediaOrder: MediaOrder): Flow<Resource<List<Album>>> =
+        AlbumsFlow(context).flowData().map {
+            withContext(Dispatchers.IO) {
+                val data = it.toMutableList().apply {
+                    replaceAll { album ->
+                        album.copy(isPinned = database.getPinnedDao().albumIsPinned(album.id))
                     }
                 }
+
+                Resource.Success(mediaOrder.sortAlbums(data))
             }
-        }
+        }.flowOn(Dispatchers.IO)
 
     override suspend fun insertPinnedAlbum(pinnedAlbum: PinnedAlbum) =
         database.getPinnedDao().insertPinnedAlbum(pinnedAlbum)
@@ -101,153 +129,49 @@ class MediaRepositoryImpl(
     override suspend fun removePinnedAlbum(pinnedAlbum: PinnedAlbum) =
         database.getPinnedDao().removePinnedAlbum(pinnedAlbum)
 
-    override suspend fun addBlacklistedAlbum(blacklistedAlbum: BlacklistedAlbum) =
-        database.getBlacklistDao().addBlacklistedAlbum(blacklistedAlbum)
+    override fun getPinnedAlbums(): Flow<List<PinnedAlbum>> =
+        database.getPinnedDao().getPinnedAlbums()
 
-    override suspend fun removeBlacklistedAlbum(blacklistedAlbum: BlacklistedAlbum) =
-        database.getBlacklistDao().removeBlacklistedAlbum(blacklistedAlbum)
+    override suspend fun addBlacklistedAlbum(ignoredAlbum: IgnoredAlbum) =
+        database.getBlacklistDao().addBlacklistedAlbum(ignoredAlbum)
 
-    override fun getBlacklistedAlbums(): Flow<List<BlacklistedAlbum>> =
+    override suspend fun removeBlacklistedAlbum(ignoredAlbum: IgnoredAlbum) =
+        database.getBlacklistDao().removeBlacklistedAlbum(ignoredAlbum)
+
+    override fun getBlacklistedAlbums(): Flow<List<IgnoredAlbum>> =
         database.getBlacklistDao().getBlacklistedAlbums()
 
-    override suspend fun getMediaById(mediaId: Long): Media? {
-        val query = Query.MediaQuery().copy(
-            bundle = Bundle().apply {
-                putString(
-                    ContentResolver.QUERY_ARG_SQL_SELECTION,
-                    MediaStore.MediaColumns._ID + "= ?"
-                )
-                putStringArray(
-                    ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS,
-                    arrayOf(mediaId.toString())
-                )
-            }
-        )
-        return context.contentResolver.findMedia(query)
-    }
-
     override fun getMediaByAlbumId(albumId: Long): Flow<Resource<List<Media>>> =
-        context.retrieveMedia {
-            val query = Query.MediaQuery().copy(
-                bundle = Bundle().apply {
-                    putString(
-                        ContentResolver.QUERY_ARG_SQL_SELECTION,
-                        MediaStore.MediaColumns.BUCKET_ID + "= ?"
-                    )
-                    putStringArray(
-                        ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS,
-                        arrayOf(albumId.toString())
-                    )
-                }
-            )
-            /** return@retrieveMedia */
-            it.getMedia(query)
-        }
+        MediaFlow(
+            contentResolver = contentResolver,
+            buckedId = albumId,
+        ).flowData().mapAsResource()
 
     override fun getMediaByAlbumIdWithType(
         albumId: Long,
         allowedMedia: AllowedMedia
     ): Flow<Resource<List<Media>>> =
-        context.retrieveMedia {
-            val query = Query.MediaQuery().copy(
-                bundle = Bundle().apply {
-                    val mimeType = when (allowedMedia) {
-                        PHOTOS -> "image%"
-                        VIDEOS -> "video%"
-                        BOTH -> "%/%"
-                    }
-                    putString(
-                        ContentResolver.QUERY_ARG_SQL_SELECTION,
-                        MediaStore.MediaColumns.BUCKET_ID + "= ? and " + MediaStore.MediaColumns.MIME_TYPE + " like ?"
-                    )
-                    putStringArray(
-                        ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS,
-                        arrayOf(albumId.toString(), mimeType)
-                    )
-                }
-            )
-            /** return@retrieveMedia */
-            it.getMedia(query)
-        }
+        MediaFlow(
+            contentResolver = contentResolver,
+            buckedId = albumId,
+            mimeType = allowedMedia.toStringAny()
+        ).flowData().mapAsResource()
 
     override fun getAlbumsWithType(allowedMedia: AllowedMedia): Flow<Resource<List<Album>>> =
-        context.retrieveAlbums {
-            val query = Query.AlbumQuery().copy(
-                bundle = Bundle().apply {
-                    val mimeType = when (allowedMedia) {
-                        PHOTOS -> "image%"
-                        VIDEOS -> "video%"
-                        BOTH -> "%/%"
-                    }
-                    putString(
-                        ContentResolver.QUERY_ARG_SQL_SELECTION,
-                        MediaStore.MediaColumns.MIME_TYPE + " like ?"
-                    )
-                    putStringArray(
-                        ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS,
-                        arrayOf(mimeType)
-                    )
-                }
-            )
-            it.getAlbums(query, mediaOrder = MediaOrder.Label(OrderType.Ascending))
-        }
-
-    override fun getMediaByUri(
-        uriAsString: String,
-        isSecure: Boolean
-    ): Flow<Resource<List<Media>>> =
-        context.retrieveMediaAsResource {
-            val media = context.getMediaByUri(Uri.parse(uriAsString))
-            /** return@retrieveMediaAsResource */
-            if (media == null) {
-                Resource.Error(message = "Media could not be opened")
-            } else {
-                val query = Query.MediaQuery().copy(
-                    bundle = Bundle().apply {
-                        putString(
-                            ContentResolver.QUERY_ARG_SQL_SELECTION,
-                            MediaStore.MediaColumns.BUCKET_ID + "= ?"
-                        )
-                        putStringArray(
-                            ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS,
-                            arrayOf(media.albumID.toString())
-                        )
-                    }
-                )
-                Resource.Success(
-                    data = if (isSecure) listOf(media) else it.getMedia(query)
-                        .ifEmpty { listOf(media) })
-            }
-        }
+        AlbumsFlow(
+            context = context,
+            mimeType = allowedMedia.toStringAny()
+        ).flowData().mapAsResource()
 
     override fun getMediaListByUris(
         listOfUris: List<Uri>,
         reviewMode: Boolean
     ): Flow<Resource<List<Media>>> =
-        context.retrieveMediaAsResource {
-            var mediaList = context.getMediaListByUris(listOfUris)
-            if (reviewMode) {
-                val query = Query.MediaQuery().copy(
-                    bundle = Bundle().apply {
-                        putString(
-                            ContentResolver.QUERY_ARG_SQL_SELECTION,
-                            MediaStore.MediaColumns.BUCKET_ID + "= ?"
-                        )
-                        putInt(MediaStore.QUERY_ARG_MATCH_TRASHED, MediaStore.MATCH_INCLUDE)
-                        putStringArray(
-                            ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS,
-                            arrayOf(mediaList.first().albumID.toString())
-                        )
-                    }
-                )
-                mediaList = it.getMedia(query).filter { media -> !media.isTrashed }
-            }
-            if (mediaList.isEmpty()) {
-                Resource.Error(message = "Media could not be opened")
-            } else {
-                Resource.Success(data = mediaList)
-            }
-        }
+        MediaUriFlow(
+            contentResolver = contentResolver,
+            uris = listOfUris,
+            reviewMode = reviewMode
+        ).flowData().mapAsResource(errorOnEmpty = true, errorMessage = "Media could not be opened")
 
     override suspend fun toggleFavorite(
         result: ActivityResultLauncher<IntentSenderRequest>,
@@ -255,7 +179,7 @@ class MediaRepositoryImpl(
         favorite: Boolean
     ) {
         val intentSender = MediaStore.createFavoriteRequest(
-            context.contentResolver,
+            contentResolver,
             mediaList.map { it.uri },
             favorite
         ).intentSender
@@ -271,7 +195,7 @@ class MediaRepositoryImpl(
         trash: Boolean
     ) {
         val intentSender = MediaStore.createTrashRequest(
-            context.contentResolver,
+            contentResolver,
             mediaList.map { it.uri },
             trash
         ).intentSender
@@ -287,7 +211,7 @@ class MediaRepositoryImpl(
     ) {
         val intentSender =
             MediaStore.createDeleteRequest(
-                context.contentResolver,
+                contentResolver,
                 mediaList.map { it.uri }).intentSender
         val senderRequest: IntentSenderRequest = IntentSenderRequest.Builder(intentSender)
             .setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION, 0)
@@ -298,7 +222,7 @@ class MediaRepositoryImpl(
     override suspend fun copyMedia(
         from: Media,
         path: String
-    ): Boolean = context.contentResolver.copyMedia(
+    ): Boolean = contentResolver.copyMedia(
         from = from,
         path = path
     )
@@ -306,7 +230,7 @@ class MediaRepositoryImpl(
     override suspend fun renameMedia(
         media: Media,
         newName: String
-    ): Boolean = context.contentResolver.updateMedia(
+    ): Boolean = contentResolver.updateMedia(
         media = media,
         contentValues = displayName(newName)
     )
@@ -314,7 +238,7 @@ class MediaRepositoryImpl(
     override suspend fun moveMedia(
         media: Media,
         newPath: String
-    ): Boolean = context.contentResolver.updateMedia(
+    ): Boolean = contentResolver.updateMedia(
         media = media,
         contentValues = relativePath(newPath)
     )
@@ -322,7 +246,7 @@ class MediaRepositoryImpl(
     override suspend fun updateMediaExif(
         media: Media,
         exifAttributes: ExifAttributes
-    ): Boolean = context.contentResolver.updateMediaExif(
+    ): Boolean = contentResolver.updateMediaExif(
         media = media,
         exifAttributes = exifAttributes
     )
@@ -333,7 +257,7 @@ class MediaRepositoryImpl(
         mimeType: String,
         relativePath: String,
         displayName: String
-    ) = context.contentResolver.saveImage(bitmap, format, mimeType, relativePath, displayName)
+    ) = contentResolver.saveImage(bitmap, format, mimeType, relativePath, displayName)
 
     override fun overrideImage(
         uri: Uri,
@@ -342,21 +266,146 @@ class MediaRepositoryImpl(
         mimeType: String,
         relativePath: String,
         displayName: String
-    ) = context.contentResolver.overrideImage(uri, bitmap, format, mimeType, relativePath, displayName)
+    ) = contentResolver.overrideImage(uri, bitmap, format, mimeType, relativePath, displayName)
 
-    private fun List<Media>.removeBlacklisted(): List<Media> = toMutableList().apply {
-        removeAll { media ->
-            database.getBlacklistDao().albumIsBlacklisted(media.albumID)
+    override fun getVaults(): Flow<Resource<List<Vault>>> =
+        context.retrieveInternalFiles {
+            with(keychainHolder) {
+                filesDir.listFiles()
+                    ?.filter { it.isDirectory && File(it, VAULT_INFO_FILE_NAME).exists() }
+                    ?.mapNotNull {
+                        try {
+                            File(it, VAULT_INFO_FILE_NAME).decrypt() as Vault
+                        } catch (e: Exception) {
+                            null
+                        }
+                    }
+                    ?: emptyList()
+            }
+        }
+
+
+    override suspend fun createVault(
+        vault: Vault,
+        onSuccess: () -> Unit,
+        onFailed: (reason: String) -> Unit
+    ) = withContext(Dispatchers.IO) { keychainHolder.writeVaultInfo(vault, onSuccess, onFailed) }
+
+    override suspend fun deleteVault(
+        vault: Vault,
+        onSuccess: () -> Unit,
+        onFailed: (reason: String) -> Unit
+    ) = withContext(Dispatchers.IO) { keychainHolder.deleteVault(vault, onSuccess, onFailed) }
+
+    override fun getEncryptedMedia(vault: Vault): Flow<Resource<List<EncryptedMedia>>> =
+        context.retrieveInternalFiles {
+            with(keychainHolder) {
+                (vaultFolder(vault).listFiles()?.filter {
+                    it.name.endsWith("enc")
+                }?.mapNotNull {
+                    try {
+                        val id = it.nameWithoutExtension.toLong()
+                        vault.mediaFile(id).decrypt<EncryptedMedia>()
+                    } catch (e: Exception) {
+                        null
+                    }
+                } ?: emptyList()).sortedByDescending { it.timestamp }
+            }
+        }
+
+    override suspend fun addMedia(vault: Vault, media: Media): Boolean =
+        withContext(Dispatchers.IO) {
+            with(keychainHolder) {
+                keychainHolder.checkVaultFolder(vault)
+                val output = vault.mediaFile(media.id)
+                if (output.exists()) output.delete()
+                val encryptedMedia =
+                    getBytes(media.uri)?.let { bytes -> media.toEncryptedMedia(bytes) }
+                return@withContext try {
+                    encryptedMedia?.let {
+                        output.encrypt(it)
+                    }
+                    true
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    printError("Failed to add file: ${media.label}")
+                    false
+                }
+            }
+        }
+
+    override suspend fun restoreMedia(vault: Vault, media: EncryptedMedia): Boolean =
+        withContext(Dispatchers.IO) {
+            with(keychainHolder) {
+                checkVaultFolder(vault)
+                return@withContext try {
+                    val output = vault.mediaFile(media.id)
+                    val bitmap = BitmapFactory.decodeByteArray(media.bytes, 0, media.bytes.size)
+                    val restored = saveImage(
+                        bitmap = bitmap,
+                        displayName = media.label,
+                        mimeType = "image/png",
+                        format = Bitmap.CompressFormat.PNG,
+                        relativePath = Environment.DIRECTORY_PICTURES + "/Restored"
+                    ) != null
+                    val deleted = if (restored) output.delete() else false
+                    restored && deleted
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    printError("Failed to restore file: ${media.label}")
+                    false
+                }
+            }
+        }
+
+    override suspend fun deleteEncryptedMedia(vault: Vault, media: EncryptedMedia): Boolean =
+        withContext(Dispatchers.IO) {
+            with(keychainHolder) {
+                checkVaultFolder(vault)
+                return@withContext try {
+                    vault.mediaFile(media.id).delete()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    printError("Failed to delete file: ${media.label}")
+                    false
+                }
+            }
+        }
+
+    override suspend fun deleteAllEncryptedMedia(
+        vault: Vault,
+        onSuccess: () -> Unit,
+        onFailed: (failedFiles: List<File>) -> Unit
+    ): Boolean = withContext(Dispatchers.IO) {
+        with(keychainHolder) {
+            checkVaultFolder(vault)
+            val failedFiles = mutableListOf<File>()
+            val files = vaultFolder(vault).listFiles()
+            files?.forEach { file ->
+                try {
+                    file.delete()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    printError("Failed to delete file: ${file.name}")
+                    failedFiles.add(file)
+                }
+            }
+            if (failedFiles.isEmpty()) {
+                onSuccess()
+                true
+            } else {
+                onFailed(failedFiles)
+                false
+            }
         }
     }
 
-    companion object {
-        private val DEFAULT_ORDER = MediaOrder.Date(OrderType.Descending)
-        private val URIs = arrayOf(
-            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-            MediaStore.Video.Media.EXTERNAL_CONTENT_URI
-        )
+    override fun getSettings(): Flow<TimelineSettings?> = database.getMediaDao().getTimelineSettings()
+    override suspend fun updateSettings(settings: TimelineSettings) {
+        database.getMediaDao().setTimelineSettings(settings)
+    }
 
+    companion object {
         private fun displayName(newName: String) = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, newName)
         }
@@ -365,26 +414,8 @@ class MediaRepositoryImpl(
             put(MediaStore.MediaColumns.RELATIVE_PATH, newPath)
         }
 
-        private fun Context.retrieveMediaAsResource(dataBody: suspend (ContentResolver) -> Resource<List<Media>>) =
-            contentFlowObserver(URIs).map {
-                try {
-                    dataBody.invoke(contentResolver)
-                } catch (e: Exception) {
-                    Resource.Error(message = e.localizedMessage ?: "An error occurred")
-                }
-            }.conflate()
-
-        private fun Context.retrieveMedia(dataBody: suspend (ContentResolver) -> List<Media>) =
-            contentFlowObserver(URIs).map {
-                try {
-                    Resource.Success(data = dataBody.invoke(contentResolver))
-                } catch (e: Exception) {
-                    Resource.Error(message = e.localizedMessage ?: "An error occurred")
-                }
-            }.conflate()
-
-        private fun Context.retrieveAlbums(dataBody: suspend (ContentResolver) -> List<Album>) =
-            contentFlowObserver(URIs).map {
+        private fun <T : Serializable> Context.retrieveInternalFiles(dataBody: suspend (ContentResolver) -> List<T>) =
+            fileFlowObserver().map {
                 try {
                     Resource.Success(data = dataBody.invoke(contentResolver))
                 } catch (e: Exception) {

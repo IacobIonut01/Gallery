@@ -1,90 +1,107 @@
 [versions]
-agp = "8.3.2"
-benchmarkMacroJunit4 = "1.2.4"
-composeCompiler = "1.5.11"
-appcompat = "1.6.1"
-coilVersion = "3.0.0-alpha06"
+adaptive = "1.1.0-alpha01"
+agp = "8.5.2"
+avifCoderCoil = "1.8.0"
+benchmarkMacroJunit4 = "1.3.0"
+biometric = "1.2.0-alpha05"
+appcompat = "1.7.0"
+composeVideo = "1.2.0"
+core = "1.11.0"
 coreSplashscreen = "1.0.1"
 fuzzywuzzy = "1.4.0"
 exifinterface = "1.3.7"
 gpuimage = "2.1.0"
+graphicsShapes = "1.0.0"
 jxlCoder = "2.1.10"
-kotlin = "1.9.23"
-kotlinCoroutinesVersion = "1.8.0"
-ksp = "1.9.23-1.0.19"
-core-ktx = "1.13.0"
+kotlin = "2.0.20"
+kotlinCoroutinesVersion = "1.8.1"
+ksp = "2.0.20-1.0.24"
+core-ktx = "1.13.1"
 junit = "4.13.2"
-androidx-test-ext-junit = "1.1.5"
-espresso-core = "3.5.1"
-lifecycle-runtime = "2.7.0"
-activity-compose = "1.9.0"
-compose-bom = "2024.04.01"
+androidx-test-ext-junit = "1.2.1"
+espresso-core = "3.6.1"
+lazycolumnscrollbar = "2.2.0"
+lifecycle-runtime = "2.8.4"
+activity-compose = "1.9.1"
 hilt = "2.51"
-material = "1.11.0"
-material3 = "1.2.1"
-media3Ui = "1.3.1"
-media3Exoplayer = "1.3.1"
+hiltCommon = "1.2.0"
+material = "1.12.0"
+material3 = "1.3.0-rc01"
+media3Exoplayer = "1.4.1"
 navigation-runtime-ktx = "2.7.7"
 pinchzoomgrid = "0.0.5"
 profileinstaller = "1.3.1"
 room = "2.6.1"
 accompanist = "0.34.0"
-datastore = "1.1.0"
+datastore = "1.1.1"
+securityCrypto = "1.1.0-alpha06"
+sketch = "4.0.0-alpha06"
 uiautomator = "2.3.0"
-zoomable = "1.6.1"
-zoomableImageCoil = "0.9.0"
+composealpha = "1.7.0-rc01"
+kotlinxSerializationJson = "1.7.0"
+workRuntimeKtx = "2.9.1"
+zoomimageViewSketch = "1.1.0-alpha05"
 
 [libraries]
 # AndroidX
+androidx-adaptive = { module = "androidx.compose.material3.adaptive:adaptive", version.ref = "adaptive" }
+androidx-adaptive-layout = { module = "androidx.compose.material3.adaptive:adaptive-layout", version.ref = "adaptive" }
+androidx-adaptive-navigation = { module = "androidx.compose.material3.adaptive:adaptive-navigation", version.ref = "adaptive" }
 androidx-benchmark-macro-junit4 = { module = "androidx.benchmark:benchmark-macro-junit4", version.ref = "benchmarkMacroJunit4" }
+androidx-biometric = { module = "androidx.biometric:biometric", version.ref = "biometric" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
 androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreen" }
 androidx-exifinterface = { module = "androidx.exifinterface:exifinterface", version.ref = "exifinterface" }
+androidx-graphics-shapes = { module = "androidx.graphics:graphics-shapes", version.ref = "graphicsShapes" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle-runtime" }
-androidx-media3-ui = { module = "androidx.media3:media3-ui", version.ref = "media3Ui" }
+androidx-media3-exoplayer-dash = { module = "androidx.media3:media3-exoplayer-dash", version.ref = "media3Exoplayer" }
+androidx-media3-exoplayer-hls = { module = "androidx.media3:media3-exoplayer-hls", version.ref = "media3Exoplayer" }
+androidx-media3-ui = { module = "androidx.media3:media3-ui", version.ref = "media3Exoplayer" }
 androidx-media3-exoplayer = { module = "androidx.media3:media3-exoplayer", version.ref = "media3Exoplayer" }
+androidx-media3-session = { module = "androidx.media3:media3-session", version.ref = "media3Exoplayer" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigation-runtime-ktx" }
 androidx-profileinstaller = { module = "androidx.profileinstaller:profileinstaller", version.ref = "profileinstaller" }
 
 # Coil
+androidx-security-crypto = { module = "androidx.security:security-crypto", version.ref = "securityCrypto" }
 androidx-uiautomator = { module = "androidx.test.uiautomator:uiautomator", version.ref = "uiautomator" }
-coil-video = { module = "io.coil-kt.coil3:coil-video", version.ref = "coilVersion" }
-coil-gif = { module = "io.coil-kt.coil3:coil-gif", version.ref = "coilVersion" }
-coil-svg = { module = "io.coil-kt.coil3:coil-svg", version.ref = "coilVersion" }
-coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilVersion" }
-coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coilVersion" }
+androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
+avif-coder-coil = { module = "com.github.awxkee:avif-coder-coil", version.ref = "avifCoderCoil" }
 
 # Compose
-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "compose-bom" }
 compose-activity = { group = "androidx.activity", name = "activity-compose", version.ref = "activity-compose" }
-compose-runtime = { group = "androidx.compose.runtime", name = "runtime" }
-compose-foundation = { group = "androidx.compose.foundation", name = "foundation" }
+compose-runtime = { group = "androidx.compose.runtime", name = "runtime", version.ref = "composealpha" }
+compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "composealpha" }
 compose-lifecycle-runtime = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycle-runtime" }
-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
+compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version = "composealpha" }
 compose-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
 compose-material3-window-size = { group = "androidx.compose.material3", name = "material3-window-size-class", version.ref = "material3" }
-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
-compose-ui-tooling-preview = { group = "androidx.compose.ui", name= "ui-tooling-preview" }
-compose-ui = { group = "androidx.compose.ui", name = "ui" }
-compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
+compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling", version.ref = "composealpha" }
+compose-ui-tooling-preview = { group = "androidx.compose.ui", name= "ui-tooling-preview", version.ref = "composealpha" }
+compose-ui = { group = "androidx.compose.ui", name = "ui", version.ref = "composealpha" }
+compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics", version.ref = "composealpha" }
+compose-video = { module = "io.sanghun:compose-video", version.ref = "composeVideo" }
 
 # Compose-shimmer
 compose-shimmer = { group = "com.valentinilk.shimmer", name = "compose-shimmer", version = "1.3.0"}
 
 # Compose Tests
 compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 
 # Dagger
+core = { module = "com.composables:core", version.ref = "core" }
 dagger-hilt = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
 dagger-hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
-androidx-hilt-compiler = { group = "androidx.hilt", name = "hilt-compiler", version = "1.2.0" }
-androidx-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version = "1.2.0" }
+androidx-hilt-common = { group = "androidx.hilt", name = "hilt-common", version.ref = "hiltCommon" }
+androidx-hilt-work = { group = "androidx.hilt", name = "hilt-work", version.ref = "hiltCommon" }
+androidx-hilt-compiler = { group = "androidx.hilt", name = "hilt-compiler", version.ref = "hiltCommon" }
+androidx-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hiltCommon" }
 
 # Room
 gpuimage = { module = "jp.co.cyberagent.android:gpuimage", version.ref = "gpuimage" }
 jxl-coder-coil = { module = "com.github.awxkee:jxl-coder-coil", version.ref = "jxlCoder" }
+lazycolumnscrollbar = { module = "com.github.nanihadesuka:LazyColumnScrollbar", version.ref = "lazycolumnscrollbar" }
 pinchzoomgrid = { module = "io.github.dokar3:pinchzoomgrid", version.ref = "pinchzoomgrid" }
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
@@ -98,7 +115,13 @@ accompanist-permissions = { group = "com.google.accompanist", name = "accompanis
 accompanist-drawablepainter = { module = "com.google.accompanist:accompanist-drawablepainter", version.ref = "accompanist" }
 
 # Zoomable
-zoomable = { module = "net.engawapg.lib:zoomable", version.ref = "zoomable" }
+sketch-animated = { module = "io.github.panpf.sketch4:sketch-animated", version.ref = "sketch" }
+sketch-compose = { module = "io.github.panpf.sketch4:sketch-compose", version.ref = "sketch" }
+sketch-extensions-compose = { module = "io.github.panpf.sketch4:sketch-extensions-compose", version.ref = "sketch" }
+sketch-http-ktor = { module = "io.github.panpf.sketch4:sketch-http-ktor", version.ref = "sketch" }
+sketch-svg = { module = "io.github.panpf.sketch4:sketch-svg", version.ref = "sketch" }
+sketch-video = { module = "io.github.panpf.sketch4:sketch-video-ffmpeg", version.ref = "sketch" }
+sketch-view = { module = "io.github.panpf.sketch4:sketch-view", version.ref = "sketch" }
 
 # Kotlinx
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinCoroutinesVersion" }
@@ -114,7 +137,9 @@ fuzzywuzzy = { module = "me.xdrop:fuzzywuzzy", version.ref = "fuzzywuzzy" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidx-test-ext-junit" }
 espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso-core" }
-zoomable-image-coil = { module = "me.saket.telephoto:zoomable-image-coil", version.ref = "zoomableImageCoil" }
+
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+zoomimage-sketch = { module = "io.github.panpf.zoomimage:zoomimage-compose-sketch", version.ref = "zoomimageViewSketch" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
@@ -125,5 +150,7 @@ kspAndroid = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 roomPlugin = { id = "androidx.room", version.ref = "room" }
 hiltAndroid = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 baselineProfilePlugin = { id = "androidx.baselineprofile", version.ref = "benchmarkMacroJunit4" }
+kotlin-compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 [bundles]
 

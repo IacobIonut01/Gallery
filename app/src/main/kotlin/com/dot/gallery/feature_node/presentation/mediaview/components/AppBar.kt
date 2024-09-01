@@ -21,7 +21,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -31,9 +30,9 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.core.Constants
-import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
+import com.dot.gallery.core.Constants.Animation.enterAnimation
+import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.ui.theme.BlackScrim
-import kotlinx.coroutines.launch
 
 @Composable
 fun MediaViewAppBar(
@@ -43,13 +42,12 @@ fun MediaViewAppBar(
     currentDate: String,
     paddingValues: PaddingValues,
     onGoBack: () -> Unit,
-    bottomSheetState: AppBottomSheetState,
+    onShowInfo: () -> Unit
 ) {
-    val scope = rememberCoroutineScope()
     AnimatedVisibility(
         visible = showUI,
-        enter = Constants.Animation.enterAnimation(Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION),
-        exit = Constants.Animation.exitAnimation(Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION)
+        enter = enterAnimation(Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION),
+        exit = exitAnimation(Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION)
     ) {
         Row(
             modifier = Modifier
@@ -77,7 +75,11 @@ fun MediaViewAppBar(
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if (showDate) {
+                AnimatedVisibility(
+                    visible = showDate,
+                    enter = enterAnimation,
+                    exit = exitAnimation
+                ) {
                     Text(
                         text = currentDate.uppercase(),
                         modifier = Modifier,
@@ -87,13 +89,13 @@ fun MediaViewAppBar(
                         textAlign = TextAlign.End
                     )
                 }
-                if (showInfo) {
+                AnimatedVisibility(
+                    visible = showInfo,
+                    enter = enterAnimation,
+                    exit = exitAnimation
+                ) {
                     IconButton(
-                        onClick = {
-                            scope.launch {
-                                bottomSheetState.show()
-                            }
-                        }
+                        onClick = onShowInfo
                     ) {
                         Image(
                             imageVector = Icons.Outlined.Info,

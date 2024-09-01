@@ -131,8 +131,8 @@
     <string name="setup_summary">メディアにアクセスするには、以下の権限を付与する必要があります:</string>
     <string name="required">必須</string>
     <string name="optional">任意</string>
-    <string name="permission_manage_media_title">• メディアの管理</string>
-    <string name="permission_manage_media_summary">"    • Automatically grants system confirmation dialogs when you request several changes to your media (Toggle Favorite, Manage Trash, Edit metadata etc)"</string>
+    <string name="permission_manage_media_title">メディアの管理</string>
+    <string name="permission_manage_media_summary">"Automatically grants system confirmation dialogs when you request several changes to your media (Toggle Favorite, Manage Trash, Edit metadata etc)"</string>
     <string name="read_media_images">メディア画像の読み取り</string>
     <string name="read_media_images_summary">アプリが画像を表示できるようにします</string>
     <string name="read_media_videos">メディア動画の読み取り</string>

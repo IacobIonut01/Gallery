@@ -5,19 +5,23 @@
 
 package com.dot.gallery.core.presentation.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Check
-import androidx.compose.material.icons.outlined.FilterList
+import androidx.compose.material.icons.outlined.KeyboardDoubleArrowDown
+import androidx.compose.material.icons.outlined.KeyboardDoubleArrowUp
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -25,9 +29,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.dot.gallery.R
 import com.dot.gallery.core.Settings.Album.rememberLastSort
 import com.dot.gallery.feature_node.domain.util.MediaOrder
 import com.dot.gallery.feature_node.domain.util.OrderType
@@ -39,52 +44,73 @@ fun FilterButton(
 ) {
     var lastSort by rememberLastSort()
     var expanded by remember { mutableStateOf(false) }
-    var selectedFilter by remember(lastSort) { mutableStateOf(filterOptions.first { it.selected }.titleRes) }
+    val selectedFilter by remember(lastSort) { mutableStateOf(filterOptions.first { it.filterKind == lastSort.kind }) }
+    var order: OrderType by remember(lastSort) { mutableStateOf(lastSort.orderType) }
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .wrapContentSize(Alignment.TopEnd)
+            .padding(top = 16.dp)
             .padding(horizontal = 8.dp),
         contentAlignment = Alignment.TopEnd
     ) {
-        TextButton(onClick = { expanded = true }) {
-            Row {
-                Text(
-                    modifier = Modifier.padding(end = 4.dp),
-                    text = stringResource(selectedFilter)
-                )
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(100))
+                    .clickable {
+                        expanded = true
+                    }
+                    .padding(vertical = 4.dp, horizontal = 8.dp),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+                text = stringResource(selectedFilter.titleRes)
+            )
+            IconButton(
+                onClick = {
+                    order = if (order == OrderType.Ascending) OrderType.Descending else OrderType.Ascending
+                    lastSort = lastSort.copy(orderType = order)
+                }
+            ) {
                 Icon(
-                    imageVector = Icons.Outlined.FilterList,
-                    contentDescription = stringResource(R.string.filter)
+                    imageVector = remember(selectedFilter) {
+                        if (order == OrderType.Descending)
+                            Icons.Outlined.KeyboardDoubleArrowDown
+                        else Icons.Outlined.KeyboardDoubleArrowUp
+                    },
+                    tint = MaterialTheme.colorScheme.primary,
+                    contentDescription = null
                 )
             }
         }
 
-        DropdownMenu(
+        Box(
             modifier = Modifier
-                .align(Alignment.TopEnd),
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
+                .wrapContentSize(Alignment.TopEnd)
         ) {
-            for (filter in filterOptions) {
-                DropdownMenuItem(
-                    text = { Text(text = stringResource(filter.titleRes)) },
-                    onClick = {
-                        filterOptions.forEach {
-                            it.selected = it.titleRes == filter.titleRes
-                            if (it.selected) selectedFilter = it.titleRes
+            DropdownMenu(
+                modifier = Modifier.align(Alignment.TopEnd),
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                filterOptions.forEach { filter ->
+                    DropdownMenuItem(
+                        text = { Text(text = stringResource(filter.titleRes)) },
+                        onClick = {
+                            lastSort = lastSort.copy(kind = filter.filterKind)
+                        },
+                        trailingIcon = {
+                            if (lastSort.kind == filter.filterKind) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Check,
+                                    contentDescription = null
+                                )
+                            }
                         }
-                        filter.onClick(filter.mediaOrder)
-                        lastSort = filterOptions.indexOf(filter)
-                    },
-                    trailingIcon = {
-                        if (filter.selected)
-                            Icon(
-                                imageVector = Icons.Outlined.Check,
-                                contentDescription = null
-                            )
-                    }
-                )
+                    )
+                }
             }
         }
     }
@@ -94,6 +120,9 @@ fun FilterButton(
 data class FilterOption(
     val titleRes: Int = -1,
     val onClick: (MediaOrder) -> Unit = {},
-    val mediaOrder: MediaOrder = MediaOrder.Date(OrderType.Descending),
-    var selected: Boolean = false
+    val filterKind: FilterKind = FilterKind.DATE
 )
+
+enum class FilterKind {
+    DATE, NAME
+}

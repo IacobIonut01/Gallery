@@ -131,8 +131,8 @@
     <string name="setup_summary">Para acceder a los medios, se necesita conceder los siguientes permisos:</string>
     <string name="required">Requerido</string>
     <string name="optional">Opcional</string>
-    <string name="permission_manage_media_title">• Gestionar medios</string>
-    <string name="permission_manage_media_summary">"    • Concede automáticamente los diálogos de confirmación del sistema cuando se solicita cambios en los archivos multimedia (Cambiar favorito, Gestionar papelera, Editar metadatos, etc.)"</string>
+    <string name="permission_manage_media_title">Gestionar medios</string>
+    <string name="permission_manage_media_summary">"Concede automáticamente los diálogos de confirmación del sistema cuando se solicita cambios en los archivos multimedia (Cambiar favorito, Gestionar papelera, Editar metadatos, etc.)"</string>
     <string name="read_media_images">Leer imágenes multimedia</string>
     <string name="read_media_images_summary">Permita que la aplicación muestre sus imágenes</string>
     <string name="read_media_videos">Leer vídeos multimedia</string>

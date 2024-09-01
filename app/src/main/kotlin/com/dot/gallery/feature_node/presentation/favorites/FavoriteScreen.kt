@@ -9,32 +9,28 @@ import android.app.Activity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
 import androidx.compose.runtime.snapshots.SnapshotStateList
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.dot.gallery.R
-import com.dot.gallery.core.AlbumState
+import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.core.Constants.Target.TARGET_FAVORITES
-import com.dot.gallery.core.MediaState
+import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.common.MediaScreen
-import com.dot.gallery.feature_node.presentation.common.MediaViewModel
 import com.dot.gallery.feature_node.presentation.favorites.components.EmptyFavorites
 import com.dot.gallery.feature_node.presentation.favorites.components.FavoriteNavActions
-import kotlinx.coroutines.flow.StateFlow
 
 @Composable
 fun FavoriteScreen(
     paddingValues: PaddingValues,
     albumName: String = stringResource(id = R.string.favorites),
-    vm: MediaViewModel,
     handler: MediaHandleUseCase,
-    mediaState: StateFlow<MediaState>,
-    albumState: StateFlow<AlbumState>,
+    mediaState: State<MediaState>,
+    albumsState: State<AlbumState>,
     selectionState: MutableState<Boolean>,
     selectedMedia: SnapshotStateList<Media>,
     toggleFavorite: (ActivityResultLauncher<IntentSenderRequest>, List<Media>, Boolean) -> Unit,
@@ -46,18 +42,17 @@ fun FavoriteScreen(
     paddingValues = paddingValues,
     target = TARGET_FAVORITES,
     albumName = albumName,
-    vm = vm,
     handler = handler,
+    albumsState = albumsState,
     mediaState = mediaState,
-    albumState = albumState,
     selectionState = selectionState,
     selectedMedia = selectedMedia,
     toggleSelection = toggleSelection,
     navActionsContent = { _: MutableState<Boolean>,
                           result: ActivityResultLauncher<IntentSenderRequest> ->
-        FavoriteNavActions(toggleFavorite, mediaState, selectedMedia, selectionState, result)
+        FavoriteNavActions(toggleFavorite, mediaState.value, selectedMedia, selectionState, result)
     },
-    emptyContent = { EmptyFavorites(Modifier.fillMaxSize()) },
+    emptyContent = { EmptyFavorites() },
     navigate = navigate,
     navigateUp = navigateUp,
     toggleNavbar = toggleNavbar

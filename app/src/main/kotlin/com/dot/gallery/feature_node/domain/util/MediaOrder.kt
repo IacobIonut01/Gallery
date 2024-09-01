@@ -7,19 +7,29 @@ package com.dot.gallery.feature_node.domain.util
 
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.Media
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-sealed class MediaOrder(private val orderType: OrderType) {
-    class Label(orderType: OrderType) : MediaOrder(orderType)
-    class Date(orderType: OrderType) : MediaOrder(orderType)
-    class Expiry(orderType: OrderType = OrderType.Descending): MediaOrder(orderType)
+@Serializable
+sealed class MediaOrder(open val orderType: OrderType) {
+    @Serializable
+    data class Label(
+        @SerialName("orderType_label")
+        override val orderType: OrderType
+    ) : MediaOrder(orderType)
 
-    fun copy(orderType: OrderType): MediaOrder {
-        return when (this) {
-            is Date -> Date(orderType)
-            is Label -> Label(orderType)
-            is Expiry -> Expiry(orderType)
-        }
-    }
+    @Serializable
+    data class Date(
+        @SerialName("orderType_date")
+        override val orderType: OrderType
+    ) : MediaOrder(orderType)
+
+
+    @Serializable
+    data class Expiry(
+        @SerialName("orderType_expiry")
+        override val orderType: OrderType = OrderType.Descending
+    ): MediaOrder(orderType)
 
     fun sortMedia(media: List<Media>): List<Media> {
         return when (orderType) {
@@ -59,5 +69,9 @@ sealed class MediaOrder(private val orderType: OrderType) {
                 }
             }
         }
+    }
+
+    companion object {
+        val Default = Date(OrderType.Descending)
     }
 }

@@ -8,7 +8,7 @@ package com.dot.gallery.feature_node.presentation.common
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
@@ -20,6 +20,7 @@ import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,20 +30,15 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dokar.pinchzoomgrid.PinchZoomGridLayout
 import com.dokar.pinchzoomgrid.rememberPinchZoomGridState
-import com.dot.gallery.core.AlbumState
-import com.dot.gallery.core.Constants.Animation.enterAnimation
-import com.dot.gallery.core.Constants.Animation.exitAnimation
+import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.core.Constants.Target.TARGET_TRASH
 import com.dot.gallery.core.Constants.cellsList
-import com.dot.gallery.core.MediaState
+import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.core.Settings.Misc.rememberGridSize
-import com.dot.gallery.core.presentation.components.Error
-import com.dot.gallery.core.presentation.components.LoadingMedia
+import com.dot.gallery.core.presentation.components.EmptyMedia
 import com.dot.gallery.core.presentation.components.NavigationActions
 import com.dot.gallery.core.presentation.components.NavigationButton
 import com.dot.gallery.core.presentation.components.SelectionSheet
@@ -52,21 +48,19 @@ import com.dot.gallery.feature_node.presentation.common.components.MediaGridView
 import com.dot.gallery.feature_node.presentation.common.components.TwoLinedDateToolbarTitle
 import com.dot.gallery.feature_node.presentation.search.MainSearchBar
 import com.dot.gallery.feature_node.presentation.util.Screen
-import kotlinx.coroutines.flow.StateFlow
 
 @OptIn(
-    ExperimentalMaterial3Api::class
+    ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class
 )
 @Composable
 fun MediaScreen(
     paddingValues: PaddingValues,
-    albumId: Long = -1L,
-    target: String? = null,
+    albumId: Long = remember { -1L },
+    target: String? = remember { null },
     albumName: String,
-    vm: MediaViewModel,
     handler: MediaHandleUseCase,
-    albumState: StateFlow<AlbumState>,
-    mediaState: StateFlow<MediaState>,
+    albumsState: State<AlbumState>,
+    mediaState: State<MediaState>,
     selectionState: MutableState<Boolean>,
     selectedMedia: SnapshotStateList<Media>,
     toggleSelection: (Int) -> Unit,
@@ -75,13 +69,13 @@ fun MediaScreen(
     enableStickyHeaders: Boolean = true,
     allowNavBar: Boolean = false,
     navActionsContent: @Composable() (RowScope.(expandedDropDown: MutableState<Boolean>, result: ActivityResultLauncher<IntentSenderRequest>) -> Unit),
-    emptyContent: @Composable () -> Unit,
-    aboveGridContent: @Composable() (() -> Unit)? = null,
+    emptyContent: @Composable () -> Unit = { EmptyMedia() },
+    aboveGridContent: @Composable() (() -> Unit)? = remember { null },
     navigate: (route: String) -> Unit,
     navigateUp: () -> Unit,
     toggleNavbar: (Boolean) -> Unit,
     isScrolling: MutableState<Boolean> = remember { mutableStateOf(false) },
-    searchBarActive: MutableState<Boolean> = mutableStateOf(false),
+    searchBarActive: MutableState<Boolean> = remember { mutableStateOf(false) },
     onActivityResult: (result: ActivityResult) -> Unit,
 ) {
     val showSearchBar = remember { albumId == -1L && target == null }
@@ -103,18 +97,12 @@ fun MediaScreen(
         lastCellIndex = cellsList.indexOf(pinchState.currentCells)
     }
 
-    /** STATES BLOCK **/
-    val state by mediaState.collectAsStateWithLifecycle()
-    val albumsState by albumState.collectAsStateWithLifecycle()
-    /** ************ **/
-
-    /** Selection state handling **/
-    LaunchedEffect(LocalConfiguration.current, selectionState.value) {
+    LaunchedEffect(selectionState.value) {
         if (allowNavBar) {
             toggleNavbar(!selectionState.value)
         }
     }
-    /** ************  **/
+
     Box {
         Scaffold(
             modifier = Modifier
@@ -129,7 +117,7 @@ fun MediaScreen(
                         title = {
                             TwoLinedDateToolbarTitle(
                                 albumName = albumName,
-                                dateHeader = state.dateHeader
+                                dateHeader = mediaState.value.dateHeader
                             )
                         },
                         navigationIcon = {
@@ -155,11 +143,12 @@ fun MediaScreen(
                     )
                 } else {
                     MainSearchBar(
-                        mediaViewModel = vm,
                         bottomPadding = paddingValues.calculateBottomPadding(),
                         navigate = navigate,
                         toggleNavbar = toggleNavbar,
-                        selectionState = if (selectedMedia.isNotEmpty()) selectionState else null,
+                        selectionState = remember(selectedMedia) {
+                            if (selectedMedia.isNotEmpty()) selectionState else null
+                        },
                         isScrolling = isScrolling,
                         activeState = searchBarActive
                     ) {
@@ -172,28 +161,20 @@ fun MediaScreen(
             }
         ) { it ->
             PinchZoomGridLayout(state = pinchState) {
-                AnimatedVisibility(
-                    visible = state.isLoading,
-                    enter = enterAnimation,
-                    exit = exitAnimation
-                ) {
-                    LoadingMedia(
-                        paddingValues = PaddingValues(
+                MediaGridView(
+                    mediaState = mediaState,
+                    allowSelection = true,
+                    showSearchBar = showSearchBar,
+                    searchBarPaddingTop = remember(paddingValues) {
+                        paddingValues.calculateTopPadding()
+                    },
+                    enableStickyHeaders = enableStickyHeaders,
+                    paddingValues = remember(paddingValues, it) {
+                        PaddingValues(
                             top = it.calculateTopPadding(),
                             bottom = paddingValues.calculateBottomPadding() + 16.dp + 64.dp
                         )
-                    )
-                }
-                MediaGridView(
-                    mediaState = state,
-                    allowSelection = true,
-                    showSearchBar = showSearchBar,
-                    searchBarPaddingTop = paddingValues.calculateTopPadding(),
-                    enableStickyHeaders = enableStickyHeaders,
-                    paddingValues = PaddingValues(
-                        top = it.calculateTopPadding(),
-                        bottom = paddingValues.calculateBottomPadding() + 16.dp + 64.dp
-                    ),
+                    },
                     canScroll = canScroll,
                     selectionState = selectionState,
                     selectedMedia = selectedMedia,
@@ -201,7 +182,8 @@ fun MediaScreen(
                     showMonthlyHeader = showMonthlyHeader,
                     toggleSelection = toggleSelection,
                     aboveGridContent = aboveGridContent,
-                    isScrolling = isScrolling
+                    isScrolling = isScrolling,
+                    emptyContent = emptyContent
                 ) {
                     val albumRoute = "albumId=$albumId"
                     val targetRoute = "target=$target"
@@ -209,16 +191,6 @@ fun MediaScreen(
                         if (target != null) targetRoute else albumRoute
                     navigate(Screen.MediaViewScreen.route + "?mediaId=${it.id}&$param")
                 }
-                /** Error State Handling Block **/
-                val showError = remember(state) { state.error.isNotEmpty() }
-                AnimatedVisibility(visible = showError) {
-                    Error(errorMessage = state.error)
-                }
-                val showEmpty = remember(state) { state.media.isEmpty() && !state.isLoading && !showError }
-                AnimatedVisibility(visible = showEmpty) {
-                    emptyContent.invoke()
-                }
-                /** ************ **/
             }
         }
         if (target != TARGET_TRASH) {

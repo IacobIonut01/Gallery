@@ -12,9 +12,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -42,6 +45,7 @@ import com.dot.gallery.core.SettingsEntity.Preference
 import com.dot.gallery.core.SettingsEntity.SeekPreference
 import com.dot.gallery.core.SettingsEntity.SwitchPreference
 import com.dot.gallery.core.SettingsType
+import com.dot.gallery.ui.core.icons.RegularExpression
 import com.dot.gallery.ui.theme.GalleryTheme
 import kotlin.math.roundToLong
 
@@ -56,6 +60,7 @@ fun SettingsItem(
         require(item.icon != null) { "Icon at this stage cannot be null" }
         Icon(
             imageVector = item.icon!!,
+            modifier = Modifier.size(24.dp),
             contentDescription = null
         )
     }
@@ -219,6 +224,7 @@ fun SettingsItemGroupPreview() =
             )
             SettingsItem(
                 item = Preference(
+                    icon = Icons.Outlined.Settings,
                     title = "Preview Top Title",
                     summary = "Preview Summary",
                     screenPosition = Position.Top
@@ -226,6 +232,7 @@ fun SettingsItemGroupPreview() =
             )
             SettingsItem(
                 item = SeekPreference(
+                    icon = com.dot.gallery.ui.core.Icons.RegularExpression,
                     title = "Preview Middle Title",
                     summary = "Preview Summary\nSecond Line",
                     currentValue = 330f,

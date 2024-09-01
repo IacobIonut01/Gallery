@@ -18,31 +18,78 @@ import android.provider.MediaStore
 import android.provider.Settings
 import android.view.HapticFeedbackConstants
 import android.view.View
+import android.view.Window
+import android.view.WindowManager
 import android.view.accessibility.AccessibilityManager
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.dot.gallery.BuildConfig
 import com.dot.gallery.R
 import com.dot.gallery.core.Settings.Misc.allowVibrations
+import com.dot.gallery.feature_node.data.data_source.InternalDatabase
 import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.presentation.edit.EditActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+@Composable
+fun getNavigationBarHeight(): Dp {
+    val insets = WindowInsets.navigationBars
+    val density = LocalDensity.current
+    return remember { with(density) { insets.getBottom(density).toDp() } }
+}
+
+@Composable
+fun SecureWindow(content: @Composable () -> Unit) {
+    ProvideWindowContext {
+        val window = LocalWindowContext.current
+        DisposableEffect(Unit) {
+            window?.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+            onDispose {
+                window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+            }
+        }
+        content()
+    }
+}
+
+val LocalWindowContext = compositionLocalOf<Window?> { null }
+
+@Composable
+fun ProvideWindowContext(content: @Composable () -> Unit) {
+    val context = LocalContext.current
+    val window = remember(context) {
+        (context as Activity).window
+    }
+    CompositionLocalProvider(LocalWindowContext provides window, content = content)
+}
+
+val Context.mediaStoreVersion: String
+    get() = "${MediaStore.getGeneration(this, MediaStore.VOLUME_EXTERNAL_PRIMARY)}/${MediaStore.getVersion(this)}"
+
+suspend fun InternalDatabase.isMediaUpToDate(context: Context): Boolean {
+    return getMediaDao().isMediaVersionUpToDate(context.mediaStoreVersion)
+}
 
 @Composable
 fun toastError(message: String? = null): Toast {
@@ -77,16 +124,14 @@ class FeedbackManager(private val view: View, scope: CoroutineScope) {
             view.reallyPerformHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
         }
     }
+}
 
-    companion object {
-        @Composable
-        fun rememberFeedbackManager(): FeedbackManager {
-            val view = LocalView.current
-            val scope = rememberCoroutineScope()
-            return remember(view, scope) {
-                FeedbackManager(view, scope)
-            }
-        }
+@Composable
+fun rememberFeedbackManager(): FeedbackManager {
+    val view = LocalView.current
+    val scope = rememberCoroutineScope()
+    return remember(view, scope) {
+        FeedbackManager(view, scope)
     }
 }
 
@@ -169,9 +214,9 @@ fun Context.launchEditImageIntent(packageName: String, uri: Uri) {
 }
 
 fun Context.launchEditIntent(media: Media) {
-    if (media.isImage) {
-        EditActivity.launchEditor(this@launchEditIntent, media.uri)
-    } else {
+//    if (media.isImage) {
+//        EditActivity.launchEditor(this@launchEditIntent, media.uri)
+//    } else {
         val intent = Intent(Intent.ACTION_EDIT).apply {
             addCategory(Intent.CATEGORY_DEFAULT)
             setDataAndType(media.uri, media.mimeType)
@@ -179,7 +224,7 @@ fun Context.launchEditIntent(media: Media) {
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         startActivity(Intent.createChooser(intent, getString(R.string.edit)))
-    }
+//    }
 }
 
 suspend fun Context.launchUseAsIntent(media: Media) =

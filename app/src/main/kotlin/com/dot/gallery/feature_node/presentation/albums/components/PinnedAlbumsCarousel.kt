@@ -41,16 +41,15 @@ import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import coil3.load
-import coil3.size.Scale
-import coil3.compose.AsyncImage
-import coil3.request.CachePolicy
 import com.dot.gallery.R
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.presentation.common.components.OptionItem
 import com.dot.gallery.feature_node.presentation.common.components.OptionSheet
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import com.dot.gallery.ui.theme.Shapes
+import com.github.panpf.sketch.AsyncImage
+import com.github.panpf.sketch.loadImage
+import com.github.panpf.sketch.resize.Scale
 import com.google.android.material.carousel.CarouselLayoutManager
 import com.google.android.material.carousel.MaskableFrameLayout
 import kotlinx.coroutines.launch
@@ -137,7 +136,7 @@ fun CarouselPinnedAlbums(
                         .size(98.dp)
                         .clip(Shapes.large),
                     contentScale = ContentScale.Crop,
-                    model = currentAlbum!!.uri,
+                    uri = currentAlbum!!.uri.toString(),
                     contentDescription = currentAlbum!!.label
                 )
                 Text(
@@ -196,10 +195,8 @@ private class PinnedAlbumsAdapter(
                 GradientDrawable.Orientation.BOTTOM_TOP,
                 intArrayOf(containerColor, Color.TRANSPARENT)
             )
-            albumImage.load(album.uri) {
-                scale(Scale.FIT)
-                memoryCachePolicy(CachePolicy.ENABLED)
-                placeholderMemoryCacheKey(album.toString())
+            albumImage.loadImage(album.uri.toString()) {
+                scale(Scale.CENTER_CROP)
             }
             albumImage.isClickable = true
             albumImage.setOnClickListener {

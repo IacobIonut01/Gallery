@@ -58,13 +58,7 @@ fun AddAlbumSheet(
                     onCancel()
                 }
             },
-            dragHandle = { DragHandle() },
-            windowInsets = WindowInsets(
-                0,
-                WindowInsets.statusBars.getTop(LocalDensity.current),
-                0,
-                0
-            )
+            dragHandle = { DragHandle() }
         ) {
             BackHandler {
                 scope.launch {

@@ -19,15 +19,22 @@ sealed class Screen(val route: String) {
         fun idAndTarget() = "$route?mediaId={mediaId}&target={target}"
 
         fun idAndAlbum() = "$route?mediaId={mediaId}&albumId={albumId}"
+
+        fun idAndQuery() = "$route?mediaId={mediaId}&query={query}"
     }
 
     data object TrashedScreen : Screen("trashed_screen")
     data object FavoriteScreen : Screen("favorite_screen")
 
     data object SettingsScreen : Screen("settings_screen")
-    data object BlacklistScreen : Screen("blacklist_screen")
+    data object IgnoredScreen : Screen("ignored_screen")
+    data object IgnoredSetupScreen : Screen("ignored_setup_screen")
 
     data object SetupScreen: Screen("setup_screen")
+
+    data object VaultScreen : Screen("vault_screen")
+
+    data object LibraryScreen : Screen("library_screen")
 
     operator fun invoke() = route
 }

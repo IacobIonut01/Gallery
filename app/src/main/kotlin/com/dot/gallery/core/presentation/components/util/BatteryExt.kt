@@ -8,6 +8,7 @@ import android.os.PowerManager
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -62,6 +63,7 @@ class BatteryStatusReceiver(private val onReceive: () -> Unit) : BroadcastReceiv
 
 }
 
+@Stable
 data class BatteryStatus(
     val isPowerSavingMode: Boolean
 )

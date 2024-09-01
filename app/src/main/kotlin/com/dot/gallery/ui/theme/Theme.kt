@@ -5,10 +5,12 @@
 
 package com.dot.gallery.ui.theme
 
+import android.content.Context
 import android.os.Build
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.LocalOverscrollConfiguration
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -17,6 +19,8 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import com.dot.gallery.core.Settings.Misc.rememberForceTheme
@@ -93,36 +97,28 @@ private val DarkColors = darkColorScheme(
 fun GalleryTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
+    dynamicColor: Boolean = remember {
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+    },
     content: @Composable () -> Unit
 ) {
     val forceThemeValue by rememberForceTheme()
     val isDarkMode by rememberIsDarkMode()
-    val forcedDarkTheme: Boolean = if (forceThemeValue) isDarkMode else darkTheme
+    val forcedDarkTheme by remember(forceThemeValue, darkTheme, isDarkMode) {
+        mutableStateOf(if (forceThemeValue) isDarkMode else darkTheme)
+    }
     val isAmoledMode by rememberIsAmoledMode()
-    var colorScheme = when {
-        dynamicColor -> {
-            val context = LocalContext.current
-            if (forcedDarkTheme) if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                dynamicDarkColorScheme(context)
-            } else {
-                DarkColors
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                dynamicLightColorScheme(context)
+    val context = LocalContext.current
+    val colorScheme = remember(dynamicColor, forcedDarkTheme, isAmoledMode) {
+        if (dynamicColor) {
+            maybeDynamicColorScheme(context, forcedDarkTheme, isAmoledMode)
+        } else {
+            if (forcedDarkTheme) {
+                DarkColors.maybeAmoled(isAmoledMode)
             } else {
                 LightColors
             }
         }
-
-        forcedDarkTheme -> DarkColors
-        else -> LightColors
-    }
-    if (forcedDarkTheme && isAmoledMode) {
-        colorScheme = colorScheme.copy(
-            surface = Color.Black,
-            inverseSurface = Color.White,
-            background = Color.Black
-        )
     }
 
     MaterialTheme(
@@ -134,4 +130,37 @@ fun GalleryTheme(
             content = content
         )
     }
+}
+
+private fun maybeDynamicColorScheme(
+    context: Context,
+    darkTheme: Boolean,
+    isAmoledMode: Boolean
+): ColorScheme {
+    return if (darkTheme) {
+        if (atLeastS) {
+            dynamicDarkColorScheme(context).maybeAmoled(isAmoledMode)
+        } else {
+            DarkColors.maybeAmoled(isAmoledMode)
+        }
+    } else {
+        if (atLeastS) {
+            dynamicLightColorScheme(context)
+        } else {
+            LightColors
+        }
+    }
+}
+
+private val atLeastS: Boolean
+    get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+
+private fun ColorScheme.maybeAmoled(boolean: Boolean) = if (boolean) {
+    copy(
+        surface = Color.Black,
+        inverseSurface = Color.White,
+        background = Color.Black
+    )
+} else {
+    this
 }

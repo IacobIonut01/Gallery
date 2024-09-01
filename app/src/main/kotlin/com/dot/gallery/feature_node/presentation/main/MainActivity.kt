@@ -8,16 +8,14 @@ package com.dot.gallery.feature_node.presentation.main
 import android.graphics.Color
 import android.os.Bundle
 import android.view.WindowManager
-import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
-import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -27,8 +25,9 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
-import com.dot.gallery.core.Settings
 import com.dot.gallery.core.Settings.Misc.getSecureMode
+import com.dot.gallery.core.Settings.Misc.rememberForceTheme
+import com.dot.gallery.core.Settings.Misc.rememberIsDarkMode
 import com.dot.gallery.core.presentation.components.AppBarContainer
 import com.dot.gallery.core.presentation.components.NavigationComp
 import com.dot.gallery.feature_node.presentation.util.toggleOrientation
@@ -38,9 +37,8 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
 
-    @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
@@ -48,19 +46,18 @@ class MainActivity : ComponentActivity() {
         enforceSecureFlag()
         enableEdgeToEdge()
         setContent {
-            val windowSizeClass = calculateWindowSizeClass(this)
             GalleryTheme {
                 val navController = rememberNavController()
                 val isScrolling = remember { mutableStateOf(false) }
                 val bottomBarState = rememberSaveable { mutableStateOf(true) }
                 val systemBarFollowThemeState = rememberSaveable { mutableStateOf(true) }
-                val forcedTheme by Settings.Misc.rememberForceTheme()
-                val localDarkTheme by Settings.Misc.rememberIsDarkMode()
+                val forcedTheme by rememberForceTheme()
+                val localDarkTheme by rememberIsDarkMode()
                 val systemDarkTheme = isSystemInDarkTheme()
-                val darkTheme = remember(forcedTheme, localDarkTheme, systemDarkTheme) {
-                    if (forcedTheme) localDarkTheme else systemDarkTheme
+                val darkTheme by remember(forcedTheme, localDarkTheme, systemDarkTheme) {
+                    mutableStateOf(if (forcedTheme) localDarkTheme else systemDarkTheme)
                 }
-                DisposableEffect(darkTheme, systemBarFollowThemeState.value) {
+                LaunchedEffect(darkTheme, systemBarFollowThemeState.value) {
                     enableEdgeToEdge(
                         statusBarStyle = SystemBarStyle.auto(
                             Color.TRANSPARENT,
@@ -71,7 +68,6 @@ class MainActivity : ComponentActivity() {
                             Color.TRANSPARENT,
                         ) { darkTheme || !systemBarFollowThemeState.value }
                     )
-                    onDispose {}
                 }
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
@@ -79,9 +75,8 @@ class MainActivity : ComponentActivity() {
                         AppBarContainer(
                             navController = navController,
                             paddingValues = paddingValues,
-                            bottomBarState = bottomBarState,
-                            windowSizeClass = windowSizeClass,
-                            isScrolling = isScrolling
+                            bottomBarState = bottomBarState.value,
+                            isScrolling = isScrolling.value
                         ) {
                             NavigationComp(
                                 navController = navController,

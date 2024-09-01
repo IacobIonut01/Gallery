@@ -21,7 +21,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.InputChip
@@ -49,18 +48,18 @@ import com.dot.gallery.feature_node.presentation.picker.AllowedMedia
 import com.dot.gallery.feature_node.presentation.picker.PickerViewModel
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PickerScreen(
     allowedMedia: AllowedMedia,
     allowSelection: Boolean,
-    sendMediaAsResult: (List<Uri>) -> Unit
+    sendMediaAsResult: (List<Uri>) -> Unit,
+    sendMediaAsMediaResult: (List<Media>) -> Unit
 ) {
     val scope = rememberCoroutineScope()
     var selectedAlbumIndex by remember { mutableLongStateOf(-1) }
     val selectedMedia = remember { mutableStateListOf<Media>() }
     val mediaVM = hiltViewModel<PickerViewModel>().apply {
-        init(allowedMedia = allowedMedia)
+        this.allowedMedia = allowedMedia
     }
     val albumsState by mediaVM.albumsState.collectAsStateWithLifecycle()
     val chipColors = InputChipDefaults.inputChipColors(
@@ -87,7 +86,7 @@ fun PickerScreen(
                 InputChip(
                     onClick = {
                         selectedAlbumIndex = it.id
-                        mediaVM.getAlbum(selectedAlbumIndex)
+                        mediaVM.albumId = selectedAlbumIndex
                     },
                     colors = chipColors,
                     shape = RoundedCornerShape(16.dp),
@@ -104,9 +103,9 @@ fun PickerScreen(
             modifier = Modifier.fillMaxSize()
         ) {
             PickerMediaScreen(
-                mediaState = mediaVM.mediaState,
+                mediaState = mediaVM.mediaState.value,
                 selectedMedia = selectedMedia,
-                allowSelection = allowSelection
+                allowSelection = allowSelection,
             )
             androidx.compose.animation.AnimatedVisibility(
                 modifier = Modifier
@@ -145,6 +144,7 @@ fun PickerScreen(
                         if (enabled) {
                             scope.launch {
                                 sendMediaAsResult(selectedMedia.map { it.uri })
+                                sendMediaAsMediaResult(selectedMedia)
                             }
                         }
                     },
@@ -161,6 +161,6 @@ fun PickerScreen(
     }
     BackHandler(selectedAlbumIndex != -1L) {
         selectedAlbumIndex = -1L
-        mediaVM.getAlbum(selectedAlbumIndex)
+        mediaVM.albumId = -1L
     }
 }

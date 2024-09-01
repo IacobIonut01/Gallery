@@ -131,8 +131,8 @@
     <string name="setup_summary">In order to access your media, it is required to grant the following permissions:</string>
     <string name="required">Richiesto</string>
     <string name="optional">Facoltativo</string>
-    <string name="permission_manage_media_title">• Manage Media</string>
-    <string name="permission_manage_media_summary">"    • Automatically grants system confirmation dialogs when you request several changes to your media (Toggle Favorite, Manage Trash, Edit metadata etc)"</string>
+    <string name="permission_manage_media_title">Manage Media</string>
+    <string name="permission_manage_media_summary">"Automatically grants system confirmation dialogs when you request several changes to your media (Toggle Favorite, Manage Trash, Edit metadata etc)"</string>
     <string name="read_media_images">Read Media Images</string>
     <string name="read_media_images_summary">Allows the app to show your images</string>
     <string name="read_media_videos">Read Media Videos</string>

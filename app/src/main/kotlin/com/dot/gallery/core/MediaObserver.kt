@@ -6,38 +6,29 @@
 package com.dot.gallery.core
 
 import android.content.Context
-import android.database.ContentObserver
-import android.net.Uri
+import android.os.FileObserver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.conflate
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
-private var observerJob: Job? = null
-/**
- * Register an observer class that gets callbacks when data identified by a given content URI
- * changes.
- */
-fun Context.contentFlowObserver(uris: Array<Uri>) = callbackFlow {
-    val observer = object : ContentObserver(null) {
-        override fun onChange(selfChange: Boolean) {
-            observerJob?.cancel()
-            observerJob = launch(Dispatchers.IO) {
-                send(false)
+private var observerFileJob: Job? = null
+fun Context.fileFlowObserver() = callbackFlow {
+    val observer = object : FileObserver(filesDir, CREATE or DELETE or MODIFY or MOVED_FROM or MOVED_TO) {
+        override fun onEvent(event: Int, path: String?) {
+            observerFileJob?.cancel()
+            observerFileJob = launch(Dispatchers.IO) {
+                send(true)
             }
         }
     }
-    for (uri in uris)
-        contentResolver.registerContentObserver(uri, true, observer)
-    // trigger first.
-    observerJob = launch(Dispatchers.IO) {
+    observer.startWatching()
+    observerFileJob = launch(Dispatchers.IO) {
         send(true)
     }
     awaitClose {
-        contentResolver.unregisterContentObserver(observer)
+        observer.stopWatching()
     }
-}.conflate().onEach { if (!it) delay(1000) }
+}.conflate()

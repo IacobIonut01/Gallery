@@ -17,7 +17,6 @@ import androidx.compose.material.icons.outlined.ImageSearch
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Photo
 import androidx.compose.material.icons.outlined.VideoFile
-import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.Text
@@ -25,13 +24,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.TAG
+import com.dot.gallery.feature_node.domain.model.InfoRow
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.presentation.util.ExifMetadata
 import com.dot.gallery.feature_node.presentation.util.formatMinSec
@@ -46,11 +45,9 @@ fun MediaInfoRow(
     modifier: Modifier = Modifier,
     label: String,
     content: String,
-    icon: ImageVector,
-    trailingIcon: ImageVector? = null,
-    contentDescription: String? = null,
+    trailingContent: @Composable (() -> Unit)? = null,
     onClick: (() -> Unit)? = null,
-    onLongClick: (() -> Unit)? = null,
+    onLongClick: (() -> Unit)? = null
 ) {
     val clipboardManager: ClipboardManager = LocalClipboardManager.current
     ListItem(
@@ -72,40 +69,17 @@ fun MediaInfoRow(
         headlineContent = {
             Text(
                 text = label,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Bold
             )
         },
         supportingContent = {
             Text(text = content)
         },
-        trailingContent = if (trailingIcon != null) {
-            {
-                Icon(
-                    imageVector = trailingIcon,
-                    contentDescription = contentDescription
-                )
-            }
-        } else null,
-        leadingContent = {
-            Icon(
-                imageVector = icon,
-                contentDescription = contentDescription
-            )
-        }
+        trailingContent = trailingContent
     )
 }
 
-data class InfoRow(
-    val label: String,
-    val content: String,
-    val icon: ImageVector,
-    val trailingIcon: ImageVector? = null,
-    val contentDescription: String? = null,
-    val onClick: (() -> Unit)? = null,
-    val onLongClick: (() -> Unit)? = null,
-)
-
-fun Media.retrieveMetadata(context: Context, exifMetadata: ExifMetadata, onLabelClick: () -> Unit): List<InfoRow> {
+fun Media.retrieveMetadata(context: Context, exifMetadata: ExifMetadata?, onLabelClick: () -> Unit): List<InfoRow> {
     val infoList = ArrayList<InfoRow>()
     if (trashed == 1) {
         infoList.apply {
@@ -130,7 +104,7 @@ fun Media.retrieveMetadata(context: Context, exifMetadata: ExifMetadata, onLabel
     }
     try {
         infoList.apply {
-            if (!exifMetadata.modelName.isNullOrEmpty()) {
+            if (exifMetadata != null && !exifMetadata.modelName.isNullOrEmpty()) {
                 val aperture = exifMetadata.apertureValue
                 val focalLength = exifMetadata.focalLength
                 val isoValue = exifMetadata.isoValue
@@ -163,7 +137,7 @@ fun Media.retrieveMetadata(context: Context, exifMetadata: ExifMetadata, onLabel
             contentString.append(formattedFileSize)
             if (mimeType.contains("video")) {
                 contentString.append(" • ${duration.formatMinSec()}")
-            } else if (exifMetadata.imageWidth != 0 && exifMetadata.imageHeight != 0) {
+            } else if (exifMetadata != null && exifMetadata.imageWidth != 0 && exifMetadata.imageHeight != 0) {
                 val width = exifMetadata.imageWidth
                 val height = exifMetadata.imageHeight
                 val imageMp = exifMetadata.imageMp

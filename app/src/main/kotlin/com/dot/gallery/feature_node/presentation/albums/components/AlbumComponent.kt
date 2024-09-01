@@ -7,7 +7,7 @@ package com.dot.gallery.feature_node.presentation.albums.components
 
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -23,7 +23,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AddCircleOutline
 import androidx.compose.material.icons.outlined.SdCard
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -45,22 +44,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import coil3.compose.LocalPlatformContext
-import coil3.compose.rememberAsyncImagePainter
-import coil3.request.CachePolicy
-import coil3.request.ImageRequest
-import coil3.size.Scale
 import com.dot.gallery.R
-import com.dot.gallery.core.presentation.components.util.AutoResizeText
-import com.dot.gallery.core.presentation.components.util.FontSizeRange
 import com.dot.gallery.feature_node.domain.model.Album
-import com.dot.gallery.feature_node.domain.model.MediaEqualityDelegate
 import com.dot.gallery.feature_node.presentation.common.components.OptionItem
 import com.dot.gallery.feature_node.presentation.common.components.OptionSheet
-import com.dot.gallery.feature_node.presentation.util.FeedbackManager.Companion.rememberFeedbackManager
+import com.dot.gallery.feature_node.presentation.util.formatSize
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
+import com.dot.gallery.feature_node.presentation.util.rememberFeedbackManager
 import com.dot.gallery.ui.theme.Shapes
+import com.github.panpf.sketch.AsyncImage
 import kotlinx.coroutines.launch
 
 @Composable
@@ -69,37 +61,43 @@ fun AlbumComponent(
     album: Album,
     isEnabled: Boolean = true,
     onItemClick: (Album) -> Unit,
+    onMoveAlbumToTrash: ((Album) -> Unit)? = null,
     onTogglePinClick: ((Album) -> Unit)? = null,
     onToggleIgnoreClick: ((Album) -> Unit)? = null
 ) {
     val scope = rememberCoroutineScope()
     val appBottomSheetState = rememberAppBottomSheetState()
-    val painter = rememberAsyncImagePainter(
-        model = ImageRequest.Builder(LocalPlatformContext.current)
-            .data(album.uri)
-            .memoryCachePolicy(CachePolicy.ENABLED)
-            .placeholderMemoryCacheKey(album.toString())
-            .scale(Scale.FIT)
-            .build(),
-        modelEqualityDelegate = MediaEqualityDelegate(),
-        contentScale = ContentScale.FillBounds
-    )
     Column(
         modifier = modifier
             .alpha(if (isEnabled) 1f else 0.4f)
             .padding(horizontal = 8.dp),
     ) {
         if (onTogglePinClick != null) {
+            val trashTitle = stringResource(R.string.move_album_to_trash)
             val pinTitle = stringResource(R.string.pin)
             val ignoredTitle = stringResource(id = R.string.add_to_ignored)
-            val tertiaryContainer = MaterialTheme.colorScheme.tertiaryContainer
-            val onTertiaryContainer = MaterialTheme.colorScheme.onTertiaryContainer
+            val secondaryContainer = MaterialTheme.colorScheme.secondaryContainer
+            val onSecondaryContainer = MaterialTheme.colorScheme.onSecondaryContainer
+            val primaryContainer = MaterialTheme.colorScheme.primaryContainer
+            val onPrimaryContainer = MaterialTheme.colorScheme.onPrimaryContainer
             val optionList = remember {
                 mutableListOf(
                     OptionItem(
+                        text = trashTitle,
+                        containerColor = primaryContainer,
+                        contentColor = onPrimaryContainer,
+                        enabled = onMoveAlbumToTrash != null,
+                        onClick = {
+                            scope.launch {
+                                appBottomSheetState.hide()
+                                onMoveAlbumToTrash?.invoke(album)
+                            }
+                        }
+                    ),
+                    OptionItem(
                         text = pinTitle,
-                        containerColor = tertiaryContainer,
-                        contentColor = onTertiaryContainer,
+                        containerColor = secondaryContainer,
+                        contentColor = onSecondaryContainer,
                         onClick = {
                             scope.launch {
                                 appBottomSheetState.hide()
@@ -129,12 +127,12 @@ fun AlbumComponent(
                 state = appBottomSheetState,
                 optionList = arrayOf(optionList),
                 headerContent = {
-                    Image(
+                    AsyncImage(
                         modifier = Modifier
                             .size(98.dp)
                             .clip(Shapes.large),
                         contentScale = ContentScale.Crop,
-                        painter = painter,
+                        uri = album.uri.toString(),
                         contentDescription = album.label
                     )
                     Text(
@@ -158,7 +156,7 @@ fun AlbumComponent(
                                     letterSpacing = MaterialTheme.typography.bodyMedium.letterSpacing
                                 )
                             ) {
-                                append(stringResource(R.string.s_items, album.count))
+                                append(stringResource(R.string.s_items, album.count) + " (${formatSize(album.size)})")
                             }
                         },
                         textAlign = TextAlign.Center,
@@ -197,7 +195,7 @@ fun AlbumComponent(
                 )
             }
         }
-        AutoResizeText(
+        Text(
             modifier = Modifier
                 .padding(top = 12.dp)
                 .padding(horizontal = 16.dp),
@@ -205,14 +203,10 @@ fun AlbumComponent(
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurface,
             overflow = TextOverflow.Ellipsis,
-            maxLines = 1,
-            fontSizeRange = FontSizeRange(
-                min = 10.sp,
-                max = 16.sp
-            )
+            maxLines = 1
         )
         if (album.count > 0) {
-            AutoResizeText(
+            Text(
                 modifier = Modifier
                     .padding(top = 2.dp, bottom = 16.dp)
                     .padding(horizontal = 16.dp),
@@ -220,14 +214,10 @@ fun AlbumComponent(
                     id = R.plurals.item_count,
                     count = album.count.toInt(),
                     album.count
-                ),
+                ) + " (${formatSize(album.size)})",
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1,
                 style = MaterialTheme.typography.labelMedium,
-                fontSizeRange = FontSizeRange(
-                    min = 6.sp,
-                    max = 12.sp
-                )
             )
         }
 
@@ -256,7 +246,7 @@ fun AlbumImage(
                 .fillMaxSize()
                 .border(
                     width = 1.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant,
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
                     shape = RoundedCornerShape(cornerRadius)
                 )
                 .alpha(0.8f)
@@ -264,7 +254,7 @@ fun AlbumImage(
                 .combinedClickable(
                     enabled = isEnabled,
                     interactionSource = interactionSource,
-                    indication = rememberRipple(),
+                    indication = LocalIndication.current,
                     onClick = { onItemClick(album) },
                     onLongClick = {
                         onItemLongClick?.let {
@@ -276,29 +266,19 @@ fun AlbumImage(
                 .padding(48.dp)
         )
     } else {
-        val painter = rememberAsyncImagePainter(
-            model = ImageRequest.Builder(LocalPlatformContext.current)
-                .data(album.uri)
-                .memoryCachePolicy(CachePolicy.ENABLED)
-                .placeholderMemoryCacheKey(album.toString())
-                .scale(Scale.FIT)
-                .build(),
-            modelEqualityDelegate = MediaEqualityDelegate(),
-            contentScale = ContentScale.FillBounds
-        )
-        Image(
+        AsyncImage(
             modifier = Modifier
                 .fillMaxSize()
                 .border(
                     width = 1.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant,
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
                     shape = RoundedCornerShape(cornerRadius)
                 )
                 .clip(RoundedCornerShape(cornerRadius))
                 .combinedClickable(
                     enabled = isEnabled,
                     interactionSource = interactionSource,
-                    indication = rememberRipple(),
+                    indication = LocalIndication.current,
                     onClick = { onItemClick(album) },
                     onLongClick = {
                         onItemLongClick?.let {
@@ -307,7 +287,7 @@ fun AlbumImage(
                         }
                     }
                 ),
-            painter = painter,
+            uri = album.uri.toString(),
             contentDescription = album.label,
             contentScale = ContentScale.Crop,
         )

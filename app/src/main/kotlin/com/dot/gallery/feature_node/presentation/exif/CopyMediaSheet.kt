@@ -38,13 +38,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.SecureFlagPolicy
 import com.dot.gallery.R
-import com.dot.gallery.core.AlbumState
+import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Constants.albumCellsList
 import com.dot.gallery.core.Settings.Album.rememberAlbumGridSize
 import com.dot.gallery.core.presentation.components.DragHandle
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.model.volume
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumComponent
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
@@ -106,7 +107,6 @@ fun CopyMediaSheet(
             val shouldDismiss = progress == 0f
             ModalBottomSheetProperties(
                 securePolicy = SecureFlagPolicy.Inherit,
-                isFocusable = shouldDismiss,
                 shouldDismissOnBackPress = shouldDismiss
             )
         }
@@ -123,7 +123,7 @@ fun CopyMediaSheet(
             },
             properties = prop,
             dragHandle = { DragHandle() },
-            windowInsets = WindowInsets(0, 0, 0, 0)
+            contentWindowInsets = { WindowInsets(0, 0, 0, 0) }
         ) {
 
             Column(

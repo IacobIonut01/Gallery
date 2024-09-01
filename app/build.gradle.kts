@@ -1,4 +1,3 @@
-import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.util.archivesName
 import java.io.FileInputStream
 import java.util.Properties
 
@@ -9,27 +8,29 @@ plugins {
     alias(libs.plugins.roomPlugin)
     alias(libs.plugins.hiltAndroid)
     alias(libs.plugins.baselineProfilePlugin)
+    alias(libs.plugins.kotlin.compose.compiler)
     id("kotlin-parcelize")
+    alias(libs.plugins.kotlinSerialization)
 }
 
 android {
     namespace = "com.dot.gallery"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.dot.gallery"
         minSdk = 30
-        targetSdk = 34
-        versionCode = 21204
-        versionName = "2.1.2"
+        targetSdk = 35
+        versionCode = 30033
+        versionName = "3.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
-        archivesName.set("Gallery-${versionName}-$versionCode")
+        base.archivesName.set("Gallery-${versionName}-$versionCode")
         if (getApiKey() == "\"DEBUG\"") {
-            archivesName.set("${archivesName.get()}-nomaps")
+            base.archivesName.set("${base.archivesName.get()}-nomaps")
         }
     }
 
@@ -95,15 +96,15 @@ android {
     }
     kotlinOptions {
         jvmTarget = "17"
-        freeCompilerArgs += listOf("-P", "plugin:androidx.compose.compiler.plugins.kotlin:experimentalStrongSkipping=true")
         freeCompilerArgs += "-Xcontext-receivers"
     }
     buildFeatures {
         compose = true
         buildConfig = true
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
+    composeCompiler {
+        enableStrongSkippingMode = true
+        includeSourceInformation = true
     }
     packaging {
         resources {
@@ -131,17 +132,20 @@ dependencies {
 
     // Compose
     implementation(libs.compose.activity)
-    implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.graphics)
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.compose.material.icons.extended)
+    implementation(libs.androidx.graphics.shapes)
 
     // Compose - Shimmer
     implementation(libs.compose.shimmer)
     // Compose - Material3
     implementation(libs.compose.material3)
     implementation(libs.compose.material3.window.size)
+    implementation(libs.androidx.adaptive)
+    implementation(libs.androidx.adaptive.layout)
+    implementation(libs.androidx.adaptive.navigation)
 
     // Compose - Accompanists
     implementation(libs.accompanist.permissions)
@@ -155,9 +159,13 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     runtimeOnly(libs.kotlinx.coroutines.android)
 
+    implementation(libs.kotlinx.serialization.json)
+
     // Dagger - Hilt
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.dagger.hilt)
+    implementation(libs.androidx.hilt.common)
+    implementation(libs.androidx.hilt.work)
     ksp(libs.dagger.hilt.compiler)
     ksp(libs.androidx.hilt.compiler)
 
@@ -169,22 +177,28 @@ dependencies {
     implementation(libs.room.ktx)
 
     // Coil
-    implementation(libs.coil.compose)
-    implementation(libs.coil.svg)
-    implementation(libs.coil.gif)
-    implementation(libs.coil.video)
     implementation(libs.jxl.coder.coil)
-    implementation(libs.coil.network.okhttp)
+    implementation(libs.avif.coder.coil)
+
+    // Sketch
+    implementation(libs.sketch.compose)
+    implementation(libs.sketch.view)
+    implementation(libs.sketch.animated)
+    implementation(libs.sketch.extensions.compose)
+    implementation(libs.sketch.http.ktor)
+    implementation(libs.sketch.svg)
+    implementation(libs.sketch.video)
 
     // Exo Player
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.ui)
+    implementation(libs.androidx.media3.session)
+    implementation(libs.androidx.media3.exoplayer.dash)
+    implementation(libs.androidx.media3.exoplayer.hls)
+    implementation(libs.compose.video)
 
     // Exif Interface
     implementation(libs.androidx.exifinterface)
-
-    // Zoomable
-    implementation(libs.zoomable)
 
     // Datastore Preferences
     implementation(libs.datastore.prefs)
@@ -199,15 +213,28 @@ dependencies {
     implementation(libs.pinchzoomgrid)
 
     // Subsampling
-    implementation(libs.zoomable.image.coil)
+    implementation(libs.zoomimage.sketch)
 
     // Splashscreen
     implementation(libs.androidx.core.splashscreen)
 
+    // Jetpack Security
+    implementation(libs.androidx.security.crypto)
+    implementation(libs.androidx.biometric)
+
+    // Composables - Core
+    implementation(libs.core)
+
+    // Worker
+    implementation(libs.androidx.work.runtime.ktx)
+
+    // Composable - Scrollbar
+    implementation(libs.lazycolumnscrollbar)
+
+
     // Tests
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)
-    androidTestImplementation(platform(libs.compose.bom))
     debugImplementation(libs.compose.ui.tooling)
     debugRuntimeOnly(libs.compose.ui.test.manifest)
 }

@@ -5,18 +5,19 @@
 
 package com.dot.gallery.feature_node.presentation.mediaview.components.video
 
-import android.annotation.SuppressLint
 import android.media.MediaMetadataRetriever
-import android.view.ViewGroup.LayoutParams.MATCH_PARENT
-import android.widget.FrameLayout
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableLongState
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.NonRestartableComposable
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -25,32 +26,34 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.media3.common.C
-import androidx.media3.common.MediaItem
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.ui.AspectRatioFrameLayout
-import androidx.media3.ui.PlayerView
+import com.dot.gallery.core.Constants.Animation.enterAnimation
+import com.dot.gallery.core.Constants.Animation.exitAnimation
+import com.dot.gallery.core.presentation.components.util.swipe
 import com.dot.gallery.feature_node.domain.model.Media
+import io.sanghun.compose.video.RepeatMode
+import io.sanghun.compose.video.uri.VideoPlayerMediaItem
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.seconds
+import io.sanghun.compose.video.VideoPlayer as SanghunComposeVideoVideoPlayer
 
-@SuppressLint("OpaqueUnitKey")
+@Stable
 @OptIn(ExperimentalFoundationApi::class)
 @androidx.annotation.OptIn(UnstableApi::class)
+@NonRestartableComposable
 @Composable
 fun VideoPlayer(
     media: Media,
     playWhenReady: Boolean,
-    videoController: @Composable (ExoPlayer, MutableState<Boolean>, MutableState<Long>, Long, Int, Float) -> Unit,
-    onItemClick: () -> Unit
+    videoController: @Composable (ExoPlayer, MutableState<Boolean>, MutableLongState, Long, Int, Float) -> Unit,
+    onItemClick: () -> Unit,
+    onSwipeDown: () -> Unit
 ) {
     var totalDuration by rememberSaveable { mutableLongStateOf(0L) }
     val currentTime = rememberSaveable { mutableLongStateOf(0L) }
@@ -70,68 +73,21 @@ fun VideoPlayer(
         )?.toFloat() ?: 60f
     }
 
-    val exoPlayer = remember(context) {
-        ExoPlayer.Builder(context)
-            .build().apply {
-                videoScalingMode = C.VIDEO_SCALING_MODE_SCALE_TO_FIT
-                repeatMode = Player.REPEAT_MODE_ONE
-                setMediaItem(MediaItem.fromUri(media.uri))
-                prepare()
-            }
+    var exoPlayer by remember {
+        mutableStateOf<ExoPlayer?>(null)
     }
 
-    DisposableEffect(
-        Box {
-            AndroidView(
-                modifier = Modifier
-                    .combinedClickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = onItemClick,
-                    ),
-                factory = {
-                    PlayerView(context).apply {
-                        useController = false
-                        resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
-
-                        player = exoPlayer
-                        layoutParams = FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
-
-                        keepScreenOn = true
-                    }
-                }
-            )
-            videoController(
-                exoPlayer,
-                isPlaying,
-                currentTime,
-                totalDuration,
-                bufferedPercentage,
-                frameRate
-            )
-        }
-    ) {
-        exoPlayer.addListener(
-            object : Player.Listener {
-                override fun onEvents(player: Player, events: Player.Events) {
-                    totalDuration = exoPlayer.duration.coerceAtLeast(0L)
-                    lastPlayingState = isPlaying.value
-                    isPlaying.value = player.isPlaying
-                }
-            }
-        )
-        onDispose {
-            exoPlayer.release()
-        }
+    var showPlayer by remember {
+        mutableStateOf(false)
     }
-
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME && isPlaying.value) {
-                exoPlayer.play()
-            } else if (event == Lifecycle.Event.ON_STOP || event == Lifecycle.Event.ON_PAUSE) {
-                exoPlayer.pause()
+            if (event == Lifecycle.Event.ON_RESUME) {
+                showPlayer = true
+            }
+            if (event == Lifecycle.Event.ON_PAUSE) {
+                showPlayer = false
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -139,25 +95,77 @@ fun VideoPlayer(
             lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
-
-    LaunchedEffect(LocalConfiguration.current, isPlaying.value) {
-        if (exoPlayer.currentPosition != currentTime.longValue) {
-            exoPlayer.seekTo(currentTime.longValue)
+    LaunchedEffect(showPlayer) {
+        if (showPlayer) {
+            delay(100)
+            exoPlayer?.playWhenReady = true
+            exoPlayer?.seekTo(currentTime.longValue)
         }
-
-        delay(50)
-
-        exoPlayer.playWhenReady = isPlaying.value
     }
 
-    if (isPlaying.value) {
-        LaunchedEffect(Unit) {
-            while (true) {
-                currentTime.longValue = exoPlayer.currentPosition.coerceAtLeast(0L)
-                bufferedPercentage = exoPlayer.bufferedPercentage
-                delay(1.seconds / 30)
+    if (showPlayer) {
+        SanghunComposeVideoVideoPlayer(
+            mediaItems = listOf(
+                VideoPlayerMediaItem.StorageMediaItem(
+                    storageUri = media.uri,
+                    mimeType = media.mimeType
+                )
+            ),
+            handleLifecycle = true,
+            autoPlay = true,
+            usePlayerController = false,
+            enablePip = false,
+            handleAudioFocus = true,
+            repeatMode = RepeatMode.ONE,
+            playerInstance = {
+                exoPlayer = this
+                addListener(
+                    object : Player.Listener {
+                        override fun onEvents(player: Player, events: Player.Events) {
+                            totalDuration = duration.coerceAtLeast(0L)
+                            lastPlayingState = isPlaying.value
+                            isPlaying.value = player.isPlaying
+                        }
+                    }
+                )
+            },
+            modifier = Modifier
+                .fillMaxSize()
+                .combinedClickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onItemClick,
+                )
+                .swipe(
+                    onSwipeDown = onSwipeDown,
+                    onSwipeUp = null
+                ),
+        )
+    }
+    AnimatedVisibility(
+        visible = exoPlayer != null,
+        enter = enterAnimation,
+        exit = exitAnimation
+    ) {
+        LaunchedEffect(isPlaying.value) {
+            exoPlayer!!.playWhenReady = isPlaying.value
+        }
+        if (isPlaying.value) {
+            LaunchedEffect(Unit) {
+                while (true) {
+                    bufferedPercentage = exoPlayer!!.bufferedPercentage
+                    currentTime.longValue = exoPlayer!!.currentPosition
+                    delay(1.seconds / 30)
+                }
             }
         }
+        videoController(
+            exoPlayer!!,
+            isPlaying,
+            currentTime,
+            totalDuration,
+            bufferedPercentage,
+            frameRate
+        )
     }
-
 }

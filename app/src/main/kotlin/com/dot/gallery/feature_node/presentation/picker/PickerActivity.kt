@@ -4,12 +4,17 @@
  */
 package com.dot.gallery.feature_node.presentation.picker
 
+import android.app.Activity
 import android.content.ClipData
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContract
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -26,39 +31,66 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
-import coil3.annotation.ExperimentalCoilApi
-import coil3.compose.setSingletonImageLoaderFactory
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants
+import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.presentation.picker.PickerActivity.Companion.EXPORT_AS_MEDIA
+import com.dot.gallery.feature_node.presentation.picker.PickerActivity.Companion.MEDIA_LIST
 import com.dot.gallery.feature_node.presentation.picker.components.PickerScreen
-import com.dot.gallery.feature_node.presentation.util.newImageLoader
 import com.dot.gallery.ui.theme.GalleryTheme
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import dagger.hilt.android.AndroidEntryPoint
 
+class PickerActivityContract : ActivityResultContract<Any?, List<Media>>() {
+
+    override fun createIntent(context: Context, input: Any?): Intent {
+        return Intent(context, PickerActivity::class.java).apply {
+            type = "image/*"
+            putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+            putExtra(EXPORT_AS_MEDIA, true)
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST", "DEPRECATION")
+    override fun parseResult(resultCode: Int, intent: Intent?): List<Media> {
+        if (resultCode != Activity.RESULT_OK || intent == null) {
+            return emptyList()
+        }
+
+        val list: List<Media> = if (Build.VERSION.SDK_INT > Build.VERSION_CODES.TIRAMISU) {
+            intent.getParcelableArrayExtra(MEDIA_LIST, Media::class.java)?.toList() ?: emptyList()
+        } else {
+            (intent.getParcelableArrayExtra(MEDIA_LIST) as Array<out Media>?)?.toList() ?: emptyList()
+        }
+        return list
+    }
+}
+
 @AndroidEntryPoint
 class PickerActivity : ComponentActivity() {
 
-    @OptIn(ExperimentalCoilApi::class)
+    private val exportAsMedia by lazy {
+        intent.getBooleanExtra(EXPORT_AS_MEDIA, false)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
+        enableEdgeToEdge()
         val type = intent.type
         val allowMultiple = intent.getBooleanExtra(Intent.EXTRA_ALLOW_MULTIPLE, false)
-
         var title = getString(R.string.select)
         title += " " + if (allowMultiple) {
             if (type.pickAny) getString(R.string.photos_and_videos)
-            else if (type.pickImage)getString(R.string.photos)
+            else if (type.pickImage) getString(R.string.photos)
             else getString(R.string.videos)
         } else {
             if (type.pickImage) getString(R.string.photo)
-            else if (type.pickVideo)getString(R.string.video)
+            else if (type.pickVideo) getString(R.string.video)
             else getString(R.string.photos_and_videos)
         }
         setContent {
-            setSingletonImageLoaderFactory(::newImageLoader)
             GalleryTheme {
                 PickerRootScreen(title, type.allowedMedia, allowMultiple)
             }
@@ -98,28 +130,42 @@ class PickerActivity : ComponentActivity() {
                 PickerScreen(
                     allowedMedia = allowedMedia,
                     allowSelection = allowMultiple,
-                    sendMediaAsResult = ::sendMediaAsResult
+                    sendMediaAsResult = ::sendMediaAsResult,
+                    sendMediaAsMediaResult = ::sendMediaAsMediaResult
                 )
             }
         }
     }
 
-    private fun sendMediaAsResult(selectedMedia: List<Uri>) {
-        val newIntent = Intent().apply {
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            data = selectedMedia[0]
-        }
-        if (selectedMedia.size == 1)
-            setResult(RESULT_OK, newIntent)
-        else {
-            val newClipData = ClipData.newUri(contentResolver, null, selectedMedia[0])
-            for (nextUri in selectedMedia.stream().skip(1)) {
-                newClipData.addItem(contentResolver, ClipData.Item(nextUri))
+    private fun sendMediaAsMediaResult(selectedMedia: List<Media>) {
+        if (exportAsMedia) {
+            val newIntent = Intent().apply {
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                putExtra(MEDIA_LIST, selectedMedia.toTypedArray())
             }
-            newIntent.clipData = newClipData
             setResult(RESULT_OK, newIntent)
+            finish()
         }
-        finish()
+    }
+
+    private fun sendMediaAsResult(selectedMedia: List<Uri>) {
+        if (!exportAsMedia) {
+            val newIntent = Intent().apply {
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                data = selectedMedia[0]
+            }
+            if (selectedMedia.size == 1)
+                setResult(RESULT_OK, newIntent)
+            else {
+                val newClipData = ClipData.newUri(contentResolver, null, selectedMedia[0])
+                for (nextUri in selectedMedia.stream().skip(1)) {
+                    newClipData.addItem(contentResolver, ClipData.Item(nextUri))
+                }
+                newIntent.clipData = newClipData
+                setResult(RESULT_OK, newIntent)
+            }
+            finish()
+        }
     }
 
     private val String?.pickImage: Boolean get() = this?.startsWith("image") ?: false
@@ -129,4 +175,9 @@ class PickerActivity : ComponentActivity() {
         get() = if (pickImage) AllowedMedia.PHOTOS
         else if (pickVideo) AllowedMedia.VIDEOS
         else AllowedMedia.BOTH
+
+    companion object {
+        const val EXPORT_AS_MEDIA = "EXPORT_AS_MEDIA"
+        const val MEDIA_LIST = "MEDIA_LIST"
+    }
 }

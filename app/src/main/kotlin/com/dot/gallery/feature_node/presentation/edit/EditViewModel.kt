@@ -13,20 +13,16 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
-import androidx.core.graphics.drawable.toBitmapOrNull
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import coil.ImageLoader
-import coil.request.ImageRequest
-import coil.size.Size
 import com.dot.gallery.feature_node.domain.model.ImageFilter
 import com.dot.gallery.feature_node.domain.model.ImageModification
 import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.use_case.MediaUseCases
+import com.dot.gallery.feature_node.domain.repository.MediaRepository
+import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.edit.components.adjustments.Adjustment
 import com.dot.gallery.feature_node.presentation.edit.components.adjustments.AdjustmentFilter
 import com.dot.gallery.feature_node.presentation.util.flipHorizontally
-import com.dot.gallery.feature_node.presentation.util.gpuImage
 import com.dot.gallery.feature_node.presentation.util.mapToImageFilters
 import com.dot.gallery.feature_node.presentation.util.rotate
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -45,9 +41,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class EditViewModel @Inject constructor(
-    private val loader: ImageLoader,
-    private val request: ImageRequest.Builder,
-    private val mediaUseCases: MediaUseCases,
+    private val repository: MediaRepository,
+    private val mediaUseCases: MediaHandleUseCase,
     @ApplicationContext
     private val applicationContext: Context
 ) : ViewModel() {
@@ -111,13 +106,13 @@ class EditViewModel @Inject constructor(
     fun loadImage(uri: Uri) {
         currentUri = uri
         viewModelScope.launch(Dispatchers.IO) {
-            mediaUseCases.getMediaListByUrisUseCase(listOf(uri), reviewMode = false)
+            repository.getMediaListByUris(listOf(uri), reviewMode = false)
                 .collectLatest {
                     val data = it.data ?: emptyList()
                     _image.emit(null)
                     origImage = null
                     gpuImage = null
-                    loader.execute(
+                    /*loader.execute(
                         request.data(uri)
                             .apply { size(Size.ORIGINAL) }
                             .target { drawable ->
@@ -134,7 +129,7 @@ class EditViewModel @Inject constructor(
                                 }
                             }
                             .build()
-                    )
+                    )*/
                 }
         }
     }
@@ -149,7 +144,7 @@ class EditViewModel @Inject constructor(
                     isRevertAction = true,
                     updateFilters = modifications.lastOrNull()?.croppedImage != null
                 )
-                modifiedImages.removeLast()
+                modifiedImages.removeLastOrNull()
             }
             canRevert.value = modifiedImages.size > 0
         }
@@ -186,7 +181,7 @@ class EditViewModel @Inject constructor(
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             val done = if (asCopy) {
-                mediaUseCases.mediaHandleUseCase.saveImage(
+                mediaUseCases.saveImage(
                     bitmap = image.asAndroidBitmap(),
                     format = bitmapFormat,
                     relativePath = mediaRef.value?.relativePath
@@ -196,7 +191,7 @@ class EditViewModel @Inject constructor(
                     mimeType = mediaRef.value?.mimeType ?: "image/png"
                 ) != null
             } else {
-                mediaUseCases.mediaHandleUseCase.overrideImage(
+                mediaUseCases.overrideImage(
                     uri = mediaRef.value!!.uri,
                     bitmap = image.asAndroidBitmap(),
                     format = bitmapFormat,

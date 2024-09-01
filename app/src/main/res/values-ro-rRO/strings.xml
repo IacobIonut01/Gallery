@@ -131,8 +131,8 @@
     <string name="setup_summary">Pentru a accesa suportul media, este necesar să acorzi următoarele permisiuni:</string>
     <string name="required">Necesar</string>
     <string name="optional">Opțional</string>
-    <string name="permission_manage_media_title">• Gestionare media</string>
-    <string name="permission_manage_media_summary">"    • Acordă automat în dialogurile de confirmare ale sistemului atunci când se solicită mai multe modificări ale suportului media (Comutarea favoritelor, Gestionarea coșului de gunoi, Editarea metadatelor etc.)"</string>
+    <string name="permission_manage_media_title">Gestionare media</string>
+    <string name="permission_manage_media_summary">"Acordă automat în dialogurile de confirmare ale sistemului atunci când se solicită mai multe modificări ale suportului media (Comutarea favoritelor, Gestionarea coșului de gunoi, Editarea metadatelor etc.)"</string>
     <string name="read_media_images">Citește imaginile</string>
     <string name="read_media_images_summary">Permite aplicației să afișeze imaginile</string>
     <string name="read_media_videos">Citește videoclipurile</string>

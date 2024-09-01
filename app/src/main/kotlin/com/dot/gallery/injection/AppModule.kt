@@ -9,12 +9,12 @@ import android.app.Application
 import android.content.ContentResolver
 import android.content.Context
 import androidx.room.Room
-import coil.ImageLoader
-import coil.request.ImageRequest
+import androidx.work.WorkManager
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
+import com.dot.gallery.feature_node.data.data_source.KeychainHolder
 import com.dot.gallery.feature_node.data.repository.MediaRepositoryImpl
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
-import com.dot.gallery.feature_node.domain.use_case.MediaUseCases
+import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -40,25 +40,31 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideMediaUseCases(repository: MediaRepository, @ApplicationContext context: Context): MediaUseCases {
-        return MediaUseCases(context, repository)
+    fun provideKeychainHolder(@ApplicationContext context: Context): KeychainHolder {
+        return KeychainHolder(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideMediaHandleUseCase(repository: MediaRepository, @ApplicationContext context: Context): MediaHandleUseCase {
+        return MediaHandleUseCase(repository, context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideWorkManager(@ApplicationContext context: Context): WorkManager {
+        return WorkManager.getInstance(context)
     }
 
     @Provides
     @Singleton
     fun provideMediaRepository(
         @ApplicationContext context: Context,
-        database: InternalDatabase
+        workManager: WorkManager,
+        database: InternalDatabase,
+        keychainHolder: KeychainHolder
     ): MediaRepository {
-        return MediaRepositoryImpl(context, database)
+        return MediaRepositoryImpl(context, workManager, database, keychainHolder)
     }
-
-    @Provides
-    @Singleton
-    fun getImageLoader(@ApplicationContext context: Context): ImageLoader = ImageLoader(context)
-
-    @Provides
-    fun getImageRequest(@ApplicationContext context: Context): ImageRequest.Builder =
-        ImageRequest.Builder(context)
 
 }
