@@ -38,7 +38,7 @@ securityCrypto = "1.1.0-alpha06"
 sketch = "4.0.0-alpha06"
 uiautomator = "2.3.0"
 composealpha = "1.7.0-rc01"
-kotlinxSerializationJson = "1.7.0"
+kotlinxSerializationJson = "1.7.2"
 workRuntimeKtx = "2.9.1"
 zoomimageViewSketch = "1.1.0-alpha05"
 
