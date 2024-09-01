@@ -224,9 +224,9 @@
     <string name="setup_type_selection_pick_album">Album wählen</string>
     <string name="setup_type_regex_label">Regex Muster</string>
     <string name="setup_type_regex_summary">Alben automatisch Ignorieren, indem ein reguläres Ausdrucksmuster(Regex) verwendet wird.\n\nBevor Sie fortfahren, muss Ihr Muster gültig sein.</string>
-    <string name="setup_type_regex_title">Regex Pattern</string>
-    <string name="setup_type_regex_subtitle">Create a selection pattern</string>
-    <string name="setup_type_regex_example_title">Examples</string>
+    <string name="setup_type_regex_title">Regex Muster</string>
+    <string name="setup_type_regex_subtitle">Erstellen Sie ein Auswahlmuster</string>
+    <string name="setup_type_regex_example_title">Beispiele</string>
     <string name="setup_type_regex_example_first_title">Match any album directly under the Music folder:</string>
     <string name="setup_type_regex_first_subtitle">.*/Music/[^/]+/?$</string>
     <string name="setup_type_regex_example_second_title">Match any album under the Music folder and its subfolders:</string>
