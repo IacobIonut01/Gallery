@@ -6,8 +6,6 @@
 package com.dot.gallery.core.presentation.components
 
 import android.app.Activity
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -47,8 +45,10 @@ import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -65,14 +65,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.R
-import com.dot.gallery.core.AlbumState
-import com.dot.gallery.core.Constants.Target.TARGET_FAVORITES
+import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.exif.CopyMediaSheet
 import com.dot.gallery.feature_node.presentation.exif.MoveMediaSheet
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialog
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialogAction
+import com.dot.gallery.feature_node.presentation.util.rememberActivityResult
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.shareMedia
 import com.dot.gallery.ui.theme.Shapes
@@ -85,7 +85,7 @@ fun SelectionSheet(
     target: String?,
     selectedMedia: SnapshotStateList<Media>,
     selectionState: MutableState<Boolean>,
-    albumsState: AlbumState,
+    albumsState: State<AlbumState>,
     handler: MediaHandleUseCase
 ) {
     fun clearSelection() {
@@ -99,24 +99,25 @@ fun SelectionSheet(
     val trashSheetState = rememberAppBottomSheetState()
     val moveSheetState = rememberAppBottomSheetState()
     val copySheetState = rememberAppBottomSheetState()
-    val result = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartIntentSenderForResult(),
-        onResult = {
-            if (it.resultCode == Activity.RESULT_OK) {
-                clearSelection()
-                if (trashSheetState.isVisible) {
-                    scope.launch {
-                        trashSheetState.hide()
-                        shouldMoveToTrash = true
-                    }
+    val result = rememberActivityResult(
+        onResultOk = {
+            clearSelection()
+            if (trashSheetState.isVisible) {
+                scope.launch {
+                    trashSheetState.hide()
+                    shouldMoveToTrash = true
                 }
             }
         }
     )
     val windowSizeClass = calculateWindowSizeClass(LocalContext.current as Activity)
-    val tabletMode = windowSizeClass.widthSizeClass > WindowWidthSizeClass.Compact
-    val sizeModifier = if (!tabletMode) Modifier.fillMaxWidth()
-    else Modifier.wrapContentWidth()
+    val tabletMode = remember(windowSizeClass) {
+        windowSizeClass.widthSizeClass > WindowWidthSizeClass.Compact
+    }
+    val sizeModifier = remember(tabletMode) {
+        if (!tabletMode) Modifier.fillMaxWidth()
+        else Modifier.wrapContentWidth()
+    }
     AnimatedVisibility(
         modifier = modifier,
         visible = selectionState.value,
@@ -145,7 +146,7 @@ fun SelectionSheet(
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 IconButton(
-                    onClick = { clearSelection() },
+                    onClick = ::clearSelection,
                     modifier = Modifier.size(24.dp),
                 ) {
                     Image(
@@ -173,30 +174,24 @@ fun SelectionSheet(
             ) {
                 // Share Component
                 SelectionBarColumn(
-                    selectedMedia = selectedMedia,
                     imageVector = Icons.Outlined.Share,
                     tabletMode = tabletMode,
                     title = stringResource(R.string.share)
                 ) {
-                    context.shareMedia(it)
+                    context.shareMedia(selectedMedia)
                 }
-                val favoriteTitle =
-                    if (target == TARGET_FAVORITES) stringResource(id = R.string.remove_selected)
-                    else stringResource(id = R.string.favorite)
                 // Favorite Component
                 SelectionBarColumn(
-                    selectedMedia = selectedMedia,
                     imageVector = Icons.Outlined.FavoriteBorder,
                     tabletMode = tabletMode,
-                    title = favoriteTitle
+                    title = stringResource(R.string.favorite)
                 ) {
                     scope.launch {
-                        handler.toggleFavorite(result = result, it)
+                        handler.toggleFavorite(result = result, selectedMedia)
                     }
                 }
                 // Copy Component
                 SelectionBarColumn(
-                    selectedMedia = selectedMedia,
                     imageVector = Icons.Outlined.CopyAll,
                     tabletMode = tabletMode,
                     title = stringResource(R.string.copy)
@@ -207,7 +202,6 @@ fun SelectionSheet(
                 }
                 // Move Component
                 SelectionBarColumn(
-                    selectedMedia = selectedMedia,
                     imageVector = Icons.AutoMirrored.Outlined.DriveFileMove,
                     tabletMode = tabletMode,
                     title = stringResource(R.string.move)
@@ -218,7 +212,6 @@ fun SelectionSheet(
                 }
                 // Trash Component
                 SelectionBarColumn(
-                    selectedMedia = selectedMedia,
                     imageVector = Icons.Outlined.DeleteOutline,
                     tabletMode = tabletMode,
                     title = stringResource(id = R.string.trash),
@@ -242,7 +235,7 @@ fun SelectionSheet(
     MoveMediaSheet(
         sheetState = moveSheetState,
         mediaList = selectedMedia,
-        albumState = albumsState,
+        albumState = albumsState.value,
         handler = handler,
         onFinish = ::clearSelection
     )
@@ -250,7 +243,7 @@ fun SelectionSheet(
     CopyMediaSheet(
         sheetState = copySheetState,
         mediaList = selectedMedia,
-        albumsState = albumsState,
+        albumsState = albumsState.value,
         handler = handler,
         onFinish = ::clearSelection
     )
@@ -258,7 +251,9 @@ fun SelectionSheet(
     TrashDialog(
         appBottomSheetState = trashSheetState,
         data = selectedMedia,
-        action = if (shouldMoveToTrash) TrashDialogAction.TRASH else TrashDialogAction.DELETE,
+        action = remember(shouldMoveToTrash) {
+            if (shouldMoveToTrash) TrashDialogAction.TRASH else TrashDialogAction.DELETE
+        },
     ) {
         if (shouldMoveToTrash) {
             handler.trashMedia(result, it, true)
@@ -271,12 +266,11 @@ fun SelectionSheet(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun RowScope.SelectionBarColumn(
-    selectedMedia: SnapshotStateList<Media>,
     imageVector: ImageVector,
     title: String,
     tabletMode: Boolean,
-    onItemLongClick: ((List<Media>) -> Unit)? = null,
-    onItemClick: (List<Media>) -> Unit,
+    onItemLongClick: (() -> Unit)? = null,
+    onItemClick: () -> Unit,
 ) {
     val tintColor = MaterialTheme.colorScheme.onSurface
     Column(
@@ -288,12 +282,8 @@ private fun RowScope.SelectionBarColumn(
                 else Modifier.weight(1f)
             )
             .combinedClickable(
-                onClick = {
-                    onItemClick.invoke(selectedMedia)
-                },
-                onLongClick = {
-                    onItemLongClick?.invoke(selectedMedia)
-                }
+                onClick = onItemClick,
+                onLongClick = onItemLongClick
             )
             .padding(top = 12.dp, bottom = 16.dp),
         verticalArrangement = Arrangement.Center,

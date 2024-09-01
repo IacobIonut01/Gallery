@@ -11,11 +11,12 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import com.dot.gallery.core.Resource
 import com.dot.gallery.feature_node.domain.model.Album
-import com.dot.gallery.feature_node.domain.model.IgnoredAlbum
 import com.dot.gallery.feature_node.domain.model.EncryptedMedia
 import com.dot.gallery.feature_node.domain.model.ExifAttributes
+import com.dot.gallery.feature_node.domain.model.IgnoredAlbum
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.PinnedAlbum
+import com.dot.gallery.feature_node.domain.model.TimelineSettings
 import com.dot.gallery.feature_node.domain.model.Vault
 import com.dot.gallery.feature_node.domain.util.MediaOrder
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia
@@ -23,6 +24,8 @@ import kotlinx.coroutines.flow.Flow
 import java.io.File
 
 interface MediaRepository {
+
+    suspend fun updateInternalDatabase()
 
     fun getMedia(): Flow<Resource<List<Media>>>
 
@@ -32,22 +35,19 @@ interface MediaRepository {
 
     fun getTrashed(): Flow<Resource<List<Media>>>
 
-    fun getAlbums(
-        mediaOrder: MediaOrder,
-        ignoreBlacklisted: Boolean = false
-    ): Flow<Resource<List<Album>>>
+    fun getAlbums(mediaOrder: MediaOrder): Flow<Resource<List<Album>>>
 
     suspend fun insertPinnedAlbum(pinnedAlbum: PinnedAlbum)
 
     suspend fun removePinnedAlbum(pinnedAlbum: PinnedAlbum)
+
+    fun getPinnedAlbums(): Flow<List<PinnedAlbum>>
 
     suspend fun addBlacklistedAlbum(ignoredAlbum: IgnoredAlbum)
 
     suspend fun removeBlacklistedAlbum(ignoredAlbum: IgnoredAlbum)
 
     fun getBlacklistedAlbums(): Flow<List<IgnoredAlbum>>
-
-    suspend fun getMediaById(mediaId: Long): Media?
 
     fun getMediaByAlbumId(albumId: Long): Flow<Resource<List<Media>>>
 
@@ -57,8 +57,6 @@ interface MediaRepository {
     ): Flow<Resource<List<Media>>>
 
     fun getAlbumsWithType(allowedMedia: AllowedMedia): Flow<Resource<List<Album>>>
-
-    fun getMediaByUri(uriAsString: String, isSecure: Boolean): Flow<Resource<List<Media>>>
 
     fun getMediaListByUris(listOfUris: List<Uri>, reviewMode: Boolean): Flow<Resource<List<Media>>>
 
@@ -143,5 +141,9 @@ interface MediaRepository {
         onSuccess: () -> Unit,
         onFailed: (failedFiles: List<File>) -> Unit
     ): Boolean
+
+    fun getSettings(): Flow<TimelineSettings?>
+
+    suspend fun updateSettings(settings: TimelineSettings)
 
 }

@@ -45,6 +45,21 @@ class ChanneledViewModel @Inject constructor() : ViewModel() {
             }
         }
 
+    fun initWithNav(navController: NavController) =
+        eventChannel.receiveAsFlow().map {
+            when (it) {
+                is Event.NavigationRouteEvent ->
+                    navController.navigate(it.route) {
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                is Event.NavigationUpEvent ->
+                    navController.navigateUp()
+
+                else -> {}
+            }
+        }
+
     fun navigate(route: String) {
         viewModelScope.launch(Dispatchers.IO) {
             eventChannel.send(Event.NavigationRouteEvent(route))

@@ -15,8 +15,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
-import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,7 +39,6 @@ import kotlinx.coroutines.launch
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
-    @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
@@ -50,7 +47,6 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContent {
             GalleryTheme {
-                val windowSizeClass = calculateWindowSizeClass(this)
                 val navController = rememberNavController()
                 val isScrolling = remember { mutableStateOf(false) }
                 val bottomBarState = rememberSaveable { mutableStateOf(true) }
@@ -80,7 +76,6 @@ class MainActivity : AppCompatActivity() {
                             navController = navController,
                             paddingValues = paddingValues,
                             bottomBarState = bottomBarState.value,
-                            windowSizeClass = windowSizeClass,
                             isScrolling = isScrolling.value
                         ) {
                             NavigationComp(

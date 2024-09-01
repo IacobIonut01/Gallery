@@ -1,0 +1,26 @@
+Added
+    Vault - A secure way to hide and encrypt your photos
+    Ignored Albums - A safe and easy way to ignore certain albums or automatically ignore a bunch of them with Regex
+    Option to Move the album from trash from Album screen / Long press the album
+    Option to not hide the searchbar and/or the navigationbar while scrolling
+    New gesture: Drag down to close media viewer
+    New UI for Setup Wizard
+Improved
+    UI Performance while viewing media grid
+    Media Content parsing and updating
+    MediaView screen - New UI and animations
+    Scroll Thumb
+    Slightly updated UI Design on Library tab
+    Empty and loading animations for media and albums
+    Detect initial grid size for bigger screens
+    Album sorting toggle
+    Re-arranged Settings screen
+Fixed
+    Lags and hangs while fast scrolling the media grid
+    Major lags while scrolling and updating the Media Store (e.g., when new images are being added to your gallery, and you want to scroll the grid)
+    Small fixes to the video player
+Changed
+    Moved to a new image loading library (sketch)
+    Moved to a new image subsampling library (com.github.panpf.zoomimage)
+Removed
+    Temporarily removed the Image Editor - a new one will be coming soon

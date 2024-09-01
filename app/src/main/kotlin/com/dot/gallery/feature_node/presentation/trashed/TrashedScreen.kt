@@ -9,33 +9,29 @@ import android.app.Activity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
 import androidx.compose.runtime.snapshots.SnapshotStateList
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.dot.gallery.R
-import com.dot.gallery.core.AlbumState
+import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.core.Constants.Target.TARGET_TRASH
-import com.dot.gallery.core.MediaState
-import com.dot.gallery.core.presentation.components.EmptyMedia
+import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.common.MediaScreen
-import com.dot.gallery.feature_node.presentation.common.MediaViewModel
 import com.dot.gallery.feature_node.presentation.trashed.components.AutoDeleteFooter
+import com.dot.gallery.feature_node.presentation.trashed.components.EmptyTrash
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashedNavActions
-import kotlinx.coroutines.flow.StateFlow
 
 @Composable
 fun TrashedGridScreen(
     paddingValues: PaddingValues,
     albumName: String = stringResource(id = R.string.trash),
-    vm: MediaViewModel,
     handler: MediaHandleUseCase,
-    mediaState: StateFlow<MediaState>,
-    albumState: StateFlow<AlbumState>,
+    mediaState: State<MediaState>,
+    albumsState: State<AlbumState>,
     selectionState: MutableState<Boolean>,
     selectedMedia: SnapshotStateList<Media>,
     toggleSelection: (Int) -> Unit,
@@ -45,10 +41,9 @@ fun TrashedGridScreen(
 ) = MediaScreen(
     paddingValues = paddingValues,
     target = TARGET_TRASH,
-    vm = vm,
     albumName = albumName,
     handler = handler,
-    albumState = albumState,
+    albumsState = albumsState,
     mediaState = mediaState,
     selectionState = selectionState,
     selectedMedia = selectedMedia,
@@ -57,9 +52,9 @@ fun TrashedGridScreen(
     enableStickyHeaders = false,
     navActionsContent = { _: MutableState<Boolean>,
                           _: ActivityResultLauncher<IntentSenderRequest> ->
-        TrashedNavActions(handler, mediaState, selectedMedia, selectionState)
+        TrashedNavActions(handler, mediaState.value, selectedMedia, selectionState)
     },
-    emptyContent = { padding -> EmptyMedia(Modifier.fillMaxSize(), padding) },
+    emptyContent = { EmptyTrash() },
     aboveGridContent = { AutoDeleteFooter() },
     navigate = navigate,
     navigateUp = navigateUp,

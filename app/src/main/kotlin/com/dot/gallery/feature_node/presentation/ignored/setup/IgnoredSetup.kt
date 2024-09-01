@@ -3,6 +3,7 @@ package com.dot.gallery.feature_node.presentation.ignored.setup
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -10,7 +11,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.dot.gallery.core.AlbumState
+import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.core.Constants.Animation.navigateInAnimation
 import com.dot.gallery.core.Constants.Animation.navigateUpAnimation
 import com.dot.gallery.feature_node.domain.model.IgnoredAlbum
@@ -25,11 +26,9 @@ import java.util.UUID
 @Composable
 fun IgnoredSetup(
     onCancel: () -> Unit,
-    albumState: AlbumState,
+    albumState: State<AlbumState>,
 ) {
-    val vm = hiltViewModel<IgnoredSetupViewModel>().apply {
-        attachToLifecycle()
-    }
+    val vm = hiltViewModel<IgnoredSetupViewModel>()
     val navController = rememberNavController()
 
     val uiState by vm.uiState.collectAsStateWithLifecycle()
@@ -124,7 +123,7 @@ fun IgnoredSetup(
                     if ((uiState.type as IgnoredType.REGEX).regex.isEmpty()) return@LaunchedEffect
                     try {
                         val regex = (uiState.type as IgnoredType.REGEX).regex.toRegex()
-                        val matchedAlbums = albumState.albums.filter(regex::matchesAlbum)
+                        val matchedAlbums = albumState.value.albumsWithBlacklisted.filter(regex::matchesAlbum)
                         vm.setMatchedAlbums(matchedAlbums)
                     } catch (e: Exception) {
                         e.printStackTrace()

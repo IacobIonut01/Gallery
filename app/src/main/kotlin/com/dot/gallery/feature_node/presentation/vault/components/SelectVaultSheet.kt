@@ -13,6 +13,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -24,6 +26,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.core.presentation.components.DragHandle
 import com.dot.gallery.feature_node.domain.model.Vault
+import com.dot.gallery.feature_node.domain.model.VaultState
 import com.dot.gallery.feature_node.presentation.common.components.OptionItem
 import com.dot.gallery.feature_node.presentation.common.components.OptionLayout
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
@@ -33,9 +36,12 @@ import kotlinx.coroutines.launch
 @Composable
 fun SelectVaultSheet(
     state: AppBottomSheetState,
-    vaults: List<Vault>,
+    vaultState: VaultState,
     onVaultSelected: (Vault) -> Unit
 ) {
+    val vaults by remember(vaultState) {
+        derivedStateOf { vaultState.vaults }
+    }
     val scope = rememberCoroutineScope()
     val vaultOptions = remember(vaults, state) {
         vaults.map {

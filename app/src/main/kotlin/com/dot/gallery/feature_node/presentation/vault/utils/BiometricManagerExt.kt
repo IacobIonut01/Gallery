@@ -5,7 +5,10 @@ import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
 import androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL
 import androidx.biometric.BiometricManager.BIOMETRIC_SUCCESS
 import androidx.biometric.BiometricPrompt
+import androidx.biometric.BiometricPrompt.PromptInfo
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
@@ -56,18 +59,22 @@ fun rememberBiometricPrompt(biometricPromptCallback: BiometricPrompt.Authenticat
 
 @Composable
 fun rememberBiometricState(
-    biometricPromptInfo: BiometricPrompt.PromptInfo,
+    title: String,
+    subtitle: String,
     onSuccess: () -> Unit,
     onFailed: () -> Unit
 ): BiometricState {
     val biometricManager = rememberBiometricManager()
     val callback = rememberBiometricCallback(onSuccess, onFailed)
     val prompt = rememberBiometricPrompt(callback)
-    val promptInfo = remember { biometricPromptInfo }
-    return remember(biometricManager, biometricPromptInfo) {
+    return remember(biometricManager, title, subtitle) {
         BiometricState(
             biometricManager = biometricManager,
-            promptInfo = promptInfo,
+            promptInfo = PromptInfo.Builder()
+                .setAllowedAuthenticators(BIOMETRIC_STRONG or DEVICE_CREDENTIAL)
+                .setTitle(title)
+                .setSubtitle(subtitle)
+                .build(),
             prompt = prompt
         )
     }
@@ -75,13 +82,15 @@ fun rememberBiometricState(
 
 class BiometricState(
     biometricManager: BiometricManager,
-    private val promptInfo: BiometricPrompt.PromptInfo,
+    private val promptInfo: PromptInfo,
     private val prompt: BiometricPrompt
 ) {
-    val canAllowAccess = biometricManager.canAuthenticate(BIOMETRIC_STRONG or DEVICE_CREDENTIAL) == BIOMETRIC_SUCCESS
+    val isSupported by mutableStateOf(
+        biometricManager.canAuthenticate(BIOMETRIC_STRONG or DEVICE_CREDENTIAL) == BIOMETRIC_SUCCESS
+    )
 
     fun authenticate() {
-        if (canAllowAccess) {
+        if (isSupported) {
             prompt.authenticate(promptInfo)
         }
     }

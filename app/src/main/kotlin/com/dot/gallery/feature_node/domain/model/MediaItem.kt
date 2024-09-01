@@ -4,25 +4,20 @@
  */
 package com.dot.gallery.feature_node.domain.model
 
-import android.os.Parcelable
-import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
-import kotlinx.parcelize.Parcelize
 
-@Parcelize
-@Immutable
-sealed class MediaItem : Parcelable {
-    @Stable
+@Stable
+sealed class MediaItem {
     abstract val key: String
 
-    @Immutable
+    @Stable
     data class Header(
         override val key: String,
         val text: String,
-        val data: List<Media>
+        val data: Set<Long>
     ) : MediaItem()
 
-    @Immutable
+    @Stable
     data class MediaViewItem(
         override val key: String,
         val media: Media
@@ -30,20 +25,18 @@ sealed class MediaItem : Parcelable {
 
 }
 
-@Parcelize
-@Immutable
-sealed class EncryptedMediaItem : Parcelable {
-    @Stable
+@Stable
+sealed class EncryptedMediaItem {
     abstract val key: String
 
-    @Immutable
+    @Stable
     data class Header(
         override val key: String,
         val text: String,
-        val data: List<EncryptedMedia>
+        val data: Set<Long>
     ) : EncryptedMediaItem()
 
-    @Immutable
+    @Stable
     data class MediaViewItem(
         override val key: String,
         val media: EncryptedMedia

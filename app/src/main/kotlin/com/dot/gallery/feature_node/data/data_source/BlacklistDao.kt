@@ -13,9 +13,6 @@ interface BlacklistDao {
     @Query("SELECT * FROM blacklist")
     fun getBlacklistedAlbums(): Flow<List<IgnoredAlbum>>
 
-    @Query("SELECT * FROM blacklist")
-    fun getBlacklistedAlbumsSync(): List<IgnoredAlbum>
-
     @Upsert
     suspend fun addBlacklistedAlbum(ignoredAlbum: IgnoredAlbum)
 

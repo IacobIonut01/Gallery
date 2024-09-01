@@ -35,6 +35,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
+import com.dot.gallery.core.presentation.components.util.swipe
 import com.dot.gallery.feature_node.domain.model.Media
 import io.sanghun.compose.video.RepeatMode
 import io.sanghun.compose.video.uri.VideoPlayerMediaItem
@@ -51,7 +52,8 @@ fun VideoPlayer(
     media: Media,
     playWhenReady: Boolean,
     videoController: @Composable (ExoPlayer, MutableState<Boolean>, MutableLongState, Long, Int, Float) -> Unit,
-    onItemClick: () -> Unit
+    onItemClick: () -> Unit,
+    onSwipeDown: () -> Unit
 ) {
     var totalDuration by rememberSaveable { mutableLongStateOf(0L) }
     val currentTime = rememberSaveable { mutableLongStateOf(0L) }
@@ -133,6 +135,10 @@ fun VideoPlayer(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
                     onClick = onItemClick,
+                )
+                .swipe(
+                    onSwipeDown = onSwipeDown,
+                    onSwipeUp = null
                 ),
         )
     }

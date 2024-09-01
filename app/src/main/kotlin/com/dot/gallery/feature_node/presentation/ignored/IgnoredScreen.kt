@@ -30,6 +30,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,7 +46,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
-import com.dot.gallery.core.AlbumState
+import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.core.Position
 import com.dot.gallery.core.SettingsEntity
 import com.dot.gallery.feature_node.domain.model.IgnoredAlbum
@@ -58,10 +59,9 @@ import com.dot.gallery.ui.core.Icons as GalleryIcons
 fun IgnoredScreen(
     navigateUp: () -> Unit,
     startSetup: () -> Unit,
-    albumsState: AlbumState,
+    albumsState: State<AlbumState>,
 ) {
     val vm = hiltViewModel<IgnoredViewModel>()
-    vm.attachToLifecycle()
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     val state by vm.blacklistState.collectAsStateWithLifecycle(IgnoredState())

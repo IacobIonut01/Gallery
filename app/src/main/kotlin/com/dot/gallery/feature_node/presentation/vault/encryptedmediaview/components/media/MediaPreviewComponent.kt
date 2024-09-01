@@ -21,6 +21,7 @@ fun MediaPreviewComponent(
     uiEnabled: Boolean,
     playWhenReady: Boolean,
     onItemClick: () -> Unit,
+    onSwipeDown: () -> Unit,
     videoController: @Composable (ExoPlayer, MutableState<Boolean>, MutableLongState, Long, Int, Float) -> Unit,
 ) {
     Box(
@@ -38,7 +39,8 @@ fun MediaPreviewComponent(
             ZoomablePagerImage(
                 media = media,
                 uiEnabled = uiEnabled,
-                onItemClick = onItemClick
+                onItemClick = onItemClick,
+                onSwipeDown = onSwipeDown
             )
         }
     }

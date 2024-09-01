@@ -7,33 +7,28 @@ package com.dot.gallery.feature_node.presentation.timeline
 
 import android.app.Activity
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.dot.gallery.R
-import com.dot.gallery.core.AlbumState
-import com.dot.gallery.core.MediaState
-import com.dot.gallery.core.presentation.components.EmptyMedia
+import com.dot.gallery.feature_node.domain.model.AlbumState
+import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.common.MediaScreen
-import com.dot.gallery.feature_node.presentation.common.MediaViewModel
 import com.dot.gallery.feature_node.presentation.timeline.components.TimelineNavActions
-import kotlinx.coroutines.flow.StateFlow
 
 @Composable
 fun TimelineScreen(
     paddingValues: PaddingValues,
     albumId: Long = -1L,
     albumName: String = stringResource(R.string.app_name),
-    vm: MediaViewModel,
     handler: MediaHandleUseCase,
-    mediaState: StateFlow<MediaState>,
-    albumState: StateFlow<AlbumState>,
+    mediaState: State<MediaState>,
+    albumsState: State<AlbumState>,
     selectionState: MutableState<Boolean>,
     selectedMedia: SnapshotStateList<Media>,
     allowNavBar: Boolean = true,
@@ -50,11 +45,10 @@ fun TimelineScreen(
         paddingValues = paddingValues,
         albumId = albumId,
         target = null,
-        vm = vm,
         albumName = albumName,
         handler = handler,
+        albumsState = albumsState,
         mediaState = mediaState,
-        albumState = albumState,
         selectionState = selectionState,
         selectedMedia = selectedMedia,
         toggleSelection = toggleSelection,
@@ -67,14 +61,13 @@ fun TimelineScreen(
                 albumId = albumId,
                 handler = handler,
                 expandedDropDown = expandedDropDown,
-                mediaState = mediaState,
+                mediaState = mediaState.value,
                 selectedMedia = selectedMedia,
                 selectionState = selectionState,
                 navigate = navigate,
                 navigateUp = navigateUp
             )
         },
-        emptyContent = { padding -> EmptyMedia(Modifier.fillMaxSize(), padding) },
         navigate = navigate,
         navigateUp = navigateUp,
         toggleNavbar = toggleNavbar,

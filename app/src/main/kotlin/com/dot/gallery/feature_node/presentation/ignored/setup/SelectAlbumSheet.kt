@@ -25,11 +25,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.R
-import com.dot.gallery.core.AlbumState
 import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Settings.Album.rememberAlbumGridSize
 import com.dot.gallery.core.presentation.components.DragHandle
 import com.dot.gallery.feature_node.domain.model.Album
+import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.domain.model.IgnoredAlbum
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumComponent
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
@@ -43,6 +43,7 @@ fun SelectAlbumSheet(
     albumState: AlbumState,
     onSelect: (Album) -> Unit
 ) {
+    val albumSize by rememberAlbumGridSize()
     val scope = rememberCoroutineScope()
     if (sheetState.isVisible) {
         ModalBottomSheet(
@@ -71,7 +72,6 @@ fun SelectAlbumSheet(
                         .fillMaxWidth()
                 )
 
-                val albumSize by rememberAlbumGridSize()
                 LazyVerticalGrid(
                     state = rememberLazyGridState(),
                     modifier = Modifier.padding(horizontal = 8.dp),

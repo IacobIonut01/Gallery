@@ -28,6 +28,7 @@ import com.dot.gallery.core.Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION
 import com.dot.gallery.core.Settings
 import com.dot.gallery.core.presentation.components.util.LocalBatteryStatus
 import com.dot.gallery.core.presentation.components.util.ProvideBatteryStatus
+import com.dot.gallery.core.presentation.components.util.swipe
 import com.dot.gallery.feature_node.domain.model.Media
 import com.github.panpf.sketch.AsyncImage
 import com.github.panpf.sketch.request.ComposableImageRequest
@@ -44,7 +45,8 @@ fun ZoomablePagerImage(
     modifier: Modifier = Modifier,
     media: Media,
     uiEnabled: Boolean,
-    onItemClick: () -> Unit
+    onItemClick: () -> Unit,
+    onSwipeDown: () -> Unit
 ) {
     ProvideBatteryStatus {
         val allowBlur by Settings.Misc.rememberAllowBlur()
@@ -80,10 +82,17 @@ fun ZoomablePagerImage(
 
     SketchZoomAsyncImage(
         zoomState = zoomState,
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .swipe(
+                onSwipeDown = onSwipeDown,
+                onSwipeUp = null
+            ),
         onTap = { onItemClick() },
         alignment = Alignment.Center,
         uri = media.uri.toString(),
         contentDescription = media.label
     )
 }
+
+

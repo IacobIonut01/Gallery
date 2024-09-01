@@ -250,6 +250,15 @@
     <string name="auto_hide_navigationbar">Hide navigation bar on scroll</string>
     <string name="auto_hide_navigationbar_summary">Automatically hide the navigation bar while scrolling</string>
     <string name="navigation">Navigation</string>
+    <string name="vault_setup_title">Setup your vault</string>
+    <string name="vault_setup_subtitle"><![CDATA[Encrypt your most private photos & videos]]></string>
+    <string name="vault_setup_name">Vault Name</string>
+    <string name="vault_setup_security_error">Please set-up a phone security measure before setting up the vault.</string>
+    <string name="vault_setup_summary">The vault will be accessed using your phone security measures (password or biometrics)\n\nEncryption key can be accessed inside the vault and will be used in order to restore any vaults.</string>
+    <string name="vault_already_exists">Vault \"%1$s\" already exists</string>
+    <string name="ignored">Ignored</string>
+    <string name="location">Location</string>
+    <string name="update_file_name">Update file name</string>
     <plurals name="item_count">
         <item quantity="one">%s item</item>
         <item quantity="other">%s items</item>

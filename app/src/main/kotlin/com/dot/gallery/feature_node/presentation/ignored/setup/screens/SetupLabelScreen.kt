@@ -41,6 +41,7 @@ fun SetupLabelScreen(
         title = stringResource(R.string.setup_label_title),
         subtitle = stringResource(R.string.setup_lavel_subtitle),
         icon = Icons.Outlined.VisibilityOff,
+        contentPadding = 0.dp,
         bottomBar = {
             OutlinedButton(
                 onClick = onGoBack

@@ -21,7 +21,7 @@ android {
         applicationId = "com.dot.gallery"
         minSdk = 30
         targetSdk = 35
-        versionCode = 30024
+        versionCode = 30033
         versionName = "3.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -132,7 +132,6 @@ dependencies {
 
     // Compose
     implementation(libs.compose.activity)
-    implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.graphics)
     implementation(libs.compose.ui.tooling.preview)
@@ -144,6 +143,9 @@ dependencies {
     // Compose - Material3
     implementation(libs.compose.material3)
     implementation(libs.compose.material3.window.size)
+    implementation(libs.androidx.adaptive)
+    implementation(libs.androidx.adaptive.layout)
+    implementation(libs.androidx.adaptive.navigation)
 
     // Compose - Accompanists
     implementation(libs.accompanist.permissions)
@@ -162,6 +164,8 @@ dependencies {
     // Dagger - Hilt
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.dagger.hilt)
+    implementation(libs.androidx.hilt.common)
+    implementation(libs.androidx.hilt.work)
     ksp(libs.dagger.hilt.compiler)
     ksp(libs.androidx.hilt.compiler)
 
@@ -221,10 +225,16 @@ dependencies {
     // Composables - Core
     implementation(libs.core)
 
+    // Worker
+    implementation(libs.androidx.work.runtime.ktx)
+
+    // Composable - Scrollbar
+    implementation(libs.lazycolumnscrollbar)
+
+
     // Tests
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)
-    androidTestImplementation(platform(libs.compose.bom))
     debugImplementation(libs.compose.ui.tooling)
     debugRuntimeOnly(libs.compose.ui.test.manifest)
 }

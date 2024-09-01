@@ -53,6 +53,7 @@ fun SetupLocationScreen(
         title = stringResource(R.string.setup_location_title),
         subtitle = stringResource(R.string.setup_location_subtitle),
         icon = Icons.Outlined.Settings,
+        contentPadding = 0.dp,
         bottomBar = {
             OutlinedButton(
                 onClick = onGoBack

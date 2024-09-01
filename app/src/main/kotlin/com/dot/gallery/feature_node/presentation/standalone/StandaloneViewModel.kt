@@ -9,18 +9,18 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.dot.gallery.core.MediaState
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.domain.model.Vault
-import com.dot.gallery.feature_node.domain.use_case.MediaUseCases
-import com.dot.gallery.feature_node.domain.use_case.VaultUseCases
+import com.dot.gallery.feature_node.domain.model.VaultState
+import com.dot.gallery.feature_node.domain.repository.MediaRepository
+import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -28,55 +28,67 @@ import javax.inject.Inject
 class StandaloneViewModel @Inject constructor(
     @ApplicationContext
     private val applicationContext: Context,
-    private val mediaUseCases: MediaUseCases,
-    private val vaultUseCases: VaultUseCases
+    private val repository: MediaRepository,
+    val handler: MediaHandleUseCase
 ) : ViewModel() {
 
-    private val _mediaState = MutableStateFlow(MediaState())
-    val mediaState = _mediaState.asStateFlow()
-    val handler = mediaUseCases.mediaHandleUseCase
     var reviewMode: Boolean = false
-
+        set(value) {
+            field = value
+            mediaState = lazy {
+                repository.getMediaListByUris(dataList, reviewMode)
+                    .map {
+                        val data = it.data
+                        if (data != null) {
+                            mediaId = data.first().id
+                            MediaState(media = data)
+                        } else {
+                            mediaFromUris()
+                        }
+                    }
+                    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), MediaState())
+            }
+        }
     var dataList: List<Uri> = emptyList()
         set(value) {
-            if (value.isNotEmpty() && value != dataList) {
-                getMedia(value)
-            }
             field = value
+            mediaState = lazy {
+                repository.getMediaListByUris(value, reviewMode)
+                    .map {
+                        val data = it.data
+                        if (data != null) {
+                            mediaId = data.first().id
+                            MediaState(media = data)
+                        } else {
+                            mediaFromUris()
+                        }
+                    }
+                    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), MediaState())
+            }
         }
 
     var mediaId: Long = -1
 
+    var mediaState = lazy {
+        repository.getMediaListByUris(dataList, reviewMode)
+            .map {
+                val data = it.data
+                if (data != null) {
+                    mediaId = data.first().id
+                    MediaState(media = data)
+                } else {
+                    mediaFromUris()
+                }
+            }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), MediaState())
+    }
 
-    private val _vaults = MutableStateFlow<List<Vault>>(emptyList())
-    val vaults = _vaults.asStateFlow()
+    val vaults = repository.getVaults().map { it.data ?: emptyList() }.map { VaultState(it, isLoading = false) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), VaultState())
 
     fun addMedia(vault: Vault, media: Media) {
         viewModelScope.launch(Dispatchers.IO) {
-            vaultUseCases.addMedia(vault, media)
-        }
-    }
-
-    private fun getMedia(clipDataUriList: List<Uri> = emptyList()) {
-        viewModelScope.launch(Dispatchers.IO) {
-            if (clipDataUriList.isNotEmpty()) {
-                mediaUseCases.getMediaListByUrisUseCase(clipDataUriList, reviewMode)
-                    .flowOn(Dispatchers.IO)
-                    .collectLatest { result ->
-                        val data = result.data
-                        if (data != null) {
-                            mediaId = data.first().id
-                            _mediaState.value = MediaState(media = data)
-                        } else {
-                            _mediaState.value = mediaFromUris()
-                        }
-                    }
-            }
-        }
-        viewModelScope.launch(Dispatchers.IO) {
-            vaultUseCases.getVaults().collectLatest {
-                _vaults.emit(it)
-            }
+            repository.addMedia(vault, media)
         }
     }
 

@@ -5,11 +5,16 @@
 
 package com.dot.gallery.core
 
+import android.app.Activity
 import android.content.Context
 import android.os.Build
 import android.os.Parcelable
 import android.provider.MediaStore
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.remember
@@ -23,6 +28,8 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.dot.gallery.core.Constants.albumCellsList
+import com.dot.gallery.core.Constants.cellsList
 import com.dot.gallery.core.Settings.PREFERENCE_NAME
 import com.dot.gallery.core.presentation.components.FilterKind
 import com.dot.gallery.core.util.rememberPreference
@@ -47,12 +54,16 @@ object Settings {
         data class LastSort(
             val orderType: OrderType,
             val kind: FilterKind
-        ): Parcelable
+        ) : Parcelable
 
         @Composable
         fun rememberLastSort() =
-            rememberPreference(key = LAST_SORT, defaultValue = LastSort(OrderType.Descending, FilterKind.DATE))
+            rememberPreference(
+                key = LAST_SORT,
+                defaultValue = LastSort(OrderType.Descending, FilterKind.DATE)
+            )
 
+        @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
         @Composable
         fun rememberAlbumGridSize(): MutableState<Int> {
             val scope = rememberCoroutineScope()
@@ -60,8 +71,21 @@ object Settings {
             val prefs = remember(context) {
                 context.getSharedPreferences("ui_settings", Context.MODE_PRIVATE)
             }
+
+            val windowSizeClass = if (context is Activity) calculateWindowSizeClass(context) else null
+            val defaultValue = remember(windowSizeClass) {
+                albumCellsList.indexOf(
+                    GridCells.Fixed(
+                        when (windowSizeClass?.widthSizeClass) {
+                            WindowWidthSizeClass.Expanded -> 5
+                            else -> 2
+                        }
+                    )
+                )
+            }
+
             var storedSize = remember(prefs) {
-                prefs.getInt("album_grid_size", 5)
+                prefs.getInt("album_grid_size", defaultValue)
             }
 
             return remember(storedSize) {
@@ -131,6 +155,7 @@ object Settings {
         fun rememberForcedLastScreen() =
             rememberPreference(key = FORCED_LAST_SCREEN, defaultValue = false)
 
+        @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
         @Composable
         fun rememberGridSize(): MutableState<Int> {
             val scope = rememberCoroutineScope()
@@ -138,8 +163,20 @@ object Settings {
             val prefs = remember(context) {
                 context.getSharedPreferences("ui_settings", Context.MODE_PRIVATE)
             }
+            val windowSizeClass = if (context is Activity) calculateWindowSizeClass(context) else null
+            val defaultValue = remember(windowSizeClass) {
+                cellsList.indexOf(
+                    GridCells.Fixed(
+                        when (windowSizeClass?.widthSizeClass) {
+                            WindowWidthSizeClass.Expanded -> 6
+                            else -> 4
+                        }
+                    )
+                )
+            }
+
             var storedSize = remember(prefs) {
-                prefs.getInt("media_grid_size", 3)
+                prefs.getInt("media_grid_size", defaultValue)
             }
 
             return remember(storedSize) {

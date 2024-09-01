@@ -107,6 +107,8 @@ object Constants {
     }
 
     val cellsList = listOf(
+        GridCells.Fixed(9),
+        GridCells.Fixed(8),
         GridCells.Fixed(7),
         GridCells.Fixed(6),
         GridCells.Fixed(5),

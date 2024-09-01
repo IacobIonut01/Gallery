@@ -1,15 +1,13 @@
 package com.dot.gallery.feature_node.presentation.library
 
-import android.os.Build
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
@@ -17,8 +15,6 @@ import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.VisibilityOff
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -37,25 +33,28 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dokar.pinchzoomgrid.PinchZoomGridLayout
 import com.dokar.pinchzoomgrid.rememberPinchZoomGridState
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.albumCellsList
 import com.dot.gallery.core.Settings.Album.rememberAlbumGridSize
-import com.dot.gallery.feature_node.presentation.common.MediaViewModel
+import com.dot.gallery.feature_node.presentation.library.components.LibrarySmallItem
 import com.dot.gallery.feature_node.presentation.search.MainSearchBar
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.ui.core.icons.Encrypted
+import com.dot.gallery.ui.core.Icons as GalleryIcons
 
 @Composable
 fun LibraryScreen(
     navigate: (route: String) -> Unit,
-    mediaViewModel: MediaViewModel,
     toggleNavbar: (Boolean) -> Unit,
     paddingValues: PaddingValues,
     isScrolling: MutableState<Boolean>,
     searchBarActive: MutableState<Boolean>
 ) {
+    val viewModel = hiltViewModel<LibraryViewModel>()
     var lastCellIndex by rememberAlbumGridSize()
 
     val pinchState = rememberPinchZoomGridState(
@@ -67,10 +66,11 @@ fun LibraryScreen(
         lastCellIndex = albumCellsList.indexOf(pinchState.currentCells)
     }
 
+    val indicatorState by viewModel.indicatorState.collectAsStateWithLifecycle()
+
     Scaffold(
         topBar = {
             MainSearchBar(
-                mediaViewModel = mediaViewModel,
                 bottomPadding = paddingValues.calculateBottomPadding(),
                 navigate = navigate,
                 toggleNavbar = toggleNavbar,
@@ -124,91 +124,68 @@ fun LibraryScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .pinchItem(key = "headerButtons")
-                            .padding(horizontal = 8.dp, vertical = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                            .padding(horizontal = 16.dp)
+                            .padding(top = 32.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                            horizontalArrangement = Arrangement.spacedBy(
+                                16.dp,
+                                Alignment.CenterHorizontally
+                            )
                         ) {
-                            Button(
-                                modifier = Modifier.weight(1f),
-                                onClick = {
-                                    navigate(Screen.TrashedScreen.route)
-                                },
-                                colors = ButtonDefaults.filledTonalButtonColors()
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.DeleteOutline,
-                                    contentDescription = stringResource(id = R.string.trash)
-                                )
-                                Spacer(modifier = Modifier.size(8.dp))
-                                Text(
-                                    text = stringResource(id = R.string.trash)
-                                )
-                            }
-                            Button(
-                                modifier = Modifier.weight(1f),
-                                onClick = {
-                                    navigate(Screen.FavoriteScreen.route)
-                                },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.tertiary,
-                                    contentColor = MaterialTheme.colorScheme.onTertiary
-                                )
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.FavoriteBorder,
-                                    contentDescription = stringResource(id = R.string.favorites)
-                                )
-                                Spacer(modifier = Modifier.size(8.dp))
-                                Text(
-                                    text = stringResource(id = R.string.favorites)
-                                )
-                            }
+                            LibrarySmallItem(
+                                title = stringResource(R.string.trash),
+                                icon = Icons.Outlined.DeleteOutline,
+                                contentColor = MaterialTheme.colorScheme.primary,
+                                useIndicator = true,
+                                indicatorCounter = indicatorState.trashCount,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clickable {
+                                        navigate(Screen.TrashedScreen.route)
+                                    }
+                            )
+                            LibrarySmallItem(
+                                title = stringResource(R.string.favorites),
+                                icon = Icons.Outlined.FavoriteBorder,
+                                contentColor = MaterialTheme.colorScheme.error,
+                                useIndicator = true,
+                                indicatorCounter = indicatorState.favoriteCount,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clickable {
+                                        navigate(Screen.FavoriteScreen.route)
+                                    }
+                            )
                         }
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                            horizontalArrangement = Arrangement.spacedBy(
+                                16.dp,
+                                Alignment.CenterHorizontally
+                            )
                         ) {
-                            Button(
-                                modifier = Modifier.weight(1f),
-                                onClick = {
-                                    navigate(Screen.VaultScreen())
-                                },
-                                colors = ButtonDefaults.filledTonalButtonColors(),
-                                enabled = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
-                            ) {
-                                Icon(
-                                    imageVector = com.dot.gallery.ui.core.Icons.Encrypted,
-                                    contentDescription = stringResource(id = R.string.vault)
-                                )
-                                Spacer(modifier = Modifier.size(8.dp))
-                                Text(
-                                    text = stringResource(R.string.vault)
-                                )
-                            }
-                            Button(
-                                modifier = Modifier.weight(1f),
-                                onClick = {
-                                    navigate(Screen.IgnoredScreen())
-                                },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.tertiary,
-                                    contentColor = MaterialTheme.colorScheme.onTertiary
-                                )
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.VisibilityOff,
-                                    contentDescription = stringResource(R.string.ignored_albums)
-                                )
-                                Spacer(modifier = Modifier.size(8.dp))
-                                Text(
-                                    text = stringResource(id = R.string.ignored_albums)
-                                )
-                            }
+                            LibrarySmallItem(
+                                title = stringResource(R.string.vault),
+                                icon = GalleryIcons.Encrypted,
+                                contentColor = MaterialTheme.colorScheme.secondary,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clickable {
+                                        navigate(Screen.VaultScreen())
+                                    },
+                                contentDescription = stringResource(R.string.vault)
+                            )
+                            LibrarySmallItem(
+                                title = stringResource(R.string.ignored),
+                                icon = Icons.Outlined.VisibilityOff,
+                                contentColor = MaterialTheme.colorScheme.tertiary,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clickable {
+                                        navigate(Screen.IgnoredScreen())
+                                    }
+                            )
                         }
                     }
                 }

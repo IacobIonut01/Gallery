@@ -1,8 +1,5 @@
 package com.dot.gallery.feature_node.presentation.ignored.setup
 
-import android.annotation.SuppressLint
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -10,19 +7,20 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.IgnoredAlbum
-import com.dot.gallery.feature_node.domain.use_case.MediaUseCases
+import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.presentation.ignored.IgnoredState
-import com.dot.gallery.feature_node.presentation.util.RepeatOnResume
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class IgnoredSetupViewModel @Inject constructor(
-    private val mediaUseCases: MediaUseCases
+    private val repository: MediaRepository
 ): ViewModel() {
 
     private val _uiState = MutableStateFlow(IgnoredSetupState())
@@ -30,20 +28,9 @@ class IgnoredSetupViewModel @Inject constructor(
 
     var isLabelError by mutableStateOf(false)
 
-    private val _ignoredState = MutableStateFlow(IgnoredState())
-    val blacklistState = _ignoredState.asStateFlow()
-
-    init {
-        getIgnoredAlbums()
-    }
-
-    @SuppressLint("ComposableNaming")
-    @Composable
-    fun attachToLifecycle() {
-        LaunchedEffect(Unit) {
-            getIgnoredAlbums()
-        }
-    }
+    val blacklistState = repository.getBlacklistedAlbums()
+        .map { IgnoredState(it) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), IgnoredState())
 
     fun setLabel(label: String) {
         _uiState.value = _uiState.value.copy(label = label)
@@ -68,15 +55,8 @@ class IgnoredSetupViewModel @Inject constructor(
 
     fun addToIgnored(ignoredAlbum: IgnoredAlbum) {
         viewModelScope.launch {
-            mediaUseCases.blacklistUseCase.addToBlacklist(ignoredAlbum)
+            repository.addBlacklistedAlbum(ignoredAlbum)
         }
     }
 
-    private fun getIgnoredAlbums() {
-        viewModelScope.launch {
-            mediaUseCases.blacklistUseCase.blacklistedAlbums.collectLatest {
-                _ignoredState.emit(IgnoredState(it))
-            }
-        }
-    }
 }

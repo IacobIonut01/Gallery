@@ -19,6 +19,8 @@ sealed class Screen(val route: String) {
         fun idAndTarget() = "$route?mediaId={mediaId}&target={target}"
 
         fun idAndAlbum() = "$route?mediaId={mediaId}&albumId={albumId}"
+
+        fun idAndQuery() = "$route?mediaId={mediaId}&query={query}"
     }
 
     data object TrashedScreen : Screen("trashed_screen")
@@ -31,11 +33,6 @@ sealed class Screen(val route: String) {
     data object SetupScreen: Screen("setup_screen")
 
     data object VaultScreen : Screen("vault_screen")
-    data object EncryptedMediaViewScreen : Screen("encrypted_media_view_screen") {
-        fun id() = "$route?mediaId={mediaId}"
-
-        fun id(id: Long) = "$route?mediaId=$id"
-    }
 
     data object LibraryScreen : Screen("library_screen")
 

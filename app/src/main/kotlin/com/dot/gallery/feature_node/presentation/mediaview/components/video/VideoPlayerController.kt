@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -65,7 +66,6 @@ import com.dot.gallery.feature_node.domain.model.PlaybackSpeed
 import com.dot.gallery.feature_node.presentation.util.formatMinSec
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.math.max
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -89,7 +89,7 @@ fun VideoPlayerController(
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .padding(horizontal = 16.dp)
-                .padding(bottom = paddingValues.calculateBottomPadding() + 72.dp)
+                .padding(bottom = paddingValues.calculateBottomPadding() + 82.dp)
                 .fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.End
@@ -190,13 +190,14 @@ fun VideoPlayerController(
             }
             var sliderValue by rememberSaveable(currentTime.longValue) { mutableFloatStateOf(currentTime.longValue.toFloat()) }
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth()
+                    .padding(bottom = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 Text(
                     modifier = Modifier.width(52.dp),
-                    text = max(sliderValue, currentTime.longValue.toFloat()).toLong().formatMinSec(),
+                    text = sliderValue.toLong().formatMinSec(),
                     fontWeight = FontWeight.Medium,
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.White,
@@ -224,7 +225,7 @@ fun VideoPlayerController(
                         },
                         track = {
                             SliderDefaults.Track(
-                                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(100)),
+                                modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(100)),
                                 sliderState = it,
                                 colors = disabledColors,
                                 drawStopIndicator = null,
@@ -254,7 +255,7 @@ fun VideoPlayerController(
                         },
                         track = {
                             SliderDefaults.Track(
-                                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(100)),
+                                modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(100)),
                                 sliderState = it,
                                 colors = activeColors,
                                 drawStopIndicator = null,
@@ -298,7 +299,7 @@ fun VideoPlayerController(
                 .align(Alignment.Center)
                 .size(64.dp)
         ) {
-            if (isPlaying.value) {
+            if (isPlaying.value && player.isPlaying) {
                 Image(
                     modifier = Modifier.fillMaxSize(),
                     imageVector = Icons.Filled.PauseCircleFilled,

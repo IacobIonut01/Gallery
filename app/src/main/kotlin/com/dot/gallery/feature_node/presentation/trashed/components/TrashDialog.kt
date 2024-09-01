@@ -66,9 +66,9 @@ import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialogA
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialogAction.RESTORE
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialogAction.TRASH
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
-import com.dot.gallery.feature_node.presentation.util.FeedbackManager.Companion.rememberFeedbackManager
 import com.dot.gallery.feature_node.presentation.util.canBeTrashed
 import com.dot.gallery.feature_node.presentation.util.mediaPair
+import com.dot.gallery.feature_node.presentation.util.rememberFeedbackManager
 import com.dot.gallery.ui.theme.Shapes
 import com.github.panpf.sketch.AsyncImage
 import kotlinx.coroutines.launch

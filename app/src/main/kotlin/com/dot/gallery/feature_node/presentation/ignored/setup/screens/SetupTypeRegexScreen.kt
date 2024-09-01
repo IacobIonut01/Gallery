@@ -64,6 +64,7 @@ fun SetupTypeRegexScreen(
         title = stringResource(R.string.setup_type_regex_title),
         subtitle = stringResource(R.string.setup_type_regex_subtitle),
         icon = Icons.RegularExpression,
+        contentPadding = 0.dp,
         bottomBar = {
             OutlinedButton(
                 onClick = onGoBack

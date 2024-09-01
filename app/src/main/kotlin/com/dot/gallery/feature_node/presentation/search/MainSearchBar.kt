@@ -40,17 +40,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dokar.pinchzoomgrid.PinchZoomGridLayout
 import com.dokar.pinchzoomgrid.rememberPinchZoomGridState
@@ -61,6 +62,7 @@ import com.dot.gallery.core.Constants.cellsList
 import com.dot.gallery.core.Settings.Misc.rememberAutoHideSearchBar
 import com.dot.gallery.core.Settings.Misc.rememberGridSize
 import com.dot.gallery.core.Settings.Search.rememberSearchHistory
+import com.dot.gallery.core.presentation.components.EmptyMedia
 import com.dot.gallery.core.presentation.components.LoadingMedia
 import com.dot.gallery.feature_node.presentation.common.MediaViewModel
 import com.dot.gallery.feature_node.presentation.common.components.MediaGridView
@@ -68,12 +70,13 @@ import com.dot.gallery.feature_node.presentation.search.components.SearchBarElev
 import com.dot.gallery.feature_node.presentation.search.components.SearchBarElevation.Expanded
 import com.dot.gallery.feature_node.presentation.search.components.SearchHistory
 import com.dot.gallery.feature_node.presentation.util.Screen
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainSearchBar(
-    mediaViewModel: MediaViewModel,
     bottomPadding: Dp,
     selectionState: MutableState<Boolean>? = null,
     navigate: (String) -> Unit,
@@ -84,30 +87,41 @@ fun MainSearchBar(
 ) {
     var historySet by rememberSearchHistory()
     var query by rememberSaveable { mutableStateOf("") }
-    val mediaState by mediaViewModel.mediaState.collectAsStateWithLifecycle()
-    LaunchedEffect(mediaState) {
-        if (query.isNotEmpty()) {
+    val mediaViewModel: MediaViewModel = hiltViewModel<MediaViewModel>().also {
+        it.mediaFlow.collectAsStateWithLifecycle()
+    }
+    val state = mediaViewModel.searchMediaState.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(state.value.media) {
+        if (query.isNotEmpty() && state.value.media.isEmpty()) {
             mediaViewModel.queryMedia(query)
         }
     }
-    val state by mediaViewModel.searchMediaState.collectAsStateWithLifecycle()
+
     val alpha by animateFloatAsState(
         targetValue = if (selectionState != null && selectionState.value) 0.6f else 1f,
         label = "alpha"
     )
-    val scope = rememberCoroutineScope()
     val elevation by animateDpAsState(
         targetValue = if (activeState.value) Expanded() else Collapsed(),
         label = "elevation"
     )
-    LaunchedEffect(LocalConfiguration.current, activeState.value) {
+    LaunchedEffect(activeState.value) {
         if (selectionState == null) {
             toggleNavbar(!activeState.value)
         }
     }
     val hideSearchBarSetting by rememberAutoHideSearchBar()
-    val shouldHide by remember(isScrolling.value, hideSearchBarSetting) {
-        mutableStateOf(if (hideSearchBarSetting) isScrolling.value else false)
+
+    var shouldHide by remember { mutableStateOf(if (hideSearchBarSetting) isScrolling.value else false) }
+
+    LaunchedEffect(isScrolling.value) {
+        snapshotFlow { isScrolling.value }
+            .distinctUntilChanged()
+            .collectLatest {
+                shouldHide = if (hideSearchBarSetting) it else false
+            }
     }
 
     Box(
@@ -117,12 +131,8 @@ fun MainSearchBar(
             .alpha(alpha)
             .fillMaxWidth()
     ) {
-        /**
-         * TODO: fillMaxWidth with fixed lateral padding on the search container only
-         * It is not yet possible because of the material3 compose limitations
-         */
         val searchBarAlpha by animateFloatAsState(
-            targetValue = remember(shouldHide) { if (shouldHide) 0f else 1f },
+            targetValue = if (shouldHide) 0f else 1f,
             label = "searchBarAlpha"
         )
         val onActiveChange: (Boolean) -> Unit = { activeState.value = it }
@@ -130,33 +140,36 @@ fun MainSearchBar(
             dividerColor = Color.Transparent,
             containerColor = MaterialTheme.colorScheme.surfaceContainer,
         )
-        /**
-         * Searched content
-         */
+
         SearchBar(
             inputField = {
                 SearchBarDefaults.InputField(
                     query = query,
                     onQueryChange = {
-                        query = it
-                        if (it != mediaViewModel.lastQuery.value && mediaViewModel.lastQuery.value.isNotEmpty())
-                            mediaViewModel.clearQuery()
+                        scope.launch {
+                            query = it
+                            if (it != mediaViewModel.lastQuery.value && mediaViewModel.lastQuery.value.isNotEmpty())
+                                mediaViewModel.clearQuery()
+                        }
                     },
                     onSearch = {
                         if (it.isNotEmpty())
-                            historySet =
-                                historySet.toMutableSet().apply { add("${System.currentTimeMillis()}/$it") }
+                            historySet = historySet.toMutableSet().apply { add("${System.currentTimeMillis()}/$it") }
                         mediaViewModel.queryMedia(it)
                     },
                     expanded = activeState.value,
                     onExpandedChange = onActiveChange,
-                    enabled = (selectionState == null || !selectionState.value) && !shouldHide,
+                    enabled = remember(selectionState?.value, shouldHide) {
+                        (selectionState == null || !selectionState.value) && !shouldHide
+                    },
                     placeholder = {
                         Text(text = stringResource(id = R.string.searchbar_title))
                     },
                     leadingIcon = {
                         IconButton(
-                            enabled = selectionState == null,
+                            enabled = remember(selectionState) {
+                                selectionState == null
+                            },
                             onClick = {
                                 scope.launch {
                                     activeState.value = !activeState.value
@@ -164,8 +177,10 @@ fun MainSearchBar(
                                     mediaViewModel.clearQuery()
                                 }
                             }) {
-                            val leadingIcon = if (activeState.value)
-                                Icons.AutoMirrored.Outlined.ArrowBack else Icons.Outlined.Search
+                            val leadingIcon = remember(activeState.value) {
+                                if (activeState.value)
+                                    Icons.AutoMirrored.Outlined.ArrowBack else Icons.Outlined.Search
+                            }
                             Icon(
                                 imageVector = leadingIcon,
                                 modifier = Modifier.fillMaxHeight(),
@@ -175,7 +190,11 @@ fun MainSearchBar(
                     },
                     trailingIcon = {
                         Row {
-                            if (!activeState.value) menuItems?.invoke(this)
+                            androidx.compose.animation.AnimatedVisibility(
+                                visible = !activeState.value,
+                            ) {
+                                menuItems?.invoke(this@Row)
+                            }
                         }
                     },
                     interactionSource = remember { MutableInteractionSource() },
@@ -189,9 +208,6 @@ fun MainSearchBar(
             colors = colors,
             tonalElevation = elevation,
             content = {
-                /**
-                 * Recent searches
-                 */
                 val lastQueryIsEmpty =
                     remember(mediaViewModel.lastQuery.value) { mediaViewModel.lastQuery.value.isEmpty() }
                 AnimatedVisibility(
@@ -205,15 +221,12 @@ fun MainSearchBar(
                     }
                 }
 
-                /**
-                 * Searched content
-                 */
                 AnimatedVisibility(
                     visible = !lastQueryIsEmpty,
                     enter = enterAnimation,
                     exit = exitAnimation
                 ) {
-                    val mediaIsEmpty = remember(state) { state.media.isEmpty() && !state.isLoading }
+                    val mediaIsEmpty = remember(state) { state.value.media.isEmpty() && !state.value.isLoading }
                     if (mediaIsEmpty) {
                         Column(
                             modifier = Modifier
@@ -257,16 +270,18 @@ fun MainSearchBar(
                                 mediaState = state,
                                 paddingValues = pd,
                                 canScroll = canScroll,
-                                isScrolling = remember { mutableStateOf(false) }
-                            ) {
-                                navigate(Screen.MediaViewScreen.route + "?mediaId=${it.id}")
-                            }
+                                isScrolling = remember { mutableStateOf(false) },
+                                onMediaClick = {
+                                    navigate(Screen.MediaViewScreen.route + "?mediaId=${it.id}&query=true")
+                                },
+                                emptyContent = { EmptyMedia() }
+                            )
                             androidx.compose.animation.AnimatedVisibility(
-                                visible = state.isLoading,
+                                visible = state.value.isLoading,
                                 enter = enterAnimation,
                                 exit = exitAnimation
                             ) {
-                                LoadingMedia(paddingValues = pd)
+                                LoadingMedia()
                             }
                         }
 
@@ -277,13 +292,15 @@ fun MainSearchBar(
     }
 
     BackHandler(activeState.value) {
-        if (mediaViewModel.lastQuery.value.isEmpty()) {
-            activeState.value = false
-            query = ""
-            mediaViewModel.queryMedia(query)
-        } else {
-            query = ""
-            mediaViewModel.clearQuery()
+        scope.launch {
+            if (mediaViewModel.lastQuery.value.isEmpty()) {
+                activeState.value = false
+                query = ""
+                mediaViewModel.queryMedia(query)
+            } else {
+                query = ""
+                mediaViewModel.clearQuery()
+            }
         }
     }
 }

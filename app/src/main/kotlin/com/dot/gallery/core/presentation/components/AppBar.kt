@@ -5,6 +5,7 @@
 
 package com.dot.gallery.core.presentation.components
 
+import android.app.Activity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
@@ -41,17 +42,22 @@ import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.NavigationRailItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -67,6 +73,8 @@ import com.dot.gallery.core.Settings.Misc.rememberOldNavbar
 import com.dot.gallery.feature_node.presentation.util.NavigationItem
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.ui.core.icons.Albums
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 @Composable
 fun rememberNavigationItems(): List<NavigationItem> {
@@ -94,16 +102,18 @@ fun rememberNavigationItems(): List<NavigationItem> {
     }
 }
 
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Stable
 @Composable
 fun AppBarContainer(
-    windowSizeClass: WindowSizeClass,
     navController: NavController,
     bottomBarState: Boolean,
     paddingValues: PaddingValues,
     isScrolling: Boolean,
     content: @Composable () -> Unit,
 ) {
+    val context = LocalContext.current
+    val windowSizeClass = calculateWindowSizeClass(context as Activity)
     val backStackEntry by navController.currentBackStackEntryAsState()
     val bottomNavItems = rememberNavigationItems()
     val useNavRail by remember(windowSizeClass) {
@@ -141,8 +151,15 @@ fun AppBarContainer(
                 content()
             }
             val hideNavBarSetting by rememberAutoHideNavBar()
-            val showClassicNavbar by remember(useNavRail, isScrolling, bottomBarState, hideNavBarSetting) {
+            var showClassicNavbar by remember {
                 mutableStateOf(!useNavRail && bottomBarState && (!isScrolling || !hideNavBarSetting))
+            }
+            LaunchedEffect(useNavRail, isScrolling, bottomBarState, hideNavBarSetting) {
+                snapshotFlow {
+                    !useNavRail && bottomBarState && (!isScrolling || !hideNavBarSetting)
+                }.distinctUntilChanged().collectLatest {
+                    showClassicNavbar = it
+                }
             }
             AnimatedVisibility(
                 modifier = Modifier.align(Alignment.BottomCenter),
@@ -167,8 +184,15 @@ fun AppBarContainer(
         Box(modifier = Modifier.fillMaxSize()) {
             content()
             val hideNavBarSetting by rememberAutoHideNavBar()
-            val showNavbar by remember(bottomBarState, isScrolling, hideNavBarSetting) {
+            var showNavbar by remember(bottomBarState, isScrolling, hideNavBarSetting) {
                 mutableStateOf(bottomBarState && (!isScrolling || !hideNavBarSetting))
+            }
+            LaunchedEffect(bottomBarState, isScrolling, hideNavBarSetting) {
+                snapshotFlow {
+                    bottomBarState && (!isScrolling || !hideNavBarSetting)
+                }.distinctUntilChanged().collectLatest {
+                    showNavbar = it
+                }
             }
             AnimatedVisibility(
                 modifier = Modifier

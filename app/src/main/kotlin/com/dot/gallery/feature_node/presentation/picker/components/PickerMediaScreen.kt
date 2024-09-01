@@ -24,13 +24,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
-import com.dot.gallery.core.MediaState
-import com.dot.gallery.core.presentation.components.StickyHeader
+import com.dot.gallery.feature_node.domain.model.MediaState
+import com.dot.gallery.core.presentation.components.MediaItemHeader
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaItem
 import com.dot.gallery.feature_node.domain.model.isHeaderKey
 import com.dot.gallery.feature_node.presentation.common.components.MediaImage
-import com.dot.gallery.feature_node.presentation.util.FeedbackManager
+import com.dot.gallery.feature_node.presentation.util.rememberFeedbackManager
 import com.dot.gallery.ui.theme.Dimens
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -47,7 +47,7 @@ fun PickerMediaScreen(
     val state by mediaState.collectAsStateWithLifecycle()
     val gridState = rememberLazyGridState()
     val isCheckVisible = rememberSaveable { mutableStateOf(allowSelection) }
-    val feedbackManager = FeedbackManager.rememberFeedbackManager()
+    val feedbackManager = rememberFeedbackManager()
 
     LazyVerticalGrid(
         state = gridState,
@@ -66,17 +66,18 @@ fun PickerMediaScreen(
         ) { item ->
             when (item) {
                 is MediaItem.Header -> {
+
                     val isChecked = rememberSaveable { mutableStateOf(false) }
                     if (allowSelection) {
                         LaunchedEffect(selectedMedia.size) {
                             // Partial check of media items should not check the header
-                            isChecked.value = selectedMedia.containsAll(item.data)
+                            isChecked.value = selectedMedia.map { it.id }.containsAll(item.data)
                         }
                     }
                     val title = item.text
                         .replace("Today", stringToday)
                         .replace("Yesterday", stringYesterday)
-                    StickyHeader(
+                    MediaItemHeader(
                         date = title,
                         showAsBig = item.key.contains("big"),
                         isCheckVisible = isCheckVisible,
@@ -89,10 +90,10 @@ fun PickerMediaScreen(
                                 if (isChecked.value) {
                                     val toAdd = item.data.toMutableList().apply {
                                         // Avoid media from being added twice to selection
-                                        removeIf { selectedMedia.contains(it) }
+                                        removeIf { selectedMedia.map { it.id }.contains(it) }
                                     }
-                                    selectedMedia.addAll(toAdd)
-                                } else selectedMedia.removeAll(item.data)
+                                    selectedMedia.addAll(mediaState.value.media.filter { toAdd.contains(it.id) })
+                                } else selectedMedia.removeAll { item.data.contains(it.id) }
                             }
                         }
                     }

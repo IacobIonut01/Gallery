@@ -12,15 +12,16 @@ import android.os.Parcelable
 import android.webkit.MimeTypeMap
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
+import androidx.room.Entity
 import com.dot.gallery.core.Constants
 import com.dot.gallery.feature_node.presentation.util.getDate
-import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 import java.io.File
 import kotlin.random.Random
 
 @Immutable
 @Parcelize
+@Entity(tableName = "media", primaryKeys = ["id"])
 data class Media(
     val id: Long = 0,
     val label: String,
@@ -40,83 +41,10 @@ data class Media(
     val duration: String? = null,
 ) : Parcelable {
 
-    @IgnoredOnParcel
-    @Stable
-    val isVideo: Boolean = mimeType.startsWith("video/") && duration != null
-
-    @IgnoredOnParcel
-    @Stable
-    val isImage: Boolean = mimeType.startsWith("image/")
-
-    @IgnoredOnParcel
-    @Stable
-    val isTrashed: Boolean = trashed == 1
-
-    @IgnoredOnParcel
-    @Stable
-    val isFavorite: Boolean = favorite == 1
-
     @Stable
     override fun toString(): String {
         return "$id, $path, $fullDate, $mimeType, favorite=$favorite"
     }
-
-    /**
-     * Used to determine if the Media object is not accessible
-     * via MediaStore.
-     * This happens when the user tries to open media from an app
-     * using external sources (in our case, Gallery Media Viewer), but
-     * the specific media is only available internally in that app
-     * (Android/data(OR media)/com.package.name/)
-     *
-     * If it's readUriOnly then we know that we should expect a barebone
-     * Media object with limited functionality (no favorites, trash, timestamp etc)
-     */
-    @IgnoredOnParcel
-    @Stable
-    val readUriOnly: Boolean = albumID == -99L && albumLabel == ""
-
-    /**
-     * Determine if the current media is a raw format
-     *
-     * Checks if [mimeType] starts with "image/x-" or "image/vnd."
-     *
-     * Most used formats:
-     * - ARW: image/x-sony-arw
-     * - CR2: image/x-canon-cr2
-     * - CRW: image/x-canon-crw
-     * - DCR: image/x-kodak-dcr
-     * - DNG: image/x-adobe-dng
-     * - ERF: image/x-epson-erf
-     * - K25: image/x-kodak-k25
-     * - KDC: image/x-kodak-kdc
-     * - MRW: image/x-minolta-mrw
-     * - NEF: image/x-nikon-nef
-     * - ORF: image/x-olympus-orf
-     * - PEF: image/x-pentax-pef
-     * - RAF: image/x-fuji-raf
-     * - RAW: image/x-panasonic-raw
-     * - SR2: image/x-sony-sr2
-     * - SRF: image/x-sony-srf
-     * - X3F: image/x-sigma-x3f
-     *
-     * Other proprietary image types in the standard:
-     * image/vnd.manufacturer.filename_extension for instance for NEF by Nikon and .mrv for Minolta:
-     * - NEF: image/vnd.nikon.nef
-     * - Minolta: image/vnd.minolta.mrw
-     */
-    @IgnoredOnParcel
-    @Stable
-    val isRaw: Boolean =
-        mimeType.isNotBlank() && (mimeType.startsWith("image/x-") || mimeType.startsWith("image/vnd."))
-
-    @IgnoredOnParcel
-    @Stable
-    val fileExtension: String = label.substringAfterLast(".").removePrefix(".")
-
-    @IgnoredOnParcel
-    @Stable
-    val volume: String = path.substringBeforeLast("/").removeSuffix(relativePath.removeSuffix("/"))
 
     companion object {
         fun createFromUri(context: Context, uri: Uri): Media? {
@@ -171,3 +99,60 @@ data class Media(
         }
     }
 }
+
+/**
+ * Determine if the current media is a raw format
+ *
+ * Checks if [Media.mimeType] starts with "image/x-" or "image/vnd."
+ *
+ * Most used formats:
+ * - ARW: image/x-sony-arw
+ * - CR2: image/x-canon-cr2
+ * - CRW: image/x-canon-crw
+ * - DCR: image/x-kodak-dcr
+ * - DNG: image/x-adobe-dng
+ * - ERF: image/x-epson-erf
+ * - K25: image/x-kodak-k25
+ * - KDC: image/x-kodak-kdc
+ * - MRW: image/x-minolta-mrw
+ * - NEF: image/x-nikon-nef
+ * - ORF: image/x-olympus-orf
+ * - PEF: image/x-pentax-pef
+ * - RAF: image/x-fuji-raf
+ * - RAW: image/x-panasonic-raw
+ * - SR2: image/x-sony-sr2
+ * - SRF: image/x-sony-srf
+ * - X3F: image/x-sigma-x3f
+ *
+ * Other proprietary image types in the standard:
+ * image/vnd.manufacturer.filename_extension for instance for NEF by Nikon and .mrv for Minolta:
+ * - NEF: image/vnd.nikon.nef
+ * - Minolta: image/vnd.minolta.mrw
+ */
+val Media.isRaw: Boolean get() =
+    mimeType.isNotBlank() && (mimeType.startsWith("image/x-") || mimeType.startsWith("image/vnd."))
+
+val Media.fileExtension: String get() = label.substringAfterLast(".").removePrefix(".")
+
+val Media.volume: String get() = path.substringBeforeLast("/").removeSuffix(relativePath.removeSuffix("/"))
+
+/**
+ * Used to determine if the Media object is not accessible
+ * via MediaStore.
+ * This happens when the user tries to open media from an app
+ * using external sources (in our case, Gallery Media Viewer), but
+ * the specific media is only available internally in that app
+ * (Android/data(OR media)/com.package.name/)
+ *
+ * If it's readUriOnly then we know that we should expect a barebone
+ * Media object with limited functionality (no favorites, trash, timestamp etc)
+ */
+val Media.readUriOnly: Boolean get() = albumID == -99L && albumLabel == ""
+
+val Media.isVideo: Boolean get() = mimeType.startsWith("video/") && duration != null
+
+val Media.isImage: Boolean get() = mimeType.startsWith("image/")
+
+val Media.isTrashed: Boolean get() = trashed == 1
+
+val Media.isFavorite: Boolean get() = favorite == 1

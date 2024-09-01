@@ -16,23 +16,20 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
-import com.dot.gallery.core.MediaState
+import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.common.components.OptionItem
 import com.dot.gallery.feature_node.presentation.common.components.OptionSheet
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 @Composable
@@ -40,13 +37,12 @@ fun TimelineNavActions(
     albumId: Long,
     handler: MediaHandleUseCase,
     expandedDropDown: MutableState<Boolean>,
-    mediaState: StateFlow<MediaState>,
+    mediaState: MediaState,
     selectedMedia: SnapshotStateList<Media>,
     selectionState: MutableState<Boolean>,
     navigate: (route: String) -> Unit,
     navigateUp: () -> Unit
 ) {
-    val state by mediaState.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val result = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartIntentSenderForResult(),
@@ -75,7 +71,7 @@ fun TimelineNavActions(
                 onClick = {
                     selectionState.value = !selectionState.value
                     if (selectionState.value)
-                        selectedMedia.addAll(state.media)
+                        selectedMedia.addAll(mediaState.media)
                     else
                         selectedMedia.clear()
                     expandedDropDown.value = false
@@ -91,7 +87,7 @@ fun TimelineNavActions(
                             scope.launch {
                                 handler.trashMedia(
                                     result = result,
-                                    mediaList = state.media,
+                                    mediaList = mediaState.media,
                                     trash = true
                                 )
                                 navigateUp()

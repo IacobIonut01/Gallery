@@ -12,11 +12,12 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.dot.gallery.core.AlbumState
+import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.presentation.mediaview.MediaViewScreen
 import com.dot.gallery.feature_node.presentation.util.toggleOrientation
 import com.dot.gallery.ui.theme.GalleryTheme
@@ -47,8 +48,8 @@ class StandaloneActivity : ComponentActivity() {
                         reviewMode = action.lowercase().contains("review")
                         dataList = uriList.toList()
                     }
-                    val vaults by viewModel.vaults.collectAsStateWithLifecycle()
-                    val mediaState by viewModel.mediaState.collectAsStateWithLifecycle()
+                    val vaults = viewModel.vaults.collectAsStateWithLifecycle()
+                    val mediaState = viewModel.mediaState.value.collectAsStateWithLifecycle()
                     MediaViewScreen(
                         navigateUp = { finish() },
                         toggleRotate = ::toggleOrientation,
@@ -56,10 +57,12 @@ class StandaloneActivity : ComponentActivity() {
                         isStandalone = true,
                         mediaId = viewModel.mediaId,
                         mediaState = mediaState,
-                        albumsState = AlbumState(),
+                        albumsState = remember {
+                            mutableStateOf(AlbumState())
+                        },
                         handler = viewModel.handler,
                         addMedia = viewModel::addMedia,
-                        vaults = vaults
+                        vaultState = vaults
                     )
                 }
                 BackHandler {

@@ -9,12 +9,12 @@ import android.app.Application
 import android.content.ContentResolver
 import android.content.Context
 import androidx.room.Room
+import androidx.work.WorkManager
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
 import com.dot.gallery.feature_node.data.data_source.KeychainHolder
 import com.dot.gallery.feature_node.data.repository.MediaRepositoryImpl
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
-import com.dot.gallery.feature_node.domain.use_case.MediaUseCases
-import com.dot.gallery.feature_node.domain.use_case.VaultUseCases
+import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -46,24 +46,25 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideMediaUseCases(repository: MediaRepository, @ApplicationContext context: Context): MediaUseCases {
-        return MediaUseCases(context, repository)
+    fun provideMediaHandleUseCase(repository: MediaRepository, @ApplicationContext context: Context): MediaHandleUseCase {
+        return MediaHandleUseCase(repository, context)
     }
 
     @Provides
     @Singleton
-    fun provideVaultUseCases(repository: MediaRepository): VaultUseCases {
-        return VaultUseCases(repository)
+    fun provideWorkManager(@ApplicationContext context: Context): WorkManager {
+        return WorkManager.getInstance(context)
     }
 
     @Provides
     @Singleton
     fun provideMediaRepository(
         @ApplicationContext context: Context,
+        workManager: WorkManager,
         database: InternalDatabase,
         keychainHolder: KeychainHolder
     ): MediaRepository {
-        return MediaRepositoryImpl(context, database, keychainHolder)
+        return MediaRepositoryImpl(context, workManager, database, keychainHolder)
     }
 
 }

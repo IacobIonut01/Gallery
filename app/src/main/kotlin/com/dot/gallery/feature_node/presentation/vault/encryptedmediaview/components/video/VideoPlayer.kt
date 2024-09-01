@@ -6,6 +6,7 @@
 package com.dot.gallery.feature_node.presentation.vault.encryptedmediaview.components.video
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
@@ -30,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.FileProvider
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -40,19 +42,13 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
+import com.dot.gallery.BuildConfig
 import com.dot.gallery.feature_node.domain.model.EncryptedMedia
 import kotlinx.coroutines.delay
-import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileDescriptor
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import java.io.InputStream
-import java.net.MalformedURLException
-import java.net.URISyntaxException
-import java.net.URL
-import java.net.URLConnection
-import java.net.URLStreamHandler
 import kotlin.time.Duration.Companion.seconds
 
 
@@ -71,33 +67,19 @@ fun encryptedMediaToFileDescriptor(encryptedMedia: EncryptedMedia): FileDescript
 }
 
 object UriByteDataHelper {
-    fun getUri(data: ByteArray?, isVideo: Boolean): Uri {
-        try {
-            val url = URL(null, "bytes:///" + if (isVideo) "video" else "image", BytesHandler(data))
-            return Uri.parse(url.toURI().toString())
-        } catch (e: MalformedURLException) {
-            throw RuntimeException(e)
-        } catch (e: URISyntaxException) {
-            throw RuntimeException(e)
-        }
-    }
+    fun getUri(context: Context, data: ByteArray, extension: String, isVideo: Boolean): Uri {
+        // Create a temporary file
+        val tempFile =
+            File(context.cacheDir, "shared_${if (isVideo) "video" else "image"}.${extension}")
 
-    private class BytesHandler(private val data: ByteArray?) : URLStreamHandler() {
-        override fun openConnection(url: URL): URLConnection {
-            return object : URLConnection(url) {
-                override fun connect() {}
-                override fun getInputStream(): InputStream {
-                    return ByteArrayInputStream(data)
-                }
-            }
+        // Write the ByteArray to the temporary file
+        FileOutputStream(tempFile).use { fileOutputStream ->
+            fileOutputStream.write(data)
+            fileOutputStream.flush()
         }
-    }
 
-    private class ByteUrlConnection(url: URL, private val data: ByteArray?) : URLConnection(url) {
-        override fun connect() {}
-        override fun getInputStream(): InputStream {
-            return ByteArrayInputStream(data)
-        }
+        // Get the URI of the temporary file using FileProvider
+        return FileProvider.getUriForFile(context, BuildConfig.CONTENT_AUTHORITY, tempFile)
     }
 }
 
@@ -134,7 +116,16 @@ fun VideoPlayer(
             .build().apply {
                 videoScalingMode = C.VIDEO_SCALING_MODE_SCALE_TO_FIT
                 repeatMode = Player.REPEAT_MODE_ONE
-                setMediaItem(MediaItem.fromUri(UriByteDataHelper.getUri(media.bytes, true)))
+                setMediaItem(
+                    MediaItem.fromUri(
+                        UriByteDataHelper.getUri(
+                            context = context,
+                            data = media.bytes,
+                            extension = media.fileExtension,
+                            isVideo = true
+                        )
+                    )
+                )
                 prepare()
             }
     }

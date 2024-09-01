@@ -27,7 +27,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,12 +43,13 @@ import androidx.compose.ui.unit.dp
 import com.dot.gallery.core.Constants.Animation
 import com.dot.gallery.core.presentation.components.CheckBox
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.model.isFavorite
+import com.dot.gallery.feature_node.domain.model.isVideo
 import com.dot.gallery.feature_node.presentation.mediaview.components.video.VideoDurationHeader
 import com.github.panpf.sketch.AsyncImage
 import com.github.panpf.sketch.request.ComposableImageRequest
 import com.github.panpf.sketch.resize.Scale
 
-@Stable
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MediaImage(
@@ -131,9 +131,7 @@ fun MediaImage(
         }
 
         AnimatedVisibility(
-            visible = remember(media) {
-                media.duration != null
-            },
+            visible = remember(media) { media.isVideo },
             enter = Animation.enterAnimation,
             exit = Animation.exitAnimation,
             modifier = Modifier.align(Alignment.TopEnd)

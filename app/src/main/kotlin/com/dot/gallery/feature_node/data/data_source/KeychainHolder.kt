@@ -32,23 +32,41 @@ class KeychainHolder @Inject constructor(
         .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
         .build()
 
-    fun writeVaultInfo(vault: Vault, onSuccess: () -> Unit = {}) {
-        val vaultFolder = File(filesDir, vault.uuid.toString())
-        if (!vaultFolder.exists()) {
-            vaultFolder.mkdir()
-        }
+    fun writeVaultInfo(vault: Vault, onSuccess: () -> Unit = {}, onFailed: (reason: String) -> Unit = {}) {
+        try {
+            val vaultFolder = File(filesDir, vault.uuid.toString())
+            if (!vaultFolder.exists()) {
+                vaultFolder.mkdirs()
+            }
 
-        File(vaultFolder, VAULT_INFO_FILE_NAME).apply {
-            if (exists()) delete()
-            encrypt(vault)
+            File(vaultFolder, VAULT_INFO_FILE_NAME).apply {
+                if (exists()) delete()
+                encrypt(vault)
+                onSuccess()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            onFailed(e.message.toString())
         }
-        onSuccess()
+    }
+
+    fun deleteVault(vault: Vault, onSuccess: () -> Unit, onFailed: (reason: String) -> Unit) {
+        try {
+            val vaultFolder = vaultFolder(vault)
+            if (vaultFolder.exists()) {
+                vaultFolder.deleteRecursively()
+            }
+            onSuccess()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            onFailed(e.message.toString())
+        }
     }
 
     fun checkVaultFolder(vault: Vault) {
         val mainFolder = File(filesDir, vault.uuid.toString())
         if (!mainFolder.exists()) {
-            mainFolder.mkdir()
+            mainFolder.mkdirs()
             writeVaultInfo(vault)
         }
     }
@@ -62,7 +80,6 @@ class KeychainHolder @Inject constructor(
     ).build().openFileInput().use {
         fromByteArray(it.readBytes())
     }
-
 
     @Throws(GeneralSecurityException::class, IOException::class, FileNotFoundException::class, UserNotAuthenticatedException::class)
     fun <T : Serializable> File.encrypt(data: T) {

@@ -14,6 +14,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.dp
 import com.dot.gallery.R
 import com.dot.gallery.core.presentation.components.SetupWizard
 import com.dot.gallery.feature_node.domain.model.Album
@@ -32,6 +33,7 @@ fun SetupConfirmationScreen(
         title = stringResource(R.string.setup_confirmation_title),
         subtitle = stringResource(R.string.setup_confirmation_subtitle),
         icon = Icons.Outlined.Checklist,
+        contentPadding = 0.dp,
         bottomBar = {
             OutlinedButton(
                 onClick = onGoBack

@@ -27,6 +27,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.ui.theme.GalleryTheme
 
@@ -36,6 +37,7 @@ fun SetupWizard(
     icon: ImageVector,
     title: String,
     subtitle: String,
+    contentPadding: Dp = 32.dp,
     content: @Composable () -> Unit,
     bottomBar: @Composable () -> Unit
 ) {
@@ -96,6 +98,8 @@ fun SetupWizard(
                 modifier = Modifier
                     .padding(horizontal = 32.dp)
                     .padding(bottom = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(contentPadding),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 content()
             }
@@ -109,6 +113,7 @@ fun SetupWizard(
     painter: Painter,
     title: String,
     subtitle: String,
+    contentPadding: Dp = 32.dp,
     content: @Composable () -> Unit,
     bottomBar: @Composable () -> Unit
 ) {
@@ -169,6 +174,8 @@ fun SetupWizard(
                 modifier = Modifier
                     .padding(horizontal = 32.dp)
                     .padding(bottom = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(contentPadding),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 content()
             }

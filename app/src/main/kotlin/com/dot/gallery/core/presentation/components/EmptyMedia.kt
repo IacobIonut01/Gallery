@@ -5,7 +5,6 @@
 
 package com.dot.gallery.core.presentation.components
 
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -20,15 +19,13 @@ import com.dot.gallery.R
 @Composable
 fun EmptyMedia(
     modifier: Modifier = Modifier,
-    paddingValues: PaddingValues = PaddingValues(16.dp),
     title: String = stringResource(R.string.no_media_title),
 ) = LoadingMedia(
     modifier = modifier,
-    paddingValues = paddingValues,
     shouldShimmer = false,
-    topContent = {
+    bottomContent = {
         Text(
-            modifier = Modifier.fillMaxWidth().padding(16.dp).padding(top = paddingValues.calculateTopPadding() / 2),
+            modifier = Modifier.fillMaxWidth().padding(32.dp),
             text = title,
             style = MaterialTheme.typography.titleLarge,
             textAlign = TextAlign.Center

@@ -8,6 +8,7 @@ package com.dot.gallery.feature_node.presentation.util
 import androidx.exifinterface.media.ExifInterface
 import java.math.RoundingMode
 import java.text.DecimalFormat
+import java.util.Locale
 
 class ExifMetadata(exifInterface: ExifInterface) {
     val manufacturerName: String? =
@@ -50,8 +51,7 @@ class ExifMetadata(exifInterface: ExifInterface) {
 
     val formattedCords: String?
         get() = if (gpsLatLong != null) String.format(
-            "%.3f, %.3f",
-            gpsLatLong[0], gpsLatLong[1]
+            Locale.getDefault(), "%.3f, %.3f", gpsLatLong[0], gpsLatLong[1]
         ) else null
 
 }

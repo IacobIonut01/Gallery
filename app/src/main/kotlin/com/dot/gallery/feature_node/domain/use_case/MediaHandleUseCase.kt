@@ -16,7 +16,7 @@ import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.presentation.util.mediaPair
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
 
 class MediaHandleUseCase(
@@ -48,25 +48,22 @@ class MediaHandleUseCase(
         result: ActivityResultLauncher<IntentSenderRequest>,
         mediaList: List<Media>,
         trash: Boolean = true
-    ) {
-        withContext(Dispatchers.Default) {
-            getTrashEnabled(context).collectLatest { isTrashEnabled ->
-                /**
-                 * Trash media only if user enabled the Trash Can
-                 * Or if user wants to remove existing items from the trash
-                 * */
-                if ((isTrashEnabled || !trash)) {
-                    val pair = mediaList.mediaPair()
-                    if (pair.first.isNotEmpty()) {
-                        repository.trashMedia(result, mediaList, trash)
-                    }
-                    if (pair.second.isNotEmpty()) {
-                        repository.deleteMedia(result, mediaList)
-                    }
-                } else {
-                    repository.deleteMedia(result, mediaList)
-                }
+    ) = withContext(Dispatchers.Default) {
+        val isTrashEnabled = getTrashEnabled(context).firstOrNull() ?: true
+        /**
+         * Trash media only if user enabled the Trash Can
+         * Or if user wants to remove existing items from the trash
+         * */
+        if ((isTrashEnabled || !trash)) {
+            val pair = mediaList.mediaPair()
+            if (pair.first.isNotEmpty()) {
+                repository.trashMedia(result, mediaList, trash)
             }
+            if (pair.second.isNotEmpty()) {
+                repository.deleteMedia(result, mediaList)
+            }
+        } else {
+            repository.deleteMedia(result, mediaList)
         }
     }
 

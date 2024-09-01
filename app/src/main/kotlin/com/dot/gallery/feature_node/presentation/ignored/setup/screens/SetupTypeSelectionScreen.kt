@@ -27,6 +27,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -54,9 +55,9 @@ import androidx.graphics.shapes.RoundedPolygon
 import androidx.graphics.shapes.star
 import androidx.graphics.shapes.toPath
 import com.dot.gallery.R
-import com.dot.gallery.core.AlbumState
 import com.dot.gallery.core.presentation.components.SetupWizard
 import com.dot.gallery.feature_node.domain.model.Album
+import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.domain.model.IgnoredAlbum
 import com.dot.gallery.feature_node.presentation.ignored.setup.SelectAlbumSheet
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
@@ -69,7 +70,7 @@ fun SetupTypeSelectionScreen(
     onNext: () -> Unit,
     initialAlbum: Album?,
     ignoredAlbums: List<IgnoredAlbum>,
-    albumsState: AlbumState,
+    albumsState: State<AlbumState>,
     onAlbumChanged: (Album?) -> Unit,
 ) {
     var album by remember { mutableStateOf(initialAlbum) }
@@ -81,6 +82,7 @@ fun SetupTypeSelectionScreen(
         title = stringResource(R.string.setup_type_selection_title),
         subtitle = stringResource(R.string.setup_type_selection_subtitle),
         icon = Icons.Outlined.PhotoAlbum,
+        contentPadding = 0.dp,
         bottomBar = {
             OutlinedButton(
                 onClick = onGoBack
@@ -205,7 +207,7 @@ fun SetupTypeSelectionScreen(
             SelectAlbumSheet(
                 sheetState = pickAlbumState,
                 ignoredAlbums = ignoredAlbums,
-                albumState = albumsState,
+                albumState = albumsState.value,
             ) { pickedAlbum ->
                 album = pickedAlbum
                 onAlbumChanged(pickedAlbum)

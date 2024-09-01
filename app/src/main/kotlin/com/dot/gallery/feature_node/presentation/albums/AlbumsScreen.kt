@@ -5,6 +5,9 @@
 
 package com.dot.gallery.feature_node.presentation.albums
 
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.IntentSenderRequest
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -24,45 +27,55 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dokar.pinchzoomgrid.PinchZoomGridLayout
 import com.dokar.pinchzoomgrid.rememberPinchZoomGridState
 import com.dot.gallery.R
+import com.dot.gallery.feature_node.domain.model.AlbumState
+import com.dot.gallery.core.Constants.Animation.enterAnimation
+import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.Constants.albumCellsList
+import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.core.Settings.Album.rememberAlbumGridSize
 import com.dot.gallery.core.Settings.Album.rememberLastSort
-import com.dot.gallery.core.presentation.components.EmptyMedia
+import com.dot.gallery.core.presentation.components.EmptyAlbum
 import com.dot.gallery.core.presentation.components.Error
 import com.dot.gallery.core.presentation.components.FilterButton
 import com.dot.gallery.core.presentation.components.FilterKind
+import com.dot.gallery.core.presentation.components.FilterOption
+import com.dot.gallery.core.presentation.components.LoadingAlbum
+import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.util.MediaOrder
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumComponent
 import com.dot.gallery.feature_node.presentation.albums.components.CarouselPinnedAlbums
-import com.dot.gallery.feature_node.presentation.common.MediaViewModel
 import com.dot.gallery.feature_node.presentation.search.MainSearchBar
 import com.dot.gallery.feature_node.presentation.util.Screen
+import com.dot.gallery.feature_node.presentation.util.rememberActivityResult
 
 @Composable
 fun AlbumsScreen(
     navigate: (route: String) -> Unit,
-    mediaViewModel: MediaViewModel,
     toggleNavbar: (Boolean) -> Unit,
+    mediaState: State<MediaState>,
+    albumsState: State<AlbumState>,
     paddingValues: PaddingValues,
-    viewModel: AlbumsViewModel,
+    filterOptions: SnapshotStateList<FilterOption>,
     isScrolling: MutableState<Boolean>,
-    searchBarActive: MutableState<Boolean>
+    searchBarActive: MutableState<Boolean>,
+    onAlbumClick: (Album) -> Unit,
+    onAlbumLongClick: (Album) -> Unit,
+    onMoveAlbumToTrash: (ActivityResultLauncher<IntentSenderRequest>, Album) -> Unit
 ) {
-    val mediaState by mediaViewModel.mediaState.collectAsStateWithLifecycle()
-    val state by viewModel.unPinnedAlbumsState.collectAsStateWithLifecycle()
-    val pinnedState by viewModel.pinnedAlbumState.collectAsStateWithLifecycle()
-    val filterOptions = viewModel.rememberFilters()
     var lastCellIndex by rememberAlbumGridSize()
 
     val pinchState = rememberPinchZoomGridState(
@@ -85,10 +98,11 @@ fun AlbumsScreen(
         )
     }
 
+    var finalPaddingValues by remember(paddingValues) { mutableStateOf(paddingValues) }
+
     Scaffold(
         topBar = {
             MainSearchBar(
-                mediaViewModel = mediaViewModel,
                 bottomPadding = paddingValues.calculateBottomPadding(),
                 navigate = navigate,
                 toggleNavbar = toggleNavbar,
@@ -103,7 +117,13 @@ fun AlbumsScreen(
                 }
             }
         }
-    ) {
+    ) { innerPaddingValues ->
+        LaunchedEffect(innerPaddingValues) {
+            finalPaddingValues = PaddingValues(
+                top = innerPaddingValues.calculateTopPadding(),
+                bottom = paddingValues.calculateBottomPadding() + 16.dp + 64.dp
+            )
+        }
         PinchZoomGridLayout(state = pinchState) {
             LaunchedEffect(gridState.isScrollInProgress) {
                 isScrolling.value = gridState.isScrollInProgress
@@ -114,17 +134,18 @@ fun AlbumsScreen(
                     .padding(horizontal = 8.dp)
                     .fillMaxSize(),
                 columns = gridCells,
-                contentPadding = PaddingValues(
-                    top = it.calculateTopPadding(),
-                    bottom = paddingValues.calculateBottomPadding() + 16.dp + 64.dp
-                ),
+                contentPadding = finalPaddingValues,
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                if (pinnedState.albums.isNotEmpty()) {
-                    item(
-                        span = { GridItemSpan(maxLineSpan) },
-                        key = "pinnedAlbums"
+                item(
+                    span = { GridItemSpan(maxLineSpan) },
+                    key = "pinnedAlbums"
+                ) {
+                    AnimatedVisibility(
+                        visible = albumsState.value.albumsPinned.isNotEmpty(),
+                        enter = enterAnimation,
+                        exit = exitAnimation
                     ) {
                         Column {
                             Text(
@@ -137,17 +158,21 @@ fun AlbumsScreen(
                                 fontWeight = FontWeight.Medium
                             )
                             CarouselPinnedAlbums(
-                                albumList = pinnedState.albums,
-                                onAlbumClick = viewModel.onAlbumClick(navigate),
-                                onAlbumLongClick = viewModel.onAlbumLongClick
+                                albumList = albumsState.value.albumsPinned,
+                                onAlbumClick = onAlbumClick,
+                                onAlbumLongClick = onAlbumLongClick
                             )
                         }
                     }
                 }
-                if (state.albums.isNotEmpty()) {
-                    item(
-                        span = { GridItemSpan(maxLineSpan) },
-                        key = "filterButton"
+                item(
+                    span = { GridItemSpan(maxLineSpan) },
+                    key = "filterButton"
+                ) {
+                    AnimatedVisibility(
+                        visible = albumsState.value.albumsUnpinned.isNotEmpty(),
+                        enter = enterAnimation,
+                        exit = exitAnimation
                     ) {
                         FilterButton(
                             modifier = Modifier.pinchItem(key = "filterButton"),
@@ -156,21 +181,29 @@ fun AlbumsScreen(
                     }
                 }
                 items(
-                    items = state.albums,
+                    items = albumsState.value.albumsUnpinned,
                     key = { item -> item.toString() }
                 ) { item ->
+                    val trashResult = rememberActivityResult()
                     AlbumComponent(
                         modifier = Modifier.pinchItem(key = item.toString()),
                         album = item,
-                        onItemClick = viewModel.onAlbumClick(navigate),
-                        onTogglePinClick = viewModel.onAlbumLongClick
+                        onItemClick = onAlbumClick,
+                        onTogglePinClick = onAlbumLongClick,
+                        onMoveAlbumToTrash = {
+                            onMoveAlbumToTrash(trashResult, it)
+                        }
                     )
                 }
 
-                if (state.albums.isNotEmpty()) {
-                    item(
-                        span = { GridItemSpan(maxLineSpan) },
-                        key = "albumDetails"
+                item(
+                    span = { GridItemSpan(maxLineSpan) },
+                    key = "albumDetails"
+                ) {
+                    AnimatedVisibility(
+                        visible = mediaState.value.media.isNotEmpty() && albumsState.value.albums.isNotEmpty(),
+                        enter = enterAnimation,
+                        exit = exitAnimation
                     ) {
                         Text(
                             modifier = Modifier
@@ -178,21 +211,52 @@ fun AlbumsScreen(
                                 .pinchItem(key = "albumDetails")
                                 .padding(horizontal = 8.dp)
                                 .padding(vertical = 24.dp),
-                            text = stringResource(R.string.images_videos, mediaState.media.size),
+                            text = stringResource(
+                                R.string.images_videos,
+                                mediaState.value.media.size
+                            ),
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Medium,
                             textAlign = TextAlign.Center
                         )
                     }
                 }
+
+                item(
+                    span = { GridItemSpan(maxLineSpan) },
+                    key = "emptyAlbums"
+                ) {
+                    AnimatedVisibility(
+                        visible = albumsState.value.albums.isEmpty() && albumsState.value.error.isEmpty(),
+                        enter = enterAnimation,
+                        exit = exitAnimation
+                    ) {
+                        EmptyAlbum()
+                    }
+                }
+
+                item(
+                    span = { GridItemSpan(maxLineSpan) },
+                    key = "loadingAlbums"
+                ) {
+                    AnimatedVisibility(
+                        visible = albumsState.value.isLoading,
+                        enter = enterAnimation,
+                        exit = exitAnimation
+                    ) {
+                        LoadingAlbum()
+                    }
+                }
             }
         }
-        /** Error State Handling Block **/
-        if (state.error.isNotEmpty()) {
-            Error(errorMessage = state.error)
-        } else if (state.albums.isEmpty() && pinnedState.albums.isEmpty()) {
-            EmptyMedia(modifier = Modifier.fillMaxSize())
-        }
-        /** ************ **/
     }
+    /** Error State Handling Block **/
+    AnimatedVisibility(
+        visible = albumsState.value.error.isNotEmpty(),
+        enter = enterAnimation,
+        exit = exitAnimation
+    ) {
+        Error(errorMessage = albumsState.value.error)
+    }
+    /** ************ **/
 }

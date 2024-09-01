@@ -18,6 +18,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
 import androidx.media3.exoplayer.ExoPlayer
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.model.isVideo
 import com.dot.gallery.feature_node.presentation.mediaview.components.video.VideoPlayer
 
 @Stable
@@ -28,12 +29,14 @@ fun MediaPreviewComponent(
     uiEnabled: Boolean,
     playWhenReady: Boolean,
     onItemClick: () -> Unit,
+    onSwipeDown: () -> Unit,
     videoController: @Composable (ExoPlayer, MutableState<Boolean>, MutableLongState, Long, Int, Float) -> Unit,
 ) {
     Box(
         modifier = Modifier.fillMaxSize(),
     ) {
         AnimatedVisibility(
+            modifier = Modifier.fillMaxSize(),
             visible = media.isVideo,
             enter = fadeIn(),
             exit = fadeOut()
@@ -42,7 +45,8 @@ fun MediaPreviewComponent(
                 media = media,
                 playWhenReady = playWhenReady,
                 videoController = videoController,
-                onItemClick = onItemClick
+                onItemClick = onItemClick,
+                onSwipeDown = onSwipeDown
             )
         }
 
@@ -54,7 +58,8 @@ fun MediaPreviewComponent(
             ZoomablePagerImage(
                 media = media,
                 uiEnabled = uiEnabled,
-                onItemClick = onItemClick
+                onItemClick = onItemClick,
+                onSwipeDown = onSwipeDown
             )
         }
     }

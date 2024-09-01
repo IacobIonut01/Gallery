@@ -6,13 +6,14 @@
 package com.dot.gallery
 
 import android.app.Application
+import androidx.hilt.work.HiltWorkerFactory
+import androidx.work.Configuration
 import com.dot.gallery.core.decoder.supportHeifDecoder
 import com.dot.gallery.core.decoder.supportJxlDecoder
 import com.github.panpf.sketch.PlatformContext
 import com.github.panpf.sketch.SingletonSketch
 import com.github.panpf.sketch.Sketch
 import com.github.panpf.sketch.cache.DiskCache
-import com.github.panpf.sketch.cache.MemoryCache
 import com.github.panpf.sketch.decode.supportAnimatedGif
 import com.github.panpf.sketch.decode.supportAnimatedHeif
 import com.github.panpf.sketch.decode.supportAnimatedWebp
@@ -24,15 +25,17 @@ import com.github.panpf.sketch.request.supportSaveCellularTraffic
 import com.github.panpf.sketch.util.appCacheDirectory
 import dagger.hilt.android.HiltAndroidApp
 import okio.FileSystem
+import javax.inject.Inject
 
 @HiltAndroidApp
-class GalleryApp : Application(), SingletonSketch.Factory {
+class GalleryApp : Application(), SingletonSketch.Factory, Configuration.Provider {
 
     override fun createSketch(context: PlatformContext): Sketch = Sketch.Builder(this).apply {
         httpStack(KtorStack())
         components {
             supportSaveCellularTraffic()
             supportPauseLoadWhenScrolling()
+            //supportThumbnailDecoder()
             supportSvg()
             supportVideoFrame()
             supportAnimatedGif()
@@ -47,7 +50,14 @@ class GalleryApp : Application(), SingletonSketch.Factory {
 
         resultCache(diskCache)
         downloadCache(diskCache)
-        memoryCache(MemoryCache.Builder(context).maxSizePercent(0.75).build())
     }.build()
+
+    @Inject
+    lateinit var workerFactory: HiltWorkerFactory
+
+    override val workManagerConfiguration: Configuration
+        get() = Configuration.Builder()
+            .setWorkerFactory(workerFactory)
+            .build()
 
 }

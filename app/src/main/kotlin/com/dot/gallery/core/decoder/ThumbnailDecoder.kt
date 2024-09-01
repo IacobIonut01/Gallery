@@ -1,7 +1,7 @@
-/*package com.dot.gallery.core.decoder
+package com.dot.gallery.core.decoder
 
-import coil3.decode.DecodeUtils
-import coil3.svg.isSvg
+import com.dot.gallery.core.decoder.SketchHeifDecoder.Factory.Companion.HEIF_MIMETYPES
+import com.dot.gallery.core.decoder.SketchJxlDecoder.Factory.Companion.JXL_MIMETYPE
 import com.github.panpf.sketch.ComponentRegistry
 import com.github.panpf.sketch.asSketchImage
 import com.github.panpf.sketch.decode.DecodeResult
@@ -16,7 +16,6 @@ import com.github.panpf.sketch.source.ContentDataSource
 import com.github.panpf.sketch.source.DataSource
 import com.github.panpf.sketch.util.MimeTypeMap
 import com.github.panpf.sketch.util.Size
-import okio.buffer
 
 
 fun ComponentRegistry.Builder.supportThumbnailDecoder(): ComponentRegistry.Builder = apply {
@@ -39,6 +38,7 @@ class ThumbnailDecoder(
                 mimeType != null &&
                 mimeType.isVideoOrImage &&
                 !isSvg(fetchResult) &&
+                !isSpecialFormat(fetchResult) &&
                 fetchResult.dataSource is ContentDataSource
             )
                 ThumbnailDecoder(requestContext, fetchResult.dataSource)
@@ -59,13 +59,13 @@ class ThumbnailDecoder(
         private val String.isVideoOrImage get() = startsWith("video/") || startsWith("image/")
 
         private fun isSvg(result: FetchResult) =
-            result.mimeType == MIME_TYPE_SVG || DecodeUtils.isSvg(
-                result.dataSource.openSource().buffer()
-            )
+            result.mimeType?.contains(MIME_TYPE_SVG) == true
 
+        private fun isSpecialFormat(result: FetchResult) =
+            HEIF_MIMETYPES.any { result.mimeType?.contains(it) == true } || result.mimeType?.contains(JXL_MIMETYPE) == true
 
         companion object {
-            private const val MIME_TYPE_SVG = "image/svg+xml"
+            private const val MIME_TYPE_SVG = "image/svg"
         }
     }
 
@@ -106,4 +106,3 @@ class ThumbnailDecoder(
     }
 
 }
-*/

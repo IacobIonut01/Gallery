@@ -23,7 +23,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.BuildConfig
 import com.dot.gallery.R
@@ -36,7 +35,6 @@ import com.dot.gallery.feature_node.presentation.util.RepeatOnResume
 import com.dot.gallery.feature_node.presentation.util.isManageFilesAllowed
 import com.dot.gallery.feature_node.presentation.util.launchManageFiles
 import com.dot.gallery.feature_node.presentation.util.launchManageMedia
-import com.dot.gallery.ui.theme.GalleryTheme
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import kotlinx.coroutines.launch
@@ -67,6 +65,7 @@ fun SetupScreen(
         painter = painterResource(R.drawable.ic_gallery_thumbnail),
         title = stringResource(id = R.string.welcome),
         subtitle = appName,
+        contentPadding = 0.dp,
         bottomBar = {
             OutlinedButton(
                 onClick = { (context as Activity).finish() }
@@ -87,6 +86,7 @@ fun SetupScreen(
         content = {
             Text(
                 modifier = Modifier
+                    .fillMaxWidth()
                     .padding(bottom = 16.dp)
                     .padding(horizontal = 16.dp),
                 text = stringResource(R.string.required)
@@ -112,7 +112,7 @@ fun SetupScreen(
                 }
 
                 Text(
-                    modifier = Modifier.padding(16.dp),
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
                     text = stringResource(R.string.optional)
                 )
                 val grantedString = stringResource(R.string.granted)
@@ -164,12 +164,4 @@ private val Context.requiredPermissionsList: Array<Pair<String, String>> get() {
         getString(R.string.access_media_location) to getString(R.string.access_media_location_summary),
         getString(R.string.internet) to getString(R.string.internet_summary)
     )
-}
-
-@Preview
-@Composable
-fun SetupPreview() {
-    GalleryTheme {
-        SetupScreen()
-    }
 }

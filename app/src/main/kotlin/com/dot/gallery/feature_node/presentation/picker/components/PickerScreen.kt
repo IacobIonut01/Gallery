@@ -59,7 +59,7 @@ fun PickerScreen(
     var selectedAlbumIndex by remember { mutableLongStateOf(-1) }
     val selectedMedia = remember { mutableStateListOf<Media>() }
     val mediaVM = hiltViewModel<PickerViewModel>().apply {
-        init(allowedMedia = allowedMedia)
+        this.allowedMedia = allowedMedia
     }
     val albumsState by mediaVM.albumsState.collectAsStateWithLifecycle()
     val chipColors = InputChipDefaults.inputChipColors(
@@ -86,7 +86,7 @@ fun PickerScreen(
                 InputChip(
                     onClick = {
                         selectedAlbumIndex = it.id
-                        mediaVM.getAlbum(selectedAlbumIndex)
+                        mediaVM.albumId = selectedAlbumIndex
                     },
                     colors = chipColors,
                     shape = RoundedCornerShape(16.dp),
@@ -103,7 +103,7 @@ fun PickerScreen(
             modifier = Modifier.fillMaxSize()
         ) {
             PickerMediaScreen(
-                mediaState = mediaVM.mediaState,
+                mediaState = mediaVM.mediaState.value,
                 selectedMedia = selectedMedia,
                 allowSelection = allowSelection,
             )
@@ -161,6 +161,6 @@ fun PickerScreen(
     }
     BackHandler(selectedAlbumIndex != -1L) {
         selectedAlbumIndex = -1L
-        mediaVM.getAlbum(selectedAlbumIndex)
+        mediaVM.albumId = -1L
     }
 }
