@@ -1,6 +1,6 @@
 [versions]
 adaptive = "1.1.0-alpha01"
-agp = "8.5.2"
+agp = "8.6.0"
 avifCoderCoil = "1.8.0"
 benchmarkMacroJunit4 = "1.3.0"
 biometric = "1.2.0-alpha05"
