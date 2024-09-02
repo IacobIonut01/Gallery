@@ -176,8 +176,8 @@
     <string name="auto">Auto</string>
     <string name="change_playback_speed_cd">Ändra uppspelningshastighet</string>
     <string name="location_new_album">Plats: Intern lagring/%1$s</string>
-    <string name="permission_manage_files_title">• Hantera alla filer</string>
-    <string name="permission_manage_files_summary">"    • Tillåter att appen skapar, ändrar och tar bort filer och album som tidigare var begränsade av systemet. (Inkluderar album utanför Pictures- och DCIM-mapparna samt de från SD-kortet.)"</string>
+    <string name="permission_manage_files_title">Hantera alla filer</string>
+    <string name="permission_manage_files_summary">"Tillåter att appen skapar, ändrar och tar bort filer och album som tidigare var begränsade av systemet. (Inkluderar album utanför Pictures- och DCIM-mapparna samt de från SD-kortet.)"</string>
     <string name="allow_to_manage_files">Tillåt att hantera alla filer</string>
     <plurals name="item_count">
         <item quantity="one">%s objekt</item>

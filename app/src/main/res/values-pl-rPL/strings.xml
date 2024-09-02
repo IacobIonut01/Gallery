@@ -176,8 +176,8 @@
     <string name="auto">Automatycznie</string>
     <string name="change_playback_speed_cd">Zmień prędkość odtwarzania</string>
     <string name="location_new_album">Lokalizacja: Pamięć wewnętrzna/%1$s</string>
-    <string name="permission_manage_files_title">• Zarządzanie wszystkimi plikami</string>
-    <string name="permission_manage_files_summary">"    • Umożliwia aplikacji tworzenie, modyfikowanie i usuwanie plików i albumów, które były wcześniej ograniczone przez system. (Obejmuje albumy spoza folderów Pictures i DCIM oraz z karty SD)"</string>
+    <string name="permission_manage_files_title">Zarządzanie wszystkimi plikami</string>
+    <string name="permission_manage_files_summary">"Umożliwia aplikacji tworzenie, modyfikowanie i usuwanie plików i albumów, które były wcześniej ograniczone przez system. (Obejmuje albumy spoza folderów Pictures i DCIM oraz z karty SD)"</string>
     <string name="allow_to_manage_files">Zezwól na zarządzanie wszystkimi plikami</string>
     <plurals name="item_count">
         <item quantity="one">%s pozycja</item>
