@@ -138,7 +138,7 @@
     <string name="read_media_videos">Visualizzare i video</string>
     <string name="read_media_videos_summary">Permette all\'app di mostrare i tuoi video</string>
     <string name="access_media_location">Accede alla cartella dei media</string>
-    <string name="access_media_location_summary"><![CDATA[Permette all'app di leggere la posizione delle tue foto e video]]></string>
+    <string name="access_media_location_summary"><![CDATA[Permette all\'app di leggere la posizione delle tue foto e video]]></string>
     <string name="internet">Internet</string>
     <string name="internet_summary"><![CDATA[Necessario per visualizzare le anteprime delle localizzazioni delle tue immagini e video]]></string>
     <string name="fancy_blur">Sfocatura</string>
