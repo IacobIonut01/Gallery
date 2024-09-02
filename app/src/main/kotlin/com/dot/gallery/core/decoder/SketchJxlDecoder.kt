@@ -10,7 +10,7 @@ import com.github.panpf.sketch.decode.internal.calculateSampleSize
 import com.github.panpf.sketch.decode.internal.createInSampledTransformed
 import com.github.panpf.sketch.decode.internal.isSmallerSizeMode
 import com.github.panpf.sketch.fetch.FetchResult
-import com.github.panpf.sketch.request.internal.RequestContext
+import com.github.panpf.sketch.request.RequestContext
 import com.github.panpf.sketch.source.DataSource
 import com.github.panpf.sketch.util.Size
 import okio.buffer
