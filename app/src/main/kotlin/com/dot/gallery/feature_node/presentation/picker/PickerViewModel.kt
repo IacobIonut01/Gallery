@@ -7,16 +7,17 @@ package com.dot.gallery.feature_node.presentation.picker
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.dot.gallery.feature_node.domain.model.AlbumState
-import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.core.Resource
 import com.dot.gallery.feature_node.domain.model.Album
+import com.dot.gallery.feature_node.domain.model.AlbumState
+import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.presentation.util.mapMedia
 import com.dot.gallery.feature_node.presentation.util.mediaFlowWithType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
@@ -29,38 +30,80 @@ open class PickerViewModel @Inject constructor(
         set(value) {
             field = value
             mediaState = lazy {
-                repository.mediaFlowWithType(value, allowedMedia)
-                    .mapMedia(albumId = value, groupByMonth = false, withMonthHeader = false, updateDatabase = {})
-                    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), MediaState())
+                combine(
+                    repository.getBlacklistedAlbums(),
+                    repository.mediaFlowWithType(value, allowedMedia)
+                ) { blacklisted, mediaResult ->
+                    val data = (mediaResult.data ?: emptyList()).toMutableList().apply {
+                        removeAll { media -> blacklisted.any { it.matchesMedia(media) } }
+                    }
+                    val error = if (mediaResult is Resource.Error) mediaResult.message
+                        ?: "An error occurred" else ""
+                    if (error.isNotEmpty()) {
+                        return@combine Resource.Error<List<Media>>(message = error)
+                    }
+                    Resource.Success<List<Media>>(data)
+                }.mapMedia(
+                    albumId = value,
+                    groupByMonth = false,
+                    withMonthHeader = false,
+                    updateDatabase = {}
+                ).stateIn(viewModelScope, SharingStarted.WhileSubscribed(), MediaState())
             }
         }
 
     var mediaState = lazy {
-        repository.mediaFlowWithType(albumId, allowedMedia)
-            .mapMedia(albumId = albumId, groupByMonth = false, withMonthHeader = false, updateDatabase = {})
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), MediaState())
+        combine(
+            repository.getBlacklistedAlbums(),
+            repository.mediaFlowWithType(albumId, allowedMedia)
+        ) { blacklisted, mediaResult ->
+            val data = (mediaResult.data ?: emptyList()).toMutableList().apply {
+                removeAll { media -> blacklisted.any { it.matchesMedia(media) } }
+            }
+            val error = if (mediaResult is Resource.Error) mediaResult.message
+                ?: "An error occurred" else ""
+            if (error.isNotEmpty()) {
+                return@combine Resource.Error<List<Media>>(message = error)
+            }
+            Resource.Success<List<Media>>(data)
+        }.mapMedia(
+            albumId = albumId,
+            groupByMonth = false,
+            withMonthHeader = false,
+            updateDatabase = {}
+        ).stateIn(viewModelScope, SharingStarted.WhileSubscribed(), MediaState())
     }
 
     val albumsState by lazy {
-        repository.getAlbumsWithType(allowedMedia)
-            .map { result ->
-                val data = result.data ?: emptyList()
-                val error = if (result is Resource.Error) result.message
-                    ?: "An error occurred" else ""
-                if (data.isEmpty()) {
-                    return@map AlbumState(albums = listOf(emptyAlbum), error = error)
-                }
-                val albums = mutableListOf<Album>().apply {
-                    add(emptyAlbum)
-                    addAll(data)
-                }
-                AlbumState(albums = albums, error = error)
+        combine(
+            repository.getBlacklistedAlbums(),
+            repository.getAlbumsWithType(allowedMedia)
+        ) { blacklisted, albumsResult ->
+            val data = (albumsResult.data ?: emptyList()).toMutableList().apply {
+                removeAll { album -> blacklisted.any { it.matchesAlbum(album) } }
             }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), AlbumState())
+            val error = if (albumsResult is Resource.Error) albumsResult.message
+                ?: "An error occurred" else ""
+            if (data.isEmpty()) {
+                return@combine AlbumState(albums = listOf(emptyAlbum), error = error)
+            }
+            val albums = mutableListOf<Album>().apply {
+                add(emptyAlbum)
+                addAll(data)
+            }
+            AlbumState(albums = albums, error = error)
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), AlbumState())
     }
 
 
-    private val emptyAlbum = Album(id = -1, label = "All", uri = Uri.EMPTY, pathToThumbnail = "", timestamp = 0, relativePath = "")
+    private val emptyAlbum = Album(
+        id = -1,
+        label = "All",
+        uri = Uri.EMPTY,
+        pathToThumbnail = "",
+        timestamp = 0,
+        relativePath = ""
+    )
 }
 
 enum class AllowedMedia {
