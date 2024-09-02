@@ -138,9 +138,9 @@
     <string name="read_media_videos">Lees mediavideo\'s</string>
     <string name="read_media_videos_summary">Hiermee kan de app je video\'s laten zien</string>
     <string name="access_media_location">Toegang tot medialocatie</string>
-    <string name="access_media_location_summary"><![CDATA[Hiermee kan de app locatiegegevens van je afbeeldingen en video's lezen]]></string>
+    <string name="access_media_location_summary"><![CDATA[Hiermee kan de app locatiegegevens van je afbeeldingen en video\'s lezen]]></string>
     <string name="internet">Internet</string>
-    <string name="internet_summary"><![CDATA[Vereist om locatievoorbeelden van je afbeeldingen en video's weer te geven]]></string>
+    <string name="internet_summary"><![CDATA[Vereist om locatievoorbeelden van je afbeeldingen en video\'s weer te geven]]></string>
     <string name="fancy_blur">Fancy Blur</string>
     <string name="fancy_blur_summary">Achtergrond vervagen in Mediaweergave</string>
     <string name="old_navbar">Gebruik Material-navigatie</string>
