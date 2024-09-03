@@ -5,7 +5,9 @@
 
 package com.dot.gallery.feature_node.presentation.mediaview.components.video
 
+import android.app.Activity
 import android.media.MediaMetadataRetriever
+import android.view.WindowManager
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
@@ -61,6 +63,13 @@ fun VideoPlayer(
     val isPlaying = rememberSaveable(playWhenReady) { mutableStateOf(playWhenReady) }
     var lastPlayingState by rememberSaveable(isPlaying.value) { mutableStateOf(isPlaying.value) }
     val context = LocalContext.current
+    DisposableEffect(Unit) {
+        val activity = context as? Activity
+        activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        onDispose {
+            activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+    }
 
     val metadata = remember(media) {
         MediaMetadataRetriever().apply {
