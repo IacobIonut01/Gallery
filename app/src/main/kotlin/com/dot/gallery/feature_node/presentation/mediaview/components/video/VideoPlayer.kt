@@ -146,8 +146,7 @@ fun VideoPlayer(
                     onClick = onItemClick,
                 )
                 .swipe(
-                    onSwipeDown = onSwipeDown,
-                    onSwipeUp = null
+                    onSwipeDown = onSwipeDown
                 ),
         )
     }
