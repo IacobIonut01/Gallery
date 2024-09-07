@@ -76,7 +76,7 @@ fun NavigationComp(
     val navPipe = hiltViewModel<ChanneledViewModel>()
     navPipe
         .initWithNav(navController, bottomBarState)
-        .collectAsStateWithLifecycle(LocalLifecycleOwner.current)
+        .collectAsStateWithLifecycle(LocalLifecycleOwner.current, context = Dispatchers.Main.immediate)
     val groupTimelineByMonth by rememberTimelineGroupByMonth()
 
     val context = LocalContext.current
