@@ -142,6 +142,7 @@ fun MediaViewScreen(
         navigateUp()
     }
     var sheetHeightDp by remember { mutableStateOf(0.dp) }
+    var lastSheetHeightDp by remember { mutableStateOf(sheetHeightDp) }
     val sheetState = rememberBottomSheetState(
         initialDetent = ImageOnly,
         detents = listOf(ImageOnly, FullyExpanded { sheetHeightDp = it })
@@ -174,10 +175,16 @@ fun MediaViewScreen(
             lastPage = page
         }
     }
+    LaunchedEffect(sheetHeightDp) {
+        if (lastSheetHeightDp != sheetHeightDp) {
+            lastSheetHeightDp = sheetHeightDp
+            isNormalizationTargetSet = false
+        }
+    }
 
     LaunchedEffect(isNormalizationTargetSet) {
         snapshotFlow { sheetState.offset }.collectLatest { offset ->
-            if (offset < 1f && !isNormalizationTargetSet) {
+            if (!isNormalizationTargetSet) {
                 isNormalizationTargetSet = true
                 normalizationTarget = offset
             }
@@ -381,6 +388,7 @@ fun MediaViewScreen(
         }
         val bottomSheetAlpha by animateFloatAsState(
             targetValue = if (showUI.value) 1f else 0f,
+            animationSpec = tween(DEFAULT_TOP_BAR_ANIMATION_DURATION),
             label = "MediaViewActionsAlpha"
         )
         BottomSheet(
@@ -400,9 +408,7 @@ fun MediaViewScreen(
                     label = "MediaViewActions2Alpha"
                 )
                 AnimatedVisibility(
-                    visible = remember(currentMedia.value) {
-                        currentMedia.value != null
-                    },
+                    visible = currentMedia.value != null,
                     enter = enterAnimation,
                     exit = exitAnimation
                 ) {
@@ -427,13 +433,15 @@ fun MediaViewScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceEvenly,
                     ) {
-                        MediaViewActions2(
-                            currentIndex = pagerState.currentPage,
-                            currentMedia = currentMedia.value!!,
-                            handler = handler,
-                            onDeleteMedia = { lastIndex = it },
-                            showDeleteButton = !isReadOnly
-                        )
+                        if (currentMedia.value != null) {
+                            MediaViewActions2(
+                                currentIndex = pagerState.currentPage,
+                                currentMedia = currentMedia.value!!,
+                                handler = handler,
+                                onDeleteMedia = { lastIndex = it },
+                                showDeleteButton = !isReadOnly
+                            )
+                        }
                     }
                 }
 
