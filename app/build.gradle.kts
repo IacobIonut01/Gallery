@@ -105,9 +105,7 @@ android {
     }
     composeCompiler {
         featureFlags = setOf(
-            ComposeFeatureFlag.IntrinsicRemember,
-            ComposeFeatureFlag.OptimizeNonSkippingGroups,
-            ComposeFeatureFlag.StrongSkipping
+            ComposeFeatureFlag.OptimizeNonSkippingGroups
         )
         includeSourceInformation = true
     }
