@@ -131,7 +131,7 @@
     <string name="setup_summary">Um auf Medien dieses Geräts zugreifen zu können, müssen folgende Berechtigungen erteilt werden:</string>
     <string name="required">Erforderlich</string>
     <string name="optional">Optional</string>
-    <string name="permission_manage_media_title">edien verwalten</string>
+    <string name="permission_manage_media_title">Medien verwalten</string>
     <string name="permission_manage_media_summary">"Hiermit ist für bestimmte Aktionen (als Favorit markieren, Papierkorb verwalten, Metadaten bearbeiten usw.) keine manuelle Bestätigung mehr erforderlich"</string>
     <string name="read_media_images">Bilder einlesen</string>
     <string name="read_media_images_summary">Ermöglicht es der App, deine Bilder anzuzeigen</string>
@@ -223,7 +223,7 @@
     <string name="setup_type_selection_add_album">Album hinzufügen</string>
     <string name="setup_type_selection_pick_album">Album wählen</string>
     <string name="setup_type_regex_label">Regex Muster</string>
-    <string name="setup_type_regex_summary">Alben automatisch Ignorieren, indem ein reguläres Ausdrucksmuster(Regex) verwendet wird.\n\nBevor Sie fortfahren, muss Ihr Muster gültig sein.</string>
+    <string name="setup_type_regex_summary">Alben automatisch Ignorieren, indem ein reguläres Ausdrucksmuster (Regex) verwendet wird.\n\nBevor Sie fortfahren, muss Ihr Muster gültig sein.</string>
     <string name="setup_type_regex_title">Regex Muster</string>
     <string name="setup_type_regex_subtitle">Erstellen Sie ein Auswahlmuster</string>
     <string name="setup_type_regex_example_title">Beispiele</string>
@@ -258,7 +258,7 @@
     <string name="vault_already_exists">Tresor \"%1$s\" existiert bereits</string>
     <string name="ignored">Ignoriert</string>
     <string name="location">Location</string>
-    <string name="update_file_name">Update file name</string>
+    <string name="update_file_name">Dateiname aktualisieren</string>
     <plurals name="item_count">
         <item quantity="one">%s Datei</item>
         <item quantity="other">%s Dateien</item>
