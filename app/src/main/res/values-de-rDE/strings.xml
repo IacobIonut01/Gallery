@@ -131,7 +131,7 @@
     <string name="setup_summary">Um auf Medien dieses Geräts zugreifen zu können, müssen folgende Berechtigungen erteilt werden:</string>
     <string name="required">Erforderlich</string>
     <string name="optional">Optional</string>
-    <string name="permission_manage_media_title">edien verwalten</string>
+    <string name="permission_manage_media_title">Medien verwalten</string>
     <string name="permission_manage_media_summary">"Hiermit ist für bestimmte Aktionen (als Favorit markieren, Papierkorb verwalten, Metadaten bearbeiten usw.) keine manuelle Bestätigung mehr erforderlich"</string>
     <string name="read_media_images">Bilder einlesen</string>
     <string name="read_media_images_summary">Ermöglicht es der App, deine Bilder anzuzeigen</string>
