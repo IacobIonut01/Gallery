@@ -257,7 +257,7 @@
     <string name="vault_setup_summary">Der Zugriff auf den Tresor erfolgt über die Sicherheitsvorkehrungen Ihres Telefons (Passwort oder biometrische Daten)\n\nDer Verschlüsselungsschlüssel kann im Tresor eingesehen werden und wird zur Wiederherstellung des Tresors verwendet.</string>
     <string name="vault_already_exists">Tresor \"%1$s\" existiert bereits</string>
     <string name="ignored">Ignoriert</string>
-    <string name="location">Location</string>
+    <string name="location">Standort</string>
     <string name="update_file_name">Dateiname aktualisieren</string>
     <plurals name="item_count">
         <item quantity="one">%s Datei</item>
