@@ -102,24 +102,19 @@ fun MediaViewScreen(
     vaultState: State<VaultState>,
     addMedia: (Vault, Media) -> Unit
 ) {
-    var initialPage by rememberSaveable(mediaId, mediaState.value) {
-        val lastMediaPosition = mediaState.value.media.indexOfFirst { it.id == mediaId }
-        mutableIntStateOf(if (lastMediaPosition != -1) lastMediaPosition else 0)
+    var currentPage by rememberSaveable { mutableIntStateOf(0) }
+    val initialPage by rememberSaveable(mediaId, mediaState.value, currentPage) {
+        var lastMediaPosition = mediaState.value.media.indexOfFirst { it.id == mediaId }
+        if (currentPage != 0) {
+            lastMediaPosition = currentPage
+        }
+        mutableIntStateOf(lastMediaPosition.coerceAtLeast(0))
     }
     val pagerState = rememberPagerState(
         initialPage = initialPage,
         initialPageOffsetFraction = 0f,
         pageCount = mediaState.value.media::size
     )
-    LaunchedEffect(mediaState.value) {
-        snapshotFlow { mediaState.value.isLoading }
-            .collectLatest { isLoading ->
-                if (!isLoading) {
-                    initialPage = mediaState.value.media.indexOfFirst { it.id == mediaId }
-                    pagerState.scrollToPage(initialPage)
-                }
-            }
-    }
 
     val currentDate = rememberSaveable { mutableStateOf("") }
     val currentMedia = rememberSaveable { mutableStateOf<Media?>(null) }
@@ -152,7 +147,6 @@ fun MediaViewScreen(
         mutableFloatStateOf(0f)
     }
     var isNormalizationTargetSet by remember { mutableStateOf(false) }
-    var lastPage by remember { mutableIntStateOf(pagerState.currentPage) }
 
     LaunchedEffect(mediaState.value) {
         snapshotFlow { pagerState.currentPage }.collectLatest { page ->
@@ -161,7 +155,7 @@ fun MediaViewScreen(
                 pagerState.scrollToPage(newIndex)
                 lastIndex = -1
             }
-            if (page != lastPage) {
+            if (page != currentPage) {
                 isNormalizationTargetSet = false
             }
 
@@ -172,7 +166,9 @@ fun MediaViewScreen(
                 windowInsetsController.toggleSystemBars(show = true)
                 navigateUp()
             }
-            lastPage = page
+            if (!mediaState.value.isLoading) {
+                currentPage = page
+            }
         }
     }
     LaunchedEffect(sheetHeightDp) {
