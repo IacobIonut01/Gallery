@@ -246,7 +246,10 @@ fun MediaViewScreen(
                         media = media!!,
                         uiEnabled = showUI.value,
                         playWhenReady = playWhenReady,
-                        onSwipeDown = navigateUp,
+                        onSwipeDown = {
+                            windowInsetsController.toggleSystemBars(show = true)
+                            navigateUp()
+                        },
                         onItemClick = {
                             if (sheetState.currentDetent == ImageOnly) {
                                 showUI.value = !showUI.value
