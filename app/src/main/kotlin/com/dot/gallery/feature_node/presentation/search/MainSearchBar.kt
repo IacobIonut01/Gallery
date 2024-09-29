@@ -156,8 +156,12 @@ fun MainSearchBar(
                         }
                     },
                     onSearch = {
-                        if (it.isNotEmpty())
-                            historySet = historySet.toMutableSet().apply { add("${System.currentTimeMillis()}/$it") }
+                        if (it.isNotEmpty()) {
+                            historySet = historySet.toMutableSet().apply {
+                                removeIf { historyQuery -> historyQuery.contains(it) }
+                                add("${System.currentTimeMillis()}/$it")
+                            }
+                        }
                         mediaViewModel.queryMedia(it)
                         canQuery = true
                     },
@@ -302,8 +306,8 @@ fun MainSearchBar(
                 activeState.value = false
             }
             canQuery = false
-                query = ""
-                mediaViewModel.clearQuery()
+            query = ""
+            mediaViewModel.clearQuery()
         }
     }
 }
