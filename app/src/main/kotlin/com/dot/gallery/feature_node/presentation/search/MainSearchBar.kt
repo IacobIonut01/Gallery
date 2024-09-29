@@ -86,6 +86,7 @@ fun MainSearchBar(
     menuItems: @Composable (RowScope.() -> Unit)? = null,
 ) {
     var historySet by rememberSearchHistory()
+    var canQuery by rememberSaveable { mutableStateOf(false) }
     var query by rememberSaveable { mutableStateOf("") }
     val mediaViewModel: MediaViewModel = hiltViewModel<MediaViewModel>().also {
         it.mediaFlow.collectAsStateWithLifecycle()
@@ -94,7 +95,7 @@ fun MainSearchBar(
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(state.value.media) {
-        if (query.isNotEmpty() && state.value.media.isEmpty()) {
+        if (query.isNotEmpty() && state.value.media.isEmpty() && canQuery) {
             mediaViewModel.queryMedia(query)
         }
     }
@@ -148,14 +149,17 @@ fun MainSearchBar(
                     onQueryChange = {
                         scope.launch {
                             query = it
-                            if (it != mediaViewModel.lastQuery.value && mediaViewModel.lastQuery.value.isNotEmpty())
+                            if (it != mediaViewModel.lastQuery.value && mediaViewModel.lastQuery.value.isNotEmpty()) {
                                 mediaViewModel.clearQuery()
+                                canQuery = false
+                            }
                         }
                     },
                     onSearch = {
                         if (it.isNotEmpty())
                             historySet = historySet.toMutableSet().apply { add("${System.currentTimeMillis()}/$it") }
                         mediaViewModel.queryMedia(it)
+                        canQuery = true
                     },
                     expanded = activeState.value,
                     onExpandedChange = onActiveChange,
@@ -216,6 +220,7 @@ fun MainSearchBar(
                     exit = exitAnimation
                 ) {
                     SearchHistory {
+                        canQuery = true
                         query = it
                         mediaViewModel.queryMedia(it)
                     }
@@ -295,12 +300,10 @@ fun MainSearchBar(
         scope.launch {
             if (mediaViewModel.lastQuery.value.isEmpty()) {
                 activeState.value = false
-                query = ""
-                mediaViewModel.queryMedia(query)
-            } else {
+            }
+            canQuery = false
                 query = ""
                 mediaViewModel.clearQuery()
-            }
         }
     }
 }
