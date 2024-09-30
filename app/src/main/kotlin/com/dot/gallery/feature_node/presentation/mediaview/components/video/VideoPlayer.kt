@@ -107,7 +107,7 @@ fun VideoPlayer(
     LaunchedEffect(showPlayer) {
         if (showPlayer) {
             delay(100)
-            exoPlayer?.playWhenReady = true
+            exoPlayer?.playWhenReady = isPlaying.value
             exoPlayer?.seekTo(currentTime.longValue)
         }
     }
@@ -121,7 +121,7 @@ fun VideoPlayer(
                 )
             ),
             handleLifecycle = true,
-            autoPlay = true,
+            autoPlay = playWhenReady,
             usePlayerController = false,
             enablePip = false,
             handleAudioFocus = true,
