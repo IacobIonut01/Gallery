@@ -261,6 +261,12 @@ object Settings {
         @Composable
         fun rememberAutoHideNavBar() =
             rememberPreference(key = AUTO_HIDE_NAVIGATIONBAR, defaultValue = true)
+
+        private val AUDIO_FOCUS = booleanPreferencesKey("audio_focus")
+
+        @Composable
+        fun rememberAudioFocus() =
+            rememberPreference(key = AUDIO_FOCUS, defaultValue = true)
     }
 }
 

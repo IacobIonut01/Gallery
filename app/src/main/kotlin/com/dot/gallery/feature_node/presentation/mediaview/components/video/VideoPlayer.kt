@@ -37,6 +37,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
+import com.dot.gallery.core.Settings.Misc.rememberAudioFocus
 import com.dot.gallery.core.presentation.components.util.swipe
 import com.dot.gallery.feature_node.domain.model.Media
 import io.sanghun.compose.video.RepeatMode
@@ -113,6 +114,7 @@ fun VideoPlayer(
     }
 
     if (showPlayer) {
+        val audioFocus by rememberAudioFocus()
         SanghunComposeVideoVideoPlayer(
             mediaItems = listOf(
                 VideoPlayerMediaItem.StorageMediaItem(
@@ -124,7 +126,7 @@ fun VideoPlayer(
             autoPlay = playWhenReady,
             usePlayerController = false,
             enablePip = false,
-            handleAudioFocus = true,
+            handleAudioFocus = audioFocus,
             repeatMode = RepeatMode.ONE,
             playerInstance = {
                 exoPlayer = this
