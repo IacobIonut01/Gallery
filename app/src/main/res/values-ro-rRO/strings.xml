@@ -137,7 +137,7 @@
     <string name="read_media_images_summary">Permite aplicației să afișeze imaginile</string>
     <string name="read_media_videos">Citește videoclipurile</string>
     <string name="read_media_videos_summary">Permite aplicației să afișeze videoclipurile</string>
-    <string name="access_media_location">Access Media Location</string>
+    <string name="access_media_location">Accesează locația media</string>
     <string name="access_media_location_summary"><![CDATA[Allows the app to read location data of your images & videos]]></string>
     <string name="internet">Internet</string>
     <string name="internet_summary"><![CDATA[Required to display Location Previews of your images & videos]]></string>
