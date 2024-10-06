@@ -181,7 +181,7 @@
     <string name="allow_to_manage_files">允许管理所有文件</string>
     <string name="vault">私密空间</string>
     <string name="tools">工具</string>
-    <string name="library">图库</string>
+    <string name="library">Library</string>
     <string name="biometric_authentication">生物特征认证</string>
     <string name="unlock_your_vault">解锁你的私密空间</string>
     <string name="add_media_to_vault_cd">将媒体添加到私密空间</string>
@@ -231,7 +231,7 @@
     <string name="setup_type_regex_first_subtitle">.*/Music/[^/]+/?$</string>
     <string name="setup_type_regex_example_second_title">匹配Music文件夹及其子文件夹下的任意相册：</string>
     <string name="setup_type_regex_example_second_subtitle">.*/Music/.+/[^/]+/?$</string>
-    <string name="setup_type_regex_example_third_title">匹配Music文件夹中以Album_开头的任何专辑：</string>
+    <string name="setup_type_regex_example_third_title">匹配Music文件夹中以Album_开头的任何相册：</string>
     <string name="setup_type_regex_example_third_subtitle">.*/Music/Album_[^/]+/?$</string>
     <string name="setup_type_regex_error">无效的正则表达式模式</string>
     <string name="setup_type_regex_error_second">此通配符已被使用</string>
@@ -239,8 +239,8 @@
     <string name="setup_confirmation_subtitle">概述忽略选项和匹配项</string>
     <string name="setup_confirmation_where">忽略哪些地方</string>
     <string name="setup_confirmation_who">忽略哪一个</string>
-    <string name="setup_confirmation_matched">匹配的专辑</string>
-    <string name="albums_and_timeline">专辑和时间线</string>
+    <string name="setup_confirmation_matched">匹配的相册</string>
+    <string name="albums_and_timeline">相册和时间线</string>
     <string name="created">创建</string>
     <string name="filter_type_date">日期</string>
     <string name="filter_type_name">名称</string>
