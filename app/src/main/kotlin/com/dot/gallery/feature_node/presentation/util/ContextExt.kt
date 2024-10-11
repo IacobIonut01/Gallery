@@ -10,6 +10,8 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.content.pm.ActivityInfo.COLOR_MODE_DEFAULT
+import android.content.pm.ActivityInfo.COLOR_MODE_HDR
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
 import android.net.Uri
@@ -51,6 +53,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+
+fun Context.setHdrMode(enabled: Boolean) {
+    if (this is Activity) {
+        window.colorMode = if (enabled) COLOR_MODE_HDR else COLOR_MODE_DEFAULT
+    }
+}
 
 @Composable
 fun getNavigationBarHeight(): Dp {
