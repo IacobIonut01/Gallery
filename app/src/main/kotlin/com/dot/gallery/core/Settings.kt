@@ -267,6 +267,12 @@ object Settings {
         @Composable
         fun rememberAudioFocus() =
             rememberPreference(key = AUDIO_FOCUS, defaultValue = true)
+
+        private val FULL_BRIGHTNESS_VIEW = booleanPreferencesKey("full_brightness_view")
+
+        @Composable
+        fun rememberFullBrightnessView() =
+            rememberPreference(key = FULL_BRIGHTNESS_VIEW, defaultValue = false)
     }
 }
 
