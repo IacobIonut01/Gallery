@@ -35,7 +35,7 @@ class StandaloneViewModel @Inject constructor(
     var reviewMode: Boolean = false
         set(value) {
             field = value
-            mediaState = lazy {
+            mediaState =
                 repository.getMediaListByUris(dataList, reviewMode)
                     .map {
                         val data = it.data
@@ -47,12 +47,11 @@ class StandaloneViewModel @Inject constructor(
                         }
                     }
                     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), MediaState())
-            }
         }
     var dataList: List<Uri> = emptyList()
         set(value) {
             field = value
-            mediaState = lazy {
+            mediaState =
                 repository.getMediaListByUris(value, reviewMode)
                     .map {
                         val data = it.data
@@ -64,26 +63,25 @@ class StandaloneViewModel @Inject constructor(
                         }
                     }
                     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), MediaState())
-            }
         }
 
     var mediaId: Long = -1
 
-    var mediaState = lazy {
-        repository.getMediaListByUris(dataList, reviewMode)
-            .map {
-                val data = it.data
-                if (data != null) {
-                    mediaId = data.first().id
-                    MediaState(media = data)
-                } else {
-                    mediaFromUris()
-                }
+    var mediaState = repository.getMediaListByUris(dataList, reviewMode)
+        .map {
+            val data = it.data
+            if (data != null) {
+                mediaId = data.first().id
+                MediaState(media = data)
+            } else {
+                mediaFromUris()
             }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), MediaState())
-    }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), MediaState())
 
-    val vaults = repository.getVaults().map { it.data ?: emptyList() }.map { VaultState(it, isLoading = false) }
+
+    val vaults = repository.getVaults().map { it.data ?: emptyList() }
+        .map { VaultState(it, isLoading = false) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), VaultState())
 
     fun addMedia(vault: Vault, media: Media) {

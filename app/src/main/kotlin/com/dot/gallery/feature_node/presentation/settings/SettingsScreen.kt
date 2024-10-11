@@ -59,9 +59,12 @@ import androidx.compose.ui.window.DialogProperties
 import com.dot.gallery.R
 import com.dot.gallery.core.Position
 import com.dot.gallery.core.Settings
+import com.dot.gallery.core.Settings.Misc.rememberAudioFocus
 import com.dot.gallery.core.Settings.Misc.rememberAutoHideNavBar
+import com.dot.gallery.core.Settings.Misc.rememberAutoHideOnVideoPlay
 import com.dot.gallery.core.Settings.Misc.rememberAutoHideSearchBar
 import com.dot.gallery.core.Settings.Misc.rememberForcedLastScreen
+import com.dot.gallery.core.Settings.Misc.rememberFullBrightnessView
 import com.dot.gallery.core.Settings.Misc.rememberLastScreen
 import com.dot.gallery.core.SettingsEntity
 import com.dot.gallery.feature_node.presentation.settings.components.SettingsAppHeader
@@ -380,7 +383,7 @@ fun rememberSettingsList(
             title = context.getString(R.string.set_default_screen),
             summary = summary,
             onClick = { showLaunchScreenDialog.value = true },
-            screenPosition = Position.Bottom
+            screenPosition = Position.Middle
         )
     }
 
@@ -404,6 +407,45 @@ fun rememberSettingsList(
             summary = context.getString(R.string.auto_hide_navigationbar_summary),
             isChecked = autoHideNavigationSetting,
             onCheck = { autoHideNavigationSetting = it },
+            screenPosition = Position.Bottom
+        )
+    }
+
+    var audioFocus by rememberAudioFocus()
+    val audioFocusPref = remember(audioFocus) {
+        SettingsEntity.SwitchPreference(
+            title = context.getString(R.string.take_audio_focus_title),
+            summary = context.getString(R.string.take_audio_focus_summary),
+            isChecked = audioFocus,
+            onCheck = {
+                scope.launch {
+                    audioFocus = it
+                    delay(50)
+                    context.restartApplication()
+                }
+            },
+            screenPosition = Position.Middle
+        )
+    }
+
+    var fullBrightnessView by rememberFullBrightnessView()
+    val fullBrightnessViewPref = remember(fullBrightnessView) {
+        SettingsEntity.SwitchPreference(
+            title = context.getString(R.string.full_brightness_view_title),
+            summary = context.getString(R.string.full_brightness_view_summary),
+            isChecked = fullBrightnessView,
+            onCheck = { fullBrightnessView = it },
+            screenPosition = Position.Middle
+        )
+    }
+
+    var autoHideOnVideoPlay by rememberAutoHideOnVideoPlay()
+    val autoHideOnVideoPlayPref = remember(autoHideOnVideoPlay) {
+        SettingsEntity.SwitchPreference(
+            title = context.getString(R.string.auto_hide_on_video_play),
+            summary = context.getString(R.string.auto_hide_on_video_play_summary),
+            isChecked = autoHideOnVideoPlay,
+            onCheck = { autoHideOnVideoPlay = it },
             screenPosition = Position.Bottom
         )
     }
@@ -444,6 +486,9 @@ fun rememberSettingsList(
             add(allowBlurPref)
             add(hideTimelineOnAlbumPref)
             add(forcedLastScreenPref)
+            add(audioFocusPref)
+            add(fullBrightnessViewPref)
+            add(autoHideOnVideoPlayPref)
             /** ********************* **/
             /** ********************* **/
             /** Navigation Section Start **/

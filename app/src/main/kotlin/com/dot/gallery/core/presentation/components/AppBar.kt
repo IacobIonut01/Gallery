@@ -46,13 +46,11 @@ import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSiz
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -73,8 +71,6 @@ import com.dot.gallery.core.Settings.Misc.rememberOldNavbar
 import com.dot.gallery.feature_node.presentation.util.NavigationItem
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.ui.core.icons.Albums
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.distinctUntilChanged
 
 @Composable
 fun rememberNavigationItems(): List<NavigationItem> {
@@ -127,7 +123,14 @@ fun AppBarContainer(
         exit = exitAnimation
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            val showNavRail = remember(useNavRail, bottomBarState) { useNavRail && bottomBarState }
+            val anySelectedRoute = remember(backStackEntry) {
+                bottomNavItems.any { it.route == navController.currentDestination?.route }
+            }
+            val showNavRail by remember(useNavRail, bottomBarState, anySelectedRoute) {
+                derivedStateOf {
+                    useNavRail && bottomBarState && anySelectedRoute
+                }
+            }
             AnimatedVisibility(
                 visible = showNavRail,
                 enter = slideInHorizontally { it * -2 },
@@ -140,8 +143,8 @@ fun AppBarContainer(
                 )
             }
             val animatedPadding by animateDpAsState(
-                targetValue = remember(useNavRail, bottomBarState) {
-                    if (useNavRail && bottomBarState) 80.dp else 0.dp
+                targetValue = remember(showNavRail) {
+                    if (showNavRail) 80.dp else 0.dp
                 },
                 label = "animatedPadding"
             )
@@ -151,14 +154,9 @@ fun AppBarContainer(
                 content()
             }
             val hideNavBarSetting by rememberAutoHideNavBar()
-            var showClassicNavbar by remember {
-                mutableStateOf(!useNavRail && bottomBarState && (!isScrolling || !hideNavBarSetting))
-            }
-            LaunchedEffect(useNavRail, isScrolling, bottomBarState, hideNavBarSetting) {
-                snapshotFlow {
-                    !useNavRail && bottomBarState && (!isScrolling || !hideNavBarSetting)
-                }.distinctUntilChanged().collectLatest {
-                    showClassicNavbar = it
+            val showClassicNavbar by remember(useNavRail, bottomBarState, isScrolling, hideNavBarSetting, anySelectedRoute) {
+                derivedStateOf {
+                    !useNavRail && bottomBarState && (!isScrolling || !hideNavBarSetting) && anySelectedRoute
                 }
             }
             AnimatedVisibility(
@@ -184,14 +182,12 @@ fun AppBarContainer(
         Box(modifier = Modifier.fillMaxSize()) {
             content()
             val hideNavBarSetting by rememberAutoHideNavBar()
-            var showNavbar by remember(bottomBarState, isScrolling, hideNavBarSetting) {
-                mutableStateOf(bottomBarState && (!isScrolling || !hideNavBarSetting))
+            val anySelectedRoute = remember(backStackEntry) {
+                bottomNavItems.any { it.route == navController.currentDestination?.route }
             }
-            LaunchedEffect(bottomBarState, isScrolling, hideNavBarSetting) {
-                snapshotFlow {
-                    bottomBarState && (!isScrolling || !hideNavBarSetting)
-                }.distinctUntilChanged().collectLatest {
-                    showNavbar = it
+            val showNavbar by remember(bottomBarState, isScrolling, hideNavBarSetting, anySelectedRoute) {
+                derivedStateOf {
+                    bottomBarState && (!isScrolling || !hideNavBarSetting) && anySelectedRoute
                 }
             }
             AnimatedVisibility(
@@ -336,7 +332,7 @@ private fun ClassicNavigationRail(
                     }
                 },
                 label = { Label(item) },
-                icon = { Label(item) }
+                icon = { Icon(item) }
             )
         }
         Spacer(Modifier.weight(1f))

@@ -346,7 +346,13 @@ fun EncryptedMediaViewScreen(
                 paddingValues = paddingValues,
                 onShowInfo = {
                     scope.launch {
-                        sheetState.animateTo(FullyExpanded)
+                        if (showUI.value) {
+                            if (sheetState.currentDetent == ImageOnly) {
+                                sheetState.animateTo(FullyExpanded)
+                            } else {
+                                sheetState.animateTo(ImageOnly)
+                            }
+                        }
                     }
                 },
                 onGoBack = {
@@ -359,6 +365,11 @@ fun EncryptedMediaViewScreen(
                     }
                 }
             )
+            LaunchedEffect(showUI.value) {
+                if (!showUI.value && (sheetState.currentDetent == FullyExpanded || sheetState.targetDetent == FullyExpanded)) {
+                    sheetState.animateTo(ImageOnly)
+                }
+            }
             BackHandler(sheetState.currentDetent == FullyExpanded) {
                 scope.launch {
                     sheetState.animateTo(ImageOnly)

@@ -10,6 +10,8 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.content.pm.ActivityInfo.COLOR_MODE_DEFAULT
+import android.content.pm.ActivityInfo.COLOR_MODE_HDR
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
 import android.net.Uri
@@ -20,6 +22,8 @@ import android.view.HapticFeedbackConstants
 import android.view.View
 import android.view.Window
 import android.view.WindowManager
+import android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL
+import android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
 import android.view.accessibility.AccessibilityManager
 import android.widget.Toast
 import androidx.annotation.RequiresApi
@@ -44,6 +48,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import com.dot.gallery.BuildConfig
 import com.dot.gallery.R
 import com.dot.gallery.core.Settings.Misc.allowVibrations
+import com.dot.gallery.core.Settings.Misc.rememberFullBrightnessView
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
 import com.dot.gallery.feature_node.domain.model.Media
 import kotlinx.coroutines.CoroutineScope
@@ -51,6 +56,30 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+
+@Composable
+fun FullBrightnessWindow(content: @Composable () -> Unit) {
+    ProvideWindowContext {
+        val window = LocalWindowContext.current
+        val enableFullBrightnessView by rememberFullBrightnessView()
+        DisposableEffect(enableFullBrightnessView) {
+            val layout = window?.attributes
+            layout?.screenBrightness = if (enableFullBrightnessView) BRIGHTNESS_OVERRIDE_FULL else BRIGHTNESS_OVERRIDE_NONE
+            window?.attributes = layout
+            onDispose {
+                layout?.screenBrightness = BRIGHTNESS_OVERRIDE_NONE
+                window?.attributes = layout
+            }
+        }
+        content()
+    }
+}
+
+fun Context.setHdrMode(enabled: Boolean) {
+    if (this is Activity) {
+        window.colorMode = if (enabled) COLOR_MODE_HDR else COLOR_MODE_DEFAULT
+    }
+}
 
 @Composable
 fun getNavigationBarHeight(): Dp {

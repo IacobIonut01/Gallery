@@ -61,19 +61,19 @@ class ChanneledViewModel @Inject constructor() : ViewModel() {
         }
 
     fun navigate(route: String) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.Main.immediate) {
             eventChannel.send(Event.NavigationRouteEvent(route))
         }
     }
 
     fun toggleNavbar(isVisible: Boolean) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.Main.immediate) {
             eventChannel.send(Event.ToggleNavigationBarEvent(isVisible))
         }
     }
 
     fun navigateUp() {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.Main.immediate) {
             eventChannel.send(Event.NavigationUpEvent)
         }
     }

@@ -35,6 +35,7 @@ import com.dot.gallery.feature_node.presentation.common.ChanneledViewModel
 import com.dot.gallery.feature_node.presentation.util.SecureWindow
 import com.dot.gallery.feature_node.presentation.vault.encryptedmediaview.EncryptedMediaViewScreen
 import com.dot.gallery.feature_node.presentation.vault.utils.rememberBiometricState
+import kotlinx.coroutines.Dispatchers
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
@@ -51,7 +52,7 @@ fun VaultScreen(
     val navPipe = hiltViewModel<ChanneledViewModel>()
     navPipe
         .initWithNav(navController)
-        .collectAsStateWithLifecycle(LocalLifecycleOwner.current)
+        .collectAsStateWithLifecycle(LocalLifecycleOwner.current, context = Dispatchers.Main.immediate)
 
     var addNewVault by remember { mutableStateOf(false) }
 

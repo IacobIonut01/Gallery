@@ -261,6 +261,24 @@ object Settings {
         @Composable
         fun rememberAutoHideNavBar() =
             rememberPreference(key = AUTO_HIDE_NAVIGATIONBAR, defaultValue = true)
+
+        private val AUDIO_FOCUS = booleanPreferencesKey("audio_focus")
+
+        @Composable
+        fun rememberAudioFocus() =
+            rememberPreference(key = AUDIO_FOCUS, defaultValue = true)
+
+        private val FULL_BRIGHTNESS_VIEW = booleanPreferencesKey("full_brightness_view")
+
+        @Composable
+        fun rememberFullBrightnessView() =
+            rememberPreference(key = FULL_BRIGHTNESS_VIEW, defaultValue = false)
+
+        private val AUTO_HIDE_ON_VIDEO_PLAY = booleanPreferencesKey("auto_hide_on_video_play")
+
+        @Composable
+        fun rememberAutoHideOnVideoPlay() =
+            rememberPreference(key = AUTO_HIDE_ON_VIDEO_PLAY, defaultValue = true)
     }
 }
 

@@ -82,7 +82,6 @@ fun ZoomablePagerImage(
             modifier = modifier
                 .fillMaxSize()
                 .swipe(
-                    onSwipeUp = null,
                     onSwipeDown = onSwipeDown
                 ),
             onTap = { onItemClick() },

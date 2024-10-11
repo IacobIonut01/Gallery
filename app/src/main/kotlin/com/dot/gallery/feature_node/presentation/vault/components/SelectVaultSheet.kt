@@ -44,11 +44,11 @@ fun SelectVaultSheet(
     }
     val scope = rememberCoroutineScope()
     val vaultOptions = remember(vaults, state) {
-        vaults.map {
+        vaults.map { vault ->
             OptionItem(
-                text = it.name,
+                text = vault.name,
                 onClick = {
-                    onVaultSelected(it)
+                    onVaultSelected(vault)
                     scope.launch {
                         state.hide()
                     }

@@ -18,17 +18,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import com.dot.gallery.R
 import com.dot.gallery.core.presentation.components.DragHandle
 import com.dot.gallery.feature_node.presentation.common.components.OptionItem
 import com.dot.gallery.feature_node.presentation.common.components.OptionLayout
@@ -42,7 +45,7 @@ fun SupportSheet(
 ) {
     val scope = rememberCoroutineScope()
     val uriHandler = LocalUriHandler.current
-    var showCryptoOptions by remember {
+    var showCryptoOptions by rememberSaveable {
         mutableStateOf(false)
     }
     val clipboard = LocalClipboardManager.current
@@ -68,100 +71,31 @@ fun SupportSheet(
             )
         )
     }
+    val cryptoOnClick: (String) -> Unit = {
+        clipboard.setText(AnnotatedString(it))
+    }
     val cryptoOptions = remember {
-        listOf(
+        mapOf(
+            "ETH" to "0x707eF0E95e814E05efadFD3d3783401cfbE8D11E",
+            "POLYGON" to "0x707eF0E95e814E05efadFD3d3783401cfbE8D11E",
+            "AVALANCHE" to "0x707eF0E95e814E05efadFD3d3783401cfbE8D11E",
+            "BNB" to "0x707eF0E95e814E05efadFD3d3783401cfbE8D11E",
+            "XDC" to "0x707eF0E95e814E05efadFD3d3783401cfbE8D11E",
+            "EPIC" to "esWaroB8AQXZuaEJWtraPomNH3Lg1JRP3EVxr6batoFuqvf3hrHP@epicbox.epic.tech",
+            "XRP" to "rPjYh6XMMra3zHFqDn6ZnYFCmPWPnbTHkc",
+            "ADA" to "addr1q978p8x80z2d4je5gutav0ypplgtpw0mhmwky8k5mscds9ru9nma366mryl0ln8ump7ysj5wa9sg20c4x7ywjyzvacxseapv0y",
+            "XLM" to "GAHXB7JI4QEZW2ZM4CA6PQ37Y3636UXWWXDHAZLHCJV5HGXYWQJBIE5Q",
+            "INJ" to "inj1wpl0p627s98qtmadl57n0q6qrna735g72dner7",
+            "SUI" to "0xe135452c381f3298e0ddb17c3e1ede8e1d6aaefb3bc3734219dd6d14ce2177ce",
+            "SEI" to "sei1t5c9dmjdempk7hklw0mm4wkxwzauncvqsgs3l4",
+            "HBAR" to "0.0.4688681-szsjz"
+        ).map { (coin, address) ->
             OptionItem(
-                text = "ETH",
-                summary = "0x707eF0E95e814E05efadFD3d3783401cfbE8D11E",
-                onClick = {
-                    clipboard.setText(AnnotatedString("0x707eF0E95e814E05efadFD3d3783401cfbE8D11E"))
-                }
-            ),
-            OptionItem(
-                text = "POLYGON",
-                summary = "0x707eF0E95e814E05efadFD3d3783401cfbE8D11E",
-                onClick = {
-                    clipboard.setText(AnnotatedString("0x707eF0E95e814E05efadFD3d3783401cfbE8D11E"))
-                }
-            ),
-            OptionItem(
-                text = "AVALANCHE",
-                summary = "0x707eF0E95e814E05efadFD3d3783401cfbE8D11E",
-                onClick = {
-                    clipboard.setText(AnnotatedString("0x707eF0E95e814E05efadFD3d3783401cfbE8D11E"))
-                }
-            ),
-            OptionItem(
-                text = "BNB",
-                summary = "0x707eF0E95e814E05efadFD3d3783401cfbE8D11E",
-                onClick = {
-                    clipboard.setText(AnnotatedString("0x707eF0E95e814E05efadFD3d3783401cfbE8D11E"))
-                }
-            ),
-            OptionItem(
-                text = "XDC",
-                summary = "0x707eF0E95e814E05efadFD3d3783401cfbE8D11E",
-                onClick = {
-                    clipboard.setText(AnnotatedString("0x707eF0E95e814E05efadFD3d3783401cfbE8D11E"))
-                }
-            ),
-            OptionItem(
-                text = "EPIC",
-                summary = "esWaroB8AQXZuaEJWtraPomNH3Lg1JRP3EVxr6batoFuqvf3hrHP@epicbox.epic.tech",
-                onClick = {
-                    clipboard.setText(AnnotatedString("esWaroB8AQXZuaEJWtraPomNH3Lg1JRP3EVxr6batoFuqvf3hrHP@epicbox.epic.tech"))
-                }
-            ),
-            OptionItem(
-                text = "XRP",
-                summary = "rPjYh6XMMra3zHFqDn6ZnYFCmPWPnbTHkc",
-                onClick = {
-                    clipboard.setText(AnnotatedString("rPjYh6XMMra3zHFqDn6ZnYFCmPWPnbTHkc"))
-                }
-            ),
-            OptionItem(
-                text = "ADA",
-                summary = "addr1q978p8x80z2d4je5gutav0ypplgtpw0mhmwky8k5mscds9ru9nma366mryl0ln8ump7ysj5wa9sg20c4x7ywjyzvacxseapv0y",
-                onClick = {
-                    clipboard.setText(AnnotatedString("addr1q978p8x80z2d4je5gutav0ypplgtpw0mhmwky8k5mscds9ru9nma366mryl0ln8ump7ysj5wa9sg20c4x7ywjyzvacxseapv0y"))
-                }
-            ),
-            OptionItem(
-                text = "XLM",
-                summary = "GAHXB7JI4QEZW2ZM4CA6PQ37Y3636UXWWXDHAZLHCJV5HGXYWQJBIE5Q",
-                onClick = {
-                    clipboard.setText(AnnotatedString("GAHXB7JI4QEZW2ZM4CA6PQ37Y3636UXWWXDHAZLHCJV5HGXYWQJBIE5Q"))
-                }
-            ),
-            OptionItem(
-                text = "INJ",
-                summary = "inj1wpl0p627s98qtmadl57n0q6qrna735g72dner7",
-                onClick = {
-                    clipboard.setText(AnnotatedString("inj1wpl0p627s98qtmadl57n0q6qrna735g72dner7"))
-                }
-            ),
-            OptionItem(
-                text = "SUI",
-                summary = "0xe135452c381f3298e0ddb17c3e1ede8e1d6aaefb3bc3734219dd6d14ce2177ce",
-                onClick = {
-                    clipboard.setText(AnnotatedString("0xe135452c381f3298e0ddb17c3e1ede8e1d6aaefb3bc3734219dd6d14ce2177ce"))
-                }
-            ),
-            OptionItem(
-                text = "SEI",
-                summary = "sei1t5c9dmjdempk7hklw0mm4wkxwzauncvqsgs3l4",
-                onClick = {
-                    clipboard.setText(AnnotatedString("sei1t5c9dmjdempk7hklw0mm4wkxwzauncvqsgs3l4"))
-                }
-            ),
-            OptionItem(
-                text = "HBAR",
-                summary = "0.0.4688681-szsjz",
-                onClick = {
-                    clipboard.setText(AnnotatedString("0.0.4688681-szsjz"))
-                }
+                text = coin,
+                summary = address,
+                onClick = cryptoOnClick
             )
-        )
+        }
     }
     if (state.isVisible) {
         BackHandler(showCryptoOptions) {
@@ -199,7 +133,7 @@ fun SupportSheet(
                                 letterSpacing = MaterialTheme.typography.titleLarge.letterSpacing
                             )
                         ) {
-                            append("Support the project")
+                            append(stringResource(R.string.support_the_project))
                         }
                         if (showCryptoOptions) {
                             append("\n")
@@ -211,7 +145,7 @@ fun SupportSheet(
                                     letterSpacing = MaterialTheme.typography.bodyMedium.letterSpacing
                                 )
                             ) {
-                                append("Click to copy")
+                                append(stringResource(R.string.click_to_copy))
                             }
                         }
                     },
