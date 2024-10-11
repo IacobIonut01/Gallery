@@ -61,6 +61,7 @@ import com.dot.gallery.core.Position
 import com.dot.gallery.core.Settings
 import com.dot.gallery.core.Settings.Misc.rememberAudioFocus
 import com.dot.gallery.core.Settings.Misc.rememberAutoHideNavBar
+import com.dot.gallery.core.Settings.Misc.rememberAutoHideOnVideoPlay
 import com.dot.gallery.core.Settings.Misc.rememberAutoHideSearchBar
 import com.dot.gallery.core.Settings.Misc.rememberForcedLastScreen
 import com.dot.gallery.core.Settings.Misc.rememberFullBrightnessView
@@ -434,6 +435,17 @@ fun rememberSettingsList(
             summary = context.getString(R.string.full_brightness_view_summary),
             isChecked = fullBrightnessView,
             onCheck = { fullBrightnessView = it },
+            screenPosition = Position.Middle
+        )
+    }
+
+    var autoHideOnVideoPlay by rememberAutoHideOnVideoPlay()
+    val autoHideOnVideoPlayPref = remember(autoHideOnVideoPlay) {
+        SettingsEntity.SwitchPreference(
+            title = context.getString(R.string.auto_hide_on_video_play),
+            summary = context.getString(R.string.auto_hide_on_video_play_summary),
+            isChecked = autoHideOnVideoPlay,
+            onCheck = { autoHideOnVideoPlay = it },
             screenPosition = Position.Bottom
         )
     }
@@ -476,6 +488,7 @@ fun rememberSettingsList(
             add(forcedLastScreenPref)
             add(audioFocusPref)
             add(fullBrightnessViewPref)
+            add(autoHideOnVideoPlayPref)
             /** ********************* **/
             /** ********************* **/
             /** Navigation Section Start **/

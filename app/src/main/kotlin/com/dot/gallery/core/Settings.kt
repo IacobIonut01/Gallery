@@ -273,6 +273,12 @@ object Settings {
         @Composable
         fun rememberFullBrightnessView() =
             rememberPreference(key = FULL_BRIGHTNESS_VIEW, defaultValue = false)
+
+        private val AUTO_HIDE_ON_VIDEO_PLAY = booleanPreferencesKey("auto_hide_on_video_play")
+
+        @Composable
+        fun rememberAutoHideOnVideoPlay() =
+            rememberPreference(key = AUTO_HIDE_ON_VIDEO_PLAY, defaultValue = true)
     }
 }
 

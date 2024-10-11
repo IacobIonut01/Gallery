@@ -61,6 +61,7 @@ import com.dot.gallery.core.Constants.DEFAULT_LOW_VELOCITY_SWIPE_DURATION
 import com.dot.gallery.core.Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION
 import com.dot.gallery.core.Constants.HEADER_DATE_FORMAT
 import com.dot.gallery.core.Constants.Target.TARGET_TRASH
+import com.dot.gallery.core.Settings.Misc.rememberAutoHideOnVideoPlay
 import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaState
@@ -87,6 +88,7 @@ import com.dot.gallery.ui.theme.BlackScrim
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.seconds
 
 @Stable
 @OptIn(ExperimentalFoundationApi::class)
@@ -262,6 +264,15 @@ fun MediaViewScreen(
                                 Box(
                                     modifier = Modifier.fillMaxSize()
                                 ) {
+                                    val hideUiOnPlay by rememberAutoHideOnVideoPlay()
+                                    LaunchedEffect(isPlaying.value, hideUiOnPlay) {
+                                        if (isPlaying.value && showUI.value && hideUiOnPlay) {
+                                            delay(2.seconds)
+                                            showUI.value = false
+                                            windowInsetsController.toggleSystemBars(false)
+                                        }
+                                    }
+
                                     val context = LocalContext.current
                                     val width =
                                         remember(context) { context.resources.displayMetrics.widthPixels }

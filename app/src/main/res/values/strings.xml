@@ -265,6 +265,8 @@
     <string name="take_audio_focus_summary">Enabling this will take audio focus when playing media. Any media playing in background will pause while the video is playing. (Restart app required)</string>
     <string name="full_brightness_view_title">Full Brightness when viewing</string>
     <string name="full_brightness_view_summary">Increase the screen brightness to maximum when viewing images and videos</string>
+    <string name="auto_hide_on_video_play">Hide UI on Video Play</string>
+    <string name="auto_hide_on_video_play_summary">Hides the UI after 2 seconds when playing videos</string>
     <plurals name="item_count">
         <item quantity="one">%s item</item>
         <item quantity="other">%s items</item>
