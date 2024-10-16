@@ -79,6 +79,7 @@ import com.dot.gallery.BuildConfig
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
+import com.dot.gallery.core.Settings.Misc.rememberTrashEnabled
 import com.dot.gallery.core.presentation.components.DragHandle
 import com.dot.gallery.core.presentation.components.NavigationBarSpacer
 import com.dot.gallery.feature_node.domain.model.AlbumState
@@ -828,6 +829,7 @@ fun TrashButton(
     var shouldMoveToTrash by rememberSaveable { mutableStateOf(true) }
     val state = rememberAppBottomSheetState()
     val scope = rememberCoroutineScope()
+    val trashEnabled = if(rememberTrashEnabled().value) R.string.trash else R.string.trash_delete
     val result = rememberActivityResult {
         scope.launch {
             state.hide()
@@ -839,7 +841,7 @@ fun TrashButton(
         currentMedia = media,
         imageVector = Icons.Outlined.DeleteOutline,
         followTheme = followTheme,
-        title = stringResource(id = R.string.trash),
+        title = stringResource(id = trashEnabled),
         onItemLongClick = {
             shouldMoveToTrash = false
             scope.launch {
