@@ -64,11 +64,15 @@
             android:name=".feature_node.presentation.main.MainActivity"
             android:exported="true"
             android:configChanges="keyboard|keyboardHidden|screenSize|screenLayout|smallestScreenSize|uiMode"
+            android:launchMode="singleTop"
             android:theme="@style/Theme.Gallery.Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+                <category android:name="android.intent.category.APP_GALLERY"/>
+                <category android:name="android.intent.category.INFO"/>
             </intent-filter>
         </activity>
 
