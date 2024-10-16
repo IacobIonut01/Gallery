@@ -177,7 +177,7 @@
     <string name="change_playback_speed_cd">Cambiar velocidad de reproducción</string>
     <string name="location_new_album">Ubicación: Almacenamiento-Interno/%1$s</string>
     <string name="permission_manage_files_title">Controlar todos los archivos</string>
-    <string name="permission_manage_files_summary">"Allows the app to create, modify, and delete files and albums that were previously restricted by the system. (Includes albums outside Pictures and DCIM folders and the ones from the SD Card"</string>
+    <string name="permission_manage_files_summary">"Permite crear, modificar y eliminar ficheros y álbumes que fueron previamente restringidos por el sistema. (Incluyendo álbumes fuera de las carpetas Pictures y DCIM y las de la tarjeta SD"</string>
     <string name="allow_to_manage_files">Permitir administrar todos los archivos</string>
     <string name="vault">Bóveda</string>
     <string name="tools">Herramientas</string>
