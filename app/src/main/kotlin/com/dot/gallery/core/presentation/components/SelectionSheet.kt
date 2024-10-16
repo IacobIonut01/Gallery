@@ -65,6 +65,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.R
+import com.dot.gallery.core.Settings.Misc.rememberTrashEnabled
 import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
@@ -211,10 +212,11 @@ fun SelectionSheet(
                     }
                 }
                 // Trash Component
+                val trashEnabled = if(rememberTrashEnabled().value) R.string.trash else R.string.trash_delete
                 SelectionBarColumn(
                     imageVector = Icons.Outlined.DeleteOutline,
                     tabletMode = tabletMode,
-                    title = stringResource(id = R.string.trash),
+                    title = stringResource(id = trashEnabled),
                     onItemLongClick = {
                         scope.launch {
                             shouldMoveToTrash = false
