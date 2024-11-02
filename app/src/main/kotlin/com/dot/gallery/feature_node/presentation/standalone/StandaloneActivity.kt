@@ -20,7 +20,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.presentation.mediaview.MediaViewScreen
-import com.dot.gallery.feature_node.presentation.util.setHdrMode
 import com.dot.gallery.feature_node.presentation.util.toggleOrientation
 import com.dot.gallery.ui.theme.GalleryTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -75,13 +74,4 @@ class StandaloneActivity : ComponentActivity() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        setHdrMode(true)
-    }
-
-    override fun onPause() {
-        super.onPause()
-        setHdrMode(false)
-    }
 }
