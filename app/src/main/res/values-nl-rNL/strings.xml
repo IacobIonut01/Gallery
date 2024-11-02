@@ -244,14 +244,14 @@
     <string name="created">Gemaakt</string>
     <string name="filter_type_date">Datum</string>
     <string name="filter_type_name">Naam</string>
-    <string name="images_videos"><![CDATA[%1$s Afbeeldingen en video's]]></string>
+    <string name="images_videos"><![CDATA[%1$s Afbeeldingen en video\'s]]></string>
     <string name="auto_hide_searchbar">Verberg zoekbalk bij scrollen</string>
     <string name="auto_hide_searchbar_summary">Automatisch de zoekbalk of de bovenste balk van het scherm verbergen tijdens het scrollen</string>
     <string name="auto_hide_navigationbar">Verberg navigatiebalk bij scrollen</string>
     <string name="auto_hide_navigationbar_summary">De navigatiebalk automatisch verbergen tijdens het scrollen</string>
     <string name="navigation">Navigatie</string>
     <string name="vault_setup_title">Uw kluis instellen</string>
-    <string name="vault_setup_subtitle"><![CDATA[Versleutel je privéfoto's en -video's]]></string>
+    <string name="vault_setup_subtitle"><![CDATA[Versleutel je privéfoto\'s en -video\'s]]></string>
     <string name="vault_setup_name">Naam kluis</string>
     <string name="vault_setup_security_error">Stel een schermbeveiliging in voordat u de kluis instelt.</string>
     <string name="vault_setup_summary">De kluis is toegankelijk via de beveiligingsmaatregelen van je telefoon (wachtwoord of biometrie)\n\n. De coderingssleutel is toegankelijk in de kluis en wordt gebruikt om de kluis te herstellen.</string>

@@ -30,7 +30,6 @@ android {
     }
 
     composeCompiler {
-        enableStrongSkippingMode = true
         includeSourceInformation = true
     }
 
