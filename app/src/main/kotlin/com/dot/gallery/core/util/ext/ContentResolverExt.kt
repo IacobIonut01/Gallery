@@ -142,18 +142,17 @@ fun ContentResolver.overrideImage(
     displayName: String
 ): Boolean {
     val values = ContentValues().apply {
-        put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
-        put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
-        put(MediaStore.MediaColumns.RELATIVE_PATH, relativePath)
+        put(MediaStore.MediaColumns.DATE_MODIFIED, System.currentTimeMillis())
         put(MediaStore.MediaColumns.IS_PENDING, 1)
     }
 
     return runCatching {
+        update(uri, values, null)
         openOutputStream(uri)?.use { stream ->
-            if (!bitmap.compress(format, 95, stream))
+            if (!bitmap.compress(format, 100, stream))
                 throw IOException("Failed to save bitmap.")
         } ?: throw IOException("Failed to open output stream.")
-        update(uri, values, null) > 0 && update(
+        update(
             uri,
             ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 0) },
             null

@@ -24,7 +24,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -62,7 +61,6 @@ fun ImageCropper(
     cropStyle: CropStyle = CropDefaults.style(),
     cropProperties: CropProperties,
     filterQuality: FilterQuality = DrawScope.DefaultFilterQuality,
-    colorFilter: ColorFilter? = null,
     crop: Boolean = false,
     cropEnabled: Boolean = true,
     onCropStart: () -> Unit,
@@ -189,7 +187,6 @@ fun ImageCropper(
             modifier = imageModifier,
             visible = visible,
             cropEnabled = cropEnabled,
-            colorFilter = colorFilter,
             imageBitmap = imageBitmap,
             containerWidth = containerWidth,
             containerHeight = containerHeight,
@@ -212,7 +209,6 @@ private fun ImageCropper(
     visible: Boolean,
     cropEnabled: Boolean,
     imageBitmap: ImageBitmap,
-    colorFilter: ColorFilter? = null,
     containerWidth: Dp,
     containerHeight: Dp,
     imageWidthPx: Int,
@@ -239,7 +235,6 @@ private fun ImageCropper(
                 modifier = modifier,
                 cropEnabled = cropEnabled,
                 imageBitmap = imageBitmap,
-                colorFilter = colorFilter,
                 containerWidth = containerWidth,
                 containerHeight = containerHeight,
                 imageWidthPx = imageWidthPx,
@@ -259,7 +254,6 @@ private fun ImageCropper(
 private fun ImageCropperImpl(
     modifier: Modifier,
     imageBitmap: ImageBitmap,
-    colorFilter: ColorFilter? = null,
     cropEnabled: Boolean,
     containerWidth: Dp,
     containerHeight: Dp,
@@ -278,7 +272,6 @@ private fun ImageCropperImpl(
         // Draw Image
         ImageDrawCanvas(
             modifier = modifier,
-            colorFilter = colorFilter,
             imageBitmap = imageBitmap,
             imageWidth = imageWidthPx,
             imageHeight = imageHeightPx

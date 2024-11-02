@@ -22,7 +22,7 @@ android {
         applicationId = "com.dot.gallery"
         minSdk = 30
         targetSdk = 35
-        versionCode = 30120
+        versionCode = 30123
         versionName = "3.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -218,8 +218,8 @@ dependencies {
     // Fuzzy Search
     implementation(libs.fuzzywuzzy)
 
-    // GPU Image
-    implementation(libs.gpuimage)
+    // Aire
+    implementation(libs.aire)
 
     // Pinch to zoom
     implementation(libs.pinchzoomgrid)

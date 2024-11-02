@@ -87,7 +87,7 @@ object CropDefaults {
  * is shared between ui and state.
  */
 @Immutable
-data class CropProperties internal constructor(
+data class CropProperties(
     val cropType: CropType,
     val handleSize: Float,
     val contentScale: ContentScale,
@@ -108,7 +108,7 @@ data class CropProperties internal constructor(
  * by [CropState] or [Modifier.crop]
  */
 @Immutable
-data class CropStyle internal constructor(
+data class CropStyle(
     val drawOverlay: Boolean,
     val drawGrid: Boolean,
     val strokeWidth: Dp,
