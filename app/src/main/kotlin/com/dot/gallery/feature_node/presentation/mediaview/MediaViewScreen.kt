@@ -61,6 +61,7 @@ import com.dot.gallery.core.Constants.DEFAULT_LOW_VELOCITY_SWIPE_DURATION
 import com.dot.gallery.core.Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION
 import com.dot.gallery.core.Constants.HEADER_DATE_FORMAT
 import com.dot.gallery.core.Constants.Target.TARGET_TRASH
+import com.dot.gallery.core.Settings.Misc.rememberAutoHideOnVideoPlay
 import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaState
@@ -71,8 +72,10 @@ import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewActions2
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewAppBar
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewDetails
+import com.dot.gallery.feature_node.presentation.mediaview.components.TrackVisibility
 import com.dot.gallery.feature_node.presentation.mediaview.components.media.MediaPreviewComponent
 import com.dot.gallery.feature_node.presentation.mediaview.components.video.VideoPlayerController
+import com.dot.gallery.feature_node.presentation.util.FullBrightnessWindow
 import com.dot.gallery.feature_node.presentation.util.ViewScreenConstants.BOTTOM_BAR_HEIGHT
 import com.dot.gallery.feature_node.presentation.util.ViewScreenConstants.BOTTOM_BAR_HEIGHT_SLIM
 import com.dot.gallery.feature_node.presentation.util.ViewScreenConstants.FullyExpanded
@@ -85,6 +88,7 @@ import com.dot.gallery.ui.theme.BlackScrim
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.seconds
 
 @Stable
 @OptIn(ExperimentalFoundationApi::class)
@@ -102,24 +106,19 @@ fun MediaViewScreen(
     vaultState: State<VaultState>,
     addMedia: (Vault, Media) -> Unit
 ) {
-    var initialPage by rememberSaveable(mediaId, mediaState.value) {
-        val lastMediaPosition = mediaState.value.media.indexOfFirst { it.id == mediaId }
-        mutableIntStateOf(if (lastMediaPosition != -1) lastMediaPosition else 0)
+    var currentPage by rememberSaveable { mutableIntStateOf(0) }
+    val initialPage by rememberSaveable(mediaId, mediaState.value, currentPage) {
+        var lastMediaPosition = mediaState.value.media.indexOfFirst { it.id == mediaId }
+        if (currentPage != 0) {
+            lastMediaPosition = currentPage
+        }
+        mutableIntStateOf(lastMediaPosition.coerceAtLeast(0))
     }
     val pagerState = rememberPagerState(
         initialPage = initialPage,
         initialPageOffsetFraction = 0f,
         pageCount = mediaState.value.media::size
     )
-    LaunchedEffect(mediaState.value) {
-        snapshotFlow { mediaState.value.isLoading }
-            .collectLatest { isLoading ->
-                if (!isLoading) {
-                    initialPage = mediaState.value.media.indexOfFirst { it.id == mediaId }
-                    pagerState.scrollToPage(initialPage)
-                }
-            }
-    }
 
     val currentDate = rememberSaveable { mutableStateOf("") }
     val currentMedia = rememberSaveable { mutableStateOf<Media?>(null) }
@@ -142,6 +141,7 @@ fun MediaViewScreen(
         navigateUp()
     }
     var sheetHeightDp by remember { mutableStateOf(0.dp) }
+    var lastSheetHeightDp by remember { mutableStateOf(sheetHeightDp) }
     val sheetState = rememberBottomSheetState(
         initialDetent = ImageOnly,
         detents = listOf(ImageOnly, FullyExpanded { sheetHeightDp = it })
@@ -151,7 +151,6 @@ fun MediaViewScreen(
         mutableFloatStateOf(0f)
     }
     var isNormalizationTargetSet by remember { mutableStateOf(false) }
-    var lastPage by remember { mutableIntStateOf(pagerState.currentPage) }
 
     LaunchedEffect(mediaState.value) {
         snapshotFlow { pagerState.currentPage }.collectLatest { page ->
@@ -160,7 +159,7 @@ fun MediaViewScreen(
                 pagerState.scrollToPage(newIndex)
                 lastIndex = -1
             }
-            if (page != lastPage) {
+            if (page != currentPage) {
                 isNormalizationTargetSet = false
             }
 
@@ -171,13 +170,21 @@ fun MediaViewScreen(
                 windowInsetsController.toggleSystemBars(show = true)
                 navigateUp()
             }
-            lastPage = page
+            if (!mediaState.value.isLoading) {
+                currentPage = page
+            }
+        }
+    }
+    LaunchedEffect(sheetHeightDp) {
+        if (lastSheetHeightDp != sheetHeightDp) {
+            lastSheetHeightDp = sheetHeightDp
+            isNormalizationTargetSet = false
         }
     }
 
     LaunchedEffect(isNormalizationTargetSet) {
         snapshotFlow { sheetState.offset }.collectLatest { offset ->
-            if (offset < 1f && !isNormalizationTargetSet) {
+            if (!isNormalizationTargetSet) {
                 isNormalizationTargetSet = true
                 normalizationTarget = offset
             }
@@ -195,244 +202,269 @@ fun MediaViewScreen(
         paddingValues.calculateBottomPadding()
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black)
-    ) {
-        HorizontalPager(
+
+    FullBrightnessWindow {
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .graphicsLayer {
-                    translationY =
-                        -((sheetHeightDp - BOTTOM_BAR_HEIGHT - bottomPadding).toPx() * normalizedOffset)
-                },
-            state = pagerState,
-            flingBehavior = PagerDefaults.flingBehavior(
-                state = pagerState,
-                snapAnimationSpec = tween(
-                    easing = FastOutLinearInEasing,
-                    durationMillis = DEFAULT_LOW_VELOCITY_SWIPE_DURATION
-                )
-            ),
-            key = { index ->
-                mediaState.value.media.getOrNull(index) ?: "empty"
-            },
-            pageSpacing = 16.dp,
-        ) { index ->
-            Column(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                var playWhenReady by rememberSaveable { mutableStateOf(false) }
-                LaunchedEffect(pagerState) {
-                    snapshotFlow { pagerState.currentPage }
-                        .collect { currentPage ->
-                            playWhenReady = currentPage == index
-                        }
-                }
-                val media by remember(index, mediaState) {
-                    derivedStateOf { mediaState.value.media.getOrNull(index) }
-                }
-
-                AnimatedVisibility(
-                    visible = remember(media) { media != null },
-                    enter = enterAnimation,
-                    exit = exitAnimation
-                ) {
-                    MediaPreviewComponent(
-                        media = media!!,
-                        uiEnabled = showUI.value,
-                        playWhenReady = playWhenReady,
-                        onSwipeDown = navigateUp,
-                        onItemClick = {
-                            if (sheetState.currentDetent == ImageOnly) {
-                                showUI.value = !showUI.value
-                                windowInsetsController.toggleSystemBars(showUI.value)
-                            }
-                        }
-                    ) { player, isPlaying, currentTime, totalTime, buffer, frameRate ->
-                        Box(
-                            modifier = Modifier.fillMaxSize()
-                        ) {
-                            val context = LocalContext.current
-                            val width =
-                                remember(context) { context.resources.displayMetrics.widthPixels }
-                            Spacer(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .graphicsLayer {
-                                        translationX = width / 1.5f
-                                    }
-                                    .align(Alignment.TopEnd)
-                                    .clip(CircleShape)
-                                    .combinedClickable(
-                                        interactionSource = remember { MutableInteractionSource() },
-                                        indication = null,
-                                        onDoubleClick = {
-                                            scope.launch {
-                                                currentTime.longValue += 10 * 1000
-                                                player.seekTo(currentTime.longValue)
-                                                delay(100)
-                                                player.play()
-                                            }
-                                        },
-                                        onClick = {
-                                            if (sheetState.currentDetent == ImageOnly) {
-                                                showUI.value = !showUI.value
-                                                windowInsetsController.toggleSystemBars(
-                                                    showUI.value
-                                                )
-                                            }
-                                        }
-                                    )
-                            )
-
-                            Spacer(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .graphicsLayer {
-                                        translationX = -width / 1.5f
-                                    }
-                                    .align(Alignment.TopStart)
-                                    .clip(CircleShape)
-                                    .combinedClickable(
-                                        interactionSource = remember { MutableInteractionSource() },
-                                        indication = null,
-                                        onDoubleClick = {
-                                            scope.launch {
-                                                currentTime.longValue -= 10 * 1000
-                                                player.seekTo(currentTime.longValue)
-                                                delay(100)
-                                                player.play()
-                                            }
-                                        },
-                                        onClick = {
-                                            if (sheetState.currentDetent == ImageOnly) {
-                                                showUI.value = !showUI.value
-                                                windowInsetsController.toggleSystemBars(
-                                                    showUI.value
-                                                )
-                                            }
-                                        }
-                                    )
-                            )
-
-                            androidx.compose.animation.AnimatedVisibility(
-                                visible = showUI.value,
-                                enter = enterAnimation(DEFAULT_TOP_BAR_ANIMATION_DURATION),
-                                exit = exitAnimation(DEFAULT_TOP_BAR_ANIMATION_DURATION),
-                                modifier = Modifier.fillMaxSize()
-                            ) {
-                                VideoPlayerController(
-                                    paddingValues = paddingValues,
-                                    player = player,
-                                    isPlaying = isPlaying,
-                                    currentTime = currentTime,
-                                    totalTime = totalTime,
-                                    buffer = buffer,
-                                    toggleRotate = toggleRotate,
-                                    frameRate = frameRate
-                                )
-                            }
-                        }
-                    }
-                }
-
-            }
-        }
-        MediaViewAppBar(
-            showUI = showUI.value,
-            showInfo = showInfo,
-            showDate = remember(currentMedia.value) {
-                currentMedia.value?.timestamp != 0L
-            },
-            currentDate = currentDate.value,
-            paddingValues = paddingValues,
-            onShowInfo = {
-                scope.launch {
-                    sheetState.animateTo(FullyExpanded)
-                }
-            },
-            onGoBack = {
-                scope.launch {
-                    if (sheetState.currentDetent == FullyExpanded) {
-                        sheetState.animateTo(ImageOnly)
-                    } else {
-                        navigateUp()
-                    }
-                }
-            }
-        )
-        BackHandler(sheetState.currentDetent == FullyExpanded) {
-            scope.launch {
-                sheetState.animateTo(ImageOnly)
-            }
-        }
-        val bottomSheetAlpha by animateFloatAsState(
-            targetValue = if (showUI.value) 1f else 0f,
-            label = "MediaViewActionsAlpha"
-        )
-        BottomSheet(
-            state = sheetState,
-            enabled = showUI.value && target != TARGET_TRASH,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .alpha(bottomSheetAlpha)
-                .fillMaxWidth()
+                .background(Color.Black)
         ) {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                val alpha by animateFloatAsState(
-                    targetValue = 1f - normalizedOffset,
-                    label = "MediaViewActions2Alpha"
-                )
-                AnimatedVisibility(
-                    visible = remember(currentMedia.value) {
-                        currentMedia.value != null
+            HorizontalPager(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        translationY =
+                            -((sheetHeightDp - BOTTOM_BAR_HEIGHT - bottomPadding).toPx() * normalizedOffset)
                     },
-                    enter = enterAnimation,
-                    exit = exitAnimation
+                state = pagerState,
+                flingBehavior = PagerDefaults.flingBehavior(
+                    state = pagerState,
+                    snapAnimationSpec = tween(
+                        easing = FastOutLinearInEasing,
+                        durationMillis = DEFAULT_LOW_VELOCITY_SWIPE_DURATION
+                    )
+                ),
+                key = { index ->
+                    mediaState.value.media.getOrNull(index) ?: "empty"
+                },
+                pageSpacing = 16.dp,
+            ) { index ->
+                Column(
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .graphicsLayer {
-                                this.alpha = alpha
-                                translationY =
-                                    BOTTOM_BAR_HEIGHT_SLIM.toPx() * normalizedOffset
-                            }
-                            .background(
-                                Brush.verticalGradient(
-                                    colors = listOf(Color.Transparent, BlackScrim)
-                                )
-                            )
-                            .padding(
-                                top = 24.dp,
-                                bottom = bottomPadding
-                            )
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState()),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceEvenly,
+                    var playWhenReady by remember { mutableStateOf(false) }
+                    val media by remember(index, mediaState) {
+                        derivedStateOf { mediaState.value.media.getOrNull(index) }
+                    }
+                    TrackVisibility(
+                        onVisibilityChanged = { isVisible ->
+                            playWhenReady = isVisible
+                        }
                     ) {
-                        MediaViewActions2(
-                            currentIndex = pagerState.currentPage,
-                            currentMedia = currentMedia.value!!,
-                            handler = handler,
-                            onDeleteMedia = { lastIndex = it },
-                            showDeleteButton = !isReadOnly
-                        )
+                        AnimatedVisibility(
+                            visible = remember(media) { media != null },
+                            enter = enterAnimation,
+                            exit = exitAnimation
+                        ) {
+                            MediaPreviewComponent(
+                                media = media!!,
+                                uiEnabled = showUI.value,
+                                playWhenReady = playWhenReady,
+                                onSwipeDown = {
+                                    windowInsetsController.toggleSystemBars(show = true)
+                                    navigateUp()
+                                },
+                                onItemClick = {
+                                    if (sheetState.currentDetent == ImageOnly) {
+                                        showUI.value = !showUI.value
+                                        windowInsetsController.toggleSystemBars(showUI.value)
+                                    }
+                                }
+                            ) { player, isPlaying, currentTime, totalTime, buffer, frameRate ->
+                                Box(
+                                    modifier = Modifier.fillMaxSize()
+                                ) {
+                                    val hideUiOnPlay by rememberAutoHideOnVideoPlay()
+                                    LaunchedEffect(isPlaying.value, hideUiOnPlay) {
+                                        if (isPlaying.value && showUI.value && hideUiOnPlay) {
+                                            delay(2.seconds)
+                                            showUI.value = false
+                                            windowInsetsController.toggleSystemBars(false)
+                                        }
+                                    }
+
+                                    val context = LocalContext.current
+                                    val width =
+                                        remember(context) { context.resources.displayMetrics.widthPixels }
+                                    Spacer(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .graphicsLayer {
+                                                translationX = width / 1.5f
+                                            }
+                                            .align(Alignment.TopEnd)
+                                            .clip(CircleShape)
+                                            .combinedClickable(
+                                                interactionSource = remember { MutableInteractionSource() },
+                                                indication = null,
+                                                onDoubleClick = {
+                                                    scope.launch {
+                                                        currentTime.longValue += 10 * 1000
+                                                        player.seekTo(currentTime.longValue)
+                                                        delay(100)
+                                                        player.play()
+                                                    }
+                                                },
+                                                onClick = {
+                                                    if (sheetState.currentDetent == ImageOnly) {
+                                                        showUI.value = !showUI.value
+                                                        windowInsetsController.toggleSystemBars(
+                                                            showUI.value
+                                                        )
+                                                    }
+                                                }
+                                            )
+                                    )
+
+                                    Spacer(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .graphicsLayer {
+                                                translationX = -width / 1.5f
+                                            }
+                                            .align(Alignment.TopStart)
+                                            .clip(CircleShape)
+                                            .combinedClickable(
+                                                interactionSource = remember { MutableInteractionSource() },
+                                                indication = null,
+                                                onDoubleClick = {
+                                                    scope.launch {
+                                                        currentTime.longValue -= 10 * 1000
+                                                        player.seekTo(currentTime.longValue)
+                                                        delay(100)
+                                                        player.play()
+                                                    }
+                                                },
+                                                onClick = {
+                                                    if (sheetState.currentDetent == ImageOnly) {
+                                                        showUI.value = !showUI.value
+                                                        windowInsetsController.toggleSystemBars(
+                                                            showUI.value
+                                                        )
+                                                    }
+                                                }
+                                            )
+                                    )
+
+                                    androidx.compose.animation.AnimatedVisibility(
+                                        visible = showUI.value,
+                                        enter = enterAnimation(DEFAULT_TOP_BAR_ANIMATION_DURATION),
+                                        exit = exitAnimation(DEFAULT_TOP_BAR_ANIMATION_DURATION),
+                                        modifier = Modifier.fillMaxSize()
+                                    ) {
+                                        VideoPlayerController(
+                                            paddingValues = paddingValues,
+                                            player = player,
+                                            isPlaying = isPlaying,
+                                            currentTime = currentTime,
+                                            totalTime = totalTime,
+                                            buffer = buffer,
+                                            toggleRotate = toggleRotate,
+                                            frameRate = frameRate
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
+            }
+            MediaViewAppBar(
+                showUI = showUI.value,
+                showInfo = showInfo,
+                showDate = remember(currentMedia.value) {
+                    currentMedia.value?.timestamp != 0L
+                },
+                currentDate = currentDate.value,
+                paddingValues = paddingValues,
+                onShowInfo = {
+                    scope.launch {
+                        if (showUI.value) {
+                            if (sheetState.currentDetent == ImageOnly) {
+                                sheetState.animateTo(FullyExpanded)
+                            } else {
+                                sheetState.animateTo(ImageOnly)
+                            }
+                        }
+                    }
+                },
+                onGoBack = {
+                    scope.launch {
+                        if (sheetState.currentDetent == FullyExpanded) {
+                            sheetState.animateTo(ImageOnly)
+                        } else {
+                            navigateUp()
+                        }
+                    }
+                }
+            )
+            LaunchedEffect(showUI.value) {
+                if (!showUI.value && (sheetState.currentDetent == FullyExpanded || sheetState.targetDetent == FullyExpanded)) {
+                    sheetState.animateTo(ImageOnly)
+                }
+            }
+            BackHandler(sheetState.currentDetent == FullyExpanded) {
+                scope.launch {
+                    sheetState.animateTo(ImageOnly)
+                }
+            }
+            val bottomSheetAlpha by animateFloatAsState(
+                targetValue = if (showUI.value) 1f else 0f,
+                animationSpec = tween(DEFAULT_TOP_BAR_ANIMATION_DURATION),
+                label = "MediaViewActionsAlpha"
+            )
+            BottomSheet(
+                state = sheetState,
+                enabled = showUI.value && target != TARGET_TRASH,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .alpha(bottomSheetAlpha)
+                    .fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    val alpha by animateFloatAsState(
+                        targetValue = 1f - normalizedOffset,
+                        label = "MediaViewActions2Alpha"
+                    )
+                    AnimatedVisibility(
+                        visible = currentMedia.value != null,
+                        enter = enterAnimation,
+                        exit = exitAnimation
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .graphicsLayer {
+                                    this.alpha = alpha
+                                    translationY =
+                                        BOTTOM_BAR_HEIGHT_SLIM.toPx() * normalizedOffset
+                                }
+                                .background(
+                                    Brush.verticalGradient(
+                                        colors = listOf(Color.Transparent, BlackScrim)
+                                    )
+                                )
+                                .padding(
+                                    top = 24.dp,
+                                    bottom = bottomPadding
+                                )
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                        ) {
+                            if (currentMedia.value != null) {
+                                MediaViewActions2(
+                                    currentIndex = pagerState.currentPage,
+                                    currentMedia = currentMedia.value!!,
+                                    handler = handler,
+                                    onDeleteMedia = { lastIndex = it },
+                                    showDeleteButton = !isReadOnly
+                                )
+                            }
+                        }
+                    }
 
-                MediaViewDetails(
-                    handler = handler,
-                    albumsState = albumsState,
-                    currentMedia = currentMedia.value,
-                    vaultState = vaultState,
-                    addMediaToVault = addMedia
-                )
+                    MediaViewDetails(
+                        handler = handler,
+                        albumsState = albumsState,
+                        currentMedia = currentMedia.value,
+                        vaultState = vaultState,
+                        addMediaToVault = addMedia
+                    )
+                }
             }
         }
     }

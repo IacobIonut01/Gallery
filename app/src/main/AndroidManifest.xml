@@ -15,6 +15,9 @@
     <!-- Required to download Map Preview for Media -->
     <uses-permission android:name="android.permission.INTERNET"/>
 
+    <!-- Remove unwanted permissions from being added -->
+    <uses-permission android:name="android.permission.INTERNET" tools:node="remove"/>
+
     <!-- Required to access media for SDK < 33 -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
@@ -61,11 +64,15 @@
             android:name=".feature_node.presentation.main.MainActivity"
             android:exported="true"
             android:configChanges="keyboard|keyboardHidden|screenSize|screenLayout|smallestScreenSize|uiMode"
+            android:launchMode="singleTop"
             android:theme="@style/Theme.Gallery.Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+                <category android:name="android.intent.category.APP_GALLERY"/>
+                <category android:name="android.intent.category.INFO"/>
             </intent-filter>
         </activity>
 
@@ -150,7 +157,7 @@
         <activity
             android:name=".feature_node.presentation.edit.EditActivity"
             android:configChanges="keyboard|keyboardHidden|screenSize|screenLayout|smallestScreenSize|uiMode"
-            android:enabled="false"
+            android:launchMode="singleTop"
             android:exported="true">
             <intent-filter android:label="@string/app_name">
                 <action android:name="android.intent.action.EDIT"/>

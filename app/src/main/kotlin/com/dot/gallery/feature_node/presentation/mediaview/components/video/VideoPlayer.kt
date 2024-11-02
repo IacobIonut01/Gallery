@@ -5,7 +5,9 @@
 
 package com.dot.gallery.feature_node.presentation.mediaview.components.video
 
+import android.app.Activity
 import android.media.MediaMetadataRetriever
+import android.view.WindowManager
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
@@ -35,6 +37,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
+import com.dot.gallery.core.Settings.Misc.rememberAudioFocus
 import com.dot.gallery.core.presentation.components.util.swipe
 import com.dot.gallery.feature_node.domain.model.Media
 import io.sanghun.compose.video.RepeatMode
@@ -61,6 +64,13 @@ fun VideoPlayer(
     val isPlaying = rememberSaveable(playWhenReady) { mutableStateOf(playWhenReady) }
     var lastPlayingState by rememberSaveable(isPlaying.value) { mutableStateOf(isPlaying.value) }
     val context = LocalContext.current
+    DisposableEffect(Unit) {
+        val activity = context as? Activity
+        activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        onDispose {
+            activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+    }
 
     val metadata = remember(media) {
         MediaMetadataRetriever().apply {
@@ -98,12 +108,13 @@ fun VideoPlayer(
     LaunchedEffect(showPlayer) {
         if (showPlayer) {
             delay(100)
-            exoPlayer?.playWhenReady = true
+            exoPlayer?.playWhenReady = isPlaying.value
             exoPlayer?.seekTo(currentTime.longValue)
         }
     }
 
     if (showPlayer) {
+        val audioFocus by rememberAudioFocus()
         SanghunComposeVideoVideoPlayer(
             mediaItems = listOf(
                 VideoPlayerMediaItem.StorageMediaItem(
@@ -112,10 +123,10 @@ fun VideoPlayer(
                 )
             ),
             handleLifecycle = true,
-            autoPlay = true,
+            autoPlay = playWhenReady,
             usePlayerController = false,
             enablePip = false,
-            handleAudioFocus = true,
+            handleAudioFocus = audioFocus,
             repeatMode = RepeatMode.ONE,
             playerInstance = {
                 exoPlayer = this
@@ -137,8 +148,7 @@ fun VideoPlayer(
                     onClick = onItemClick,
                 )
                 .swipe(
-                    onSwipeDown = onSwipeDown,
-                    onSwipeUp = null
+                    onSwipeDown = onSwipeDown
                 ),
         )
     }

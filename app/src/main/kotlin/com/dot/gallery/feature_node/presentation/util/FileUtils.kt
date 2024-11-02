@@ -27,6 +27,9 @@ import kotlin.math.log10
 import kotlin.math.min
 import kotlin.math.pow
 
+@Suppress("NOTHING_TO_INLINE")
+inline fun String.sentenceCase(): String = lowercase().replaceFirstChar { it.uppercase() }
+
 fun formatSize(size: Long): String {
     if (size <= 0) return "0 B"
 

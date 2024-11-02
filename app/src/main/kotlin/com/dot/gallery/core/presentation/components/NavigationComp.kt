@@ -76,7 +76,7 @@ fun NavigationComp(
     val navPipe = hiltViewModel<ChanneledViewModel>()
     navPipe
         .initWithNav(navController, bottomBarState)
-        .collectAsStateWithLifecycle(LocalLifecycleOwner.current)
+        .collectAsStateWithLifecycle(LocalLifecycleOwner.current, context = Dispatchers.Main.immediate)
     val groupTimelineByMonth by rememberTimelineGroupByMonth()
 
     val context = LocalContext.current
@@ -110,7 +110,7 @@ fun NavigationComp(
     LaunchedEffect(navBackStackEntry) {
         navBackStackEntry?.destination?.route?.let {
             val shouldDisplayBottomBar =
-                bottomNavEntries.find { item -> item.route == it } != null
+                bottomNavEntries.find { item -> item.route == it } != null && !searchBarActive.value
             if (lastShouldDisplay != shouldDisplayBottomBar) {
                 bottomBarState.value = shouldDisplayBottomBar
                 lastShouldDisplay = shouldDisplayBottomBar

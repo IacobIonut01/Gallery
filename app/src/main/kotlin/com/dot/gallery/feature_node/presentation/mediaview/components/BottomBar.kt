@@ -159,209 +159,215 @@ fun MediaViewDetails(
             enter = enterAnimation,
             exit = exitAnimation
         ) {
-            Column {
-                val context = LocalContext.current
-                val scope = rememberCoroutineScope()
-                val exifInterface = rememberExifInterface(currentMedia!!, true)
-                val exifMetadata = rememberExifMetadata(currentMedia, exifInterface)
-                var exifAttributes by rememberExifAttributes(exifInterface)
-                val exifAttributesEditResult = rememberActivityResult(
-                    onResultOk = {
-                        scope.launch {
-                            if (handler.updateMediaExif(currentMedia, exifAttributes)) {
-                                printDebug("Exif Attributes Updated")
-                            } else {
-                                Toast.makeText(context, "Exif Update failed", Toast.LENGTH_SHORT).show()
-                            }
-                        }
-                    }
-                )
-
-                val dateCaption = rememberMediaDateCaption(exifMetadata, currentMedia)
-                val metadataState = rememberAppBottomSheetState()
-                val mediaInfoList = rememberMediaInfo(
-                    media = currentMedia,
-                    exifMetadata = exifMetadata,
-                    onLabelClick = {
-                        if (!currentMedia.readUriOnly) {
+            if (currentMedia != null) {
+                Column {
+                    val context = LocalContext.current
+                    val scope = rememberCoroutineScope()
+                    val exifInterface = rememberExifInterface(currentMedia, true)
+                    val exifMetadata = rememberExifMetadata(currentMedia, exifInterface)
+                    var exifAttributes by rememberExifAttributes(exifInterface)
+                    val exifAttributesEditResult = rememberActivityResult(
+                        onResultOk = {
                             scope.launch {
-                                metadataState.show()
-                            }
-                        }
-                    }
-                )
-
-                val locationData = rememberLocationData(exifMetadata, currentMedia)
-
-                LazyColumn(
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    item {
-                        DateHeader(
-                            modifier = Modifier.fillMaxWidth(),
-                            mediaDateCaption = dateCaption
-                        )
-                    }
-                    item {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .horizontalScroll(state = rememberScrollState())
-                                .padding(horizontal = 16.dp)
-                                .padding(top = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            if (currentMedia.isRaw) {
-                                MediaInfoChip2(
-                                    text = currentMedia.fileExtension.toUpperCase(Locale.current),
-                                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer
-                                )
-                            }
-                        }
-                    }
-                    item {
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
-                    items(
-                        items = mediaInfoList
-                    ) {
-                        MediaInfoRow(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp),
-                            label = it.label,
-                            content = it.content,
-                            trailingContent = {
-                                if (it.trailingIcon != null && !currentMedia.readUriOnly) {
-                                    MediaInfoChip2(
-                                        text = stringResource(R.string.edit),
-                                        contentColor = MaterialTheme.colorScheme.secondary,
-                                        containerColor = MaterialTheme.colorScheme.secondary.copy(
-                                            alpha = 0.1f
-                                        ),
-                                        onClick = {
-                                            scope.launch {
-                                                metadataState.show()
-                                            }
-                                        }
-                                    )
+                                if (handler.updateMediaExif(currentMedia, exifAttributes)) {
+                                    printDebug("Exif Attributes Updated")
+                                } else {
+                                    Toast.makeText(
+                                        context,
+                                        "Exif Update failed",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
                                 }
-                            },
-                            onClick = it.onClick
-                        )
-                    }
-                    item {
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
-                    item {
-                        MediaViewInfoActions2(
-                            media = currentMedia,
-                            albumsState = albumsState,
-                            vaults = vaultState,
-                            handler = handler,
-                            addMedia = addMediaToVault
-                        )
-                    }
-                    item {
-                        LocationItem(
-                            locationData = locationData
-                        )
-                    }
-                    item {
-                        androidx.compose.animation.AnimatedVisibility(
-                            visible = !currentMedia.readUriOnly
-                        ) {
-                            Column(
+                            }
+                        }
+                    )
+
+                    val dateCaption = rememberMediaDateCaption(exifMetadata, currentMedia)
+                    val metadataState = rememberAppBottomSheetState()
+                    val mediaInfoList = rememberMediaInfo(
+                        media = currentMedia,
+                        exifMetadata = exifMetadata,
+                        onLabelClick = {
+                            if (!currentMedia.readUriOnly) {
+                                scope.launch {
+                                    metadataState.show()
+                                }
+                            }
+                        }
+                    )
+
+                    val locationData = rememberLocationData(exifMetadata, currentMedia)
+
+                    LazyColumn(
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        item {
+                            DateHeader(
+                                modifier = Modifier.fillMaxWidth(),
+                                mediaDateCaption = dateCaption
+                            )
+                        }
+                        item {
+                            Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
+                                    .horizontalScroll(state = rememberScrollState())
                                     .padding(horizontal = 16.dp)
-                                    .padding(bottom = 16.dp)
-                                    .clip(RoundedCornerShape(16.dp)),
-                                verticalArrangement = Arrangement.spacedBy(1.dp),
+                                    .padding(top = 8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                AnimatedVisibility(
-                                    visible = locationData != null
-                                ) {
-                                    ListItem(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clip(RoundedCornerShape(2.dp))
-                                            .clickable {
-                                                scope.launch {
-                                                    exifAttributes = exifAttributes.copy(
-                                                        gpsLatLong = null
-                                                    )
-                                                    exifAttributesEditResult.launch(
-                                                        currentMedia.writeRequest(context.contentResolver)
-                                                    )
-                                                }
-                                            },
-                                        headlineContent = {
-                                            Text("Delete Location")
-                                        },
-                                        leadingContent = {
-                                            Icon(
-                                                imageVector = Icons.Outlined.GpsOff,
-                                                contentDescription = "Delete Location"
-                                            )
-                                        },
-                                        colors = ListItemDefaults.colors(
-                                            containerColor = MaterialTheme.colorScheme.primary.copy(
-                                                alpha = 0.1f
-                                            ),
-                                            headlineColor = MaterialTheme.colorScheme.primary,
-                                            leadingIconColor = MaterialTheme.colorScheme.primary
-                                        )
-                                    )
-                                }
-                                AnimatedVisibility(
-                                    visible = exifMetadata?.lensDescription != null
-                                ) {
-                                    ListItem(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clip(RoundedCornerShape(2.dp))
-                                            .clickable {
-                                                scope.launch {
-                                                    exifAttributes = ExifAttributes()
-                                                    exifAttributesEditResult.launch(
-                                                        currentMedia.writeRequest(context.contentResolver)
-                                                    )
-                                                }
-                                            },
-                                        headlineContent = {
-                                            Text("Delete Metadata")
-                                        },
-                                        leadingContent = {
-                                            Icon(
-                                                imageVector = Icons.Outlined.LocalFireDepartment,
-                                                contentDescription = "Delete Metadata"
-                                            )
-                                        },
-                                        colors = ListItemDefaults.colors(
-                                            containerColor = MaterialTheme.colorScheme.primary.copy(
-                                                alpha = 0.1f
-                                            ),
-                                            headlineColor = MaterialTheme.colorScheme.primary,
-                                            leadingIconColor = MaterialTheme.colorScheme.primary
-                                        )
+                                if (currentMedia.isRaw) {
+                                    MediaInfoChip2(
+                                        text = currentMedia.fileExtension.toUpperCase(Locale.current),
+                                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer
                                     )
                                 }
                             }
                         }
+                        item {
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                        items(
+                            items = mediaInfoList
+                        ) {
+                            MediaInfoRow(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp),
+                                label = it.label,
+                                content = it.content,
+                                trailingContent = {
+                                    if (it.trailingIcon != null && !currentMedia.readUriOnly) {
+                                        MediaInfoChip2(
+                                            text = stringResource(R.string.edit),
+                                            contentColor = MaterialTheme.colorScheme.secondary,
+                                            containerColor = MaterialTheme.colorScheme.secondary.copy(
+                                                alpha = 0.1f
+                                            ),
+                                            onClick = {
+                                                scope.launch {
+                                                    metadataState.show()
+                                                }
+                                            }
+                                        )
+                                    }
+                                },
+                                onClick = it.onClick
+                            )
+                        }
+                        item {
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                        item {
+                            MediaViewInfoActions2(
+                                media = currentMedia,
+                                albumsState = albumsState,
+                                vaults = vaultState,
+                                handler = handler,
+                                addMedia = addMediaToVault
+                            )
+                        }
+                        item {
+                            LocationItem(
+                                locationData = locationData
+                            )
+                        }
+                        item {
+                            androidx.compose.animation.AnimatedVisibility(
+                                visible = !currentMedia.readUriOnly
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp)
+                                        .padding(bottom = 16.dp)
+                                        .clip(RoundedCornerShape(16.dp)),
+                                    verticalArrangement = Arrangement.spacedBy(1.dp),
+                                ) {
+                                    AnimatedVisibility(
+                                        visible = locationData != null
+                                    ) {
+                                        ListItem(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clip(RoundedCornerShape(2.dp))
+                                                .clickable {
+                                                    scope.launch {
+                                                        exifAttributes = exifAttributes.copy(
+                                                            gpsLatLong = null
+                                                        )
+                                                        exifAttributesEditResult.launch(
+                                                            currentMedia.writeRequest(context.contentResolver)
+                                                        )
+                                                    }
+                                                },
+                                            headlineContent = {
+                                                Text("Delete Location")
+                                            },
+                                            leadingContent = {
+                                                Icon(
+                                                    imageVector = Icons.Outlined.GpsOff,
+                                                    contentDescription = "Delete Location"
+                                                )
+                                            },
+                                            colors = ListItemDefaults.colors(
+                                                containerColor = MaterialTheme.colorScheme.primary.copy(
+                                                    alpha = 0.1f
+                                                ),
+                                                headlineColor = MaterialTheme.colorScheme.primary,
+                                                leadingIconColor = MaterialTheme.colorScheme.primary
+                                            )
+                                        )
+                                    }
+                                    AnimatedVisibility(
+                                        visible = exifMetadata?.lensDescription != null
+                                    ) {
+                                        ListItem(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clip(RoundedCornerShape(2.dp))
+                                                .clickable {
+                                                    scope.launch {
+                                                        exifAttributes = ExifAttributes()
+                                                        exifAttributesEditResult.launch(
+                                                            currentMedia.writeRequest(context.contentResolver)
+                                                        )
+                                                    }
+                                                },
+                                            headlineContent = {
+                                                Text("Delete Metadata")
+                                            },
+                                            leadingContent = {
+                                                Icon(
+                                                    imageVector = Icons.Outlined.LocalFireDepartment,
+                                                    contentDescription = "Delete Metadata"
+                                                )
+                                            },
+                                            colors = ListItemDefaults.colors(
+                                                containerColor = MaterialTheme.colorScheme.primary.copy(
+                                                    alpha = 0.1f
+                                                ),
+                                                headlineColor = MaterialTheme.colorScheme.primary,
+                                                leadingIconColor = MaterialTheme.colorScheme.primary
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        item {
+                            NavigationBarSpacer()
+                        }
                     }
-                    item {
-                        NavigationBarSpacer()
-                    }
-                }
 
-                if (metadataState.isVisible) {
-                    MetadataEditSheet(
-                        state = metadataState,
-                        media = currentMedia,
-                        handle = handler
-                    )
+                    if (metadataState.isVisible) {
+                        MetadataEditSheet(
+                            state = metadataState,
+                            media = currentMedia,
+                            handle = handler
+                        )
+                    }
                 }
             }
         }

@@ -111,7 +111,9 @@ fun OptionLayout(
                 contentColor = item.contentColor
                     ?: MaterialTheme.colorScheme.onSurface,
                 position = position,
-                onClick = item.onClick
+                onClick = {
+                    item.onClick(item.summary.toString())
+                }
             )
         }
     }
@@ -182,7 +184,7 @@ fun OptionButton(
 data class OptionItem(
     val text: String,
     val summary: String? = null,
-    val onClick: () -> Unit,
+    val onClick: (summary: String) -> Unit,
     val enabled: Boolean = true,
     val containerColor: Color? = null,
     val contentColor: Color? = null,

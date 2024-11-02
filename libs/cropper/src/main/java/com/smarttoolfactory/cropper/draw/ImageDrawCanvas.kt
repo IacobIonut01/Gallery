@@ -3,7 +3,6 @@ package com.smarttoolfactory.cropper.draw
 import androidx.compose.foundation.Canvas
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
@@ -16,7 +15,6 @@ import kotlin.math.roundToInt
 internal fun ImageDrawCanvas(
     modifier: Modifier,
     imageBitmap: ImageBitmap,
-    colorFilter: ColorFilter? = null,
     imageWidth: Int,
     imageHeight: Int
 ) {
@@ -27,7 +25,6 @@ internal fun ImageDrawCanvas(
 
         drawImage(
             image = imageBitmap,
-            colorFilter = colorFilter,
             srcSize = IntSize(imageBitmap.width, imageBitmap.height),
             dstSize = IntSize(imageWidth, imageHeight),
             dstOffset = IntOffset(

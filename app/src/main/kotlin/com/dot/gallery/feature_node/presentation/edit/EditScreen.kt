@@ -1,350 +1,377 @@
 package com.dot.gallery.feature_node.presentation.edit
 
-import android.media.MediaScannerConnection
-import android.widget.Toast
+import android.graphics.Bitmap
+import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.OpenInNew
+import androidx.compose.material.icons.automirrored.outlined.Undo
+import androidx.compose.material.icons.outlined.ChevronLeft
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.layout.AnimatedPane
+import androidx.compose.material3.adaptive.layout.PaneAdaptedValue
+import androidx.compose.material3.adaptive.layout.SupportingPaneScaffold
+import androidx.compose.material3.adaptive.layout.SupportingPaneScaffoldRole
+import androidx.compose.material3.adaptive.navigation.rememberSupportingPaneScaffoldNavigator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavDestination.Companion.hasRoute
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
-import com.dot.gallery.feature_node.presentation.edit.components.EditBottomBar
-import com.dot.gallery.feature_node.presentation.edit.components.EditId.ADJUST
-import com.dot.gallery.feature_node.presentation.edit.components.EditId.CROP
-import com.dot.gallery.feature_node.presentation.edit.components.EditId.FILTERS
-import com.dot.gallery.feature_node.presentation.edit.components.EditId.MARKUP
-import com.dot.gallery.feature_node.presentation.edit.components.EditId.MORE
-import com.dot.gallery.feature_node.presentation.edit.components.EditOption
-import com.dot.gallery.feature_node.presentation.edit.components.EditOptions
-import com.dot.gallery.feature_node.presentation.edit.components.HorizontalScrubber
-import com.dot.gallery.feature_node.presentation.edit.components.adjustments.AdjustmentFilter
-import com.dot.gallery.feature_node.presentation.edit.components.adjustments.AdjustmentSelector
-import com.dot.gallery.feature_node.presentation.edit.components.crop.CropOptions
-import com.dot.gallery.feature_node.presentation.edit.components.crop.Cropper
-import com.dot.gallery.feature_node.presentation.edit.components.filters.FilterSelector
-import com.dot.gallery.feature_node.presentation.edit.components.more.MoreSelector
+import com.dot.gallery.feature_node.domain.model.editor.Adjustment
+import com.dot.gallery.feature_node.domain.model.editor.CropState
+import com.dot.gallery.feature_node.domain.model.editor.DrawMode
+import com.dot.gallery.feature_node.domain.model.editor.EditorDestination
+import com.dot.gallery.feature_node.domain.model.editor.ImageFilter
+import com.dot.gallery.feature_node.domain.model.editor.PathProperties
+import com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.VariableFilterTypes
+import com.dot.gallery.feature_node.presentation.edit.components.editor.EditorNavigator
+import com.dot.gallery.feature_node.presentation.edit.components.editor.ImageViewer
 import com.dot.gallery.feature_node.presentation.util.getEditImageCapableApps
-import com.smarttoolfactory.cropper.model.OutlineType
-import com.smarttoolfactory.cropper.model.RectCropShape
-import com.smarttoolfactory.cropper.settings.CropDefaults
-import com.smarttoolfactory.cropper.settings.CropOutlineProperty
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlin.math.roundToInt
+import com.dot.gallery.feature_node.presentation.util.goBack
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
-fun EditScreen(
-    viewModel: EditViewModel,
-    onNavigateUp: () -> Unit = {},
+fun EditScreen2(
+    canOverride: Boolean = false,
+    canSave: Boolean = true,
+    isChanged: Boolean = false,
+    isSaving: Boolean = false,
+    currentImage: Bitmap?,
+    targetImage: Bitmap?,
+    targetUri: Uri?,
+    originalImage: Bitmap? = null,
+    previewMatrix: ColorMatrix? = null,
+    previewRotation: Float = 0f,
+    appliedAdjustments: List<Adjustment> = emptyList(),
+    currentPosition: Offset,
+    paths: List<Pair<Path, PathProperties>>,
+    pathsUndone: List<Pair<Path, PathProperties>>,
+    previousPosition: Offset,
+    drawMode: DrawMode,
+    currentPathProperty: PathProperties,
+    currentPath: Path,
+    onClose: () -> Unit,
+    onOverride: () -> Unit,
+    onSaveCopy: () -> Unit,
+    onAdjustItemLongClick: (VariableFilterTypes) -> Unit,
+    onAdjustmentChange: (Adjustment) -> Unit,
+    onAdjustmentPreview: (Adjustment) -> Unit,
+    onToggleFilter: (ImageFilter) -> Unit,
+    removeLast: () -> Unit,
+    onCropSuccess: (Bitmap) -> Unit ,
+    addPath: (Path, PathProperties) -> Unit,
+    clearPathsUndone: () -> Unit,
+    setCurrentPosition: (Offset) -> Unit,
+    setPreviousPosition: (Offset) -> Unit,
+    setDrawMode: (DrawMode) -> Unit,
+    setCurrentPath: (Path) -> Unit,
+    setCurrentPathProperty: (PathProperties) -> Unit,
+    applyDrawing: (Bitmap, () -> Unit) -> Unit,
+    undoLastPath: () -> Unit,
+    redoLastPath: () -> Unit
 ) {
-    val image by viewModel.image.collectAsStateWithLifecycle()
-    val mediaRef by viewModel.mediaRef.collectAsStateWithLifecycle()
-    var crop by remember { mutableStateOf(false) }
-    var saving by remember { mutableStateOf(false) }
     val context = LocalContext.current
-    val editApps = remember(context, context::getEditImageCapableApps)
-    val options = remember(editApps) {
-        mutableStateListOf(
-            EditOption(
-                title = "Crop",
-                id = CROP
-            ),
-            EditOption(
-                title = "Adjust",
-                isEnabled = false,
-                id = ADJUST
-            ),
-            EditOption(
-                title = "Filters",
-                id = FILTERS
-            ),
-            EditOption(
-                title = "Markup",
-                isEnabled = false,
-                id = MARKUP
-            )
-        )
+    val navigator = rememberSupportingPaneScaffoldNavigator()
+    val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+
+    val showMarkup by rememberSaveable(navBackStackEntry) {
+        mutableStateOf(navBackStackEntry?.destination?.route?.contains("markup", true) == true)
     }
-    LaunchedEffect(editApps) {
-        if (editApps.isNotEmpty()) {
-            options.add(
-                EditOption(
-                    title = "More",
-                    id = MORE
-                )
-            )
-        }
-    }
-    val selectedOption = remember {
-        mutableStateOf(options.first())
-    }
-    val selectedAdjFilter = remember {
-        mutableStateOf<Pair<AdjustmentFilter, Float>?>(null)
-    }
-    val scope = rememberCoroutineScope(getContext = { Dispatchers.IO })
-    val filters by viewModel.filters.collectAsStateWithLifecycle(context = Dispatchers.IO)
-    val cropEnabled by remember(selectedOption.value) { mutableStateOf(selectedOption.value.id == CROP) }
-    val pagerState = rememberPagerState { options.size }
-    LaunchedEffect(selectedOption.value.id) {
-        pagerState.scrollToPage(
-            when (selectedOption.value.id) {
-                CROP -> 0
-                ADJUST -> 1
-                FILTERS -> 2
-                MARKUP -> 3
-                MORE -> 4
-            }
+
+    var cropState by rememberSaveable { mutableStateOf(CropState()) }
+    LaunchedEffect(navBackStackEntry) {
+        cropState = cropState.copy(
+            showCropper = navBackStackEntry?.destination?.hasRoute<EditorDestination.Crop>() == true
         )
     }
 
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        bottomBar = {
-            Column {
-                HorizontalDivider()
-                Spacer(modifier = Modifier.height(8.dp))
-                EditOptions(
-                    options = options,
-                    selectedOption = selectedOption
-                )
-                EditBottomBar(
-                    onCancel = onNavigateUp,
-                    enabled = !saving,
-                    canRevert = viewModel.canRevert.value,
-                    onOverride = { },
-                    onRevert = viewModel::revert,
-                    onSaveCopy = {
-                        scope.launch {
-                            image?.let {
-                                viewModel.saveImage(it.asImageBitmap(), asCopy = true) { success ->
-                                    if (success) {
-                                        MediaScannerConnection.scanFile(
-                                            context,
-                                            arrayOf(mediaRef!!.path),
-                                            arrayOf(mediaRef!!.mimeType),
-                                            null
-                                        )
-                                        onNavigateUp()
-                                    } else {
-                                        Toast.makeText(
-                                            context,
-                                            "Save failed.",
-                                            Toast.LENGTH_LONG
-                                        ).show()
-                                    }
-                                }
-                            }
-                        }
-                    }
-                )
-            }
-        }
-    ) { paddingValues ->
-        Column(
+    val animatedBlurRadius by animateDpAsState(
+        if (isSaving || cropState.isCropping) 50.dp else 0.dp,
+        label = "animatedBlurRadius"
+    )
+
+    Box {
+        Scaffold(
             modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black)
                 .animateContentSize()
-                .padding(paddingValues),
-        ) {
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .animateContentSize()
-            ) {
-                image?.let { imageBitmap ->
-                    Cropper(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        bitmap = imageBitmap,
-                        cropEnabled = cropEnabled,
-                        cropProperties = CropDefaults.properties(
-                            cropOutlineProperty = CropOutlineProperty(
-                                outlineType = OutlineType.RoundedRect,
-                                cropOutline = RectCropShape(
-                                    id = 0,
-                                    title = OutlineType.RoundedRect.name
-                                )
-                            ),
-                            maxZoom = 5f,
-                            overlayRatio = 1f,
-                            pannable = true,
-                            fling = false,
-                            rotatable = false
-                        ),
-                        crop = crop,
-                        onCropStart = {
-                            saving = true
-                        },
-                        onCropSuccess = { newImage ->
-                            scope.launch {
-                                viewModel.addCroppedImage(newImage)
-                            }
-                            crop = false
-                            saving = false
-                        }
-                    )
-                }
-
-                this@Column.AnimatedVisibility(
-                    visible = saving,
-                    enter = enterAnimation,
-                    exit = exitAnimation
+                .fillMaxSize()
+                .then(if (isSaving || cropState.isCropping) Modifier.blur(animatedBlurRadius) else Modifier),
+            containerColor = Color.Black,
+            contentColor = Color.White,
+            bottomBar = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .animateContentSize()
+                        .systemBarsPadding(),
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(color = Color.Black.copy(alpha = 0.4f)),
-                        contentAlignment = Alignment.Center
+                    AnimatedVisibility(
+                        visible = navigator.scaffoldValue[SupportingPaneScaffoldRole.Supporting] == PaneAdaptedValue.Hidden,
+                        enter = enterAnimation,
+                        exit = exitAnimation
                     ) {
-                        CircularProgressIndicator()
-                    }
-                }
-
-            }
-
-            HorizontalPager(
-                modifier = Modifier
-                    .wrapContentHeight()
-                    .animateContentSize(),
-                userScrollEnabled = false,
-                beyondViewportPageCount = 1,
-                verticalAlignment = Alignment.Bottom,
-                state = pagerState
-            ) { page ->
-                when (page) {
-                    0 -> {
-                        CropOptions(
-                            onMirrorPressed = {
-                                viewModel.flipHorizontally()
+                        EditorNavigator(
+                            modifier = Modifier
+                                .animateContentSize()
+                                .fillMaxWidth(),
+                            navController = navController,
+                            appliedAdjustments = appliedAdjustments,
+                            targetImage = targetImage,
+                            targetUri = targetUri,
+                            onAdjustItemLongClick = onAdjustItemLongClick,
+                            onAdjustmentChange = onAdjustmentChange,
+                            onAdjustmentPreview = onAdjustmentPreview,
+                            onToggleFilter = onToggleFilter,
+                            startCropping = {
+                                cropState = cropState.copy(isCropping = true)
                             },
-                            onRotatePressed = {
-                                //cropRotation += 90f
-                                viewModel.addAngle(90f)
-                            },
-                            onAspectRationPressed = {
-
-                            },
-                            onCropPressed = {
-                                crop = true
-                            }
+                            undoLastPath = undoLastPath,
+                            redoLastPath = redoLastPath,
+                            drawMode = drawMode,
+                            setDrawMode = setDrawMode,
+                            currentPathProperty = currentPathProperty,
+                            setCurrentPathProperty = setCurrentPathProperty,
+                            paths = paths,
+                            pathsUndone = pathsUndone,
                         )
                     }
-
-                    1 -> {
-                        Column {
-                            val state =
-                                rememberPagerState(pageCount = EditViewModel.adjustmentFilters::size)
-                            LaunchedEffect(selectedAdjFilter.value) {
-                                selectedAdjFilter.value?.let {
-                                    val index = EditViewModel.adjustmentFilters.indexOf(it.first)
-                                    state.scrollToPage(index)
-                                }
-                            }
-                            AnimatedVisibility(
-                                visible = selectedAdjFilter.value != null,
-                                enter = slideInVertically(),
-                                exit = slideOutVertically()
-                            ) {
-                                HorizontalPager(
-                                    state = state,
-                                    userScrollEnabled = false,
-                                ) {
-                                    val adjustment = EditViewModel.adjustmentFilters[it]
-                                    var currentValue by rememberSaveable {
-                                        mutableFloatStateOf(
-                                            selectedAdjFilter.value?.second
-                                                ?: adjustment.defaultValue
-                                        )
-                                    }
-                                    HorizontalScrubber(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(horizontal = 16.dp),
-                                        displayValue = { value ->
-                                            (value * 100).roundToInt().toString()
-                                        },
-                                        minValue = remember(adjustment, adjustment::minValue),
-                                        maxValue = remember(adjustment, adjustment::maxValue),
-                                        defaultValue = remember(
-                                            adjustment,
-                                            adjustment::defaultValue
-                                        ),
-                                        allowNegative = remember(adjustment) { adjustment.minValue < 0f },
-                                        currentValue = currentValue,
-                                        onValueChanged = { isScrolling, newValue ->
-                                            scope.launch {
-                                                if (selectedAdjFilter.value != null) {
-                                                    viewModel.addAdjustment(
-                                                        isScrolling,
-                                                        selectedAdjFilter.value!!.first to newValue
-                                                    )
-                                                    currentValue = newValue
-                                                }
-                                            }
+                    val showingEditorScreen = remember(navBackStackEntry) {
+                        navBackStackEntry?.destination?.hasRoute<EditorDestination.Editor>() == true
+                    }
+                    Row(
+                        modifier = Modifier
+                            .animateContentSize()
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row {
+                            IconButton(
+                                onClick = {
+                                    if (showingEditorScreen) onClose() else {
+                                        context.goBack {
+                                            navController.popBackStack()
                                         }
+                                    }
+                                }
+                            ) {
+                                val icon =
+                                    if (showingEditorScreen) Icons.Outlined.Close else Icons.Outlined.ChevronLeft
+                                Icon(
+                                    imageVector = icon,
+                                    contentDescription = icon.name,
+                                    tint = LocalContentColor.current
+                                )
+                            }
+
+                            val showingExternalEditorScreen =
+                                navBackStackEntry?.destination?.hasRoute<EditorDestination.ExternalEditor>() == true
+
+                            val editApps = remember(context, context::getEditImageCapableApps)
+
+                            AnimatedVisibility(
+                                visible = !showingExternalEditorScreen && (editApps.isNotEmpty() || isChanged),
+                                enter = enterAnimation,
+                                exit = exitAnimation
+                            ) {
+                                IconButton(
+                                    onClick = {
+                                        if (isChanged) {
+                                            removeLast()
+                                        } else {
+                                            navController.navigate(EditorDestination.ExternalEditor)
+                                        }
+                                    }
+                                ) {
+                                    val icon =
+                                        if (isChanged) Icons.AutoMirrored.Outlined.Undo else Icons.AutoMirrored.Outlined.OpenInNew
+                                    Icon(
+                                        imageVector = icon,
+                                        contentDescription = icon.name,
+                                        tint = LocalContentColor.current
                                     )
                                 }
                             }
-                            AdjustmentSelector(
-                                viewModel = viewModel,
-                                selectedFilter = selectedAdjFilter
+                        }
+
+                        AnimatedVisibility(
+                            visible = isChanged,
+                            enter = enterAnimation,
+                            exit = exitAnimation
+                        ) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(2.dp)
+                            ) {
+                                ElevatedButton(
+                                    shape = RoundedCornerShape(
+                                        topStart = 100f,
+                                        bottomStart = 100f,
+                                        topEnd = 10f,
+                                        bottomEnd = 10f
+                                    ),
+                                    onClick = onOverride,
+                                    enabled = canOverride && canSave
+                                ) {
+                                    Text(stringResource(R.string.override))
+                                }
+                                Button(
+                                    shape = RoundedCornerShape(
+                                        topStart = 10f,
+                                        bottomStart = 10f,
+                                        topEnd = 100f,
+                                        bottomEnd = 100f
+                                    ),
+                                    onClick = onSaveCopy,
+                                    enabled = canSave
+                                ) {
+                                    Text(stringResource(R.string.save_copy))
+                                }
+                            }
+                        }
+
+                        AnimatedVisibility(
+                            modifier = Modifier.padding(end = 16.dp),
+                            visible = !isChanged && showingEditorScreen,
+                            enter = enterAnimation,
+                            exit = exitAnimation
+                        ) {
+                            Text(
+                                text = stringResource(R.string.up_to_date),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.secondary
                             )
                         }
                     }
-
-                    2 -> {
-                        FilterSelector(
-                            filters = filters,
-                            viewModel = viewModel
-                        )
-                    }
-
-                    3 -> {
-                        // TODO
-                    }
-
-                    4 -> {
-                        MoreSelector(
-                            editApps = editApps,
-                            currentUri = viewModel.currentUri
+                }
+            }
+        ) { innerPadding ->
+            SupportingPaneScaffold(
+                directive = navigator.scaffoldDirective,
+                value = navigator.scaffoldValue,
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .animateContentSize()
+                    .fillMaxSize(),
+                mainPane = {
+                    ImageViewer(
+                        modifier = Modifier.fillMaxSize(),
+                        currentImage = currentImage,
+                        previewMatrix = previewMatrix,
+                        previewRotation = previewRotation,
+                        cropState = cropState,
+                        showMarkup = showMarkup,
+                        paths = paths,
+                        currentPosition = currentPosition,
+                        previousPosition = previousPosition,
+                        drawMode = drawMode,
+                        currentPath = currentPath,
+                        currentPathProperty = currentPathProperty,
+                        isSupportingPanel = navigator.scaffoldValue[SupportingPaneScaffoldRole.Supporting] == PaneAdaptedValue.Expanded,
+                        onCropSuccess = {
+                            onCropSuccess(it)
+                            cropState = cropState.copy(isCropping = false)
+                        },
+                        addPath = addPath,
+                        clearPathsUndone = clearPathsUndone,
+                        setCurrentPosition = setCurrentPosition,
+                        setPreviousPosition = setPreviousPosition,
+                        setCurrentPath = setCurrentPath,
+                        setCurrentPathProperty = setCurrentPathProperty,
+                        applyDrawing = applyDrawing
+                    )
+                },
+                supportingPane = {
+                    AnimatedPane(modifier = Modifier) {
+                        EditorNavigator(
+                            modifier = Modifier.animateContentSize(),
+                            navController = navController,
+                            appliedAdjustments = appliedAdjustments,
+                            targetImage = targetImage,
+                            targetUri = targetUri,
+                            onAdjustItemLongClick = onAdjustItemLongClick,
+                            onAdjustmentChange = onAdjustmentChange,
+                            onAdjustmentPreview = onAdjustmentPreview,
+                            onToggleFilter = onToggleFilter,
+                            startCropping = {
+                                cropState = cropState.copy(isCropping = true)
+                            },
+                            undoLastPath = undoLastPath,
+                            redoLastPath = redoLastPath,
+                            drawMode = drawMode,
+                            setDrawMode = setDrawMode,
+                            currentPathProperty = currentPathProperty,
+                            setCurrentPathProperty = setCurrentPathProperty,
+                            paths = paths,
+                            pathsUndone = pathsUndone,
+                            isSupportingPanel = true
                         )
                     }
                 }
+            )
+        }
+
+        AnimatedVisibility(
+            visible = isSaving,
+            enter = enterAnimation,
+            exit = exitAnimation
+        ) {
+            Box(
+                modifier = Modifier
+                    .background(
+                        color = Color.Black.copy(alpha = 0.4f)
+                    )
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(48.dp),
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
         }
     }
 }
-

@@ -124,6 +124,10 @@ fun MediaImage(
                     .fillMaxSize(),
                 request = ComposableImageRequest(media.uri.toString()) {
                     scale(Scale.CENTER_CROP)
+                    setExtra(
+                        key = "mediaKey",
+                        value = media.toString(),
+                    )
                 },
                 contentDescription = media.label,
                 contentScale = ContentScale.Crop,

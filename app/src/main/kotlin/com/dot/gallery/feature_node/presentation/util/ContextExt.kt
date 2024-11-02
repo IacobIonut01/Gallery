@@ -10,6 +10,8 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.content.pm.ActivityInfo.COLOR_MODE_DEFAULT
+import android.content.pm.ActivityInfo.COLOR_MODE_HDR
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
 import android.net.Uri
@@ -20,8 +22,11 @@ import android.view.HapticFeedbackConstants
 import android.view.View
 import android.view.Window
 import android.view.WindowManager
+import android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL
+import android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
 import android.view.accessibility.AccessibilityManager
 import android.widget.Toast
+import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.navigationBars
@@ -44,13 +49,48 @@ import androidx.core.view.WindowInsetsControllerCompat
 import com.dot.gallery.BuildConfig
 import com.dot.gallery.R
 import com.dot.gallery.core.Settings.Misc.allowVibrations
+import com.dot.gallery.core.Settings.Misc.rememberFullBrightnessView
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.model.isImage
+import com.dot.gallery.feature_node.presentation.edit.EditActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+
+fun Context.goBack(fallback: (() -> Unit)? = null) {
+    if (this is ComponentActivity) {
+        onBackPressedDispatcher.onBackPressed()
+    } else {
+        fallback?.invoke()
+    }
+}
+
+@Composable
+fun FullBrightnessWindow(content: @Composable () -> Unit) {
+    ProvideWindowContext {
+        val window = LocalWindowContext.current
+        val enableFullBrightnessView by rememberFullBrightnessView()
+        DisposableEffect(enableFullBrightnessView) {
+            val layout = window?.attributes
+            layout?.screenBrightness = if (enableFullBrightnessView) BRIGHTNESS_OVERRIDE_FULL else BRIGHTNESS_OVERRIDE_NONE
+            window?.attributes = layout
+            onDispose {
+                layout?.screenBrightness = BRIGHTNESS_OVERRIDE_NONE
+                window?.attributes = layout
+            }
+        }
+        content()
+    }
+}
+
+fun Context.setHdrMode(enabled: Boolean) {
+    if (this is Activity) {
+        window.colorMode = if (enabled) COLOR_MODE_HDR else COLOR_MODE_DEFAULT
+    }
+}
 
 @Composable
 fun getNavigationBarHeight(): Dp {
@@ -214,9 +254,9 @@ fun Context.launchEditImageIntent(packageName: String, uri: Uri) {
 }
 
 fun Context.launchEditIntent(media: Media) {
-//    if (media.isImage) {
-//        EditActivity.launchEditor(this@launchEditIntent, media.uri)
-//    } else {
+    if (media.isImage) {
+        EditActivity.launchEditor(this@launchEditIntent, media.uri)
+    } else {
         val intent = Intent(Intent.ACTION_EDIT).apply {
             addCategory(Intent.CATEGORY_DEFAULT)
             setDataAndType(media.uri, media.mimeType)
@@ -224,7 +264,7 @@ fun Context.launchEditIntent(media: Media) {
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         startActivity(Intent.createChooser(intent, getString(R.string.edit)))
-//    }
+    }
 }
 
 suspend fun Context.launchUseAsIntent(media: Media) =

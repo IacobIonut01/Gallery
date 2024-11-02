@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.compose.compiler.gradle.ComposeFeatureFlag
 import java.io.FileInputStream
 import java.util.Properties
 
@@ -21,8 +22,8 @@ android {
         applicationId = "com.dot.gallery"
         minSdk = 30
         targetSdk = 35
-        versionCode = 30033
-        versionName = "3.0.0"
+        versionCode = 30123
+        versionName = "3.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -103,7 +104,9 @@ android {
         buildConfig = true
     }
     composeCompiler {
-        enableStrongSkippingMode = true
+        featureFlags = setOf(
+            ComposeFeatureFlag.OptimizeNonSkippingGroups
+        )
         includeSourceInformation = true
     }
     packaging {
@@ -114,6 +117,15 @@ android {
 
     room {
         schemaDirectory("$projectDir/schemas/")
+    }
+
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+            isUniversalApk = true
+        }
     }
 }
 
@@ -206,8 +218,8 @@ dependencies {
     // Fuzzy Search
     implementation(libs.fuzzywuzzy)
 
-    // GPU Image
-    implementation(libs.gpuimage)
+    // Aire
+    implementation(libs.aire)
 
     // Pinch to zoom
     implementation(libs.pinchzoomgrid)

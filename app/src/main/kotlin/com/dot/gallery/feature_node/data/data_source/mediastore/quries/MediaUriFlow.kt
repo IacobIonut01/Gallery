@@ -14,23 +14,24 @@ import android.os.Bundle
 import android.provider.MediaStore
 import androidx.core.os.bundleOf
 import com.dot.gallery.core.Constants
-import com.dot.gallery.feature_node.data.data_source.mediastore.MediaQuery
+import com.dot.gallery.core.util.MediaStoreBuckets
 import com.dot.gallery.core.util.PickerUtils
 import com.dot.gallery.core.util.Query
 import com.dot.gallery.core.util.and
 import com.dot.gallery.core.util.eq
-import com.dot.gallery.core.util.join
-import com.dot.gallery.core.util.MediaStoreBuckets
 import com.dot.gallery.core.util.ext.mapEachRow
 import com.dot.gallery.core.util.ext.queryFlow
 import com.dot.gallery.core.util.ext.tryGetLong
 import com.dot.gallery.core.util.ext.tryGetString
+import com.dot.gallery.core.util.join
+import com.dot.gallery.feature_node.data.data_source.mediastore.MediaQuery
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaType
 import com.dot.gallery.feature_node.domain.model.isTrashed
 import com.dot.gallery.feature_node.presentation.util.getDate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlin.random.Random
 
 /**
  * Media uri flow
@@ -167,7 +168,13 @@ class MediaUriFlow(
                 mimeType = mimeType
             )
         }.let { flow ->
-            val ids = uris.map { ContentUris.parseId(it) }
+            val ids = uris.map {
+                try {
+                    ContentUris.parseId(it)
+                } catch (e: NumberFormatException) {
+                    Random.nextInt(1000000, 2000000)
+                }
+            }
             if (reviewMode) {
                 flow.map { mediaList ->
                     mediaList.filter { media ->

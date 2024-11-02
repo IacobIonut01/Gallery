@@ -24,3 +24,5 @@
 -dontwarn org.conscrypt.**
 -dontwarn org.openjsse.**
 -dontwarn org.slf4j.impl.StaticLoggerBinder
+
+-keep class com.dot.gallery.feature_node.presentation.edit.adjustments.** { *; }

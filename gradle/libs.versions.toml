@@ -1,8 +1,9 @@
 [versions]
-adaptive = "1.1.0-alpha01"
-agp = "8.6.0"
-avifCoderCoil = "1.8.0"
-benchmarkMacroJunit4 = "1.3.0"
+adaptive = "1.1.0-alpha06"
+agp = "8.6.1"
+aire = "0.15.2"
+avifCoderCoil = "1.8.0.1"
+benchmarkMacroJunit4 = "1.3.3"
 biometric = "1.2.0-alpha05"
 appcompat = "1.7.0"
 composeVideo = "1.2.0"
@@ -11,39 +12,40 @@ coreSplashscreen = "1.0.1"
 fuzzywuzzy = "1.4.0"
 exifinterface = "1.3.7"
 gpuimage = "2.1.0"
-graphicsShapes = "1.0.0"
+graphicsShapes = "1.0.1"
 jxlCoder = "2.1.10"
 kotlin = "2.0.20"
 kotlinCoroutinesVersion = "1.8.1"
-ksp = "2.0.20-1.0.24"
-core-ktx = "1.13.1"
+ksp = "2.0.20-1.0.25"
+core-ktx = "1.15.0"
 junit = "4.13.2"
 androidx-test-ext-junit = "1.2.1"
 espresso-core = "3.6.1"
 lazycolumnscrollbar = "2.2.0"
-lifecycle-runtime = "2.8.4"
-activity-compose = "1.9.1"
+lifecycle-runtime = "2.8.7"
+activity-compose = "1.9.3"
 hilt = "2.52"
 hiltCommon = "1.2.0"
 material = "1.12.0"
-material3 = "1.3.0-rc01"
+material3 = "1.3.1"
 media3Exoplayer = "1.4.1"
-navigation-runtime-ktx = "2.7.7"
+navigation-runtime-ktx = "2.8.3"
 pinchzoomgrid = "0.0.5"
-profileinstaller = "1.3.1"
+profileinstaller = "1.4.1"
 room = "2.6.1"
-accompanist = "0.34.0"
+accompanist = "0.36.0"
 datastore = "1.1.1"
 securityCrypto = "1.1.0-alpha06"
 sketch = "4.0.0-alpha08"
 uiautomator = "2.3.0"
-composealpha = "1.7.0-rc01"
+composealpha = "1.8.0-alpha05"
 kotlinxSerializationJson = "1.7.2"
-workRuntimeKtx = "2.9.1"
+workRuntimeKtx = "2.10.0"
 zoomimageViewSketch = "1.1.0-beta01"
 
 [libraries]
 # AndroidX
+aire = { module = "com.github.awxkee:aire", version.ref = "aire" }
 androidx-adaptive = { module = "androidx.compose.material3.adaptive:adaptive", version.ref = "adaptive" }
 androidx-adaptive-layout = { module = "androidx.compose.material3.adaptive:adaptive-layout", version.ref = "adaptive" }
 androidx-adaptive-navigation = { module = "androidx.compose.material3.adaptive:adaptive-navigation", version.ref = "adaptive" }
@@ -74,7 +76,7 @@ compose-activity = { group = "androidx.activity", name = "activity-compose", ver
 compose-runtime = { group = "androidx.compose.runtime", name = "runtime", version.ref = "composealpha" }
 compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "composealpha" }
 compose-lifecycle-runtime = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycle-runtime" }
-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version = "composealpha" }
+compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version = "1.7.5" }
 compose-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
 compose-material3-window-size = { group = "androidx.compose.material3", name = "material3-window-size-class", version.ref = "material3" }
 compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling", version.ref = "composealpha" }
@@ -99,7 +101,6 @@ androidx-hilt-compiler = { group = "androidx.hilt", name = "hilt-compiler", vers
 androidx-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hiltCommon" }
 
 # Room
-gpuimage = { module = "jp.co.cyberagent.android:gpuimage", version.ref = "gpuimage" }
 jxl-coder-coil = { module = "com.github.awxkee:jxl-coder-coil", version.ref = "jxlCoder" }
 lazycolumnscrollbar = { module = "com.github.nanihadesuka:LazyColumnScrollbar", version.ref = "lazycolumnscrollbar" }
 pinchzoomgrid = { module = "io.github.dokar3:pinchzoomgrid", version.ref = "pinchzoomgrid" }

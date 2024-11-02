@@ -43,7 +43,7 @@ data class Media(
 
     @Stable
     override fun toString(): String {
-        return "$id, $path, $fullDate, $mimeType, favorite=$favorite"
+        return "$id, $path, $fullDate, $mimeType, favorite=$favorite, $timestamp"
     }
 
     companion object {
