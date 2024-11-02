@@ -829,7 +829,10 @@ fun TrashButton(
     var shouldMoveToTrash by rememberSaveable { mutableStateOf(true) }
     val state = rememberAppBottomSheetState()
     val scope = rememberCoroutineScope()
-    val trashEnabled = if(rememberTrashEnabled().value) R.string.trash else R.string.trash_delete
+    val trashEnabled = rememberTrashEnabled()
+    val trashEnabledRes = remember(trashEnabled) {
+        if (trashEnabled.value) R.string.trash else R.string.trash_delete
+    }
     val result = rememberActivityResult {
         scope.launch {
             state.hide()
@@ -841,7 +844,7 @@ fun TrashButton(
         currentMedia = media,
         imageVector = Icons.Outlined.DeleteOutline,
         followTheme = followTheme,
-        title = stringResource(id = trashEnabled),
+        title = stringResource(id = trashEnabledRes),
         onItemLongClick = {
             shouldMoveToTrash = false
             scope.launch {

@@ -267,13 +267,16 @@ private fun TrashButton(
 ) {
     val state = rememberAppBottomSheetState()
     val scope = rememberCoroutineScope()
-    val trashEnabled = if(rememberTrashEnabled().value) R.string.trash else R.string.trash_delete
+    val trashEnabled = rememberTrashEnabled()
+    val trashEnabledRes = remember(trashEnabled) {
+        if (trashEnabled.value) R.string.trash else R.string.trash_delete
+    }
 
     EncryptedBottomBarColumn(
         currentMedia = media,
         imageVector = Icons.Outlined.DeleteOutline,
         followTheme = followTheme,
-        title = stringResource(id = trashEnabled),
+        title = stringResource(id = trashEnabledRes),
         onItemLongClick = {
             scope.launch {
                 state.show()

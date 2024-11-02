@@ -212,11 +212,14 @@ fun SelectionSheet(
                     }
                 }
                 // Trash Component
-                val trashEnabled = if(rememberTrashEnabled().value) R.string.trash else R.string.trash_delete
+                val trashEnabled = rememberTrashEnabled()
+                val trashEnabledRes = remember(trashEnabled) {
+                    if (trashEnabled.value) R.string.trash else R.string.trash_delete
+                }
                 SelectionBarColumn(
                     imageVector = Icons.Outlined.DeleteOutline,
                     tabletMode = tabletMode,
-                    title = stringResource(id = trashEnabled),
+                    title = stringResource(id = trashEnabledRes),
                     onItemLongClick = {
                         scope.launch {
                             shouldMoveToTrash = false
