@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
+import com.dot.gallery.core.Settings.Misc.rememberTrashEnabled
 import com.dot.gallery.core.presentation.components.DragHandle
 import com.dot.gallery.core.presentation.components.NavigationBarSpacer
 import com.dot.gallery.feature_node.domain.model.EncryptedMedia
@@ -266,12 +267,16 @@ private fun TrashButton(
 ) {
     val state = rememberAppBottomSheetState()
     val scope = rememberCoroutineScope()
+    val trashEnabled = rememberTrashEnabled()
+    val trashEnabledRes = remember(trashEnabled) {
+        if (trashEnabled.value) R.string.trash else R.string.trash_delete
+    }
 
     EncryptedBottomBarColumn(
         currentMedia = media,
         imageVector = Icons.Outlined.DeleteOutline,
         followTheme = followTheme,
-        title = stringResource(id = R.string.trash),
+        title = stringResource(id = trashEnabledRes),
         onItemLongClick = {
             scope.launch {
                 state.show()
