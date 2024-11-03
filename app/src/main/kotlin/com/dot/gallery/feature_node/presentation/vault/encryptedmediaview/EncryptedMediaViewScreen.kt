@@ -414,7 +414,6 @@ fun EncryptedMediaViewScreen(
                                     )
                                 )
                                 .padding(
-                                    top = 24.dp,
                                     bottom = bottomPadding
                                 )
                                 .fillMaxWidth()

@@ -5,8 +5,8 @@ import androidx.compose.ui.unit.dp
 import com.composables.core.SheetDetent
 
 object ViewScreenConstants {
-    val BOTTOM_BAR_HEIGHT = 132.dp
-    val BOTTOM_BAR_HEIGHT_SLIM = 128.dp
+    val BOTTOM_BAR_HEIGHT = 104.dp
+    val BOTTOM_BAR_HEIGHT_SLIM = 100.dp
 
     val ImageOnly = SheetDetent("imageOnly") { _, _ -> BOTTOM_BAR_HEIGHT }
 
