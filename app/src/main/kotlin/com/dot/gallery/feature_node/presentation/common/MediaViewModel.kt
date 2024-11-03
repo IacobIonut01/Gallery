@@ -14,6 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dot.gallery.core.Resource
+import com.dot.gallery.feature_node.domain.model.IgnoredAlbum
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.domain.model.TimelineSettings
@@ -89,7 +90,7 @@ open class MediaViewModel @Inject constructor(
             updateDatabase()
             mapMediaToItem(
                 data = (result.data ?: emptyList()).toMutableList().apply {
-                    removeAll { media -> blacklistedAlbums.any { it.matchesMedia(media) && it.hiddenInTimeline  } }
+                    removeAll { media -> blacklistedAlbums.any { it.shouldIgnore(media) } }
                 },
                 error = result.message ?: "",
                 albumId = albumId,
@@ -192,4 +193,7 @@ open class MediaViewModel @Inject constructor(
             return@withContext matches.map { it.referent }.ifEmpty { emptyList() }
         }
     }
+
+    private fun IgnoredAlbum.shouldIgnore(media: Media) =
+        matchesMedia(media) && (hiddenInTimeline && albumId == -1L || hiddenInAlbums && albumId != -1L)
 }

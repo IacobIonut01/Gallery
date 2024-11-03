@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.dot.gallery.core.Resource
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.AlbumState
+import com.dot.gallery.feature_node.domain.model.IgnoredAlbum
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
@@ -58,7 +59,7 @@ open class PickerViewModel @Inject constructor(
             repository.mediaFlowWithType(albumId, allowedMedia)
         ) { blacklisted, mediaResult ->
             val data = (mediaResult.data ?: emptyList()).toMutableList().apply {
-                removeAll { media -> blacklisted.any { it.matchesMedia(media) && it.hiddenInTimeline } }
+                removeAll { media -> blacklisted.any { it.shouldIgnore(media) } }
             }
             val error = if (mediaResult is Resource.Error) mediaResult.message
                 ?: "An error occurred" else ""
@@ -104,6 +105,9 @@ open class PickerViewModel @Inject constructor(
         timestamp = 0,
         relativePath = ""
     )
+
+    private fun IgnoredAlbum.shouldIgnore(media: Media) =
+        matchesMedia(media) && (hiddenInTimeline && albumId == -1L || hiddenInAlbums && albumId != -1L)
 }
 
 enum class AllowedMedia {
