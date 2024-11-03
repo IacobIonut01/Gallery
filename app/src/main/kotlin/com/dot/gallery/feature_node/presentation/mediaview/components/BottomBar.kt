@@ -304,12 +304,12 @@ fun MediaViewDetails(
                                                     }
                                                 },
                                             headlineContent = {
-                                                Text("Delete Location")
+                                                Text(stringResource(R.string.delete_location))
                                             },
                                             leadingContent = {
                                                 Icon(
                                                     imageVector = Icons.Outlined.GpsOff,
-                                                    contentDescription = "Delete Location"
+                                                    contentDescription = stringResource(R.string.delete_location)
                                                 )
                                             },
                                             colors = ListItemDefaults.colors(
@@ -337,12 +337,12 @@ fun MediaViewDetails(
                                                     }
                                                 },
                                             headlineContent = {
-                                                Text("Delete Metadata")
+                                                Text(stringResource(R.string.delete_metadata))
                                             },
                                             leadingContent = {
                                                 Icon(
                                                     imageVector = Icons.Outlined.LocalFireDepartment,
-                                                    contentDescription = "Delete Metadata"
+                                                    contentDescription = stringResource(R.string.delete_metadata)
                                                 )
                                             },
                                             colors = ListItemDefaults.colors(
