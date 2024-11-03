@@ -127,6 +127,11 @@ android {
             isUniversalApk = true
         }
     }
+
+    dependenciesInfo {
+        // Disables dependency metadata when building APKs.
+        includeInApk = false
+    }
 }
 
 dependencies {
