@@ -89,7 +89,7 @@ open class MediaViewModel @Inject constructor(
             updateDatabase()
             mapMediaToItem(
                 data = (result.data ?: emptyList()).toMutableList().apply {
-                    removeAll { media -> blacklistedAlbums.any { it.matchesMedia(media) } }
+                    removeAll { media -> blacklistedAlbums.any { it.matchesMedia(media) && it.hiddenInTimeline  } }
                 },
                 error = result.message ?: "",
                 albumId = albumId,
