@@ -7,7 +7,7 @@ package com.dot.gallery.feature_node.domain.model
 import android.os.Parcelable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.exifinterface.media.ExifInterface
 import kotlinx.parcelize.Parcelize
 
@@ -97,7 +97,7 @@ data class ExifAttributes(
 }
 
 @Composable
-fun rememberExifAttributes(exifInterface: ExifInterface? = null) = remember {
+fun rememberExifAttributes(exifInterface: ExifInterface? = null) = rememberSaveable {
     if (exifInterface != null) mutableStateOf(ExifAttributes.fromExifInterface(exifInterface))
     else mutableStateOf(ExifAttributes())
 }
