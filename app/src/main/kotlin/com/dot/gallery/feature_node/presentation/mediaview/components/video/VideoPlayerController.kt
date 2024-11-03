@@ -58,6 +58,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.media3.exoplayer.ExoPlayer
@@ -89,7 +90,7 @@ fun VideoPlayerController(
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .padding(horizontal = 16.dp)
-                .padding(bottom = paddingValues.calculateBottomPadding() + 82.dp)
+                .padding(bottom = paddingValues.calculateBottomPadding() + 80.dp)
                 .fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.End

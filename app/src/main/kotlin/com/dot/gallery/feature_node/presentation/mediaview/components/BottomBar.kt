@@ -555,19 +555,25 @@ private fun MediaViewInfoActions2(
         horizontalArrangement = Arrangement.SpaceEvenly,
     ) {
         // Share Component
-        ShareButton(media, followTheme = true)
+        ShareButton(media, followTheme = true, enabled = true)
         // Hide
         if (!media.isVideo) {
-            HideButton(media, vaults = vaults, addMedia = addMedia, followTheme = true)
+            HideButton(
+                media,
+                vaults = vaults,
+                addMedia = addMedia,
+                followTheme = true,
+                enabled = true
+            )
         }
         // Use as or Open With
-        OpenAsButton(media, followTheme = true)
+        OpenAsButton(media, followTheme = true, enabled = true)
         // Copy
-        CopyButton(media, albumsState.value, handler, followTheme = true)
+        CopyButton(media, albumsState.value, handler, followTheme = true, enabled = true)
         // Move
-        MoveButton(media, albumsState.value, handler, followTheme = true)
+        MoveButton(media, albumsState.value, handler, followTheme = true, enabled = true)
         // Edit
-        EditButton(media, followTheme = true)
+        EditButton(media, followTheme = true, enabled = true)
     }
 }
 
@@ -577,7 +583,8 @@ fun MediaViewActions2(
     currentMedia: Media,
     handler: MediaHandleUseCase,
     onDeleteMedia: ((Int) -> Unit)?,
-    showDeleteButton: Boolean
+    showDeleteButton: Boolean,
+    enabled: Boolean
 ) {
     if (currentMedia.isTrashed) {
         val scope = rememberCoroutineScope()
@@ -586,7 +593,8 @@ fun MediaViewActions2(
         BottomBarColumn(
             currentMedia = currentMedia,
             imageVector = Icons.Outlined.RestoreFromTrash,
-            title = stringResource(id = R.string.trash_restore)
+            title = stringResource(id = R.string.trash_restore),
+            enabled = enabled
         ) {
             scope.launch {
                 onDeleteMedia?.invoke(currentIndex)
@@ -597,7 +605,8 @@ fun MediaViewActions2(
         BottomBarColumn(
             currentMedia = currentMedia,
             imageVector = Icons.Outlined.DeleteOutline,
-            title = stringResource(id = R.string.trash_delete)
+            title = stringResource(id = R.string.trash_delete),
+            enabled = enabled
         ) {
             scope.launch {
                 onDeleteMedia?.invoke(currentIndex)
@@ -606,14 +615,21 @@ fun MediaViewActions2(
         }
     } else {
         // Share Component
-        ShareButton(currentMedia)
+        ShareButton(currentMedia, enabled = enabled)
         // Favorite Component
-        FavoriteButton(currentMedia, handler)
+        FavoriteButton(currentMedia, handler, enabled = enabled)
         // Edit
-        EditButton(currentMedia)
+        EditButton(currentMedia, enabled = enabled)
         // Trash Component
         if (showDeleteButton) {
-            TrashButton(currentIndex, currentMedia, handler, false, onDeleteMedia)
+            TrashButton(
+                currentIndex,
+                currentMedia,
+                handler,
+                false,
+                enabled = enabled,
+                onDeleteMedia
+            )
         }
     }
 }
@@ -623,6 +639,7 @@ fun HideButton(
     media: Media,
     vaults: State<VaultState>,
     addMedia: (Vault, Media) -> Unit,
+    enabled: Boolean,
     followTheme: Boolean = false
 ) {
     val sheetState = rememberAppBottomSheetState()
@@ -631,10 +648,10 @@ fun HideButton(
         currentMedia = media,
         imageVector = Icons.Outlined.Lock,
         followTheme = followTheme,
-        enabled = remember(vaults.value) {
-            vaults.value.vaults.isNotEmpty()
+        enabled = remember(vaults.value, enabled) {
+            vaults.value.vaults.isNotEmpty() && enabled
         },
-        title = stringResource(R.string.hide)
+        title = stringResource(R.string.hide),
     ) {
         scope.launch {
             sheetState.show()
@@ -674,6 +691,7 @@ fun CopyButton(
     media: Media,
     albumsState: AlbumState,
     handler: MediaHandleUseCase,
+    enabled: Boolean,
     followTheme: Boolean = false
 ) {
     val copySheetState = rememberAppBottomSheetState()
@@ -682,7 +700,8 @@ fun CopyButton(
         currentMedia = media,
         imageVector = Icons.Outlined.CopyAll,
         followTheme = followTheme,
-        title = stringResource(R.string.copy)
+        title = stringResource(R.string.copy),
+        enabled = enabled
     ) {
         scope.launch {
             copySheetState.show()
@@ -703,6 +722,7 @@ fun MoveButton(
     media: Media,
     albumsState: AlbumState,
     handler: MediaHandleUseCase,
+    enabled: Boolean,
     followTheme: Boolean = false
 ) {
     val moveSheetState = rememberAppBottomSheetState()
@@ -711,7 +731,8 @@ fun MoveButton(
         currentMedia = media,
         imageVector = Icons.AutoMirrored.Outlined.DriveFileMove,
         followTheme = followTheme,
-        title = stringResource(R.string.move)
+        title = stringResource(R.string.move),
+        enabled = enabled
     ) {
         scope.launch {
             moveSheetState.show()
@@ -730,6 +751,7 @@ fun MoveButton(
 @Composable
 fun ShareButton(
     media: Media,
+    enabled: Boolean,
     followTheme: Boolean = false
 ) {
     val scope = rememberCoroutineScope()
@@ -738,7 +760,8 @@ fun ShareButton(
         currentMedia = media,
         imageVector = Icons.Outlined.Share,
         followTheme = followTheme,
-        title = stringResource(R.string.share)
+        title = stringResource(R.string.share),
+        enabled = enabled
     ) {
         scope.launch {
             context.shareMedia(media = it)
@@ -750,6 +773,7 @@ fun ShareButton(
 fun FavoriteButton(
     media: Media,
     handler: MediaHandleUseCase,
+    enabled: Boolean,
     followTheme: Boolean = false
 ) {
     val scope = rememberCoroutineScope()
@@ -771,7 +795,8 @@ fun FavoriteButton(
             currentMedia = media,
             imageVector = favoriteIcon,
             followTheme = followTheme,
-            title = stringResource(R.string.favorite)
+            title = stringResource(R.string.favorite),
+            enabled = enabled
         ) {
             scope.launch {
                 handler.toggleFavorite(result = result, arrayListOf(it), it.favorite != 1)
@@ -783,6 +808,7 @@ fun FavoriteButton(
 @Composable
 fun EditButton(
     media: Media,
+    enabled: Boolean,
     followTheme: Boolean = false
 ) {
     val context = LocalContext.current
@@ -790,7 +816,8 @@ fun EditButton(
         currentMedia = media,
         imageVector = Icons.Outlined.Edit,
         followTheme = followTheme,
-        title = stringResource(R.string.edit)
+        title = stringResource(R.string.edit),
+        enabled = enabled
     ) {
         context.launchEditIntent(it)
     }
@@ -799,6 +826,7 @@ fun EditButton(
 @Composable
 fun OpenAsButton(
     media: Media,
+    enabled: Boolean,
     followTheme: Boolean = false
 ) {
     val context = LocalContext.current
@@ -808,7 +836,8 @@ fun OpenAsButton(
             currentMedia = media,
             imageVector = Icons.AutoMirrored.Outlined.OpenInNew,
             followTheme = followTheme,
-            title = stringResource(R.string.open_with)
+            title = stringResource(R.string.open_with),
+            enabled = enabled
         ) {
             scope.launch { context.launchOpenWithIntent(it) }
         }
@@ -817,7 +846,8 @@ fun OpenAsButton(
             currentMedia = media,
             imageVector = Icons.AutoMirrored.Outlined.OpenInNew,
             followTheme = followTheme,
-            title = stringResource(R.string.use_as)
+            title = stringResource(R.string.use_as),
+            enabled = enabled
         ) {
             scope.launch { context.launchUseAsIntent(it) }
         }
@@ -830,6 +860,7 @@ fun TrashButton(
     media: Media,
     handler: MediaHandleUseCase,
     followTheme: Boolean = false,
+    enabled: Boolean,
     onDeleteMedia: ((Int) -> Unit)?
 ) {
     var shouldMoveToTrash by rememberSaveable { mutableStateOf(true) }
@@ -862,7 +893,8 @@ fun TrashButton(
             scope.launch {
                 state.show()
             }
-        }
+        },
+        enabled = enabled
     )
 
     TrashDialog(
@@ -878,7 +910,6 @@ fun TrashButton(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun BottomBarColumn(
     currentMedia: Media?,
@@ -898,9 +929,9 @@ fun BottomBarColumn(
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
             .defaultMinSize(
-                minWidth = 90.dp,
-                minHeight = 80.dp
+                minWidth = 90.dp
             )
+            .height(80.dp)
             .combinedClickable(
                 enabled = enabled,
                 onLongClick = {

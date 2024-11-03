@@ -437,7 +437,6 @@ fun MediaViewScreen(
                                     )
                                 )
                                 .padding(
-                                    top = 24.dp,
                                     bottom = bottomPadding
                                 )
                                 .fillMaxWidth()
@@ -451,7 +450,8 @@ fun MediaViewScreen(
                                     currentMedia = currentMedia.value!!,
                                     handler = handler,
                                     onDeleteMedia = { lastIndex = it },
-                                    showDeleteButton = !isReadOnly
+                                    showDeleteButton = !isReadOnly,
+                                    enabled = showUI.value
                                 )
                             }
                         }
