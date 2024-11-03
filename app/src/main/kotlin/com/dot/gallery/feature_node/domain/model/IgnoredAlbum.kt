@@ -22,8 +22,8 @@ data class IgnoredAlbum(
 ) : Parcelable {
 
     private val hiddenInBoth get() = location == ALBUMS_AND_TIMELINE
-    private val hiddenInAlbums get() = location == ALBUMS_ONLY || hiddenInBoth
-    private val hiddenInTimeline get() = location == TIMELINE_ONLY || hiddenInBoth
+    val hiddenInAlbums get() = location == ALBUMS_ONLY || hiddenInBoth
+    val hiddenInTimeline get() = location == TIMELINE_ONLY || hiddenInBoth
 
     fun matchesMedia(media: Media): Boolean =
         matches(

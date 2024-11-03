@@ -35,7 +35,7 @@ open class PickerViewModel @Inject constructor(
                     repository.mediaFlowWithType(value, allowedMedia)
                 ) { blacklisted, mediaResult ->
                     val data = (mediaResult.data ?: emptyList()).toMutableList().apply {
-                        removeAll { media -> blacklisted.any { it.matchesMedia(media) } }
+                        removeAll { media -> blacklisted.any { it.matchesMedia(media) && it.hiddenInTimeline } }
                     }
                     val error = if (mediaResult is Resource.Error) mediaResult.message
                         ?: "An error occurred" else ""
@@ -58,7 +58,7 @@ open class PickerViewModel @Inject constructor(
             repository.mediaFlowWithType(albumId, allowedMedia)
         ) { blacklisted, mediaResult ->
             val data = (mediaResult.data ?: emptyList()).toMutableList().apply {
-                removeAll { media -> blacklisted.any { it.matchesMedia(media) } }
+                removeAll { media -> blacklisted.any { it.matchesMedia(media) && it.hiddenInTimeline } }
             }
             val error = if (mediaResult is Resource.Error) mediaResult.message
                 ?: "An error occurred" else ""
@@ -80,7 +80,7 @@ open class PickerViewModel @Inject constructor(
             repository.getAlbumsWithType(allowedMedia)
         ) { blacklisted, albumsResult ->
             val data = (albumsResult.data ?: emptyList()).toMutableList().apply {
-                removeAll { album -> blacklisted.any { it.matchesAlbum(album) } }
+                removeAll { album -> blacklisted.any { it.matchesAlbum(album) && it.hiddenInAlbums } }
             }
             val error = if (albumsResult is Resource.Error) albumsResult.message
                 ?: "An error occurred" else ""
