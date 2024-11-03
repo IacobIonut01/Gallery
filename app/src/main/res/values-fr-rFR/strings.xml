@@ -268,6 +268,8 @@
     <string name="auto_hide_on_video_play">Masquer l\'interface lors de la lecture d\'une vidéo</string>
     <string name="auto_hide_on_video_play_summary">Masquer l\'interface après 2 secondes lors de la lecture d\'une vidéo</string>
     <string name="up_to_date">À jour</string>
+    <string name="delete_location">Delete Location</string>
+    <string name="delete_metadata">Delete Metadata</string>
     <plurals name="item_count">
         <item quantity="one">%s élément</item>
         <item quantity="other">%s éléments</item>
