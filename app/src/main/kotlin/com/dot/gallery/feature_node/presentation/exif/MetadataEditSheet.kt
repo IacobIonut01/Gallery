@@ -25,6 +25,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,7 +36,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.R
 import com.dot.gallery.core.presentation.components.DragHandle
-import com.dot.gallery.feature_node.domain.model.ExifAttributes
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.isImage
 import com.dot.gallery.feature_node.domain.model.isVideo
@@ -58,13 +58,11 @@ fun MetadataEditSheet(
     handle: MediaHandleUseCase
 ) {
     val scope = rememberCoroutineScope { Dispatchers.IO }
-    var shouldRemoveMetadata by remember { mutableStateOf(false) }
-    var shouldRemoveLocation by remember { mutableStateOf(false) }
     val exifInterface = rememberExifInterface(media, useDirectPath = true)
     val context = LocalContext.current
     val cr = remember(context) { context.contentResolver }
     var exifAttributes by rememberExifAttributes(exifInterface)
-    var newLabel by remember { mutableStateOf(media.label) }
+    var newLabel by rememberSaveable { mutableStateOf(media.label) }
     val errorToast = toastError()
     val request = rememberActivityResult {
         scope.launch {
@@ -183,11 +181,6 @@ fun MetadataEditSheet(
                     Button(
                         onClick = {
                             scope.launch(Dispatchers.Main) {
-                                if (shouldRemoveMetadata) {
-                                    exifAttributes = ExifAttributes()
-                                } else if (shouldRemoveLocation) {
-                                    exifAttributes = exifAttributes.copy(gpsLatLong = null)
-                                }
                                 request.launch(media.writeRequest(cr))
                             }
                         }
