@@ -209,6 +209,7 @@ fun EncryptedMediaViewScreen(
                         durationMillis = DEFAULT_LOW_VELOCITY_SWIPE_DURATION
                     )
                 ),
+                beyondViewportPageCount = 4,
                 key = { index ->
                     state.media.getOrNull(index) ?: "empty"
                 },
