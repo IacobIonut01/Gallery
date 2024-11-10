@@ -39,7 +39,7 @@ class KeychainHolder @Inject constructor(
                 vaultFolder.mkdirs()
             }
 
-            File(vaultFolder, VAULT_INFO_FILE_NAME).apply {
+            vaultInfoFile(vault).apply {
                 if (exists()) delete()
                 encrypt(vault)
                 onSuccess()
