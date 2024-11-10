@@ -222,6 +222,7 @@ fun MediaViewScreen(
                         durationMillis = DEFAULT_LOW_VELOCITY_SWIPE_DURATION
                     )
                 ),
+                beyondViewportPageCount = 4,
                 key = { index ->
                     mediaState.value.media.getOrNull(index) ?: "empty"
                 },
