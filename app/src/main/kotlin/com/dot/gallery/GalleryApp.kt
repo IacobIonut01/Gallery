@@ -10,6 +10,7 @@ import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import com.dot.gallery.core.decoder.supportHeifDecoder
 import com.dot.gallery.core.decoder.supportJxlDecoder
+import com.dot.gallery.core.decoder.supportVaultDecoder
 import com.github.panpf.sketch.PlatformContext
 import com.github.panpf.sketch.SingletonSketch
 import com.github.panpf.sketch.Sketch
@@ -35,7 +36,6 @@ class GalleryApp : Application(), SingletonSketch.Factory, Configuration.Provide
         components {
             supportSaveCellularTraffic()
             supportPauseLoadWhenScrolling()
-            //supportThumbnailDecoder()
             supportSvg()
             supportVideoFrame()
             supportAnimatedGif()
@@ -43,6 +43,7 @@ class GalleryApp : Application(), SingletonSketch.Factory, Configuration.Provide
             supportAnimatedHeif()
             supportHeifDecoder()
             supportJxlDecoder()
+            supportVaultDecoder()
         }
         val diskCache = DiskCache.Builder(context, FileSystem.SYSTEM)
             .directory(context.appCacheDirectory())

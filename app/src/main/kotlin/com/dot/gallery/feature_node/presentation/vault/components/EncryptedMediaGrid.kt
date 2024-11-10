@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -12,6 +13,8 @@ import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisallowComposableCalls
 import androidx.compose.runtime.LaunchedEffect
@@ -26,21 +29,23 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.dokar.pinchzoomgrid.PinchZoomGridScope
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
-import com.dot.gallery.feature_node.domain.model.EncryptedMediaState
 import com.dot.gallery.core.presentation.components.Error
 import com.dot.gallery.core.presentation.components.LoadingMedia
 import com.dot.gallery.core.presentation.components.MediaItemHeader
-import com.dot.gallery.feature_node.domain.model.EncryptedMedia
+import com.dot.gallery.feature_node.domain.model.DecryptedMedia
 import com.dot.gallery.feature_node.domain.model.EncryptedMediaItem
+import com.dot.gallery.feature_node.domain.model.EncryptedMediaState
 import com.dot.gallery.feature_node.domain.model.isBigHeaderKey
 import com.dot.gallery.feature_node.domain.model.isHeaderKey
 import com.dot.gallery.feature_node.presentation.util.rememberFeedbackManager
 import com.dot.gallery.feature_node.presentation.util.update
+import com.valentinilk.shimmer.shimmer
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -53,14 +58,14 @@ fun PinchZoomGridScope.EncryptedMediaGrid(
     paddingValues: PaddingValues,
     allowSelection: Boolean,
     selectionState: MutableState<Boolean>,
-    selectedMedia: SnapshotStateList<EncryptedMedia>,
+    selectedMedia: SnapshotStateList<DecryptedMedia>,
     toggleSelection: @DisallowComposableCalls (Int) -> Unit,
     canScroll: Boolean,
     allowHeaders: Boolean,
     aboveGridContent: @Composable (() -> Unit)?,
     isScrolling: MutableState<Boolean>,
     emptyContent: @Composable () -> Unit,
-    onMediaClick: @DisallowComposableCalls (media: EncryptedMedia) -> Unit
+    onMediaClick: @DisallowComposableCalls (media: DecryptedMedia) -> Unit
 ) {
     LaunchedEffect(gridState.isScrollInProgress) {
         snapshotFlow {
@@ -93,7 +98,18 @@ fun PinchZoomGridScope.EncryptedMediaGrid(
                     enter = enterAnimation,
                     exit = exitAnimation
                 ) {
-                    LoadingMedia()
+                    LoadingMedia(
+                        topContent = {
+                            Text(
+                                text = "Decrypting media...",
+                                modifier = Modifier.padding(top = 16.dp)
+                                    .fillMaxWidth()
+                                    .shimmer(),
+                                textAlign = TextAlign.Center,
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                        }
+                    )
                 }
             }
 
@@ -167,10 +183,10 @@ private fun PinchZoomGridScope.EncryptedMediaGridContentWithHeaders(
     paddingValues: PaddingValues,
     allowSelection: Boolean,
     selectionState: MutableState<Boolean>,
-    selectedMedia: SnapshotStateList<EncryptedMedia>,
+    selectedMedia: SnapshotStateList<DecryptedMedia>,
     toggleSelection: @DisallowComposableCalls (Int) -> Unit,
     canScroll: Boolean,
-    onMediaClick: @DisallowComposableCalls (media: EncryptedMedia) -> Unit,
+    onMediaClick: @DisallowComposableCalls (media: DecryptedMedia) -> Unit,
     topContent: LazyGridScope.() -> Unit,
     bottomContent: LazyGridScope.() -> Unit
 ) {
@@ -304,10 +320,10 @@ private fun PinchZoomGridScope.EncryptedMediaGridContent(
     paddingValues: PaddingValues,
     allowSelection: Boolean,
     selectionState: MutableState<Boolean>,
-    selectedMedia: SnapshotStateList<EncryptedMedia>,
+    selectedMedia: SnapshotStateList<DecryptedMedia>,
     toggleSelection: @DisallowComposableCalls (Int) -> Unit,
     canScroll: Boolean,
-    onMediaClick: @DisallowComposableCalls (media: EncryptedMedia) -> Unit,
+    onMediaClick: @DisallowComposableCalls (media: DecryptedMedia) -> Unit,
     topContent: LazyGridScope.() -> Unit,
     bottomContent: LazyGridScope.() -> Unit
 ) {

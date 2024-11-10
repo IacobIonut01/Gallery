@@ -36,7 +36,7 @@ fun rememberMediaDateCaption(
 @Composable
 fun rememberMediaDateCaption(
     exifMetadata: ExifMetadata?,
-    media: EncryptedMedia
+    media: DecryptedMedia
 ): MediaDateCaption {
     val deviceInfo = remember(exifMetadata) { exifMetadata?.lensDescription }
     val defaultDesc = stringResource(R.string.image_add_description)

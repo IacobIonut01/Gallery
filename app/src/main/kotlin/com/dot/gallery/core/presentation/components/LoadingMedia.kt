@@ -34,6 +34,7 @@ import com.valentinilk.shimmer.shimmer
 fun LoadingMedia(
     modifier: Modifier = Modifier,
     shouldShimmer: Boolean = true,
+    topContent: @Composable (() -> Unit)? = null,
     bottomContent: @Composable (() -> Unit)? = null,
 ) {
     val gridSize by rememberGridSize()
@@ -44,6 +45,10 @@ fun LoadingMedia(
             .then(if (shouldShimmer) Modifier.shimmer() else Modifier),
         verticalArrangement = Arrangement.spacedBy(1.dp),
     ) {
+        if (topContent != null) {
+            topContent()
+        }
+
         Box(
             modifier = Modifier
                 .padding(horizontal = 24.dp, vertical = 24.dp),

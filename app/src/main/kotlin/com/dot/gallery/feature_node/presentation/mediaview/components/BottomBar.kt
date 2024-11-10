@@ -557,7 +557,7 @@ private fun MediaViewInfoActions2(
         // Share Component
         ShareButton(media, followTheme = true, enabled = true)
         // Hide
-        if (!media.isVideo) {
+        //if (!media.isVideo) {
             HideButton(
                 media,
                 vaults = vaults,
@@ -565,7 +565,7 @@ private fun MediaViewInfoActions2(
                 followTheme = true,
                 enabled = true
             )
-        }
+        //}
         // Use as or Open With
         OpenAsButton(media, followTheme = true, enabled = true)
         // Copy

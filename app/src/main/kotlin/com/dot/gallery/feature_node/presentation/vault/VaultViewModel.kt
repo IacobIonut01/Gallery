@@ -9,7 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dot.gallery.core.Resource
-import com.dot.gallery.feature_node.domain.model.EncryptedMedia
+import com.dot.gallery.feature_node.domain.model.DecryptedMedia
 import com.dot.gallery.feature_node.domain.model.EncryptedMediaState
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.Vault
@@ -50,11 +50,10 @@ open class VaultViewModel @Inject constructor(
         }
     }
 
-    init {
-        fetchVaultsAndMedia()
-    }
-
     fun setVault(vault: Vault?, onFailed: (reason: String) -> Unit = {}, onSuccess: () -> Unit) {
+        if (vault != currentVault.value) {
+            _mediaState.value = EncryptedMediaState()
+        }
         viewModelScope.launch(Dispatchers.IO) {
             val newVaultState = repository.getVaults().singleOrNull().mapToVaultState()
             _vaultState.emit(newVaultState)
@@ -114,16 +113,18 @@ open class VaultViewModel @Inject constructor(
         }
     }
 
-    fun restoreMedia(vault: Vault, media: EncryptedMedia) {
+    fun restoreMedia(vault: Vault, media: DecryptedMedia, onSuccess: () -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.restoreMedia(vault, media)
+            onSuccess()
             fetchVaultsAndMedia(vault)
         }
     }
 
-    fun deleteMedia(vault: Vault, media: EncryptedMedia) {
+    fun deleteMedia(vault: Vault, media: DecryptedMedia, onSuccess: () -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.deleteEncryptedMedia(vault, media)
+            onSuccess()
             fetchVaultsAndMedia(vault)
         }
     }

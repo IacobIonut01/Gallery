@@ -116,12 +116,14 @@ fun VideoPlayer(
     if (showPlayer) {
         val audioFocus by rememberAudioFocus()
         SanghunComposeVideoVideoPlayer(
-            mediaItems = listOf(
-                VideoPlayerMediaItem.StorageMediaItem(
-                    storageUri = media.uri,
-                    mimeType = media.mimeType
+            mediaItems = remember(media) {
+                listOf(
+                    VideoPlayerMediaItem.StorageMediaItem(
+                        storageUri = media.uri,
+                        mimeType = media.mimeType
+                    )
                 )
-            ),
+            },
             handleLifecycle = true,
             autoPlay = playWhenReady,
             usePlayerController = false,

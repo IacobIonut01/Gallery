@@ -1,8 +1,13 @@
 package com.dot.gallery.feature_node.presentation.vault
 
+import android.graphics.Color
 import android.os.Build
+import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
+import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,9 +19,11 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -24,6 +31,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.dot.gallery.R
@@ -31,6 +39,8 @@ import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.Constants.Animation.navigateInAnimation
 import com.dot.gallery.core.Constants.Animation.navigateUpAnimation
+import com.dot.gallery.core.Settings.Misc.rememberForceTheme
+import com.dot.gallery.core.Settings.Misc.rememberIsDarkMode
 import com.dot.gallery.feature_node.presentation.common.ChanneledViewModel
 import com.dot.gallery.feature_node.presentation.util.SecureWindow
 import com.dot.gallery.feature_node.presentation.vault.encryptedmediaview.EncryptedMediaViewScreen
@@ -52,7 +62,10 @@ fun VaultScreen(
     val navPipe = hiltViewModel<ChanneledViewModel>()
     navPipe
         .initWithNav(navController)
-        .collectAsStateWithLifecycle(LocalLifecycleOwner.current, context = Dispatchers.Main.immediate)
+        .collectAsStateWithLifecycle(
+            LocalLifecycleOwner.current,
+            context = Dispatchers.Main.immediate
+        )
 
     var addNewVault by remember { mutableStateOf(false) }
 
@@ -66,13 +79,39 @@ fun VaultScreen(
         },
         onFailed = {
             isAuthenticated = false
-            if (addNewVault) navController.navigateUp() else navigateUp()
         }
     )
 
     val vaultState by viewModel.vaultState.collectAsStateWithLifecycle()
     val startDestination by remember(vaultState) {
         derivedStateOf { vaultState.getStartScreen() }
+    }
+
+    val context = LocalContext.current
+
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val systemBarFollowThemeState = rememberSaveable(navBackStackEntry) {
+        mutableStateOf(
+            navBackStackEntry?.destination?.route?.contains(VaultScreens.EncryptedMediaViewScreen()) == false
+        )
+    }
+    val forcedTheme by rememberForceTheme()
+    val localDarkTheme by rememberIsDarkMode()
+    val systemDarkTheme = isSystemInDarkTheme()
+    val darkTheme by remember(forcedTheme, localDarkTheme, systemDarkTheme) {
+        mutableStateOf(if (forcedTheme) localDarkTheme else systemDarkTheme)
+    }
+    LaunchedEffect(darkTheme, systemBarFollowThemeState.value) {
+        (context as? ComponentActivity)?.enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.auto(
+                Color.TRANSPARENT,
+                Color.TRANSPARENT,
+            ) { darkTheme || !systemBarFollowThemeState.value },
+            navigationBarStyle = SystemBarStyle.auto(
+                Color.TRANSPARENT,
+                Color.TRANSPARENT,
+            ) { darkTheme || !systemBarFollowThemeState.value }
+        )
     }
 
     NavHost(

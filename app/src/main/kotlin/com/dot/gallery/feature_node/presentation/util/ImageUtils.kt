@@ -27,12 +27,14 @@ import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ShareCompat
+import androidx.core.content.FileProvider
+import androidx.core.net.toFile
 import androidx.exifinterface.media.ExifInterface
-import com.dot.gallery.feature_node.domain.model.EncryptedMedia
+import com.dot.gallery.BuildConfig
+import com.dot.gallery.feature_node.domain.model.DecryptedMedia
 import com.dot.gallery.feature_node.domain.model.InfoRow
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.presentation.mediaview.components.retrieveMetadata
-import com.dot.gallery.feature_node.presentation.vault.encryptedmediaview.components.video.UriByteDataHelper
 import java.io.IOException
 
 val sdcardRegex = "^/storage/[A-Z0-9]+-[A-Z0-9]+/.*$".toRegex()
@@ -204,11 +206,13 @@ fun Context.shareMedia(media: Media) {
         .startChooser()
 }
 
-fun Context.shareMedia(media: EncryptedMedia) {
+fun Context.shareMedia(media: DecryptedMedia) {
+    val uri = FileProvider.getUriForFile(this, BuildConfig.CONTENT_AUTHORITY, Uri.parse(media.uri).toFile())
+
     ShareCompat
         .IntentBuilder(this)
         .setType(media.mimeType)
-        .addStream(UriByteDataHelper.getUri(this, media.bytes, media.fileExtension, media.duration != null))
+        .addStream(uri)
         .startChooser()
 }
 

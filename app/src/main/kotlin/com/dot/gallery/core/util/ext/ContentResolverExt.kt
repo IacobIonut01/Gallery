@@ -212,6 +212,43 @@ fun ContentResolver.saveImage(
     }
 }
 
+fun ContentResolver.saveVideo(
+    bytes: ByteArray,
+    mimeType: String,
+    relativePath: String = Environment.DIRECTORY_MOVIES,
+    displayName: String
+): Uri? {
+    val values = ContentValues().apply {
+        put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
+        put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
+        put(
+            MediaStore.MediaColumns.RELATIVE_PATH,
+            if (relativePath.contains("DCIM") || relativePath.contains("Movies")) relativePath
+            else Environment.DIRECTORY_MOVIES + "/Edited"
+        )
+    }
+
+    var uri: Uri? = null
+
+    return runCatching {
+        insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)?.also {
+            uri = it // Keep uri reference so it can be removed on failure
+
+            openOutputStream(it)?.use { stream ->
+                stream.write(bytes)
+            } ?: throw IOException("Failed to open output stream.")
+
+        } ?: throw IOException("Failed to create new MediaStore record.")
+    }.getOrElse {
+        uri?.let { orphanUri ->
+            // Don't leave an orphan entry in the MediaStore
+            delete(orphanUri, null, null)
+        }
+
+        return null
+    }
+}
+
 suspend fun ContentResolver.updateMedia(
     media: Media,
     contentValues: ContentValues

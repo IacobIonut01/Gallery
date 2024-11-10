@@ -37,11 +37,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.core.Constants.Animation
 import com.dot.gallery.core.presentation.components.CheckBox
-import com.dot.gallery.feature_node.domain.model.EncryptedMedia
+import com.dot.gallery.feature_node.domain.model.DecryptedMedia
 import com.dot.gallery.feature_node.presentation.vault.encryptedmediaview.components.video.VideoDurationHeader
 import com.github.panpf.sketch.AsyncImage
 import com.github.panpf.sketch.cache.CachePolicy
-import com.github.panpf.sketch.fetch.newBase64Uri
 import com.github.panpf.sketch.request.ComposableImageRequest
 import com.github.panpf.sketch.resize.Scale
 
@@ -49,12 +48,12 @@ import com.github.panpf.sketch.resize.Scale
 @Composable
 fun EncryptedMediaImage(
     modifier: Modifier = Modifier,
-    media: EncryptedMedia,
+    media: DecryptedMedia,
     selectionState: MutableState<Boolean>,
-    selectedMedia: SnapshotStateList<EncryptedMedia>,
+    selectedMedia: SnapshotStateList<DecryptedMedia>,
     canClick: Boolean,
-    onItemClick: (EncryptedMedia) -> Unit,
-    onItemLongClick: (EncryptedMedia) -> Unit,
+    onItemClick: (DecryptedMedia) -> Unit,
+    onItemLongClick: (DecryptedMedia) -> Unit,
 ) {
     var isSelected by remember { mutableStateOf(false) }
     LaunchedEffect(selectionState.value, selectedMedia.size) {
@@ -117,10 +116,12 @@ fun EncryptedMediaImage(
             AsyncImage(
                 modifier = Modifier
                     .fillMaxSize(),
-                request = ComposableImageRequest(newBase64Uri(mimeType = media.mimeType, imageData = media.bytes)) {
-                    memoryCachePolicy(CachePolicy.ENABLED)
+                request = ComposableImageRequest(media.uri) {
                     scale(Scale.CENTER_CROP)
+                    resultCachePolicy(CachePolicy.ENABLED)
+                    memoryCachePolicy(CachePolicy.ENABLED)
                     crossfade()
+                    setExtra("realMimeType", media.mimeType)
                 },
                 contentDescription = media.label,
                 contentScale = ContentScale.Crop,

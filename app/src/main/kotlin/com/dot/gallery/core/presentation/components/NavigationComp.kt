@@ -118,7 +118,7 @@ fun NavigationComp(
             if (it != Screen.VaultScreen()) {
                 shouldSkipAuth.value = false
             }
-            systemBarFollowThemeState.value = !it.contains(Screen.MediaViewScreen.route)
+            systemBarFollowThemeState.value = !(it.contains(Screen.MediaViewScreen.route) || it.contains(Screen.VaultScreen()))
         }
     }
 

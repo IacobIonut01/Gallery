@@ -30,14 +30,19 @@ import com.dot.gallery.core.Settings.Misc.rememberForceTheme
 import com.dot.gallery.core.Settings.Misc.rememberIsDarkMode
 import com.dot.gallery.core.presentation.components.AppBarContainer
 import com.dot.gallery.core.presentation.components.NavigationComp
+import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.presentation.util.toggleOrientation
 import com.dot.gallery.ui.theme.GalleryTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
+
+    @Inject
+    lateinit var repository: MediaRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()

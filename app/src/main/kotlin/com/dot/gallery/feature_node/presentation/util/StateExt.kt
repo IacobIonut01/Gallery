@@ -14,7 +14,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Resource
-import com.dot.gallery.feature_node.domain.model.EncryptedMedia
+import com.dot.gallery.feature_node.domain.model.DecryptedMedia
 import com.dot.gallery.feature_node.domain.model.EncryptedMediaItem
 import com.dot.gallery.feature_node.domain.model.EncryptedMediaState
 import com.dot.gallery.feature_node.domain.model.Media
@@ -183,7 +183,7 @@ private fun List<Media>.dateHeader(albumId: Long): String =
     } else ""
 
 suspend fun MutableStateFlow<EncryptedMediaState>.collectEncryptedMedia(
-    data: List<EncryptedMedia>,
+    data: List<DecryptedMedia>,
     groupByMonth: Boolean = false,
     withMonthHeader: Boolean = true
 ) = withContext(Dispatchers.IO) {
@@ -197,7 +197,7 @@ suspend fun MutableStateFlow<EncryptedMediaState>.collectEncryptedMedia(
 }
 
 suspend fun mapEncryptedMediaToItem(
-    data: List<EncryptedMedia>,
+    data: List<DecryptedMedia>,
     groupByMonth: Boolean = false,
     withMonthHeader: Boolean = true
 ) = withContext(Dispatchers.IO) {
