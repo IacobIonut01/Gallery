@@ -58,8 +58,8 @@ class EncryptedVideoFrameDecoder(
             requestContext: RequestContext,
             fetchResult: FetchResult
         ): EncryptedVideoFrameDecoder? {
+            val mimeType = requestContext.request.extras?.get("realMimeType") as String? ?: return null
             val dataSource = fetchResult.dataSource as? FileDataSource ?: return null
-            val mimeType = requestContext.request.extras?.get("realMimeType") as String
             if (mimeType.startsWith("video")) {
                 return EncryptedVideoFrameDecoder(
                     requestContext = requestContext,
