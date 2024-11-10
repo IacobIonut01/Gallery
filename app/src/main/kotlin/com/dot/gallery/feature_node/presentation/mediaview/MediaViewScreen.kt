@@ -5,6 +5,7 @@
 
 package com.dot.gallery.feature_node.presentation.mediaview
 
+import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutLinearInEasing
@@ -29,6 +30,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
@@ -82,8 +84,12 @@ import com.dot.gallery.feature_node.presentation.util.ViewScreenConstants.ImageO
 import com.dot.gallery.feature_node.presentation.util.getDate
 import com.dot.gallery.feature_node.presentation.util.normalize
 import com.dot.gallery.feature_node.presentation.util.rememberWindowInsetsController
+import com.dot.gallery.feature_node.presentation.util.setHdrMode
 import com.dot.gallery.feature_node.presentation.util.toggleSystemBars
 import com.dot.gallery.ui.theme.BlackScrim
+import com.github.panpf.sketch.getBitmapOrNull
+import com.github.panpf.sketch.request.ImageRequest
+import com.github.panpf.sketch.sketch
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -149,6 +155,7 @@ fun MediaViewScreen(
         mutableFloatStateOf(0f)
     }
     var isNormalizationTargetSet by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     LaunchedEffect(mediaState.value) {
         snapshotFlow { pagerState.currentPage }.collectLatest { page ->
@@ -173,6 +180,32 @@ fun MediaViewScreen(
             }
         }
     }
+
+    // set HDR Gain map
+    LaunchedEffect(mediaState.value) {
+        snapshotFlow { pagerState.currentPage }.collectLatest { page ->
+            val activeMedia = mediaState.value.media.getOrNull(page)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                val request = ImageRequest(context, activeMedia?.uri.toString()) {
+                    setExtra(
+                        key = "mediaKey",
+                        value = activeMedia.toString(),
+                    )
+                }
+                val result = context.sketch.execute(request)
+                result.image?.getBitmapOrNull()?.let { bitmap ->
+                    context.setHdrMode(bitmap.hasGainmap())
+                }
+            }
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            context.setHdrMode(false)
+        }
+    }
+
     LaunchedEffect(sheetHeightDp) {
         if (lastSheetHeightDp != sheetHeightDp) {
             lastSheetHeightDp = sheetHeightDp

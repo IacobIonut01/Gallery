@@ -11,7 +11,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.NonRestartableComposable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -27,7 +26,6 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.core.Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION
 import com.dot.gallery.core.Settings
@@ -36,9 +34,7 @@ import com.dot.gallery.core.presentation.components.util.ProvideBatteryStatus
 import com.dot.gallery.core.presentation.components.util.swipe
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.presentation.util.rememberFeedbackManager
-import com.dot.gallery.feature_node.presentation.util.setHdrMode
 import com.github.panpf.sketch.AsyncImage
-import com.github.panpf.sketch.getBitmapOrNull
 import com.github.panpf.sketch.rememberAsyncImageState
 import com.github.panpf.sketch.request.ComposableImageRequest
 import com.github.panpf.sketch.request.ImageOptions
@@ -102,21 +98,6 @@ fun ZoomablePagerImage(
             )
         }
     )
-
-    val context = LocalContext.current
-
-    DisposableEffect(media, asyncState.result) {
-        scope.launch {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                asyncState.result?.image?.getBitmapOrNull()?.let {
-                    context.setHdrMode(it.hasGainmap())
-                }
-            }
-        }
-        onDispose {
-            context.setHdrMode(false)
-        }
-    }
 
     SketchZoomAsyncImage(
         zoomState = zoomState,
