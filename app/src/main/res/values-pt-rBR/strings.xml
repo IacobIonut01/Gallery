@@ -131,7 +131,7 @@
     <string name="setup_summary">Para acessar sua mídia, é necessário conceder as seguintes permissões:</string>
     <string name="required">Necessário</string>
     <string name="optional">Opcional</string>
-    <string name="permission_manage_media_title">Gerenciar mídia</string>
+    <string name="permission_manage_media_title">Gerenciar Mídia</string>
     <string name="permission_manage_media_summary">"Automaticamente concede diálogos de confirmação do sistema quando você solicita várias alterações em sua mídia (alternar favoritos, gerenciar lixeira, editar metadados, etc.)"</string>
     <string name="read_media_images">Ler imagens de mídia</string>
     <string name="read_media_images_summary">Permite que o aplicativo mostre suas imagens</string>
