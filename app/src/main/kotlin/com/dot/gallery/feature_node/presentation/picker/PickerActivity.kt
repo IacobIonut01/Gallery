@@ -46,7 +46,7 @@ class PickerActivityContract : ActivityResultContract<Any?, List<Media>>() {
 
     override fun createIntent(context: Context, input: Any?): Intent {
         return Intent(context, PickerActivity::class.java).apply {
-            type = "image/*"
+            type = "*/*"
             putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
             putExtra(EXPORT_AS_MEDIA, true)
         }

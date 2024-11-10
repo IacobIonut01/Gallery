@@ -26,6 +26,7 @@ import com.dot.gallery.core.util.ext.copyMedia
 import com.dot.gallery.core.util.ext.mapAsResource
 import com.dot.gallery.core.util.ext.overrideImage
 import com.dot.gallery.core.util.ext.saveImage
+import com.dot.gallery.core.util.ext.saveVideo
 import com.dot.gallery.core.util.ext.updateMedia
 import com.dot.gallery.core.util.ext.updateMediaExif
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
@@ -35,6 +36,8 @@ import com.dot.gallery.feature_node.data.data_source.mediastore.quries.AlbumsFlo
 import com.dot.gallery.feature_node.data.data_source.mediastore.quries.MediaFlow
 import com.dot.gallery.feature_node.data.data_source.mediastore.quries.MediaUriFlow
 import com.dot.gallery.feature_node.domain.model.Album
+import com.dot.gallery.feature_node.domain.model.DecryptedMedia
+import com.dot.gallery.feature_node.domain.model.DecryptedMedia.Companion.asDecryptedMedia
 import com.dot.gallery.feature_node.domain.model.EncryptedMedia
 import com.dot.gallery.feature_node.domain.model.ExifAttributes
 import com.dot.gallery.feature_node.domain.model.IgnoredAlbum
@@ -42,6 +45,8 @@ import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.PinnedAlbum
 import com.dot.gallery.feature_node.domain.model.TimelineSettings
 import com.dot.gallery.feature_node.domain.model.Vault
+import com.dot.gallery.feature_node.domain.model.compatibleBitmapFormat
+import com.dot.gallery.feature_node.domain.model.compatibleMimeType
 import com.dot.gallery.feature_node.domain.model.toEncryptedMedia
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.domain.util.MediaOrder
@@ -297,19 +302,22 @@ class MediaRepositoryImpl(
         onFailed: (reason: String) -> Unit
     ) = withContext(Dispatchers.IO) { keychainHolder.deleteVault(vault, onSuccess, onFailed) }
 
-    override fun getEncryptedMedia(vault: Vault): Flow<Resource<List<EncryptedMedia>>> =
+    override fun getEncryptedMedia(vault: Vault): Flow<Resource<List<DecryptedMedia>>> =
         context.retrieveInternalFiles {
             with(keychainHolder) {
-                (vaultFolder(vault).listFiles()?.filter {
-                    it.name.endsWith("enc")
-                }?.mapNotNull {
-                    try {
-                        val id = it.nameWithoutExtension.toLong()
-                        vault.mediaFile(id).decrypt<EncryptedMedia>()
-                    } catch (e: Exception) {
-                        null
+                withContext(Dispatchers.IO) {
+                    (vaultFolder(vault).listFiles()?.filter { it.name.endsWith("enc") }
+                        ?: emptyList()).map { file ->
+                        try {
+                            val id = file.nameWithoutExtension.toLong()
+                            val encryptedFile = vault.mediaFile(id)
+                            val encryptedMedia = encryptedFile.decrypt<EncryptedMedia>()
+                            encryptedMedia.asDecryptedMedia(Uri.fromFile(encryptedFile))
+                        } catch (e: Exception) {
+                            null
+                        }
                     }
-                } ?: emptyList()).sortedByDescending { it.timestamp }
+                }.filterNotNull().sortedByDescending { it.timestamp }
             }
         }
 
@@ -334,20 +342,30 @@ class MediaRepositoryImpl(
             }
         }
 
-    override suspend fun restoreMedia(vault: Vault, media: EncryptedMedia): Boolean =
+    override suspend fun restoreMedia(vault: Vault, media: DecryptedMedia): Boolean =
         withContext(Dispatchers.IO) {
             with(keychainHolder) {
                 checkVaultFolder(vault)
                 return@withContext try {
                     val output = vault.mediaFile(media.id)
-                    val bitmap = BitmapFactory.decodeByteArray(media.bytes, 0, media.bytes.size)
-                    val restored = saveImage(
-                        bitmap = bitmap,
-                        displayName = media.label,
-                        mimeType = "image/png",
-                        format = Bitmap.CompressFormat.PNG,
-                        relativePath = Environment.DIRECTORY_PICTURES + "/Restored"
-                    ) != null
+                    val encryptedMedia = output.decrypt<EncryptedMedia>()
+                    val restored: Boolean
+                    if (media.isImage) {
+                        restored = saveImage(
+                            bitmap = BitmapFactory.decodeByteArray(encryptedMedia.bytes, 0, encryptedMedia.bytes.size),
+                            displayName = media.label,
+                            mimeType = media.compatibleMimeType(),
+                            format = media.compatibleBitmapFormat(),
+                            relativePath = Environment.DIRECTORY_PICTURES + "/Restored"
+                        ) != null
+                    } else {
+                        restored = contentResolver.saveVideo(
+                            bytes = encryptedMedia.bytes,
+                            displayName = media.label,
+                            mimeType = media.compatibleMimeType(),
+                            relativePath = Environment.DIRECTORY_MOVIES + "/Restored"
+                        ) != null
+                    }
                     val deleted = if (restored) output.delete() else false
                     restored && deleted
                 } catch (e: Exception) {
@@ -358,7 +376,7 @@ class MediaRepositoryImpl(
             }
         }
 
-    override suspend fun deleteEncryptedMedia(vault: Vault, media: EncryptedMedia): Boolean =
+    override suspend fun deleteEncryptedMedia(vault: Vault, media: DecryptedMedia): Boolean =
         withContext(Dispatchers.IO) {
             with(keychainHolder) {
                 checkVaultFolder(vault)

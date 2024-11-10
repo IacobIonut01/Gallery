@@ -22,11 +22,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.core.presentation.components.util.advancedShadow
-import com.dot.gallery.feature_node.domain.model.EncryptedMedia
+import com.dot.gallery.feature_node.domain.model.DecryptedMedia
 import com.dot.gallery.feature_node.presentation.util.formatMinSec
 
 @Composable
-fun VideoDurationHeader(modifier: Modifier = Modifier, media: EncryptedMedia) {
+fun VideoDurationHeader(modifier: Modifier = Modifier, media: DecryptedMedia) {
     Row(
         modifier = modifier
             .padding(all = 8.dp)

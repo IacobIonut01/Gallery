@@ -39,7 +39,7 @@ sealed class EncryptedMediaItem {
     @Stable
     data class MediaViewItem(
         override val key: String,
-        val media: EncryptedMedia
+        val media: DecryptedMedia
     ) : EncryptedMediaItem()
 
 }

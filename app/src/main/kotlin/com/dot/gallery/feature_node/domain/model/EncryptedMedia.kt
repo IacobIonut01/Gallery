@@ -19,6 +19,7 @@ import java.io.Serializable
 
 @Immutable
 @Parcelize
+@kotlinx.serialization.Serializable
 data class EncryptedMedia(
     val id: Long = 0,
     val label: String,

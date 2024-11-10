@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
@@ -25,32 +24,29 @@ import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
 import com.dot.gallery.core.presentation.components.util.LocalBatteryStatus
 import com.dot.gallery.core.presentation.components.util.ProvideBatteryStatus
 import com.dot.gallery.core.presentation.components.util.swipe
-import com.dot.gallery.feature_node.domain.model.EncryptedMedia
+import com.dot.gallery.feature_node.domain.model.DecryptedMedia
 import com.github.panpf.sketch.cache.CachePolicy
-import com.github.panpf.sketch.fetch.newBase64Uri
 import com.github.panpf.sketch.rememberAsyncImagePainter
 import com.github.panpf.sketch.request.ComposableImageRequest
-import com.github.panpf.zoomimage.SketchZoomAsyncImage
+import com.github.panpf.zoomimage.ZoomImage
 
 @Composable
 fun ZoomablePagerImage(
     modifier: Modifier = Modifier,
-    media: EncryptedMedia,
+    media: DecryptedMedia,
     uiEnabled: Boolean,
     onItemClick: () -> Unit,
     onSwipeDown: () -> Unit
 ) {
     val painter = rememberAsyncImagePainter(
-        request = ComposableImageRequest(
-            remember(media) {
-                newBase64Uri(
-                    mimeType = media.mimeType,
-                    imageData = media.bytes
-                )
-            }
-        ) {
+        request = ComposableImageRequest(media.uri) {
             memoryCachePolicy(CachePolicy.ENABLED)
             crossfade()
+            setExtra(
+                key = "encryptedMediaKey",
+                value = media.toString(),
+            )
+            setExtra("realMimeType", media.mimeType)
         },
         contentScale = ContentScale.Fit,
         filterQuality = FilterQuality.None,
@@ -78,16 +74,14 @@ fun ZoomablePagerImage(
             }
         }
 
-        SketchZoomAsyncImage(
+        ZoomImage(
             modifier = modifier
                 .fillMaxSize()
                 .swipe(
                     onSwipeDown = onSwipeDown
                 ),
             onTap = { onItemClick() },
-            uri = remember(media) {
-                newBase64Uri(mimeType = media.mimeType, imageData = media.bytes)
-            },
+            painter = painter,
             contentScale = ContentScale.Fit,
             contentDescription = media.label
         )

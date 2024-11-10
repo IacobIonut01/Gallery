@@ -4,7 +4,6 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -52,7 +51,7 @@ import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.presentation.components.DragHandle
-import com.dot.gallery.feature_node.domain.model.EncryptedMedia
+import com.dot.gallery.feature_node.domain.model.DecryptedMedia
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialogAction
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialogAction.DELETE
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialogAction.RESTORE
@@ -61,19 +60,17 @@ import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.rememberFeedbackManager
 import com.dot.gallery.ui.theme.Shapes
 import com.github.panpf.sketch.AsyncImage
-import com.github.panpf.sketch.fetch.newBase64Uri
 import kotlinx.coroutines.launch
 
 @OptIn(
-    ExperimentalMaterial3Api::class,
-    ExperimentalFoundationApi::class
+    ExperimentalMaterial3Api::class
 )
 @Composable
 fun EncryptedTrashDialog(
     appBottomSheetState: AppBottomSheetState,
-    data: List<EncryptedMedia>,
+    data: List<DecryptedMedia>,
     action: TrashDialogAction,
-    onConfirm: suspend (List<EncryptedMedia>) -> Unit
+    onConfirm: suspend (List<DecryptedMedia>) -> Unit
 ) {
     val dataCopy = data.toMutableStateList()
     var confirmed by remember { mutableStateOf(false) }
@@ -244,7 +241,7 @@ fun EncryptedTrashDialog(
                         ) {
                             AsyncImage(
                                 modifier = Modifier.fillMaxSize(),
-                                uri = newBase64Uri(it.mimeType, it.bytes),
+                                uri = it.uri,
                                 contentDescription = it.label,
                                 contentScale = ContentScale.Crop
                             )

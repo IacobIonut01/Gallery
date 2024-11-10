@@ -43,7 +43,7 @@ import com.dokar.pinchzoomgrid.PinchZoomGridScope
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.Settings.Misc.rememberAutoHideSearchBar
-import com.dot.gallery.feature_node.domain.model.EncryptedMedia
+import com.dot.gallery.feature_node.domain.model.DecryptedMedia
 import com.dot.gallery.feature_node.domain.model.EncryptedMediaState
 import com.dot.gallery.feature_node.domain.model.isHeaderKey
 import com.dot.gallery.feature_node.domain.model.isIgnoredKey
@@ -62,7 +62,7 @@ fun PinchZoomGridScope.EncryptedMediaGridView(
     showSearchBar: Boolean = remember { false },
     allowSelection: Boolean = remember { false },
     selectionState: MutableState<Boolean> = remember { mutableStateOf(false) },
-    selectedMedia: SnapshotStateList<EncryptedMedia> = remember { mutableStateListOf() },
+    selectedMedia: SnapshotStateList<DecryptedMedia> = remember { mutableStateListOf() },
     toggleSelection: @DisallowComposableCalls (Int) -> Unit = {},
     canScroll: Boolean = true,
     allowHeaders: Boolean = true,
@@ -71,7 +71,7 @@ fun PinchZoomGridScope.EncryptedMediaGridView(
     aboveGridContent: @Composable (() -> Unit)? = null,
     isScrolling: MutableState<Boolean>,
     emptyContent: @Composable () -> Unit,
-    onMediaClick: @DisallowComposableCalls (media: EncryptedMedia) -> Unit = {},
+    onMediaClick: @DisallowComposableCalls (media: DecryptedMedia) -> Unit = {},
 ) {
     val mappedData by remember(mediaState.value, showMonthlyHeader) {
         derivedStateOf {

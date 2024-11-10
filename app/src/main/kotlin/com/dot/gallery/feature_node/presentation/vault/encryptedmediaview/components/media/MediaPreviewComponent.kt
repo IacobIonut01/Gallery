@@ -12,12 +12,12 @@ import androidx.compose.runtime.MutableLongState
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
 import androidx.media3.exoplayer.ExoPlayer
-import com.dot.gallery.feature_node.domain.model.EncryptedMedia
+import com.dot.gallery.feature_node.domain.model.DecryptedMedia
 import com.dot.gallery.feature_node.presentation.vault.encryptedmediaview.components.video.VideoPlayer
 
 @Composable
 fun MediaPreviewComponent(
-    media: EncryptedMedia,
+    media: DecryptedMedia,
     uiEnabled: Boolean,
     playWhenReady: Boolean,
     onItemClick: () -> Unit,
@@ -33,7 +33,8 @@ fun MediaPreviewComponent(
                 media = media,
                 playWhenReady = playWhenReady,
                 videoController = videoController,
-                onItemClick = onItemClick
+                onItemClick = onItemClick,
+                onSwipeDown = onSwipeDown
             )
         } else {
             ZoomablePagerImage(

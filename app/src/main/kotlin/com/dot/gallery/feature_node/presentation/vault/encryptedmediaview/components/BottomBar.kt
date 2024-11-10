@@ -50,7 +50,7 @@ import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.Settings.Misc.rememberTrashEnabled
 import com.dot.gallery.core.presentation.components.DragHandle
 import com.dot.gallery.core.presentation.components.NavigationBarSpacer
-import com.dot.gallery.feature_node.domain.model.EncryptedMedia
+import com.dot.gallery.feature_node.domain.model.DecryptedMedia
 import com.dot.gallery.feature_node.domain.model.Vault
 import com.dot.gallery.feature_node.domain.model.rememberMediaDateCaption
 import com.dot.gallery.feature_node.presentation.mediaview.components.DateHeader
@@ -63,9 +63,9 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun EncryptedMediaViewDetails(
-    currentMedia: EncryptedMedia?,
+    currentMedia: DecryptedMedia?,
     currentVault: Vault?,
-    restoreMedia: (Vault, EncryptedMedia) -> Unit
+    restoreMedia: (Vault, DecryptedMedia, () -> Unit) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -96,16 +96,18 @@ fun EncryptedMediaViewDetails(
             exit = exitAnimation
         ) {
             Column {
-                val dateCaption = rememberMediaDateCaption(null, currentMedia!!)
+                val dateCaption = currentMedia?.let { rememberMediaDateCaption(null, it) }
 
                 LazyColumn(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     item {
-                        DateHeader(
-                            modifier = Modifier.fillMaxWidth(),
-                            mediaDateCaption = dateCaption
-                        )
+                        dateCaption?.let {
+                            DateHeader(
+                                modifier = Modifier.fillMaxWidth(),
+                                mediaDateCaption = it
+                            )
+                        }
                     }
                     item {
                         Row(
@@ -116,12 +118,14 @@ fun EncryptedMediaViewDetails(
                                 .padding(top = 8.dp),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            if (currentMedia.isRaw) {
-                                MediaInfoChip2(
-                                    text = currentMedia.fileExtension.toUpperCase(Locale.current),
-                                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer
-                                )
+                            if (currentMedia != null) {
+                                if (currentMedia.isRaw) {
+                                    MediaInfoChip2(
+                                        text = currentMedia.fileExtension.toUpperCase(Locale.current),
+                                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                                    )
+                                }
                             }
                         }
                     }
@@ -129,11 +133,13 @@ fun EncryptedMediaViewDetails(
                         Spacer(modifier = Modifier.height(8.dp))
                     }
                     item {
-                        EncryptedMediaViewInfoActions(
-                            media = currentMedia,
-                            restoreMedia = restoreMedia,
-                            currentVault = currentVault!!
-                        )
+                        currentMedia?.let {
+                            EncryptedMediaViewInfoActions(
+                                media = it,
+                                restoreMedia = restoreMedia,
+                                currentVault = currentVault!!
+                            )
+                        }
                     }
                     item {
                         NavigationBarSpacer()
@@ -146,8 +152,8 @@ fun EncryptedMediaViewDetails(
 
 @Composable
 private fun EncryptedMediaViewInfoActions(
-    media: EncryptedMedia,
-    restoreMedia: (Vault, EncryptedMedia) -> Unit,
+    media: DecryptedMedia,
+    restoreMedia: (Vault, DecryptedMedia, () -> Unit) -> Unit,
     currentVault: Vault
 ) {
     Row(
@@ -169,11 +175,11 @@ private fun EncryptedMediaViewInfoActions(
 @Composable
 fun EncryptedMediaViewActions(
     currentIndex: Int,
-    currentMedia: EncryptedMedia,
+    currentMedia: DecryptedMedia,
     currentVault: Vault,
     onDeleteMedia: ((Int) -> Unit)?,
-    restoreMedia: (Vault, EncryptedMedia) -> Unit,
-    deleteMedia: (Vault, EncryptedMedia) -> Unit
+    restoreMedia: (Vault, DecryptedMedia, () -> Unit) -> Unit,
+    deleteMedia: (Vault, DecryptedMedia, () -> Unit) -> Unit
 ) {
     // Share Component
     ShareButton(currentMedia)
@@ -192,7 +198,7 @@ fun EncryptedMediaViewActions(
 
 @Composable
 private fun ShareButton(
-    media: EncryptedMedia,
+    media: DecryptedMedia,
     followTheme: Boolean = false
 ) {
     val scope = rememberCoroutineScope()
@@ -211,9 +217,9 @@ private fun ShareButton(
 
 @Composable
 private fun RestoreButton(
-    media: EncryptedMedia,
+    media: DecryptedMedia,
     currentVault: Vault,
-    restoreMedia: (Vault, EncryptedMedia) -> Unit,
+    restoreMedia: (Vault, DecryptedMedia, () -> Unit) -> Unit,
     followTheme: Boolean = false
 ) {
     val scope = rememberCoroutineScope()
@@ -224,7 +230,9 @@ private fun RestoreButton(
         title = "Restore"
     ) {
         scope.launch {
-            restoreMedia(currentVault, it)
+            restoreMedia(currentVault, it) {
+
+            }
         }
     }
 }
@@ -260,11 +268,11 @@ private fun OpenAsButton(
 @Composable
 private fun TrashButton(
     index: Int,
-    media: EncryptedMedia,
+    media: DecryptedMedia,
     currentVault: Vault,
     followTheme: Boolean = false,
     onDeleteMedia: ((Int) -> Unit)?,
-    deleteMedia: (Vault, EncryptedMedia) -> Unit
+    deleteMedia: (Vault, DecryptedMedia, () -> Unit) -> Unit
 ) {
     val state = rememberAppBottomSheetState()
     val scope = rememberCoroutineScope()
@@ -296,21 +304,22 @@ private fun TrashButton(
         action = TrashDialogAction.DELETE
     ) {
         it.forEach { media ->
-            deleteMedia(currentVault, media)
+            deleteMedia(currentVault, media) {
+                onDeleteMedia?.invoke(index)
+            }
         }
-        onDeleteMedia?.invoke(index)
     }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun EncryptedBottomBarColumn(
-    currentMedia: EncryptedMedia?,
+    currentMedia: DecryptedMedia?,
     imageVector: ImageVector,
     title: String,
     followTheme: Boolean = false,
-    onItemLongClick: ((EncryptedMedia) -> Unit)? = null,
-    onItemClick: (EncryptedMedia) -> Unit
+    onItemLongClick: ((DecryptedMedia) -> Unit)? = null,
+    onItemClick: (DecryptedMedia) -> Unit
 ) {
     val tintColor = if (followTheme) MaterialTheme.colorScheme.onSurface else Color.White
     Column(

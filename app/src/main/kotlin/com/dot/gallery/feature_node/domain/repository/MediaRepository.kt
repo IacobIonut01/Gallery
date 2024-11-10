@@ -11,7 +11,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import com.dot.gallery.core.Resource
 import com.dot.gallery.feature_node.domain.model.Album
-import com.dot.gallery.feature_node.domain.model.EncryptedMedia
+import com.dot.gallery.feature_node.domain.model.DecryptedMedia
 import com.dot.gallery.feature_node.domain.model.ExifAttributes
 import com.dot.gallery.feature_node.domain.model.IgnoredAlbum
 import com.dot.gallery.feature_node.domain.model.Media
@@ -128,13 +128,13 @@ interface MediaRepository {
         onFailed: (reason: String) -> Unit
     )
 
-    fun getEncryptedMedia(vault: Vault): Flow<Resource<List<EncryptedMedia>>>
+    fun getEncryptedMedia(vault: Vault): Flow<Resource<List<DecryptedMedia>>>
 
     suspend fun addMedia(vault: Vault, media: Media): Boolean
 
-    suspend fun restoreMedia(vault: Vault, media: EncryptedMedia): Boolean
+    suspend fun restoreMedia(vault: Vault, media: DecryptedMedia): Boolean
 
-    suspend fun deleteEncryptedMedia(vault: Vault, media: EncryptedMedia): Boolean
+    suspend fun deleteEncryptedMedia(vault: Vault, media: DecryptedMedia): Boolean
 
     suspend fun deleteAllEncryptedMedia(
         vault: Vault,
