@@ -255,6 +255,7 @@
     <string name="vault_setup_name">Vault Name</string>
     <string name="vault_setup_security_error">Please set-up a phone security measure before setting up the vault.</string>
     <string name="vault_setup_summary">The vault will be accessed using your phone security measures (password or biometrics)\n\nEncryption key can be accessed inside the vault and will be used in order to restore any vaults.</string>
+    <string name="vault_setup_summary2">The vault will be accessed using your phone security measures (password or biometrics)\n\nThe vault contents are encrypted using a AES256 encryption algorithm.\nEncryption key can\'t be accessed inside the vault and you will not be able to transfer your vault.</string>
     <string name="vault_already_exists">Vault \"%1$s\" already exists</string>
     <string name="ignored">Ignored</string>
     <string name="location">Location</string>
