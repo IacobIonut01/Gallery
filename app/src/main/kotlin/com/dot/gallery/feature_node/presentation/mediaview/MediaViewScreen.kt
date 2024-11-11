@@ -87,7 +87,7 @@ import com.dot.gallery.feature_node.presentation.util.rememberWindowInsetsContro
 import com.dot.gallery.feature_node.presentation.util.setHdrMode
 import com.dot.gallery.feature_node.presentation.util.toggleSystemBars
 import com.dot.gallery.ui.theme.BlackScrim
-import com.github.panpf.sketch.getBitmapOrNull
+import com.github.panpf.sketch.BitmapImage
 import com.github.panpf.sketch.request.ImageRequest
 import com.github.panpf.sketch.sketch
 import kotlinx.coroutines.delay
@@ -193,7 +193,7 @@ fun MediaViewScreen(
                     )
                 }
                 val result = context.sketch.execute(request)
-                result.image?.getBitmapOrNull()?.let { bitmap ->
+                (result.image as? BitmapImage)?.bitmap?.let { bitmap ->
                     context.setHdrMode(bitmap.hasGainmap())
                 }
             }

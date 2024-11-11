@@ -3,6 +3,7 @@ package com.dot.gallery.core.decoder
 import com.github.panpf.sketch.ComponentRegistry
 import com.github.panpf.sketch.decode.DecodeResult
 import com.github.panpf.sketch.decode.Decoder
+import com.github.panpf.sketch.decode.ImageInfo
 import com.github.panpf.sketch.fetch.FetchResult
 import com.github.panpf.sketch.request.RequestContext
 import com.github.panpf.sketch.source.DataSource
@@ -18,6 +19,8 @@ class SketchHeifDecoder(
     private val dataSource: DataSource,
     private val mimeType: String
 ) : Decoder {
+
+    private val coder = HeifCoder(requestContext.request.context)
 
     class Factory : Decoder.Factory {
 
@@ -55,13 +58,20 @@ class SketchHeifDecoder(
         }
     }
 
-    override suspend fun decode(): Result<DecodeResult> = runCatching {
-        val coder = HeifCoder(requestContext.request.context)
-        return@runCatching dataSource.withCustomDecoder(
+    override fun decode(): DecodeResult {
+        return dataSource.withCustomDecoder(
             requestContext = requestContext,
             mimeType = mimeType,
             getSize = coder::getSize,
             decodeSampled = coder::decodeSampled
+        )
+    }
+
+    override val imageInfo: ImageInfo by lazy {
+        dataSource.getImageInfo(
+            requestContext = requestContext,
+            mimeType = mimeType,
+            getSize = coder::getSize
         )
     }
 

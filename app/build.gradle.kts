@@ -22,7 +22,7 @@ android {
         applicationId = "com.dot.gallery"
         minSdk = 30
         targetSdk = 35
-        versionCode = 31006
+        versionCode = 31007
         versionName = "3.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -200,7 +200,9 @@ dependencies {
     // Sketch
     implementation(libs.sketch.compose)
     implementation(libs.sketch.view)
-    implementation(libs.sketch.animated)
+    implementation(libs.sketch.animated.gif)
+    implementation(libs.sketch.animated.heif)
+    implementation(libs.sketch.animated.webp)
     implementation(libs.sketch.extensions.compose)
     implementation(libs.sketch.http.ktor)
     implementation(libs.sketch.svg)

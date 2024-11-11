@@ -12,23 +12,30 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.core.Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION
 import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
+import com.dot.gallery.core.decoder.EncryptedRegionDecoder
 import com.dot.gallery.core.presentation.components.util.LocalBatteryStatus
 import com.dot.gallery.core.presentation.components.util.ProvideBatteryStatus
 import com.dot.gallery.core.presentation.components.util.swipe
+import com.dot.gallery.feature_node.data.data_source.KeychainHolder
 import com.dot.gallery.feature_node.domain.model.DecryptedMedia
+import com.dot.gallery.feature_node.domain.model.asSubsamplingImage
 import com.github.panpf.sketch.cache.CachePolicy
 import com.github.panpf.sketch.rememberAsyncImagePainter
 import com.github.panpf.sketch.request.ComposableImageRequest
 import com.github.panpf.zoomimage.ZoomImage
+import com.github.panpf.zoomimage.compose.rememberZoomState
 
 @Composable
 fun ZoomablePagerImage(
@@ -40,7 +47,7 @@ fun ZoomablePagerImage(
 ) {
     val painter = rememberAsyncImagePainter(
         request = ComposableImageRequest(media.uri) {
-            memoryCachePolicy(CachePolicy.ENABLED)
+            memoryCachePolicy(CachePolicy.DISABLED)
             crossfade()
             setExtra(
                 key = "encryptedMediaKey",
@@ -74,6 +81,17 @@ fun ZoomablePagerImage(
             }
         }
 
+        val zoomState = rememberZoomState()
+        val context = LocalContext.current
+        val keychainHolder = remember(context) {
+            KeychainHolder(context)
+        }
+
+        LaunchedEffect(zoomState.subsampling) {
+            zoomState.subsampling.regionDecoders = listOf(EncryptedRegionDecoder.Factory(keychainHolder))
+            zoomState.setSubsamplingImage(media.asSubsamplingImage())
+        }
+
         ZoomImage(
             modifier = modifier
                 .fillMaxSize()
@@ -82,10 +100,10 @@ fun ZoomablePagerImage(
                 ),
             onTap = { onItemClick() },
             painter = painter,
+            zoomState = zoomState,
             contentScale = ContentScale.Fit,
             contentDescription = media.label
         )
     }
-
 
 }

@@ -26,7 +26,7 @@ import com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.Vari
 import com.dot.gallery.feature_node.presentation.util.overlayBitmaps
 import com.dot.gallery.feature_node.presentation.util.printDebug
 import com.dot.gallery.feature_node.presentation.util.printError
-import com.github.panpf.sketch.getBitmapOrNull
+import com.github.panpf.sketch.BitmapImage
 import com.github.panpf.sketch.request.ImageRequest
 import com.github.panpf.sketch.sketch
 import com.github.panpf.sketch.util.Size
@@ -187,7 +187,7 @@ class EditViewModel @Inject constructor(
                 )
             }
             val result = context.sketch.execute(request)
-            val bitmap = result.image?.getBitmapOrNull()
+            val bitmap = (result.image as? BitmapImage)?.bitmap
             _originalBitmap.value = bitmap
             _targetBitmap.value = bitmap
             if (_currentBitmap.value == null) {
