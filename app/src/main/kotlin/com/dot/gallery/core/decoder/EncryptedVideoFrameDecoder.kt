@@ -7,15 +7,15 @@ import com.dot.gallery.feature_node.data.data_source.KeychainHolder
 import com.dot.gallery.feature_node.domain.model.EncryptedMedia
 import com.github.panpf.sketch.Image
 import com.github.panpf.sketch.Sketch
-import com.github.panpf.sketch.asSketchImage
+import com.github.panpf.sketch.asImage
+import com.github.panpf.sketch.decode.DecodeConfig
 import com.github.panpf.sketch.decode.DecodeException
 import com.github.panpf.sketch.decode.Decoder
 import com.github.panpf.sketch.decode.ImageInfo
-import com.github.panpf.sketch.decode.ImageInvalidException
 import com.github.panpf.sketch.decode.internal.DecodeHelper
 import com.github.panpf.sketch.decode.internal.ExifOrientationHelper
 import com.github.panpf.sketch.decode.internal.HelperDecoder
-import com.github.panpf.sketch.decode.internal.newDecodeConfigByQualityParams
+import com.github.panpf.sketch.decode.internal.checkImageInfo
 import com.github.panpf.sketch.fetch.FetchResult
 import com.github.panpf.sketch.request.ImageRequest
 import com.github.panpf.sketch.request.RequestContext
@@ -29,9 +29,9 @@ import com.github.panpf.sketch.source.FileDataSource
 import com.github.panpf.sketch.source.getFileOrNull
 import com.github.panpf.sketch.util.Rect
 import com.github.panpf.sketch.util.Size
+import com.github.panpf.sketch.util.div
 import java.io.File
 import java.io.FileOutputStream
-import kotlin.math.roundToInt
 
 class EncryptedVideoFrameDecoder(
     private val requestContext: RequestContext,
@@ -128,10 +128,6 @@ private class EncryptedVideoFrameDecodeHelper(
     }
 
     override fun decode(sampleSize: Int): Image {
-        val config = request.newDecodeConfigByQualityParams(imageInfo.mimeType).apply {
-            inSampleSize = sampleSize
-        }
-        val option = request.videoFrameOption ?: MediaMetadataRetriever.OPTION_CLOSEST_SYNC
         val frameMicros = request.videoFrameMicros
             ?: request.videoFramePercent?.let { percentDuration ->
                 val duration = mediaMetadataRetriever
@@ -140,36 +136,29 @@ private class EncryptedVideoFrameDecodeHelper(
                 (duration * percentDuration * 1000).toLong()
             }
             ?: 0L
-
-        val inSampleSize = config.inSampleSize?.toFloat()
-        val dstWidth = if (inSampleSize != null) {
-            (imageInfo.width / inSampleSize).roundToInt()
-        } else {
-            imageInfo.width
-        }
-        val dstHeight = if (inSampleSize != null) {
-            (imageInfo.height / inSampleSize).roundToInt()
-        } else {
-            imageInfo.height
-        }
+        val option = request.videoFrameOption ?: MediaMetadataRetriever.OPTION_CLOSEST_SYNC
+        val imageSize = imageInfo.size
+        val dstSize = imageSize / sampleSize.toFloat()
+        val config = DecodeConfig(request, imageInfo.mimeType, isOpaque = false)
         val bitmapParams = BitmapParams().apply {
-            val inPreferredConfigFromRequest = config.inPreferredConfig
-            if (inPreferredConfigFromRequest != null) {
-                preferredConfig = inPreferredConfigFromRequest
-            }
+            config.colorType?.also { preferredConfig = it }
         }
-        val bitmap = mediaMetadataRetriever
-            .getScaledFrameAtTime(frameMicros, option, dstWidth, dstHeight, bitmapParams)
-            ?: throw DecodeException(
-                "Failed to getScaledFrameAtTime. frameMicros=%d, option=%s, dst=%dx%d, image=%dx%d, preferredConfig=%s.".format(
-                    frameMicros, optionToName(option), dstWidth, dstHeight,
-                    imageInfo.width, imageInfo.height, config.inPreferredConfig
-                )
-            )
-
-        val image = bitmap.asSketchImage()
-        val correctedImage = exifOrientationHelper.applyToImage(image) ?: image
-        return correctedImage
+        val bitmap = mediaMetadataRetriever.getScaledFrameAtTime(
+            /* timeUs = */ frameMicros,
+            /* option = */ option,
+            /* dstWidth = */ dstSize.width,
+            /* dstHeight = */ dstSize.height,
+            /* params = */ bitmapParams
+        ) ?: throw DecodeException(
+            "Failed to getScaledFrameAtTime. " +
+                    "frameMicros=$frameMicros, " +
+                    "option=${optionToName(option)}, " +
+                    "dstSize=$dstSize, " +
+                    "imageSize=$imageSize, " +
+                    "preferredConfig=${config.colorType}"
+        )
+        val correctedBitmap = exifOrientationHelper.applyToBitmap(bitmap) ?: bitmap
+        return correctedBitmap.asImage()
     }
 
     override fun decodeRegion(region: Rect, sampleSize: Int): Image {
@@ -181,13 +170,10 @@ private class EncryptedVideoFrameDecodeHelper(
             .extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)?.toIntOrNull() ?: 0
         val srcHeight = mediaMetadataRetriever
             .extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)?.toIntOrNull() ?: 0
-        if (srcWidth <= 1 || srcHeight <= 1) {
-            val message = "Invalid video file. size=${srcWidth}x${srcHeight}"
-            throw ImageInvalidException(message)
-        }
         val imageSize = Size(width = srcWidth, height = srcHeight)
         val correctedImageSize = exifOrientationHelper.applyToSize(imageSize)
         return ImageInfo(size = correctedImageSize, mimeType = mimeType)
+            .apply { checkImageInfo(this) }
     }
 
     private fun readExifOrientation(): Int {

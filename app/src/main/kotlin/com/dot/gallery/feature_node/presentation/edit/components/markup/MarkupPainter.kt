@@ -32,14 +32,12 @@ import com.dot.gallery.feature_node.domain.model.editor.PainterMotionEvent
 import com.dot.gallery.feature_node.domain.model.editor.PathProperties
 import com.dot.gallery.feature_node.presentation.edit.utils.dragMotionEvent
 import com.dot.gallery.feature_node.presentation.util.goBack
-import io.ktor.util.InternalAPI
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-@OptIn(InternalAPI::class)
 @Composable
 fun MarkupPainter(
     modifier: Modifier = Modifier,

@@ -36,12 +36,12 @@ room = "2.6.1"
 accompanist = "0.36.0"
 datastore = "1.1.1"
 securityCrypto = "1.1.0-alpha06"
-sketch = "4.0.0-alpha08"
+sketch = "4.0.0-beta02"
 uiautomator = "2.3.0"
 composealpha = "1.8.0-alpha05"
 kotlinxSerializationJson = "1.7.3"
 workRuntimeKtx = "2.10.0"
-zoomimageViewSketch = "1.1.0-beta01"
+zoomimageViewSketch = "1.1.0-rc01"
 
 [libraries]
 # AndroidX
@@ -116,12 +116,14 @@ accompanist-permissions = { group = "com.google.accompanist", name = "accompanis
 accompanist-drawablepainter = { module = "com.google.accompanist:accompanist-drawablepainter", version.ref = "accompanist" }
 
 # Zoomable
-sketch-animated = { module = "io.github.panpf.sketch4:sketch-animated", version.ref = "sketch" }
+sketch-animated-gif = { module = "io.github.panpf.sketch4:sketch-animated-gif", version.ref = "sketch" }
+sketch-animated-heif = { module = "io.github.panpf.sketch4:sketch-animated-heif", version.ref = "sketch" }
+sketch-animated-webp = { module = "io.github.panpf.sketch4:sketch-animated-webp", version.ref = "sketch" }
 sketch-compose = { module = "io.github.panpf.sketch4:sketch-compose", version.ref = "sketch" }
 sketch-extensions-compose = { module = "io.github.panpf.sketch4:sketch-extensions-compose", version.ref = "sketch" }
-sketch-http-ktor = { module = "io.github.panpf.sketch4:sketch-http-ktor", version.ref = "sketch" }
+sketch-http-ktor = { module = "io.github.panpf.sketch4:sketch-http-ktor3", version.ref = "sketch" }
 sketch-svg = { module = "io.github.panpf.sketch4:sketch-svg", version.ref = "sketch" }
-sketch-video = { module = "io.github.panpf.sketch4:sketch-video-ffmpeg", version.ref = "sketch" }
+sketch-video = { module = "io.github.panpf.sketch4:sketch-video", version.ref = "sketch" }
 sketch-view = { module = "io.github.panpf.sketch4:sketch-view", version.ref = "sketch" }
 
 # Kotlinx
@@ -140,7 +142,7 @@ androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version
 espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso-core" }
 
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
-zoomimage-sketch = { module = "io.github.panpf.zoomimage:zoomimage-compose-sketch", version.ref = "zoomimageViewSketch" }
+zoomimage-sketch = { module = "io.github.panpf.zoomimage:zoomimage-compose-sketch4", version.ref = "zoomimageViewSketch" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

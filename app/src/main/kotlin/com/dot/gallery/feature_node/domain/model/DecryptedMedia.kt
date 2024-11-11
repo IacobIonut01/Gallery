@@ -4,6 +4,9 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Parcelable
 import androidx.compose.runtime.Stable
+import androidx.core.net.toFile
+import com.github.panpf.zoomimage.subsampling.FileImageSource
+import com.github.panpf.zoomimage.subsampling.SubsamplingImage
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 import java.io.Serializable
@@ -87,6 +90,10 @@ data class DecryptedMedia(
         }
     }
 
+}
+
+fun DecryptedMedia.asSubsamplingImage(): SubsamplingImage {
+    return SubsamplingImage(imageSource = FileImageSource(Uri.parse(uri).toFile()))
 }
 
 fun DecryptedMedia.compatibleMimeType(): String {
