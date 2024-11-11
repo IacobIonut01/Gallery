@@ -261,19 +261,19 @@
     <string name="update_file_name">Оновити назву файлу</string>
     <string name="support_the_project">Підтримати проєкт</string>
     <string name="click_to_copy">Натисніть, щоб скопіювати</string>
-    <string name="take_audio_focus_title">Take Audio Focus</string>
-    <string name="take_audio_focus_summary">Enabling this will take audio focus when playing media. Any media playing in background will pause while the video is playing. (Restart app required)</string>
-    <string name="full_brightness_view_title">Full Brightness when viewing</string>
-    <string name="full_brightness_view_summary">Increase the screen brightness to maximum when viewing images and videos</string>
-    <string name="auto_hide_on_video_play">Hide UI on Video Play</string>
-    <string name="auto_hide_on_video_play_summary">Hides the UI after 2 seconds when playing videos</string>
-    <string name="up_to_date">Up-to-date</string>
-    <string name="delete_location">Delete Location</string>
-    <string name="delete_metadata">Delete Metadata</string>
+    <string name="take_audio_focus_title">Отримання фокусу звуку</string>
+    <string name="take_audio_focus_summary">Якщо увімкнути цей параметр, під час відтворення медіафайлів фокус буде зосереджено на звуці. Будь-який медіафайл, що відтворюється у фоновому режимі, буде призупинено під час відтворення відео. (Потрібно перезапустити застосунок)</string>
+    <string name="full_brightness_view_title">Повна яскравість під час перегляду</string>
+    <string name="full_brightness_view_summary">Збільшення яскравості екрана до максимуму під час перегляду зображень і відео</string>
+    <string name="auto_hide_on_video_play">Приховати інтерфейс під час відтворення відео</string>
+    <string name="auto_hide_on_video_play_summary">Приховує інтерфейс через 2 секунди під час відтворення відео</string>
+    <string name="up_to_date">Актуально</string>
+    <string name="delete_location">Видалити розташування</string>
+    <string name="delete_metadata">Видалити метадані</string>
     <plurals name="item_count">
-        <item quantity="one">%s item</item>
-        <item quantity="few">%s items</item>
-        <item quantity="many">%s items</item>
-        <item quantity="other">%s items</item>
+        <item quantity="one">%s елемент</item>
+        <item quantity="few">%s елементи</item>
+        <item quantity="many">%s елементів</item>
+        <item quantity="other">%s елементів</item>
     </plurals>
 </resources>
