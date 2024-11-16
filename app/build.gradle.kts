@@ -1,3 +1,4 @@
+import com.android.build.gradle.internal.api.BaseVariantOutputImpl
 import org.jetbrains.kotlin.compose.compiler.gradle.ComposeFeatureFlag
 import java.io.FileInputStream
 import java.util.Properties
@@ -22,17 +23,14 @@ android {
         applicationId = "com.dot.gallery"
         minSdk = 30
         targetSdk = 35
-        versionCode = 31007
+        versionCode = 31008
         versionName = "3.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
-        base.archivesName.set("Gallery-${versionName}-$versionCode")
-        if (getApiKey() == "\"DEBUG\"") {
-            base.archivesName.set("${base.archivesName.get()}-nomaps")
-        }
+        base.archivesName.set("Gallery-${versionName}-$versionCode" + mapsApiApplicationPrefix)
     }
 
     lint.baseline = file("lint-baseline.xml")
@@ -119,18 +117,45 @@ android {
         schemaDirectory("$projectDir/schemas/")
     }
 
-    splits {
-        abi {
-            isEnable = true
-            reset()
-            include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
-            isUniversalApk = true
-        }
-    }
-
     dependenciesInfo {
         // Disables dependency metadata when building APKs.
         includeInApk = false
+    }
+
+    flavorDimensions += listOf("abi")
+    productFlavors {
+        create("arm64-v8a") {
+            dimension = "abi"
+            versionCode = 4 + (android.defaultConfig.versionCode ?: 0) * 10
+            ndk.abiFilters.add("arm64-v8a")
+        }
+        create("armeabi-v7a") {
+            dimension = "abi"
+            versionCode = 3 + (android.defaultConfig.versionCode ?: 0) * 10
+            ndk.abiFilters.add("armeabi-v7a")
+        }
+        create("x86_64") {
+            dimension = "abi"
+            versionCode = 2 + (android.defaultConfig.versionCode ?: 0) * 10
+            ndk.abiFilters.add("x86_64")
+        }
+        create("x86") {
+            dimension = "abi"
+            versionCode = 1 + (android.defaultConfig.versionCode ?: 0) * 10
+            ndk.abiFilters.add("x86")
+        }
+        create("universal") {
+            dimension = "abi"
+            versionCode = 0 + (android.defaultConfig.versionCode ?: 0) * 10
+            ndk.abiFilters.addAll(listOf("x86", "x86_64", "armeabi-v7a", "arm64-v8a"))
+        }
+    }
+
+    applicationVariants.all {
+        outputs.forEach { output ->
+            (output as BaseVariantOutputImpl).outputFileName =
+                "Gallery-${versionName}-$versionCode-${productFlavors[0].name}" + mapsApiApplicationPrefix + ".apk"
+        }
     }
 }
 
@@ -257,6 +282,14 @@ dependencies {
     debugImplementation(libs.compose.ui.tooling)
     debugRuntimeOnly(libs.compose.ui.test.manifest)
 }
+
+val mapsApiApplicationPrefix: String
+    get() = if (getApiKey() == "\"DEBUG\"") {
+        "-nomaps"
+    } else {
+        ""
+    }
+
 
 fun getApiKey(): String {
     val fl = rootProject.file("api.properties")
