@@ -15,6 +15,25 @@ android {
         create("nonMinifiedStaging") {
         }
     }
+    flavorDimensions += listOf("abi")
+    productFlavors {
+        create("arm64-v8a") {
+            dimension = "abi"
+            ndk.abiFilters.add("arm64-v8a")
+        }
+        create("armeabi-v7a") {
+            dimension = "abi"
+            ndk.abiFilters.add("armeabi-v7a")
+        }
+        create("x86_64") {
+            dimension = "abi"
+            ndk.abiFilters.add("x86_64")
+        }
+        create("x86") {
+            dimension = "abi"
+            ndk.abiFilters.add("x86")
+        }
+    }
     namespace = "com.dot.baselineprofile"
     compileSdk = 34
 

@@ -106,8 +106,6 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: Gallery Release (Maps)
-      - name: Remove apk release suffix
-        run: find . -name "Gallery-*.apk" -exec bash -c 'mv "$1" "${1//-release/}"' _ {} \;
       - name: Generate SHA256
         run: find . -name "Gallery-*.apk" -exec bash -c 'sha256sum "$1" | awk '\''{print $1}'\'' > "$1.sha256"' _ {} \;
       - name: Create Release

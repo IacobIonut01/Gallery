@@ -101,7 +101,7 @@ jobs:
           chmod +x ./strip_allfiles_permission.sh && ./strip_allfiles_permission.sh &&
           echo ALL_FILES_ACCESS=false > ./app.properties
       - name: Build Google Play Bundle
-        run: ./gradlew bundleGplay
+        run: ./gradlew bundleUniversalGplay
         env: 
           SIGNING_KEY_ALIAS: ${{ secrets.ALIAS }}
           SIGNING_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
@@ -111,15 +111,15 @@ jobs:
         with:
           serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
           packageName: com.dot.gallery.gplay
-          releaseFiles: app/build/outputs/bundle/gplay/Gallery-${{ steps.versionname.outputs.versionName }}-${{ steps.versioncode.outputs.versionCode }}-gplay.aab
+          releaseFiles: app/build/outputs/bundle/universalGplay/Gallery-${{ steps.versionname.outputs.versionName }}-${{ steps.versioncode.outputs.versionCode }}-universal-gplay.aab
           track: production
           releaseName: ${{ steps.versionname.outputs.versionName }}-${{ steps.versioncode.outputs.versionCode }} Release
-          mappingFile: app/build/outputs/mapping/gplay/mapping.txt
-          debugSymbols: app/build/intermediates/merged_native_libs/gplay/mergeGplayNativeLibs/out/lib
+          mappingFile: app/build/outputs/mapping/universalGplay/mapping.txt
+          debugSymbols: app/build/intermediates/merged_native_libs/universalGplay/mergeUniversalGplayNativeLibs/out/lib
       - uses: actions/upload-artifact@v4
         with:
           name: Gallery Release (GPlay Bundle)
-          path: app/build/outputs/bundle/gplay/Gallery-${{ steps.versionname.outputs.versionName }}-${{ steps.versioncode.outputs.versionCode }}-gplay.aab
+          path: app/build/outputs/bundle/universalGplay/Gallery-${{ steps.versionname.outputs.versionName }}-${{ steps.versioncode.outputs.versionCode }}-universal-gplay.aab
 
   release:
     needs: [build_nomaps, build_maps]
@@ -131,8 +131,6 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: Gallery Release (Maps)
-      - name: Remove apk release suffix
-        run: find . -name "Gallery-*.apk" -exec bash -c 'mv "$1" "${1//-release/}"' _ {} \;
       - name: Generate SHA256
         run: find . -name "Gallery-*.apk" -exec bash -c 'sha256sum "$1" | awk '\''{print $1}'\'' > "$1.sha256"' _ {} \;
       - name: Create Release
