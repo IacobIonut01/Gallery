@@ -18,8 +18,8 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.withContext
 
 fun WorkManager.updateDatabase() {
@@ -52,8 +52,8 @@ class DatabaseUpdaterWorker @AssistedInject constructor(
             val mediaVersion = appContext.mediaStoreVersion
             printDebug("Database is not up to date. Updating to version $mediaVersion")
             database.getMediaDao().setMediaVersion(MediaVersion(mediaVersion))
-            val media = repository.getMedia().map { it.data ?: emptyList() }.single()
-            database.getMediaDao().updateMedia(media)
+            val media = repository.getMedia().map { it.data ?: emptyList() }.firstOrNull()
+            media?.let { database.getMediaDao().updateMedia(it) }
             delay(5000)
         }
 
