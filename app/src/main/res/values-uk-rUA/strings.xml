@@ -195,9 +195,9 @@
     <string name="no_ignored_albums">Немає ігнорованих альбомів</string>
     <string name="setup_ignored_albums">Налаштувати ігноровані альбоми</string>
     <string name="individual_album_selection">Індивідуальний вибір альбому</string>
-    <string name="wildcard_creator">Wildcard Creator</string>
+    <string name="wildcard_creator">Творець знаків підставлення</string>
     <string name="wildcard_summary">Шаблон буде використано для зіставлення назв альбомів або шляхів до них.\nШаблон можна розглядати як регулярний шаблон.</string>
-    <string name="wildcard_summary_first">Wildcard: %1$s\nMatched albums: %2$s</string>
+    <string name="wildcard_summary_first">Підставлення: %1$s\nВідповідні альбоми: %2$s</string>
     <string name="matched_albums">"Відповідні альбоми: %1$s"</string>
     <string name="go_back">Назад</string>
     <string name="continue_string">Продовжити</string>
