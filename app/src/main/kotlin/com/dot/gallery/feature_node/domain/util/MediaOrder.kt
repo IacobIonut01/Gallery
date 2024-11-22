@@ -35,17 +35,17 @@ sealed class MediaOrder(open val orderType: OrderType) {
         return when (orderType) {
             OrderType.Ascending -> {
                 when (this) {
-                    is Date -> media.sortedBy { it.timestamp }
+                    is Date -> media.sortedBy { it.takenTimestamp ?: it.timestamp }
                     is Label -> media.sortedBy { it.label.lowercase() }
-                    is Expiry -> media.sortedBy { it.expiryTimestamp ?: it.timestamp }
+                    is Expiry -> media.sortedBy { it.expiryTimestamp ?: it.takenTimestamp ?: it.timestamp }
                 }
             }
 
             OrderType.Descending -> {
                 when (this) {
-                    is Date -> media.sortedByDescending { it.timestamp }
+                    is Date -> media.sortedByDescending { it.takenTimestamp ?: it.timestamp }
                     is Label -> media.sortedByDescending { it.label.lowercase() }
-                    is Expiry -> media.sortedByDescending { it.expiryTimestamp ?: it.timestamp }
+                    is Expiry -> media.sortedByDescending { it.expiryTimestamp ?: it.takenTimestamp ?: it.timestamp }
                 }
             }
         }

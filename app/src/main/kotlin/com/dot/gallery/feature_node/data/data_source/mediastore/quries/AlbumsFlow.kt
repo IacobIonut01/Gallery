@@ -7,15 +7,16 @@ import android.database.Cursor
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
+import androidx.core.database.getLongOrNull
 import androidx.core.os.bundleOf
-import com.dot.gallery.feature_node.data.data_source.mediastore.MediaQuery
 import com.dot.gallery.core.util.PickerUtils
 import com.dot.gallery.core.util.Query
 import com.dot.gallery.core.util.and
 import com.dot.gallery.core.util.eq
-import com.dot.gallery.core.util.join
 import com.dot.gallery.core.util.ext.queryFlow
 import com.dot.gallery.core.util.ext.tryGetString
+import com.dot.gallery.core.util.join
+import com.dot.gallery.feature_node.data.data_source.mediastore.MediaQuery
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.MediaType
 import kotlinx.coroutines.flow.Flow
@@ -85,6 +86,7 @@ class AlbumsFlow(
                 val thumbnailPathIndex = it.getColumnIndex(MediaStore.Files.FileColumns.DATA)
                 val thumbnailRelativePathIndex =
                     it.getColumnIndex(MediaStore.Files.FileColumns.RELATIVE_PATH)
+                val thumbnailDateTakenIndex = it.getColumnIndex(MediaStore.Files.FileColumns.DATE_TAKEN)
                 val thumbnailDateIndex = it.getColumnIndex(MediaStore.Files.FileColumns.DATE_MODIFIED)
                 val sizeIndex = it.getColumnIndex(MediaStore.Files.FileColumns.SIZE)
                 val mimeTypeIndex = it.getColumnIndex(MediaStore.Files.FileColumns.MIME_TYPE)
@@ -105,6 +107,7 @@ class AlbumsFlow(
                         val label = it.tryGetString(labelIndex, Build.MODEL)
                         val thumbnailPath = it.getString(thumbnailPathIndex)
                         val thumbnailRelativePath = it.getString(thumbnailRelativePathIndex)
+                        val thumbnailDateTaken = it.getLongOrNull(thumbnailDateTakenIndex)
                         val thumbnailDate = it.getLong(thumbnailDateIndex)
                         val size = it.getLong(sizeIndex)
                         val mimeType = it.getString(mimeTypeIndex)
@@ -119,7 +122,7 @@ class AlbumsFlow(
                             uri = ContentUris.withAppendedId(contentUri, id),
                             pathToThumbnail = thumbnailPath,
                             relativePath = thumbnailRelativePath,
-                            timestamp = thumbnailDate
+                            timestamp = thumbnailDateTaken ?: thumbnailDate
                         ).apply {
                             this.count += 1
                             this.size += size
