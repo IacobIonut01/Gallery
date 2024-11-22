@@ -85,7 +85,7 @@ class MediaRepositoryImpl(
             contentResolver = contentResolver,
             buckedId = MediaStoreBuckets.MEDIA_STORE_BUCKET_TIMELINE.id
         ).flowData().map {
-            Resource.Success(it)
+            Resource.Success(MediaOrder.Date(OrderType.Descending).sortMedia(it))
         }.flowOn(Dispatchers.IO)
 
     override fun getMediaByType(allowedMedia: AllowedMedia): Flow<Resource<List<Media>>> =
