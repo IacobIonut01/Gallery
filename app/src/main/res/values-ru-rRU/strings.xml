@@ -203,8 +203,8 @@
     <string name="continue_string">Далее</string>
     <string name="apply">Применить</string>
     <string name="setup_label_info">Select what albums you would like to not see in the main Timeline, in the Albums tab or both.\n\nYou can either select individual albums or create a Regex Pattern to automatically hide any albums that matches it.</string>
-    <string name="setup_label_input">Label</string>
-    <string name="setup_label_placeholder">Set your label</string>
+    <string name="setup_label_input">Название</string>
+    <string name="setup_label_placeholder">Установите название</string>
     <string name="setup_label_title">Игнорируемые альбомы</string>
     <string name="setup_lavel_subtitle">Создать</string>
     <string name="setup_location_title">Опции</string>
