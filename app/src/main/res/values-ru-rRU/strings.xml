@@ -76,7 +76,7 @@
     <string name="selection_dialog_close_cd">Закрыть окно выбора</string>
     <string name="edit">Изменить</string>
     <string name="trash_deletion_warning">Перемещённые Вами в корзину фотографии и видео будут полностью удалены через 30 дней.</string>
-    <string name="open_with">Открыть в</string>
+    <string name="open_with">Открыть с помощью</string>
     <string name="select">Выбрать</string>
     <string name="photos_and_videos">Фото и видео</string>
     <string name="photos">Фото</string>
@@ -90,7 +90,7 @@
     <string name="allow">Разрешить</string>
     <string name="all">Все</string>
     <string name="secure_mode_title">Безопасный режим</string>
-    <string name="secure_mode_summary">Скрывает содержимое при выходе</string>
+    <string name="secure_mode_summary">Скрывает предпросмотр приложения при выходе</string>
     <string name="rotate_screen_cd">Повернуть экран</string>
     <string name="size_dp">%1$sdp</string>
     <string name="change_album_size">Поменять размер альбомных карточек</string>
@@ -169,7 +169,7 @@
     <string name="albums">Альбомы</string>
     <string name="launch_on_timeline">Запуск хронологии</string>
     <string name="launch_on_albums">Запуск альбомов</string>
-    <string name="launch_auto">Запустить последний экран, когда приложение было закрыто</string>
+    <string name="launch_auto">Запустить последний экран перед закрытием приложения</string>
     <string name="set_default_screen">Установить экран по умолчанию</string>
     <string name="done">Готово</string>
     <string name="toggle_audio_cd">Переключение звука</string>
@@ -189,7 +189,7 @@
     <string name="granted">Предоставлено</string>
     <string name="new_vault">Новый Сейф</string>
     <string name="delete_vault">Удалить Сейф</string>
-    <string name="unknown_vault">Сейф неизвестен</string>
+    <string name="unknown_vault">Неизвестный сейф</string>
     <string name="hide">Скрыть</string>
     <string name="ignored_albums_text">Выберите альбомы, которые вы не хотите видеть на основной хронологии, на вкладке \"Альбомы\" или на обеих вкладках.\n\nВы можете выбрать отдельные альбомы или создать шаблон чтобы автоматически скрыть все альбомы, которые ему соответствуют.</string>
     <string name="no_ignored_albums">Нет игнорируемых альбомов</string>
