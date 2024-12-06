@@ -39,7 +39,7 @@
     <string name="metadata">メタデータ</string>
     <string name="select_all">すべて選択</string>
     <string name="unselect_all">すべて選択解除</string>
-    <string name="drop_down_cd">Drop down</string>
+    <string name="drop_down_cd">ドロップダウン</string>
     <string name="back_cd">戻る</string>
     <string name="settings_title">設定</string>
     <string name="settings_general">全般</string>
@@ -100,7 +100,7 @@
     <string name="album_card_size_summary">アルバムカードのサイズを手動で選択</string>
     <string name="set_wallpaper">壁紙</string>
     <string name="set_wallpaper_error">壁紙を設定出来ません。利用できるアプリがありません!</string>
-    <string name="monthly_timeline_title">Monthly Timeline</string>
+    <string name="monthly_timeline_title">月間のタイムライン</string>
     <string name="monthly_timeline_summary">タイムラインを日付ごとではなく月ごとにグループ化する (アプリの再起動が必要)</string>
     <string name="amoled_mode_title">AMOLED モードを使用</string>
     <string name="amoled_mode_summary">高コントラストで、AMOLED スクリーンに最適です</string>
@@ -167,10 +167,10 @@
     <string name="use_last_opened_screen">最後に開いた画面を使用する</string>
     <string name="timeline">履歴</string>
     <string name="albums">アルバム</string>
-    <string name="launch_on_timeline">Launch on Timeline</string>
-    <string name="launch_on_albums">Launch on Albums</string>
-    <string name="launch_auto">Launch last screen when the app was closed</string>
-    <string name="set_default_screen">Set default screen</string>
+    <string name="launch_on_timeline">タイムラインで起動</string>
+    <string name="launch_on_albums">アルバムで起動</string>
+    <string name="launch_auto">アプリを閉じたときの最後の画面を起動</string>
+    <string name="set_default_screen">デフォルトの画面を設定</string>
     <string name="done">完了</string>
     <string name="toggle_audio_cd">オーディオの切り替え</string>
     <string name="auto">自動</string>
@@ -179,7 +179,7 @@
     <string name="permission_manage_files_title">すべてのファイルを管理</string>
     <string name="permission_manage_files_summary">"システムによって制限されていたファイルやアルバムの作成、変更、削除を可能にします。(ピクチャとDCIMフォルダの外のアルバムとSDカードからのものを含む)"</string>
     <string name="allow_to_manage_files">すべてのファイルの管理を許可する</string>
-    <string name="vault">金庫</string>
+    <string name="vault">保管庫</string>
     <string name="tools">ツール</string>
     <string name="library">ライブラリ</string>
     <string name="biometric_authentication">生体認証</string>
