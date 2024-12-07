@@ -274,6 +274,6 @@
         <item quantity="one">%s пункт</item>
         <item quantity="few">%s пунктов</item>
         <item quantity="many">%s пунктов</item>
-        <item quantity="other">%s пунктов</item>
+        <item quantity="other">%s эл.</item>
     </plurals>
 </resources>
