@@ -256,12 +256,12 @@
     <string name="vault_setup_security_error">Перед настройкой сейфа установите меры безопасности на телефоне.</string>
     <string name="vault_setup_summary">Доступ к сейфу будет осуществляться с помощью мер безопасности вашего телефона (пароль или биометрические данные)\n\nКлюч шифрования может быть доступен внутри хранилища и будет использоваться для восстановления других хранилищ.</string>
     <string name="vault_already_exists">Сейф \"%1$s\" уже существует</string>
-    <string name="ignored">Игнорировано</string>
+    <string name="ignored">Игнорированное</string>
     <string name="location">Путь</string>
     <string name="update_file_name">Изменить имя файла</string>
     <string name="support_the_project">Поддержать проект</string>
     <string name="click_to_copy">Нажмите, чтобы скопировать</string>
-    <string name="take_audio_focus_title">Забрать аудио фокус</string>
+    <string name="take_audio_focus_title">Забирать аудио фокус</string>
     <string name="take_audio_focus_summary">Когда включено, аудио фокус будет переключен при проигрывании медиа. Медиа проигрываемое в фоне остановится пока видео воспроизводится. (Требуется перезапуск приложения)</string>
     <string name="full_brightness_view_title">Полная яркость при просмотре</string>
     <string name="full_brightness_view_summary">Увеличивать яркость экрана до максимума при просмотре изображений и видео</string>
