@@ -2,6 +2,7 @@ package com.dot.gallery.feature_node.domain.util
 
 import android.net.Uri
 import androidx.room.TypeConverter
+import com.dot.gallery.feature_node.domain.model.Media
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
@@ -23,4 +24,10 @@ object Converters {
 
     @TypeConverter
     fun fromMediaOrder(mediaOrder: MediaOrder): String = Json.encodeToString(mediaOrder)
+
+    @TypeConverter
+    fun fromMedia(media: Media): String = Json.encodeToString(media)
+
+    @TypeConverter
+    fun toMedia(value: String): Media = Json.decodeFromString(value)
 }

@@ -7,7 +7,6 @@ package com.dot.gallery.feature_node.presentation.util
 
 import android.os.Parcelable
 import android.text.format.DateFormat
-import com.dot.gallery.core.Constants
 import kotlinx.parcelize.Parcelize
 import java.text.ParseException
 import java.text.SimpleDateFormat
@@ -38,16 +37,16 @@ fun getDateHeader(startDate: DateExt, endDate: DateExt): String {
     }
 }
 
-fun getMonth(date: String): String {
+fun getMonth(extendedFormat: String, defaultFormat: String, date: String): String {
     return try {
-        val dateFormatExtended = SimpleDateFormat(Constants.EXTENDED_DATE_FORMAT, Locale.US).parse(date)
+        val dateFormatExtended = SimpleDateFormat(extendedFormat, Locale.US).parse(date)
         val cal = Calendar.getInstance(Locale.US).apply { timeInMillis = dateFormatExtended!!.time }
         val month = cal.getDisplayName(Calendar.MONTH, Calendar.LONG_FORMAT, Locale.US)!!
         val year = cal.get(Calendar.YEAR)
         "$month $year"
     } catch (e: ParseException) {
         try {
-            val dateFormat = SimpleDateFormat(Constants.DEFAULT_DATE_FORMAT, Locale.US).parse(date)
+            val dateFormat = SimpleDateFormat(defaultFormat, Locale.US).parse(date)
             val cal = Calendar.getInstance(Locale.US).apply { timeInMillis = dateFormat!!.time }
             cal.getDisplayName(Calendar.MONTH, Calendar.LONG_FORMAT, Locale.US)!!
         } catch (e: ParseException) {
@@ -56,21 +55,8 @@ fun getMonth(date: String): String {
     }
 }
 
-fun getYear(date: String): String {
-    return try {
-        val dateFormatExtended = SimpleDateFormat(Constants.EXTENDED_DATE_FORMAT, Locale.US).parse(date)
-        val cal = Calendar.getInstance(Locale.US).apply { timeInMillis = dateFormatExtended!!.time }
-        val year = cal.get(Calendar.YEAR)
-        year.toString()
-    } catch (e: ParseException) {
-        val cal = Calendar.getInstance(Locale.US).apply { timeInMillis = System.currentTimeMillis() }
-        cal.getDisplayName(Calendar.MONTH, Calendar.LONG_FORMAT, Locale.US)!!
-        cal.get(Calendar.YEAR).toString()
-    }
-}
-
 fun Long.getDate(
-    format: CharSequence = Constants.DEFAULT_DATE_FORMAT,
+    format: CharSequence,
 ): String {
     val mediaDate = Calendar.getInstance(Locale.US)
     mediaDate.timeInMillis = this * 1000L
@@ -78,9 +64,9 @@ fun Long.getDate(
 }
 
 fun Long.getDate(
-    format: CharSequence = Constants.DEFAULT_DATE_FORMAT,
-    weeklyFormat: CharSequence = Constants.WEEKLY_DATE_FORMAT,
-    extendedFormat: CharSequence = Constants.EXTENDED_DATE_FORMAT,
+    format: String,
+    weeklyFormat: String,
+    extendedFormat: String,
     stringToday: String,
     stringYesterday: String
 ): String {
@@ -136,6 +122,7 @@ fun Long.formatMinSec(): String {
         "00:00"
     } else {
         String.format(
+            Locale.getDefault(),
             "%02d:%02d",
             TimeUnit.MILLISECONDS.toMinutes(this),
             TimeUnit.MILLISECONDS.toSeconds(this) -

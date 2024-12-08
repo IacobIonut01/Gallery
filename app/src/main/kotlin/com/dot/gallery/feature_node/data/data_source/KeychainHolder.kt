@@ -7,8 +7,8 @@ import androidx.security.crypto.EncryptedFile
 import androidx.security.crypto.EncryptedFile.FileEncryptionScheme.AES256_GCM_HKDF_4KB
 import androidx.security.crypto.MasterKey
 import com.dot.gallery.feature_node.domain.model.Vault
-import com.dot.gallery.feature_node.domain.model.fromByteArray
-import com.dot.gallery.feature_node.domain.model.toByteArray
+import com.dot.gallery.feature_node.domain.util.fromByteArray
+import com.dot.gallery.feature_node.domain.util.toByteArray
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -25,7 +25,7 @@ class KeychainHolder @Inject constructor(
     val filesDir: File = context.filesDir
 
     fun vaultFolder(vault: Vault) = File(filesDir, vault.uuid.toString())
-    fun vaultInfoFile(vault: Vault) = File(vaultFolder(vault), VAULT_INFO_FILE_NAME)
+    private fun vaultInfoFile(vault: Vault) = File(vaultFolder(vault), VAULT_INFO_FILE_NAME)
     fun Vault.mediaFile(mediaId: Long) = File(vaultFolder(this), "$mediaId.enc")
 
     private val masterKey: MasterKey = MasterKey.Builder(context)

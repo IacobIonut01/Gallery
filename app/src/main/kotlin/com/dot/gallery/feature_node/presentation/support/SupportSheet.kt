@@ -81,6 +81,7 @@ fun SupportSheet(
             "AVALANCHE" to "0x707eF0E95e814E05efadFD3d3783401cfbE8D11E",
             "BNB" to "0x707eF0E95e814E05efadFD3d3783401cfbE8D11E",
             "XDC" to "0x707eF0E95e814E05efadFD3d3783401cfbE8D11E",
+            "XMR" to "48JMiDR8mZiEis8V5pWtxv3r121K6fqqZfhajiewCbff27GnucdyLfkQ12Fr6ZM1eR9Botdu3Rx1bidmHyLTZBWnJ4AJKot",
             "EPIC" to "esWaroB8AQXZuaEJWtraPomNH3Lg1JRP3EVxr6batoFuqvf3hrHP@epicbox.epic.tech",
             "XRP" to "rPjYh6XMMra3zHFqDn6ZnYFCmPWPnbTHkc",
             "ADA" to "addr1q978p8x80z2d4je5gutav0ypplgtpw0mhmwky8k5mscds9ru9nma366mryl0ln8ump7ysj5wa9sg20c4x7ywjyzvacxseapv0y",

@@ -4,7 +4,7 @@ import android.media.MediaMetadataRetriever
 import android.media.MediaMetadataRetriever.BitmapParams
 import androidx.exifinterface.media.ExifInterface
 import com.dot.gallery.feature_node.data.data_source.KeychainHolder
-import com.dot.gallery.feature_node.domain.model.EncryptedMedia
+import com.dot.gallery.feature_node.domain.model.Media.EncryptedMedia
 import com.github.panpf.sketch.Image
 import com.github.panpf.sketch.Sketch
 import com.github.panpf.sketch.asImage

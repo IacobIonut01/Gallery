@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+@file:Suppress("UNCHECKED_CAST")
+
 package com.dot.gallery.feature_node.presentation.timeline.components
 
 import android.app.Activity
@@ -14,8 +16,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisallowComposableCalls
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -23,8 +27,8 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.dot.gallery.R
-import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.common.components.OptionItem
 import com.dot.gallery.feature_node.presentation.common.components.OptionSheet
@@ -33,15 +37,15 @@ import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetStat
 import kotlinx.coroutines.launch
 
 @Composable
-fun TimelineNavActions(
+inline fun <reified T: Media> TimelineNavActions(
     albumId: Long,
     handler: MediaHandleUseCase,
     expandedDropDown: MutableState<Boolean>,
-    mediaState: MediaState,
-    selectedMedia: SnapshotStateList<Media>,
+    mediaState: State<MediaState<T>>,
+    selectedMedia: SnapshotStateList<T>,
     selectionState: MutableState<Boolean>,
-    navigate: (route: String) -> Unit,
-    navigateUp: () -> Unit
+    crossinline navigate: @DisallowComposableCalls (route: String) -> Unit,
+    crossinline navigateUp: @DisallowComposableCalls () -> Unit
 ) {
     val scope = rememberCoroutineScope()
     val result = rememberLauncherForActivityResult(
@@ -71,14 +75,14 @@ fun TimelineNavActions(
                 onClick = {
                     selectionState.value = !selectionState.value
                     if (selectionState.value)
-                        selectedMedia.addAll(mediaState.media)
+                        selectedMedia.addAll(mediaState.value.media)
                     else
                         selectedMedia.clear()
                     expandedDropDown.value = false
                 }
             )
         ).apply {
-            if (albumId != -1L) {
+            if (albumId != -1L && T::class == Media.UriMedia::class) {
                 add(
                     OptionItem(
                         text = context.getString(R.string.move_album_to_trash),
@@ -87,7 +91,7 @@ fun TimelineNavActions(
                             scope.launch {
                                 handler.trashMedia(
                                     result = result,
-                                    mediaList = mediaState.media,
+                                    mediaList = mediaState.value.media as List<Media.UriMedia>,
                                     trash = true
                                 )
                                 navigateUp()

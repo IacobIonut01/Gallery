@@ -10,14 +10,15 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.res.stringResource
 import com.dot.gallery.R
+import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaItem
 import com.dot.gallery.feature_node.domain.model.isHeaderKey
 
 @Composable
-fun rememberStickyHeaderItem(
+fun <T: Media> rememberStickyHeaderItem(
     gridState: LazyGridState,
-    headers: SnapshotStateList<MediaItem.Header>,
-    mappedData: SnapshotStateList<MediaItem>
+    headers: SnapshotStateList<MediaItem.Header<T>>,
+    mappedData: SnapshotStateList<MediaItem<T>>
 ): State<String?> {
     val stringToday = stringResource(id = R.string.header_today)
     val stringYesterday = stringResource(id = R.string.header_yesterday)

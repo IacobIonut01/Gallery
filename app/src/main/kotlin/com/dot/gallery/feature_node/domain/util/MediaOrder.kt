@@ -31,21 +31,21 @@ sealed class MediaOrder(open val orderType: OrderType) {
         override val orderType: OrderType = OrderType.Descending
     ): MediaOrder(orderType)
 
-    fun sortMedia(media: List<Media>): List<Media> {
+    fun <T: Media> sortMedia(media: List<T>): List<T> {
         return when (orderType) {
             OrderType.Ascending -> {
                 when (this) {
-                    is Date -> media.sortedBy { it.takenTimestamp ?: it.timestamp }
+                    is Date -> media.sortedBy { it.definedTimestamp }
                     is Label -> media.sortedBy { it.label.lowercase() }
-                    is Expiry -> media.sortedBy { it.expiryTimestamp ?: it.takenTimestamp ?: it.timestamp }
+                    is Expiry -> media.sortedBy { it.expiryTimestamp ?: it.definedTimestamp }
                 }
             }
 
             OrderType.Descending -> {
                 when (this) {
-                    is Date -> media.sortedByDescending { it.takenTimestamp ?: it.timestamp }
+                    is Date -> media.sortedByDescending { it.definedTimestamp }
                     is Label -> media.sortedByDescending { it.label.lowercase() }
-                    is Expiry -> media.sortedByDescending { it.expiryTimestamp ?: it.takenTimestamp ?: it.timestamp }
+                    is Expiry -> media.sortedByDescending { it.expiryTimestamp ?: it.definedTimestamp }
                 }
             }
         }

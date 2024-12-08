@@ -18,49 +18,51 @@ import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
 import androidx.media3.exoplayer.ExoPlayer
 import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.model.isVideo
+import com.dot.gallery.feature_node.domain.util.isVideo
 import com.dot.gallery.feature_node.presentation.mediaview.components.video.VideoPlayer
 
 @Stable
 @NonRestartableComposable
 @Composable
-fun MediaPreviewComponent(
-    media: Media,
+fun <T: Media> MediaPreviewComponent(
+    media: T?,
     uiEnabled: Boolean,
     playWhenReady: Boolean,
     onItemClick: () -> Unit,
     onSwipeDown: () -> Unit,
     videoController: @Composable (ExoPlayer, MutableState<Boolean>, MutableLongState, Long, Int, Float) -> Unit,
 ) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-    ) {
-        AnimatedVisibility(
+    if (media != null) {
+        Box(
             modifier = Modifier.fillMaxSize(),
-            visible = media.isVideo,
-            enter = fadeIn(),
-            exit = fadeOut()
         ) {
-            VideoPlayer(
-                media = media,
-                playWhenReady = playWhenReady,
-                videoController = videoController,
-                onItemClick = onItemClick,
-                onSwipeDown = onSwipeDown
-            )
-        }
+            AnimatedVisibility(
+                modifier = Modifier.fillMaxSize(),
+                visible = media.isVideo,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                VideoPlayer(
+                    media = media,
+                    playWhenReady = playWhenReady,
+                    videoController = videoController,
+                    onItemClick = onItemClick,
+                    onSwipeDown = onSwipeDown
+                )
+            }
 
-        AnimatedVisibility(
-            visible = !media.isVideo,
-            enter = fadeIn(),
-            exit = fadeOut()
-        ) {
-            ZoomablePagerImage(
-                media = media,
-                uiEnabled = uiEnabled,
-                onItemClick = onItemClick,
-                onSwipeDown = onSwipeDown
-            )
+            AnimatedVisibility(
+                visible = !media.isVideo,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                ZoomablePagerImage(
+                    media = media,
+                    uiEnabled = uiEnabled,
+                    onItemClick = onItemClick,
+                    onSwipeDown = onSwipeDown
+                )
+            }
         }
     }
 }

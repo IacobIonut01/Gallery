@@ -44,6 +44,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.util.getUri
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia
 import com.dot.gallery.feature_node.presentation.picker.PickerViewModel
 import kotlinx.coroutines.launch
@@ -143,7 +144,7 @@ fun PickerScreen(
                     onClick = {
                         if (enabled) {
                             scope.launch {
-                                sendMediaAsResult(selectedMedia.map { it.uri })
+                                sendMediaAsResult(selectedMedia.map { it.getUri() })
                                 sendMediaAsMediaResult(selectedMedia)
                             }
                         }

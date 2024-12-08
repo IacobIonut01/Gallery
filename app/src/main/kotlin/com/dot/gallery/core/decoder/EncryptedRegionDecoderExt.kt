@@ -1,13 +1,14 @@
 package com.dot.gallery.core.decoder
 
 import android.graphics.BitmapFactory
+import androidx.core.net.toFile
 import androidx.exifinterface.media.ExifInterface
 import com.dot.gallery.feature_node.data.data_source.KeychainHolder
-import com.dot.gallery.feature_node.domain.model.EncryptedMedia
+import com.dot.gallery.feature_node.domain.model.Media.EncryptedMedia
 import com.github.panpf.sketch.decode.ImageInvalidException
 import com.github.panpf.sketch.decode.internal.ExifOrientationHelper
 import com.github.panpf.sketch.util.Size
-import com.github.panpf.zoomimage.subsampling.FileImageSource
+import com.github.panpf.zoomimage.subsampling.ContentImageSource
 import com.github.panpf.zoomimage.subsampling.ImageInfo
 import com.github.panpf.zoomimage.subsampling.ImageSource
 import com.github.panpf.zoomimage.util.IntSizeCompat
@@ -16,8 +17,8 @@ import java.io.IOException
 
 @Throws(IOException::class)
 fun ImageSource.readEncryptedExifOrientation(keychainHolder: KeychainHolder): Int {
-    return with(this as FileImageSource) {
-        val encryptedFile = path.toFile()
+    return with(this as ContentImageSource) {
+        val encryptedFile = uri.toFile()
         val encryptedMedia = with(keychainHolder) {
             encryptedFile.decrypt<EncryptedMedia>()
         }
@@ -32,11 +33,11 @@ fun ImageSource.readEncryptedExifOrientation(keychainHolder: KeychainHolder): In
 
 @Throws(IOException::class)
 fun ImageSource.readEncryptedImageInfoWithIgnoreExifOrientation(keychainHolder: KeychainHolder): ImageInfo {
-    with(this as FileImageSource) {
+    with(this as ContentImageSource) {
         val boundOptions = BitmapFactory.Options().apply {
             inJustDecodeBounds = true
         }
-        val encryptedFile = path.toFile()
+        val encryptedFile = uri.toFile()
         val encryptedMedia = with(keychainHolder) {
             encryptedFile.decrypt<EncryptedMedia>()
         }

@@ -52,7 +52,8 @@ import com.dot.gallery.core.Settings.Misc.allowVibrations
 import com.dot.gallery.core.Settings.Misc.rememberFullBrightnessView
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
 import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.model.isImage
+import com.dot.gallery.feature_node.domain.util.getUri
+import com.dot.gallery.feature_node.domain.util.isImage
 import com.dot.gallery.feature_node.presentation.edit.EditActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -88,7 +89,11 @@ fun FullBrightnessWindow(content: @Composable () -> Unit) {
 
 fun Context.setHdrMode(enabled: Boolean) {
     if (this is Activity) {
-        window.colorMode = if (enabled) COLOR_MODE_HDR else COLOR_MODE_DEFAULT
+        if (window.colorMode == COLOR_MODE_HDR && !enabled) {
+            window.colorMode = COLOR_MODE_DEFAULT
+        } else if (window.colorMode == COLOR_MODE_DEFAULT && enabled) {
+            window.colorMode = COLOR_MODE_HDR
+        }
     }
 }
 
@@ -245,7 +250,7 @@ fun Context.getEditImageCapableApps(): List<ResolveInfo> {
 fun Context.launchEditImageIntent(packageName: String, uri: Uri) {
     val intent = Intent(Intent.ACTION_EDIT).apply {
         addCategory(Intent.CATEGORY_DEFAULT)
-        setDataAndType(uri, "image/*")
+        setDataAndType(uri.authorizedUri(this@launchEditImageIntent), "image/*")
         putExtra("mimeType", "image/*")
         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         setPackage(packageName)
@@ -253,13 +258,13 @@ fun Context.launchEditImageIntent(packageName: String, uri: Uri) {
     startActivity(intent)
 }
 
-fun Context.launchEditIntent(media: Media) {
+fun <T: Media>  Context.launchEditIntent(media: T) {
     if (media.isImage) {
-        EditActivity.launchEditor(this@launchEditIntent, media.uri)
+        EditActivity.launchEditor(this@launchEditIntent, media.getUri().authorizedUri(this@launchEditIntent))
     } else {
         val intent = Intent(Intent.ACTION_EDIT).apply {
             addCategory(Intent.CATEGORY_DEFAULT)
-            setDataAndType(media.uri, media.mimeType)
+            setDataAndType(media.getUri().authorizedUri(this@launchEditIntent), media.mimeType)
             putExtra("mimeType", media.mimeType)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
@@ -267,22 +272,22 @@ fun Context.launchEditIntent(media: Media) {
     }
 }
 
-suspend fun Context.launchUseAsIntent(media: Media) =
+suspend fun <T: Media> Context.launchUseAsIntent(media: T) =
     withContext(Dispatchers.Default) {
         val intent = Intent(Intent.ACTION_ATTACH_DATA).apply {
             addCategory(Intent.CATEGORY_DEFAULT)
-            setDataAndType(media.uri, media.mimeType)
+            setDataAndType(media.getUri().authorizedUri(this@launchUseAsIntent), media.mimeType)
             putExtra("mimeType", media.mimeType)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         startActivity(Intent.createChooser(intent, getString(R.string.set_as)))
     }
 
-suspend fun Context.launchOpenWithIntent(media: Media) =
+suspend fun <T: Media> Context.launchOpenWithIntent(media: T) =
     withContext(Dispatchers.Default) {
         val intent = Intent(Intent.ACTION_VIEW).apply {
             addCategory(Intent.CATEGORY_DEFAULT)
-            setDataAndType(media.uri, media.mimeType)
+            setDataAndType(media.getUri().authorizedUri(this@launchOpenWithIntent), media.mimeType)
             putExtra("mimeType", media.mimeType)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }

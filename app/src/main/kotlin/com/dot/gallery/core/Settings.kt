@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+@file:Suppress("MemberVisibilityCanBePrivate")
+
 package com.dot.gallery.core
 
 import android.app.Activity
@@ -17,9 +19,11 @@ import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.edit
 import androidx.datastore.core.DataStore
@@ -34,6 +38,7 @@ import com.dot.gallery.core.Settings.PREFERENCE_NAME
 import com.dot.gallery.core.presentation.components.FilterKind
 import com.dot.gallery.core.util.rememberPreference
 import com.dot.gallery.feature_node.domain.util.OrderType
+import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
 import com.dot.gallery.feature_node.presentation.util.Screen
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -72,7 +77,7 @@ object Settings {
                 context.getSharedPreferences("ui_settings", Context.MODE_PRIVATE)
             }
 
-            val windowSizeClass = if (context is Activity) calculateWindowSizeClass(context) else null
+            val windowSizeClass = (context as? Activity)?.let { calculateWindowSizeClass(it) }
             val defaultValue = remember(windowSizeClass) {
                 albumCellsList.indexOf(
                     GridCells.Fixed(
@@ -83,9 +88,17 @@ object Settings {
                     )
                 )
             }
+            val orientation = LocalConfiguration.current.orientation
+            val isLandscape by rememberedDerivedState(orientation, windowSizeClass) {
+                orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE ||
+                        windowSizeClass?.widthSizeClass == WindowWidthSizeClass.Expanded
+            }
+            val key by rememberedDerivedState {
+                if (isLandscape) "album_grid_size_landscape" else "album_grid_size"
+            }
 
-            var storedSize = remember(prefs) {
-                prefs.getInt("album_grid_size", defaultValue)
+            var storedSize = remember(prefs, key, defaultValue, orientation, windowSizeClass) {
+                prefs.getInt(key, defaultValue)
             }
 
             return remember(storedSize) {
@@ -95,7 +108,7 @@ object Settings {
                         set(value) {
                             scope.launch {
                                 prefs.edit {
-                                    putInt("album_grid_size", value)
+                                    putInt(key, value)
                                     storedSize = value
                                 }
                             }
@@ -175,8 +188,18 @@ object Settings {
                 )
             }
 
-            var storedSize = remember(prefs) {
-                prefs.getInt("media_grid_size", defaultValue)
+            val orientation = LocalConfiguration.current.orientation
+            val isLandscape by rememberedDerivedState(orientation, windowSizeClass) {
+                orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE ||
+                        windowSizeClass?.widthSizeClass == WindowWidthSizeClass.Expanded
+            }
+
+            val key by rememberedDerivedState {
+                if (isLandscape) "media_grid_size_landscape" else "media_grid_size"
+            }
+
+            var storedSize = remember(prefs, key, defaultValue, orientation, windowSizeClass) {
+                prefs.getInt(key, defaultValue)
             }
 
             return remember(storedSize) {
@@ -186,7 +209,7 @@ object Settings {
                         set(value) {
                             scope.launch {
                                 prefs.edit {
-                                    putInt("media_grid_size", value)
+                                    putInt(key, value)
                                     storedSize = value
                                 }
                             }
@@ -279,6 +302,44 @@ object Settings {
         @Composable
         fun rememberAutoHideOnVideoPlay() =
             rememberPreference(key = AUTO_HIDE_ON_VIDEO_PLAY, defaultValue = true)
+
+        private val NO_CLASSIFICATION = booleanPreferencesKey("no_classification")
+
+        @Composable
+        fun rememberNoClassification() =
+            rememberPreference(key = NO_CLASSIFICATION, defaultValue = false)
+
+        val DATE_HEADER_FORMAT = stringPreferencesKey("date_header_format")
+
+        @Composable
+        fun rememberDateHeaderFormat() =
+            rememberPreference(key = DATE_HEADER_FORMAT, defaultValue = Constants.HEADER_DATE_FORMAT)
+
+        val EXIF_DATE_FORMAT = stringPreferencesKey("exif_date_format")
+
+        @Composable
+        fun rememberExifDateFormat() =
+            rememberPreference(key = EXIF_DATE_FORMAT, defaultValue = Constants.EXIF_DATE_FORMAT)
+
+        val EXTENDED_DATE_FORMAT = stringPreferencesKey("extended_date_format")
+
+        @Composable
+        fun rememberExtendedDateFormat() =
+            rememberPreference(key = EXTENDED_DATE_FORMAT, defaultValue = Constants.EXTENDED_DATE_FORMAT)
+
+        val DEFAULT_DATE_FORMAT = stringPreferencesKey("default_date_format")
+
+        @Composable
+        fun rememberDefaultDateFormat() =
+            rememberPreference(key = DEFAULT_DATE_FORMAT, defaultValue = Constants.DEFAULT_DATE_FORMAT)
+
+        val WEEKLY_DATE_FORMAT = stringPreferencesKey("weekly_date_format")
+
+        @Composable
+        fun rememberWeeklyDateFormat() =
+            rememberPreference(key = WEEKLY_DATE_FORMAT, defaultValue = Constants.WEEKLY_DATE_FORMAT)
+
+        fun getSetting(context: Context, key: Preferences.Key<String>) = context.dataStore.data.map { it[key] }
     }
 }
 

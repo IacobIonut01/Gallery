@@ -89,7 +89,7 @@ class AlbumsViewModel @Inject constructor(
         }
     }
 
-    private val settingsFlow = repository.getSettings()
+    private val settingsFlow = repository.getTimelineSettings()
         .stateIn(viewModelScope, started = SharingStarted.Eagerly, TimelineSettings())
 
     private val pinnedAlbums = repository.getPinnedAlbums()
@@ -104,7 +104,7 @@ class AlbumsViewModel @Inject constructor(
         set(value) {
             viewModelScope.launch(Dispatchers.IO) {
                 settingsFlow.value?.copy(albumMediaOrder = value)?.let {
-                    repository.updateSettings(it)
+                    repository.updateTimelineSettings(it)
                 }
             }
         }

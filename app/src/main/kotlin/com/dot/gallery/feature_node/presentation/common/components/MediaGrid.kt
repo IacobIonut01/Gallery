@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyGridState
@@ -31,37 +30,36 @@ import com.dokar.pinchzoomgrid.PinchZoomGridScope
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
-import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.core.presentation.components.Error
 import com.dot.gallery.core.presentation.components.LoadingMedia
 import com.dot.gallery.core.presentation.components.MediaItemHeader
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaItem
+import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.domain.model.isBigHeaderKey
 import com.dot.gallery.feature_node.domain.model.isHeaderKey
-import com.dot.gallery.feature_node.domain.model.isImage
+import com.dot.gallery.feature_node.domain.util.isImage
 import com.dot.gallery.feature_node.presentation.util.rememberFeedbackManager
 import com.dot.gallery.feature_node.presentation.util.update
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 @Composable
-fun PinchZoomGridScope.MediaGrid(
+fun <T: Media> PinchZoomGridScope.MediaGrid(
     gridState: LazyGridState,
-    gridCells: GridCells,
-    mediaState: State<MediaState>,
-    mappedData: SnapshotStateList<MediaItem>,
+    mediaState: State<MediaState<T>>,
+    mappedData: SnapshotStateList<MediaItem<T>>,
     paddingValues: PaddingValues,
     allowSelection: Boolean,
     selectionState: MutableState<Boolean>,
-    selectedMedia: SnapshotStateList<Media>,
+    selectedMedia: SnapshotStateList<T>,
     toggleSelection: @DisallowComposableCalls (Int) -> Unit,
     canScroll: Boolean,
     allowHeaders: Boolean,
-    aboveGridContent: @Composable (() -> Unit)?,
+    aboveGridContent: @Composable() (() -> Unit)?,
     isScrolling: MutableState<Boolean>,
     emptyContent: @Composable () -> Unit,
-    onMediaClick: @DisallowComposableCalls (media: Media) -> Unit
+    onMediaClick: @DisallowComposableCalls (media: T) -> Unit
 ) {
     LaunchedEffect(gridState.isScrollInProgress) {
         snapshotFlow {
@@ -159,16 +157,16 @@ fun PinchZoomGridScope.MediaGrid(
 }
 
 @Composable
-private fun PinchZoomGridScope.MediaGridContentWithHeaders(
-    mediaState: State<MediaState>,
-    mappedData: SnapshotStateList<MediaItem>,
+private fun <T: Media> PinchZoomGridScope.MediaGridContentWithHeaders(
+    mediaState: State<MediaState<T>>,
+    mappedData: SnapshotStateList<MediaItem<T>>,
     paddingValues: PaddingValues,
     allowSelection: Boolean,
     selectionState: MutableState<Boolean>,
-    selectedMedia: SnapshotStateList<Media>,
+    selectedMedia: SnapshotStateList<T>,
     toggleSelection: @DisallowComposableCalls (Int) -> Unit,
     canScroll: Boolean,
-    onMediaClick: @DisallowComposableCalls (media: Media) -> Unit,
+    onMediaClick: @DisallowComposableCalls (media: T) -> Unit,
     topContent: LazyGridScope.() -> Unit,
     bottomContent: LazyGridScope.() -> Unit
 ) {
@@ -287,15 +285,15 @@ private fun PinchZoomGridScope.MediaGridContentWithHeaders(
 }
 
 @Composable
-private fun PinchZoomGridScope.MediaGridContent(
-    mediaState: State<MediaState>,
+private fun <T: Media> PinchZoomGridScope.MediaGridContent(
+    mediaState: State<MediaState<T>>,
     paddingValues: PaddingValues,
     allowSelection: Boolean,
     selectionState: MutableState<Boolean>,
-    selectedMedia: SnapshotStateList<Media>,
+    selectedMedia: SnapshotStateList<T>,
     toggleSelection: @DisallowComposableCalls (Int) -> Unit,
     canScroll: Boolean,
-    onMediaClick: @DisallowComposableCalls (media: Media) -> Unit,
+    onMediaClick: @DisallowComposableCalls (media: T) -> Unit,
     topContent: LazyGridScope.() -> Unit,
     bottomContent: LazyGridScope.() -> Unit
 ) {

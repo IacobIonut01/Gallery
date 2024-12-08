@@ -8,7 +8,7 @@ package com.dot.gallery.ui.theme
 import android.content.Context
 import android.os.Build
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.LocalOverscrollConfiguration
+import androidx.compose.foundation.LocalOverscrollFactory
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
@@ -126,7 +126,7 @@ fun GalleryTheme(
         typography = Typography
     ) {
         CompositionLocalProvider(
-            value = LocalOverscrollConfiguration provides null,
+            value = LocalOverscrollFactory provides null,
             content = content
         )
     }

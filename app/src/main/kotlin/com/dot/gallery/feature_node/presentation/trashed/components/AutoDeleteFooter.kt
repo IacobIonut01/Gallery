@@ -28,7 +28,7 @@ fun AutoDeleteFooter() {
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
-            .padding(bottom = 16.dp),
+            .padding(vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {

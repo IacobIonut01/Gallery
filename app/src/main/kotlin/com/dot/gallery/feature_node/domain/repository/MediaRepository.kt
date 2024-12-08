@@ -9,12 +9,14 @@ import android.graphics.Bitmap
 import android.net.Uri
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
+import androidx.datastore.preferences.core.Preferences
 import com.dot.gallery.core.Resource
 import com.dot.gallery.feature_node.domain.model.Album
-import com.dot.gallery.feature_node.domain.model.DecryptedMedia
 import com.dot.gallery.feature_node.domain.model.ExifAttributes
 import com.dot.gallery.feature_node.domain.model.IgnoredAlbum
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.model.Media.ClassifiedMedia
+import com.dot.gallery.feature_node.domain.model.Media.UriMedia
 import com.dot.gallery.feature_node.domain.model.PinnedAlbum
 import com.dot.gallery.feature_node.domain.model.TimelineSettings
 import com.dot.gallery.feature_node.domain.model.Vault
@@ -27,13 +29,13 @@ interface MediaRepository {
 
     suspend fun updateInternalDatabase()
 
-    fun getMedia(): Flow<Resource<List<Media>>>
+    fun getMedia(): Flow<Resource<List<UriMedia>>>
 
-    fun getMediaByType(allowedMedia: AllowedMedia): Flow<Resource<List<Media>>>
+    fun getMediaByType(allowedMedia: AllowedMedia): Flow<Resource<List<UriMedia>>>
 
-    fun getFavorites(mediaOrder: MediaOrder): Flow<Resource<List<Media>>>
+    fun getFavorites(mediaOrder: MediaOrder): Flow<Resource<List<UriMedia>>>
 
-    fun getTrashed(): Flow<Resource<List<Media>>>
+    fun getTrashed(): Flow<Resource<List<UriMedia>>>
 
     fun getAlbums(mediaOrder: MediaOrder): Flow<Resource<List<Album>>>
 
@@ -49,51 +51,51 @@ interface MediaRepository {
 
     fun getBlacklistedAlbums(): Flow<List<IgnoredAlbum>>
 
-    fun getMediaByAlbumId(albumId: Long): Flow<Resource<List<Media>>>
+    fun getMediaByAlbumId(albumId: Long): Flow<Resource<List<UriMedia>>>
 
     fun getMediaByAlbumIdWithType(
         albumId: Long,
         allowedMedia: AllowedMedia
-    ): Flow<Resource<List<Media>>>
+    ): Flow<Resource<List<UriMedia>>>
 
     fun getAlbumsWithType(allowedMedia: AllowedMedia): Flow<Resource<List<Album>>>
 
-    fun getMediaListByUris(listOfUris: List<Uri>, reviewMode: Boolean): Flow<Resource<List<Media>>>
+    fun getMediaListByUris(listOfUris: List<Uri>, reviewMode: Boolean): Flow<Resource<List<UriMedia>>>
 
-    suspend fun toggleFavorite(
+    suspend fun <T: Media> toggleFavorite(
         result: ActivityResultLauncher<IntentSenderRequest>,
-        mediaList: List<Media>,
+        mediaList: List<T>,
         favorite: Boolean
     )
 
-    suspend fun trashMedia(
+    suspend fun <T: Media> trashMedia(
         result: ActivityResultLauncher<IntentSenderRequest>,
-        mediaList: List<Media>,
+        mediaList: List<T>,
         trash: Boolean
     )
 
-    suspend fun copyMedia(
-        from: Media,
+    suspend fun <T: Media> copyMedia(
+        from: T,
         path: String
     ): Boolean
 
-    suspend fun deleteMedia(
+    suspend fun <T: Media> deleteMedia(
         result: ActivityResultLauncher<IntentSenderRequest>,
-        mediaList: List<Media>
+        mediaList: List<T>
     )
 
-    suspend fun renameMedia(
-        media: Media,
+    suspend fun <T: Media> renameMedia(
+        media: T,
         newName: String
     ): Boolean
 
-    suspend fun moveMedia(
-        media: Media,
+    suspend fun <T: Media> moveMedia(
+        media: T,
         newPath: String
     ): Boolean
 
-    suspend fun updateMediaExif(
-        media: Media,
+    suspend fun <T: Media> updateMediaExif(
+        media: T,
         exifAttributes: ExifAttributes
     ): Boolean
 
@@ -128,13 +130,13 @@ interface MediaRepository {
         onFailed: (reason: String) -> Unit
     )
 
-    fun getEncryptedMedia(vault: Vault): Flow<Resource<List<DecryptedMedia>>>
+    fun getEncryptedMedia(vault: Vault): Flow<Resource<List<UriMedia>>>
 
-    suspend fun addMedia(vault: Vault, media: Media): Boolean
+    suspend fun <T: Media> addMedia(vault: Vault, media: T): Boolean
 
-    suspend fun restoreMedia(vault: Vault, media: DecryptedMedia): Boolean
+    suspend fun <T: Media> restoreMedia(vault: Vault, media: T): Boolean
 
-    suspend fun deleteEncryptedMedia(vault: Vault, media: DecryptedMedia): Boolean
+    suspend fun <T: Media> deleteEncryptedMedia(vault: Vault, media: T): Boolean
 
     suspend fun deleteAllEncryptedMedia(
         vault: Vault,
@@ -142,8 +144,29 @@ interface MediaRepository {
         onFailed: (failedFiles: List<File>) -> Unit
     ): Boolean
 
-    fun getSettings(): Flow<TimelineSettings?>
+    fun getTimelineSettings(): Flow<TimelineSettings?>
 
-    suspend fun updateSettings(settings: TimelineSettings)
+    suspend fun updateTimelineSettings(settings: TimelineSettings)
+
+    fun <Result> getSetting(key: Preferences.Key<Result>, defaultValue: Result): Flow<Result>
+
+    fun getClassifiedCategories(): Flow<List<String>>
+
+    fun getClassifiedMediaByCategory(category: String?): Flow<List<ClassifiedMedia>>
+
+    fun getClassifiedMediaByMostPopularCategory(): Flow<List<ClassifiedMedia>>
+
+    fun getCategoriesWithMedia(): Flow<List<ClassifiedMedia>>
+
+    fun getClassifiedMediaCount(): Flow<Int>
+
+    fun getClassifiedMediaCountAtCategory(category: String): Flow<Int>
+
+    fun getClassifiedMediaThumbnailByCategory(category: String): Flow<ClassifiedMedia?>
+
+    suspend fun getCategoryForMediaId(mediaId: Long): String?
+    suspend fun changeCategory(mediaId: Long, newCategory: String)
+
+    suspend fun deleteClassifications()
 
 }

@@ -8,7 +8,6 @@ package com.dot.gallery.feature_node.presentation.common
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
@@ -33,44 +32,44 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import com.dokar.pinchzoomgrid.PinchZoomGridLayout
 import com.dokar.pinchzoomgrid.rememberPinchZoomGridState
-import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.core.Constants.Target.TARGET_TRASH
 import com.dot.gallery.core.Constants.cellsList
-import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.core.Settings.Misc.rememberGridSize
 import com.dot.gallery.core.presentation.components.EmptyMedia
 import com.dot.gallery.core.presentation.components.NavigationActions
 import com.dot.gallery.core.presentation.components.NavigationButton
 import com.dot.gallery.core.presentation.components.SelectionSheet
+import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.common.components.MediaGridView
 import com.dot.gallery.feature_node.presentation.common.components.TwoLinedDateToolbarTitle
 import com.dot.gallery.feature_node.presentation.search.MainSearchBar
 import com.dot.gallery.feature_node.presentation.util.Screen
 
-@OptIn(
-    ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class
-)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MediaScreen(
-    paddingValues: PaddingValues,
+fun <T: Media> MediaScreen(
+    paddingValues: PaddingValues = PaddingValues(0.dp),
     albumId: Long = remember { -1L },
     target: String? = remember { null },
     albumName: String,
     handler: MediaHandleUseCase,
-    albumsState: State<AlbumState>,
-    mediaState: State<MediaState>,
+    albumsState: State<AlbumState> = remember { mutableStateOf(AlbumState()) },
+    mediaState: State<MediaState<T>>,
     selectionState: MutableState<Boolean>,
-    selectedMedia: SnapshotStateList<Media>,
+    selectedMedia: SnapshotStateList<T>,
     toggleSelection: (Int) -> Unit,
     allowHeaders: Boolean = true,
     showMonthlyHeader: Boolean = false,
     enableStickyHeaders: Boolean = true,
     allowNavBar: Boolean = false,
-    navActionsContent: @Composable() (RowScope.(expandedDropDown: MutableState<Boolean>, result: ActivityResultLauncher<IntentSenderRequest>) -> Unit),
+    customDateHeader: String? = null,
+    customViewingNavigation: ((media: T) -> Unit)? = null,
+    navActionsContent: @Composable (RowScope.(expandedDropDown: MutableState<Boolean>, result: ActivityResultLauncher<IntentSenderRequest>) -> Unit),
     emptyContent: @Composable () -> Unit = { EmptyMedia() },
-    aboveGridContent: @Composable() (() -> Unit)? = remember { null },
+    aboveGridContent: @Composable (() -> Unit)? = remember { null },
     navigate: (route: String) -> Unit,
     navigateUp: () -> Unit,
     toggleNavbar: (Boolean) -> Unit,
@@ -117,7 +116,7 @@ fun MediaScreen(
                         title = {
                             TwoLinedDateToolbarTitle(
                                 albumName = albumName,
-                                dateHeader = mediaState.value.dateHeader
+                                dateHeader = customDateHeader ?: mediaState.value.dateHeader
                             )
                         },
                         navigationIcon = {
@@ -172,7 +171,7 @@ fun MediaScreen(
                     paddingValues = remember(paddingValues, it) {
                         PaddingValues(
                             top = it.calculateTopPadding(),
-                            bottom = paddingValues.calculateBottomPadding() + 16.dp + 64.dp
+                            bottom = paddingValues.calculateBottomPadding() + 128.dp
                         )
                     },
                     canScroll = canScroll,
@@ -185,11 +184,15 @@ fun MediaScreen(
                     isScrolling = isScrolling,
                     emptyContent = emptyContent
                 ) {
-                    val albumRoute = "albumId=$albumId"
-                    val targetRoute = "target=$target"
-                    val param =
-                        if (target != null) targetRoute else albumRoute
-                    navigate(Screen.MediaViewScreen.route + "?mediaId=${it.id}&$param")
+                    if (customViewingNavigation == null) {
+                        val albumRoute = "albumId=$albumId"
+                        val targetRoute = "target=$target"
+                        val param =
+                            if (target != null) targetRoute else albumRoute
+                        navigate(Screen.MediaViewScreen.route + "?mediaId=${it.id}&$param")
+                    } else {
+                        customViewingNavigation(it)
+                    }
                 }
             }
         }
@@ -197,7 +200,6 @@ fun MediaScreen(
             SelectionSheet(
                 modifier = Modifier
                     .align(Alignment.BottomEnd),
-                target = target,
                 selectedMedia = selectedMedia,
                 selectionState = selectionState,
                 albumsState = albumsState,

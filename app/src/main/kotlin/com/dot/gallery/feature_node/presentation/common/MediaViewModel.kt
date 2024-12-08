@@ -13,9 +13,12 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Resource
+import com.dot.gallery.core.Settings
 import com.dot.gallery.feature_node.domain.model.IgnoredAlbum
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.model.Media.UriMedia
 import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.domain.model.TimelineSettings
 import com.dot.gallery.feature_node.domain.model.Vault
@@ -50,24 +53,25 @@ open class MediaViewModel @Inject constructor(
 
     var lastQuery = mutableStateOf("")
     val multiSelectState = mutableStateOf(false)
-    private val _searchMediaState = MutableStateFlow(MediaState())
+    private val _searchMediaState = MutableStateFlow(MediaState<Media>())
     val searchMediaState = _searchMediaState.asStateFlow()
-    val selectedPhotoState = mutableStateListOf<Media>()
+    val selectedPhotoState = mutableStateListOf<UriMedia>()
 
     var albumId: Long = -1L
     var target: String? = null
+    var category: String? = null
 
     var groupByMonth: Boolean
         get() = settingsFlow.value?.groupTimelineByMonth ?: false
         set(value) {
             viewModelScope.launch(Dispatchers.IO) {
                 settingsFlow.value?.copy(groupTimelineByMonth = value)?.let {
-                    repository.updateSettings(it)
+                    repository.updateTimelineSettings(it)
                 }
             }
         }
 
-    private val settingsFlow = repository.getSettings()
+    private val settingsFlow = repository.getTimelineSettings()
         .stateIn(
             viewModelScope,
             started = SharingStarted.Eagerly,
@@ -77,12 +81,31 @@ open class MediaViewModel @Inject constructor(
     private val blacklistedAlbums = repository.getBlacklistedAlbums()
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
+    private val defaultDateFormat =
+        repository.getSetting(Settings.Misc.DEFAULT_DATE_FORMAT, Constants.DEFAULT_DATE_FORMAT)
+            .stateIn(viewModelScope, SharingStarted.Eagerly, Constants.DEFAULT_DATE_FORMAT)
+
+    private val extendedDateFormat =
+        repository.getSetting(Settings.Misc.EXTENDED_DATE_FORMAT, Constants.EXTENDED_DATE_FORMAT)
+            .stateIn(viewModelScope, SharingStarted.Eagerly, Constants.EXTENDED_DATE_FORMAT)
+
+    private val weeklyDateFormat =
+        repository.getSetting(Settings.Misc.WEEKLY_DATE_FORMAT, Constants.WEEKLY_DATE_FORMAT)
+            .stateIn(viewModelScope, SharingStarted.Eagerly, Constants.WEEKLY_DATE_FORMAT)
+
     val mediaFlow by lazy {
         combine(
             repository.mediaFlow(albumId, target),
             settingsFlow,
             blacklistedAlbums,
-        ) { result, settings, blacklistedAlbums ->
+            combine(
+                defaultDateFormat,
+                extendedDateFormat,
+                weeklyDateFormat
+            ) { defaultDateFormat, extendedDateFormat, weeklyDateFormat ->
+                Triple(defaultDateFormat, extendedDateFormat, weeklyDateFormat)
+            }
+        ) { result, settings, blacklistedAlbums, (defaultDateFormat, extendedDateFormat, weeklyDateFormat) ->
             if (result is Resource.Error) return@combine MediaState(
                 error = result.message ?: "",
                 isLoading = false
@@ -95,6 +118,9 @@ open class MediaViewModel @Inject constructor(
                 error = result.message ?: "",
                 albumId = albumId,
                 groupByMonth = settings?.groupTimelineByMonth ?: false,
+                defaultDateFormat = defaultDateFormat,
+                extendedDateFormat = extendedDateFormat,
+                weeklyDateFormat = weeklyDateFormat
             )
         }.stateIn(viewModelScope, started = SharingStarted.WhileSubscribed(), MediaState())
     }
@@ -131,7 +157,7 @@ open class MediaViewModel @Inject constructor(
         }
     }
 
-    fun addMedia(vault: Vault, media: Media) {
+    fun <T : Media> addMedia(vault: Vault, media: T) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.addMedia(vault, media)
         }
@@ -144,7 +170,7 @@ open class MediaViewModel @Inject constructor(
 
     fun toggleFavorite(
         result: ActivityResultLauncher<IntentSenderRequest>,
-        mediaList: List<Media>,
+        mediaList: List<UriMedia>,
         favorite: Boolean = false
     ) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -179,13 +205,16 @@ open class MediaViewModel @Inject constructor(
                     data = mediaFlow.value.media.parseQuery(query),
                     error = mediaFlow.value.error,
                     albumId = albumId,
-                    groupByMonth = groupByMonth
+                    groupByMonth = groupByMonth,
+                    defaultDateFormat = defaultDateFormat.value,
+                    extendedDateFormat = extendedDateFormat.value,
+                    weeklyDateFormat = weeklyDateFormat.value
                 )
             }
         }
     }
 
-    private suspend fun List<Media>.parseQuery(query: String): List<Media> {
+    private suspend fun <T : Media> List<T>.parseQuery(query: String): List<T> {
         return withContext(Dispatchers.IO) {
             if (query.isEmpty())
                 return@withContext emptyList()

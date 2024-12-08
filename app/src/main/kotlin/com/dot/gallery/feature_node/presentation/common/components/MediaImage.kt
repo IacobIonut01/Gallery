@@ -43,8 +43,9 @@ import androidx.compose.ui.unit.dp
 import com.dot.gallery.core.Constants.Animation
 import com.dot.gallery.core.presentation.components.CheckBox
 import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.model.isFavorite
-import com.dot.gallery.feature_node.domain.model.isVideo
+import com.dot.gallery.feature_node.domain.util.getUri
+import com.dot.gallery.feature_node.domain.util.isFavorite
+import com.dot.gallery.feature_node.domain.util.isVideo
 import com.dot.gallery.feature_node.presentation.mediaview.components.video.VideoDurationHeader
 import com.github.panpf.sketch.AsyncImage
 import com.github.panpf.sketch.request.ComposableImageRequest
@@ -52,14 +53,14 @@ import com.github.panpf.sketch.resize.Scale
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun MediaImage(
+fun <T: Media> MediaImage(
     modifier: Modifier = Modifier,
-    media: Media,
+    media: T,
     selectionState: MutableState<Boolean>,
-    selectedMedia: SnapshotStateList<Media>,
+    selectedMedia: SnapshotStateList<T>,
     canClick: Boolean,
-    onItemClick: (Media) -> Unit,
-    onItemLongClick: (Media) -> Unit,
+    onItemClick: (T) -> Unit,
+    onItemLongClick: (T) -> Unit,
 ) {
     var isSelected by remember { mutableStateOf(false) }
     LaunchedEffect(selectionState.value, selectedMedia.size) {
@@ -122,11 +123,15 @@ fun MediaImage(
             AsyncImage(
                 modifier = Modifier
                     .fillMaxSize(),
-                request = ComposableImageRequest(media.uri.toString()) {
+                request = ComposableImageRequest(media.getUri().toString()) {
                     scale(Scale.CENTER_CROP)
                     setExtra(
                         key = "mediaKey",
                         value = media.toString(),
+                    )
+                    setExtra(
+                        key = "realMimeType",
+                        value = media.mimeType,
                     )
                 },
                 contentDescription = media.label,

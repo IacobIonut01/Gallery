@@ -13,17 +13,17 @@ import android.os.Bundle
 import android.provider.MediaStore
 import androidx.core.os.bundleOf
 import com.dot.gallery.core.Constants
-import com.dot.gallery.feature_node.data.data_source.mediastore.MediaQuery
+import com.dot.gallery.core.util.MediaStoreBuckets
 import com.dot.gallery.core.util.PickerUtils
 import com.dot.gallery.core.util.Query
 import com.dot.gallery.core.util.and
 import com.dot.gallery.core.util.eq
-import com.dot.gallery.core.util.join
-import com.dot.gallery.core.util.MediaStoreBuckets
 import com.dot.gallery.core.util.ext.mapEachRow
 import com.dot.gallery.core.util.ext.queryFlow
 import com.dot.gallery.core.util.ext.tryGetLong
 import com.dot.gallery.core.util.ext.tryGetString
+import com.dot.gallery.core.util.join
+import com.dot.gallery.feature_node.data.data_source.mediastore.MediaQuery
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaType
 import com.dot.gallery.feature_node.presentation.util.getDate
@@ -42,7 +42,7 @@ class MediaFlow(
     private val contentResolver: ContentResolver,
     private val buckedId: Long,
     private val mimeType: String? = null
-) : QueryFlow<Media>() {
+) : QueryFlow<Media.UriMedia>() {
     init {
         assert(buckedId != MediaStoreBuckets.MEDIA_STORE_BUCKET_PLACEHOLDER.id) {
             "MEDIA_STORE_BUCKET_PLACEHOLDER found"
@@ -149,7 +149,7 @@ class MediaFlow(
             MediaStore.Video.Media.EXTERNAL_CONTENT_URI
         val uri = ContentUris.withAppendedId(contentUri, id)
         val formattedDate = modifiedTimestamp.getDate(Constants.FULL_DATE_FORMAT)
-        Media(
+        Media.UriMedia(
             id = id,
             label = title,
             uri = uri,

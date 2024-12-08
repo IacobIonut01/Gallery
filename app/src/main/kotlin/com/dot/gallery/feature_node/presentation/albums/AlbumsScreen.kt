@@ -41,11 +41,9 @@ import androidx.compose.ui.unit.dp
 import com.dokar.pinchzoomgrid.PinchZoomGridLayout
 import com.dokar.pinchzoomgrid.rememberPinchZoomGridState
 import com.dot.gallery.R
-import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.Constants.albumCellsList
-import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.core.Settings.Album.rememberAlbumGridSize
 import com.dot.gallery.core.Settings.Album.rememberLastSort
 import com.dot.gallery.core.presentation.components.EmptyAlbum
@@ -55,6 +53,9 @@ import com.dot.gallery.core.presentation.components.FilterKind
 import com.dot.gallery.core.presentation.components.FilterOption
 import com.dot.gallery.core.presentation.components.LoadingAlbum
 import com.dot.gallery.feature_node.domain.model.Album
+import com.dot.gallery.feature_node.domain.model.AlbumState
+import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.domain.util.MediaOrder
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumComponent
 import com.dot.gallery.feature_node.presentation.albums.components.CarouselPinnedAlbums
@@ -66,7 +67,7 @@ import com.dot.gallery.feature_node.presentation.util.rememberActivityResult
 fun AlbumsScreen(
     navigate: (route: String) -> Unit,
     toggleNavbar: (Boolean) -> Unit,
-    mediaState: State<MediaState>,
+    mediaState: State<MediaState<Media.UriMedia>>,
     albumsState: State<AlbumState>,
     paddingValues: PaddingValues,
     filterOptions: SnapshotStateList<FilterOption>,

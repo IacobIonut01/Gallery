@@ -42,8 +42,8 @@ import com.dot.gallery.core.Constants.Animation.navigateUpAnimation
 import com.dot.gallery.core.Settings.Misc.rememberForceTheme
 import com.dot.gallery.core.Settings.Misc.rememberIsDarkMode
 import com.dot.gallery.feature_node.presentation.common.ChanneledViewModel
+import com.dot.gallery.feature_node.presentation.mediaview.MediaViewScreen
 import com.dot.gallery.feature_node.presentation.util.SecureWindow
-import com.dot.gallery.feature_node.presentation.vault.encryptedmediaview.EncryptedMediaViewScreen
 import com.dot.gallery.feature_node.presentation.vault.utils.rememberBiometricState
 import kotlinx.coroutines.Dispatchers
 
@@ -54,6 +54,7 @@ fun VaultScreen(
     toggleRotate: () -> Unit,
     shouldSkipAuth: MutableState<Boolean>,
     navigateUp: () -> Unit,
+    navigate: (String) -> Unit
 ) = SecureWindow {
     val viewModel = hiltViewModel<VaultViewModel>()
     viewModel.attachToLifecycle()
@@ -169,6 +170,7 @@ fun VaultScreen(
                     mediaState = mediaState,
                     currentVault = viewModel.currentVault,
                     addMediaToVault = viewModel::addMedia,
+                    addMediaListToVault = viewModel::addMedia,
                     deleteVault = viewModel::deleteVault,
                     setVault = { vault -> viewModel.setVault(vault) {} },
                     onCreateVaultClick = {
@@ -188,17 +190,29 @@ fun VaultScreen(
             )
         ) { backStackEntry ->
             val mediaId = remember(backStackEntry) {
-                backStackEntry.arguments?.getLong("mediaId")
+                backStackEntry.arguments?.getLong("mediaId") ?: -1
             }
-            EncryptedMediaViewScreen(
+            val mediaState = viewModel.mediaState.collectAsStateWithLifecycle()
+            MediaViewScreen(
                 navigateUp = navPipe::navigateUp,
                 toggleRotate = toggleRotate,
                 paddingValues = paddingValues,
-                mediaId = remember(mediaId) { mediaId ?: -1 },
-                mediaState = viewModel.mediaState,
-                currentVault = viewModel.currentVault,
+                mediaId = mediaId,
+                mediaState = mediaState,
+                currentVault = viewModel.currentVault.value,
                 restoreMedia = viewModel::restoreMedia,
-                deleteMedia = viewModel::deleteMedia
+                deleteMedia = viewModel::deleteMedia,
+                handler = null,
+                vaultState = vaultState,
+                addMedia = { vault, media ->
+                    viewModel.addMedia(
+                        vault = vault,
+                        media = media,
+                        onSuccess = {},
+                        onFailed = {}
+                    )
+                },
+                navigate = navigate
             )
         }
     }

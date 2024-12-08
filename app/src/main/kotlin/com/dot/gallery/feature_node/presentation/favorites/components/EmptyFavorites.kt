@@ -7,7 +7,7 @@ package com.dot.gallery.feature_node.presentation.favorites.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -27,9 +27,9 @@ fun EmptyFavorites(
     title: String = stringResource(R.string.empty_favorites_title),
 ) {
     Column(
-        modifier = modifier,
+        modifier = modifier.padding(top = 64.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically)
     ) {
         Icon(
             modifier = Modifier
@@ -38,7 +38,6 @@ fun EmptyFavorites(
             contentDescription = stringResource(R.string.empty_favorites_title),
             tint = MaterialTheme.colorScheme.primary
         )
-        Spacer(modifier = Modifier.size(16.dp))
         Text(
             text = title,
             style = MaterialTheme.typography.titleLarge

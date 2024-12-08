@@ -1,6 +1,7 @@
 package com.dot.gallery.core
 
 import android.content.Context
+import androidx.compose.ui.util.fastMap
 import androidx.hilt.work.HiltWorker
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
@@ -40,8 +41,7 @@ class DatabaseUpdaterWorker @AssistedInject constructor(
     private val repository: MediaRepository,
     @Assisted private val appContext: Context,
     @Assisted workerParams: WorkerParameters
-) :
-    CoroutineWorker(appContext, workerParams) {
+) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result {
         if (database.isMediaUpToDate(appContext)) {
@@ -53,7 +53,10 @@ class DatabaseUpdaterWorker @AssistedInject constructor(
             printDebug("Database is not up to date. Updating to version $mediaVersion")
             database.getMediaDao().setMediaVersion(MediaVersion(mediaVersion))
             val media = repository.getMedia().map { it.data ?: emptyList() }.firstOrNull()
-            media?.let { database.getMediaDao().updateMedia(it) }
+            media?.let {
+                database.getMediaDao().updateMedia(it)
+                database.getClassifierDao().deleteDeclassifiedImages(it.fastMap { m -> m.id })
+            }
             delay(5000)
         }
 

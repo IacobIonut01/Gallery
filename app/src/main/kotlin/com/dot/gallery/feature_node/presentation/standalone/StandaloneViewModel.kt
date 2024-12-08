@@ -10,6 +10,7 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.model.Media.UriMedia
 import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.domain.model.Vault
 import com.dot.gallery.feature_node.domain.model.VaultState
@@ -24,6 +25,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Suppress("UNCHECKED_CAST")
 @HiltViewModel
 class StandaloneViewModel @Inject constructor(
     @ApplicationContext
@@ -84,16 +86,16 @@ class StandaloneViewModel @Inject constructor(
         .map { VaultState(it, isLoading = false) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), VaultState())
 
-    fun addMedia(vault: Vault, media: Media) {
+    fun addMedia(vault: Vault, media: UriMedia) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.addMedia(vault, media)
         }
     }
 
-    private fun mediaFromUris(): MediaState {
-        val list = mutableListOf<Media>()
+    private fun <T: Media> mediaFromUris(): MediaState<T> {
+        val list = mutableListOf<T>()
         dataList.forEach {
-            Media.createFromUri(applicationContext, it)?.let { it1 -> list.add(it1) }
+            Media.createFromUri(applicationContext, it)?.let { it1 -> list.add(it1 as T) }
         }
         return MediaState(media = list)
     }

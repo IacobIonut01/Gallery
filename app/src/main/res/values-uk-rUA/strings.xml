@@ -32,7 +32,7 @@
     <string name="empty_favorites_title">Немає обраних</string>
     <string name="label">Етикетка</string>
     <string name="path">Шлях</string>
-    <string name="iso">" • ISO"</string>
+    <string name="iso">ISO</string>
     <string name="kb">КБ</string>
     <string name="mb">МБ</string>
     <string name="gb">ГБ</string>

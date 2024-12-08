@@ -23,6 +23,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -37,15 +38,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.R
-import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Constants.albumCellsList
 import com.dot.gallery.core.Settings.Album.rememberAlbumGridSize
 import com.dot.gallery.core.presentation.components.DragHandle
 import com.dot.gallery.feature_node.domain.model.Album
+import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.model.volume
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
+import com.dot.gallery.feature_node.domain.util.volume
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumComponent
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.rememberActivityResult
@@ -59,10 +60,10 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MoveMediaSheet(
+fun <T: Media> MoveMediaSheet(
     sheetState: AppBottomSheetState,
-    mediaList: List<Media>,
-    albumState: AlbumState,
+    mediaList: List<T>,
+    albumState: State<AlbumState>,
     handler: MediaHandleUseCase,
     onFinish: () -> Unit,
 ) {
@@ -180,7 +181,7 @@ fun MoveMediaSheet(
                             )
                         }
                         items(
-                            items = albumState.albums,
+                            items = albumState.value.albums,
                             key = { item -> item.toString() }
                         ) { item ->
                             val mediaVolume = (mediaList.firstOrNull()?.volume ?: item.volume)

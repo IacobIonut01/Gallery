@@ -46,9 +46,9 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
-import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.core.Position
 import com.dot.gallery.core.SettingsEntity
+import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.domain.model.IgnoredAlbum
 import com.dot.gallery.feature_node.presentation.settings.components.SettingsItem
 import com.dot.gallery.ui.core.icons.RegularExpression

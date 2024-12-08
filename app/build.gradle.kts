@@ -23,7 +23,7 @@ android {
         applicationId = "com.dot.gallery"
         minSdk = 30
         targetSdk = 35
-        versionCode = 31008
+        versionCode = 31020
         versionName = "3.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -275,6 +275,10 @@ dependencies {
     // Composable - Scrollbar
     implementation(libs.lazycolumnscrollbar)
 
+    // TensorFlow Lite
+    implementation(libs.tensorflow.lite)
+    implementation(libs.tensorflow.lite.task.vision)
+    implementation(libs.tensorflow.lite.gpu)
 
     // Tests
     testImplementation(libs.junit)

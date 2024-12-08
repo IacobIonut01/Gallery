@@ -34,6 +34,7 @@ import androidx.core.view.WindowCompat
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.model.Media.UriMedia
 import com.dot.gallery.feature_node.presentation.picker.PickerActivity.Companion.EXPORT_AS_MEDIA
 import com.dot.gallery.feature_node.presentation.picker.PickerActivity.Companion.MEDIA_LIST
 import com.dot.gallery.feature_node.presentation.picker.components.PickerScreen
@@ -42,7 +43,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import dagger.hilt.android.AndroidEntryPoint
 
-class PickerActivityContract : ActivityResultContract<Any?, List<Media>>() {
+class PickerActivityContract : ActivityResultContract<Any?, List<UriMedia>>() {
 
     override fun createIntent(context: Context, input: Any?): Intent {
         return Intent(context, PickerActivity::class.java).apply {
@@ -53,15 +54,15 @@ class PickerActivityContract : ActivityResultContract<Any?, List<Media>>() {
     }
 
     @Suppress("UNCHECKED_CAST", "DEPRECATION")
-    override fun parseResult(resultCode: Int, intent: Intent?): List<Media> {
+    override fun parseResult(resultCode: Int, intent: Intent?): List<UriMedia> {
         if (resultCode != Activity.RESULT_OK || intent == null) {
             return emptyList()
         }
 
-        val list: List<Media> = if (Build.VERSION.SDK_INT > Build.VERSION_CODES.TIRAMISU) {
-            intent.getParcelableArrayExtra(MEDIA_LIST, Media::class.java)?.toList() ?: emptyList()
+        val list: List<UriMedia> = if (Build.VERSION.SDK_INT > Build.VERSION_CODES.TIRAMISU) {
+            intent.getParcelableArrayExtra(MEDIA_LIST, UriMedia::class.java)?.toList() ?: emptyList()
         } else {
-            (intent.getParcelableArrayExtra(MEDIA_LIST) as Array<out Media>?)?.toList() ?: emptyList()
+            (intent.getParcelableArrayExtra(MEDIA_LIST) as Array<out UriMedia>?)?.toList() ?: emptyList()
         }
         return list
     }

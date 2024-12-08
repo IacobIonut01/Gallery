@@ -8,6 +8,7 @@ package com.dot.gallery.feature_node.presentation.timeline
 import android.app.Activity
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisallowComposableCalls
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
@@ -15,29 +16,29 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.res.stringResource
 import com.dot.gallery.R
 import com.dot.gallery.feature_node.domain.model.AlbumState
-import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.common.MediaScreen
 import com.dot.gallery.feature_node.presentation.timeline.components.TimelineNavActions
 
 @Composable
-fun TimelineScreen(
+inline fun <reified T: Media> TimelineScreen(
     paddingValues: PaddingValues,
     albumId: Long = -1L,
     albumName: String = stringResource(R.string.app_name),
     handler: MediaHandleUseCase,
-    mediaState: State<MediaState>,
+    mediaState: State<MediaState<T>>,
     albumsState: State<AlbumState>,
     selectionState: MutableState<Boolean>,
-    selectedMedia: SnapshotStateList<Media>,
+    selectedMedia: SnapshotStateList<T>,
     allowNavBar: Boolean = true,
     allowHeaders: Boolean = true,
     enableStickyHeaders: Boolean = true,
-    toggleSelection: (Int) -> Unit,
-    navigate: (route: String) -> Unit,
-    navigateUp: () -> Unit,
-    toggleNavbar: (Boolean) -> Unit,
+    noinline toggleSelection: (Int) -> Unit,
+    noinline navigate: @DisallowComposableCalls (route: String) -> Unit,
+    noinline navigateUp: @DisallowComposableCalls () -> Unit,
+    noinline toggleNavbar: (Boolean) -> Unit,
     isScrolling: MutableState<Boolean>,
     searchBarActive: MutableState<Boolean> = mutableStateOf(false)
 ) {
@@ -61,7 +62,7 @@ fun TimelineScreen(
                 albumId = albumId,
                 handler = handler,
                 expandedDropDown = expandedDropDown,
-                mediaState = mediaState.value,
+                mediaState = mediaState,
                 selectedMedia = selectedMedia,
                 selectionState = selectionState,
                 navigate = navigate,

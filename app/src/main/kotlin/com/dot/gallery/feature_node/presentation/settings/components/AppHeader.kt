@@ -26,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -45,7 +46,7 @@ import kotlinx.coroutines.launch
 fun SettingsAppHeader() {
 
     val appName = stringResource(id = R.string.app_name)
-    val appVersion = remember { "v${BuildConfig.VERSION_NAME}" }
+    val appVersion = remember { "v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})" }
     val appDeveloper = stringResource(R.string.app_dev, stringResource(R.string.app_dev_name))
 
     val donateImage = painterResource(id = R.drawable.ic_donate)
@@ -85,8 +86,10 @@ fun SettingsAppHeader() {
                 text = appVersion,
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 11.sp,
-                modifier = Modifier
+                fontSize = 12.sp,
+                modifier = Modifier.graphicsLayer {
+                    translationX = 6.0f
+                }
             )
         }
         Spacer(modifier = Modifier.height(8.dp))

@@ -3,11 +3,11 @@ package com.dot.gallery.feature_node.domain.model
 import androidx.compose.runtime.Stable
 
 @Stable
-data class MediaState(
-    val media: List<Media> = emptyList(),
-    val mappedMedia: List<MediaItem> = emptyList(),
-    val mappedMediaWithMonthly: List<MediaItem> = emptyList(),
-    val headers: List<MediaItem.Header> = emptyList(),
+data class MediaState<Type: Media>(
+    val media: List<Type> = emptyList(),
+    val mappedMedia: List<MediaItem<Type>> = emptyList(),
+    val mappedMediaWithMonthly: List<MediaItem<Type>> = emptyList(),
+    val headers: List<MediaItem.Header<Type>> = emptyList(),
     val dateHeader: String = "",
     val error: String = "",
     val isLoading: Boolean = true

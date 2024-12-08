@@ -35,7 +35,7 @@ object Constants {
     /**
      * Value in ms
      */
-    const val DEFAULT_LOW_VELOCITY_SWIPE_DURATION = 150
+    const val DEFAULT_LOW_VELOCITY_SWIPE_DURATION = 50
 
     /**
      * Smooth enough at 300ms
@@ -45,13 +45,7 @@ object Constants {
     /**
      * Syncs with status bar fade in/out
      */
-    const val DEFAULT_TOP_BAR_ANIMATION_DURATION = 1000
-
-    /**
-     * MAX Image Size in Media Preview
-     * Android LIMIT: 4096x4096 [16MP]
-     */
-    const val MAX_IMAGE_SIZE = 4096
+    const val DEFAULT_TOP_BAR_ANIMATION_DURATION = 500
 
     private val PERMISSION_COMMON = listOf(
         Manifest.permission.ACCESS_MEDIA_LOCATION

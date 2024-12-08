@@ -24,10 +24,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -41,6 +43,7 @@ import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.GpsOff
+import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.LocalFireDepartment
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.RestoreFromTrash
@@ -51,8 +54,10 @@ import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -65,7 +70,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -75,6 +82,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.toUpperCase
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.BuildConfig
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Animation.enterAnimation
@@ -89,22 +97,28 @@ import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaDateCaption
 import com.dot.gallery.feature_node.domain.model.Vault
 import com.dot.gallery.feature_node.domain.model.VaultState
-import com.dot.gallery.feature_node.domain.model.fileExtension
-import com.dot.gallery.feature_node.domain.model.isFavorite
-import com.dot.gallery.feature_node.domain.model.isRaw
-import com.dot.gallery.feature_node.domain.model.isTrashed
-import com.dot.gallery.feature_node.domain.model.isVideo
-import com.dot.gallery.feature_node.domain.model.readUriOnly
 import com.dot.gallery.feature_node.domain.model.rememberExifAttributes
 import com.dot.gallery.feature_node.domain.model.rememberLocationData
 import com.dot.gallery.feature_node.domain.model.rememberMediaDateCaption
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
+import com.dot.gallery.feature_node.domain.util.canMakeActions
+import com.dot.gallery.feature_node.domain.util.fileExtension
+import com.dot.gallery.feature_node.domain.util.getCategory
+import com.dot.gallery.feature_node.domain.util.getUri
+import com.dot.gallery.feature_node.domain.util.isEncrypted
+import com.dot.gallery.feature_node.domain.util.isFavorite
+import com.dot.gallery.feature_node.domain.util.isLocalContent
+import com.dot.gallery.feature_node.domain.util.isRaw
+import com.dot.gallery.feature_node.domain.util.isTrashed
+import com.dot.gallery.feature_node.domain.util.isVideo
+import com.dot.gallery.feature_node.domain.util.readUriOnly
 import com.dot.gallery.feature_node.presentation.exif.CopyMediaSheet
 import com.dot.gallery.feature_node.presentation.exif.MetadataEditSheet
 import com.dot.gallery.feature_node.presentation.exif.MoveMediaSheet
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialog
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialogAction
 import com.dot.gallery.feature_node.presentation.util.MapBoxURL
+import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.feature_node.presentation.util.connectivityState
 import com.dot.gallery.feature_node.presentation.util.launchEditIntent
 import com.dot.gallery.feature_node.presentation.util.launchMap
@@ -121,16 +135,20 @@ import com.dot.gallery.feature_node.presentation.util.writeRequest
 import com.dot.gallery.feature_node.presentation.vault.components.SelectVaultSheet
 import com.dot.gallery.ui.theme.Shapes
 import com.github.panpf.sketch.AsyncImage
+import com.github.panpf.sketch.rememberAsyncImagePainter
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 
 @Composable
-fun MediaViewDetails(
+fun <T : Media> MediaViewDetails(
     albumsState: State<AlbumState>,
-    vaultState: State<VaultState>,
-    currentMedia: Media?,
-    handler: MediaHandleUseCase,
-    addMediaToVault: (Vault, Media) -> Unit,
+    vaultState: VaultState,
+    currentMedia: T?,
+    handler: MediaHandleUseCase?,
+    addMediaToVault: (Vault, T) -> Unit,
+    restoreMedia: ((Vault, T, () -> Unit) -> Unit)?,
+    currentVault: Vault?,
+    navigate: (String) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -170,7 +188,7 @@ fun MediaViewDetails(
                     val exifAttributesEditResult = rememberActivityResult(
                         onResultOk = {
                             scope.launch {
-                                if (handler.updateMediaExif(currentMedia, exifAttributes)) {
+                                if (handler!!.updateMediaExif(currentMedia, exifAttributes)) {
                                     printDebug("Exif Attributes Updated")
                                 } else {
                                     Toast.makeText(
@@ -198,6 +216,14 @@ fun MediaViewDetails(
                     )
 
                     val locationData = rememberLocationData(exifMetadata, currentMedia)
+                    var category by remember(currentMedia) {
+                        mutableStateOf(currentMedia.getCategory)
+                    }
+                    LaunchedEffect(currentMedia, category, handler) {
+                        if (category == null && handler != null) {
+                            category = handler.getCategoryForMediaId(currentMedia.id)
+                        }
+                    }
 
                     LazyColumn(
                         modifier = Modifier.fillMaxWidth(),
@@ -224,6 +250,13 @@ fun MediaViewDetails(
                                         contentColor = MaterialTheme.colorScheme.onTertiaryContainer
                                     )
                                 }
+                                if (currentMedia.isEncrypted) {
+                                    MediaInfoChip2(
+                                        text = stringResource(R.string.encrypted),
+                                        containerColor = MaterialTheme.colorScheme.error,
+                                        contentColor = MaterialTheme.colorScheme.onError
+                                    )
+                                }
                             }
                         }
                         item {
@@ -239,7 +272,7 @@ fun MediaViewDetails(
                                 label = it.label,
                                 content = it.content,
                                 trailingContent = {
-                                    if (it.trailingIcon != null && !currentMedia.readUriOnly) {
+                                    if (it.trailingIcon != null && currentMedia.canMakeActions && handler != null) {
                                         MediaInfoChip2(
                                             text = stringResource(R.string.edit),
                                             contentColor = MaterialTheme.colorScheme.secondary,
@@ -257,6 +290,47 @@ fun MediaViewDetails(
                                 onClick = it.onClick
                             )
                         }
+                        if (category != null && handler != null) {
+                            item {
+                                val mediaCategoryCounter by handler.getClassifiedMediaCountAtCategory(
+                                    category!!
+                                ).collectAsStateWithLifecycle(0)
+                                val mediaCategoryThumbnail by handler.getClassifiedMediaThumbnailByCategory(
+                                    category!!
+                                ).collectAsStateWithLifecycle(null)
+                                MediaInfoRow(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp),
+                                    label = category!!,
+                                    content = stringResource(
+                                        R.string.s_items,
+                                        mediaCategoryCounter
+                                    ),
+                                    trailingContent = {
+                                        androidx.compose.animation.AnimatedVisibility(
+                                            visible = mediaCategoryThumbnail != null,
+                                            enter = enterAnimation,
+                                            exit = exitAnimation
+                                        ) {
+                                            Image(
+                                                painter = rememberAsyncImagePainter(
+                                                    mediaCategoryThumbnail!!.uri.toString()
+                                                ),
+                                                contentDescription = null,
+                                                contentScale = ContentScale.Crop,
+                                                modifier = Modifier
+                                                    .size(48.dp)
+                                                    .clip(RoundedCornerShape(16.dp))
+                                            )
+                                        }
+                                    },
+                                    onClick = {
+                                        navigate(Screen.CategoryViewScreen.category(category!!))
+                                    }
+                                )
+                            }
+                        }
                         item {
                             Spacer(modifier = Modifier.height(8.dp))
                         }
@@ -266,7 +340,9 @@ fun MediaViewDetails(
                                 albumsState = albumsState,
                                 vaults = vaultState,
                                 handler = handler,
-                                addMedia = addMediaToVault
+                                addMedia = addMediaToVault,
+                                restoreMedia = restoreMedia,
+                                currentVault = currentVault
                             )
                         }
                         item {
@@ -276,7 +352,7 @@ fun MediaViewDetails(
                         }
                         item {
                             androidx.compose.animation.AnimatedVisibility(
-                                visible = !currentMedia.readUriOnly
+                                visible = currentMedia.canMakeActions
                             ) {
                                 Column(
                                     modifier = Modifier
@@ -293,7 +369,9 @@ fun MediaViewDetails(
                                             modifier = Modifier
                                                 .fillMaxWidth()
                                                 .clip(RoundedCornerShape(2.dp))
-                                                .clickable {
+                                                .clickable(
+                                                    enabled = handler != null
+                                                ) {
                                                     scope.launch {
                                                         exifAttributes = exifAttributes.copy(
                                                             gpsLatLong = null
@@ -362,7 +440,7 @@ fun MediaViewDetails(
                         }
                     }
 
-                    if (metadataState.isVisible) {
+                    if (metadataState.isVisible && handler != null) {
                         MetadataEditSheet(
                             state = metadataState,
                             media = currentMedia,
@@ -447,13 +525,24 @@ fun LocationItem(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
+                var locationDataHeight by rememberSaveable(locationData) {
+                    mutableFloatStateOf(0f)
+                }
+                val density = LocalDensity.current.density
                 Column(
                     modifier = Modifier
-                        .weight(2f)
-                        .padding(start = 16.dp),
+                        .weight(1f)
+                        .wrapContentHeight()
+                        .onGloballyPositioned {
+                            val newHeight = it.size.height / density
+                            if (locationDataHeight != newHeight) {
+                                locationDataHeight = newHeight
+                            }
+                        }
+                        .padding(horizontal = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically)
                 ) {
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                     Icon(
                         imageVector = Icons.AutoMirrored.Outlined.OpenInNew,
                         contentDescription = stringResource(R.string.open_with),
@@ -471,14 +560,14 @@ fun LocationItem(
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.secondary
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
 
                 val connection by connectivityState()
 
                 AnimatedVisibility(
                     modifier = Modifier
-                        .weight(1f)
+                        .size(locationDataHeight.dp)
                         .aspectRatio(1f)
                         .clip(Shapes.large),
                     visible = remember(connection) {
@@ -494,8 +583,7 @@ fun LocationItem(
                         contentScale = ContentScale.Crop,
                         contentDescription = stringResource(R.string.location_map_cd),
                         modifier = Modifier
-                            .weight(1f)
-                            .aspectRatio(1f)
+                            .fillMaxSize()
                             .clip(Shapes.large)
                     )
                 }
@@ -540,12 +628,14 @@ fun MediaInfoChip2(
 }
 
 @Composable
-private fun MediaViewInfoActions2(
-    media: Media,
+private fun <T : Media> MediaViewInfoActions2(
+    media: T,
     albumsState: State<AlbumState>,
-    vaults: State<VaultState>,
-    handler: MediaHandleUseCase,
-    addMedia: (Vault, Media) -> Unit
+    vaults: VaultState,
+    handler: MediaHandleUseCase?,
+    addMedia: (Vault, T) -> Unit,
+    restoreMedia: ((Vault, T, () -> Unit) -> Unit)?,
+    currentVault: Vault?
 ) {
     Row(
         modifier = Modifier
@@ -557,7 +647,7 @@ private fun MediaViewInfoActions2(
         // Share Component
         ShareButton(media, followTheme = true, enabled = true)
         // Hide
-        //if (!media.isVideo) {
+        if (media.isLocalContent) {
             HideButton(
                 media,
                 vaults = vaults,
@@ -565,80 +655,103 @@ private fun MediaViewInfoActions2(
                 followTheme = true,
                 enabled = true
             )
-        //}
-        // Use as or Open With
-        OpenAsButton(media, followTheme = true, enabled = true)
-        // Copy
-        CopyButton(media, albumsState.value, handler, followTheme = true, enabled = true)
-        // Move
-        MoveButton(media, albumsState.value, handler, followTheme = true, enabled = true)
-        // Edit
-        EditButton(media, followTheme = true, enabled = true)
-    }
-}
-
-@Composable
-fun MediaViewActions2(
-    currentIndex: Int,
-    currentMedia: Media,
-    handler: MediaHandleUseCase,
-    onDeleteMedia: ((Int) -> Unit)?,
-    showDeleteButton: Boolean,
-    enabled: Boolean
-) {
-    if (currentMedia.isTrashed) {
-        val scope = rememberCoroutineScope()
-        val result = rememberActivityResult()
-        // Restore Component
-        BottomBarColumn(
-            currentMedia = currentMedia,
-            imageVector = Icons.Outlined.RestoreFromTrash,
-            title = stringResource(id = R.string.trash_restore),
-            enabled = enabled
-        ) {
-            scope.launch {
-                onDeleteMedia?.invoke(currentIndex)
-                handler.trashMedia(result = result, arrayListOf(it), trash = false)
-            }
         }
-        // Delete Component
-        BottomBarColumn(
-            currentMedia = currentMedia,
-            imageVector = Icons.Outlined.DeleteOutline,
-            title = stringResource(id = R.string.trash_delete),
-            enabled = enabled
-        ) {
-            scope.launch {
-                onDeleteMedia?.invoke(currentIndex)
-                handler.deleteMedia(result = result, arrayListOf(it))
-            }
-        }
-    } else {
-        // Share Component
-        ShareButton(currentMedia, enabled = enabled)
-        // Favorite Component
-        FavoriteButton(currentMedia, handler, enabled = enabled)
-        // Edit
-        EditButton(currentMedia, enabled = enabled)
-        // Trash Component
-        if (showDeleteButton) {
-            TrashButton(
-                currentIndex,
-                currentMedia,
-                handler,
-                false,
-                enabled = enabled,
-                onDeleteMedia
+        // Restore
+        if (media.isEncrypted && restoreMedia != null && currentVault != null) {
+            RestoreButton(
+                media,
+                currentVault = currentVault,
+                restoreMedia = restoreMedia,
+                followTheme = true
             )
         }
+        // Use as or Open With
+        OpenAsButton(media, followTheme = true, enabled = true)
+        if (handler != null && albumsState.value.albums.isNotEmpty() && media.canMakeActions) {
+            // Copy
+            CopyButton(media, albumsState, handler, followTheme = true, enabled = true)
+            // Move
+            MoveButton(media, albumsState, handler, followTheme = true, enabled = true)
+        }
+        // Edit
+        if (!media.isEncrypted) {
+            EditButton(media, followTheme = true, enabled = true)
+        }
     }
 }
 
 @Composable
-fun HideButton(
-    media: Media,
-    vaults: State<VaultState>,
-    addMedia: (Vault, Media) -> Unit,
+fun <T : Media> MediaViewActions2(
+    currentIndex: Int,
+    currentMedia: T?,
+    handler: MediaHandleUseCase?,
+    onDeleteMedia: ((Int) -> Unit)?,
+    showDeleteButton: Boolean,
+    enabled: Boolean,
+    deleteMedia: ((Vault, T, () -> Unit) -> Unit)?,
+    currentVault: Vault?
+) {
+    if (currentMedia != null) {
+        if (currentMedia.isTrashed) {
+            val scope = rememberCoroutineScope()
+            val result = rememberActivityResult()
+            // Restore Component
+            BottomBarColumn(
+                currentMedia = currentMedia,
+                imageVector = Icons.Outlined.RestoreFromTrash,
+                title = stringResource(id = R.string.trash_restore),
+                enabled = enabled
+            ) {
+                scope.launch {
+                    onDeleteMedia?.invoke(currentIndex)
+                    handler!!.trashMedia(result = result, arrayListOf(it), trash = false)
+                }
+            }
+            // Delete Component
+            BottomBarColumn(
+                currentMedia = currentMedia,
+                imageVector = Icons.Outlined.DeleteOutline,
+                title = stringResource(id = R.string.trash_delete),
+                enabled = enabled
+            ) {
+                scope.launch {
+                    onDeleteMedia?.invoke(currentIndex)
+                    handler!!.deleteMedia(result = result, arrayListOf(it))
+                }
+            }
+        } else {
+            // Share Component
+            ShareButton(currentMedia, enabled = enabled)
+            // Favorite Component
+            if (handler != null && currentMedia.canMakeActions) {
+                FavoriteButton(currentMedia, handler, enabled = enabled)
+            }
+            // Edit
+            if (!currentMedia.isEncrypted) {
+                EditButton(currentMedia, enabled = enabled)
+            }
+            // Trash Component
+            if (showDeleteButton) {
+                TrashButton(
+                    currentIndex,
+                    currentMedia,
+                    handler,
+                    false,
+                    enabled = enabled,
+                    onDeleteMedia,
+                    currentVault = currentVault,
+                    deleteMedia = deleteMedia
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun <T : Media> HideButton(
+    media: T,
+    vaults: VaultState,
+    addMedia: (Vault, T) -> Unit,
     enabled: Boolean,
     followTheme: Boolean = false
 ) {
@@ -648,8 +761,8 @@ fun HideButton(
         currentMedia = media,
         imageVector = Icons.Outlined.Lock,
         followTheme = followTheme,
-        enabled = remember(vaults.value, enabled) {
-            vaults.value.vaults.isNotEmpty() && enabled
+        enabled = remember(vaults, enabled) {
+            vaults.vaults.isNotEmpty() && enabled
         },
         title = stringResource(R.string.hide),
     ) {
@@ -663,17 +776,16 @@ fun HideButton(
             sheetState.hide()
         }
     })
-    val vaultState by remember(vaults.value) { vaults }
     SelectVaultSheet(
         state = sheetState,
-        vaultState = vaultState,
+        vaultState = vaults,
         onVaultSelected = { vault ->
             scope.launch {
                 addMedia(vault, media).also {
                     val intentSender =
                         MediaStore.createDeleteRequest(
                             context.contentResolver,
-                            listOf(media.uri)
+                            listOf(media.getUri())
                         ).intentSender
                     val senderRequest: IntentSenderRequest =
                         IntentSenderRequest.Builder(intentSender)
@@ -687,9 +799,31 @@ fun HideButton(
 }
 
 @Composable
-fun CopyButton(
-    media: Media,
-    albumsState: AlbumState,
+private fun <T : Media> RestoreButton(
+    media: T,
+    currentVault: Vault,
+    restoreMedia: (Vault, T, () -> Unit) -> Unit,
+    followTheme: Boolean = false
+) {
+    val scope = rememberCoroutineScope()
+    BottomBarColumn(
+        currentMedia = media,
+        imageVector = Icons.Outlined.Image,
+        followTheme = followTheme,
+        title = stringResource(R.string.restore)
+    ) {
+        scope.launch {
+            restoreMedia(currentVault, it) {
+
+            }
+        }
+    }
+}
+
+@Composable
+fun <T : Media> CopyButton(
+    media: T,
+    albumsState: State<AlbumState>,
     handler: MediaHandleUseCase,
     enabled: Boolean,
     followTheme: Boolean = false
@@ -718,9 +852,9 @@ fun CopyButton(
 }
 
 @Composable
-fun MoveButton(
-    media: Media,
-    albumsState: AlbumState,
+fun <T : Media> MoveButton(
+    media: T,
+    albumsState: State<AlbumState>,
     handler: MediaHandleUseCase,
     enabled: Boolean,
     followTheme: Boolean = false
@@ -749,8 +883,8 @@ fun MoveButton(
 }
 
 @Composable
-fun ShareButton(
-    media: Media,
+fun <T : Media> ShareButton(
+    media: T,
     enabled: Boolean,
     followTheme: Boolean = false
 ) {
@@ -770,8 +904,8 @@ fun ShareButton(
 }
 
 @Composable
-fun FavoriteButton(
-    media: Media,
+fun <T : Media> FavoriteButton(
+    media: T,
     handler: MediaHandleUseCase,
     enabled: Boolean,
     followTheme: Boolean = false
@@ -806,8 +940,8 @@ fun FavoriteButton(
 }
 
 @Composable
-fun EditButton(
-    media: Media,
+fun <T : Media> EditButton(
+    media: T,
     enabled: Boolean,
     followTheme: Boolean = false
 ) {
@@ -824,8 +958,8 @@ fun EditButton(
 }
 
 @Composable
-fun OpenAsButton(
-    media: Media,
+fun <T : Media> OpenAsButton(
+    media: T,
     enabled: Boolean,
     followTheme: Boolean = false
 ) {
@@ -855,13 +989,15 @@ fun OpenAsButton(
 }
 
 @Composable
-fun TrashButton(
+fun <T : Media> TrashButton(
     index: Int,
-    media: Media,
-    handler: MediaHandleUseCase,
+    media: T,
+    handler: MediaHandleUseCase?,
     followTheme: Boolean = false,
     enabled: Boolean,
-    onDeleteMedia: ((Int) -> Unit)?
+    onDeleteMedia: ((Int) -> Unit)?,
+    deleteMedia: ((Vault, T, () -> Unit) -> Unit)?,
+    currentVault: Vault?
 ) {
     var shouldMoveToTrash by rememberSaveable { mutableStateOf(true) }
     val state = rememberAppBottomSheetState()
@@ -902,23 +1038,31 @@ fun TrashButton(
         data = listOf(media),
         action = if (shouldMoveToTrash) TrashDialogAction.TRASH else TrashDialogAction.DELETE
     ) {
-        if (shouldMoveToTrash) {
-            handler.trashMedia(result, it, true)
+        if (deleteMedia != null && currentVault != null) {
+            it.forEach { media ->
+                deleteMedia(currentVault, media) {
+                    onDeleteMedia?.invoke(index)
+                }
+            }
         } else {
-            handler.deleteMedia(result, it)
+            if (shouldMoveToTrash) {
+                handler!!.trashMedia(result, it, true)
+            } else {
+                handler!!.deleteMedia(result, it)
+            }
         }
     }
 }
 
 @Composable
-fun BottomBarColumn(
-    currentMedia: Media?,
+fun <T : Media> BottomBarColumn(
+    currentMedia: T?,
     imageVector: ImageVector,
     title: String,
     enabled: Boolean = true,
     followTheme: Boolean = false,
-    onItemLongClick: ((Media) -> Unit)? = null,
-    onItemClick: (Media) -> Unit
+    onItemLongClick: ((T) -> Unit)? = null,
+    onItemClick: (T) -> Unit
 ) {
     val alpha = if (enabled) 1f else 0.5f
     val tintColor =
@@ -931,7 +1075,7 @@ fun BottomBarColumn(
             .defaultMinSize(
                 minWidth = 90.dp
             )
-            .height(80.dp)
+            .height(84.dp)
             .combinedClickable(
                 enabled = enabled,
                 onLongClick = {

@@ -207,7 +207,7 @@ fun SetupTypeSelectionScreen(
             SelectAlbumSheet(
                 sheetState = pickAlbumState,
                 ignoredAlbums = ignoredAlbums,
-                albumState = albumsState.value,
+                albumState = albumsState,
             ) { pickedAlbum ->
                 album = pickedAlbum
                 onAlbumChanged(pickedAlbum)

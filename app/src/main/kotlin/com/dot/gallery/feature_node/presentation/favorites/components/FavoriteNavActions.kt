@@ -13,19 +13,20 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.res.stringResource
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
-import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.model.MediaState
 
 @Composable
-fun FavoriteNavActions(
-    toggleFavorite: (ActivityResultLauncher<IntentSenderRequest>, List<Media>, Boolean) -> Unit,
-    mediaState: MediaState,
-    selectedMedia: SnapshotStateList<Media>,
+fun <T: Media> FavoriteNavActions(
+    toggleFavorite: (ActivityResultLauncher<IntentSenderRequest>, List<T>, Boolean) -> Unit,
+    mediaState: State<MediaState<T>>,
+    selectedMedia: SnapshotStateList<T>,
     selectionState: MutableState<Boolean>,
     result: ActivityResultLauncher<IntentSenderRequest>
 ) {
@@ -33,13 +34,13 @@ fun FavoriteNavActions(
     val removeSelectedTitle = stringResource(R.string.remove_selected)
     val title = if (selectionState.value) removeSelectedTitle else removeAllTitle
     AnimatedVisibility(
-        visible = mediaState.media.isNotEmpty(),
+        visible = mediaState.value.media.isNotEmpty(),
         enter = enterAnimation,
         exit = exitAnimation
     ) {
         TextButton(
             onClick = {
-                toggleFavorite(result, selectedMedia.ifEmpty { mediaState.media }, false)
+                toggleFavorite(result, selectedMedia.ifEmpty { mediaState.value.media }, false)
             }
         ) {
             Text(

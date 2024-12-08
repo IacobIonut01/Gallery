@@ -29,6 +29,10 @@ import androidx.compose.ui.zIndex
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
+import com.dot.gallery.core.Settings.Misc.rememberDefaultDateFormat
+import com.dot.gallery.core.Settings.Misc.rememberExtendedDateFormat
+import com.dot.gallery.core.Settings.Misc.rememberWeeklyDateFormat
+import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaItem
 import com.dot.gallery.feature_node.presentation.util.getDate
 import my.nanihadesuka.compose.InternalLazyVerticalGridScrollbar
@@ -38,9 +42,9 @@ import my.nanihadesuka.compose.ScrollbarSelectionMode
 import my.nanihadesuka.compose.ScrollbarSettings
 
 @Composable
-fun rememberScrollbarSettings(
-    headers: SnapshotStateList<MediaItem.Header>,
-) : ScrollbarSettings {
+fun <T : Media> rememberScrollbarSettings(
+    headers: SnapshotStateList<MediaItem.Header<T>>,
+): ScrollbarSettings {
     val enabled by remember(headers) { derivedStateOf { headers.size > 3 } }
     return remember(headers, enabled) {
         ScrollbarSettings.Default.copy(
@@ -58,11 +62,11 @@ fun rememberScrollbarSettings(
 }
 
 @Composable
-fun TimelineScroller(
+fun <T : Media> TimelineScroller(
     state: LazyGridState,
     modifier: Modifier = Modifier,
-    mappedData: SnapshotStateList<MediaItem>,
-    headers: SnapshotStateList<MediaItem.Header>,
+    mappedData: SnapshotStateList<MediaItem<T>>,
+    headers: SnapshotStateList<MediaItem.Header<T>>,
     settings: ScrollbarSettings = rememberScrollbarSettings(headers),
     content: @Composable () -> Unit
 ) {
@@ -76,27 +80,39 @@ fun TimelineScroller(
             indicatorContent = { index, isSelected ->
                 val stringToday = stringResource(R.string.header_today)
                 val stringYesterday = stringResource(R.string.header_yesterday)
+                val defaultDateFormat by rememberDefaultDateFormat()
+                val weeklyDateFormat by rememberWeeklyDateFormat()
+                val extendedDateFormat by rememberExtendedDateFormat()
+
                 val currentDate by remember(mappedData, index) {
                     derivedStateOf {
-                        mappedData.getOrNull((index + 1).coerceAtMost(mappedData.size - 1))?.let { item ->
-                            when (item) {
-                                is MediaItem.MediaViewItem -> item.media.timestamp.getDate(
-                                    stringToday = stringToday,
-                                    stringYesterday = stringYesterday
-                                )
-                                is MediaItem.Header -> item.text
+                        mappedData.getOrNull((index + 1).coerceAtMost(mappedData.size - 1))
+                            ?.let { item ->
+                                when (item) {
+                                    is MediaItem.MediaViewItem -> item.media.timestamp.getDate(
+                                        format = defaultDateFormat,
+                                        weeklyFormat = weeklyDateFormat,
+                                        extendedFormat = extendedDateFormat,
+                                        stringToday = stringToday,
+                                        stringYesterday = stringYesterday
+                                    )
+
+                                    is MediaItem.Header -> item.text
+                                }
                             }
-                        }
                     }
                 }
                 val isScrolling by remember(state) { derivedStateOf { state.isScrollInProgress } }
                 val offset by animateDpAsState(
-                    targetValue = if (isScrolling || isSelected) 24.dp else 72.dp, label = "thumbOffset"
+                    targetValue = if (isScrolling || isSelected) 24.dp else 72.dp,
+                    label = "thumbOffset"
                 )
                 Row(
-                    modifier = Modifier.offset {
-                        IntOffset(offset.roundToPx(), 0)
-                    }.zIndex(5f),
+                    modifier = Modifier
+                        .offset {
+                            IntOffset(offset.roundToPx(), 0)
+                        }
+                        .zIndex(5f),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {

@@ -40,10 +40,15 @@ import com.dot.gallery.core.Settings.Misc.rememberLastScreen
 import com.dot.gallery.core.Settings.Misc.rememberTimelineGroupByMonth
 import com.dot.gallery.core.presentation.components.util.OnLifecycleEvent
 import com.dot.gallery.core.presentation.components.util.permissionGranted
+import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.presentation.albums.AlbumsScreen
 import com.dot.gallery.feature_node.presentation.albums.AlbumsViewModel
+import com.dot.gallery.feature_node.presentation.classifier.CategoriesScreen
+import com.dot.gallery.feature_node.presentation.classifier.CategoryViewModel
+import com.dot.gallery.feature_node.presentation.classifier.CategoryViewScreen
 import com.dot.gallery.feature_node.presentation.common.ChanneledViewModel
 import com.dot.gallery.feature_node.presentation.common.MediaViewModel
+import com.dot.gallery.feature_node.presentation.dateformat.DateFormatScreen
 import com.dot.gallery.feature_node.presentation.favorites.FavoriteScreen
 import com.dot.gallery.feature_node.presentation.ignored.IgnoredScreen
 import com.dot.gallery.feature_node.presentation.ignored.setup.IgnoredSetup
@@ -315,7 +320,7 @@ fun NavigationComp(
                 vm.mediaFlow.collectAsStateWithLifecycle(context = Dispatchers.IO)
             } else timelineState
 
-            val vaultState = timelineViewModel.vaultsFlow.collectAsStateWithLifecycle(context = Dispatchers.IO)
+            val vaultState by timelineViewModel.vaultsFlow.collectAsStateWithLifecycle(context = Dispatchers.IO)
             MediaViewScreen(
                 navigateUp = navPipe::navigateUp,
                 toggleRotate = toggleRotate,
@@ -325,7 +330,8 @@ fun NavigationComp(
                 albumsState = albumsState,
                 handler = vm.handler,
                 addMedia = vm::addMedia,
-                vaultState = vaultState
+                vaultState = vaultState,
+                navigate = navPipe::navigate
             )
         }
         composable(
@@ -363,7 +369,7 @@ fun NavigationComp(
             val mediaState =
                 viewModel.mediaFlow.collectAsStateWithLifecycle(context = Dispatchers.IO)
 
-            val vaultState = timelineViewModel.vaultsFlow.collectAsStateWithLifecycle(context = Dispatchers.IO)
+            val vaultState by timelineViewModel.vaultsFlow.collectAsStateWithLifecycle(context = Dispatchers.IO)
             MediaViewScreen(
                 navigateUp = navPipe::navigateUp,
                 toggleRotate = toggleRotate,
@@ -374,7 +380,8 @@ fun NavigationComp(
                 albumsState = albumsState,
                 handler = viewModel.handler,
                 addMedia = viewModel::addMedia,
-                vaultState = vaultState
+                vaultState = vaultState,
+                navigate = navPipe::navigate
             )
         }
         composable(
@@ -404,7 +411,7 @@ fun NavigationComp(
                 if (query) viewModel.searchMediaState else viewModel.mediaFlow
             }.collectAsStateWithLifecycle(context = Dispatchers.IO)
 
-            val vaultState = timelineViewModel.vaultsFlow.collectAsStateWithLifecycle(context = Dispatchers.IO)
+            val vaultState by timelineViewModel.vaultsFlow.collectAsStateWithLifecycle(context = Dispatchers.IO)
 
             MediaViewScreen(
                 navigateUp = navPipe::navigateUp,
@@ -415,7 +422,8 @@ fun NavigationComp(
                 albumsState = albumsState,
                 handler = viewModel.handler,
                 addMedia = viewModel::addMedia,
-                vaultState = vaultState
+                vaultState = vaultState,
+                navigate = navPipe::navigate
             )
         }
         composable(
@@ -453,7 +461,8 @@ fun NavigationComp(
                     paddingValues = paddingValues,
                     toggleRotate = toggleRotate,
                     shouldSkipAuth = shouldSkipAuth,
-                    navigateUp = navPipe::navigateUp
+                    navigateUp = navPipe::navigateUp,
+                    navigate = navPipe::navigate
                 )
             }
         }
@@ -468,6 +477,83 @@ fun NavigationComp(
                 isScrolling = isScrolling,
                 searchBarActive = searchBarActive
             )
+        }
+
+        composable(
+            route = Screen.CategoriesScreen()
+        ) {
+            CategoriesScreen(
+                navigateUp = navPipe::navigateUp,
+                navigate = navPipe::navigate
+            )
+        }
+
+        composable(
+            route = Screen.CategoryViewScreen.category(),
+            arguments = listOf(
+                navArgument(name = "category") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                }
+            )
+        ) { backStackEntry ->
+            val category: String = remember(backStackEntry) {
+                backStackEntry.arguments?.getString("category") ?: ""
+            }
+            CategoryViewScreen(
+                navigateUp = navPipe::navigateUp,
+                navigate = navPipe::navigate,
+                toggleNavbar = navPipe::toggleNavbar,
+                category = category
+            )
+        }
+
+        composable(
+            route = Screen.MediaViewScreen.idAndCategory(),
+            arguments = listOf(
+                navArgument(name = "mediaId") {
+                    type = NavType.LongType
+                    defaultValue = -1
+                },
+                navArgument(name = "category") {
+                    type = NavType.StringType
+                    defaultValue = "null"
+                }
+            )
+        ) { backStackEntry ->
+            val mediaId: Long = remember(backStackEntry) {
+                backStackEntry.arguments?.getLong("mediaId") ?: -1
+            }
+            val category: String = remember(backStackEntry) {
+                backStackEntry.arguments?.getString("category", "null").toString()
+            }
+
+            val viewModel = hiltViewModel<CategoryViewModel>().apply {
+                this.category = category
+            }
+            val mediaState = viewModel.mediaByCategory
+                .collectAsStateWithLifecycle(MediaState())
+
+            val vaultState by timelineViewModel.vaultsFlow.collectAsStateWithLifecycle(context = Dispatchers.IO)
+
+            MediaViewScreen(
+                navigateUp = navPipe::navigateUp,
+                toggleRotate = toggleRotate,
+                paddingValues = paddingValues,
+                mediaId = mediaId,
+                mediaState = mediaState,
+                albumsState = albumsState,
+                handler = viewModel.handler,
+                addMedia = viewModel::addMedia,
+                vaultState = vaultState,
+                navigate = navPipe::navigate
+            )
+        }
+
+        composable(
+            route = Screen.DateFormatScreen()
+        ) {
+            DateFormatScreen(navigateUp = navPipe::navigateUp)
         }
 
     }
