@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,6 +21,9 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.rounded.ArrowDropDown
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -36,8 +40,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -46,6 +50,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -57,17 +62,20 @@ import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.Constants.cellsList
 import com.dot.gallery.core.Settings.Misc.rememberGridSize
 import com.dot.gallery.core.presentation.components.EmptyMedia
-import com.dot.gallery.feature_node.domain.model.EncryptedMediaState
-import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.core.presentation.components.ModalSheet
+import com.dot.gallery.feature_node.domain.model.Media.UriMedia
+import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.domain.model.Vault
 import com.dot.gallery.feature_node.domain.model.VaultState
+import com.dot.gallery.feature_node.presentation.common.components.MediaGridView
+import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
 import com.dot.gallery.feature_node.presentation.picker.PickerActivityContract
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import com.dot.gallery.feature_node.presentation.vault.components.DeleteVaultSheet
-import com.dot.gallery.feature_node.presentation.vault.components.EncryptedMediaGridView
 import com.dot.gallery.feature_node.presentation.vault.components.NewVaultSheet
 import com.dot.gallery.feature_node.presentation.vault.components.SelectVaultSheet
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -75,11 +83,12 @@ import kotlinx.coroutines.launch
 fun VaultDisplay(
     navigateUp: () -> Unit,
     navigate: (route: String) -> Unit,
-    mediaState: State<EncryptedMediaState>,
+    mediaState: State<MediaState<UriMedia>>,
     vaultState: VaultState,
     currentVault: MutableState<Vault?>,
     onCreateVaultClick: () -> Unit,
-    addMediaToVault: (Vault, Media) -> Unit,
+    addMediaToVault: (vault: Vault, media: UriMedia, onSuccess: () -> Unit, onFailed: (reason: String) -> Unit) -> Unit,
+    addMediaListToVault: (vault: Vault, mediaList: List<UriMedia>) -> Unit,
     setVault: (Vault) -> Unit,
     deleteVault: (Vault) -> Unit
 ) {
@@ -108,13 +117,20 @@ fun VaultDisplay(
         lastCellIndex = cellsList.indexOf(pinchState.currentCells)
     }
 
+    val scope = rememberCoroutineScope()
+    val bottomSheetState = rememberAppBottomSheetState()
+
+    var toAddMedia by remember { mutableStateOf<List<UriMedia>>(emptyList()) }
+
     val pickerLauncher = rememberLauncherForActivityResult(PickerActivityContract()) { mediaList ->
-        mediaList.forEach {
-            currentVault.value?.let { vault -> addMediaToVault(vault, it) }
+        scope.launch {
+            if (mediaList.isNotEmpty()) {
+                toAddMedia = mediaList
+                bottomSheetState.show()
+            }
         }
     }
 
-    val scope = rememberCoroutineScope()
     val newVaultSheetState = rememberAppBottomSheetState()
     val deleteVaultSheetState = rememberAppBottomSheetState()
 
@@ -123,6 +139,82 @@ fun VaultDisplay(
         if (vaultState.vaults.isNotEmpty()) return@LaunchedEffect
         navigateUp()
     }
+
+    var failedMedia by remember { mutableStateOf(emptyList<UriMedia>()) }
+    var progress by remember { mutableFloatStateOf(0f) }
+    var currentIndex by remember { mutableStateOf<Int?>(null) }
+    val text by rememberedDerivedState {
+        if (progress == 1f) {
+            if (failedMedia.isEmpty()) {
+                "Media added successfully"
+            } else {
+                "Failed to add ${failedMedia.size} media"
+            }
+        } else if (currentIndex != null) {
+            "Encrypting media $currentIndex/${toAddMedia.size}"
+        } else {
+            "Encrypting media..."
+        }
+    }
+
+    ModalSheet(
+        sheetState = bottomSheetState,
+        onDismissRequest = {
+            toAddMedia = emptyList()
+        },
+        title = text,
+        content = {
+            LaunchedEffect(toAddMedia) {
+                if (toAddMedia.isEmpty()) return@LaunchedEffect
+                progress = 0f
+                failedMedia = emptyList()
+                currentIndex = null
+                addMediaListToVault(currentVault.value!!, toAddMedia)
+                progress = 1f
+            }
+
+            LaunchedEffect(progress) {
+                if (progress == 1f) {
+                    scope.launch {
+                        bottomSheetState.hide()
+                    }
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .padding(32.dp)
+                    .align(Alignment.CenterHorizontally)
+                    .padding(bottom = 48.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    progress = {
+                        progress
+                    },
+                    strokeWidth = 4.dp,
+                    strokeCap = StrokeCap.Round,
+                    modifier = Modifier.size(128.dp),
+                )
+                Text(text = "${(progress * 100).roundToInt()}%")
+            }
+
+            Button(
+                onClick = {
+                    scope.launch {
+                        toAddMedia = emptyList()
+                        bottomSheetState.hide()
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                )
+            ) {
+                Text(text = stringResource(R.string.action_cancel))
+            }
+        }
+    )
 
     Scaffold(
         modifier = Modifier
@@ -161,7 +253,8 @@ fun VaultDisplay(
                             horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             Text(
-                                text = currentVault.value?.name ?: stringResource(R.string.unknown_vault)
+                                text = currentVault.value?.name
+                                    ?: stringResource(R.string.unknown_vault)
                             )
                             androidx.compose.animation.AnimatedVisibility(
                                 visible = vaultState.vaults.size > 1,
@@ -204,7 +297,7 @@ fun VaultDisplay(
         }
     ) {
         PinchZoomGridLayout(state = pinchState) {
-            EncryptedMediaGridView(
+            MediaGridView(
                 mediaState = mediaState,
                 allowSelection = true,
                 showSearchBar = false,

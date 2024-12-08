@@ -32,7 +32,7 @@
     <string name="empty_favorites_title">Vous n\'avez pas de favori</string>
     <string name="label">Nom</string>
     <string name="path">Emplacement</string>
-    <string name="iso">" • ISO"</string>
+    <string name="iso">ISO</string>
     <string name="kb">ko</string>
     <string name="mb">Mo</string>
     <string name="gb">Go</string>

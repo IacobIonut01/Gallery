@@ -32,7 +32,7 @@
     <string name="empty_favorites_title">Nemáte žádné oblíbené</string>
     <string name="label">Štítek</string>
     <string name="path">Cesta</string>
-    <string name="iso">" • ISO"</string>
+    <string name="iso">ISO</string>
     <string name="kb">KB</string>
     <string name="mb">MB</string>
     <string name="gb">GB</string>

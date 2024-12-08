@@ -7,7 +7,9 @@ package com.dot.gallery.feature_node.presentation.picker
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Resource
+import com.dot.gallery.core.Settings
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.domain.model.IgnoredAlbum
@@ -26,6 +28,16 @@ import javax.inject.Inject
 open class PickerViewModel @Inject constructor(
     private val repository: MediaRepository
 ) : ViewModel() {
+
+    private val defaultDateFormat = repository.getSetting(Settings.Misc.DEFAULT_DATE_FORMAT, Constants.DEFAULT_DATE_FORMAT)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, Constants.DEFAULT_DATE_FORMAT)
+
+    private val extendedDateFormat = repository.getSetting(Settings.Misc.EXTENDED_DATE_FORMAT, Constants.EXTENDED_DATE_FORMAT)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, Constants.EXTENDED_DATE_FORMAT)
+
+    private val weeklyDateFormat = repository.getSetting(Settings.Misc.WEEKLY_DATE_FORMAT, Constants.WEEKLY_DATE_FORMAT)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, Constants.WEEKLY_DATE_FORMAT)
+
     var allowedMedia: AllowedMedia = AllowedMedia.BOTH
     var albumId: Long = -1L
         set(value) {
@@ -48,7 +60,10 @@ open class PickerViewModel @Inject constructor(
                     albumId = value,
                     groupByMonth = false,
                     withMonthHeader = false,
-                    updateDatabase = {}
+                    updateDatabase = {},
+                    defaultDateFormat = defaultDateFormat.value,
+                    extendedDateFormat = extendedDateFormat.value,
+                    weeklyDateFormat = weeklyDateFormat.value
                 ).stateIn(viewModelScope, SharingStarted.WhileSubscribed(), MediaState())
             }
         }
@@ -71,7 +86,10 @@ open class PickerViewModel @Inject constructor(
             albumId = albumId,
             groupByMonth = false,
             withMonthHeader = false,
-            updateDatabase = {}
+            updateDatabase = {},
+            defaultDateFormat = defaultDateFormat.value,
+            extendedDateFormat = extendedDateFormat.value,
+            weeklyDateFormat = weeklyDateFormat.value
         ).stateIn(viewModelScope, SharingStarted.WhileSubscribed(), MediaState())
     }
 

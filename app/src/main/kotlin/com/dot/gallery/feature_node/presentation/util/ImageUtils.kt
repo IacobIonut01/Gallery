@@ -31,9 +31,9 @@ import androidx.core.content.FileProvider
 import androidx.core.net.toFile
 import androidx.exifinterface.media.ExifInterface
 import com.dot.gallery.BuildConfig
-import com.dot.gallery.feature_node.domain.model.DecryptedMedia
 import com.dot.gallery.feature_node.domain.model.InfoRow
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.util.getUri
 import com.dot.gallery.feature_node.presentation.mediaview.components.retrieveMetadata
 import java.io.IOException
 
@@ -73,7 +73,11 @@ fun resizeBitmap(bitmap: Bitmap, maxWidth: Int, maxHeight: Int): Bitmap {
 
 fun overlayBitmaps(currentImage: Bitmap, markupBitmap: Bitmap): Bitmap {
     // Create a new bitmap with the same dimensions as the current image
-    val resultBitmap = Bitmap.createBitmap(currentImage.width, currentImage.height, currentImage.config ?: Bitmap.Config.ARGB_8888)
+    val resultBitmap = Bitmap.createBitmap(
+        currentImage.width,
+        currentImage.height,
+        currentImage.config ?: Bitmap.Config.ARGB_8888
+    )
 
     // Create a canvas to draw on the new bitmap
     val canvas = Canvas(resultBitmap)
@@ -138,16 +142,22 @@ fun rememberActivityResult(onResultCanceled: () -> Unit = {}, onResultOk: () -> 
     )
 
 
-fun Media.writeRequest(
+fun <T: Media> T.writeRequest(
     contentResolver: ContentResolver,
-) = IntentSenderRequest.Builder(MediaStore.createWriteRequest(contentResolver, arrayListOf(uri))).build()
+) = IntentSenderRequest.Builder(MediaStore.createWriteRequest(contentResolver, arrayListOf(getUri())))
+    .build()
 
-fun List<Media>.writeRequest(
+fun <T: Media> List<T>.writeRequest(
     contentResolver: ContentResolver,
-) = IntentSenderRequest.Builder(MediaStore.createWriteRequest(contentResolver, map { it.uri })).build()
+) = IntentSenderRequest.Builder(MediaStore.createWriteRequest(contentResolver, map { it.getUri() }))
+    .build()
 
 @Composable
-fun rememberMediaInfo(media: Media, exifMetadata: ExifMetadata?, onLabelClick: () -> Unit): List<InfoRow> {
+fun <T: Media> rememberMediaInfo(
+    media: T,
+    exifMetadata: ExifMetadata?,
+    onLabelClick: () -> Unit
+): List<InfoRow> {
     val context = LocalContext.current
     return remember(media) {
         media.retrieveMetadata(context, exifMetadata, onLabelClick)
@@ -155,18 +165,22 @@ fun rememberMediaInfo(media: Media, exifMetadata: ExifMetadata?, onLabelClick: (
 }
 
 @Composable
-fun rememberExifMetadata(media: Media, exifInterface: ExifInterface?): ExifMetadata? {
+fun <T: Media> rememberExifMetadata(media: T, exifInterface: ExifInterface?): ExifMetadata? {
     return remember(media, exifInterface) {
         exifInterface?.let { ExifMetadata(it) }
     }
 }
 
 @Composable
-fun rememberExifInterface(media: Media, useDirectPath: Boolean = false): ExifInterface? {
+fun <T: Media> rememberExifInterface(media: T, useDirectPath: Boolean = false): ExifInterface? {
     val context = LocalContext.current
     return remember(media) {
-        if (useDirectPath) try { ExifInterface(media.path) } catch (_: IOException) { null }
-        else getExifInterface(context, media.uri)
+        if (useDirectPath) try {
+            ExifInterface(media.path)
+        } catch (_: IOException) {
+            null
+        }
+        else getExifInterface(context, media.getUri())
     }
 }
 
@@ -198,16 +212,23 @@ fun Context.uriToPath(uri: Uri?): String? {
     return path ?: FileUtils(this).getPath(uri)
 }
 
-fun Context.shareMedia(media: Media) {
-    ShareCompat
-        .IntentBuilder(this)
-        .setType(media.mimeType)
-        .addStream(media.uri)
-        .startChooser()
-}
+fun Uri.authorizedUri(context: Context): Uri = if (this.toString()
+        .startsWith("content://media/")
+) this else FileProvider.getUriForFile(
+    context,
+    BuildConfig.CONTENT_AUTHORITY,
+    this.toFile()
+)
 
-fun Context.shareMedia(media: DecryptedMedia) {
-    val uri = FileProvider.getUriForFile(this, BuildConfig.CONTENT_AUTHORITY, Uri.parse(media.uri).toFile())
+fun <T: Media> Context.shareMedia(media: T) {
+    val originalUri = media.getUri()
+    val uri = if (originalUri.toString()
+            .startsWith("content://media/")
+    ) originalUri else FileProvider.getUriForFile(
+        this,
+        BuildConfig.CONTENT_AUTHORITY,
+        originalUri.toFile()
+    )
 
     ShareCompat
         .IntentBuilder(this)
@@ -216,7 +237,7 @@ fun Context.shareMedia(media: DecryptedMedia) {
         .startChooser()
 }
 
-fun Context.shareMedia(mediaList: List<Media>) {
+fun <T: Media> Context.shareMedia(mediaList: List<T>) {
     val mimeTypes =
         if (mediaList.find { it.duration != null } != null) {
             if (mediaList.find { it.duration == null } != null) "video/*,image/*" else "video/*"
@@ -226,7 +247,7 @@ fun Context.shareMedia(mediaList: List<Media>) {
         .IntentBuilder(this)
         .setType(mimeTypes)
     mediaList.forEach {
-        shareCompat.addStream(it.uri)
+        shareCompat.addStream(it.getUri())
     }
     shareCompat.startChooser()
 }

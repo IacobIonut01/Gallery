@@ -15,10 +15,10 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.res.stringResource
 import com.dot.gallery.R
-import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.core.Constants.Target.TARGET_FAVORITES
+import com.dot.gallery.feature_node.domain.model.AlbumState
+import com.dot.gallery.feature_node.domain.model.Media.UriMedia
 import com.dot.gallery.feature_node.domain.model.MediaState
-import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
 import com.dot.gallery.feature_node.presentation.common.MediaScreen
 import com.dot.gallery.feature_node.presentation.favorites.components.EmptyFavorites
@@ -29,11 +29,11 @@ fun FavoriteScreen(
     paddingValues: PaddingValues,
     albumName: String = stringResource(id = R.string.favorites),
     handler: MediaHandleUseCase,
-    mediaState: State<MediaState>,
+    mediaState: State<MediaState<UriMedia>>,
     albumsState: State<AlbumState>,
     selectionState: MutableState<Boolean>,
-    selectedMedia: SnapshotStateList<Media>,
-    toggleFavorite: (ActivityResultLauncher<IntentSenderRequest>, List<Media>, Boolean) -> Unit,
+    selectedMedia: SnapshotStateList<UriMedia>,
+    toggleFavorite: (ActivityResultLauncher<IntentSenderRequest>, List<UriMedia>, Boolean) -> Unit,
     toggleSelection: (Int) -> Unit,
     navigate: (route: String) -> Unit,
     navigateUp: () -> Unit,
@@ -50,7 +50,7 @@ fun FavoriteScreen(
     toggleSelection = toggleSelection,
     navActionsContent = { _: MutableState<Boolean>,
                           result: ActivityResultLauncher<IntentSenderRequest> ->
-        FavoriteNavActions(toggleFavorite, mediaState.value, selectedMedia, selectionState, result)
+        FavoriteNavActions(toggleFavorite, mediaState, selectedMedia, selectionState, result)
     },
     emptyContent = { EmptyFavorites() },
     navigate = navigate,

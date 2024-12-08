@@ -24,15 +24,15 @@ class MediaHandleUseCase(
     private val context: Context
 ) {
 
-    suspend fun toggleFavorite(
+    suspend fun <T: Media> toggleFavorite(
         result: ActivityResultLauncher<IntentSenderRequest>,
-        mediaList: List<Media>,
+        mediaList: List<T>,
         favorite: Boolean
     ) = repository.toggleFavorite(result, mediaList, favorite)
 
-    suspend fun toggleFavorite(
+    suspend fun <T: Media> toggleFavorite(
         result: ActivityResultLauncher<IntentSenderRequest>,
-        mediaList: List<Media>
+        mediaList: List<T>
     ) {
         val turnToFavorite = mediaList.filter { it.favorite == 0 }
         val turnToNotFavorite = mediaList.filter { it.favorite == 1 }
@@ -44,9 +44,9 @@ class MediaHandleUseCase(
         }
     }
 
-    suspend fun trashMedia(
+    suspend fun <T: Media> trashMedia(
         result: ActivityResultLauncher<IntentSenderRequest>,
-        mediaList: List<Media>,
+        mediaList: List<T>,
         trash: Boolean = true
     ) = withContext(Dispatchers.Default) {
         val isTrashEnabled = getTrashEnabled(context).firstOrNull() ?: true
@@ -67,28 +67,28 @@ class MediaHandleUseCase(
         }
     }
 
-    suspend fun copyMedia(
-        from: Media,
+    suspend fun <T: Media> copyMedia(
+        from: T,
         path: String
     ): Boolean = repository.copyMedia(from, path)
 
-    suspend fun deleteMedia(
+    suspend fun <T: Media> deleteMedia(
         result: ActivityResultLauncher<IntentSenderRequest>,
-        mediaList: List<Media>
+        mediaList: List<T>
     ) = repository.deleteMedia(result, mediaList)
 
-    suspend fun renameMedia(
-        media: Media,
+    suspend fun <T: Media> renameMedia(
+        media: T,
         newName: String
     ): Boolean = repository.renameMedia(media, newName)
 
-    suspend fun moveMedia(
-        media: Media,
+    suspend fun <T: Media> moveMedia(
+        media: T,
         newPath: String
     ): Boolean = repository.moveMedia(media, newPath)
 
-    suspend fun updateMediaExif(
-        media: Media,
+    suspend fun <T: Media> updateMediaExif(
+        media: T,
         exifAttributes: ExifAttributes
     ): Boolean = repository.updateMediaExif(media, exifAttributes)
 
@@ -108,5 +108,11 @@ class MediaHandleUseCase(
         relativePath: String,
         displayName: String
     ) = repository.overrideImage(uri, bitmap, format, mimeType, relativePath, displayName)
+
+    suspend fun getCategoryForMediaId(mediaId: Long) = repository.getCategoryForMediaId(mediaId)
+
+    fun getClassifiedMediaCountAtCategory(category: String) = repository.getClassifiedMediaCountAtCategory(category)
+
+    fun getClassifiedMediaThumbnailByCategory(category: String) = repository.getClassifiedMediaThumbnailByCategory(category)
 
 }

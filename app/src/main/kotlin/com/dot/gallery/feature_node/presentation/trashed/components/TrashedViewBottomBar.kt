@@ -42,7 +42,7 @@ fun TrashedViewBottomBar(
     handler: MediaHandleUseCase,
     showUI: Boolean,
     paddingValues: PaddingValues,
-    currentMedia: Media?,
+    currentMedia: Media.UriMedia?,
     currentIndex: Int,
     onDeleteMedia: (Int) -> Unit,
 ) {

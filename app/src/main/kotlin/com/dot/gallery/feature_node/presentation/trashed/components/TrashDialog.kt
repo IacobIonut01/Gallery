@@ -9,7 +9,6 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
@@ -62,6 +61,7 @@ import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.presentation.components.DragHandle
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.util.getUri
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialogAction.DELETE
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialogAction.RESTORE
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialogAction.TRASH
@@ -73,16 +73,13 @@ import com.dot.gallery.ui.theme.Shapes
 import com.github.panpf.sketch.AsyncImage
 import kotlinx.coroutines.launch
 
-@OptIn(
-    ExperimentalMaterial3Api::class,
-    ExperimentalFoundationApi::class
-)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TrashDialog(
+fun <T: Media> TrashDialog(
     appBottomSheetState: AppBottomSheetState,
-    data: List<Media>,
+    data: List<T>,
     action: TrashDialogAction,
-    onConfirm: suspend (List<Media>) -> Unit
+    onConfirm: suspend (List<T>) -> Unit
 ) {
     val dataCopy = data.toMutableStateList()
     var confirmed by remember { mutableStateOf(false) }
@@ -290,7 +287,7 @@ fun TrashDialog(
                         ) {
                             AsyncImage(
                                 modifier = Modifier.fillMaxSize(),
-                                uri = it.uri.toString(),
+                                uri = it.getUri().toString(),
                                 contentDescription = it.label,
                                 contentScale = ContentScale.Crop
                             )

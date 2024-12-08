@@ -32,7 +32,7 @@
     <string name="empty_favorites_title">Du hast noch keine Favoriten</string>
     <string name="label">Dateiname</string>
     <string name="path">Pfad</string>
-    <string name="iso">" • ISO"</string>
+    <string name="iso">ISO</string>
     <string name="kb">KB</string>
     <string name="mb">MB</string>
     <string name="gb">GB</string>

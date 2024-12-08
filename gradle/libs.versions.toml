@@ -1,5 +1,5 @@
 [versions]
-adaptive = "1.1.0-alpha06"
+adaptive = "1.1.0-alpha07"
 agp = "8.6.1"
 aire = "0.15.3"
 avifCoderCoil = "1.8.0.1"
@@ -11,7 +11,6 @@ core = "1.11.1"
 coreSplashscreen = "1.0.1"
 fuzzywuzzy = "1.4.0"
 exifinterface = "1.3.7"
-gpuimage = "2.1.0"
 graphicsShapes = "1.0.1"
 jxlCoder = "2.1.10"
 kotlin = "2.0.21"
@@ -29,7 +28,7 @@ hiltCommon = "1.2.0"
 material = "1.12.0"
 material3 = "1.3.1"
 media3Exoplayer = "1.4.1"
-navigation-runtime-ktx = "2.8.3"
+navigation-runtime-ktx = "2.8.4"
 pinchzoomgrid = "0.0.5"
 profileinstaller = "1.4.1"
 room = "2.6.1"
@@ -37,8 +36,11 @@ accompanist = "0.36.0"
 datastore = "1.1.1"
 securityCrypto = "1.1.0-alpha06"
 sketch = "4.0.0-beta02"
+tensorflowLite = "2.16.1"
+tensorflowLiteTaskVision = "0.4.4"
+tensorflowLiteGpu = "2.16.1"
 uiautomator = "2.3.0"
-composealpha = "1.8.0-alpha05"
+composealpha = "1.8.0-alpha06"
 kotlinxSerializationJson = "1.7.3"
 workRuntimeKtx = "2.10.0"
 zoomimageViewSketch = "1.1.0-rc01"
@@ -142,6 +144,9 @@ androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version
 espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso-core" }
 
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+tensorflow-lite-gpu = { module = "org.tensorflow:tensorflow-lite-gpu", version.ref = "tensorflowLiteGpu" }
+tensorflow-lite-task-vision = { module = "org.tensorflow:tensorflow-lite-task-vision", version.ref = "tensorflowLiteTaskVision" }
+tensorflow-lite = { module = "org.tensorflow:tensorflow-lite", version.ref = "tensorflowLite" }
 zoomimage-sketch = { module = "io.github.panpf.zoomimage:zoomimage-compose-sketch4", version.ref = "zoomimageViewSketch" }
 
 [plugins]

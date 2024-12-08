@@ -44,7 +44,8 @@ open class EncryptedBitmapFactoryDecoder(
         ): Decoder? {
             val mimeType = requestContext.request.extras?.get("realMimeType") as String? ?: return null
             val dataSource = fetchResult.dataSource as? FileDataSource ?: return null
-            return if (dataSource.path.toString().contains(BuildConfig.APPLICATION_ID) && mimeType.startsWith("image"))
+            val path = dataSource.getFile().path
+            return if (path.toString().contains(BuildConfig.APPLICATION_ID) && mimeType.startsWith("image"))
                 EncryptedBitmapFactoryDecoder(requestContext, dataSource)
             else null
         }

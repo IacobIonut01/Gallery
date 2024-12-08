@@ -7,9 +7,9 @@ package com.dot.gallery.feature_node.presentation.mediaview.components.video
 
 import android.app.Activity
 import android.media.MediaMetadataRetriever
+import android.net.Uri
 import android.view.WindowManager
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.fillMaxSize
@@ -39,20 +39,23 @@ import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.Settings.Misc.rememberAudioFocus
 import com.dot.gallery.core.presentation.components.util.swipe
+import com.dot.gallery.feature_node.data.data_source.KeychainHolder
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.util.getUri
+import com.dot.gallery.feature_node.domain.util.isEncrypted
 import io.sanghun.compose.video.RepeatMode
 import io.sanghun.compose.video.uri.VideoPlayerMediaItem
 import kotlinx.coroutines.delay
+import java.io.File
 import kotlin.time.Duration.Companion.seconds
 import io.sanghun.compose.video.VideoPlayer as SanghunComposeVideoVideoPlayer
 
 @Stable
-@OptIn(ExperimentalFoundationApi::class)
 @androidx.annotation.OptIn(UnstableApi::class)
 @NonRestartableComposable
 @Composable
-fun VideoPlayer(
-    media: Media,
+fun <T: Media> VideoPlayer(
+    media: T,
     playWhenReady: Boolean,
     videoController: @Composable (ExoPlayer, MutableState<Boolean>, MutableLongState, Long, Int, Float) -> Unit,
     onItemClick: () -> Unit,
@@ -64,6 +67,26 @@ fun VideoPlayer(
     val isPlaying = rememberSaveable(playWhenReady) { mutableStateOf(playWhenReady) }
     var lastPlayingState by rememberSaveable(isPlaying.value) { mutableStateOf(isPlaying.value) }
     val context = LocalContext.current
+    val keychainHolder = remember {
+        KeychainHolder(context)
+    }
+    var decryptedVideoFile: File? = remember(media) {
+        if (media.isEncrypted) {
+            createDecryptedVideoFile(keychainHolder, media)
+        } else {
+            null
+        }
+    }
+    if (media.isEncrypted) {
+        DisposableEffect(Unit) {
+            if (decryptedVideoFile?.exists() == false) {
+                decryptedVideoFile = createDecryptedVideoFile(keychainHolder, media)
+            }
+            onDispose {
+                decryptedVideoFile?.delete()
+            }
+        }
+    }
     DisposableEffect(Unit) {
         val activity = context as? Activity
         activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -74,7 +97,13 @@ fun VideoPlayer(
 
     val metadata = remember(media) {
         MediaMetadataRetriever().apply {
-            setDataSource(context, media.uri)
+            if (media.isEncrypted) {
+                decryptedVideoFile!!.inputStream().use {
+                    setDataSource(it.fd)
+                }
+            } else {
+                setDataSource(context, media.getUri())
+            }
         }
     }
     val frameRate = remember(metadata) {
@@ -117,12 +146,21 @@ fun VideoPlayer(
         val audioFocus by rememberAudioFocus()
         SanghunComposeVideoVideoPlayer(
             mediaItems = remember(media) {
-                listOf(
-                    VideoPlayerMediaItem.StorageMediaItem(
-                        storageUri = media.uri,
-                        mimeType = media.mimeType
+                if (media.isEncrypted) {
+                    listOf(
+                        VideoPlayerMediaItem.StorageMediaItem(
+                            storageUri = Uri.fromFile(decryptedVideoFile),
+                            mimeType = media.mimeType
+                        )
                     )
-                )
+                } else {
+                    listOf(
+                        VideoPlayerMediaItem.StorageMediaItem(
+                            storageUri = media.getUri(),
+                            mimeType = media.mimeType
+                        )
+                    )
+                }
             },
             handleLifecycle = true,
             autoPlay = playWhenReady,

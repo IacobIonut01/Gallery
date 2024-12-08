@@ -8,18 +8,16 @@ package com.dot.gallery.feature_node.presentation.settings
 import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -29,10 +27,12 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -51,11 +51,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.DialogProperties
 import com.dot.gallery.R
 import com.dot.gallery.core.Position
 import com.dot.gallery.core.Settings
@@ -85,6 +85,7 @@ fun SettingsScreen(
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     val showLaunchScreenDialog = rememberSaveable { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val settingsList = rememberSettingsList(navigate, showLaunchScreenDialog)
 
     Scaffold(
@@ -121,11 +122,11 @@ fun SettingsScreen(
         }
 
         if (showLaunchScreenDialog.value) {
-            BasicAlertDialog(
+            ModalBottomSheet(
                 onDismissRequest = { showLaunchScreenDialog.value = false },
-                properties = DialogProperties(
-                    decorFitsSystemWindows = false
-                )
+                contentWindowInsets = {
+                    WindowInsets(bottom = WindowInsets.systemBars.getBottom(LocalDensity.current))
+                }
             ) {
                 Column(
                     modifier = Modifier
@@ -134,7 +135,8 @@ fun SettingsScreen(
                             shape = Shapes.extraLarge
                         )
                         .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     CompositionLocalProvider(
                         value = LocalTextStyle.provides(
@@ -146,93 +148,75 @@ fun SettingsScreen(
                         val scope = rememberCoroutineScope()
                         Text(
                             text = stringResource(R.string.set_default_launch_screen),
-                            modifier = Modifier.padding(vertical = 16.dp),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Medium
                         )
-                        Column(
-                            modifier = Modifier.verticalScroll(rememberScrollState())
-                        ) {
-                            var lastScreen by rememberLastScreen()
-                            var forcedLastScreen by rememberForcedLastScreen()
-                            ListItem(
-                                modifier = Modifier
-                                    .clip(Shapes.large)
-                                    .clickable {
-                                        scope.launch {
-                                            forcedLastScreen = false
-                                            lastScreen = Screen.TimelineScreen()
-                                        }
-                                    },
-                                colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                                headlineContent = {
-                                    Text(text = stringResource(R.string.use_last_opened_screen))
+
+                        var lastScreen by rememberLastScreen()
+                        var forcedLastScreen by rememberForcedLastScreen()
+                        val lastOpenScreenString = stringResource(R.string.use_last_opened_screen)
+                        val timelineOpenScreenString = stringResource(R.string.launch_on_timeline)
+                        val albumsOpenScreenString = stringResource(R.string.launch_on_albums)
+                        val libraryOpenScreenString = stringResource(R.string.launch_on_library)
+
+                        val openItems = remember(lastScreen, forcedLastScreen) {
+                            listOf(
+                                Triple(lastOpenScreenString, !forcedLastScreen) {
+                                    forcedLastScreen = false
+                                    lastScreen = Screen.TimelineScreen()
                                 },
-                                trailingContent = {
-                                    RadioButton(
-                                        selected = !forcedLastScreen,
-                                        onClick = {
-                                            scope.launch {
-                                                forcedLastScreen = false
-                                                lastScreen = Screen.TimelineScreen()
-                                            }
-                                        }
-                                    )
-                                }
-                            )
-                            ListItem(
-                                modifier = Modifier
-                                    .clip(Shapes.large)
-                                    .clickable {
-                                        scope.launch {
-                                            forcedLastScreen = true
-                                            lastScreen = Screen.TimelineScreen()
-                                        }
-                                    },
-                                colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                                headlineContent = {
-                                    Text(text = stringResource(R.string.timeline))
+                                Triple(
+                                    timelineOpenScreenString,
+                                    forcedLastScreen && lastScreen == Screen.TimelineScreen()
+                                ) {
+                                    forcedLastScreen = true
+                                    lastScreen = Screen.TimelineScreen()
                                 },
-                                trailingContent = {
-                                    RadioButton(
-                                        selected = forcedLastScreen && lastScreen == Screen.TimelineScreen(),
-                                        onClick = {
-                                            scope.launch {
-                                                forcedLastScreen = true
-                                                lastScreen = Screen.TimelineScreen()
-                                            }
-                                        }
-                                    )
-                                }
-                            )
-                            ListItem(
-                                modifier = Modifier
-                                    .clip(Shapes.large)
-                                    .clickable {
-                                        scope.launch {
-                                            forcedLastScreen = true
-                                            lastScreen = Screen.AlbumsScreen()
-                                        }
-                                    },
-                                colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                                headlineContent = {
-                                    Text(text = stringResource(R.string.albums))
+                                Triple(
+                                    albumsOpenScreenString,
+                                    forcedLastScreen && lastScreen == Screen.AlbumsScreen()
+                                ) {
+                                    forcedLastScreen = true
+                                    lastScreen = Screen.AlbumsScreen()
                                 },
-                                trailingContent = {
-                                    RadioButton(
-                                        selected = forcedLastScreen && lastScreen == Screen.AlbumsScreen(),
-                                        onClick = {
-                                            scope.launch {
-                                                forcedLastScreen = true
-                                                lastScreen = Screen.AlbumsScreen()
-                                            }
-                                        }
-                                    )
+                                Triple(
+                                    libraryOpenScreenString,
+                                    forcedLastScreen && lastScreen == Screen.LibraryScreen()
+                                ) {
+                                    forcedLastScreen = true
+                                    lastScreen = Screen.LibraryScreen()
                                 }
                             )
                         }
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Button(onClick = { showLaunchScreenDialog.value = false }) {
+
+                        LazyColumn {
+                            items(
+                                items = openItems,
+                                key = { it.first }
+                            ) { (title, enabled, onClick) ->
+                                ListItem(
+                                    modifier = Modifier
+                                        .clip(Shapes.large)
+                                        .clickable(onClick = onClick),
+                                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                                    headlineContent = {
+                                        Text(text = title)
+                                    },
+                                    trailingContent = {
+                                        RadioButton(
+                                            selected = enabled,
+                                            onClick = onClick
+                                        )
+                                    }
+                                )
+                            }
+                        }
+                        Button(onClick = {
+                            scope.launch {
+                                sheetState.hide()
+                                showLaunchScreenDialog.value = false
+                            }
+                        }) {
                             Text(
                                 text = stringResource(R.string.done),
                                 color = MaterialTheme.colorScheme.onPrimary
@@ -243,9 +227,9 @@ fun SettingsScreen(
             }
         }
     }
-
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun rememberSettingsList(
     navigate: (String) -> Unit,
@@ -327,7 +311,7 @@ fun rememberSettingsList(
                     context.restartApplication()
                 }
             },
-            screenPosition = Position.Top
+            screenPosition = Position.Middle
         )
     }
 
@@ -370,10 +354,11 @@ fun rememberSettingsList(
     val forcedLastScreen by rememberForcedLastScreen()
     val summary = remember(lastScreen, forcedLastScreen) {
         if (forcedLastScreen) {
-            if (lastScreen == Screen.TimelineScreen())
-                context.getString(R.string.launch_on_timeline)
-            else
-                context.getString(R.string.launch_on_albums)
+            when (lastScreen) {
+                Screen.TimelineScreen() -> context.getString(R.string.launch_on_timeline)
+                Screen.AlbumsScreen() -> context.getString(R.string.launch_on_albums)
+                else -> context.getString(R.string.launch_on_library)
+            }
         } else {
             context.getString(R.string.launch_auto)
         }
@@ -450,6 +435,26 @@ fun rememberSettingsList(
         )
     }
 
+    var noClassification by Settings.Misc.rememberNoClassification()
+    val noClassificationPref = remember(noClassification) {
+        SettingsEntity.SwitchPreference(
+            title = context.getString(R.string.no_classification),
+            summary = context.getString(R.string.no_classification_summary),
+            isChecked = noClassification,
+            onCheck = { noClassification = it },
+            screenPosition = Position.Alone
+        )
+    }
+
+    val dateHeaderPref = remember {
+        SettingsEntity.Preference(
+            title = context.getString(R.string.date_header),
+            summary = context.getString(R.string.date_header_summary),
+            onClick = { navigate(Screen.DateFormatScreen()) },
+            screenPosition = Position.Top
+        )
+    }
+
     return remember(
         arrayOf(
             forceTheme,
@@ -482,6 +487,7 @@ fun rememberSettingsList(
             add(SettingsEntity.Header(title = context.getString(R.string.customization)))
             /** Customization Section Start **/
             /** Customization Section Start **/
+            add(dateHeaderPref)
             add(groupByMonthPref)
             add(allowBlurPref)
             add(hideTimelineOnAlbumPref)
@@ -497,6 +503,8 @@ fun rememberSettingsList(
             add(showOldNavbarPref)
             add(autoHideSearch)
             add(autoHideNavigation)
+            add(SettingsEntity.Header(title = context.getString(R.string.ai_category)))
+            add(noClassificationPref)
             /** ********************* **/
             /** ********************* **/
 

@@ -32,7 +32,7 @@
     <string name="empty_favorites_title">Du har inga favoriter</string>
     <string name="label">Etikett</string>
     <string name="path">Sökväg</string>
-    <string name="iso">" • ISO"</string>
+    <string name="iso">ISO</string>
     <string name="kb">KB</string>
     <string name="mb">MB</string>
     <string name="gb">GB</string>

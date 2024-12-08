@@ -32,7 +32,7 @@
     <string name="empty_favorites_title">Nie masz nic ulubionego</string>
     <string name="label">Etykieta</string>
     <string name="path">Ścieżka</string>
-    <string name="iso">" • ISO"</string>
+    <string name="iso">ISO</string>
     <string name="kb">KB</string>
     <string name="mb">MB</string>
     <string name="gb">GB</string>

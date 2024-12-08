@@ -32,7 +32,7 @@
     <string name="empty_favorites_title">Nu ai favoriți</string>
     <string name="label">Etichetă</string>
     <string name="path">Calea</string>
-    <string name="iso">" • ISO"</string>
+    <string name="iso">ISO</string>
     <string name="kb">KB</string>
     <string name="mb">MB</string>
     <string name="gb">GB</string>

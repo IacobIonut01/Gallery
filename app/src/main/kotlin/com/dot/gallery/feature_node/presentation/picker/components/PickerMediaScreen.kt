@@ -24,10 +24,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
-import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.core.presentation.components.MediaItemHeader
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaItem
+import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.domain.model.isHeaderKey
 import com.dot.gallery.feature_node.presentation.common.components.MediaImage
 import com.dot.gallery.feature_node.presentation.util.rememberFeedbackManager
@@ -36,9 +36,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 @Composable
-fun PickerMediaScreen(
-    mediaState: StateFlow<MediaState>,
-    selectedMedia: SnapshotStateList<Media>,
+fun <T: Media> PickerMediaScreen(
+    mediaState: StateFlow<MediaState<T>>,
+    selectedMedia: SnapshotStateList<T>,
     allowSelection: Boolean,
 ) {
     val scope = rememberCoroutineScope()

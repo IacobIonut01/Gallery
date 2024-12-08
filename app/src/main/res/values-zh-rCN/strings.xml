@@ -32,7 +32,7 @@
     <string name="empty_favorites_title">没有收藏的图片和视频</string>
     <string name="label">文件名</string>
     <string name="path">路径</string>
-    <string name="iso">" • ISO"</string>
+    <string name="iso">ISO</string>
     <string name="kb">KB</string>
     <string name="mb">MB</string>
     <string name="gb">GB</string>

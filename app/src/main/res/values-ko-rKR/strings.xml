@@ -32,7 +32,7 @@
     <string name="empty_favorites_title">즐겨찾기가 없습니다</string>
     <string name="label">라벨</string>
     <string name="path">경로</string>
-    <string name="iso">" • ISO"</string>
+    <string name="iso">ISO</string>
     <string name="kb">KB</string>
     <string name="mb">MB</string>
     <string name="gb">GB</string>

@@ -20,7 +20,5 @@ fun printError(message: String) {
 }
 
 fun printWarning(message: String) {
-    if (BuildConfig.BUILD_TYPE != "release") {
-        Log.w("GalleryInfo", message)
-    }
+    Log.w("GalleryInfo", message)
 }

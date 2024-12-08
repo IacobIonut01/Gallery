@@ -16,6 +16,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -40,7 +41,7 @@ import kotlinx.coroutines.launch
 fun SelectAlbumSheet(
     sheetState: AppBottomSheetState,
     ignoredAlbums: List<IgnoredAlbum>,
-    albumState: AlbumState,
+    albumState: State<AlbumState>,
     onSelect: (Album) -> Unit
 ) {
     val albumSize by rememberAlbumGridSize()
@@ -85,7 +86,7 @@ fun SelectAlbumSheet(
                     )
                 ) {
                     items(
-                        items = albumState.albums,
+                        items = albumState.value.albums,
                         key = { item -> item.toString() }
                     ) { item ->
                         AlbumComponent(

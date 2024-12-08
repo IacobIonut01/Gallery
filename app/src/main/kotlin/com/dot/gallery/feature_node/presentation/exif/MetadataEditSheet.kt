@@ -37,10 +37,10 @@ import androidx.compose.ui.unit.dp
 import com.dot.gallery.R
 import com.dot.gallery.core.presentation.components.DragHandle
 import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.model.isImage
-import com.dot.gallery.feature_node.domain.model.isVideo
 import com.dot.gallery.feature_node.domain.model.rememberExifAttributes
 import com.dot.gallery.feature_node.domain.use_case.MediaHandleUseCase
+import com.dot.gallery.feature_node.domain.util.isImage
+import com.dot.gallery.feature_node.domain.util.isVideo
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.rememberActivityResult
 import com.dot.gallery.feature_node.presentation.util.rememberExifInterface
@@ -52,9 +52,9 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MetadataEditSheet(
+fun <T: Media> MetadataEditSheet(
     state: AppBottomSheetState,
-    media: Media,
+    media: T,
     handle: MediaHandleUseCase
 ) {
     val scope = rememberCoroutineScope { Dispatchers.IO }

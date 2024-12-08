@@ -42,9 +42,9 @@ import androidx.compose.ui.unit.dp
 import com.dokar.pinchzoomgrid.PinchZoomGridScope
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
-import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.core.Settings.Misc.rememberAutoHideSearchBar
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.domain.model.isHeaderKey
 import com.dot.gallery.feature_node.domain.model.isIgnoredKey
 import com.dot.gallery.feature_node.presentation.util.roundDpToPx
@@ -54,14 +54,14 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PinchZoomGridScope.MediaGridView(
-    mediaState: State<MediaState>,
+fun <T : Media> PinchZoomGridScope.MediaGridView(
+    mediaState: State<MediaState<T>>,
     paddingValues: PaddingValues = PaddingValues(0.dp),
     searchBarPaddingTop: Dp = 0.dp,
     showSearchBar: Boolean = remember { false },
     allowSelection: Boolean = remember { false },
     selectionState: MutableState<Boolean> = remember { mutableStateOf(false) },
-    selectedMedia: SnapshotStateList<Media> = remember { mutableStateListOf() },
+    selectedMedia: SnapshotStateList<T> = remember { mutableStateListOf() },
     toggleSelection: @DisallowComposableCalls (Int) -> Unit = {},
     canScroll: Boolean = true,
     allowHeaders: Boolean = true,
@@ -70,9 +70,9 @@ fun PinchZoomGridScope.MediaGridView(
     aboveGridContent: @Composable (() -> Unit)? = null,
     isScrolling: MutableState<Boolean>,
     emptyContent: @Composable () -> Unit,
-    onMediaClick: @DisallowComposableCalls (media: Media) -> Unit = {},
+    onMediaClick: @DisallowComposableCalls (media: T) -> Unit = {},
 ) {
-    val mappedData by remember(mediaState.value, showMonthlyHeader) {
+    val mappedData by remember(mediaState, showMonthlyHeader) {
         derivedStateOf {
             (if (showMonthlyHeader) mediaState.value.mappedMediaWithMonthly
             else mediaState.value.mappedMedia).toMutableStateList()
@@ -80,7 +80,7 @@ fun PinchZoomGridScope.MediaGridView(
     }
 
     LaunchedEffect(showMonthlyHeader, mediaState.value) {
-        snapshotFlow { mediaState.value }
+        snapshotFlow { mediaState }
             .distinctUntilChanged()
             .collectLatest {
                 mappedData.clear()
@@ -117,11 +117,12 @@ fun PinchZoomGridScope.MediaGridView(
     AnimatedVisibility(
         visible = enableStickyHeaders
     ) {
+        val headers by remember(mediaState.value) {
+            derivedStateOf { mediaState.value.headers.toMutableStateList() }
+        }
         val stickyHeaderItem by rememberStickyHeaderItem(
             gridState = gridState,
-            headers = remember(mediaState.value) {
-                mediaState.value.headers.toMutableStateList()
-            },
+            headers = headers,
             mappedData = mappedData
         )
 
@@ -154,7 +155,7 @@ fun PinchZoomGridScope.MediaGridView(
             toolbarOffset = { if (showSearchBar) 0 else 64.roundDpToPx(density) + searchBarHeightPx },
             stickyHeader = {
                 val show by remember(
-                    mediaState.value,
+                    mediaState,
                     stickyHeaderItem
                 ) {
                     derivedStateOf {
@@ -194,7 +195,6 @@ fun PinchZoomGridScope.MediaGridView(
         ) {
             MediaGrid(
                 gridState = gridState,
-                gridCells = gridCells,
                 mediaState = mediaState,
                 mappedData = mappedData,
                 paddingValues = paddingValues,
@@ -216,7 +216,6 @@ fun PinchZoomGridScope.MediaGridView(
     ) {
         MediaGrid(
             gridState = gridState,
-            gridCells = gridCells,
             mediaState = mediaState,
             mappedData = mappedData,
             paddingValues = paddingValues,

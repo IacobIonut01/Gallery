@@ -5,6 +5,7 @@ import androidx.compose.runtime.Immutable
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.dot.gallery.feature_node.domain.util.volume
 import kotlinx.parcelize.Parcelize
 
 @Entity(tableName = "blacklist")

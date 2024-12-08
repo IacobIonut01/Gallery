@@ -8,21 +8,25 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.WorkManager
+import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Resource
-import com.dot.gallery.feature_node.domain.model.DecryptedMedia
-import com.dot.gallery.feature_node.domain.model.EncryptedMediaState
-import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.core.Settings
+import com.dot.gallery.feature_node.domain.model.Media.UriMedia
+import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.domain.model.Vault
 import com.dot.gallery.feature_node.domain.model.VaultState
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
-import com.dot.gallery.feature_node.presentation.util.collectEncryptedMedia
+import com.dot.gallery.feature_node.presentation.util.collectMedia
 import com.dot.gallery.feature_node.presentation.util.printError
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.singleOrNull
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.IOException
@@ -31,16 +35,26 @@ import javax.inject.Inject
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @HiltViewModel
 open class VaultViewModel @Inject constructor(
-    private val repository: MediaRepository
+    private val repository: MediaRepository,
+    private val workManager: WorkManager
 ) : ViewModel() {
 
     var currentVault = mutableStateOf<Vault?>(null)
 
-    private val _mediaState = MutableStateFlow(EncryptedMediaState())
+    private val _mediaState = MutableStateFlow(MediaState<UriMedia>())
     val mediaState = _mediaState.asStateFlow()
 
     private val _vaultState = MutableStateFlow(VaultState())
     val vaultState = _vaultState.asStateFlow()
+
+    private val defaultDateFormat = repository.getSetting(Settings.Misc.DEFAULT_DATE_FORMAT, Constants.DEFAULT_DATE_FORMAT)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, Constants.DEFAULT_DATE_FORMAT)
+
+    private val extendedDateFormat = repository.getSetting(Settings.Misc.EXTENDED_DATE_FORMAT, Constants.EXTENDED_DATE_FORMAT)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, Constants.EXTENDED_DATE_FORMAT)
+
+    private val weeklyDateFormat = repository.getSetting(Settings.Misc.WEEKLY_DATE_FORMAT, Constants.WEEKLY_DATE_FORMAT)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, Constants.WEEKLY_DATE_FORMAT)
 
     @SuppressLint("ComposableNaming")
     @Composable
@@ -52,7 +66,7 @@ open class VaultViewModel @Inject constructor(
 
     fun setVault(vault: Vault?, onFailed: (reason: String) -> Unit = {}, onSuccess: () -> Unit) {
         if (vault != currentVault.value) {
-            _mediaState.value = EncryptedMediaState()
+            _mediaState.value = MediaState()
         }
         viewModelScope.launch(Dispatchers.IO) {
             val newVaultState = repository.getVaults().singleOrNull().mapToVaultState()
@@ -102,18 +116,27 @@ open class VaultViewModel @Inject constructor(
         }
     }
 
-    fun addMedia(vault: Vault, media: Media) {
+    fun addMedia(vault: Vault, mediaList: List<UriMedia>) {
+        workManager.scheduleEncryptingMedia(vault, mediaList)
+    }
+
+    fun addMedia(vault: Vault, media: UriMedia, onSuccess: () -> Unit, onFailed: (reason: String) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                repository.addMedia(vault, media)
-                fetchVaultsAndMedia(vault)
+                if (repository.addMedia(vault, media)) {
+                    fetchVaultsAndMedia(vault)
+                    onSuccess()
+                } else {
+                    onFailed("Failed to add media")
+                }
             } catch (e: IOException) {
                 e.printStackTrace()
+                onFailed("Failed to add media")
             }
         }
     }
 
-    fun restoreMedia(vault: Vault, media: DecryptedMedia, onSuccess: () -> Unit) {
+    fun restoreMedia(vault: Vault, media: UriMedia, onSuccess: () -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.restoreMedia(vault, media)
             onSuccess()
@@ -121,7 +144,7 @@ open class VaultViewModel @Inject constructor(
         }
     }
 
-    fun deleteMedia(vault: Vault, media: DecryptedMedia, onSuccess: () -> Unit) {
+    fun deleteMedia(vault: Vault, media: UriMedia, onSuccess: () -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.deleteEncryptedMedia(vault, media)
             onSuccess()
@@ -154,7 +177,16 @@ open class VaultViewModel @Inject constructor(
         vault?.let {
             viewModelScope.launch(Dispatchers.IO) {
                 repository.getEncryptedMedia(vault).collectLatest {
-                    _mediaState.collectEncryptedMedia(data = it.data ?: emptyList())
+                    _mediaState.collectMedia(
+                        data = it.data ?: emptyList(),
+                        error = it.message ?: "",
+                        albumId = -1,
+                        groupByMonth = false,
+                        withMonthHeader = true,
+                        defaultDateFormat = defaultDateFormat.value,
+                        extendedDateFormat = extendedDateFormat.value,
+                        weeklyDateFormat = weeklyDateFormat.value
+                    )
                 }
             }
         }
@@ -168,7 +200,7 @@ open class VaultViewModel @Inject constructor(
     }
 
     override fun onCleared() {
-        _mediaState.value = EncryptedMediaState()
+        _mediaState.value = MediaState()
         super.onCleared()
     }
 }

@@ -10,44 +10,161 @@ import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Parcelable
 import android.webkit.MimeTypeMap
-import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.Stable
 import androidx.room.Entity
 import com.dot.gallery.core.Constants
+import com.dot.gallery.feature_node.domain.util.UriSerializer
 import com.dot.gallery.feature_node.presentation.util.getDate
 import kotlinx.parcelize.Parcelize
+import kotlinx.serialization.Serializable
 import java.io.File
 import kotlin.random.Random
 
-@Immutable
-@Parcelize
-@Entity(tableName = "media", primaryKeys = ["id"])
-data class Media(
-    val id: Long = 0,
-    val label: String,
-    val uri: Uri,
-    val path: String,
-    val relativePath: String,
-    val albumID: Long,
-    val albumLabel: String,
-    val timestamp: Long,
-    val expiryTimestamp: Long? = null,
-    val takenTimestamp: Long? = null,
-    val fullDate: String,
-    val mimeType: String,
-    val favorite: Int,
-    val trashed: Int,
-    val size: Long,
-    val duration: String? = null,
-) : Parcelable {
 
-    @Stable
+@Serializable
+@Parcelize
+sealed class Media : Parcelable, java.io.Serializable {
+
+    abstract val id: Long
+    abstract val label: String
+    abstract val path: String
+    abstract val relativePath: String
+    abstract val albumID: Long
+    abstract val albumLabel: String
+    abstract val timestamp: Long
+    abstract val expiryTimestamp: Long?
+    abstract val takenTimestamp: Long?
+    abstract val fullDate: String
+    abstract val mimeType: String
+    abstract val favorite: Int
+    abstract val trashed: Int
+    abstract val size: Long
+    abstract val duration: String?
+
+    val definedTimestamp: Long
+        get() = takenTimestamp?.div(1000) ?: timestamp
+
     override fun toString(): String {
-        return "$id, $path, $fullDate, $mimeType, favorite=$favorite, $timestamp"
+        return "$id, $path, $fullDate, $mimeType, $definedTimestamp"
+    }
+
+    @Serializable
+    @Parcelize
+    @Entity(tableName = "media", primaryKeys = ["id"])
+    data class UriMedia(
+        override val id: Long = 0,
+        override val label: String,
+        @Serializable(with = UriSerializer::class)
+        val uri: Uri,
+        override val path: String,
+        override val relativePath: String,
+        override val albumID: Long,
+        override val albumLabel: String,
+        override val timestamp: Long,
+        override val expiryTimestamp: Long? = null,
+        override val takenTimestamp: Long? = null,
+        override val fullDate: String,
+        override val mimeType: String,
+        override val favorite: Int,
+        override val trashed: Int,
+        override val size: Long,
+        override val duration: String? = null
+    ) : Media()
+
+    @Serializable
+    @Parcelize
+    @Entity(tableName = "classified_media", primaryKeys = ["id"])
+    data class ClassifiedMedia(
+        override val id: Long = 0,
+        override val label: String,
+        @Serializable(with = UriSerializer::class)
+        val uri: Uri,
+        override val path: String,
+        override val relativePath: String,
+        override val albumID: Long,
+        override val albumLabel: String,
+        override val timestamp: Long,
+        override val expiryTimestamp: Long?,
+        override val takenTimestamp: Long?,
+        override val fullDate: String,
+        override val mimeType: String,
+        override val favorite: Int,
+        override val trashed: Int,
+        override val size: Long,
+        override val duration: String?,
+        val category: String?,
+        val score: Float,
+    ): Media()
+
+    @Serializable
+    @Parcelize
+    data class EncryptedMedia(
+        override val id: Long = 0,
+        override val label: String,
+        val bytes: ByteArray,
+        override val path: String,
+        override val relativePath: String,
+        override val albumID: Long,
+        override val albumLabel: String,
+        override val timestamp: Long,
+        override val expiryTimestamp: Long? = null,
+        override val takenTimestamp: Long? = null,
+        override val fullDate: String,
+        override val mimeType: String,
+        override val favorite: Int,
+        override val trashed: Int,
+        override val size: Long,
+        override val duration: String? = null
+    ): Media() {
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+
+            other as EncryptedMedia
+
+            if (id != other.id) return false
+            if (label != other.label) return false
+            if (!bytes.contentEquals(other.bytes)) return false
+            if (path != other.path) return false
+            if (relativePath != other.relativePath) return false
+            if (albumID != other.albumID) return false
+            if (albumLabel != other.albumLabel) return false
+            if (timestamp != other.timestamp) return false
+            if (expiryTimestamp != other.expiryTimestamp) return false
+            if (takenTimestamp != other.takenTimestamp) return false
+            if (fullDate != other.fullDate) return false
+            if (mimeType != other.mimeType) return false
+            if (favorite != other.favorite) return false
+            if (trashed != other.trashed) return false
+            if (size != other.size) return false
+            if (duration != other.duration) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            var result = id.hashCode()
+            result = 31 * result + label.hashCode()
+            result = 31 * result + bytes.contentHashCode()
+            result = 31 * result + path.hashCode()
+            result = 31 * result + relativePath.hashCode()
+            result = 31 * result + albumID.hashCode()
+            result = 31 * result + albumLabel.hashCode()
+            result = 31 * result + timestamp.hashCode()
+            result = 31 * result + (expiryTimestamp?.hashCode() ?: 0)
+            result = 31 * result + (takenTimestamp?.hashCode() ?: 0)
+            result = 31 * result + fullDate.hashCode()
+            result = 31 * result + mimeType.hashCode()
+            result = 31 * result + favorite
+            result = 31 * result + trashed
+            result = 31 * result + size.hashCode()
+            result = 31 * result + (duration?.hashCode() ?: 0)
+            return result
+        }
     }
 
     companion object {
-        fun createFromUri(context: Context, uri: Uri): Media? {
+        fun createFromUri(context: Context, uri: Uri): UriMedia? {
             if (uri.path == null) return null
             val extension = uri.toString().substringAfterLast(".")
             var mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension).toString()
@@ -80,7 +197,7 @@ data class Media(
             if (timestamp != 0L) {
                 formattedDate = timestamp.getDate(Constants.EXTENDED_DATE_FORMAT)
             }
-            return Media(
+            return UriMedia(
                 id = Random(System.currentTimeMillis()).nextLong(-1000, 25600000),
                 label = uri.toString().substringAfterLast("/"),
                 uri = uri,
@@ -98,61 +215,5 @@ data class Media(
             )
         }
     }
+
 }
-
-/**
- * Determine if the current media is a raw format
- *
- * Checks if [Media.mimeType] starts with "image/x-" or "image/vnd."
- *
- * Most used formats:
- * - ARW: image/x-sony-arw
- * - CR2: image/x-canon-cr2
- * - CRW: image/x-canon-crw
- * - DCR: image/x-kodak-dcr
- * - DNG: image/x-adobe-dng
- * - ERF: image/x-epson-erf
- * - K25: image/x-kodak-k25
- * - KDC: image/x-kodak-kdc
- * - MRW: image/x-minolta-mrw
- * - NEF: image/x-nikon-nef
- * - ORF: image/x-olympus-orf
- * - PEF: image/x-pentax-pef
- * - RAF: image/x-fuji-raf
- * - RAW: image/x-panasonic-raw
- * - SR2: image/x-sony-sr2
- * - SRF: image/x-sony-srf
- * - X3F: image/x-sigma-x3f
- *
- * Other proprietary image types in the standard:
- * image/vnd.manufacturer.filename_extension for instance for NEF by Nikon and .mrv for Minolta:
- * - NEF: image/vnd.nikon.nef
- * - Minolta: image/vnd.minolta.mrw
- */
-val Media.isRaw: Boolean get() =
-    mimeType.isNotBlank() && (mimeType.startsWith("image/x-") || mimeType.startsWith("image/vnd."))
-
-val Media.fileExtension: String get() = label.substringAfterLast(".").removePrefix(".")
-
-val Media.volume: String get() = path.substringBeforeLast("/").removeSuffix(relativePath.removeSuffix("/"))
-
-/**
- * Used to determine if the Media object is not accessible
- * via MediaStore.
- * This happens when the user tries to open media from an app
- * using external sources (in our case, Gallery Media Viewer), but
- * the specific media is only available internally in that app
- * (Android/data(OR media)/com.package.name/)
- *
- * If it's readUriOnly then we know that we should expect a barebone
- * Media object with limited functionality (no favorites, trash, timestamp etc)
- */
-val Media.readUriOnly: Boolean get() = albumID == -99L && albumLabel == ""
-
-val Media.isVideo: Boolean get() = mimeType.startsWith("video/") && duration != null
-
-val Media.isImage: Boolean get() = mimeType.startsWith("image/")
-
-val Media.isTrashed: Boolean get() = trashed == 1
-
-val Media.isFavorite: Boolean get() = favorite == 1

@@ -5,10 +5,11 @@ import android.graphics.BitmapRegionDecoder
 import android.graphics.Rect
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
+import androidx.core.net.toFile
 import com.dot.gallery.feature_node.data.data_source.KeychainHolder
-import com.dot.gallery.feature_node.domain.model.EncryptedMedia
+import com.dot.gallery.feature_node.domain.model.Media.EncryptedMedia
 import com.github.panpf.zoomimage.subsampling.BitmapTileImage
-import com.github.panpf.zoomimage.subsampling.FileImageSource
+import com.github.panpf.zoomimage.subsampling.ContentImageSource
 import com.github.panpf.zoomimage.subsampling.ImageInfo
 import com.github.panpf.zoomimage.subsampling.ImageSource
 import com.github.panpf.zoomimage.subsampling.RegionDecoder
@@ -61,7 +62,7 @@ class EncryptedRegionDecoder(
         if (bitmapRegionDecoder != null) return
 
         val encryptedMedia = with(keychainHolder) {
-            (imageSource as FileImageSource).path.toFile().decrypt<EncryptedMedia>()
+            (imageSource as ContentImageSource).uri.toFile().decrypt<EncryptedMedia>()
         }
 
         bitmapRegionDecoder = kotlin.runCatching {

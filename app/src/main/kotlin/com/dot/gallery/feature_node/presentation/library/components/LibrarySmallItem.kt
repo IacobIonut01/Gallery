@@ -25,15 +25,17 @@ import com.dot.gallery.core.Constants.Animation.exitAnimation
 fun LibrarySmallItem(
     modifier: Modifier = Modifier,
     title: String,
+    subtitle: String? = null,
     icon: ImageVector,
     contentColor: Color = MaterialTheme.colorScheme.onSurface,
+    containerColor: Color = contentColor.copy(alpha = 0.1f),
     useIndicator: Boolean = false,
     indicatorCounter: Int = 0,
-    contentDescription: String = title,
+    contentDescription: String = title
 ) {
     ListItem(
         colors = ListItemDefaults.colors(
-            containerColor = contentColor.copy(alpha = 0.1f),
+            containerColor = containerColor,
             headlineColor = contentColor
         ),
         modifier = Modifier
@@ -53,6 +55,16 @@ fun LibrarySmallItem(
                 tint = contentColor,
                 contentDescription = contentDescription
             )
+        },
+        supportingContent = if (subtitle == null) null else {
+            {
+                Text(
+                    modifier = Modifier.padding(vertical = 6.dp),
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = contentColor.copy(alpha = 0.8f),
+                )
+            }
         },
         trailingContent = {
             AnimatedVisibility(

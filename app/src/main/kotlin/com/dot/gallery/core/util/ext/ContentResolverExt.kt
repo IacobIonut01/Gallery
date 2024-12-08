@@ -23,7 +23,8 @@ import androidx.exifinterface.media.ExifInterface
 import com.dot.gallery.core.Constants
 import com.dot.gallery.feature_node.domain.model.ExifAttributes
 import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.model.isVideo
+import com.dot.gallery.feature_node.domain.util.getUri
+import com.dot.gallery.feature_node.domain.util.isVideo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.awaitClose
@@ -82,8 +83,8 @@ fun ContentResolver.queryFlow(
     }
 }.conflate()
 
-suspend fun ContentResolver.copyMedia(
-    from: Media,
+suspend fun <T: Media> ContentResolver.copyMedia(
+    from: T,
     path: String
 ) = withContext(Dispatchers.IO) {
     val contentValues = ContentValues().apply {
@@ -100,7 +101,7 @@ suspend fun ContentResolver.copyMedia(
         if (outUri != null) {
             async {
                 openFileDescriptor(outUri, "w", null).use { target ->
-                    openFileDescriptor(from.uri, "r").use { from ->
+                    openFileDescriptor(from.getUri(), "r").use { from ->
                         if (target != null && from != null) {
                             try {
                                 FileUtils.copy(from.fileDescriptor, target.fileDescriptor)
@@ -249,13 +250,13 @@ fun ContentResolver.saveVideo(
     }
 }
 
-suspend fun ContentResolver.updateMedia(
-    media: Media,
+suspend fun <T: Media> ContentResolver.updateMedia(
+    media: T,
     contentValues: ContentValues
 ): Boolean = withContext(Dispatchers.IO) {
     return@withContext try {
         update(
-            media.uri,
+            media.getUri(),
             contentValues,
             null
         ) > 0
@@ -265,12 +266,12 @@ suspend fun ContentResolver.updateMedia(
     }
 }
 
-suspend fun ContentResolver.updateMediaExif(
-    media: Media,
+suspend fun <T: Media> ContentResolver.updateMediaExif(
+    media: T,
     exifAttributes: ExifAttributes
 ) = withContext(Dispatchers.IO) {
     return@withContext try {
-        openFileDescriptor(media.uri, "rw").use { imagePfd ->
+        openFileDescriptor(media.getUri(), "rw").use { imagePfd ->
             if (imagePfd != null) {
                 val exif = ExifInterface(imagePfd.fileDescriptor)
                 exifAttributes.writeExif(exif)

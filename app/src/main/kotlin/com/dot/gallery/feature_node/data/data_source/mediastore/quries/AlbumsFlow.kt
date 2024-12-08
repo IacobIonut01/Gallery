@@ -122,7 +122,7 @@ class AlbumsFlow(
                             uri = ContentUris.withAppendedId(contentUri, id),
                             pathToThumbnail = thumbnailPath,
                             relativePath = thumbnailRelativePath,
-                            timestamp = thumbnailDateTaken ?: thumbnailDate
+                            timestamp = thumbnailDateTaken?.div(1000) ?: thumbnailDate
                         ).apply {
                             this.count += 1
                             this.size += size

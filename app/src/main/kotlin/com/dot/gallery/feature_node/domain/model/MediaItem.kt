@@ -7,40 +7,21 @@ package com.dot.gallery.feature_node.domain.model
 import androidx.compose.runtime.Stable
 
 @Stable
-sealed class MediaItem {
+sealed class MediaItem<T: Media> {
     abstract val key: String
 
     @Stable
-    data class Header(
+    data class Header<T: Media> (
         override val key: String,
         val text: String,
         val data: Set<Long>
-    ) : MediaItem()
+    ) : MediaItem<T>()
 
     @Stable
-    data class MediaViewItem(
+    data class MediaViewItem<T: Media> (
         override val key: String,
-        val media: Media
-    ) : MediaItem()
-
-}
-
-@Stable
-sealed class EncryptedMediaItem {
-    abstract val key: String
-
-    @Stable
-    data class Header(
-        override val key: String,
-        val text: String,
-        val data: Set<Long>
-    ) : EncryptedMediaItem()
-
-    @Stable
-    data class MediaViewItem(
-        override val key: String,
-        val media: DecryptedMedia
-    ) : EncryptedMediaItem()
+        val media: T
+    ) : MediaItem<T>()
 
 }
 

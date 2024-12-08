@@ -27,7 +27,7 @@ import com.dot.gallery.core.util.join
 import com.dot.gallery.feature_node.data.data_source.mediastore.MediaQuery
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaType
-import com.dot.gallery.feature_node.domain.model.isTrashed
+import com.dot.gallery.feature_node.domain.util.isTrashed
 import com.dot.gallery.feature_node.presentation.util.getDate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -48,7 +48,7 @@ class MediaUriFlow(
     private val mimeType: String? = null,
     private val uris: List<Uri>,
     private val reviewMode: Boolean = false
-) : QueryFlow<Media>() {
+) : QueryFlow<Media.UriMedia>() {
 
     private var buckedId: Long = MediaStoreBuckets.MEDIA_STORE_BUCKET_TIMELINE.id
 
@@ -149,7 +149,7 @@ class MediaUriFlow(
                 MediaStore.Video.Media.EXTERNAL_CONTENT_URI
             val uri = ContentUris.withAppendedId(contentUri, id)
             val formattedDate = modifiedTimestamp.getDate(Constants.FULL_DATE_FORMAT)
-            Media(
+            Media.UriMedia(
                 id = id,
                 label = title,
                 uri = uri,

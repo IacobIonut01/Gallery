@@ -9,7 +9,6 @@ import android.app.Activity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -81,10 +80,9 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
-fun SelectionSheet(
+fun <T: Media> SelectionSheet(
     modifier: Modifier = Modifier,
-    target: String?,
-    selectedMedia: SnapshotStateList<Media>,
+    selectedMedia: SnapshotStateList<T>,
     selectionState: MutableState<Boolean>,
     albumsState: State<AlbumState>,
     handler: MediaHandleUseCase
@@ -237,21 +235,23 @@ fun SelectionSheet(
         }
     }
 
-    MoveMediaSheet(
-        sheetState = moveSheetState,
-        mediaList = selectedMedia,
-        albumState = albumsState.value,
-        handler = handler,
-        onFinish = ::clearSelection
-    )
+    if (albumsState.value.albums.isNotEmpty()) {
+        MoveMediaSheet(
+            sheetState = moveSheetState,
+            mediaList = selectedMedia,
+            albumState = albumsState,
+            handler = handler,
+            onFinish = ::clearSelection
+        )
 
-    CopyMediaSheet(
-        sheetState = copySheetState,
-        mediaList = selectedMedia,
-        albumsState = albumsState.value,
-        handler = handler,
-        onFinish = ::clearSelection
-    )
+        CopyMediaSheet(
+            sheetState = copySheetState,
+            mediaList = selectedMedia,
+            albumsState = albumsState,
+            handler = handler,
+            onFinish = ::clearSelection
+        )
+    }
 
     TrashDialog(
         appBottomSheetState = trashSheetState,
@@ -268,7 +268,6 @@ fun SelectionSheet(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun RowScope.SelectionBarColumn(
     imageVector: ImageVector,

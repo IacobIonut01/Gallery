@@ -32,7 +32,7 @@
     <string name="empty_favorites_title">無收藏內容</string>
     <string name="label">標籤</string>
     <string name="path">路徑</string>
-    <string name="iso">" • ISO"</string>
+    <string name="iso">ISO</string>
     <string name="kb">KB</string>
     <string name="mb">MB</string>
     <string name="gb">GB</string>

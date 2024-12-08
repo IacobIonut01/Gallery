@@ -7,7 +7,6 @@ package com.dot.gallery.feature_node.presentation.mediaview.components
 
 import android.content.Context
 import android.util.Log
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
@@ -32,14 +31,15 @@ import com.dot.gallery.R
 import com.dot.gallery.core.Constants.TAG
 import com.dot.gallery.feature_node.domain.model.InfoRow
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.util.isEncrypted
 import com.dot.gallery.feature_node.presentation.util.ExifMetadata
 import com.dot.gallery.feature_node.presentation.util.formatMinSec
 import com.dot.gallery.feature_node.presentation.util.formattedFileSize
 import com.dot.gallery.ui.theme.Shapes
 import java.io.File
 import java.io.IOException
+import java.util.Locale
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MediaInfoRow(
     modifier: Modifier = Modifier,
@@ -108,18 +108,17 @@ fun Media.retrieveMetadata(context: Context, exifMetadata: ExifMetadata?, onLabe
                 val aperture = exifMetadata.apertureValue
                 val focalLength = exifMetadata.focalLength
                 val isoValue = exifMetadata.isoValue
-                val stringBuilder = StringBuilder()
-                if (aperture != 0.0)
-                    stringBuilder.append("f/$aperture")
-                if (focalLength != 0.0)
-                    stringBuilder.append(" • ${focalLength}mm")
-                if (isoValue != 0)
-                    stringBuilder.append(context.getString(R.string.iso) + isoValue)
+                val metadata = mutableListOf<String>()
+
+                if (aperture != 0.0) metadata.add("f/${String.format(Locale.getDefault(), "%.2f", aperture)}")
+                if (focalLength != 0.0) metadata.add("${focalLength}mm")
+                if (isoValue != 0) metadata.add("$isoValue ${context.getString(R.string.iso)}")
+
                 add(
                     InfoRow(
                         icon = Icons.Outlined.Camera,
                         label = "${exifMetadata.manufacturerName} ${exifMetadata.modelName}",
-                        content = stringBuilder.toString()
+                        content = metadata.joinToString(separator = " • ")
                     )
                 )
             }
@@ -153,14 +152,15 @@ fun Media.retrieveMetadata(context: Context, exifMetadata: ExifMetadata?, onLabe
                 )
             )
 
-
-            add(
-                InfoRow(
-                    icon = Icons.Outlined.Info,
-                    label = context.getString(R.string.path),
-                    content = path.substringBeforeLast("/")
+            if (!isEncrypted) {
+                add(
+                    InfoRow(
+                        icon = Icons.Outlined.Info,
+                        label = context.getString(R.string.path),
+                        content = path.substringBeforeLast("/")
+                    )
                 )
-            )
+            }
         }
     } catch (e: IOException) {
         Log.e(TAG, "ExifInterface ERROR\n" + e.printStackTrace())

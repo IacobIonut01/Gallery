@@ -12,6 +12,7 @@ import androidx.core.graphics.scale
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.model.Media.UriMedia
 import com.dot.gallery.feature_node.domain.model.editor.Adjustment
 import com.dot.gallery.feature_node.domain.model.editor.DrawMode
 import com.dot.gallery.feature_node.domain.model.editor.ImageFilter
@@ -71,7 +72,7 @@ class EditViewModel @Inject constructor(
     private val _appliedAdjustments = MutableStateFlow<List<Adjustment>>(emptyList())
     val appliedAdjustments = _appliedAdjustments.asStateFlow()
 
-    private val activeMedia = MutableStateFlow<Media?>(null)
+    private val activeMedia = MutableStateFlow<UriMedia?>(null)
 
     private val _isSaving = MutableStateFlow(true)
     val isSaving = _isSaving.asStateFlow()

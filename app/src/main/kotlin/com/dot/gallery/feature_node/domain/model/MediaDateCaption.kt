@@ -2,10 +2,11 @@ package com.dot.gallery.feature_node.domain.model
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.res.stringResource
 import com.dot.gallery.R
-import com.dot.gallery.core.Constants
+import com.dot.gallery.core.Settings.Misc.rememberExifDateFormat
 import com.dot.gallery.feature_node.presentation.util.ExifMetadata
 import com.dot.gallery.feature_node.presentation.util.getDate
 
@@ -24,9 +25,10 @@ fun rememberMediaDateCaption(
     val deviceInfo = remember(exifMetadata) { exifMetadata?.lensDescription }
     val defaultDesc = stringResource(R.string.image_add_description)
     val description = remember(exifMetadata) { exifMetadata?.imageDescription ?: defaultDesc }
-    return remember(media) {
+    val currentDateFormat by rememberExifDateFormat()
+    return remember(media, currentDateFormat) {
         MediaDateCaption(
-            date = media.timestamp.getDate(Constants.EXIF_DATE_FORMAT),
+            date = media.definedTimestamp.getDate(currentDateFormat),
             deviceInfo = deviceInfo,
             description = description
         )
@@ -36,14 +38,15 @@ fun rememberMediaDateCaption(
 @Composable
 fun rememberMediaDateCaption(
     exifMetadata: ExifMetadata?,
-    media: DecryptedMedia
+    media: Media.UriMedia
 ): MediaDateCaption {
     val deviceInfo = remember(exifMetadata) { exifMetadata?.lensDescription }
     val defaultDesc = stringResource(R.string.image_add_description)
     val description = remember(exifMetadata) { exifMetadata?.imageDescription ?: defaultDesc }
-    return remember(media) {
+    val currentDateFormat by rememberExifDateFormat()
+    return remember(media, currentDateFormat) {
         MediaDateCaption(
-            date = media.timestamp.getDate(Constants.EXIF_DATE_FORMAT),
+            date = media.definedTimestamp.getDate(currentDateFormat),
             deviceInfo = deviceInfo,
             description = description
         )

@@ -4,7 +4,7 @@ import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
-import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.model.Media.UriMedia
 import com.dot.gallery.feature_node.domain.model.MediaVersion
 import com.dot.gallery.feature_node.domain.model.TimelineSettings
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia
@@ -13,30 +13,30 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface MediaDao {
 
-    /** Media */
+    /** UriMedia */
     @Query("SELECT * FROM media ORDER BY timestamp DESC")
-    suspend fun getMedia(): List<Media>
+    suspend fun getMedia(): List<UriMedia>
 
     @Query("SELECT * FROM media WHERE mimeType LIKE :allowedMedia ORDER BY timestamp DESC")
-    suspend fun getMediaByType(allowedMedia: AllowedMedia): List<Media>
+    suspend fun getMediaByType(allowedMedia: AllowedMedia): List<UriMedia>
 
     @Query("SELECT * FROM media WHERE favorite = 1 ORDER BY timestamp DESC")
-    suspend fun getFavorites(): List<Media>
+    suspend fun getFavorites(): List<UriMedia>
 
     @Query("SELECT * FROM media WHERE id = :id LIMIT 1")
-    suspend fun getMediaById(id: Long): Media
+    suspend fun getMediaById(id: Long): UriMedia
 
     @Query("SELECT * FROM media WHERE albumID = :albumId ORDER BY timestamp DESC")
-    suspend fun getMediaByAlbumId(albumId: Long): List<Media>
+    suspend fun getMediaByAlbumId(albumId: Long): List<UriMedia>
 
     @Query("SELECT * FROM media WHERE albumID = :albumId AND mimeType LIKE :allowedMedia ORDER BY timestamp DESC")
-    suspend fun getMediaByAlbumIdAndType(albumId: Long, allowedMedia: AllowedMedia): List<Media>
+    suspend fun getMediaByAlbumIdAndType(albumId: Long, allowedMedia: AllowedMedia): List<UriMedia>
 
-    @Upsert(entity = Media::class)
-    suspend fun addMediaList(mediaList: List<Media>)
+    @Upsert(entity = UriMedia::class)
+    suspend fun addMediaList(mediaList: List<UriMedia>)
 
     @Transaction
-    suspend fun updateMedia(mediaList: List<Media>) {
+    suspend fun updateMedia(mediaList: List<UriMedia>) {
         // Upsert the items in mediaList
         addMediaList(mediaList)
 
