@@ -32,7 +32,7 @@
     <string name="empty_favorites_title">没有收藏的图片和视频</string>
     <string name="label">文件名</string>
     <string name="path">路径</string>
-    <string name="iso">" • ISO"</string>
+    <string name="iso">ISO</string>
     <string name="kb">KB</string>
     <string name="mb">MB</string>
     <string name="gb">GB</string>
@@ -255,6 +255,7 @@
     <string name="vault_setup_name">私密空间名称</string>
     <string name="vault_setup_security_error">请在设置保险库前设置手机安全措施。</string>
     <string name="vault_setup_summary">您可以使用手机安全措施（密码或生物识别）访问私密空间\n\n可以在私密空间内部访问加密密钥，并将其用于恢复任何保险库。</string>
+    <string name="vault_setup_summary2">The vault will be accessed using your phone security measures (password or biometrics)\n\nThe vault contents are encrypted using a AES256 encryption algorithm.\nEncryption key can\'t be accessed inside the vault and you will not be able to transfer your vault.</string>
     <string name="vault_already_exists">私密空间“%1$s”已存在</string>
     <string name="ignored">忽略</string>
     <string name="location">地点</string>
@@ -270,6 +271,22 @@
     <string name="up_to_date">最新</string>
     <string name="delete_location">删除位置</string>
     <string name="delete_metadata">删除元数据</string>
+    <string name="categorise_your_media">Categorise your media</string>
+    <string name="disclaimer">Disclaimer</string>
+    <string name="disclaimer_classification">Your media is not uploaded to any server, all classification is done locally on your device by using TensorFlow-Lite with a pre-trained model available in the app\'s assets.</string>
+    <string name="delete_all_categories">Delete all categories</string>
+    <string name="delete_all_categories_summary">This will permanently delete all categories found in your media so far, this action is irreversible. You will have to rescan your media to reclassify them.</string>
+    <string name="ai_category">Smart Features</string>
+    <string name="no_classification">Disable image classification</string>
+    <string name="no_classification_summary">Turning this on will remove any UI regarding image classification or managing it. It will NOT delete your classified images database</string>
+    <string name="classification_unwanted">I don\'t want this</string>
+    <string name="classification_unwanted_summary">I don\'t want this, please remove it.\n(It can be enabled again in the settings)</string>
+    <string name="restore">Restore</string>
+    <string name="encrypted">Encrypted</string>
+    <string name="date_format_settings">Date Format</string>
+    <string name="date_header">Date Formats</string>
+    <string name="date_header_summary">Set your own custom date formats</string>
+    <string name="launch_on_library">Launch on Library</string>
     <plurals name="item_count">
         <item quantity="other">%s 个项目</item>
     </plurals>
