@@ -16,7 +16,7 @@
     <string name="pause_video">Pausa</string>
     <string name="play_video">Riproduci</string>
     <string name="favorites">Preferiti</string>
-    <string name="no_media_title">Sembra che non ci sia niente qui.</string>
+    <string name="no_media_title">Sembra che non ci sia niente qui</string>
     <string name="no_media_cd">Nessun contenuto multimediale trovato</string>
     <string name="empty_trash_title">Lindo e pinto</string>
     <string name="empty_trash_cd">Il cestino è vuoto</string>
@@ -260,7 +260,7 @@
     <string name="ignored">Ignorato</string>
     <string name="location">Posizione</string>
     <string name="update_file_name">Aggiorna nome file</string>
-    <string name="support_the_project">Support the project</string>
+    <string name="support_the_project">Supporta il progetto</string>
     <string name="click_to_copy">Click to copy</string>
     <string name="take_audio_focus_title">Take Audio Focus</string>
     <string name="take_audio_focus_summary">Enabling this will take audio focus when playing media. Any media playing in background will pause while the video is playing. (Restart app required)</string>
