@@ -219,7 +219,7 @@
     <string name="setup_location_types_selection">選択</string>
     <string name="setup_location_types_regex">正規表現パターン</string>
     <string name="setup_type_selection_title">選択</string>
-    <string name="setup_type_selection_subtitle">Select your to-be-ignored album</string>
+    <string name="setup_type_selection_subtitle">非表示にするアルバムを選択する</string>
     <string name="setup_type_selection_add_album">アルバムを追加</string>
     <string name="setup_type_selection_pick_album">アルバムを選択</string>
     <string name="setup_type_regex_label">正規表現パターン</string>
