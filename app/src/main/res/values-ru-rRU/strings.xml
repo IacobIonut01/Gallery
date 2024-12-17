@@ -44,13 +44,13 @@
     <string name="settings_title">Настройки</string>
     <string name="settings_general">Основные</string>
     <string name="settings_trash_title">Использовать корзину</string>
-    <string name="settings_trash_summary">Хранить удалённые медиафайлы 30 дней.\nЕсли отключить, медиафайлы будут удаляться навсегда.</string>
+    <string name="settings_trash_summary">Хранить удалённые медиафайлы 30 дней в корзине.\nЕсли отключить, медиафайлы будут удаляться сразу навсегда.</string>
     <string name="move_album_to_trash">Отправить альбом в корзину</string>
     <string name="pinned_albums_title">Закреплённые альбомы</string>
     <string name="unpin">Открепить</string>
     <string name="pin">Закрепить</string>
     <string name="nav_timeline">Хронология</string>
-    <string name="location_cd">Местоположение медиафайла</string>
+    <string name="location_cd">Расположение медиа</string>
     <string name="location_map_cd">Карта</string>
     <string name="app_dev">от %s</string>
     <string name="app_dev_name">IacobIonut01</string>
