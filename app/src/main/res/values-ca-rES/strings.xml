@@ -3,12 +3,12 @@
     <string name="app_name">Gallery</string>
     <string name="nav_albums">Albums</string>
     <string name="searchbar_title"><![CDATA[Search photos & videos]]></string>
-    <string name="header_today">Today</string>
-    <string name="header_yesterday">Yesterday</string>
+    <string name="header_today">Avui</string>
+    <string name="header_yesterday">Ahir</string>
     <string name="request_permissions">Request permissions</string>
-    <string name="filter">Filter</string>
+    <string name="filter">Filtre</string>
     <string name="filter_recent">Recent</string>
-    <string name="filter_nameAZ">Name (A-Z)</string>
+    <string name="filter_nameAZ">Nom (A-Z)</string>
     <string name="filter_nameZA">Name (Z-A)</string>
     <string name="filter_old">Old</string>
     <string name="selected_s">Selected %s</string>
