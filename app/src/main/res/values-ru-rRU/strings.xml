@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">Галерея</string>
     <string name="nav_albums">Альбомы</string>
-    <string name="searchbar_title"><![CDATA[Поиск фотографий и видео]]></string>
+    <string name="searchbar_title"><![CDATA[Поиск фото и видео]]></string>
     <string name="header_today">Сегодня</string>
     <string name="header_yesterday">Вчера</string>
     <string name="request_permissions">Запрос разрешений</string>
@@ -13,7 +13,7 @@
     <string name="filter_old">Старые</string>
     <string name="selected_s">Выбрано %s</string>
     <string name="trash">Корзина</string>
-    <string name="pause_video">Поставить на паузу</string>
+    <string name="pause_video">Пауза</string>
     <string name="play_video">Воспроизвести</string>
     <string name="favorites">Избранное</string>
     <string name="no_media_title">Похоже, здесь пусто</string>
