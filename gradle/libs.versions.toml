@@ -43,7 +43,7 @@ uiautomator = "2.3.0"
 composealpha = "1.8.0-alpha06"
 kotlinxSerializationJson = "1.7.3"
 workRuntimeKtx = "2.10.0"
-zoomimageViewSketch = "1.1.0-rc01"
+zoomimageViewSketch = "1.1.0"
 
 [libraries]
 # AndroidX
