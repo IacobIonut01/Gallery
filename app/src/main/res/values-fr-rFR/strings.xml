@@ -255,7 +255,7 @@
     <string name="vault_setup_name">Nom du coffre-fort</string>
     <string name="vault_setup_security_error">Veuillez mettre en place une mesure de sécurité téléphonique avant de configurer le coffre-fort.</string>
     <string name="vault_setup_summary">L\'accès au coffre-fort se fera en utilisant les mesures de sécurité de votre téléphone (mot de passe ou données biométriques)\n\nLa clé de chiffrement est accessible à l\'intérieur du coffre-fort et sera utilisée pour restaurer tout coffre-fort.</string>
-    <string name="vault_setup_summary2">The vault will be accessed using your phone security measures (password or biometrics)\n\nThe vault contents are encrypted using a AES256 encryption algorithm.\nEncryption key can\'t be accessed inside the vault and you will not be able to transfer your vault.</string>
+    <string name="vault_setup_summary2">L\'accès au coffre-fort se fait par les mesures de sécurité de votre téléphone (mot de passe ou données biométriques)\n\nLe contenu du coffre-fort est chiffré à l\'aide d\'un algorithme de chiffrement AES256.\nLa clé de chiffrement n\'est pas accessible à l\'intérieur du coffre-fort et vous ne pourrez pas transférer votre coffre-fort.</string>
     <string name="vault_already_exists">Le coffre-fort \"%1$s\" existe déjà</string>
     <string name="ignored">Ignoré</string>
     <string name="location">Emplacement</string>
