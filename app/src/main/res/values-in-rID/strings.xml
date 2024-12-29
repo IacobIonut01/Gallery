@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Gallery</string>
+    <string name="app_name">Galeri</string>
     <string name="nav_albums">Albums</string>
     <string name="searchbar_title"><![CDATA[Search photos & videos]]></string>
-    <string name="header_today">Today</string>
+    <string name="header_today">Hari ini</string>
     <string name="header_yesterday">Yesterday</string>
     <string name="request_permissions">Request permissions</string>
     <string name="filter">Filter</string>
@@ -49,7 +49,7 @@
     <string name="pinned_albums_title">Pinned Albums</string>
     <string name="unpin">Unpin</string>
     <string name="pin">Pin</string>
-    <string name="nav_timeline">Timeline</string>
+    <string name="nav_timeline">Garis Waktu</string>
     <string name="location_cd">Media Location</string>
     <string name="location_map_cd">Location Map</string>
     <string name="app_dev">by %s</string>
