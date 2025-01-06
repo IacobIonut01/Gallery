@@ -284,9 +284,9 @@
     <string name="restore">Restaurar</string>
     <string name="encrypted">Criptografado</string>
     <string name="date_format_settings">Formato de data</string>
-    <string name="date_header">Date Formats</string>
-    <string name="date_header_summary">Set your own custom date formats</string>
-    <string name="launch_on_library">Launch on Library</string>
+    <string name="date_header">Formatos de data</string>
+    <string name="date_header_summary">Defina seus próprios formatos de data personalizados</string>
+    <string name="launch_on_library">Iniciar na Biblioteca</string>
     <plurals name="item_count">
         <item quantity="one">%s ítem</item>
         <item quantity="other">%s ítens</item>
