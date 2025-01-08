@@ -159,7 +159,7 @@
     <string name="add_to_ignored_summary">Убрать альбом из отображения в Галерее</string>
     <string name="remove_from_ignored">Удалить из списка игнорируемых</string>
     <string name="remove_from_ignored_summary">Удалите из списка игнорируемых альбом с названием %1$s</string>
-    <string name="override">Переопределение</string>
+    <string name="override">Заменить</string>
     <string name="save_copy">Сохранить копию</string>
     <string name="favorite">В избранное</string>
     <string name="allow_to_manage_media">Разрешить управлять медиафайлами</string>
