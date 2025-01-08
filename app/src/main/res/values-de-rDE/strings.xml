@@ -89,7 +89,7 @@
     <string name="skip">Überspringen</string>
     <string name="allow">Erlauben</string>
     <string name="all">Alle</string>
-    <string name="secure_mode_title">Privatspähre-Modus</string>
+    <string name="secure_mode_title">Privatsphäre-Modus</string>
     <string name="secure_mode_summary">Blendet die App-Vorschau beim Verlassen der App aus</string>
     <string name="rotate_screen_cd">Bildschirm drehen</string>
     <string name="size_dp">%1$sdp</string>
@@ -272,8 +272,8 @@
     <string name="delete_location">Standort entfernen</string>
     <string name="delete_metadata">Metadaten löschen</string>
     <string name="categorise_your_media">Kategorisiere deine Medien</string>
-    <string name="disclaimer">Disclaimer</string>
-    <string name="disclaimer_classification">Your media is not uploaded to any server, all classification is done locally on your device by using TensorFlow-Lite with a pre-trained model available in the app\'s assets.</string>
+    <string name="disclaimer">Haftungsausschluss</string>
+    <string name="disclaimer_classification">Ihre Medien werden nirgends hochgeladen. Klassifizierung erfolgt lokal auf dem Gerät mit einem vortrainierten TensorFlow-Lite Modell, das in den Assets der App verfügbar ist.</string>
     <string name="delete_all_categories">Lösche alle Kategorien</string>
     <string name="delete_all_categories_summary">This will permanently delete all categories found in your media so far, this action is irreversible. You will have to rescan your media to reclassify them.</string>
     <string name="ai_category">KI-Funktionen</string>
