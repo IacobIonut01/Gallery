@@ -255,7 +255,7 @@
     <string name="vault_setup_name">保管庫の名前</string>
     <string name="vault_setup_security_error">保管庫をセットアップする前に、携帯電話のセキュリティ対策を設定してください。</string>
     <string name="vault_setup_summary">保管庫には、携帯電話のセキュリティ対策(パスワードまたは生体認証) を使ってアクセスします。\n\n暗号化キーは保管庫内でアクセスすることができ、保管庫を復元するために使用されます。</string>
-    <string name="vault_setup_summary2">The vault will be accessed using your phone security measures (password or biometrics)\n\nThe vault contents are encrypted using a AES256 encryption algorithm.\nEncryption key can\'t be accessed inside the vault and you will not be able to transfer your vault.</string>
+    <string name="vault_setup_summary2">保管庫には、携帯電話のセキュリティ対策（パスワードまたは生体認証）を使用してアクセスします。\n\n保管庫の内容は、AES256暗号化アルゴリズムを使用して暗号化されます。\n暗号化キーは保管庫内部にはアクセスできず、保管庫を転送することはできません。</string>
     <string name="vault_already_exists">保管庫 \"%1$s\" はすでに存在します</string>
     <string name="ignored">非表示</string>
     <string name="location">ロケーション</string>
