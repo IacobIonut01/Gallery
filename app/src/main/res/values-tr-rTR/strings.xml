@@ -255,7 +255,7 @@
     <string name="vault_setup_name">Kasa Adı</string>
     <string name="vault_setup_security_error">Kasayı kurmadan önce bir telefon güvenlik önlemi belirleyin.</string>
     <string name="vault_setup_summary">Kasa, telefon güvenlik önlemleriniz (şifre veya biyometrik veriler) kullanılarak açılacaktır.\n\nŞifreleme anahtarı kasanın içinde erişilebilir ve herhangi bir kasayı geri yüklemek için kullanılacaktır.</string>
-    <string name="vault_setup_summary2">The vault will be accessed using your phone security measures (password or biometrics)\n\nThe vault contents are encrypted using a AES256 encryption algorithm.\nEncryption key can\'t be accessed inside the vault and you will not be able to transfer your vault.</string>
+    <string name="vault_setup_summary2">Kasaya telefon güvenlik önlemleriniz (şifre veya biyometrik) kullanılarak erişilecektir. \n\n Kasanın içeriği AES256 şifreleme algoritması kullanılarak şifrelenir. \n Şifreleme anahtarına kasanın içinden erişilemez ve kasayı transfer edemezsiniz.</string>
     <string name="vault_already_exists">Kasa \"%1$s\" zaten mevcut</string>
     <string name="ignored">Yok sayıldı</string>
     <string name="location">Konum</string>
@@ -273,7 +273,7 @@
     <string name="delete_metadata">Meta verisini sil</string>
     <string name="categorise_your_media">Medyanızı kategorilere ayırın</string>
     <string name="disclaimer">Uyarı</string>
-    <string name="disclaimer_classification">Your media is not uploaded to any server, all classification is done locally on your device by using TensorFlow-Lite with a pre-trained model available in the app\'s assets.</string>
+    <string name="disclaimer_classification">Medyanız herhangi bir sunucuya yüklenmez, tüm sınıflandırma, uygulamanın içinde bulunan önceden eğitilmiş bir model kullanılarak TensorFlow-Lite kullanılarak yerel olarak cihazınızda yapılır.</string>
     <string name="delete_all_categories">Tüm kategorileri sil</string>
     <string name="delete_all_categories_summary">Bu, medyanızda şu ana kadar bulunan tüm kategorileri kalıcı olarak silecektir, bu eylem geri alınamaz. Medyanızı yeniden sınıflandırmak için yeniden taramanız gerekecektir.</string>
     <string name="ai_category">Akıllı Özellikler</string>
