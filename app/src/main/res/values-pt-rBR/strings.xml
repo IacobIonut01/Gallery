@@ -287,8 +287,8 @@
     <string name="date_header">Formatos de data</string>
     <string name="date_header_summary">Defina seus próprios formatos de data personalizados</string>
     <string name="launch_on_library">Iniciar na Biblioteca</string>
-    <string name="categories">Categories</string>
-    <string name="classified_media">%1$s classified media</string>
+    <string name="categories">categorias</string>
+    <string name="classified_media">mídia %1$s classificada</string>
     <string name="scan_for_new_categories">Scan for new categories</string>
     <string name="scanning_media">Scanning media...</string>
     <string name="date_header_title">Date Header</string>
