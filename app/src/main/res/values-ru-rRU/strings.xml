@@ -126,7 +126,7 @@
     <string name="move_to_another_album">Переместить в другой альбом</string>
     <string name="move">Переместить</string>
     <string name="some_permissions_are_not_granted">Некоторые разрешения не предоставлены!</string>
-    <string name="get_started">Начало</string>
+    <string name="get_started">Начать</string>
     <string name="welcome">Добро пожаловать</string>
     <string name="setup_summary">Для доступа к вашим медиафайлам необходимо предоставить следующие разрешения:</string>
     <string name="required">Необходимое</string>
