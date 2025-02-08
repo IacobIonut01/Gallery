@@ -288,9 +288,9 @@
     <string name="date_header_summary">Налаштуйте власні формати дат</string>
     <string name="launch_on_library">Запустити у бібліотеці</string>
     <string name="categories">Категорії</string>
-    <string name="classified_media">%1$s classified media</string>
-    <string name="scan_for_new_categories">Scan for new categories</string>
-    <string name="scanning_media">Scanning media...</string>
+    <string name="classified_media">%1$s класифікованих медіа</string>
+    <string name="scan_for_new_categories">Сканувати нові категорії</string>
+    <string name="scanning_media">Сканування медіа...</string>
     <string name="date_header_title">Date Header</string>
     <string name="media_view">Media View</string>
     <string name="exif_date">Exif Date</string>
