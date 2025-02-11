@@ -287,8 +287,8 @@
     <string name="date_header">日期格式</string>
     <string name="date_header_summary">設定您自己的自訂日期格式</string>
     <string name="launch_on_library">啟動時開啟媒體庫頁面</string>
-    <string name="categories">Categories</string>
-    <string name="classified_media">%1$s classified media</string>
+    <string name="categories">分類</string>
+    <string name="classified_media">%1$s 已分類媒體</string>
     <string name="scan_for_new_categories">Scan for new categories</string>
     <string name="scanning_media">Scanning media...</string>
     <string name="date_header_title">Date Header</string>
