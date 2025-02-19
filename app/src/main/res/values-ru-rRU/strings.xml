@@ -313,14 +313,14 @@
     <string name="markup">Разметка</string>
     <string name="type_size">Размер</string>
     <string name="encrypting_media">Шифрование медиа...</string>
-    <string name="decrypt_vault">Расшифровка хранилища</string>
+    <string name="decrypt_vault">Расшифровка сейфа</string>
     <string name="restore_vault_summary">Текущий сейф и его содержимое будет расшифровано и восстановлено.\nЭто действие снова сделает ваш контент доступным в Галерее.</string>
     <string name="restore_vault_title">Подтвердить расшифровку?</string>
     <string name="yes">Да</string>
     <string name="vault_deletion_title">Подтвердить удаление?</string>
     <string name="vault_deletion_summary">Текущий сейф и его содержимое будет удалено навсегда.\nЭто действие нельзя отменить.</string>
-    <string name="create_new_vault_title">Создать новое хранилище?</string>
-    <string name="create_new_vault_summary">Доступ к хранилищу будет осуществляться с использованием мер безопасности вашего телефона (пароль или биометрические данные)\n\nКлюч шифрования доступен внутри хранилища и будет использоваться для восстановления любых хранилищ.</string>
+    <string name="create_new_vault_title">Создать новый сейф?</string>
+    <string name="create_new_vault_summary">Доступ к сейфу будет осуществляться с использованием мер безопасности вашего телефона (пароль или биометрические данные)\n\nКлюч шифрования доступен внутри хранилища и будет использоваться для восстановления любых сейфов.</string>
     <string name="select_a_vault">Выберите сейф</string>
     <plurals name="item_count">
         <item quantity="one">%s элемент</item>
