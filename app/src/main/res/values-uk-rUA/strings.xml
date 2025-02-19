@@ -303,8 +303,8 @@
     <string name="auto_play_video_summary">Відтворювати відео автоматично під час перегляду медіа</string>
     <string name="shared_elements">Анімовані медіа елементи</string>
     <string name="shared_elements_summary">Анімуйте натискання / повернення медіа елементів за допомогою спільних елементів переходу</string>
-    <string name="type_stylus">Stylus</string>
-    <string name="type_highlighter">Highlighter</string>
+    <string name="type_stylus">Перо</string>
+    <string name="type_highlighter">Маркер</string>
     <string name="type_marker">Marker</string>
     <string name="type_erase">Eraser</string>
     <string name="crop">Crop</string>
