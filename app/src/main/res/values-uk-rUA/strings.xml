@@ -304,7 +304,7 @@
     <string name="shared_elements">Анімовані медіа елементи</string>
     <string name="shared_elements_summary">Анімуйте натискання / повернення медіа елементів за допомогою спільних елементів переходу</string>
     <string name="type_stylus">Перо</string>
-    <string name="type_highlighter">Маркер</string>
+    <string name="type_highlighter">Текстовиділювач</string>
     <string name="type_marker">Маркер</string>
     <string name="type_erase">Ластик</string>
     <string name="crop">Обрізати</string>
