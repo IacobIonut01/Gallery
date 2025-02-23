@@ -263,7 +263,7 @@
     <string name="support_the_project">支援該專案</string>
     <string name="click_to_copy">點選複製</string>
     <string name="take_audio_focus_title">取得音訊焦點</string>
-    <string name="take_audio_focus_summary">啟用此功能將在播放媒體時取得音訊焦點。 影片播放時，後台播放的任何媒體都會暫停。  （需要重新啟動應用程式）</string>
+    <string name="take_audio_focus_summary">啟用此功能將在播放媒體時取得音訊焦點。影片播放時，後台播放的任何媒體都會暫停。（需要重新啟動應用程式）</string>
     <string name="full_brightness_view_title">觀看時全亮度</string>
     <string name="full_brightness_view_summary">查看影像和影片時將螢幕亮度調至最大</string>
     <string name="auto_hide_on_video_play">在影片播放時隱藏 UI</string>
@@ -277,8 +277,8 @@
     <string name="delete_all_categories">刪除所有類別</string>
     <string name="delete_all_categories_summary">這將永久刪除迄今為止在您的媒體中找到的所有類別，此操作不可逆轉。 您必須重新掃描您的媒體才能將其重新分類。</string>
     <string name="ai_category">智慧功能</string>
-    <string name="no_classification">禁用影像分類</string>
-    <string name="no_classification_summary">啟用此功能將刪除任何有關影像分類或管理影像的 UI。 它不會刪除您的分類圖像資料庫</string>
+    <string name="no_classification">停用影像分類</string>
+    <string name="no_classification_summary">啟用此功能將刪除任何有關影像分類或管理影像的 UI。它不會刪除您的分類圖像資料庫</string>
     <string name="classification_unwanted">我不想要這個</string>
     <string name="classification_unwanted_summary">我不想要這個，請將它移除。\n（可以在設定中再次啟用）</string>
     <string name="restore">恢復</string>
