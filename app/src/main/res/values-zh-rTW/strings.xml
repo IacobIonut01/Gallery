@@ -20,7 +20,7 @@
     <string name="no_media_cd">無可用媒體檔案</string>
     <string name="empty_trash_title">一塵不染</string>
     <string name="empty_trash_cd">已清空垃圾桶</string>
-    <string name="error_title">出現問題了  :(</string>
+    <string name="error_title">出現問題了 :(</string>
     <string name="error_cd">發生錯誤</string>
     <string name="copy_error">複製錯誤</string>
     <string name="trash_restore">還原</string>
@@ -37,8 +37,8 @@
     <string name="mb">MB</string>
     <string name="gb">GB</string>
     <string name="metadata">相關資訊</string>
-    <string name="select_all">選取全部</string>
-    <string name="unselect_all">撤銷全選</string>
+    <string name="select_all">全部選取</string>
+    <string name="unselect_all">全部取消選取</string>
     <string name="drop_down_cd">下拉選單</string>
     <string name="back_cd">返回</string>
     <string name="settings_title">設定</string>
@@ -72,7 +72,7 @@
     <string name="edit_cd">編輯</string>
     <string name="settings_theme_header">主題</string>
     <string name="settings_follow_system_theme_title">跟隨系統主題</string>
-    <string name="settings_dark_mode_title">使用暗黑模式</string>
+    <string name="settings_dark_mode_title">使用深色模式</string>
     <string name="selection_dialog_close_cd">關閉選取視窗</string>
     <string name="edit">編輯</string>
     <string name="trash_deletion_warning">刪除的照片和影片將在 30 天後清除。</string>
@@ -263,7 +263,7 @@
     <string name="support_the_project">支援該專案</string>
     <string name="click_to_copy">點選複製</string>
     <string name="take_audio_focus_title">取得音訊焦點</string>
-    <string name="take_audio_focus_summary">啟用此功能將在播放媒體時取得音訊焦點。 影片播放時，後台播放的任何媒體都會暫停。  （需要重新啟動應用程式）</string>
+    <string name="take_audio_focus_summary">啟用此功能將在播放媒體時取得音訊焦點。影片播放時，後台播放的任何媒體都會暫停。（需要重新啟動應用程式）</string>
     <string name="full_brightness_view_title">觀看時全亮度</string>
     <string name="full_brightness_view_summary">查看影像和影片時將螢幕亮度調至最大</string>
     <string name="auto_hide_on_video_play">在影片播放時隱藏 UI</string>
@@ -277,8 +277,8 @@
     <string name="delete_all_categories">刪除所有類別</string>
     <string name="delete_all_categories_summary">這將永久刪除迄今為止在您的媒體中找到的所有類別，此操作不可逆轉。 您必須重新掃描您的媒體才能將其重新分類。</string>
     <string name="ai_category">智慧功能</string>
-    <string name="no_classification">禁用影像分類</string>
-    <string name="no_classification_summary">啟用此功能將刪除任何有關影像分類或管理影像的 UI。 它不會刪除您的分類圖像資料庫</string>
+    <string name="no_classification">停用影像分類</string>
+    <string name="no_classification_summary">啟用此功能將刪除任何有關影像分類或管理影像的 UI。它不會刪除您的分類圖像資料庫</string>
     <string name="classification_unwanted">我不想要這個</string>
     <string name="classification_unwanted_summary">我不想要這個，請將它移除。\n（可以在設定中再次啟用）</string>
     <string name="restore">恢復</string>
@@ -303,6 +303,25 @@
     <string name="auto_play_video_summary">Play the video automatically while viewing media</string>
     <string name="shared_elements">Animate media items</string>
     <string name="shared_elements_summary">Animate media items click/return using shared elements transitions</string>
+    <string name="type_stylus">Stylus</string>
+    <string name="type_highlighter">Highlighter</string>
+    <string name="type_marker">Marker</string>
+    <string name="type_erase">Eraser</string>
+    <string name="crop">Crop</string>
+    <string name="adjust">Adjust</string>
+    <string name="filters">Filters</string>
+    <string name="markup">Markup</string>
+    <string name="type_size">Size</string>
+    <string name="encrypting_media">Encrypting media...</string>
+    <string name="decrypt_vault">Decrypt Vault</string>
+    <string name="restore_vault_summary">The current vault and its content will be decrypted and restored.\nThis action will make your content accessible again in the Gallery.</string>
+    <string name="restore_vault_title">Confirm Decryption?</string>
+    <string name="yes">Yes</string>
+    <string name="vault_deletion_title">Confirm Deletion?</string>
+    <string name="vault_deletion_summary">The current vault and its content will be deleted permanently.\nThis action cannot be undone.</string>
+    <string name="create_new_vault_title">建立新私密空間？</string>
+    <string name="create_new_vault_summary">The vault will be accessed using your phone security measures (password or biometrics)\n\nEncryption key can be accessed inside the vault and will be used in order to restore any vaults.</string>
+    <string name="select_a_vault">選擇私密空間</string>
     <plurals name="item_count">
         <item quantity="other">%s 個項目</item>
     </plurals>
