@@ -129,8 +129,8 @@
     <string name="get_started">Kom igång</string>
     <string name="welcome">Välkommen</string>
     <string name="setup_summary">För att appen ska kunna komma åt dina medier måste följande behörigheter beviljas:</string>
-    <string name="required">Obligatorisk</string>
-    <string name="optional">Valfri</string>
+    <string name="required">Nödvändiga</string>
+    <string name="optional">Valfria</string>
     <string name="permission_manage_media_title">Hantera medier</string>
     <string name="permission_manage_media_summary">"Beviljar automatiskt systemets bekräftelsedialogrutor när du begär diverse ändringar av dina medier (markera/avmarkera som favorit, hantera skräp, redigera metadata etc.)"</string>
     <string name="read_media_images">Läsa mediebilder</string>
