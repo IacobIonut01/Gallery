@@ -267,7 +267,7 @@
     <string name="full_brightness_view_title">Full Brightness when viewing</string>
     <string name="full_brightness_view_summary">Increase the screen brightness to maximum when viewing images and videos</string>
     <string name="auto_hide_on_video_play">Hide UI on Video Play</string>
-    <string name="auto_hide_on_video_play_summary">Hides the UI after 2 seconds when playing videos</string>
+    <string name="auto_hide_on_video_play_summary">Po 2 sekundžių yra paslepiama naudotojo sąsają, kai yra rodomi vaizdo įrašai</string>
     <string name="up_to_date">Up-to-date</string>
     <string name="delete_location">Delete Location</string>
     <string name="delete_metadata">Delete Metadata</string>
