@@ -295,8 +295,8 @@
     <string name="media_view">Zobrazení médií</string>
     <string name="exif_date">Datum Exif</string>
     <string name="media_info">Informace o médiu</string>
-    <string name="weekly_date">Weekly Date</string>
-    <string name="media_grid">Media Grid</string>
+    <string name="weekly_date">Týdenní datum</string>
+    <string name="media_grid">Mřížka médií</string>
     <string name="classic_date">Classic Date</string>
     <string name="extended_date">Extended Date</string>
     <string name="auto_play_video">Video Auto-Play</string>
