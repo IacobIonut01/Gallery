@@ -1,5 +1,5 @@
 [versions]
-adaptive = "1.1.0-beta01"
+adaptive = "1.1.0"
 agp = "8.8.0"
 aire = "0.15.5"
 avifCoderCoil = "2.0.10"
