@@ -304,7 +304,7 @@
     <string name="shared_elements">为媒体项目应用动画</string>
     <string name="shared_elements_summary">用共享元素过渡来作为媒体项目的点击/返回动画</string>
     <string name="type_stylus">Stylus</string>
-    <string name="type_highlighter">Highlighter</string>
+    <string name="type_highlighter">萤光笔</string>
     <string name="type_marker">Marker</string>
     <string name="type_erase">Eraser</string>
     <string name="crop">Crop</string>
