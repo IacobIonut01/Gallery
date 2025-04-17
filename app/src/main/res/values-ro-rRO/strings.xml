@@ -191,12 +191,12 @@
     <string name="delete_vault">Șterge seiful</string>
     <string name="unknown_vault">Seif necunoscut</string>
     <string name="hide">Ascunde</string>
-    <string name="ignored_albums_text">Select what albums you would like to not see in the main Timeline, in the Albums tab or both.\n\nYou can either select individual albums or create a wildcard pattern to automatically hide any albums that matches it.</string>
+    <string name="ignored_albums_text">Selectează ce albume ai dori să excluzi din Cronologie, din secțiunea de Albume sau amândouă.\n\nPoti selecta albume individuale sau poți crea un șablon cu metacaractere pentru a ascunde automat orice album se potrivește cu șablonul.</string>
     <string name="no_ignored_albums">Nu există albume ignorate</string>
     <string name="setup_ignored_albums">Configurare albume ignorate</string>
-    <string name="individual_album_selection">Individual Album Selection</string>
-    <string name="wildcard_creator">Wildcard Creator</string>
-    <string name="wildcard_summary">The wildcard will be used to match album names or their paths.\nThe wildcard can be treated as a regex pattern.</string>
+    <string name="individual_album_selection">Selecție de Albume Individuale</string>
+    <string name="wildcard_creator">Creator de Șablon</string>
+    <string name="wildcard_summary">Șablonul va fi folosit pentru a potrivi nume de albume sau căile lor.\nȘablonul poate fi tratat ca un șablon regex.</string>
     <string name="wildcard_summary_first">Wildcard: %1$s\nMatched albums: %2$s</string>
     <string name="matched_albums">"Albume potrivite: %1$s"</string>
     <string name="go_back">Înapoi</string>
