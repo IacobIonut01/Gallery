@@ -323,7 +323,7 @@
     <string name="create_new_vault_summary">Do sejfu można się dostać używając zabezpieczeń telefonu (hasło lub biometria)\n\nKlucz szyfrujący można znaleźć wewnątrz sejfu i można go użyć, aby odzyskać dowolny sejf.</string>
     <string name="select_a_vault">Wybierz sejf</string>
     <string name="taken_on">Taken on</string>
-    <string name="resolution">Resolution</string>
+    <string name="resolution">Rozdzielczość</string>
     <string name="dimensions">Dimensions</string>
     <string name="duration">Duration</string>
     <string name="frame_rate">Frame Rate</string>
@@ -334,11 +334,11 @@
     <string name="ppi_resolution_string">" • %.1f × %.1f %s"</string>
     <string name="at_kbps">" at %1$s"</string>
     <string name="video_fps">%.1f fps</string>
-    <string name="collecting_metadata">Collecting metadata...</string>
-    <string name="database">Database</string>
-    <string name="refresh_metadata">Refresh Metadata</string>
-    <string name="refresh_metadata_summary">If something feels wrong, refresh all stored media metadata</string>
-    <string name="metadata_refresh_toast">Refreshing metadata...</string>
+    <string name="collecting_metadata">Zbieranie metadanych...</string>
+    <string name="database">Baza danych</string>
+    <string name="refresh_metadata">Odśwież metadane</string>
+    <string name="refresh_metadata_summary">Jeśli coś jest nie tak, odśwież wszystkie zapisane metadane multimediów</string>
+    <string name="metadata_refresh_toast">Odświeżanie metadanych...</string>
     <plurals name="item_count">
         <item quantity="one">%s pozycja</item>
         <item quantity="few">%s pozycji</item>
