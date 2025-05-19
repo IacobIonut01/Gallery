@@ -24,7 +24,7 @@
     <string name="error_cd">Wystąpił błąd</string>
     <string name="copy_error">Skopiuj błąd</string>
     <string name="trash_restore">Przywróć</string>
-    <string name="trash_empty">Pusty</string>
+    <string name="trash_empty">Opróżnij</string>
     <string name="trash_delete">Usuń</string>
     <string name="share">Udostępnij</string>
     <string name="remove_selected">Usuń wybrane</string>
