@@ -322,6 +322,23 @@
     <string name="create_new_vault_title">创建新的私密空间？</string>
     <string name="create_new_vault_summary">保险库将通过您的手机安全措施（密码或生物识别）进行访问。\n\n加密密钥可以在保险库内部获取，并用于恢复任何保险库。</string>
     <string name="select_a_vault">请选择私密空间</string>
+    <string name="taken_on">Taken on</string>
+    <string name="resolution">Resolution</string>
+    <string name="dimensions">Dimensions</string>
+    <string name="duration">Duration</string>
+    <string name="frame_rate">Frame Rate</string>
+    <string name="bitrate">Bitrate</string>
+    <string name="resolution_with_mp">%1$d × %2$d • %3$s MP</string>
+    <string name="ppi">PPI</string>
+    <string name="ppcm">PPCM</string>
+    <string name="ppi_resolution_string">" • %.1f × %.1f %s"</string>
+    <string name="at_kbps">" at %1$s"</string>
+    <string name="video_fps">%.1f fps</string>
+    <string name="collecting_metadata">Collecting metadata...</string>
+    <string name="database">Database</string>
+    <string name="refresh_metadata">Refresh Metadata</string>
+    <string name="refresh_metadata_summary">If something feels wrong, refresh all stored media metadata</string>
+    <string name="metadata_refresh_toast">Refreshing metadata...</string>
     <plurals name="item_count">
         <item quantity="other">%s 个项目</item>
     </plurals>
