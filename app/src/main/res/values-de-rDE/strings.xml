@@ -283,11 +283,11 @@
     <string name="classification_unwanted_summary">Ich möchte das nicht, bitte entfernen.\n(Es kann in den Einstellungen wieder aktiviert werden)</string>
     <string name="restore">Wiederherstellen</string>
     <string name="encrypted">Verschlüsselt</string>
-    <string name="date_format_settings">Date Format</string>
-    <string name="date_header">Date Formats</string>
+    <string name="date_format_settings">Datumsformat</string>
+    <string name="date_header">Datumsformate</string>
     <string name="date_header_summary">Erstelle deine eigenen Datumsformate</string>
     <string name="launch_on_library">In der Bibliothek starten</string>
-    <string name="categories">Categories</string>
+    <string name="categories">Kategorien</string>
     <string name="classified_media">%1$s classified media</string>
     <string name="scan_for_new_categories">Scan for new categories</string>
     <string name="scanning_media">Scanning media...</string>
