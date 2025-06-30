@@ -126,7 +126,7 @@
     <string name="move_to_another_album">In ein anderes Album verschieben</string>
     <string name="move">Verschieben</string>
     <string name="some_permissions_are_not_granted">Manche Berechtigungen wurden nicht erteilt!</string>
-    <string name="get_started">Erste Schritte</string>
+    <string name="get_started">Los geht\'s</string>
     <string name="welcome">Willkommen</string>
     <string name="setup_summary">Um auf Medien dieses Geräts zugreifen zu können, müssen folgende Berechtigungen erteilt werden:</string>
     <string name="required">Erforderlich</string>
@@ -214,7 +214,7 @@
     <string name="setup_location_options_albums">Alben</string>
     <string name="setup_location_options_timeline">Zeitleiste</string>
     <string name="setup_location_options_both">Beide</string>
-    <string name="setup_location_type_title">Wer sollte ignoriert werden</string>
+    <string name="setup_location_type_title">Welche sollten ignoriert werden</string>
     <string name="setup_location_type_subtitle">Entweder ein einzelnes Album auswählen oder ein Regex Muster erstellen, das mit mehreren übereinstimmt</string>
     <string name="setup_location_types_selection">Auswahl</string>
     <string name="setup_location_types_regex">Regex Muster</string>
@@ -238,7 +238,7 @@
     <string name="setup_confirmation_title">Bestätigung</string>
     <string name="setup_confirmation_subtitle">Übersicht über deine Ignorieroptionen und Treffer</string>
     <string name="setup_confirmation_where">Wo sollte ignoriert werden</string>
-    <string name="setup_confirmation_who">Wo sollte ignoriert werden</string>
+    <string name="setup_confirmation_who">Welche sollten ignoriert werden</string>
     <string name="setup_confirmation_matched">Passende Alben</string>
     <string name="albums_and_timeline">Sowohl Alben als auch Zeitleiste</string>
     <string name="created">Erstellt</string>
@@ -246,14 +246,14 @@
     <string name="filter_type_name">Name</string>
     <string name="images_videos"><![CDATA[%1$s Bilder und Videos]]></string>
     <string name="auto_hide_searchbar">Suchleiste beim Scrollen ausblenden</string>
-    <string name="auto_hide_searchbar_summary">Automatisches Ausblenden der Suchleiste oder der oberen Leiste des Bildschirms beim Scrollen</string>
-    <string name="auto_hide_navigationbar">Ausblenden der Navigationsleiste beim Scrollen</string>
+    <string name="auto_hide_searchbar_summary">Beim Scrollen automatisch die Suchleiste oder die obere Leiste des Bildschirms ausblenden</string>
+    <string name="auto_hide_navigationbar">Navigationsleiste beim Scrollen ausblenden</string>
     <string name="auto_hide_navigationbar_summary">Beim Scrollen automatisch die Navigationsleiste ausblenden</string>
     <string name="navigation">Navigation</string>
     <string name="vault_setup_title">Tresor einrichten</string>
     <string name="vault_setup_subtitle"><![CDATA[Verschlüssle deine privaten Fotos & Videos]]></string>
     <string name="vault_setup_name">Bezeichnung des Tresors</string>
-    <string name="vault_setup_security_error">Bitte richten Sie vor dem Einrichten des Tresors eine telefonische Sicherheitsmaßnahme ein.</string>
+    <string name="vault_setup_security_error">Bitte lege vor der Einrichtung des Tresors eine Telefonsicherheitseinstellung fest.</string>
     <string name="vault_setup_summary">Der Zugriff auf den Tresor erfolgt über die Sicherheitsvorkehrungen deines Telefons (Passwort oder biometrische Daten)\n\nDer Verschlüsselungsschlüssel kann im Tresor eingesehen werden und wird zur Wiederherstellung des Tresors verwendet.</string>
     <string name="vault_setup_summary2">Der Zugriff auf den Tresor erfolgt über die Sicherheitsmaßnahmen deines Telefons (Passwort oder biometrische Daten)\n\nDer Inhalt des Tresors wird mit einem AES256-Verschlüsselungsalgorithmus verschlüsselt.\nAuf den Verschlüsselungsschlüssel kann innerhalb des Tresors nicht zugegriffen werden und du kannst deinen Tresor nicht übertragen.</string>
     <string name="vault_already_exists">Tresor \"%1$s\" existiert bereits</string>
@@ -263,10 +263,10 @@
     <string name="support_the_project">Das Projekt unterstützen</string>
     <string name="click_to_copy">Zum Kopieren anklicken</string>
     <string name="take_audio_focus_title">Audio-Fokus übernehmen</string>
-    <string name="take_audio_focus_summary">Wenn Sie diese Option aktivieren, wird bei der Wiedergabe von Medien der Audio-Fokus übernommen. Alle Medien, die im Hintergrund abgespielt werden, werden angehalten, während das Video abgespielt wird. (Neustart der App erforderlich)</string>
+    <string name="take_audio_focus_summary">Ist diese Option aktiviert, wird bei der Wiedergabe von Medien der Audio-Fokus übernommen. Alle Medien, die im Hintergrund abgespielt werden, werden angehalten, während das Video abgespielt wird. (Neustart der App erforderlich)</string>
     <string name="full_brightness_view_title">Volle Helligkeit beim Betrachten</string>
-    <string name="full_brightness_view_summary">Bildschirmhelligkeit maximieren bei Betrachtung von Bildern und Videos</string>
-    <string name="auto_hide_on_video_play">UI bei Videowiedergabe ausblenden</string>
+    <string name="full_brightness_view_summary">Bildschirmhelligkeit bei Betrachtung von Bildern und Videos maximieren</string>
+    <string name="auto_hide_on_video_play">Benutzeroberfläche bei Videowiedergabe ausblenden</string>
     <string name="auto_hide_on_video_play_summary">Blendet die Benutzeroberfläche beim Abspielen von Videos nach 2 Sekunden aus</string>
     <string name="up_to_date">Aktuell</string>
     <string name="delete_location">Standort entfernen</string>
@@ -274,8 +274,8 @@
     <string name="categorise_your_media">Kategorisiere deine Medien</string>
     <string name="disclaimer">Haftungsausschluss</string>
     <string name="disclaimer_classification">Ihre Medien werden nirgends hochgeladen. Klassifizierung erfolgt lokal auf dem Gerät mit einem vortrainierten TensorFlow-Lite Modell, das in den Assets der App verfügbar ist.</string>
-    <string name="delete_all_categories">Lösche alle Kategorien</string>
-    <string name="delete_all_categories_summary">Damit werden alle bisher in Ihren Medien gefundenen Kategorien endgültig gelöscht. Diese Aktion kann nicht rückgängig gemacht werden. Anschließend musst du deine Medien erneut scannen, damit sie neu zugeordnet werden können.</string>
+    <string name="delete_all_categories">Alle Kategorien löschen</string>
+    <string name="delete_all_categories_summary">Damit werden alle bisher in deinen Medien gefundenen Kategorien endgültig gelöscht. Diese Aktion kann nicht rückgängig gemacht werden. Anschließend musst du deine Medien erneut scannen, damit sie neu zugeordnet werden können.</string>
     <string name="ai_category">KI-Funktionen</string>
     <string name="no_classification">Bildklassifizierung deaktivieren</string>
     <string name="no_classification_summary">Wenn du diese Funktion aktivierst, wird die Benutzeroberfläche für die Bildklassifizierung und deren Verwaltung entfernt. Deine Datenbank mit klassifizierten Bildern wird NICHT gelöscht</string>
@@ -285,13 +285,13 @@
     <string name="encrypted">Verschlüsselt</string>
     <string name="date_format_settings">Datumsformat</string>
     <string name="date_header">Datumsformate</string>
-    <string name="date_header_summary">Erstelle deine eigenen Datumsformate</string>
+    <string name="date_header_summary">Lege deine eigenen Datumsformate fest</string>
     <string name="launch_on_library">In der Bibliothek starten</string>
     <string name="categories">Kategorien</string>
     <string name="classified_media">%1$s klassifizierte Medien</string>
     <string name="scan_for_new_categories">Nach neuen Kategorien suchen</string>
     <string name="scanning_media">Scanne Medien...</string>
-    <string name="date_header_title">Datum Kopfzeile</string>
+    <string name="date_header_title">Datum in der Kopfzeile</string>
     <string name="media_view">Medienansicht</string>
     <string name="exif_date">Exif-Datum</string>
     <string name="media_info">Medieninfo</string>
@@ -305,7 +305,7 @@
     <string name="shared_elements_summary">Medienelemente animieren bei Klick/Rückkehr mit Übergängen für gemeinsame Elemente</string>
     <string name="type_stylus">Stift</string>
     <string name="type_highlighter">Textmarker</string>
-    <string name="type_marker">Marker</string>
+    <string name="type_marker">Markierstift</string>
     <string name="type_erase">Radierer</string>
     <string name="crop">Zuschneiden</string>
     <string name="adjust">Anpassen</string>
@@ -341,6 +341,6 @@
     <string name="metadata_refresh_toast">Aktualisiere Metadaten...</string>
     <plurals name="item_count">
         <item quantity="one">%s Datei</item>
-        <item quantity="other">%s Dateien</item>
+        <item quantity="other">%s Elemente</item>
     </plurals>
 </resources>
