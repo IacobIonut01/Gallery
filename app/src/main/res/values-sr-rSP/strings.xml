@@ -210,7 +210,7 @@
     <string name="setup_location_title">Options</string>
     <string name="setup_location_subtitle">Where and who’s ignored</string>
     <string name="setup_location_location_title">Where should be ignored</string>
-    <string name="setup_location_location_subtitle">The album and it’s content will be hidden depending where the location is set</string>
+    <string name="setup_location_location_subtitle">Албум и његов садржај ће бити сакријен у зависности гдје је постављена локација</string>
     <string name="setup_location_options_albums">Albums</string>
     <string name="setup_location_options_timeline">Timeline</string>
     <string name="setup_location_options_both">Both</string>
