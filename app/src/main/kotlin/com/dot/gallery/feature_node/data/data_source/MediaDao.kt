@@ -18,7 +18,7 @@ interface MediaDao {
     suspend fun getMedia(): List<UriMedia>
 
     @Query("SELECT * FROM media WHERE mimeType LIKE :allowedMedia ORDER BY timestamp DESC")
-    suspend fun getMediaByType(allowedMedia: AllowedMedia): List<UriMedia>
+    suspend fun getMediaByType(allowedMedia: String): List<UriMedia>
 
     @Query("SELECT * FROM media WHERE favorite = 1 ORDER BY timestamp DESC")
     suspend fun getFavorites(): List<UriMedia>

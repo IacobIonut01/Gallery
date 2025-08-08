@@ -161,6 +161,7 @@ android {
 
 dependencies {
     implementation(libs.androidx.lifecycle.process)
+    implementation(libs.androidx.palette.ktx)
     runtimeOnly(libs.androidx.profileinstaller)
     implementation(project(":libs:cropper"))
     "baselineProfile"(project(mapOf("path" to ":baselineprofile")))

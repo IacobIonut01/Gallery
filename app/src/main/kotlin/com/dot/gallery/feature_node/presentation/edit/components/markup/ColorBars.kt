@@ -27,6 +27,8 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.DrawStyle
+import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
@@ -178,11 +180,7 @@ fun SaturationBar(
         val drawScopeSize = size
 
         if (drawScopeSize.width > 0 && drawScopeSize.height > 0) {
-            val bitmap = Bitmap.createBitmap(
-                size.width.toInt(),
-                size.height.toInt(),
-                Bitmap.Config.ARGB_8888
-            )
+            val bitmap = createBitmap(size.width.toInt(), size.height.toInt())
             val saturationCanvas = android.graphics.Canvas(bitmap)
             val saturationPanel = RectF(0f, 0f, bitmap.width.toFloat(), bitmap.height.toFloat())
             val saturationColors = IntArray(
@@ -288,7 +286,7 @@ fun HueBar(
                     .fillMaxWidth()
             )
             .then(modifier)
-            .clip(RoundedCornerShape(20))
+            .clip(RoundedCornerShape(50))
             .emitDragGesture(interactionSource)
     ) {
         val drawScopeSize = size
@@ -349,21 +347,33 @@ fun HueBar(
             }
 
             if (enabled) {
-                drawRoundRect(
-                    color = Color.White,
-                    topLeft = if (isSupportingPanel) {
-                        Offset(0f, pressOffset.value.y - 8.dp.toPx())
-                    } else {
-                        Offset(pressOffset.value.x - 8.dp.toPx(), 0f)
-                    },
-                    size = if (isSupportingPanel) {
-                        Size(size.width, size.width / 3)
-                    } else {
-                        Size(size.height / 3, size.height)
-                    },
-                    cornerRadius = CornerRadius(20f, 20f),
-                    style = Stroke(width = 3.dp.toPx())
-                )
+                if (isSupportingPanel) {
+                    drawCircle(
+                        color = currentColor,
+                        radius = (size.width - 3.dp.toPx()) / 2.0f,
+                        center = Offset(pressOffset.value.y, size.width / 2.0f),
+                        style = Fill
+                    )
+                    drawCircle(
+                        color = Color.White,
+                        radius = (size.width - 3.dp.toPx()) / 2.0f,
+                        center = Offset(pressOffset.value.y, size.width / 2.0f),
+                        style = Stroke(width = 3.dp.toPx())
+                    )
+                } else {
+                    drawCircle(
+                        color = currentColor,
+                        radius = (size.height - 3.dp.toPx()) / 2.0f,
+                        center = Offset(pressOffset.value.x, size.height / 2.0f),
+                        style = Fill
+                    )
+                    drawCircle(
+                        color = Color.White,
+                        radius = (size.height - 3.dp.toPx()) / 2.0f,
+                        center = Offset(pressOffset.value.x, size.height / 2.0f),
+                        style = Stroke(width = 3.dp.toPx())
+                    )
+                }
             }
         }
     }

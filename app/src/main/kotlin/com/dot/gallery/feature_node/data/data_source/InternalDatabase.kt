@@ -28,6 +28,7 @@ import com.dot.gallery.feature_node.domain.util.Converters
         MediaVersion::class,
         TimelineSettings::class,
         Media.ClassifiedMedia::class,
+        Media.HueClassifiedMedia::class,
         Media.EncryptedMedia2::class,
         Vault::class,
         MediaMetadataCore::class,
@@ -56,6 +57,8 @@ abstract class InternalDatabase : RoomDatabase() {
     abstract fun getMediaDao(): MediaDao
 
     abstract fun getClassifierDao(): ClassifierDao
+
+    abstract fun getHueClassifierDao(): HueClassifierDao
 
     abstract fun getVaultDao(): VaultDao
 

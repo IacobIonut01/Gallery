@@ -184,7 +184,7 @@ open class MediaViewModel @Inject constructor(
         permissionState.tryEmit(hasPermission)
     }
 
-    private fun updateDatabase() {
+    fun updateDatabase() {
         viewModelScope.launch(Dispatchers.IO) {
             updater.send(Event.UpdateDatabase)
         }

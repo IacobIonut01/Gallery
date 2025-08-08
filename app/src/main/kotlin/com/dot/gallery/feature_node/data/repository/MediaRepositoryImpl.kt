@@ -15,7 +15,12 @@ import android.os.Environment
 import android.provider.MediaStore
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.util.fastDistinctBy
+import androidx.compose.ui.util.fastFilter
 import androidx.core.app.ActivityOptionsCompat
+import androidx.core.graphics.ColorUtils
 import androidx.datastore.preferences.core.Preferences
 import androidx.work.WorkManager
 import com.dot.gallery.core.Resource
@@ -65,12 +70,18 @@ import com.dot.gallery.feature_node.presentation.picker.AllowedMedia
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia.BOTH
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia.PHOTOS
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia.VIDEOS
+import com.dot.gallery.feature_node.presentation.huesearch.Morton3D
+import com.dot.gallery.feature_node.presentation.huesearch.quantizeLab
 import com.dot.gallery.feature_node.presentation.util.printError
 import com.dot.gallery.feature_node.presentation.util.printInfo
 import com.dot.gallery.feature_node.presentation.util.printWarning
 import com.dot.gallery.feature_node.presentation.vault.scheduleMediaMigrationCheck
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flowOn
@@ -632,6 +643,24 @@ class MediaRepositoryImpl(
             database.getClassifierDao().getClassifiedMediaByCategoryFlow(category)
         else emptyFlow()
 
+    @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
+    override fun getNearestImagesByHueFlow(hueFlow: Flow<Color>): Flow<List<Media.HueClassifiedMedia>> {
+        return combine(
+            hueFlow.debounce(20L),
+            database.getHueClassifierDao().getClassifiedMediaFlow()
+        ) { hue, classifiedMedia ->
+            val lab = DoubleArray(3).also { ColorUtils.colorToLAB(hue.toArgb(), it) }
+            val (gx, gy, gz) = quantizeLab(lab[0], lab[1], lab[2])
+
+            val neighborhood = Morton3D.neighbors(gx, gy, gz, 4)
+            classifiedMedia.run {
+                fastFilter { it.morton1 in neighborhood }
+                    .plus(fastFilter { it.morton2 in neighborhood })
+                    .fastDistinctBy { it.id }
+            }
+        }.flowOn(Dispatchers.Default)
+    }
+
     override fun getClassifiedMediaByMostPopularCategory(): Flow<List<ClassifiedMedia>> =
         database.getClassifierDao().getClassifiedMediaByMostPopularCategoryFlow()
 
@@ -660,6 +689,14 @@ class MediaRepositoryImpl(
 
     override fun getMetadata(media: Media): Flow<MediaMetadata> {
         return database.getMetadataDao().getFullMetadata(media.id).map { it.toMediaMetadata() }
+    }
+
+    override fun getHueClassifiedImageCount(): Flow<Int> {
+        return database.getHueClassifierDao().getClassifiedMediaCountFlow()
+    }
+
+    override suspend fun deleteHueClassifications() {
+        return database.getHueClassifierDao().deleteAllClassifiedMedia()
     }
 
     override fun getMetadata(): Flow<List<MediaMetadata>> {

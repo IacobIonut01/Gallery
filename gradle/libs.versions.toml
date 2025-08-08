@@ -47,6 +47,7 @@ workRuntimeKtx = "2.10.1"
 zoomimageViewSketch = "1.1.2"
 rules = "1.6.1"
 lifecycleProcess = "2.9.0"
+paletteKtx = "1.0.0"
 
 [libraries]
 # AndroidX
@@ -155,6 +156,7 @@ tensorflow-lite = { module = "org.tensorflow:tensorflow-lite", version.ref = "te
 zoomimage-sketch = { module = "io.github.panpf.zoomimage:zoomimage-compose-sketch4", version.ref = "zoomimageViewSketch" }
 androidx-rules = { group = "androidx.test", name = "rules", version.ref = "rules" }
 androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycleProcess" }
+androidx-palette-ktx = { group = "androidx.palette", name = "palette-ktx", version.ref = "paletteKtx" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
