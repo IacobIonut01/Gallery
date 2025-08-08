@@ -24,6 +24,8 @@ sealed class Screen(val route: String) {
 
         fun idAndCategory() = "$route?mediaId={mediaId}&category={category}"
 
+        fun idAndHue() = "$route?mediaId={mediaId}&hue={hue}"
+
         fun idAndCategory(id: Long, category: String) = "$route?mediaId=$id&category=$category"
     }
 
@@ -51,6 +53,8 @@ sealed class Screen(val route: String) {
     }
 
     data object DateFormatScreen : Screen("date_format_screen")
+
+    data object HueSearchScreen : Screen("hue_search_screen")
 
     operator fun invoke() = route
 }

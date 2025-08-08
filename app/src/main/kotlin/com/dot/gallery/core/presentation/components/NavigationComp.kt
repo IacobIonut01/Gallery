@@ -41,7 +41,6 @@ import com.dot.gallery.core.Settings.Misc.rememberLastScreen
 import com.dot.gallery.core.Settings.Misc.rememberTimelineGroupByMonth
 import com.dot.gallery.core.presentation.components.util.OnLifecycleEvent
 import com.dot.gallery.core.presentation.components.util.permissionGranted
-import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.presentation.albums.AlbumsScreen
 import com.dot.gallery.feature_node.presentation.albums.AlbumsViewModel
 import com.dot.gallery.feature_node.presentation.classifier.CategoriesScreen
@@ -51,6 +50,8 @@ import com.dot.gallery.feature_node.presentation.common.ChanneledViewModel
 import com.dot.gallery.feature_node.presentation.common.MediaViewModel
 import com.dot.gallery.feature_node.presentation.dateformat.DateFormatScreen
 import com.dot.gallery.feature_node.presentation.favorites.FavoriteScreen
+import com.dot.gallery.feature_node.presentation.huesearch.HueSearchScreen
+import com.dot.gallery.feature_node.presentation.huesearch.HueSearchViewModel
 import com.dot.gallery.feature_node.presentation.ignored.IgnoredScreen
 import com.dot.gallery.feature_node.presentation.ignored.setup.IgnoredSetup
 import com.dot.gallery.feature_node.presentation.library.LibraryScreen
@@ -523,6 +524,42 @@ fun NavigationComp(
             }
 
             composable(
+                route = Screen.HueSearchScreen()
+            ) {
+                val vm = hiltViewModel<HueSearchViewModel>().apply {
+                    updateDatabase = timelineViewModel::updateDatabase
+                }
+                val hueState = vm.hueState.collectAsStateWithLifecycle(context = Dispatchers.IO)
+                val mediaState = vm.mediaState.collectAsStateWithLifecycle(context = Dispatchers.IO)
+                val isRunning = vm.isRunning.collectAsStateWithLifecycle(context = Dispatchers.IO)
+                val progress = vm.progress.collectAsStateWithLifecycle(context = Dispatchers.IO)
+                val classifiedCount = vm.classifiedImageCount.collectAsStateWithLifecycle(context = Dispatchers.IO)
+
+                HueSearchScreen(
+                    mediaState = mediaState,
+                    metadataState = metadataState,
+                    albumsState = albumsState,
+                    selectionState = vm.selectionState,
+                    selectedMedia = vm.selectedMedia,
+                    toggleSelection = vm::toggleSelection,
+                    navigate = navPipe::navigate,
+                    navigateUp = navPipe::navigateUp,
+                    toggleNavbar = navPipe::toggleNavbar,
+                    sharedTransitionScope = this@SharedTransitionLayout,
+                    animatedContentScope = this,
+                    setColor = vm::setColor,
+                    currentColor = hueState,
+                    isRunning = isRunning,
+                    progress = progress,
+                    classifiedCount = classifiedCount,
+                    startClassification = vm::startClassification,
+                    stopClassification = vm::stopClassification,
+                    deleteClassifications = vm::deleteClassifications,
+                    handler = vm.handler
+                )
+            }
+
+            composable(
                 route = Screen.CategoryViewScreen.category(),
                 arguments = listOf(
                     navArgument(name = "category") {
@@ -567,8 +604,7 @@ fun NavigationComp(
                 val viewModel = hiltViewModel<CategoryViewModel>().apply {
                     this.category = category
                 }
-                val mediaState = viewModel.mediaByCategory
-                    .collectAsStateWithLifecycle(MediaState())
+                val mediaState = viewModel.mediaByCategory.collectAsStateWithLifecycle()
 
                 MediaViewScreen(
                     navigateUp = navPipe::navigateUp,
@@ -589,11 +625,59 @@ fun NavigationComp(
             }
 
             composable(
+                route = Screen.MediaViewScreen.idAndHue(),
+                arguments = listOf(
+                    navArgument(name = "mediaId") {
+                        type = NavType.LongType
+                        defaultValue = -1
+                    },
+                    navArgument(name = "hue") {
+                        type = NavType.LongType
+                        defaultValue = -1
+                    }
+                )
+            ) { backStackEntry ->
+                val mediaId: Long = remember(backStackEntry) {
+                    backStackEntry.arguments?.getLong("mediaId") ?: -1
+                }
+                val hue: Long = remember(backStackEntry) {
+                    backStackEntry.arguments?.getLong("hue") ?: -1
+                }
+                val entryName = Screen.HueSearchScreen()
+
+                val parentEntry = remember(backStackEntry) {
+                    navController.getBackStackEntry(entryName)
+                }
+
+                val viewModel = hiltViewModel<HueSearchViewModel>(parentEntry).apply {
+                    initHue = hue
+                    updateDatabase = timelineViewModel::updateDatabase
+                }
+                val mediaState = viewModel.mediaState.collectAsStateWithLifecycle()
+
+                MediaViewScreen(
+                    navigateUp = navPipe::navigateUp,
+                    toggleRotate = toggleRotate,
+                    paddingValues = paddingValues,
+                    mediaId = mediaId,
+                    target = "hue_$hue",
+                    mediaState = mediaState,
+                    albumsState = albumsState,
+                    metadataState = metadataState,
+                    handler = viewModel.handler,
+                    addMedia = viewModel::addMedia,
+                    vaultState = vaultState,
+                    navigate = navPipe::navigate,
+                    sharedTransitionScope = this@SharedTransitionLayout,
+                    animatedContentScope = this
+                )
+            }
+
+            composable(
                 route = Screen.DateFormatScreen()
             ) {
                 DateFormatScreen(navigateUp = navPipe::navigateUp)
             }
-
         }
     }
 }

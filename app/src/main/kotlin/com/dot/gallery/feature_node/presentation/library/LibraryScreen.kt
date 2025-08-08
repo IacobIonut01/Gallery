@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.QuestionMark
+import androidx.compose.material.icons.outlined.ColorLens
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.ImageSearch
@@ -220,6 +221,24 @@ fun LibraryScreen(
                                     .clickable {
                                         navigate(Screen.IgnoredScreen())
                                     }
+                            )
+                        }
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(
+                                16.dp,
+                                Alignment.CenterHorizontally
+                            )
+                        ) {
+                            LibrarySmallItem(
+                                title = "Search photo by hue",
+                                icon = Icons.Outlined.ColorLens,
+                                contentColor = MaterialTheme.colorScheme.secondary,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clickable {
+                                        navigate(Screen.HueSearchScreen())
+                                    },
+                                contentDescription = "Search photo by hue"
                             )
                         }
                     }

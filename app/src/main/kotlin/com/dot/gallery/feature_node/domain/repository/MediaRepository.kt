@@ -9,6 +9,7 @@ import android.graphics.Bitmap
 import android.net.Uri
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
+import androidx.compose.ui.graphics.Color
 import androidx.datastore.preferences.core.Preferences
 import com.dot.gallery.core.Resource
 import com.dot.gallery.feature_node.domain.model.Album
@@ -182,5 +183,11 @@ interface MediaRepository {
     fun getMetadata(): Flow<List<MediaMetadata>>
 
     fun getMetadata(media: Media): Flow<MediaMetadata>
+
+    fun getNearestImagesByHueFlow(hueFlow: Flow<Color>): Flow<List<Media.HueClassifiedMedia>>
+
+    fun getHueClassifiedImageCount(): Flow<Int>
+
+    suspend fun deleteHueClassifications()
 
 }

@@ -62,6 +62,7 @@ class DatabaseUpdaterWorker @AssistedInject constructor(
             media?.let {
                 database.getMediaDao().updateMedia(it)
                 database.getClassifierDao().deleteDeclassifiedImages(it.fastMap { m -> m.id })
+                database.getHueClassifierDao().deleteDeclassifiedMedia(it.fastMap { m -> m.id })
             }
             delay(5000)
         }
