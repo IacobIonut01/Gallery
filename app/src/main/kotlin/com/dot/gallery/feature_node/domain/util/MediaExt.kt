@@ -8,7 +8,6 @@ import com.dot.gallery.feature_node.domain.model.Media
 import com.github.panpf.zoomimage.subsampling.ContentImageSource
 import com.github.panpf.zoomimage.subsampling.SubsamplingImage
 import io.ktor.util.reflect.instanceOf
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.ByteArrayInputStream
 import java.io.ObjectInputStream
