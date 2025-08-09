@@ -118,12 +118,12 @@
     <string name="restoring_items">Restoring %1$s items..</string>
     <string name="trash_incompatible_title">Nokre element kan ikkje flyttast til papirkorga.</string>
     <string name="trash_incompatible_summary">Desse elementa vert sletta permanent.</string>
-    <string name="error_toast">An error occurred!</string>
+    <string name="error_toast">Det oppstod ein feil.</string>
     <string name="beta">Beta</string>
     <string name="remove_metadata">Fjern metadata</string>
     <string name="remove_location">Remove Location</string>
     <string name="description">Description</string>
-    <string name="move_to_another_album">Move to another album</string>
+    <string name="move_to_another_album">Flytt til eit anna album</string>
     <string name="move">Move</string>
     <string name="some_permissions_are_not_granted">Nokre tilgangsløyve er ikkje gjevne.</string>
     <string name="get_started">Kom i gang</string>
@@ -149,8 +149,8 @@
     <string name="hide_timeline_for_album_summary">Gøymer dato-topptekst ved opning av eit album</string>
     <string name="allow_vibrations">Tillat vibrering</string>
     <string name="allow_vibrations_summary">Tillet vibrering ved visse handlingar eller fingertrykk-rørsler</string>
-    <string name="album_name">Album Name</string>
-    <string name="create_new_album">Create new album</string>
+    <string name="album_name">Albumnamn</string>
+    <string name="create_new_album">Opprett album</string>
     <string name="copy">Copy</string>
     <string name="ignored_albums">Ignored Albums</string>
     <string name="select_an_album">Select an album</string>
