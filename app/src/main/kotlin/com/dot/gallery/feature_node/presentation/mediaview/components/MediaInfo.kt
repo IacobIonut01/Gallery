@@ -172,7 +172,7 @@ fun Media.retrieveMetadata(
 
                 val formattedFileSize = try {
                     File(path).formattedFileSize(context)
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     null // Just for safety, shouldn't crash here
                 }
                 if (formattedFileSize != null && formattedFileSize != "0 ${context.getString(R.string.kb)}") {
