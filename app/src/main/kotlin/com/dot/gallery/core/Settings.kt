@@ -81,8 +81,8 @@ object Settings {
 
         @Composable
         fun rememberLastViewType() =
-            rememberPreference(
-                key = LAST_VIEW,
+            rememberPreferenceSerializable(
+                keyString = LAST_VIEW,
                 defaultValue = ViewType.GRID
             )
 
