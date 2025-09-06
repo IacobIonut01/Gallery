@@ -21,7 +21,7 @@ android {
 
     defaultConfig {
         applicationId = "com.dot.gallery"
-        minSdk = 30
+        minSdk = 26
         targetSdk = 36
         versionCode = 32006
         versionName = "3.2.0"
@@ -127,7 +127,7 @@ android {
         create("arm64-v8a") {
             dimension = "abi"
             versionCode = 4 + (android.defaultConfig.versionCode ?: 0) * 10
-            ndk.abiFilters.add("arm64-v8a")
+            ndk.abiFilters.add("x86")
         }
         create("armeabi-v7a") {
             dimension = "abi"

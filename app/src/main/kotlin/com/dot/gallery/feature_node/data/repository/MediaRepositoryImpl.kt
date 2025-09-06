@@ -11,11 +11,13 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import androidx.core.app.ActivityOptionsCompat
+import androidx.core.content.contentValuesOf
 import androidx.datastore.preferences.core.Preferences
 import androidx.work.WorkManager
 import com.dot.gallery.core.Resource
@@ -200,15 +202,24 @@ class MediaRepositoryImpl(
         mediaList: List<T>,
         favorite: Boolean
     ) {
-        val intentSender = MediaStore.createFavoriteRequest(
-            contentResolver,
-            mediaList.map { it.getUri() },
-            favorite
-        ).intentSender
-        val senderRequest: IntentSenderRequest = IntentSenderRequest.Builder(intentSender)
-            .setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION, 0)
-            .build()
-        result.launch(senderRequest)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val intentSender = MediaStore.createFavoriteRequest(
+                contentResolver,
+                mediaList.map { it.getUri() },
+                favorite
+            ).intentSender
+            val senderRequest: IntentSenderRequest = IntentSenderRequest.Builder(intentSender)
+                .setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION, 0)
+                .build()
+            result.launch(senderRequest)
+        } else {
+            mediaList.forEach { media ->
+                val contentValues = contentValuesOf(
+                    MediaStore.MediaColumns.IS_FAVORITE to if (favorite) 1 else 0
+                )
+                contentResolver.update(media.getUri(), contentValues, null, null)
+            }
+        }
     }
 
     override suspend fun <T : Media> trashMedia(
@@ -216,29 +227,46 @@ class MediaRepositoryImpl(
         mediaList: List<T>,
         trash: Boolean
     ) {
-        val intentSender = MediaStore.createTrashRequest(
-            contentResolver,
-            mediaList.map { it.getUri() },
-            trash
-        ).intentSender
-        val senderRequest: IntentSenderRequest = IntentSenderRequest.Builder(intentSender)
-            .setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION, 0)
-            .build()
-        result.launch(senderRequest, ActivityOptionsCompat.makeTaskLaunchBehind())
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val intentSender = MediaStore.createTrashRequest(
+                contentResolver,
+                mediaList.map { it.getUri() },
+                trash
+            ).intentSender
+            val senderRequest: IntentSenderRequest = IntentSenderRequest.Builder(intentSender)
+                .setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION, 0)
+                .build()
+            result.launch(senderRequest, ActivityOptionsCompat.makeTaskLaunchBehind())
+        } else {
+            mediaList.forEach { media ->
+                val contentValues = contentValuesOf(
+                    MediaStore.MediaColumns.IS_TRASHED to if (trash) 1 else 0
+                )
+                contentResolver.update(media.getUri(), contentValues, null, null)
+            }
+
+        }
     }
 
     override suspend fun <T : Media> deleteMedia(
         result: ActivityResultLauncher<IntentSenderRequest>,
         mediaList: List<T>
     ) {
-        val intentSender =
-            MediaStore.createDeleteRequest(
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val intentSender = MediaStore.createDeleteRequest(
                 contentResolver,
                 mediaList.map { it.getUri() }).intentSender
-        val senderRequest: IntentSenderRequest = IntentSenderRequest.Builder(intentSender)
-            .setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION, 0)
-            .build()
-        result.launch(senderRequest)
+            val senderRequest: IntentSenderRequest = IntentSenderRequest.Builder(intentSender)
+                .setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION, 0)
+                .build()
+            result.launch(senderRequest)
+        } else {
+            mediaList.forEach { media ->
+                contentResolver.delete(media.getUri(), null, null)
+            }
+        }
     }
 
     override suspend fun <T : Media> copyMedia(
