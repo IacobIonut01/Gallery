@@ -37,9 +37,11 @@ import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaMetadata
 import com.dot.gallery.feature_node.domain.util.isVideo
 import com.dot.gallery.feature_node.presentation.util.formatMinSec
+import com.dot.gallery.feature_node.presentation.util.formattedFileSize
 import com.dot.gallery.feature_node.presentation.util.toBitrateString
 import com.dot.gallery.ui.theme.Shapes
 import kotlinx.coroutines.launch
+import java.io.File
 
 @Composable
 fun MediaInfoRow(
@@ -161,6 +163,14 @@ fun Media.retrieveMetadata(
                     md.imageResolutionY,
                     unit
                 )
+            }
+            try {
+                val formattedFileSize = File(path).formattedFileSize(context)
+                if (formattedFileSize != "0 ${context.getString(R.string.kb)}") {
+                    content += " • $formattedFileSize"
+                }
+            } catch (_: Exception) {
+                // Just for safety, shouldn't crash here
             }
             info += InfoRow(
                 icon = Icons.Outlined.ImageSearch,
