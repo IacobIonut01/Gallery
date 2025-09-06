@@ -127,7 +127,7 @@ android {
         create("arm64-v8a") {
             dimension = "abi"
             versionCode = 4 + (android.defaultConfig.versionCode ?: 0) * 10
-            ndk.abiFilters.add("x86")
+            ndk.abiFilters.add("arm64-v8a")
         }
         create("armeabi-v7a") {
             dimension = "abi"
