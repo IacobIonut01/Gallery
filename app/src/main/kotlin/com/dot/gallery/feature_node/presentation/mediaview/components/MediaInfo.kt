@@ -145,32 +145,39 @@ fun Media.retrieveMetadata(
 
         // 8) Image dimensions & megapixels & Image resolution (PPI)
         if (md.imageWidth > 0 && md.imageHeight > 0) {
-            var content = context.getString(
-                R.string.resolution_with_mp,
-                md.imageWidth,
-                md.imageHeight,
-                md.imageMp
-            )
-            if (md.imageResolutionX != null && md.imageResolutionY != null) {
-                val unit = when (md.resolutionUnit) {
-                    2 -> context.getString(R.string.ppi)
-                    3 -> context.getString(R.string.ppcm)
-                    else -> ""
-                }
-                content += context.getString(
-                    R.string.ppi_resolution_string,
-                    md.imageResolutionX,
-                    md.imageResolutionY,
-                    unit
+            val content = buildString {
+                append(
+                    context.getString(
+                        R.string.resolution_with_mp,
+                        md.imageWidth,
+                        md.imageHeight,
+                        md.imageMp
+                    )
                 )
-            }
-            try {
-                val formattedFileSize = File(path).formattedFileSize(context)
-                if (formattedFileSize != "0 ${context.getString(R.string.kb)}") {
-                    content += " • $formattedFileSize"
+                if (md.imageResolutionX != null && md.imageResolutionY != null) {
+                    val unit = when (md.resolutionUnit) {
+                        2 -> context.getString(R.string.ppi)
+                        3 -> context.getString(R.string.ppcm)
+                        else -> ""
+                    }
+                    append(
+                        context.getString(
+                            R.string.ppi_resolution_string,
+                            md.imageResolutionX,
+                            md.imageResolutionY,
+                            unit
+                        )
+                    )
                 }
-            } catch (_: Exception) {
-                // Just for safety, shouldn't crash here
+
+                val formattedFileSize = try {
+                    File(path).formattedFileSize(context)
+                } catch (e: Exception) {
+                    null // Just for safety, shouldn't crash here
+                }
+                if (formattedFileSize != null && formattedFileSize != "0 ${context.getString(R.string.kb)}") {
+                    append(" • $formattedFileSize")
+                }
             }
             info += InfoRow(
                 icon = Icons.Outlined.ImageSearch,
@@ -195,10 +202,12 @@ fun Media.retrieveMetadata(
                     content = "${md.videoWidth} × ${md.videoHeight}"
                 )
             }
-            md.frameRate?.let {
-                var content = context.getString(R.string.video_fps, it)
-                md.bitRate?.let {
-                    content += context.getString(R.string.at_kbps, it.toBitrateString())
+            md.frameRate?.let { fps ->
+                val content = buildString {
+                    append(context.getString(R.string.video_fps, fps))
+                    md.bitRate?.let {
+                        append(context.getString(R.string.at_kbps, it.toBitrateString()))
+                    }
                 }
                 info += InfoRow(
                     icon = Icons.Outlined.Info,
