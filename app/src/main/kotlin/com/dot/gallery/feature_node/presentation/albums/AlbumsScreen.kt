@@ -186,7 +186,9 @@ fun AlbumsScreen(
                                 ) {
                                     FilterButton(
                                         modifier = Modifier.pinchItem(key = "filterButton"),
-                                        filterOptions = filterOptions.toTypedArray()
+                                        filterOptions = filterOptions.toTypedArray(),
+                                        viewType = viewType,
+                                        onViewTypeChange = { viewType = it }
                                     )
                                 }
                             }
@@ -279,9 +281,13 @@ fun AlbumsScreen(
                     LazyColumn(
                         state = listState,
                         modifier = Modifier
+                            .hazeSource(LocalHazeState.current)
                             .padding(horizontal = 8.dp)
                             .fillMaxSize(),
-                        contentPadding = innerPaddingValues,
+                        contentPadding = PaddingValues(
+                            top = innerPaddingValues.calculateTopPadding(),
+                            bottom = innerPaddingValues.calculateBottomPadding() + 16.dp + 64.dp
+                        ),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         item("pinnedAlbums") {
