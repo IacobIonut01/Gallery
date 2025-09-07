@@ -239,13 +239,7 @@ class MediaRepositoryImpl(
                 .build()
             result.launch(senderRequest, ActivityOptionsCompat.makeTaskLaunchBehind())
         } else {
-            mediaList.forEach { media ->
-                val contentValues = contentValuesOf(
-                    MediaStore.MediaColumns.IS_TRASHED to if (trash) 1 else 0
-                )
-                contentResolver.update(media.getUri(), contentValues, null, null)
-            }
-
+            // Trash under A11
         }
     }
 
