@@ -291,7 +291,7 @@ fun <T : Media> MediaViewScreen(
     )
 
     val userScrollEnabled by rememberedDerivedState { sheetState.currentDetent != FullyExpanded }
-    var isLocked by remember { mutableStateOf(false) }
+    var isLocked by rememberSaveable { mutableStateOf(false) }
     // Override back button/gesture when locked
     BackHandler(enabled = isLocked) { }
 
