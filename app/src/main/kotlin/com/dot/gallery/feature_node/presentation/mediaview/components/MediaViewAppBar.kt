@@ -140,7 +140,7 @@ fun MediaViewAppBar(
                     .fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
-                androidx.compose.animation.AnimatedVisibility(
+                this@Row.AnimatedVisibility(
                     visible = showDate,
                     enter = enterAnimation,
                     exit = exitAnimation
@@ -159,8 +159,7 @@ fun MediaViewAppBar(
                         textAlign = TextAlign.Center
                     )
                 }
-
-                androidx.compose.animation.AnimatedVisibility(
+                this@Row.AnimatedVisibility(
                     visible = isLocked,
                     enter = fadeIn(),
                     exit = fadeOut(),
