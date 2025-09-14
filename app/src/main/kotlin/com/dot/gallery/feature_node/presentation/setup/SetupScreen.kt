@@ -65,6 +65,9 @@ fun SetupScreen(
     }
     val appName = "${stringResource(id = R.string.app_name)} v${BuildConfig.VERSION_NAME}"
     LaunchedEffect(permissionGranted) {
+
+        println("tetsinggg: $permissionGranted")
+
         if (permissionGranted) {
             onPermissionGranted()
         } else if (!firstLaunch) Toast.makeText(
