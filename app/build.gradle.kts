@@ -262,6 +262,8 @@ dependencies {
     // Fuzzy Search
     implementation(libs.fuzzywuzzy.kotlin)
 
+    implementation(libs.androidx.palette.ktx)
+
     // Aire
     implementation(libs.aire)
 

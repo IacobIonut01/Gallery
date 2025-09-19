@@ -11,6 +11,7 @@ import android.net.Uri
 import android.os.Parcelable
 import android.webkit.MimeTypeMap
 import androidx.room.Entity
+import androidx.room.Index
 import com.dot.gallery.core.Constants
 import com.dot.gallery.feature_node.domain.util.UriSerializer
 import com.dot.gallery.feature_node.domain.util.getUri
@@ -99,6 +100,38 @@ sealed class Media : Parcelable, java.io.Serializable {
         val category: String?,
         val score: Float,
     ): Media()
+
+    @Entity(
+        tableName = "hue_indexed_media",
+        indices = [
+            Index("morton1"),
+            Index("morton2")
+        ],
+        primaryKeys = ["id"]
+    )
+    data class HueIndexedMedia(
+        override val id: Long = 0,
+        override val label: String,
+        @Serializable(with = UriSerializer::class)
+        val uri: Uri,
+        override val path: String,
+        override val relativePath: String,
+        override val albumID: Long,
+        override val albumLabel: String,
+        override val timestamp: Long,
+        override val expiryTimestamp: Long? = null,
+        override val takenTimestamp: Long? = null,
+        override val fullDate: String,
+        override val mimeType: String,
+        override val favorite: Int,
+        override val trashed: Int,
+        override val size: Long,
+        override val duration: String? = null,
+        val L1: Double, val a1: Double, val b1: Double,
+        val L2: Double, val a2: Double, val b2: Double,
+        val morton1: Long,
+        val morton2: Long
+    ) : Media()
 
     @Serializable
     @Parcelize

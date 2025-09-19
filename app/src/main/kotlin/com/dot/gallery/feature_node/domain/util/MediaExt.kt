@@ -192,6 +192,7 @@ fun <T : Media> T.getUri(): Uri {
     return when (this) {
         is Media.UriMedia -> uri
         is Media.ClassifiedMedia -> uri
+        is Media.HueIndexedMedia -> uri
         else -> throw IllegalArgumentException("Media type ${this.javaClass.simpleName} not supported")
     }
 }

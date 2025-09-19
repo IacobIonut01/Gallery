@@ -136,6 +136,13 @@ class MediaHandlerImpl @Inject constructor(
     override fun getClassifiedMediaThumbnailByCategory(category: String): Flow<Media.ClassifiedMedia?> =
         repository.getClassifiedMediaThumbnailByCategory(category)
 
+    override fun getHueIndexedMediaCount(): Flow<Int> =
+        repository.getHueIndexedImageCount()
+
+    override suspend fun deleteHueIndexData() {
+        repository.deleteHueIndexData()
+    }
+
     override suspend fun deleteAlbumThumbnail(albumId: Long) =
         repository.deleteAlbumThumbnail(albumId)
 

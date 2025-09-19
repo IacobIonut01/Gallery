@@ -1,5 +1,6 @@
 package com.dot.gallery.core
 
+import androidx.compose.ui.graphics.Color
 import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.domain.model.IgnoredAlbum
 import com.dot.gallery.feature_node.domain.model.ImageEmbedding
@@ -10,6 +11,7 @@ import com.dot.gallery.feature_node.domain.model.PinnedAlbum
 import com.dot.gallery.feature_node.domain.model.TimelineSettings
 import com.dot.gallery.feature_node.domain.model.Vault
 import com.dot.gallery.feature_node.domain.model.VaultState
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -60,5 +62,12 @@ interface MediaDistributor {
      */
     val imageEmbeddingsFlow: StateFlow<List<ImageEmbedding>>
 
+    /**
+     * Hue Search
+     */
+    fun hueSearchMediaFlow(
+        hueFlow: Flow<Color>,
+        debounceMillis: Long = 50L
+    ): StateFlow<MediaState<Media.HueIndexedMedia>>
 
 }

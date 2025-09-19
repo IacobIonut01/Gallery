@@ -1,6 +1,11 @@
 package com.dot.gallery.core
 
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.util.fastDistinctBy
+import androidx.compose.ui.util.fastFilter
+import androidx.core.graphics.ColorUtils
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import com.dot.gallery.core.Settings.Misc.DEFAULT_DATE_FORMAT
@@ -24,24 +29,30 @@ import com.dot.gallery.feature_node.domain.util.MediaOrder
 import com.dot.gallery.feature_node.domain.util.OrderType
 import com.dot.gallery.feature_node.domain.util.mapPinned
 import com.dot.gallery.feature_node.domain.util.removeBlacklisted
+import com.dot.gallery.feature_node.presentation.huesearch.HueIndexHelper
 import com.dot.gallery.feature_node.presentation.util.mapMediaToItem
 import com.dot.gallery.feature_node.presentation.util.mediaFlow
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -285,5 +296,38 @@ class MediaDistributorImpl @Inject constructor(
                 initialValue = emptyList()
             )
 
+    /**
+     * Hue Search
+     */
+    @OptIn(FlowPreview::class)
+    override fun hueSearchMediaFlow(
+        hueFlow: Flow<Color>,
+        debounceMillis: Long
+    ): StateFlow<MediaState<Media.HueIndexedMedia>> =
+        combine(
+            hueFlow.debounce(debounceMillis),
+            repository.getHueIndexedImagesFlow(),
+            dateFormatsFlow
+        ) { hue, indexedImages, (defaultDateFormat, extendedDateFormat, weeklyDateFormat) ->
+            val lab = DoubleArray(3).also { ColorUtils.colorToLAB(hue.toArgb(), it) }
+            val (gx, gy, gz) = HueIndexHelper.quantizeLab(lab[0], lab[1], lab[2])
+
+            val neighborhood = HueIndexHelper.neighbors(gx, gy, gz, 4)
+            val data = indexedImages.run {
+                fastFilter { it.morton1 in neighborhood }
+                    .plus(fastFilter { it.morton2 in neighborhood })
+                    .fastDistinctBy { it.id }
+            }
+            mapMediaToItem(
+                data = data,
+                error = "",
+                albumId = -1L,
+                defaultDateFormat = defaultDateFormat,
+                extendedDateFormat = extendedDateFormat,
+                weeklyDateFormat = weeklyDateFormat
+            )
+        }
+            .flowOn(Dispatchers.Default)
+            .stateIn(appScope, sharingMethod, MediaState())
 
 }

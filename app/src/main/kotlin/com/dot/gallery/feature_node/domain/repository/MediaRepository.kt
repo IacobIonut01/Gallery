@@ -9,6 +9,7 @@ import android.graphics.Bitmap
 import android.net.Uri
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
+import androidx.compose.ui.graphics.Color
 import androidx.datastore.preferences.core.Preferences
 import com.dot.gallery.core.Resource
 import com.dot.gallery.feature_node.domain.model.Album
@@ -18,6 +19,7 @@ import com.dot.gallery.feature_node.domain.model.ImageEmbedding
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.Media.ClassifiedMedia
 import com.dot.gallery.feature_node.domain.model.Media.UriMedia
+import com.dot.gallery.feature_node.domain.model.Media.HueIndexedMedia
 import com.dot.gallery.feature_node.domain.model.MediaMetadata
 import com.dot.gallery.feature_node.domain.model.PinnedAlbum
 import com.dot.gallery.feature_node.domain.model.TimelineSettings
@@ -208,5 +210,11 @@ interface MediaRepository {
     suspend fun getRecord(id: Long): ImageEmbedding?
 
     fun getImageEmbeddings(): Flow<List<ImageEmbedding>>
+
+    fun getHueIndexedImagesFlow(): Flow<List<HueIndexedMedia>>
+
+    fun getHueIndexedImageCount(): Flow<Int>
+
+    suspend fun deleteHueIndexData()
 
 }

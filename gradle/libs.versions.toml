@@ -51,6 +51,7 @@ zoomimage = "1.4.0"
 lifecycleProcess = "2.9.2"
 glide-compose = "1.0.0-beta01"
 glide-ksp = "4.16.0"
+paletteKtx = "1.0.0"
 
 [libraries]
 # AndroidX
@@ -149,6 +150,7 @@ material = { module = "com.google.android.material:material", version.ref = "mat
 
 # Fuzzy Search
 fuzzywuzzy-kotlin = { module = "com.github.jens-muenker:fuzzywuzzy-kotlin", version.ref = "fuzzywuzzyKotlin" }
+androidx-palette-ktx = { group = "androidx.palette", name = "palette-ktx", version.ref = "paletteKtx" }
 
 # Glide
 glide-compose = { module = "com.github.bumptech.glide:compose", version.ref = "glide-compose" }
