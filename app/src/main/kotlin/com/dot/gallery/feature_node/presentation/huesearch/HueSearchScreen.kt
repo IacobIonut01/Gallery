@@ -127,7 +127,7 @@ fun SharedTransitionScope.HueSearchScreen(
 
                     if (indexedImageCount != 0 && !isRunning) {
                         LibrarySmallItem(
-                            title = "Delete all hue info",
+                            title = stringResource(R.string.delete_all_hue_info),
                             icon = Icons.Default.Delete,
                             contentColor = MaterialTheme.colorScheme.error,
                             modifier = Modifier
@@ -196,8 +196,8 @@ fun ScannerButton(
             .clip(RoundedCornerShape(16.dp))
             .then(modifier),
         headlineContent = {
-            val scanningMediaText = "Scanning photos for hue info..."
-            val scanForNewCategoriesText = "Scan photos for hue info"
+            val scanningMediaText = stringResource(R.string.scanning_media)
+            val scanForNewCategoriesText = stringResource(R.string.scan_photos_for_hue_info)
             val text = remember(isRunning) {
                 if (isRunning) scanningMediaText else scanForNewCategoriesText
             }
@@ -214,7 +214,7 @@ fun ScannerButton(
             Icon(
                 imageVector = Icons.Outlined.Scanner,
                 tint = contentColor,
-                contentDescription = stringResource(R.string.scan_for_new_categories)
+                contentDescription = stringResource(R.string.scan_photos_for_hue_info)
             )
         },
         trailingContent = {
@@ -314,7 +314,7 @@ fun NoHueInfo(
                 }
         )
         Text(
-            text = "Scan your photos for hue info",
+            text = stringResource(R.string.scan_photos_for_hue_info),
             style = MaterialTheme.typography.titleMedium.copy(brush = brush),
         )
     }

@@ -361,6 +361,8 @@
     <string name="search_images_videos"><![CDATA[Search images & videos]]></string>
     <string name="suggestions">Suggestions</string>
     <string name="search_by_hue">Search by Hue</string>
+    <string name="scan_photos_for_hue_info">Scan photos for hue info</string>
+    <string name="delete_all_hue_info">Delete all hue info</string>
     <plurals name="item_count">
         <item quantity="one">%s item</item>
         <item quantity="other">%s items</item>
