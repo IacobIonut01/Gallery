@@ -339,11 +339,11 @@
     <string name="refresh_metadata">刷新元数据</string>
     <string name="refresh_metadata_summary">如果觉得有问题，刷新所有存储的媒体元数据</string>
     <string name="metadata_refresh_toast">刷新元数据中…</string>
-    <string name="change_thumbnail">Change album cover</string>
-    <string name="delete_thumbnail">Remove custom album cover</string>
-    <string name="settings_theme">Themes</string>
-    <string name="settings_theme_summary">Customise your media gallery</string>
-    <string name="customization_summary">Optmise the app to your own preferences</string>
+    <string name="change_thumbnail">更改专辑封面</string>
+    <string name="delete_thumbnail">删除自定义专辑封面</string>
+    <string name="settings_theme">主题</string>
+    <string name="settings_theme_summary">自定义您的媒体库</string>
+    <string name="customization_summary">根据您自己的喜好优化应用程序</string>
     <string name="settings_misc">Miscellaneous</string>
     <string name="settings_misc_summary">Various uncategorised settings</string>
     <string name="settings_general_summary">Various general settings</string>
