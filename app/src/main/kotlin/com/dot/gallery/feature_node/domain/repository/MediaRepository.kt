@@ -18,6 +18,7 @@ import com.dot.gallery.feature_node.domain.model.ImageEmbedding
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.Media.ClassifiedMedia
 import com.dot.gallery.feature_node.domain.model.Media.UriMedia
+import com.dot.gallery.feature_node.domain.model.Media.HueIndexedMedia
 import com.dot.gallery.feature_node.domain.model.MediaMetadata
 import com.dot.gallery.feature_node.domain.model.PinnedAlbum
 import com.dot.gallery.feature_node.domain.model.TimelineSettings
@@ -208,5 +209,11 @@ interface MediaRepository {
     suspend fun getRecord(id: Long): ImageEmbedding?
 
     fun getImageEmbeddings(): Flow<List<ImageEmbedding>>
+
+    fun getHueIndexedImagesFlow(): Flow<List<HueIndexedMedia>>
+
+    fun getHueIndexedImageCount(): Flow<Int>
+
+    suspend fun deleteHueIndexData()
 
 }

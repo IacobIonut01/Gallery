@@ -745,6 +745,18 @@ class MediaRepositoryImpl(
         return database.getImageEmbeddingDao().getRecords()
     }
 
+    override fun getHueIndexedImagesFlow(): Flow<List<Media.HueIndexedMedia>> {
+        return database.getHueIndexerDao().getIndexedMediaFlow()
+    }
+
+    override fun getHueIndexedImageCount(): Flow<Int> {
+        return database.getHueIndexerDao().getIndexedMediaCountFlow()
+    }
+
+    override suspend fun deleteHueIndexData() {
+        return database.getHueIndexerDao().deleteAllIndexedMedia()
+    }
+
     companion object {
         private fun relativePath(newPath: String) = ContentValues().apply {
             put(MediaStore.MediaColumns.RELATIVE_PATH, newPath)

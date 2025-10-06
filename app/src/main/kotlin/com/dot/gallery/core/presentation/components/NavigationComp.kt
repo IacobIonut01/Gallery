@@ -18,6 +18,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -55,6 +56,8 @@ import com.dot.gallery.feature_node.presentation.classifier.CategoryViewModel
 import com.dot.gallery.feature_node.presentation.classifier.CategoryViewScreen
 import com.dot.gallery.feature_node.presentation.dateformat.DateFormatScreen
 import com.dot.gallery.feature_node.presentation.favorites.FavoriteScreen
+import com.dot.gallery.feature_node.presentation.huesearch.HueSearchScreen
+import com.dot.gallery.feature_node.presentation.huesearch.HueSearchViewModel
 import com.dot.gallery.feature_node.presentation.ignored.IgnoredScreen
 import com.dot.gallery.feature_node.presentation.ignored.setup.IgnoredSetup
 import com.dot.gallery.feature_node.presentation.library.LibraryScreen
@@ -464,6 +467,54 @@ fun NavigationComp(
                     paddingValues = paddingValues,
                     mediaId = mediaId,
                     target = "category_$category",
+                    mediaState = mediaState,
+                    sharedTransitionScope = this@SharedTransitionLayout,
+                    animatedContentScope = this
+                )
+            }
+
+            composable(
+                route = Screen.HueSearchScreen()
+            ) {
+                val viewModel = hiltViewModel<HueSearchViewModel>()
+                HueSearchScreen(
+                    paddingValues = paddingValues,
+                    clearSelection = selector::clearSelection,
+                    animatedContentScope = this,
+                    viewModel = viewModel
+                )
+            }
+
+            composable(
+                route = Screen.MediaViewScreen.idAndHue(),
+                arguments = listOf(
+                    navArgument(name = "mediaId") {
+                        type = NavType.LongType
+                        defaultValue = -1L
+                    },
+                    navArgument(name = "hue") {
+                        type = NavType.IntType
+                        defaultValue = -1
+                    }
+                )
+            ) { backStackEntry ->
+                val mediaId: Long = remember(backStackEntry) {
+                    backStackEntry.arguments?.getLong("mediaId") ?: -1
+                }
+                val hue: Int = remember(backStackEntry) {
+                    backStackEntry.arguments?.getInt("hue") ?: -1
+                }
+
+                val viewModel = hiltViewModel<HueSearchViewModel>().apply {
+                    setColor(Color(hue))
+                }
+                val mediaState = viewModel.imagesByHue.collectAsStateWithLifecycle(MediaState())
+
+                MediaViewScreen(
+                    toggleRotate = toggleRotate,
+                    paddingValues = paddingValues,
+                    mediaId = mediaId,
+                    target = "hue_$hue",
                     mediaState = mediaState,
                     sharedTransitionScope = this@SharedTransitionLayout,
                     animatedContentScope = this

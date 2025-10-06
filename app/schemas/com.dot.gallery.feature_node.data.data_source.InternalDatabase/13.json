@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 13,
-    "identityHash": "26ff9ec9cc612eb24d80263f7bb14a7f",
+    "identityHash": "f4c23754c71fe941151d4de6df0d4f74",
     "entities": [
       {
         "tableName": "pinned_table",
@@ -349,6 +349,179 @@
             "id"
           ]
         }
+      },
+      {
+        "tableName": "hue_indexed_media",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `label` TEXT NOT NULL, `uri` TEXT NOT NULL, `path` TEXT NOT NULL, `relativePath` TEXT NOT NULL, `albumID` INTEGER NOT NULL, `albumLabel` TEXT NOT NULL, `timestamp` INTEGER NOT NULL, `expiryTimestamp` INTEGER, `takenTimestamp` INTEGER, `fullDate` TEXT NOT NULL, `mimeType` TEXT NOT NULL, `favorite` INTEGER NOT NULL, `trashed` INTEGER NOT NULL, `size` INTEGER NOT NULL, `duration` TEXT, `L1` REAL NOT NULL, `a1` REAL NOT NULL, `b1` REAL NOT NULL, `L2` REAL NOT NULL, `a2` REAL NOT NULL, `b2` REAL NOT NULL, `morton1` INTEGER NOT NULL, `morton2` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "label",
+            "columnName": "label",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "uri",
+            "columnName": "uri",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "path",
+            "columnName": "path",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "relativePath",
+            "columnName": "relativePath",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "albumID",
+            "columnName": "albumID",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "albumLabel",
+            "columnName": "albumLabel",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "timestamp",
+            "columnName": "timestamp",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "expiryTimestamp",
+            "columnName": "expiryTimestamp",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "takenTimestamp",
+            "columnName": "takenTimestamp",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "fullDate",
+            "columnName": "fullDate",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "mimeType",
+            "columnName": "mimeType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "favorite",
+            "columnName": "favorite",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "trashed",
+            "columnName": "trashed",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "size",
+            "columnName": "size",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "duration",
+            "columnName": "duration",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "L1",
+            "columnName": "L1",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "a1",
+            "columnName": "a1",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "b1",
+            "columnName": "b1",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "L2",
+            "columnName": "L2",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "a2",
+            "columnName": "a2",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "b2",
+            "columnName": "b2",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "morton1",
+            "columnName": "morton1",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "morton2",
+            "columnName": "morton2",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_hue_indexed_media_morton1",
+            "unique": false,
+            "columnNames": [
+              "morton1"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_hue_indexed_media_morton1` ON `${TABLE_NAME}` (`morton1`)"
+          },
+          {
+            "name": "index_hue_indexed_media_morton2",
+            "unique": false,
+            "columnNames": [
+              "morton2"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_hue_indexed_media_morton2` ON `${TABLE_NAME}` (`morton2`)"
+          }
+        ]
       },
       {
         "tableName": "encrypted_media",
@@ -732,7 +905,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '26ff9ec9cc612eb24d80263f7bb14a7f')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f4c23754c71fe941151d4de6df0d4f74')"
     ]
   }
 }

@@ -108,34 +108,34 @@ fun <T : Media> PinchZoomGridScope.MediaGrid(
             }
         }
     }
-    val bottomContent: @Composable () -> Unit = {
-        Column(
-            modifier = Modifier.padding(paddingValues).fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            AnimatedVisibility(
-                visible = mediaState.value.isLoading,
-                enter = enterAnimation,
-                exit = exitAnimation
+    val bottomContent: LazyGridScope.() -> Unit = {
+        item {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                LoadingMedia()
-            }
-            AnimatedVisibility(
-                visible = mediaState.value.media.isEmpty() && !mediaState.value.isLoading,
-                enter = enterAnimation,
-                exit = exitAnimation
-            ) {
-                emptyContent()
-            }
-            AnimatedVisibility(visible = mediaState.value.error.isNotEmpty()) {
-                Error(errorMessage = mediaState.value.error)
+                AnimatedVisibility(
+                    visible = mediaState.value.isLoading,
+                    enter = enterAnimation,
+                    exit = exitAnimation
+                ) {
+                    LoadingMedia()
+                }
+                AnimatedVisibility(
+                    visible = mediaState.value.media.isEmpty() && !mediaState.value.isLoading,
+                    enter = enterAnimation,
+                    exit = exitAnimation
+                ) {
+                    emptyContent()
+                }
+                AnimatedVisibility(visible = mediaState.value.error.isNotEmpty()) {
+                    Error(errorMessage = mediaState.value.error)
+                }
             }
         }
     }
 
     Box {
-        bottomContent()
         if (allowHeaders) {
             MediaGridContentWithHeaders(
                 modifier = modifier,
@@ -147,6 +147,7 @@ fun <T : Media> PinchZoomGridScope.MediaGrid(
                 canScroll = canScroll,
                 onMediaClick = onMediaClick,
                 topContent = topContent,
+                bottomContent = bottomContent,
                 sharedTransitionScope = sharedTransitionScope,
                 animatedContentScope = animatedContentScope
             )
@@ -180,6 +181,7 @@ private fun <T : Media> PinchZoomGridScope.MediaGridContentWithHeaders(
     canScroll: Boolean,
     onMediaClick: @DisallowComposableCalls (media: T) -> Unit,
     topContent: LazyGridScope.() -> Unit,
+    bottomContent: LazyGridScope.() -> Unit,
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
 ) {

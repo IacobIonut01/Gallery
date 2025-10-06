@@ -69,6 +69,9 @@ interface MediaHandler {
 
     fun getClassifiedMediaThumbnailByCategory(category: String): Flow<Media.ClassifiedMedia?>
 
+    fun getHueIndexedMediaCount(): Flow<Int>
+    suspend fun deleteHueIndexData()
+
     suspend fun deleteAlbumThumbnail(albumId: Long)
     suspend fun updateAlbumThumbnail(albumId: Long, newThumbnail: Uri)
     fun hasAlbumThumbnail(albumId: Long): Flow<Boolean>

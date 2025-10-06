@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import com.dot.gallery.core.MediaDistributor
 import com.dot.gallery.core.MediaHandler
 import com.dot.gallery.core.MediaSelector
@@ -52,6 +53,7 @@ class MockedMediaDistributor: MediaDistributor {
     override val vaultsMediaFlow: StateFlow<VaultState> = MutableStateFlow(VaultState())
     override fun vaultMediaFlow(vault: Vault?): StateFlow<MediaState<Media.UriMedia>> = MutableStateFlow(MediaState())
     override val imageEmbeddingsFlow: StateFlow<List<ImageEmbedding>> = MutableStateFlow(emptyList())
+    override fun hueSearchMediaFlow(hueFlow: Flow<Color>, debounceMillis: Long): StateFlow<MediaState<Media.HueIndexedMedia>> = MutableStateFlow(MediaState())
 }
 
 class MockedMediaHandler: MediaHandler {
@@ -127,6 +129,8 @@ class MockedMediaHandler: MediaHandler {
     override suspend fun getCategoryForMediaId(mediaId: Long): String? = null
     override fun getClassifiedMediaCountAtCategory(category: String): Flow<Int> = emptyFlow()
     override fun getClassifiedMediaThumbnailByCategory(category: String): Flow<Media.ClassifiedMedia?> = emptyFlow()
+    override fun getHueIndexedMediaCount(): Flow<Int> = emptyFlow()
+    override suspend fun deleteHueIndexData() = Unit
     override suspend fun deleteAlbumThumbnail(albumId: Long) = Unit
     override suspend fun updateAlbumThumbnail(albumId: Long, newThumbnail: Uri) = Unit
     override fun hasAlbumThumbnail(albumId: Long): Flow<Boolean> = emptyFlow()
