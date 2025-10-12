@@ -313,6 +313,11 @@
     <string name="markup">Розмітка</string>
     <string name="type_size">Розмір</string>
     <string name="encrypting_media">Шифрування медіа...</string>
+    <string name="vault_encrypt_notification_title">Encrypting media</string>
+    <string name="vault_decrypt_notification_title">Decrypting media</string>
+    <string name="vault_operation_in_progress">%1$d%% completed</string>
+    <string name="vault_notification_channel_name">Vault Operations</string>
+    <string name="vault_notification_channel_description">Progress of encryption / decryption tasks</string>
     <string name="decrypt_vault">Розшифрування сейфу</string>
     <string name="restore_vault_summary">Поточний сейф та його вміст буде розшифровано та відновлено.\nЦя дія знову зробить ваш контент доступним у Галереї.</string>
     <string name="restore_vault_title">Підтвердити розшифрування?</string>
@@ -360,6 +365,12 @@
     <string name="screenshots">Screenshots</string>
     <string name="search_images_videos"><![CDATA[Search images & videos]]></string>
     <string name="suggestions">Suggestions</string>
+    <string name="post_notifications">Notifications</string>
+    <string name="post_notifications_summary">Allows the app to display notifications</string>
+    <string name="search">Search</string>
+    <string name="search_media">Search media</string>
+    <string name="rotate">Rotate</string>
+    <string name="locked">Locked</string>
     <plurals name="item_count">
         <item quantity="one">%s елемент</item>
         <item quantity="few">%s елементи</item>
