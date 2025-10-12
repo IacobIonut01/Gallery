@@ -313,6 +313,11 @@
     <string name="markup">標記</string>
     <string name="type_size">尺寸</string>
     <string name="encrypting_media">媒體加密中</string>
+    <string name="vault_encrypt_notification_title">Encrypting media</string>
+    <string name="vault_decrypt_notification_title">Decrypting media</string>
+    <string name="vault_operation_in_progress">%1$d%% completed</string>
+    <string name="vault_notification_channel_name">Vault Operations</string>
+    <string name="vault_notification_channel_description">Progress of encryption / decryption tasks</string>
     <string name="decrypt_vault">解密私密空間</string>
     <string name="restore_vault_summary">目前私密空間及其內容將被解密並還原。\n此動作將使您的內容在相簿中再次可用。</string>
     <string name="restore_vault_title">確認解密？</string>
@@ -360,6 +365,12 @@
     <string name="screenshots">截圖</string>
     <string name="search_images_videos"><![CDATA[搜尋圖片和影片]]></string>
     <string name="suggestions">建議</string>
+    <string name="post_notifications">Notifications</string>
+    <string name="post_notifications_summary">Allows the app to display notifications</string>
+    <string name="search">Search</string>
+    <string name="search_media">Search media</string>
+    <string name="rotate">Rotate</string>
+    <string name="locked">Locked</string>
     <plurals name="item_count">
         <item quantity="other">%s 個項目</item>
     </plurals>
