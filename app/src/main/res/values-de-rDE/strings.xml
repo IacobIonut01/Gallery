@@ -313,7 +313,7 @@
     <string name="markup">Markieren</string>
     <string name="type_size">Größe</string>
     <string name="encrypting_media">Medien verschlüsseln...</string>
-    <string name="vault_encrypt_notification_title">Encrypting media</string>
+    <string name="vault_encrypt_notification_title">Verschlüssele Medien</string>
     <string name="vault_decrypt_notification_title">Decrypting media</string>
     <string name="vault_operation_in_progress">%1$d%% completed</string>
     <string name="vault_notification_channel_name">Vault Operations</string>
@@ -370,7 +370,7 @@
     <string name="search">Search</string>
     <string name="search_media">Search media</string>
     <string name="rotate">Rotate</string>
-    <string name="locked">Locked</string>
+    <string name="locked">Gesperrt</string>
     <plurals name="item_count">
         <item quantity="one">%s Datei</item>
         <item quantity="other">%s Elemente</item>
