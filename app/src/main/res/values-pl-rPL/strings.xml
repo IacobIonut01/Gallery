@@ -44,7 +44,7 @@
     <string name="settings_title">Ustawienia</string>
     <string name="settings_general">Ogólne</string>
     <string name="settings_trash_title">Użyj kosza</string>
-    <string name="settings_trash_summary">Przechowuje usunięte zdjęcia i filmy przez 30 dni.\nUsunięcie ich spowoduje ich trwałą utratę, jeśli jest wyłączony.</string>
+    <string name="settings_trash_summary">Przechowuje usunięte zdjęcia i filmy przez 30 dni.\nWyłączenie tej funkcji spowoduje to, że zdjęcia zostaną od razu nieodwracalnie usunięte.</string>
     <string name="move_album_to_trash">Przenieś album do kosza</string>
     <string name="pinned_albums_title">Przypięte albumy</string>
     <string name="unpin">Odepnij</string>
@@ -347,13 +347,13 @@
     <string name="change_thumbnail">Zmień okładkę albumu</string>
     <string name="delete_thumbnail">Usuń własną okładkę albumu</string>
     <string name="settings_theme">Motywy</string>
-    <string name="settings_theme_summary">Customise your media gallery</string>
-    <string name="customization_summary">Optmise the app to your own preferences</string>
+    <string name="settings_theme_summary">Dostosuj swoją galerię multimediów</string>
+    <string name="customization_summary">Dostosuj aplikację do własnych preferencji</string>
     <string name="settings_misc">Miscellaneous</string>
     <string name="settings_misc_summary">Various uncategorised settings</string>
-    <string name="settings_general_summary">Various general settings</string>
-    <string name="ai_category_summary">Control what Smart Features you want to use</string>
-    <string name="video_playback">Video Playback</string>
+    <string name="settings_general_summary">Różne ogólne ustawienia</string>
+    <string name="ai_category_summary">Kontroluj, z jakich inteligentnych funkcji chcesz korzystać</string>
+    <string name="video_playback">Odtwarzanie wideo</string>
     <string name="interface_settings">Interface</string>
     <string name="show_date_header">Show Media Date Header</string>
     <string name="show_date_header_summary">Show the media date in the media view top bar header.</string>
