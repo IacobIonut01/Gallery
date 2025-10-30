@@ -177,8 +177,8 @@
     <string name="change_playback_speed_cd">Skift afspilningshastighed</string>
     <string name="location_new_album">Sti: Internt lager/%1$s</string>
     <string name="permission_manage_files_title">Manage All Files</string>
-    <string name="permission_manage_files_summary">"Allows the app to create, modify, and delete files and albums that were previously restricted by the system. (Includes albums outside Pictures and DCIM folders and the ones from the SD Card)"</string>
-    <string name="allow_to_manage_files">Allow to Manage All Files</string>
+    <string name="permission_manage_files_summary">"Giver appen mulighed for at oprette, ændre og slette filer og album, som tidligere var begrænset af systemet. (Inkluderer filer uden for mapperne Pictures, DCIM og filer på SD-kortet)"</string>
+    <string name="allow_to_manage_files">Tillad at administrere alle filer</string>
     <string name="vault">Vault</string>
     <string name="tools">Værktøjer</string>
     <string name="library">Bibliotek</string>
@@ -191,7 +191,7 @@
     <string name="delete_vault">Delete Vault</string>
     <string name="unknown_vault">Unknown Vault</string>
     <string name="hide">Skjul</string>
-    <string name="ignored_albums_text">Select what albums you would like to not see in the main Timeline, in the Albums tab or both.\n\nYou can either select individual albums or create a wildcard pattern to automatically hide any albums that matches it.</string>
+    <string name="ignored_albums_text">Vælg, hvilke album du ikke ønsker at se på hovedtidslinjen, under albummer eller begge dele.\n\nDu kan enten vælge individuelle album eller oprette et regulært udtryk for automatisk at skjule alle album, der stemmer overens det.</string>
     <string name="no_ignored_albums">Ingen ignorerede albummer</string>
     <string name="setup_ignored_albums">Opsæt ignorerede albummer</string>
     <string name="individual_album_selection">Valg af individuelt album</string>
@@ -301,7 +301,7 @@
     <string name="extended_date">Udvidet dato</string>
     <string name="auto_play_video">Automatisk videoafspilning</string>
     <string name="auto_play_video_summary">Afspil video automatisk, ved visning af medie</string>
-    <string name="shared_elements">Animate media items</string>
+    <string name="shared_elements">Animer medieelementer</string>
     <string name="shared_elements_summary">Animate media items click/return using shared elements transitions</string>
     <string name="type_stylus">Stylus</string>
     <string name="type_highlighter">Overstregningspen</string>
