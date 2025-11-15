@@ -371,6 +371,7 @@
     <string name="search_media">搜尋媒體</string>
     <string name="rotate">旋轉</string>
     <string name="locked">已鎖定</string>
+    <string name="decrypt_failed_tap_to_retry">Decrypt failed. Tap to retry.</string>
     <plurals name="item_count">
         <item quantity="other">%s 個項目</item>
     </plurals>
