@@ -371,6 +371,7 @@
     <string name="search_media">Medya ara</string>
     <string name="rotate">Döndür</string>
     <string name="locked">Kilitli</string>
+    <string name="decrypt_failed_tap_to_retry">Decrypt failed. Tap to retry.</string>
     <plurals name="item_count">
         <item quantity="one">%s öğe</item>
         <item quantity="other">%s öğeler</item>
