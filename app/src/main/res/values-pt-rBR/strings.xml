@@ -349,9 +349,9 @@
     <string name="settings_theme">Themes</string>
     <string name="settings_theme_summary">Customise your media gallery</string>
     <string name="customization_summary">Optmise the app to your own preferences</string>
-    <string name="settings_misc">Miscellaneous</string>
-    <string name="settings_misc_summary">Various uncategorised settings</string>
-    <string name="settings_general_summary">Various general settings</string>
+    <string name="settings_misc">Diversos</string>
+    <string name="settings_misc_summary">Várias configurações não categorizadas</string>
+    <string name="settings_general_summary">Várias configurações gerais</string>
     <string name="ai_category_summary">Control what Smart Features you want to use</string>
     <string name="video_playback">Video Playback</string>
     <string name="interface_settings">Interface</string>
