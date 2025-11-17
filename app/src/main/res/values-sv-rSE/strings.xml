@@ -301,8 +301,8 @@
     <string name="extended_date">Extended Date</string>
     <string name="auto_play_video">Video Auto-Play</string>
     <string name="auto_play_video_summary">Play the video automatically while viewing media</string>
-    <string name="shared_elements">Animate media items</string>
-    <string name="shared_elements_summary">Animate media items click/return using shared elements transitions</string>
+    <string name="shared_elements">Animera medieobjekt</string>
+    <string name="shared_elements_summary">Animera klick på/återgång från medieobjekt med övergångar för delade element</string>
     <string name="type_stylus">Pekpenna</string>
     <string name="type_highlighter">Överstrykningspenna</string>
     <string name="type_marker">Markör</string>
@@ -354,11 +354,11 @@
     <string name="settings_general_summary">Diverse allmänna inställningar</string>
     <string name="ai_category_summary">Control what Smart Features you want to use</string>
     <string name="video_playback">Video Playback</string>
-    <string name="interface_settings">Interface</string>
+    <string name="interface_settings">Gränssnitt</string>
     <string name="show_date_header">Show Media Date Header</string>
     <string name="show_date_header_summary">Show the media date in the media view top bar header.</string>
-    <string name="show_selection_titles">Display Selection Item\'s Title</string>
-    <string name="show_selection_titles_summary">Display in the selection sheet a title for each action</string>
+    <string name="show_selection_titles">Visa markeringsobjektens titel</string>
+    <string name="show_selection_titles_summary">Visa en titel för varje åtgärd i markeringsfältet</string>
     <string name="extended_date_header_title">Extended Date Header</string>
     <string name="clear_selection">Remove All</string>
     <string name="selfies">Selfies</string>
