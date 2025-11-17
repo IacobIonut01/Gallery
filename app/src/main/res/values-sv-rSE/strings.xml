@@ -264,7 +264,7 @@
     <string name="click_to_copy">Click to copy</string>
     <string name="take_audio_focus_title">Take Audio Focus</string>
     <string name="take_audio_focus_summary">Enabling this will take audio focus when playing media. Any media playing in background will pause while the video is playing. (Restart app required)</string>
-    <string name="full_brightness_view_title">Full Brightness when viewing</string>
+    <string name="full_brightness_view_title">Full ljusstyrka vid visning</string>
     <string name="full_brightness_view_summary">Increase the screen brightness to maximum when viewing images and videos</string>
     <string name="auto_hide_on_video_play">Hide UI on Video Play</string>
     <string name="auto_hide_on_video_play_summary">Hides the UI after 2 seconds when playing videos</string>
@@ -292,7 +292,7 @@
     <string name="scan_for_new_categories">Scan for new categories</string>
     <string name="scanning_media">Scanning media...</string>
     <string name="date_header_title">Date Header</string>
-    <string name="media_view">Media View</string>
+    <string name="media_view">Medievy</string>
     <string name="exif_date">Exif Date</string>
     <string name="media_info">Media Info</string>
     <string name="weekly_date">Weekly Date</string>
@@ -361,14 +361,14 @@
     <string name="show_selection_titles_summary">Visa en titel för varje åtgärd i markeringsfältet</string>
     <string name="extended_date_header_title">Extended Date Header</string>
     <string name="clear_selection">Remove All</string>
-    <string name="selfies">Selfies</string>
-    <string name="screenshots">Screenshots</string>
-    <string name="search_images_videos"><![CDATA[Search images & videos]]></string>
+    <string name="selfies">Selfier</string>
+    <string name="screenshots">Skärmdumpar</string>
+    <string name="search_images_videos"><![CDATA[Sök bilder & videor]]></string>
     <string name="suggestions">Suggestions</string>
     <string name="post_notifications">Notifications</string>
     <string name="post_notifications_summary">Allows the app to display notifications</string>
-    <string name="search">Search</string>
-    <string name="search_media">Search media</string>
+    <string name="search">Sök</string>
+    <string name="search_media">Sök medier</string>
     <string name="rotate">Rotate</string>
     <string name="locked">Locked</string>
     <string name="decrypt_failed_tap_to_retry">Decrypt failed. Tap to retry.</string>
