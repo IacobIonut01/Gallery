@@ -372,6 +372,9 @@
     <string name="rotate">Rotacionar</string>
     <string name="locked">Bloqueado</string>
     <string name="decrypt_failed_tap_to_retry">Falha na descriptografia. Toque para tentar novamente.</string>
+    <string name="other">Other</string>
+    <string name="settings_trash_confirmation_title">Require confirmation on trash</string>
+    <string name="settings_trash_confirmation_summary">Enable to require an extra confirmation before moving your media to the trash</string>
     <plurals name="item_count">
         <item quantity="one">%s ítem</item>
         <item quantity="other">%s ítens</item>
