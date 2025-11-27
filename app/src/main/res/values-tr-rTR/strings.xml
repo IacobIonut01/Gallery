@@ -371,10 +371,10 @@
     <string name="search_media">Medya ara</string>
     <string name="rotate">Döndür</string>
     <string name="locked">Kilitli</string>
-    <string name="decrypt_failed_tap_to_retry">Decrypt failed. Tap to retry.</string>
-    <string name="other">Other</string>
-    <string name="settings_trash_confirmation_title">Require confirmation on trash</string>
-    <string name="settings_trash_confirmation_summary">Enable to require an extra confirmation before moving your media to the trash</string>
+    <string name="decrypt_failed_tap_to_retry">Şifre çözülemedi. Tekrar denemek için dokunun.</string>
+    <string name="other">Diğer</string>
+    <string name="settings_trash_confirmation_title">Çöpe atarken onayla</string>
+    <string name="settings_trash_confirmation_summary">Medyayı çöp kutusuna taşımadan önce ek onay istenmesini etkinleştirin</string>
     <plurals name="item_count">
         <item quantity="one">%s öğe</item>
         <item quantity="other">%s öğeler</item>
