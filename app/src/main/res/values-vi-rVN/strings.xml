@@ -18,8 +18,8 @@
     <string name="header_today">Hôm nay</string>
     <string name="header_yesterday">Hôm qua</string>
     <string name="trash">Xóa</string>
-    <string name="pause_video">Tạm dừng thước phim</string>
-    <string name="play_video">Phát thước phim</string>
+    <string name="pause_video">Tạm dừng đoạn phim</string>
+    <string name="play_video">Phát đoạn phim</string>
     <string name="favorites">Thích</string>
     <string name="no_media_title">Ở đây trống không</string>
     <string name="empty_trash_title">Sạch trơn</string>
@@ -83,11 +83,11 @@
     <string name="trash_deletion_warning">Mọi thứ sẽ bị xóa vĩnh viễn sau 30 ngày.</string>
     <string name="open_with">Mở bằng</string>
     <string name="select">Chọn</string>
-    <string name="photos_and_videos">Ảnh và thước phim</string>
+    <string name="photos_and_videos">Ảnh và đoạn phim</string>
     <string name="photos">Ảnh</string>
-    <string name="videos">Thước phim</string>
+    <string name="videos">Các đoạn phim</string>
     <string name="photo">Ảnh</string>
-    <string name="video">Thước phim</string>
+    <string name="video">Đoạn phim</string>
     <string name="close">Đóng</string>
     <string name="navigate_up">Điều hướng lên</string>
     <string name="skip">Bỏ qua</string>
@@ -126,7 +126,7 @@
     <string name="trash_incompatible_summary">Những mục như vậy sẽ bị xóa vĩnh viễn.</string>
     <string name="error_toast">Đã xảy ra lỗi!</string>
     <string name="description">Mô tả</string>
-    <string name="video_description_local_only">Mô tả của thước phim được lưu trữ cục bộ và sẽ không bị ghi đè vào tệp</string>
+    <string name="video_description_local_only">Mô tả của đoạn phim được lưu trữ cục bộ và sẽ không bị ghi đè vào tệp</string>
     <string name="move_to_another_album">Chuyển sang bộ sưu tập khác</string>
     <string name="move">Di chuyển</string>
     <string name="some_permissions_are_not_granted">Một số quyền không được cấp!</string>
@@ -138,12 +138,12 @@
     <string name="permission_manage_media_summary">"Tự động cấp quyền khi bạn thay đổi đối với phương tiện của mình (Thích, Thùng rác, Chỉnh siêu dữ liệu, vân vân)"</string>
     <string name="read_media_images">Đọc phương tiện dạng ảnh</string>
     <string name="read_media_images_summary">Cho phép ứng dụng hiển thị hình ảnh của bạn</string>
-    <string name="read_media_videos">Đọc phương tiện dạng thước phim</string>
-    <string name="read_media_videos_summary">Cho phép ứng dụng hiển thị các thước phim của bạn</string>
+    <string name="read_media_videos">Đọc phương tiện dạng đoạn phim</string>
+    <string name="read_media_videos_summary">Cho phép ứng dụng hiển thị các đoạn phim của bạn</string>
     <string name="access_media_location">Truy cập vị trí của phương tiện</string>
-    <string name="access_media_location_summary"><![CDATA[Cho phép ứng dụng đọc dữ liệu vị trí của hình ảnh & thước phim của bạn]]></string>
+    <string name="access_media_location_summary"><![CDATA[Cho phép ứng dụng đọc dữ liệu vị trí của hình ảnh & đoạn phim của bạn]]></string>
     <string name="internet">Mạng</string>
-    <string name="internet_summary"><![CDATA[Bắt buộc phải hiển thị bản xem trước vị trí của hình ảnh & thước phim của bạn]]></string>
+    <string name="internet_summary"><![CDATA[Bắt buộc phải hiển thị bản xem trước vị trí của hình ảnh & đoạn phim của bạn]]></string>
     <string name="fancy_blur">Hiệu ứng mờ</string>
     <string name="fancy_blur_summary">Làm mờ nền trong màn hình xem phương tiện</string>
     <string name="auto_contrast">Độ tương phản tự động (Thử nghiệm)</string>
@@ -291,14 +291,14 @@
     <string name="sort_by_file_name">Tên tệp</string>
     <string name="sort_ascending">Tăng dần</string>
     <string name="sort_descending">Giảm dần</string>
-    <string name="images_videos"><![CDATA[%1$s ảnh & thước phim]]></string>
+    <string name="images_videos"><![CDATA[%1$s ảnh & đoạn phim]]></string>
     <string name="auto_hide_searchbar">Ẩn thanh tìm kiếm khi cuộn</string>
     <string name="auto_hide_searchbar_summary">Tự động ẩn thanh tìm kiếm hoặc thanh trên cùng của màn hình khi cuộn</string>
     <string name="auto_hide_navigationbar">Giấu thanh điều hướng khi cuộn</string>
     <string name="auto_hide_navigationbar_summary">Tự động giấu thanh điều hướng khi cuộn</string>
     <string name="navigation">Điều hướng</string>
     <string name="vault_setup_title">Thiết lập két của bạn</string>
-    <string name="vault_setup_subtitle"><![CDATA[Mã hóa những bức ảnh và các thước phim riêng tư nhất của bạn]]></string>
+    <string name="vault_setup_subtitle"><![CDATA[Mã hóa những bức ảnh và các đoạn phim riêng tư nhất của bạn]]></string>
     <string name="vault_setup_name">Tên két</string>
     <string name="vault_setup_security_error">Please set-up a phone security measure before setting up the vault.</string>
     <string name="vault_setup_summary2">Két sẽ được truy cập bằng các biện pháp vảo mật của thiết bị (mật khẩu hoặc sinh trắc)\n\nNội dung bên trong két sẽ được mã hoá bằng thuật toán AES-256 và chỉ có thể được truy cập sau khi xác minh.</string>
@@ -309,11 +309,11 @@
     <string name="support_the_project">Hỗ trợ dự án</string>
     <string name="click_to_copy">Nhấn để sao chép</string>
     <string name="take_audio_focus_title">Chiếm quyền phát âm thanh</string>
-    <string name="take_audio_focus_summary">Khi bật, ứng dụng sẽ chiếm quyền phát âm thanh khi phát phương tiện. Các nội dung đang phát trong nền sẽ tạm dừng khi video được phát. (Cần khởi động lại ứng dụng)</string>
+    <string name="take_audio_focus_summary">Khi bật, ứng dụng sẽ chiếm quyền phát âm thanh khi phát phương tiện. Các nội dung đang phát trong nền sẽ tạm dừng khi đoạn phim được phát. (Cần khởi động lại ứng dụng)</string>
     <string name="full_brightness_view_title">Độ sáng tối đa khi xem</string>
-    <string name="full_brightness_view_summary">Tự động tăng độ sáng màn hình lên mức tối đa khi xem ảnh và video</string>
-    <string name="auto_hide_on_video_play">Ẩn giao diện khi phát video</string>
-    <string name="auto_hide_on_video_play_summary">Ẩn giao diện sau 2 giây khi phát video</string>
+    <string name="full_brightness_view_summary">Tự động tăng độ sáng màn hình lên mức tối đa khi xem ảnh và đoạn phim</string>
+    <string name="auto_hide_on_video_play">Ẩn giao diện khi phát đoạn phim</string>
+    <string name="auto_hide_on_video_play_summary">Ẩn giao diện sau 2 giây khi phát đoạn phim</string>
     <string name="delete_location">Xóa vị trí</string>
     <string name="delete_metadata">Xóa siêu dữ liệu</string>
     <string name="view_all_metadata">Xem tất cả siêu dữ liệu</string>
@@ -336,7 +336,7 @@
     <string name="ai_models_size">Kích thước mô hình: %s</string>
     <string name="ai_models_unavailable">Không khả dụng — Yêu cầu tính năng Mô hình AI</string>
     <string name="ai_models_description">Các mô hình AI cho phép tìm kiếm ảnh thông minh và phân loại phương tiện tự động. Ứng dụng sử dụng các mô hình CLIP (Contrastive Language-Image Pretraining) ở định dạng ONNX để hiểu nội dung trong ảnh của bạn.</string>
-    <string name="ai_models_privacy_description">Toàn bộ quá trình xử lý AI diễn ra trực tiếp trên thiết bị của bạn. Không có ảnh, truy vấn tìm kiếm hay dữ liệu phân loại nào được gửi ra ngoài điện thoại. Các mô hình hoạt động cục bộ bằng ONNX Runtime và không cần kết nối Internet sau khi tải xuống. Ảnh và video của bạn luôn được bảo vệ và giữ riêng tư hoàn toàn.</string>
+    <string name="ai_models_privacy_description">Toàn bộ quá trình xử lý AI diễn ra trực tiếp trên thiết bị của bạn. Không có ảnh, truy vấn tìm kiếm hay dữ liệu phân loại nào được gửi ra ngoài điện thoại. Các mô hình hoạt động cục bộ bằng ONNX Runtime và không cần kết nối Internet sau khi tải xuống. Ảnh và đoạn phim của bạn luôn được bảo vệ và giữ riêng tư hoàn toàn.</string>
     <string name="ai_models_source">Nguồn</string>
     <string name="ai_models_source_url">github.com/IacobIonut01/ReFra</string>
     <string name="ai_models_files">Tệp mô hình</string>
@@ -414,8 +414,8 @@
     <string name="media_grid">Lưới phương tiện</string>
     <string name="classic_date">Ngày cổ điển</string>
     <string name="extended_date">Ngày mở rộng</string>
-    <string name="auto_play_video">Tự động phát video</string>
-    <string name="auto_play_video_summary">Tự động phát video khi xem phương tiện</string>
+    <string name="auto_play_video">Tự động phát đoạn phim</string>
+    <string name="auto_play_video_summary">Tự động phát đoạn phim khi xem phương tiện</string>
     <string name="shared_elements">Hiệu ứng động cho các mục phương tiện</string>
     <string name="shared_elements_summary">Hiển thị hiệu ứng động cho các mục phương tiện khi mở và quay lại bằng hiệu ứng chuyển tiếp dùng chung</string>
     <string name="type_stylus">Bút cảm ứng</string>
@@ -513,7 +513,7 @@
     <string name="ppcm">PPCM</string>
     <string name="ppi_resolution_string">" • %.1f × %.1f %s"</string>
     <string name="at_kbps">" tại %1$s"</string>
-    <string name="video_fps">%.1f fps</string>
+    <string name="video_fps">%.1f khung hình trên giây</string>
     <string name="collecting_metadata">Collecting metadata…</string>
     <string name="database">Cơ sở dữ liệu</string>
     <string name="refresh_metadata">Làm mới siêu dữ liệu</string>
@@ -527,11 +527,11 @@
     <string name="settings_timeline_albums">Dòng thời gian &amp; album</string>
     <string name="settings_timeline_albums_summary">Bố cục, nhóm, định dạng ngày tháng và hành vi của album</string>
     <string name="settings_media_viewer">Trình xem phương tiện</string>
-    <string name="settings_media_viewer_summary">Trải nghiệm xem, trình chỉnh sửa và phát video</string>
+    <string name="settings_media_viewer_summary">Trải nghiệm xem, trình chỉnh sửa, trình phát đoạn phim</string>
     <string name="settings_navigation">Điều hướng</string>
     <string name="settings_navigation_summary">Màn hình khởi động, thanh điều hướng, hành vi giao diện</string>
     <!-- Settings Overhaul: Extended Descriptions -->
-    <string name="monthly_timeline_description">Nhóm tất cả ảnh và video theo tháng thay vì theo từng ngày. Điều này giúp thư viện hiển thị gọn gàng hơn, nhưng sẽ mất khả năng phân tách theo từng ngày.\n\nThay đổi cài đặt này sẽ khởi động lại ứng dụng.</string>
+    <string name="monthly_timeline_description">Nhóm tất cả ảnh và đoạn phim theo tháng thay vì theo từng ngày. Điều này giúp thư viện hiển thị gọn gàng hơn, nhưng sẽ mất khả năng phân tách theo từng ngày.\n\nThay đổi cài đặt này sẽ khởi động lại ứng dụng.</string>
     <string name="group_similar_media_description">Tự động nhóm các ảnh liên quan lại với nhau — các cặp RAW+JPG, bản sao đã chỉnh sửa và ảnh chụp liên tiếp. Khi bật, chỉ ảnh chính sẽ được hiển thị trong lưới; các ảnh đã nhóm sẽ xuất hiện trong trình xem ảnh.</string>
     <!-- Group similar: sub-type toggles -->
     <string name="group_raw_jpg_title">Các cặp RAW+JPG</string>
@@ -541,14 +541,14 @@
     <string name="group_burst_sequences_title">Ảnh chụp liên tiếp</string>
     <string name="group_burst_sequences_summary">Ghép các ảnh chụp liên tiếp có cùng dấu thời gian.\n\nCác mẫu được nhận diện:\n• Samsung — 20151021_072800_007\n• Pixel/Motorola — IMG_20151021_072800_BURST007\n• Sony — DSC_0007_BURST20151021072800\n• OnePlus — IMG_20151021_072800_BURST(007)\n• Chung — hậu tố _BURST###, _COVER</string>
     <string name="allow_gif_animation_description">Khi bật, ảnh GIF sẽ phát hoạt ảnh trực tiếp trong dòng thời gian và lưới album. Tắt tùy chọn này để chỉ hiển thị ảnh thu nhỏ tĩnh, giúp giảm giật lag trong các thư mục chứa nhiều ảnh GIF.</string>
-    <string name="hide_timeline_for_albums_description">Ẩn các tiêu đề ngày tháng khi duyệt bên trong album, hiển thị lưới ảnh và video liên tục gọn gàng hơn.</string>
-    <string name="merge_albums_by_name_description">Gộp các album có cùng tên từ nhiều vị trí lưu trữ khác nhau thành một album duy nhất. Hữu ích nếu bạn có ảnh và video được lưu trên cả bộ nhớ trong và thẻ SD.</string>
-    <string name="full_brightness_view_description">Tự động đặt độ sáng màn hình ở mức tối đa khi xem ảnh hoặc video toàn màn hình. Độ sáng sẽ trở về mức bình thường khi bạn thoát khỏi trình xem.</string>
+    <string name="hide_timeline_for_albums_description">Ẩn các tiêu đề ngày tháng khi duyệt bên trong một bộ sưu tập, hiển thị lưới ảnh và đoạn phim liên tục gọn gàng hơn.</string>
+    <string name="merge_albums_by_name_description">Gộp các bộ sưu tập có cùng tên từ nhiều vị trí lưu trữ khác nhau thành một bộ sưu tập duy nhất. Hữu ích nếu bạn có ảnh và đoạn phim được lưu trên cả bộ nhớ trong và thẻ SD.</string>
+    <string name="full_brightness_view_description">Tự động đặt độ sáng màn hình ở mức tối đa khi xem ảnh hoặc đoạn phim toàn màn hình. Độ sáng sẽ trở về mức bình thường khi bạn thoát khỏi trình xem.</string>
     <string name="show_date_header_description">Hiển thị ngày và giờ của ảnh hiện tại ở phía trên cùng của màn hình trình xem ảnh.</string>
     <string name="show_favorite_button_description">Hiển thị nút yêu thích trên thanh công cụ của trình xem ảnh, cho phép bạn nhanh chóng thêm hoặc xóa ảnh hiện tại khỏi mục Yêu thích.</string>
-    <string name="audio_focus_description">Khi bật, ứng dụng sẽ yêu cầu quyền ưu tiên âm thanh khi phát video. Điều này sẽ tạm dừng các ứng dụng âm thanh khác (nhạc, podcast, v.v.) trong khi video đang phát.\n\nThay đổi cài đặt này sẽ khởi động lại ứng dụng.</string>
-    <string name="auto_hide_on_video_play_description">Tự động ẩn thanh trên cùng và dưới cùng khi video bắt đầu phát, mang lại trải nghiệm toàn màn hình. Chạm vào màn hình để hiện lại các điều khiển.</string>
-    <string name="auto_play_video_description">Video sẽ tự động phát khi bạn vuốt đến chúng trong trình xem ảnh. Tắt tùy chọn này nếu muốn chạm thủ công để phát video.</string>
+    <string name="audio_focus_description">Khi bật, ứng dụng sẽ yêu cầu quyền ưu tiên âm thanh khi phát đoạn phim. Điều này sẽ tạm dừng các ứng dụng âm thanh khác (nhạc, podcast, v.v.) trong khi đoạn phim đang phát.\n\nThay đổi cài đặt này sẽ khởi động lại ứng dụng.</string>
+    <string name="auto_hide_on_video_play_description">Tự động ẩn thanh trên và dưới khi đoạn phim bắt đầu phát, mang lại trải nghiệm toàn màn hình. Chạm vào màn hình để hiện chúng lại.</string>
+    <string name="auto_play_video_description">Các đoạn phim sẽ tự động phát khi bạn vuốt đến chúng trong trình xem phương tiện. Tắt tùy chọn này nếu muốn chạm thủ công để phát đoạn phim.</string>
     <string name="fancy_blur_description">Áp dụng hiệu ứng làm mờ cho nền phía sau ảnh trong trình xem ảnh. Yêu cầu Android 12 trở lên.</string>
     <string name="shared_elements_description">Bật hiệu ứng chuyển tiếp mượt mà giữa ảnh thu nhỏ trong lưới và trình xem ảnh toàn màn hình. Hiệu ứng này tạo sự liền mạch về mặt thị giác khi ảnh được phóng to hoặc thu nhỏ.</string>
     <string name="old_navbar_description">Chuyển sang thanh điều hướng Material cổ điển có nhãn văn bản. Trên màn hình lớn hơn, thanh điều hướng bên sẽ được hiển thị thay thế.</string>
@@ -557,7 +557,7 @@
     <string name="show_selection_titles_description">Hiển thị tên bên dưới mỗi mục trong thanh điều hướng dưới cùng (Dòng thời gian, Album, Thư viện). Tắt tùy chọn này để sử dụng thanh điều hướng chỉ có biểu tượng, gọn gàng hơn.</string>
     <string name="secure_mode_description">Ngăn nội dung của ứng dụng xuất hiện trong ảnh chụp màn hình, màn hình ứng dụng gần đây và bản ghi màn hình. Hữu ích để bảo vệ quyền riêng tư khi thư viện của bạn chứa nội dung nhạy cảm.</string>
     <string name="allow_vibrations_description">Cho phép ứng dụng tạo phản hồi rung trong một số thao tác và cử chỉ, chẳng hạn như nhấn giữ để chọn hoặc chuyển tiếp khi chụm để thu phóng.</string>
-    <string name="trash_enabled_description">When enabled, deleted photos and videos are moved to trash and kept for 30 days before permanent deletion. When disabled, deleting is immediate and irreversible.</string>
+    <string name="trash_enabled_description">Khi được bật, các ảnh và đoạn phim bị xóa sẽ được dời tới thùng rác và được giữ lại trong 30 ngày trước khi bị xóa vĩnh viễn. Khi tắt, việc xóa sẽ có hiệu lực ngay lập tức và không thể đảo ngược.</string>
     <string name="trash_confirmation_description">Shows a confirmation dialog before moving items to the trash, preventing accidental deletions.</string>
     <string name="follow_system_theme_description">When enabled, the app follows your device\'s light/dark mode setting automatically. Disable to manually choose light or dark mode below.</string>
     <string name="dark_mode_description">Forces the app to use dark mode regardless of your system setting. Only available when \"Follow System Theme\" is disabled.</string>
@@ -571,7 +571,7 @@
     <string name="metadata_collecting">Collecting metadata…</string>
     <string name="metadata_collecting_progress">Collecting metadata… %1$d%%</string>
     <string name="metadata_idle">Tap to refresh media metadata from your library</string>
-    <string name="video_playback">Video Playback</string>
+    <string name="video_playback">Trình phát đoạn phim</string>
     <string name="interface_settings">Interface</string>
     <string name="show_date_header">Show Media Date Header</string>
     <string name="show_date_header_summary">Show the media date in the media view top bar header.</string>
@@ -606,7 +606,7 @@
     <string name="clear_selection">Remove All</string>
     <string name="selfies">Selfies</string>
     <string name="screenshots">Screenshots</string>
-    <string name="search_images_videos"><![CDATA[Tìm kiếm các ảnh và thước phim]]></string>
+    <string name="search_images_videos"><![CDATA[Tìm kiếm các ảnh và đoạn phim]]></string>
     <string name="suggestions">Suggestions</string>
     <string name="post_notifications">Notifications</string>
     <string name="post_notifications_summary">Allows the app to display notifications</string>
@@ -874,7 +874,7 @@
     <string name="trash_restore_all">Restore all</string>
     <string name="trash_delete_all">Delete all</string>
     <string name="favorites_info_title">Your Favorites</string>
-    <string name="favorites_info_summary">Long press on any photo or video to select it, then tap the heart icon to add it to your favorites. Items added here are a shortcut and won\'t be removed from their original album.</string>
+    <string name="favorites_info_summary">Ấn giữ lên bất kỳ ảnh hay đoạn phim nào để chọn nó, rồi ấn vào biểu tượng tim để thêm vào danh sách yêu thích. Các mục đã thêm vào sẽ trở thành lối tắt và sẽ không bị xóa khỏi bộ sưu tập gốc.</string>
     <!-- Story Cards -->
     <string name="story_cards_settings_title">Story Cards</string>
     <string name="story_cards_settings_summary">Configure story cards above the timeline</string>
