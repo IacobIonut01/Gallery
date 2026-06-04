@@ -860,7 +860,7 @@
     <!-- Timeline Filter -->
     <string name="filter">Bộ lọc</string>
     <string name="filter_title">Bộ lọc</string>
-    <string name="filter_type">Type</string>
+    <string name="filter_type">Loại</string>
     <string name="filter_all">All</string>
     <string name="filter_status">Status</string>
     <string name="filter_time">Time</string>
