@@ -589,7 +589,7 @@
     <string name="reset_to_defaults">Reset to defaults</string>
     <string name="action_locked">This action cannot be removed</string>
     <string name="no_actions_available">No more actions available</string>
-    <string name="minimum_one_action">At least one action is required</string>
+    <string name="minimum_one_action">Cần ít nhất một hành động</string>
     <string name="action_desc_close">Dismiss the selection sheet and clear all selected items</string>
     <string name="action_desc_select_all">Select or deselect all items in the current view</string>
     <string name="action_desc_info">View detailed metadata and information about the selected item</string>
