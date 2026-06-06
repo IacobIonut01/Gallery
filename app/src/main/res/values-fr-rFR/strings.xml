@@ -343,12 +343,12 @@
     <string name="ai_models_feature_search">Search by Description</string>
     <string name="ai_models_feature_categories">Automatic Categories</string>
     <!-- New Category System -->
-    <string name="add_category">Add category</string>
+    <string name="add_category">Ajouter une catégorie</string>
     <string name="edit_category">Edit category</string>
-    <string name="delete_category_title">Delete category?</string>
-    <string name="delete_category_confirmation">Are you sure you want to delete this category? This action cannot be undone.</string>
-    <string name="category_name">Category name</string>
-    <string name="category_name_hint">e.g., Nature, Food, Travel</string>
+    <string name="delete_category_title">Supprimer la catégorie ?</string>
+    <string name="delete_category_confirmation">Êtes-vous sûr de vouloir supprimer cette catégorie ? Cette action ne peut pas être annulée.</string>
+    <string name="category_name">Nom de la catégorie</string>
+    <string name="category_name_hint">ex : Nature, Nourriture, Voyage</string>
     <string name="search_terms">Search terms</string>
     <string name="search_terms_hint">Comma-separated keywords to match images</string>
     <string name="search_terms_example">coucher de soleil, lever de soleil, heure dorée, ciel</string>
