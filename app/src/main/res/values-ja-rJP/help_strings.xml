@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- GET STARTED: BASICS -->
-    <string name="help_tip_basics_timeline_title">Browse your timeline</string>
-    <string name="help_tip_basics_timeline_subtitle">See all your photos and videos organized by date</string>
-    <string name="help_tip_basics_timeline_p1_title">Your photos, organized by time</string>
+    <string name="help_tip_basics_timeline_title">タイムラインを見る</string>
+    <string name="help_tip_basics_timeline_subtitle">日付順に整理された写真や動画をすべて表示</string>
+    <string name="help_tip_basics_timeline_p1_title">時間順で整理されたあなたの写真</string>
     <string name="help_tip_basics_timeline_p1_desc">The Timeline is your home screen — it displays every photo and video on your device, sorted from newest to oldest. Date headers separate your media by month, making it easy to scroll back to a specific time period. If you have thousands of photos, don\'t worry — Gallery loads them efficiently so scrolling stays smooth.</string>
     <string name="help_tip_basics_timeline_p2_title">Scroll and explore</string>
     <string name="help_tip_basics_timeline_p2_desc">Scroll through your timeline to browse media. Use the scrollbar on the right edge to jump quickly to any month. You can also pinch to zoom the grid — spread two fingers apart to see larger thumbnails or pinch together to fit more photos on screen.</string>
