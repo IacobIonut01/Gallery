@@ -334,7 +334,7 @@
     <string name="ai_models_delete">AIモデルを削除</string>
     <string name="ai_models_delete_confirm">AIモデルを削除してもよろしいですか？AI機能を使用するには再度ダウンロードする必要があります。</string>
     <string name="ai_models_size">モデルサイズ： %s</string>
-    <string name="ai_models_unavailable">Unavailable — Requires AI Models Feature</string>
+    <string name="ai_models_unavailable">利用不可 — AIモデル機能が必要です</string>
     <string name="ai_models_description">AIモデルにより、インテリジェント画像検索と自動メディア分類が可能になります。 アプリは、あなたの写真の内容を理解するためにONNX形式のCLIP(Contrastive Language-Image Pretraining)モデルを使用します。</string>
     <string name="ai_models_privacy_description">すべてのAI処理はデバイス上で完全に実行されます。画像、検索クエリ、または分類データは端末から離れることはありません。 モデルはONNXランタイムを使用してローカルで実行され、ダウンロード後はインターネット接続を必要としません。メディアは完全に非公開のままです。</string>
     <string name="ai_models_source">ソース</string>
@@ -421,7 +421,7 @@
     <string name="type_stylus">ペン</string>
     <string name="type_highlighter">蛍光ペン</string>
     <string name="type_marker">マーカー</string>
-    <string name="type_text">Text</string>
+    <string name="type_text">テキスト</string>
     <string name="type_erase">消しゴム</string>
     <string name="type_pan">Pan</string>
     <string name="filters">フィルター</string>
@@ -724,8 +724,8 @@
     <string name="other_albums">その他のアルバム</string>
     <string name="albums_merged_title">アルバムが統合されました</string>
     <string name="albums_merged_description">同じフォルダ内の %1$d アルバムが統合されました。</string>
-    <string name="merge_albums_by_name">Merge albums by name</string>
-    <string name="merge_albums_by_name_summary">Albums with the same name are displayed as one. They still exist in separate folders.</string>
+    <string name="merge_albums_by_name">アルバムを名前で統合</string>
+    <string name="merge_albums_by_name_summary">同じ名前のアルバムが一つとして表示されます。それらは別々のフォルダに存在します。</string>
     <string name="merge_subfolders">サブフォルダを統合</string>
     <string name="unmerge_subfolders">サブフォルダの統合を解除</string>
     <string name="dismiss">Dismiss</string>
@@ -744,7 +744,7 @@
     <string name="rename_collection">名前を変更</string>
     <string name="delete_collection">コレクションを削除</string>
     <string name="delete_collection_confirm">このコレクションを削除してもよろしいですか？ コレクション内のメディアは削除されません。</string>
-    <string name="add_to_collection">Add to collection</string>
+    <string name="add_to_collection">コレクションに追加</string>
     <string name="remove_from_collection">Remove from collection</string>
     <string name="collection_empty">このコレクションは空です</string>
     <string name="n_items_in_collection">%1$d アイテム</string>
