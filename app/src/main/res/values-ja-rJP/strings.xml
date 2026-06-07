@@ -377,15 +377,15 @@
     <string name="quick_start_subtitle">提案をタップして開始</string>
     <string name="matching_preview">プレビュー</string>
     <string name="see_all_matches">すべての %1$d 件を表示</string>
-    <string name="sensitivity">Sensitivity</string>
-    <string name="sensitivity_broad">Broad</string>
-    <string name="sensitivity_broad_desc">Include loosely related photos</string>
-    <string name="sensitivity_balanced">Balanced</string>
-    <string name="sensitivity_balanced_desc">Good mix of relevance</string>
-    <string name="sensitivity_strict">Strict</string>
-    <string name="sensitivity_strict_desc">Only strong matches</string>
-    <string name="sensitivity_exact">Exact</string>
-    <string name="sensitivity_exact_desc">Near-perfect matches only</string>
+    <string name="sensitivity">感度</string>
+    <string name="sensitivity_broad">幅広く</string>
+    <string name="sensitivity_broad_desc">関連性の薄い写真も含める</string>
+    <string name="sensitivity_balanced">バランス</string>
+    <string name="sensitivity_balanced_desc">関連性の良いミックス</string>
+    <string name="sensitivity_strict">厳格</string>
+    <string name="sensitivity_strict_desc">関連性の高いもののみ</string>
+    <string name="sensitivity_exact">完全一致</string>
+    <string name="sensitivity_exact_desc">ほぼ一致する結果のみ</string>
     <string name="fine_tune">微調整</string>
     <string name="category_created">Category created — classifying photos…</string>
     <string name="category_updated">Category updated — reclassifying…</string>
@@ -645,7 +645,7 @@
     <string name="group_type_raw_jpg">RAW + JPG</string>
     <string name="group_type_edits">Edits</string>
     <string name="sort_most_accurate">Most accurate</string>
-    <string name="sort_by_date">Date</string>
+    <string name="sort_by_date">日時</string>
     <plurals name="item_count">
         <item quantity="other">%s アイテム</item>
     </plurals>
@@ -681,30 +681,30 @@
     <string name="editor_type_something">何か入力してください</string>
     <string name="editor_remove">削除</string>
     <!-- Lighting tools -->
-    <string name="tool_brightness">Brightness</string>
-    <string name="tool_tone">Tone</string>
-    <string name="tool_contrast">Contrast</string>
-    <string name="tool_black_point">Black point</string>
-    <string name="tool_white_point">White point</string>
-    <string name="tool_highlights">Highlights</string>
-    <string name="tool_shadows">Shadows</string>
-    <string name="tool_vignette">Vignette</string>
+    <string name="tool_brightness">明るさ</string>
+    <string name="tool_tone">トーン</string>
+    <string name="tool_contrast">コントラスト</string>
+    <string name="tool_black_point">ブラックポイント</string>
+    <string name="tool_white_point">ホワイトポイント</string>
+    <string name="tool_highlights">ハイライト</string>
+    <string name="tool_shadows">影</string>
+    <string name="tool_vignette">周辺減光</string>
     <!-- Colour tools -->
-    <string name="tool_saturation">Saturation</string>
-    <string name="tool_warmth">Warmth</string>
-    <string name="tool_tint">Tint</string>
-    <string name="tool_skin_tone">Skin tone</string>
-    <string name="tool_blue_tone">Blue tone</string>
+    <string name="tool_saturation">彩度</string>
+    <string name="tool_warmth">色温度</string>
+    <string name="tool_tint">色調</string>
+    <string name="tool_skin_tone">肌の色合い</string>
+    <string name="tool_blue_tone">青系の色合い</string>
     <!-- Actions tools -->
     <!-- Filter styles -->
-    <string name="filter_style_vivid">Vivid</string>
-    <string name="filter_style_luminous">Luminous</string>
-    <string name="filter_style_radiant">Radiant</string>
-    <string name="filter_style_ember">Ember</string>
-    <string name="filter_style_airy">Airy</string>
+    <string name="filter_style_vivid">ビビッド</string>
+    <string name="filter_style_luminous">ルミナス</string>
+    <string name="filter_style_radiant">ラディアント</string>
+    <string name="filter_style_ember">エンバー</string>
+    <string name="filter_style_airy">エアリー</string>
     <!-- Aspect ratios -->
-    <string name="aspect_freeform">Freeform</string>
-    <string name="aspect_square">Square</string>
+    <string name="aspect_freeform">自由形式</string>
+    <string name="aspect_square">正方形</string>
     <!-- Auto presets -->
     <string name="preset_enhance">Enhance</string>
     <string name="preset_dynamic">Dynamic</string>
