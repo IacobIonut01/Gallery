@@ -111,7 +111,7 @@
     <string name="amoled_mode_summary">增强对比度，适合 AMOLED 屏幕</string>
     <string name="color_palette_preview_description">Icons, text, and more match colors in your wallpaper</string>
     <string name="color_palette_wallpaper_colors">Wallpaper colors</string>
-    <string name="color_palette_other_colors">Other colors</string>
+    <string name="color_palette_other_colors">其他颜色</string>
     <string name="media_details">详细信息</string>
     <string name="edit_metadata">编辑元数据</string>
     <string name="dialog_to_trash">移至回收站</string>
@@ -146,7 +146,7 @@
     <string name="internet_summary"><![CDATA[需要显示图像和视频的位置预览]]></string>
     <string name="fancy_blur">精细背景模糊</string>
     <string name="fancy_blur_summary">模糊媒体视图中的背景</string>
-    <string name="auto_contrast">Auto Contrast (Beta)</string>
+    <string name="auto_contrast">自动对比度（Beta）</string>
     <string name="auto_contrast_summary">Adjust button contrast based on image brightness</string>
     <string name="auto_contrast_description">Continuously samples the screen to detect image brightness and adjusts media viewer UI colors accordingly. Over dark regions, buttons and icons appear white with a dark backdrop. Over bright regions, they switch to black with a light backdrop. Works in both light and dark themes. Status bar icons also adapt to match the image brightness behind them. Updates in real-time as you zoom, pan, and swipe between media.</string>
     <string name="old_navbar">使用 Material 导航栏</string>
