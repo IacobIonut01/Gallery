@@ -300,7 +300,7 @@
     <string name="vault_setup_title">Thiết lập két của bạn</string>
     <string name="vault_setup_subtitle"><![CDATA[Mã hóa những bức ảnh và các đoạn phim riêng tư nhất của bạn]]></string>
     <string name="vault_setup_name">Tên két</string>
-    <string name="vault_setup_security_error">Please set-up a phone security measure before setting up the vault.</string>
+    <string name="vault_setup_security_error">Vui lòng thiết lập một biện pháp bảo mật thiết bị trước khi thiết lập két.</string>
     <string name="vault_setup_summary2">Két sẽ được truy cập bằng các biện pháp vảo mật của thiết bị (mật khẩu hoặc sinh trắc)\n\nNội dung bên trong két sẽ được mã hoá bằng thuật toán AES-256 và chỉ có thể được truy cập sau khi xác minh.</string>
     <string name="vault_setup_decryption_info">Các tệp của bạn được truy cập trực tiếp khi cần và không bao giờ được lưu trên thiết bị ở dạng đã giải mã.</string>
     <string name="vault_already_exists">Két \"%1$s\" đã tồn tại</string>
@@ -585,10 +585,10 @@
     <string name="top_actions_right_aligned_summary">Position top action buttons near the right edge of the display for easier reach</string>
     <string name="middle_actions">Middle Actions</string>
     <string name="action_bar">Action Bar</string>
-    <string name="add_action">Add action</string>
-    <string name="reset_to_defaults">Reset to defaults</string>
-    <string name="action_locked">This action cannot be removed</string>
-    <string name="no_actions_available">No more actions available</string>
+    <string name="add_action">Thêm hành động</string>
+    <string name="reset_to_defaults">Khôi phục mặc định</string>
+    <string name="action_locked">Hành động này không thể bị loại bỏ</string>
+    <string name="no_actions_available">Không còn hành động nào có sẵn</string>
     <string name="minimum_one_action">Cần ít nhất một hành động</string>
     <string name="action_desc_close">Dismiss the selection sheet and clear all selected items</string>
     <string name="action_desc_select_all">Select or deselect all items in the current view</string>
