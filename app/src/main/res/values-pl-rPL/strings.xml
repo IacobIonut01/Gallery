@@ -337,7 +337,7 @@
     <string name="ai_models_unavailable">Nie dostępne — wymaga modele AI</string>
     <string name="ai_models_description">Modele AI umożliwiają inteligentne wyszukiwanie zdjęć i automatyczną klasyfikację mediów. Aplikacja używa modele CLIP (Contrastive Language-Image Pretraining) w formacie ONNX, aby zrozumieć zawartość Twoich zdjęć.</string>
     <string name="ai_models_privacy_description">Całe przetwarzanie AI odbywa się w całości na Twoim urządzeniu. Żadne zdjęcia, wyszukiwania, ani dane klasyfikacyjne nie opuszczają Twojego telefonu. Modele działają lokalnie używając ONNX Runtime i nie potrzebują połączenia z Internetem po pobraniu. Twoje media pozostają w pełni prywatne.</string>
-    <string name="ai_models_source">Source</string>
+    <string name="ai_models_source">Źródło</string>
     <string name="ai_models_source_url">github.com/IacobIonut01/ReFra</string>
     <string name="ai_models_files">Pliki modelów</string>
     <string name="ai_models_feature_search">Wyszukaj po opisie</string>
@@ -444,14 +444,14 @@
     <string name="select_a_vault">Wybierz sejf</string>
     <string name="vault_select_subtitle">Choose which vault to open</string>
     <string name="vault_items_encrypted">%1$d item(s) encrypted successfully</string>
-    <string name="vault_item_deleted">Item deleted from vault</string>
+    <string name="vault_item_deleted">Element usunięty z sejfu</string>
     <string name="vault_add_to_vault_title">Add to vault</string>
     <string name="vault_delete_originals">Delete originals after encrypting</string>
     <string name="vault_encrypt_and_keep">Encrypt &amp; Keep</string>
     <string name="vault_encrypt_and_delete">Encrypt &amp; Delete</string>
     <string name="vault_remember_choice">Remember my choice</string>
     <string name="vault_encrypt_behavior">Vault encrypt behavior</string>
-    <string name="vault_encrypt_behavior_summary">Choose what happens to originals when adding media to a vault</string>
+    <string name="vault_encrypt_behavior_summary">Wybierz, co ma się stać z oryginałami podczas dodawania plików multimedialnych do sejfu</string>
     <string name="vault_encrypt_ask">Always ask</string>
     <string name="vault_encrypt_delete">Always delete originals</string>
     <string name="vault_encrypt_keep">Always keep originals</string>
@@ -538,7 +538,7 @@
     <string name="group_raw_jpg_summary">Matches RAW files with their JPG/HEIF counterpart that share the same base filename and folder.\n\nSupported RAW formats:\nDNG, CR2, CR3, NEF, ARW, RAF, ORF, RW2, PEF, SRW, NRW</string>
     <string name="group_edited_copies_title">Edited copies</string>
     <string name="group_edited_copies_summary">Matches files with edit suffixes to the original.\n\nPatterns detected:\n• (1), (2) — copy/duplicate numbering\n• ~2, ~3 — tilde duplicates\n• _edited, -edited\n• _HDR\n• .NIGHT, .PORTRAIT, .LONG_EXPOSURE\n• .ORIGINAL, .PANO, .COVER</string>
-    <string name="group_burst_sequences_title">Burst sequences</string>
+    <string name="group_burst_sequences_title">Seria</string>
     <string name="group_burst_sequences_summary">Matches burst photos that share a timestamp.\n\nPatterns detected:\n• Samsung — 20151021_072800_007\n• Pixel/Motorola — IMG_20151021_072800_BURST007\n• Sony — DSC_0007_BURST20151021072800\n• OnePlus — IMG_20151021_072800_BURST(007)\n• Generic — _BURST###, _COVER suffixes</string>
     <string name="allow_gif_animation_description">When enabled, GIF images play their animation directly in the timeline and album grids. Disable this to show static thumbnails instead, which can reduce lag in folders with many GIFs.</string>
     <string name="hide_timeline_for_albums_description">Removes the date section headers when browsing inside an album, showing a cleaner continuous grid of media.</string>
