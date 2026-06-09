@@ -113,11 +113,11 @@
     <string name="help_tip_personalize_colors_p2_s2">システム、ニュートラル、プリセット、またはカスタムを選択</string>
     <string name="help_tip_personalize_colors_p2_s3">カスタムの場合は色を選択します</string>
     <string name="help_tip_personalize_colors_p2_s4">変更内容を即座にプレビュー</string>
-    <string name="help_tip_personalize_grid_title">Adjust grid size</string>
-    <string name="help_tip_personalize_grid_subtitle">Pinch to change how many columns appear</string>
-    <string name="help_tip_personalize_grid_p1_title">Pinch to zoom the grid</string>
-    <string name="help_tip_personalize_grid_p1_desc">Place two fingers on the grid and pinch in or out to change the thumbnail size. Pinching out (spreading fingers) makes photos larger with fewer columns — great for seeing detail. Pinching in (squeezing fingers) makes photos smaller with more columns — ideal for scanning through lots of photos quickly.</string>
-    <string name="help_tip_personalize_grid_p2_title">Find your perfect size</string>
+    <string name="help_tip_personalize_grid_title">グリッドのサイズを調整</string>
+    <string name="help_tip_personalize_grid_subtitle">ピンチで表示する列数を変更する</string>
+    <string name="help_tip_personalize_grid_p1_title">ピンチしてグリッドを拡大する</string>
+    <string name="help_tip_personalize_grid_p1_desc">サムネイルのサイズを変更するには、グリッド上に2本の指を置き、ピンチインまたはアウトします。 ピンチアウト(指を広げる)すると、より少ない列で写真が大きくなります。細部を見るのに最適です。 ピンチイン(指を絞る)すると、より多くのカラムで写真が小さくなります。たくさんの写真を素早くスキャンするのに理想的です。</string>
+    <string name="help_tip_personalize_grid_p2_title">あなたにピッタリのサイズを見つける</string>
     <string name="help_tip_personalize_grid_p2_desc">The grid ranges from 2 columns (large thumbnails) to 10 columns (tiny thumbnails for maximum overview). Gallery remembers your preference separately for the timeline and album views. Tip: try 3-4 columns for a good balance between seeing photo details and fitting many on screen.</string>
     <string name="help_tip_personalize_amoled_title">Enable AMOLED dark mode</string>
     <string name="help_tip_personalize_amoled_subtitle">Pure black backgrounds for OLED screens</string>
