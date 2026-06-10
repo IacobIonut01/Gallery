@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- GET STARTED: BASICS -->
-    <string name="help_tip_basics_timeline_title">Browse your timeline</string>
-    <string name="help_tip_basics_timeline_subtitle">See all your photos and videos organized by date</string>
+    <string name="help_tip_basics_timeline_title">Parcourez votre chronologie</string>
+    <string name="help_tip_basics_timeline_subtitle">Voir toutes vos photos et vidéos organisées par date</string>
     <string name="help_tip_basics_timeline_p1_title">Your photos, organized by time</string>
     <string name="help_tip_basics_timeline_p1_desc">The Timeline is your home screen — it displays every photo and video on your device, sorted from newest to oldest. Date headers separate your media by month, making it easy to scroll back to a specific time period. If you have thousands of photos, don\'t worry — Gallery loads them efficiently so scrolling stays smooth.</string>
-    <string name="help_tip_basics_timeline_p2_title">Scroll and explore</string>
+    <string name="help_tip_basics_timeline_p2_title">Faites défiler et explorez</string>
     <string name="help_tip_basics_timeline_p2_desc">Scroll through your timeline to browse media. Use the scrollbar on the right edge to jump quickly to any month. You can also pinch to zoom the grid — spread two fingers apart to see larger thumbnails or pinch together to fit more photos on screen.</string>
     <string name="help_tip_basics_timeline_p2_s1">Open Gallery to see your Timeline</string>
     <string name="help_tip_basics_timeline_p2_s2">Scroll up and down to browse</string>
     <string name="help_tip_basics_timeline_p2_s3">Use the right-edge scrollbar to jump to a month</string>
-    <string name="help_tip_basics_timeline_p2_s4">Pinch to change thumbnail size</string>
-    <string name="help_tip_basics_timeline_p2_s5">Tap any photo to view it full-screen</string>
-    <string name="help_tip_basics_view_media_title">View photos and videos</string>
-    <string name="help_tip_basics_view_media_subtitle">Tap to open, swipe to navigate, pinch to zoom</string>
-    <string name="help_tip_basics_view_media_p1_title">Open a photo or video</string>
+    <string name="help_tip_basics_timeline_p2_s4">Pincez pour changer la taille de la vignette</string>
+    <string name="help_tip_basics_timeline_p2_s5">Appuyez sur n\'importe quelle photo pour l\'afficher en plein écran</string>
+    <string name="help_tip_basics_view_media_title">Voir les photos et vidéos</string>
+    <string name="help_tip_basics_view_media_subtitle">Appuyez pour ouvrir, balayez pour naviguer, pincez pour zoomer</string>
+    <string name="help_tip_basics_view_media_p1_title">Ouvrir une photo ou une vidéo</string>
     <string name="help_tip_basics_view_media_p1_desc">Tap any thumbnail in the timeline or an album to open it in the full-screen viewer. The photo smoothly animates from the grid into full view (if shared element transitions are enabled in Appearance settings). Videos begin playing automatically by default.</string>
     <string name="help_tip_basics_view_media_p2_title">Navigate between media</string>
     <string name="help_tip_basics_view_media_p2_desc">Swipe left or right to move between photos and videos without going back to the grid. Swipe down to close the viewer and return to where you were. The viewer remembers your position, so you won\'t lose your place.</string>
@@ -42,7 +42,7 @@
     <string name="help_tip_basics_copy_clipboard_subtitle">Copy a photo to paste it into other apps</string>
     <string name="help_tip_basics_copy_clipboard_p1_title">Copy to clipboard</string>
     <string name="help_tip_basics_copy_clipboard_p1_desc">Copy a photo directly to your clipboard, then paste it into messaging apps, document editors, email, or any app that accepts images. This is faster than sharing when you just need to quickly drop an image into a conversation or document. The copied image stays on your clipboard until you copy something else.</string>
-    <string name="help_tip_basics_copy_clipboard_p1_s1">Open a photo</string>
+    <string name="help_tip_basics_copy_clipboard_p1_s1">Ouvrir une photo</string>
     <string name="help_tip_basics_copy_clipboard_p1_s2">Tap the copy icon in the action bar</string>
     <string name="help_tip_basics_copy_clipboard_p1_s3">Switch to any app and paste</string>
     <string name="help_tip_basics_copy_clipboard_p1_s4">Tip: works great for quickly pasting into chats</string>
@@ -54,7 +54,7 @@
     <string name="help_tip_nav_bottom_bar_p2_title">Three main sections</string>
     <string name="help_tip_nav_bottom_bar_p2_desc">Timeline shows all your media sorted by date — great for finding recent photos. Albums organizes photos by the folder they\'re stored in (Camera, Screenshots, Downloads, etc.) — perfect for browsing by source. Library is your hub for Favorites, Trash, Vault, Locations, and AI Categories — quick access to everything special.</string>
     <string name="help_tip_nav_albums_title">Browse by albums</string>
-    <string name="help_tip_nav_albums_subtitle">See photos organized by folder</string>
+    <string name="help_tip_nav_albums_subtitle">Voir les photos organisées par dossier</string>
     <string name="help_tip_nav_albums_p1_title">Album view</string>
     <string name="help_tip_nav_albums_p1_desc">Albums show your photos organized by the folders they\'re stored in — Camera, Screenshots, Downloads, WhatsApp Images, and more. Each album displays a thumbnail preview and the number of items inside. You can switch between grid and list view to find albums quickly.</string>
     <string name="help_tip_nav_albums_p2_title">Explore your albums</string>
