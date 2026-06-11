@@ -14,7 +14,7 @@
     <string name="show_favorite_button_summary">在媒体视图中显示“收藏”切换按钮</string>
     <string name="default_image_editor">默认图片编辑器</string>
     <string name="default_image_editor_builtin">内置编辑器</string>
-    <string name="nav_albums">专辑</string>
+    <string name="nav_albums">相册</string>
     <string name="header_today">今天</string>
     <string name="header_yesterday">昨天</string>
     <string name="trash">回收站</string>
@@ -61,7 +61,7 @@
     <string name="donate">捐赠</string>
     <string name="github">GitHub</string>
     <string name="donate_button_cd">捐赠按钮</string>
-    <string name="github_button_cd">Github按钮</string>
+    <string name="github_button_cd">Github 按钮</string>
     <string name="github_url">https://github.com/IacobIonut01/Gallery</string>
     <string name="dismiss_banner">关闭横幅</string>
     <string name="dismiss_banner_title">移动横幅？</string>
@@ -138,14 +138,14 @@
     <string name="optional">可选</string>
     <string name="permission_manage_media_title">管理媒体</string>
     <string name="permission_manage_media_summary">"当你要求对媒体进行多项更改时（切换收藏、管理垃圾箱、编辑元数据等），系统会自动发出确认对话框。"</string>
-    <string name="read_media_images">阅读媒体图片</string>
+    <string name="read_media_images">读取媒体图片</string>
     <string name="read_media_images_summary">允许应用程序显示您的图像</string>
-    <string name="read_media_videos">浏览媒体视频</string>
+    <string name="read_media_videos">读取媒体视频</string>
     <string name="read_media_videos_summary">允许应用程序显示您的视频</string>
     <string name="access_media_location">访问媒体位置</string>
     <string name="access_media_location_summary"><![CDATA[允许应用程序读取图像和视频的位置数据]]></string>
     <string name="internet">互联网</string>
-    <string name="internet_summary"><![CDATA[需要显示图像和视频的位置预览]]></string>
+    <string name="internet_summary"><![CDATA[显示图像和视频的位置预览时需要]]></string>
     <string name="fancy_blur">精细背景模糊</string>
     <string name="fancy_blur_summary">模糊媒体视图中的背景</string>
     <string name="auto_contrast">自动对比度（Beta）</string>
@@ -167,7 +167,7 @@
     <string name="add_to_ignored">添加到隐藏的相册</string>
     <string name="override">覆盖</string>
     <string name="save_copy">保存副本</string>
-    <string name="revert_to_original">恢复至原始状态</string>
+    <string name="revert_to_original">恢复至原始图像</string>
     <string name="revert_to_original_confirmation">这将撤销所有的编辑操作并恢复原始图像。此操作无法撤销。</string>
     <string name="action_revert">恢复</string>
     <string name="edit_backups">编辑备份</string>
@@ -210,7 +210,7 @@
     <string name="remove_subtitle_track">移除字幕轨道</string>
     <string name="location_new_album">位置：内部存储/%1$s</string>
     <string name="permission_manage_files_title">管理所有文件</string>
-    <string name="permission_manage_files_summary">"允许应用程序创建、修改和删除之前受系统限制的文件和相册。(包括图片和 DCIM 文件夹以外的相册以及 SD 卡中的相册"</string>
+    <string name="permission_manage_files_summary">"允许应用程序创建、修改和删除之前受系统限制的文件和相册。（包括图片和 DCIM 文件夹以外的相册以及 SD 卡中的相册）"</string>
     <string name="vault">私密空间</string>
     <string name="library">库</string>
     <string name="biometric_authentication">生物特征认证</string>
@@ -222,7 +222,7 @@
     <string name="backspace_cd">删除最后一位数字</string>
     <string name="switch_vault_cd">切换私密空间</string>
     <string name="granted">同意</string>
-    <string name="new_vault">新的私密空间</string>
+    <string name="new_vault">新建私密空间</string>
     <string name="delete_vault">删除私密空间</string>
     <string name="unknown_vault">未知私密空间</string>
     <string name="hide">隐藏</string>
