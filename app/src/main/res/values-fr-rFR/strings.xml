@@ -53,7 +53,7 @@
     <string name="nav_timeline">Chronologie</string>
     <string name="location_cd">Emplacement du média</string>
     <string name="location_map_cd">Carte de localisation</string>
-    <string name="show_in_app">Show in app</string>
+    <string name="show_in_app">Afficher dans l\'application</string>
     <string name="open_externally">Open externally</string>
     <string name="no_map_app">Aucune application disponible pour afficher la localisation</string>
     <string name="app_dev">par %s</string>
@@ -756,9 +756,9 @@
     <string name="other_albums">Other albums</string>
     <string name="albums_merged_title">Albums merged</string>
     <string name="albums_merged_description">%1$d albums with the same name have been merged.</string>
-    <string name="merge_albums_by_name">Merge albums by name</string>
-    <string name="merge_albums_by_name_summary">Albums with the same name are displayed as one. They still exist in separate folders.</string>
-    <string name="merge_subfolders">Merge subfolders</string>
+    <string name="merge_albums_by_name">Fusionner les albums par nom</string>
+    <string name="merge_albums_by_name_summary">Les albums portant le même nom sont affichés comme un seul. Ils existent toujours dans des dossiers séparés.</string>
+    <string name="merge_subfolders">Fusionner les sous-dossiers</string>
     <string name="unmerge_subfolders">Unmerge subfolders</string>
     <string name="dismiss">Dismiss</string>
     <!-- Album Sections -->
@@ -812,7 +812,7 @@
     <string name="select_albums_for_collection_subtitle">Select albums to add their media to this collection</string>
     <string name="add_selected">Add selected</string>
     <!-- Help & Tips Screen -->
-    <string name="help_title">Help &amp; tips</string>
+    <string name="help_title">Aide &amp; conseils</string>
     <string name="help_summary">Tutorials, tips, and what\'s new</string>
     <string name="help_whats_new">What\'s new</string>
     <string name="help_whats_new_subtitle">Discover the latest Gallery features</string>
@@ -831,7 +831,7 @@
     <string name="help_cat_timeline_albums">Timeline &amp; album settings</string>
     <string name="help_cat_viewing">Photo &amp; video viewing</string>
     <string name="help_cat_viewer_actions">Media viewer actions</string>
-    <string name="help_cat_viewer_settings">Media viewer settings</string>
+    <string name="help_cat_viewer_settings">Paramètres de la visionneuse de médias</string>
     <string name="help_cat_editing">Photo editing</string>
     <string name="help_cat_search">Search</string>
     <string name="help_cat_ai">AI features</string>
@@ -841,7 +841,7 @@
     <string name="help_cat_fav_trash">Favorites &amp; trash</string>
     <string name="help_cat_locations">Location browsing</string>
     <string name="help_cat_metadata">Metadata &amp; EXIF</string>
-    <string name="help_cat_settings_appearance">Settings: Appearance</string>
+    <string name="help_cat_settings_appearance">Paramètres : Apparence</string>
     <string name="help_cat_settings_general">Settings: General</string>
     <string name="help_cat_settings_navigation">Settings: Navigation</string>
     <string name="help_cat_settings_smart">Settings: Smart features</string>
@@ -877,7 +877,7 @@
     <string name="cast_perm_multicast">Multicast</string>
     <string name="cast_perm_multicast_desc">Required for automatic device discovery on your network</string>
     <!-- Backup &amp; Restore (#909) -->
-    <string name="settings_backup">Backup &amp; restore</string>
+    <string name="settings_backup">Sauvegarde &amp; restauration</string>
     <string name="settings_backup_summary">Export and import settings, favorites and vaults</string>
     <string name="backup_include_header">Include in backup</string>
     <string name="backup_include_settings">App settings</string>
@@ -934,7 +934,7 @@
     <string name="backup_done">Done</string>
     <string name="backup_try_again">Try again</string>
     <!-- Security Settings (#820, #821, #825, #826, #827) -->
-    <string name="settings_security">Security</string>
+    <string name="settings_security">Sécurité</string>
     <string name="settings_security_summary">Sandboxing, encryption, private folder</string>
     <string name="security_sandbox_header">Sandbox</string>
     <string name="security_metadata_isolation">Metadata isolation mode</string>
@@ -985,9 +985,9 @@
     <string name="filter_reset">Reset</string>
     <string name="filter_apply">Apply</string>
     <string name="filter_active">Filter active</string>
-    <string name="show_filter_button">Filter button</string>
-    <string name="show_filter_button_summary">Show filter button in search bar</string>
-    <string name="show_filter_button_description">Shows a filter icon inside the search bar on the timeline screen. Tap it to open a sheet where you can narrow down your gallery by media type, favorites, year, or album.</string>
+    <string name="show_filter_button">Bouton des filtres</string>
+    <string name="show_filter_button_summary">Afficher le bouton des filtres dans la barre de recherche</string>
+    <string name="show_filter_button_description">Affiche une icône des filtres dans la barre de recherche de l\'écran de la chronologie. Appuyez dessus pour ouvrir une fenêtre contextuelle qui vous permet de filtrer votre galerie par type de média, favoris, année ou album.</string>
     <string name="show_searchbar_favorite_button">Favorite button</string>
     <string name="show_searchbar_favorite_button_summary">Show favorite button next to search bar</string>
     <string name="show_searchbar_favorite_button_description">Shows a heart button next to the search bar on the timeline screen. Tap it to quickly open your favorites collection.</string>
