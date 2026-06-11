@@ -438,7 +438,7 @@
     <string name="help_tip_search_text_subtitle">Find photos by filename with fuzzy matching</string>
     <string name="help_tip_search_text_p1_title">Text search</string>
     <string name="help_tip_search_text_p1_desc">Type in the search bar at the top of the timeline to find photos by filename. Gallery uses fuzzy matching, which means you don\'t need to type the exact name — close matches will still appear. This is great for finding files when you remember part of the name but not the exact spelling.</string>
-    <string name="help_tip_search_text_p2_title">Search tips</string>
+    <string name="help_tip_search_text_p2_title">Conseils de recherche</string>
     <string name="help_tip_search_text_p2_desc">Search works across all albums simultaneously, so you\'ll find results no matter where the file is stored. Results update as you type for instant feedback. Your recent searches are saved and shown as suggestions when you tap the search bar, making it quick to repeat common searches.</string>
     <string name="help_tip_search_ai_title">AI-powered image search</string>
     <string name="help_tip_search_ai_subtitle">Describe what you\'re looking for in natural language</string>
