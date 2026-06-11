@@ -4,7 +4,7 @@
     <string name="help_tip_basics_timeline_title">Parcourez votre chronologie</string>
     <string name="help_tip_basics_timeline_subtitle">Voir toutes vos photos et vidéos organisées par date</string>
     <string name="help_tip_basics_timeline_p1_title">Your photos, organized by time</string>
-    <string name="help_tip_basics_timeline_p1_desc">The Timeline is your home screen — it displays every photo and video on your device, sorted from newest to oldest. Date headers separate your media by month, making it easy to scroll back to a specific time period. If you have thousands of photos, don\'t worry — Gallery loads them efficiently so scrolling stays smooth.</string>
+    <string name="help_tip_basics_timeline_p1_desc">La Chronologie est votre écran d\'accueil : elle affiche toutes les photos et vidéos de votre appareil, classées de la plus récente à la plus ancienne. Les en-têtes de date regroupent vos médias par mois, ce qui vous permet de revenir facilement à une période spécifique. Si vous avez des milliers de photos, pas d\'inquiétude : l\'application les charge efficacement pour que le défilement reste fluide.</string>
     <string name="help_tip_basics_timeline_p2_title">Faites défiler et explorez</string>
     <string name="help_tip_basics_timeline_p2_desc">Scroll through your timeline to browse media. Use the scrollbar on the right edge to jump quickly to any month. You can also pinch to zoom the grid — spread two fingers apart to see larger thumbnails or pinch together to fit more photos on screen.</string>
     <string name="help_tip_basics_timeline_p2_s1">Ouvrez la Galerie pour voir votre chronologie</string>
@@ -56,7 +56,7 @@
     <string name="help_tip_nav_albums_title">Browse by albums</string>
     <string name="help_tip_nav_albums_subtitle">Voir les photos organisées par dossier</string>
     <string name="help_tip_nav_albums_p1_title">Album view</string>
-    <string name="help_tip_nav_albums_p1_desc">Albums show your photos organized by the folders they\'re stored in — Camera, Screenshots, Downloads, WhatsApp Images, and more. Each album displays a thumbnail preview and the number of items inside. You can switch between grid and list view to find albums quickly.</string>
+    <string name="help_tip_nav_albums_p1_desc">Les albums affichent vos photos classées par dossiers : Appareil photo, Captures d\'écran, Téléchargements, Images WhatsApp, etc. Chaque album affiche un aperçu sous forme de vignette ainsi que le nombre d\'éléments qu\'il contient. Vous pouvez basculer entre l\'affichage en grille et l\'affichage en liste pour trouver rapidement les albums.</string>
     <string name="help_tip_nav_albums_p2_title">Explore your albums</string>
     <string name="help_tip_nav_albums_p2_desc">Tap any album to see its contents. Long press an album for more options: pin it to the top for quick access, hide it from the list, change its thumbnail, or add it to a group or collection. Tip: pin your most-used albums (like Camera) so they\'re always at the top of the list.</string>
     <string name="help_tip_nav_albums_p2_s1">Tap \'Albums\' in the bottom bar</string>
@@ -122,7 +122,7 @@
     <string name="help_tip_personalize_amoled_title">Enable AMOLED dark mode</string>
     <string name="help_tip_personalize_amoled_subtitle">Pure black backgrounds for OLED screens</string>
     <string name="help_tip_personalize_amoled_p1_title">AMOLED mode</string>
-    <string name="help_tip_personalize_amoled_p1_desc">If your phone has an OLED or AMOLED display, this mode uses true black pixels which are actually turned off — saving battery and creating a striking visual. Combine with Force dark mode for the best results. Note: this setting only takes effect when dark mode is active.</string>
+    <string name="help_tip_personalize_amoled_p1_desc">Si votre téléphone est équipé d\'un écran OLED ou AMOLED, ce mode utilise de vrais pixels noirs, qui sont en fait désactivés, ce qui permet d\'économiser la batterie et d\'obtenir un rendu visuel saisissant. Associez-le au mode sombre forcé pour obtenir les meilleurs résultats. Remarque : ce paramètre ne s\'applique que lorsque le mode sombre est activé.</string>
     <string name="help_tip_personalize_amoled_p1_s1">Go to Settings &gt; Appearance</string>
     <string name="help_tip_personalize_amoled_p1_s2">Enable Force dark mode first</string>
     <string name="help_tip_personalize_amoled_p1_s3">Toggle \'AMOLED pure black\'</string>
@@ -146,7 +146,7 @@
     <string name="help_tip_personalize_shared_elements_p1_s2">Toggle \'Shared element transitions\'</string>
     <string name="help_tip_personalize_shared_elements_p1_s3">Tap any photo to see the effect</string>
     <string name="help_tip_personalize_app_name_title">Change the app name</string>
-    <string name="help_tip_personalize_app_name_subtitle">Display as \'Gallery\' or \'Refra\' on your home screen</string>
+    <string name="help_tip_personalize_app_name_subtitle">Afficher en tant que \'Galerie\' ou \'Refra\' sur votre écran d\'accueil</string>
     <string name="help_tip_personalize_app_name_p1_title">App name</string>
     <string name="help_tip_personalize_app_name_p1_desc">Choose whether the app shows as \'Gallery\' or \'Refra\' on your home screen and in the app drawer. \'Refra\' is the app\'s alternative name. This changes the icon label only — the app itself stays the same. You may need to restart your launcher or wait a moment for the change to appear on your home screen.</string>
     <string name="help_tip_personalize_app_name_p1_s1">Go to Settings &gt; General</string>
