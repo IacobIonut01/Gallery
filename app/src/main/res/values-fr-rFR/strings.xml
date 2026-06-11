@@ -288,7 +288,7 @@
     <string name="filter_type_date">Date</string>
     <string name="filter_type_name">Nom</string>
     <string name="sort">Trier</string>
-    <string name="sort_by_date_taken">Date taken</string>
+    <string name="sort_by_date_taken">Date de prise de vue</string>
     <string name="sort_by_date_modified">Modifié le</string>
     <string name="sort_by_file_name">Nom du fichier</string>
     <string name="sort_ascending">Ascendant</string>
@@ -343,7 +343,7 @@
     <string name="ai_models_source_url">github.com/IacobIonut01/ReFra</string>
     <string name="ai_models_files">Model Files</string>
     <string name="ai_models_feature_search">Recherche par Description</string>
-    <string name="ai_models_feature_categories">Automatic Categories</string>
+    <string name="ai_models_feature_categories">Catégories Automatiques</string>
     <!-- New Category System -->
     <string name="add_category">Ajouter une catégorie</string>
     <string name="edit_category">Modifier la catégorie</string>
@@ -363,7 +363,7 @@
     <string name="matching_photos_count">%1$d correspondance</string>
     <string name="recommended">recommandé</string>
     <string name="no_matching_photos">Aucune photo correspondante trouvée</string>
-    <string name="category_helper_text">Add a name, search terms and adjust the accuracy to create your category</string>
+    <string name="category_helper_text">Ajoutez un nom, des termes de recherche et ajustez la précision pour créer votre catégorie</string>
     <string name="reset_categories">Réinitialiser les catégories</string>
     <string name="reset_categories_summary">Supprimer toutes les catégories et réinitialiser avec les valeurs par défaut</string>
     <string name="create">Créer</string>
@@ -452,7 +452,7 @@
     <string name="vault_encrypt_and_keep">Encrypt &amp; Keep</string>
     <string name="vault_encrypt_and_delete">Encrypt &amp; Delete</string>
     <string name="vault_remember_choice">Se souvenir de mon choix</string>
-    <string name="vault_encrypt_behavior">Vault encrypt behavior</string>
+    <string name="vault_encrypt_behavior">Comportement du chiffrement du coffre-fort</string>
     <string name="vault_encrypt_behavior_summary">Choisissez ce qu\'il advient des originaux lors de l\'ajout de médias à un coffre-fort</string>
     <string name="vault_encrypt_ask">Toujours demander</string>
     <string name="vault_encrypt_delete">Toujours supprimer les originaux</string>
@@ -463,7 +463,7 @@
     <string name="vault_remove_custom_password_summary">This will remove the custom password and revert to device security for unlocking this vault</string>
     <string name="vault_actions">Vault actions</string>
     <string name="more_options">Plus d\'options</string>
-    <string name="vault_enter_password">Enter vault password</string>
+    <string name="vault_enter_password">Entrez le mot de passe du coffre-fort</string>
     <string name="vault_confirm_password">Confirmer le mot de passe</string>
     <string name="vault_password_mismatch">Les mots de passe ne correspondent pas</string>
     <string name="vault_password_too_short">Le mot de passe doit comporter au moins 4 caractères</string>
@@ -932,7 +932,7 @@
     <string name="backup_exporting">Exporting\u2026</string>
     <string name="backup_restoring">Restoring\u2026</string>
     <string name="backup_done">Done</string>
-    <string name="backup_try_again">Try again</string>
+    <string name="backup_try_again">Essayer à nouveau</string>
     <!-- Security Settings (#820, #821, #825, #826, #827) -->
     <string name="settings_security">Sécurité</string>
     <string name="settings_security_summary">Sandboxing, encryption, private folder</string>
@@ -963,7 +963,7 @@
     <string name="security_private_folder_change">Changer de dossier</string>
     <string name="security_private_folder_clear">Supprimer le dossier</string>
     <string name="private_folder_remove_title">Supprimer le dossier privé</string>
-    <string name="private_folder_remove_keep_hidden">Keep files hidden</string>
+    <string name="private_folder_remove_keep_hidden">Garder les fichiers cachés</string>
     <string name="private_folder_remove_keep_hidden_summary">The .nomedia file will remain in the folder. Files will stay hidden from other apps and the media library.</string>
     <string name="private_folder_remove_make_visible">Rendre les fichiers visibles</string>
     <string name="private_folder_remove_make_visible_summary">Les le fichier .nomedia sera supprimé et le dossier sera analysé par le système. Les fichiers apparaîtront dans d\'autres applications de galerie et dans la médiathèque.</string>
@@ -971,18 +971,18 @@
     <string name="private_folder_security_subtitle">Comment souhaitez-vous protéger le dossier privé ?</string>
     <string name="private_folder_security_none">None</string>
     <string name="private_folder_security_device">Device security</string>
-    <string name="private_folder_security_custom">Custom password</string>
+    <string name="private_folder_security_custom">Mot de passe personnalisé</string>
     <string name="private_folder_unlock">Unlock private folder</string>
-    <string name="private_folder_unlock_subtitle">Authenticate to access your private folder</string>
+    <string name="private_folder_unlock_subtitle">Authentifiez-vous pour accéder à votre dossier privé</string>
     <!-- Timeline Filter -->
     <string name="filter">Filter</string>
     <string name="filter_title">Filter</string>
     <string name="filter_type">Type</string>
-    <string name="filter_all">All</string>
+    <string name="filter_all">Tout</string>
     <string name="filter_status">Status</string>
     <string name="filter_time">Time</string>
     <string name="filter_source">Source</string>
-    <string name="filter_reset">Reset</string>
+    <string name="filter_reset">Réinitialiser</string>
     <string name="filter_apply">Apply</string>
     <string name="filter_active">Filter active</string>
     <string name="show_filter_button">Bouton des filtres</string>
@@ -1019,28 +1019,28 @@
     <string name="group_method_timeline">Timeline</string>
     <string name="group_method_albums">Albums</string>
     <string name="group_method_favorites">Favoris</string>
-    <string name="group_method_vault">Vault</string>
+    <string name="group_method_vault">Coffre-fort</string>
     <string name="group_method_cloud_archive">Archivage Cloud</string>
     <string name="group_method_location">Map &amp; location</string>
-    <string name="customize_date_formats">Customize date formats</string>
+    <string name="customize_date_formats">Personnaliser les formats de date</string>
     <!-- Story Cards -->
     <string name="story_cards_settings_title">Cartes Histoire</string>
     <string name="story_cards_settings_summary">Configurer les cartes d\'histoire au-dessus de la chronologie</string>
-    <string name="story_cards_enabled">Show Story Cards</string>
+    <string name="story_cards_enabled">Afficher les Cartes Histoire</string>
     <string name="story_cards_enabled_summary">Display story cards above the timeline</string>
     <string name="story_cards_order_title">Card types &amp; order</string>
     <string name="story_viewer_settings_title">Story viewer</string>
     <string name="story_viewer_auto_advance">Auto-advance</string>
-    <string name="story_viewer_auto_advance_summary">Automatically move to the next photo</string>
-    <string name="story_viewer_duration">Duration per photo</string>
+    <string name="story_viewer_auto_advance_summary">Passer automatiquement à la photo suivante</string>
+    <string name="story_viewer_duration">Durée par photo</string>
     <string name="story_viewer_duration_summary">Currently %1$s seconds per photo</string>
     <string name="navigate_back">Navigate back</string>
     <!-- Cloud Accounts Settings -->
     <string name="settings_cloud_accounts">Cloud Accounts</string>
     <string name="settings_cloud_accounts_summary">Immich, ownCloud sync &amp; remote media</string>
-    <string name="cloud_no_accounts">No cloud accounts configured</string>
+    <string name="cloud_no_accounts">Aucun compte cloud configuré</string>
     <string name="cloud_no_accounts_description">Add a cloud media server to sync and browse your remote photos and videos.</string>
-    <string name="cloud_add_server">Add server</string>
+    <string name="cloud_add_server">Ajouter un serveur</string>
     <string name="cloud_add_immich">Add Immich server</string>
     <string name="cloud_add_owncloud">Add ownCloud server</string>
     <string name="cloud_server_url">Server URL</string>
