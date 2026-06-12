@@ -593,7 +593,7 @@
     <string name="selection_actions_description">Customize which actions appear in the selection bar and their order. Drag to reorder, add or remove actions as needed.</string>
     <string name="top_actions">Top Actions</string>
     <string name="top_actions_right_aligned">Right-align top actions</string>
-    <string name="top_actions_right_aligned_summary">Position top action buttons near the right edge of the display for easier reach</string>
+    <string name="top_actions_right_aligned_summary">Positionner les boutons d\'action supérieurs près du bord droit de l\'écran pour un accès plus facile</string>
     <string name="middle_actions">Middle Actions</string>
     <string name="action_bar">Action Bar</string>
     <string name="add_action">Add action</string>
@@ -606,14 +606,14 @@
     <string name="action_desc_info">View detailed metadata and information about the selected item</string>
     <string name="action_desc_share">Partager les éléments sélectionnés avec d\'autres applications</string>
     <string name="action_desc_favorite">Toggle favorite status for selected items</string>
-    <string name="action_desc_collection">Add or remove selected items to/from a collection</string>
+    <string name="action_desc_collection">Ajouter ou supprimer des éléments sélectionnés vers/depuis une collection</string>
     <string name="action_desc_copy">Copier les éléments sélectionnés dans un autre album</string>
     <string name="action_desc_move">Déplacer les éléments sélectionnés vers un autre album</string>
     <string name="action_desc_trash">Déplacer les éléments sélectionnés vers la corbeille</string>
     <string name="action_desc_hide">Crypter et masquer les éléments sélectionnés dans le coffre-fort</string>
     <string name="action_desc_edit">Ouvrez l\'élément sélectionné dans l\'éditeur de photos</string>
     <string name="action_desc_rotate">Tourner les éléments sélectionnés de 90° dans le sens des aiguilles d\'une montre</string>
-    <string name="action_desc_download">Download cloud media to your device</string>
+    <string name="action_desc_download">Télécharger des médias du cloud sur votre appareil</string>
     <string name="download">Télécharger</string>
     <string name="downloading">Downloading…</string>
     <string name="download_complete">Téléchargement terminé</string>
@@ -633,7 +633,7 @@
     <string name="locked">Verrouillé</string>
     <string name="lock_album">Verrouiller l\'album</string>
     <string name="unlock_album">Déverrouiller l\'album</string>
-    <string name="unlock_album_biometric_subtitle">Authenticate to view this album</string>
+    <string name="unlock_album_biometric_subtitle">Authentifiez-vous pour voir cet album</string>
     <string name="locked_album_security_error">Please set up a phone security measure (PIN, pattern, password or biometrics) before locking or unlocking albums.</string>
     <string name="lock_album_disclaimer">Locking an album only hides it behind authentication within this app. The contents will not be encrypted and will still be accessible by other apps and file managers.\n\nTo encrypt your files, use the Vault feature instead.</string>
     <string name="decrypt_failed_tap_to_retry">Échec du déchiffrement. Appui pour réessayer.</string>
