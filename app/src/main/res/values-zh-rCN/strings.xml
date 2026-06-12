@@ -902,17 +902,17 @@
     <string name="backup_show_password">显示密码</string>
     <string name="backup_verify_export_subtitle">请验证您的身份以导出私密空间内容</string>
     <string name="backup_unlock_vault_subtitle">解锁“%1$s”以便将其纳入备份</string>
-    <string name="backup_unlock_vaults_gate_subtitle">Verify your vault security to choose which vaults to back up</string>
-    <string name="backup_import_password_title">Encrypted backup</string>
-    <string name="backup_import_password_desc">This backup is password-protected. Enter the password to import it.</string>
-    <string name="backup_wrong_password">Incorrect password</string>
-    <string name="backup_result_exported">Backup exported</string>
-    <string name="backup_result_imported">Backup imported</string>
-    <string name="backup_stat_favorites">Favorites</string>
-    <string name="backup_vaults_value">%1$d (%2$d items)</string>
-    <string name="backup_import_pending_favorites">%1$d local favorites awaiting your confirmation.</string>
+    <string name="backup_unlock_vaults_gate_subtitle">请进行私密空间安全验证，以便选择要备份的私密空间</string>
+    <string name="backup_import_password_title">加密备份</string>
+    <string name="backup_import_password_desc">此备份受密码保护。请输入密码以导入它。</string>
+    <string name="backup_wrong_password">密码错误</string>
+    <string name="backup_result_exported">备份已导出</string>
+    <string name="backup_result_imported">备份已导入</string>
+    <string name="backup_stat_favorites">收藏</string>
+    <string name="backup_vaults_value">%1$d (%2$d 项)</string>
+    <string name="backup_import_pending_favorites">%1$d 本地收藏等待您确认。</string>
     <!-- Backup wizard -->
-    <string name="backup_intro">Save a copy of your settings, favorites, cloud accounts and vaults, or restore them from a backup file.</string>
+    <string name="backup_intro">备份您的设置、收藏、云服务帐号和私密空间，或从备份文件中恢复它们。</string>
     <string name="backup_export_card_desc">Create a backup file from this device</string>
     <string name="backup_import_card_desc">Restore data from a backup file</string>
     <string name="backup_next">Next</string>
