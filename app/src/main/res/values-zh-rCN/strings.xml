@@ -450,9 +450,9 @@
     <string name="vault_add_to_vault_title">添加到私密空间</string>
     <string name="vault_delete_originals">加密后删除原始文件</string>
     <string name="vault_encrypt_and_keep">加密 &amp; 保留</string>
-    <string name="vault_encrypt_and_delete">Encrypt &amp; Delete</string>
-    <string name="vault_remember_choice">Remember my choice</string>
-    <string name="vault_encrypt_behavior">Vault encrypt behavior</string>
+    <string name="vault_encrypt_and_delete">加密 &amp; 删除</string>
+    <string name="vault_remember_choice">记住当前选择</string>
+    <string name="vault_encrypt_behavior">私密空间加密行为</string>
     <string name="vault_encrypt_behavior_summary">Choose what happens to originals when adding media to a vault</string>
     <string name="vault_encrypt_ask">总是询问</string>
     <string name="vault_encrypt_delete">总是删除原始文件</string>
