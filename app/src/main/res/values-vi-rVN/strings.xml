@@ -589,12 +589,12 @@
     <string name="show_selection_titles">Display Selection Item\'s Title</string>
     <string name="show_selection_titles_summary">Display in the selection sheet a title for each action</string>
     <string name="selection_actions">Selection Actions</string>
-    <string name="selection_actions_summary">Customize action bar items and order</string>
+    <string name="selection_actions_summary">Tùy biến các nút và thứ tự các nút trên thanh công cụ</string>
     <string name="selection_actions_description">Customize which actions appear in the selection bar and their order. Drag to reorder, add or remove actions as needed.</string>
     <string name="top_actions">Top Actions</string>
     <string name="top_actions_right_aligned">Right-align top actions</string>
     <string name="top_actions_right_aligned_summary">Position top action buttons near the right edge of the display for easier reach</string>
-    <string name="middle_actions">Middle Actions</string>
+    <string name="middle_actions">Khoảng giữa</string>
     <string name="action_bar">Action Bar</string>
     <string name="add_action">Thêm hành động</string>
     <string name="reset_to_defaults">Khôi phục mặc định</string>
