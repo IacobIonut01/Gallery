@@ -111,6 +111,9 @@
     <string name="allow_gif_animation_summary">GIF-Animationen in der Zeitleiste und im Album-Raster abspielen. Deaktivieren, um Lag in Ordnern mit vielen GIFs zu verringern</string>
     <string name="amoled_mode_title">Amoled-Modus verwenden</string>
     <string name="amoled_mode_summary">Höherer Kontrast, geeignet für AMOLED-Bildschirme</string>
+    <string name="use_system_font_title">Use system font</string>
+    <string name="use_system_font_summary">Use your device\'s default font instead of the built-in one</string>
+    <string name="use_system_font_description">When enabled, the app uses your device\'s system font instead of the built-in Google Sans font. This can improve readability if you use a custom system font.</string>
     <string name="color_palette_preview_description">Symbole, Text und mehr passen sich farblich an dein Hintergrundbild an</string>
     <string name="color_palette_wallpaper_colors">Farben des Hintergrundbildes</string>
     <string name="color_palette_other_colors">Andere Farben</string>
@@ -310,8 +313,6 @@
     <string name="location">Standort</string>
     <string name="support_the_project">Das Projekt unterstützen</string>
     <string name="click_to_copy">Zum Kopieren anklicken</string>
-    <string name="take_audio_focus_title">Audio-Fokus übernehmen</string>
-    <string name="take_audio_focus_summary">Ist diese Option aktiviert, wird bei der Wiedergabe von Medien der Audio-Fokus übernommen. Alle Medien, die im Hintergrund abgespielt werden, werden angehalten, während das Video abgespielt wird. (Neustart der App erforderlich)</string>
     <string name="full_brightness_view_title">Volle Helligkeit beim Betrachten</string>
     <string name="full_brightness_view_summary">Bildschirmhelligkeit bei Betrachtung von Bildern und Videos maximieren</string>
     <string name="auto_hide_on_video_play">Benutzeroberfläche bei Videowiedergabe ausblenden</string>
@@ -490,7 +491,7 @@
     <string name="vault_hide_in_progress">Hiding media…</string>
     <string name="vault_setup_password_prompt">Would you like to set a custom password for this vault?</string>
     <string name="vault_skip_password">Use device security</string>
-    <string name="vault_set_password">Set password</string>
+    <string name="vault_set_password">Set custom password</string>
     <string name="vault_deletion_title_named">Delete \"%1$s\"?</string>
     <string name="vault_deletion_summary_named">Vault \"%1$s\" and all its content will be deleted permanently.\nThis action cannot be undone.</string>
     <string name="vault_manage_security">Manage security</string>
@@ -557,7 +558,6 @@
     <string name="full_brightness_view_description">Automatically sets screen brightness to maximum when viewing a photo or video in full screen. Brightness returns to your normal level when you leave the viewer.</string>
     <string name="show_date_header_description">Displays the date and time of the current photo at the top of the media viewer screen.</string>
     <string name="show_favorite_button_description">Shows a heart button in the media viewer toolbar, allowing you to quickly add or remove the current photo from your favorites.</string>
-    <string name="audio_focus_description">When enabled, the app requests audio focus during video playback. This pauses other audio apps (music, podcasts) while your video plays.\n\nChanging this setting will restart the app.</string>
     <string name="auto_hide_on_video_play_description">Automatically hides the top and bottom bars when a video starts playing, giving you a full-screen experience. Tap the screen to bring the controls back.</string>
     <string name="auto_play_video_description">Videos start playing automatically when you swipe to them in the media viewer. Disable this to require a manual tap to play.</string>
     <string name="fancy_blur_description">Applies a blur effect to the background behind photos in the media viewer. Requires Android 12 or higher.</string>
@@ -693,6 +693,7 @@
     <string name="editor_rotate_90">Rotate 90 degrees</string>
     <string name="editor_aspect_ratio">Aspect ratio</string>
     <string name="editor_apply_crop">Apply crop</string>
+    <string name="editor_crop">Crop</string>
     <string name="editor_cancel_markup">Cancel markup</string>
     <string name="editor_apply_markup">Apply markup</string>
     <string name="editor_undo">Undo</string>
