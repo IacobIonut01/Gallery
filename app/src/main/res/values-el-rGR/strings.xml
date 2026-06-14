@@ -111,6 +111,9 @@
     <string name="allow_gif_animation_summary">Play GIF animations in the timeline and album grid. Disable to reduce lag in folders with many GIFs</string>
     <string name="amoled_mode_title">Use Amoled Mode</string>
     <string name="amoled_mode_summary">Higher contrast, best suited for Amoled Screens</string>
+    <string name="use_system_font_title">Use system font</string>
+    <string name="use_system_font_summary">Use your device\'s default font instead of the built-in one</string>
+    <string name="use_system_font_description">When enabled, the app uses your device\'s system font instead of the built-in Google Sans font. This can improve readability if you use a custom system font.</string>
     <string name="color_palette_preview_description">Icons, text, and more match colors in your wallpaper</string>
     <string name="color_palette_wallpaper_colors">Wallpaper colors</string>
     <string name="color_palette_other_colors">Other colors</string>
@@ -310,8 +313,6 @@
     <string name="location">Τοποθεσία</string>
     <string name="support_the_project">Support the project</string>
     <string name="click_to_copy">Click to copy</string>
-    <string name="take_audio_focus_title">Take Audio Focus</string>
-    <string name="take_audio_focus_summary">Enabling this will take audio focus when playing media. Any media playing in background will pause while the video is playing. (Restart app required)</string>
     <string name="full_brightness_view_title">Full Brightness when viewing</string>
     <string name="full_brightness_view_summary">Increase the screen brightness to maximum when viewing images and videos</string>
     <string name="auto_hide_on_video_play">Hide UI on Video Play</string>
@@ -490,7 +491,7 @@
     <string name="vault_hide_in_progress">Hiding media…</string>
     <string name="vault_setup_password_prompt">Would you like to set a custom password for this vault?</string>
     <string name="vault_skip_password">Use device security</string>
-    <string name="vault_set_password">Set password</string>
+    <string name="vault_set_password">Set custom password</string>
     <string name="vault_deletion_title_named">Delete \"%1$s\"?</string>
     <string name="vault_deletion_summary_named">Vault \"%1$s\" and all its content will be deleted permanently.\nThis action cannot be undone.</string>
     <string name="vault_manage_security">Manage security</string>
@@ -557,7 +558,6 @@
     <string name="full_brightness_view_description">Automatically sets screen brightness to maximum when viewing a photo or video in full screen. Brightness returns to your normal level when you leave the viewer.</string>
     <string name="show_date_header_description">Displays the date and time of the current photo at the top of the media viewer screen.</string>
     <string name="show_favorite_button_description">Shows a heart button in the media viewer toolbar, allowing you to quickly add or remove the current photo from your favorites.</string>
-    <string name="audio_focus_description">When enabled, the app requests audio focus during video playback. This pauses other audio apps (music, podcasts) while your video plays.\n\nChanging this setting will restart the app.</string>
     <string name="auto_hide_on_video_play_description">Automatically hides the top and bottom bars when a video starts playing, giving you a full-screen experience. Tap the screen to bring the controls back.</string>
     <string name="auto_play_video_description">Videos start playing automatically when you swipe to them in the media viewer. Disable this to require a manual tap to play.</string>
     <string name="fancy_blur_description">Applies a blur effect to the background behind photos in the media viewer. Requires Android 12 or higher.</string>
@@ -693,6 +693,7 @@
     <string name="editor_rotate_90">Rotate 90 degrees</string>
     <string name="editor_aspect_ratio">Aspect ratio</string>
     <string name="editor_apply_crop">Apply crop</string>
+    <string name="editor_crop">Crop</string>
     <string name="editor_cancel_markup">Cancel markup</string>
     <string name="editor_apply_markup">Apply markup</string>
     <string name="editor_undo">Undo</string>
