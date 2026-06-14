@@ -1047,7 +1047,7 @@
     <string name="help_release_420_settings_revamp_desc">Complete UI and UX overhaul for all settings screens</string>
     <string name="help_release_420_base_button_title">Refreshed button style</string>
     <string name="help_release_420_base_button_desc">New unified button design used throughout the app</string>
-    <string name="help_release_420_categories_refresh_title">Categories UI refresh</string>
+    <string name="help_release_420_categories_refresh_title">تحديث واجهة المستخدم للفئات</string>
     <string name="help_release_420_categories_refresh_desc">Redesigned categories screen with improved navigation</string>
     <string name="help_release_420_selection_sheet_title">Configurable selection sheet</string>
     <string name="help_release_420_selection_sheet_desc">Customize which actions appear and their order</string>
