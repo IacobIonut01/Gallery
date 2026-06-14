@@ -111,6 +111,9 @@
     <string name="allow_gif_animation_summary">Reproducir animaciones GIF en la línea de tiempo y en la cuadrícula de álbumes. Desactivar para reducir el retardo en carpetas con muchos GIF</string>
     <string name="amoled_mode_title">Utilizar el modo Amoled</string>
     <string name="amoled_mode_summary">Mayor contraste, más adecuado para pantallas Amoled</string>
+    <string name="use_system_font_title">Use system font</string>
+    <string name="use_system_font_summary">Use your device\'s default font instead of the built-in one</string>
+    <string name="use_system_font_description">When enabled, the app uses your device\'s system font instead of the built-in Google Sans font. This can improve readability if you use a custom system font.</string>
     <string name="color_palette_preview_description">Los iconos, el texto y otros elementos coinciden con los colores del fondo de pantalla</string>
     <string name="color_palette_wallpaper_colors">Colores del fondo de pantalla</string>
     <string name="color_palette_other_colors">Otros colores</string>
@@ -310,8 +313,6 @@
     <string name="location">Ubicación</string>
     <string name="support_the_project">Apoya el proyecto</string>
     <string name="click_to_copy">Haz clic para copiar</string>
-    <string name="take_audio_focus_title">Tomar enfoque de audio</string>
-    <string name="take_audio_focus_summary">Al activar esta opción, el audio se centrará en la reproducción multimedia. Cualquier medio que se reproduzca en segundo plano se detendrá mientras se reproduce el vídeo. (Es necesario reiniciar la aplicación)</string>
     <string name="full_brightness_view_title">Brillo máximo durante la visualización</string>
     <string name="full_brightness_view_summary">Aumenta el brillo de la pantalla al máximo cuando veas imágenes y vídeos</string>
     <string name="auto_hide_on_video_play">Ocultar la interfaz de usuario al reproducir un vídeo</string>
@@ -490,7 +491,7 @@
     <string name="vault_hide_in_progress">Ocultar archivos multimedia…</string>
     <string name="vault_setup_password_prompt">¿Desea establecer una contraseña personalizada para esta caja fuerte?</string>
     <string name="vault_skip_password">Usar seguridad del dispositivo</string>
-    <string name="vault_set_password">Set password</string>
+    <string name="vault_set_password">Establecer contraseña personalizada</string>
     <string name="vault_deletion_title_named">¿Eliminar \"%1$s\"?</string>
     <string name="vault_deletion_summary_named">La caja fuerte \"%1$s\" y todo su contenido serán eliminados permanentemente.\nEsta acción no se puede deshacer.</string>
     <string name="vault_manage_security">Administrar seguridad</string>
@@ -557,7 +558,6 @@
     <string name="full_brightness_view_description">Ajusta automáticamente el brillo de la pantalla al máximo cuando ves una foto o un vídeo a pantalla completa. El brillo vuelve a su nivel normal al salir del visor.</string>
     <string name="show_date_header_description">Muestra la fecha y la hora de la foto actual en la parte superior de la pantalla del visor multimedia.</string>
     <string name="show_favorite_button_description">Muestra un botón de corazón en la barra de herramientas del visor multimedia, que te permite añadir o eliminar rápidamente la foto actual de tus favoritos.</string>
-    <string name="audio_focus_description">Cuando está activada, la aplicación solicita el enfoque de audio durante la reproducción de vídeo. Esto pone en pausa otras aplicaciones de audio (música, podcasts) mientras se reproduce el vídeo.\n\nAl cambiar esta configuración, se reiniciará la aplicación.</string>
     <string name="auto_hide_on_video_play_description">Oculta automáticamente las barras superior e inferior cuando empieza a reproducirse un vídeo, ofreciéndote una experiencia a pantalla completa. Toca la pantalla para recuperar los controles.</string>
     <string name="auto_play_video_description">Los vídeos empiezan a reproducirse automáticamente al deslizar el dedo hacia ellos en el visor multimedia. Desactívalo para que sea necesario tocarlos manualmente para reproducirlos.</string>
     <string name="fancy_blur_description">Aplica un efecto de desenfoque al fondo detrás de las fotos en el visor multimedia. Requiere Android 12 o superior.</string>
@@ -693,6 +693,7 @@
     <string name="editor_rotate_90">Rotar 90 grados</string>
     <string name="editor_aspect_ratio">Relación de aspecto</string>
     <string name="editor_apply_crop">Aplicar recorte</string>
+    <string name="editor_crop">Crop</string>
     <string name="editor_cancel_markup">Cancelar marcado</string>
     <string name="editor_apply_markup">Aplicar marcado</string>
     <string name="editor_undo">Deshacer</string>
