@@ -329,14 +329,6 @@
     <string name="help_tip_viewer_auto_play_p1_desc">When enabled, videos begin playing immediately when you swipe to them or tap to open them. Disable this if you prefer to manually press play, for example when browsing in public or on a limited data connection. Videos will still show a thumbnail preview when auto-play is off.</string>
     <string name="help_tip_viewer_auto_play_p1_s1">Go to Settings &gt; Media viewer</string>
     <string name="help_tip_viewer_auto_play_p1_s2">Toggle \'Auto-play videos\'</string>
-    <string name="help_tip_viewer_audio_focus_title">Audio focus</string>
-    <string name="help_tip_viewer_audio_focus_subtitle">Control audio behavior during video playback</string>
-    <string name="help_tip_viewer_audio_focus_p1_title">Audio focus</string>
-    <string name="help_tip_viewer_audio_focus_p1_desc">When enabled, Gallery automatically pauses any background audio (music, podcasts, audiobooks) when a video starts playing, and resumes it when the video stops. Disable this if you want your music to keep playing while browsing videos silently.</string>
-    <string name="help_tip_viewer_audio_focus_p1_s1">Go to Settings &gt; Media viewer</string>
-    <string name="help_tip_viewer_audio_focus_p1_s2">Toggle \'Take audio focus\'</string>
-    <string name="help_tip_viewer_audio_focus_p1_s3">Enabled: pauses background audio during video</string>
-    <string name="help_tip_viewer_audio_focus_p1_s4">Disabled: background audio keeps playing</string>
     <string name="help_tip_viewer_auto_hide_video_title">Auto-hide UI on video play</string>
     <string name="help_tip_viewer_auto_hide_video_subtitle">Hide controls when a video starts playing</string>
     <string name="help_tip_viewer_auto_hide_video_p1_title">Auto-hide UI</string>
@@ -383,9 +375,9 @@
     <string name="help_tip_edit_rotate_p2_s3">Tap to apply the transformation</string>
     <string name="help_tip_edit_rotate_p2_s4">Combine with crop for precise framing</string>
     <string name="help_tip_edit_filters_title">Apply photo filters</string>
-    <string name="help_tip_edit_filters_subtitle">Preset filters, including a one-tap Negative, to transform your photos</string>
+    <string name="help_tip_edit_filters_subtitle">20 preset filters to transform your photos</string>
     <string name="help_tip_edit_filters_p1_title">Photo filters</string>
-    <string name="help_tip_edit_filters_p1_desc">Choose from a set of carefully crafted preset filters that transform the mood and tone of your photos. Warm filters (Honey, Desert, Palma) add golden tones, while cool filters (Isla, Clay) add blue or muted tones. The new Negative preset inverts colours in a single tap. Each filter previews instantly so you can compare the effect before applying.</string>
+    <string name="help_tip_edit_filters_p1_desc">Choose from 20 carefully crafted preset filters that transform the mood and tone of your photos. Warm filters (Honey, Desert, Palma) add golden tones. Cool filters (Isla, Clay) add blue or muted tones. Each filter previews instantly so you can compare the effect before applying.</string>
     <string name="help_tip_edit_filters_p2_title">Apply a filter</string>
     <string name="help_tip_edit_filters_p2_desc">Scroll horizontally through the filter strip at the bottom to browse options. Tap any filter to see a live preview on your photo. If you don\'t like the result, simply tap another filter or tap the original to remove it. Filters can be combined with fine-tune adjustments for even more control.</string>
     <string name="help_tip_edit_filters_p2_s1">Open a photo and tap edit</string>
@@ -1024,8 +1016,8 @@
     <string name="help_release_421_right_align_actions_desc">Move top action buttons to the right for easier one-handed use</string>
     <string name="help_release_421_vault_overhaul_title">Vault overhaul</string>
     <string name="help_release_421_vault_overhaul_desc">Gate authentication, custom passwords, per-vault security, and streamlined flow</string>
-    <string name="help_release_421_nomaps_withml_title">Offline WithML variant</string>
-    <string name="help_release_421_nomaps_withml_desc">New build variant with AI models but without online features (maps, cloud, network)</string>
+    <string name="help_release_421_nomaps_withml_title">NoMaps WithML variant</string>
+    <string name="help_release_421_nomaps_withml_desc">New build variant with AI models but without map dependencies</string>
     <string name="help_release_421_bugfixes_title">Bug fixes &amp; improvements</string>
     <string name="help_release_421_bugfixes_desc">Fixed phantom selections, corrected setup permissions, and improved image loading</string>
     <!-- RELEASE NOTES -->
@@ -1229,4 +1221,19 @@
     <string name="help_release_500_location_sheet_desc">Tap a photo\'s location to see a map preview with quick actions to open it in app or externally</string>
     <string name="help_release_500_bugfixes_title">Bug fixes &amp; improvements</string>
     <string name="help_release_500_bugfixes_desc">Fixed panorama mirroring, background audio on focus loss, picker album thumbnails, file descriptor leaks, vault UX issues, duplicate-key crashes, and SD card copy/move destinations</string>
+    <!-- RELEASE NOTES: 5.0.1 -->
+    <string name="help_release_501_formats_title">More image formats</string>
+    <string name="help_release_501_formats_desc">View PSD, JPEG 2000, TIFF, and SVG files in the timeline and viewer, each with crisp pinch-to-zoom</string>
+    <string name="help_release_501_heif_title">Faster HEIC &amp; AVIF</string>
+    <string name="help_release_501_heif_desc">Hardware-accelerated HEIC/AVIF decoding with fixed AVIF color artifacts</string>
+    <string name="help_release_501_system_font_title">Use system font</string>
+    <string name="help_release_501_system_font_desc">New display option to switch the app over to your device\'s system font instead of the bundled typeface</string>
+    <string name="help_release_501_jxl_zoom_title">High-quality JXL zoom</string>
+    <string name="help_release_501_jxl_zoom_desc">JPEG XL images now zoom sharply in the viewer through a dedicated region decoder</string>
+    <string name="help_release_501_video_fixes_title">Smoother video playback</string>
+    <string name="help_release_501_video_fixes_desc">Video follows the media volume stream, zoom and pinch behave naturally on rotation, and the info section stays open when auto-hide fires</string>
+    <string name="help_release_501_scroll_fixes_title">Stable scrolling &amp; navigation</string>
+    <string name="help_release_501_scroll_fixes_desc">Timeline and settings scroll positions are preserved, and viewer exit transitions no longer break</string>
+    <string name="help_release_501_bugfixes_title">Bug fixes</string>
+    <string name="help_release_501_bugfixes_desc">Improved editor markup gestures and crop box interactions, fixed launch crash on null MediaStore columns, black screen after deleting in the standalone viewer, panorama compass and gyro on rotation, album cover mismatch, date-field text, scrubber near zero, widget self-healing, and updated Simplified Chinese translations</string>
 </resources>
