@@ -111,6 +111,9 @@
     <string name="allow_gif_animation_summary">Joue les animations GIF dans la chronologie et la grille d\'album. Désactiver pour réduire les ralentissements dans les dossiers contenant de nombreux GIF</string>
     <string name="amoled_mode_title">Utiliser le mode Amoled</string>
     <string name="amoled_mode_summary">Contraste plus élevé, mieux adapté aux écrans Amoled</string>
+    <string name="use_system_font_title">Use system font</string>
+    <string name="use_system_font_summary">Use your device\'s default font instead of the built-in one</string>
+    <string name="use_system_font_description">When enabled, the app uses your device\'s system font instead of the built-in Google Sans font. This can improve readability if you use a custom system font.</string>
     <string name="color_palette_preview_description">Icônes, texte et plus seront assortis aux couleurs de votre fond d\'écran</string>
     <string name="color_palette_wallpaper_colors">Couleurs du fond d\'écran</string>
     <string name="color_palette_other_colors">Autres couleurs</string>
@@ -310,8 +313,6 @@
     <string name="location">Emplacement</string>
     <string name="support_the_project">Soutenir le projet</string>
     <string name="click_to_copy">Cliquer pour copier</string>
-    <string name="take_audio_focus_title">Prendre la priorité sur l\'audio</string>
-    <string name="take_audio_focus_summary">L\'activation de cette option permet de prendre la priorité de l\'audio lors de la lecture d\'un média. Tout média lu en arrière-plan sera suspendu pendant la lecture de la vidéo. (Redémarrage de l\'application nécessaire)</string>
     <string name="full_brightness_view_title">Luminosité maximale lors du visionnage</string>
     <string name="full_brightness_view_summary">Augmenter la luminosité de l\'écran au maximum lors du visionnage d\'images ou de vidéos</string>
     <string name="auto_hide_on_video_play">Masquer l\'interface pendant la lecture vidéo</string>
@@ -490,7 +491,7 @@
     <string name="vault_hide_in_progress">Hiding media…</string>
     <string name="vault_setup_password_prompt">Souhaitez-vous définir un mot de passe personnalisé pour ce coffre-fort ?</string>
     <string name="vault_skip_password">Use device security</string>
-    <string name="vault_set_password">Définir un mot de passe</string>
+    <string name="vault_set_password">Set custom password</string>
     <string name="vault_deletion_title_named">Delete \"%1$s\"?</string>
     <string name="vault_deletion_summary_named">Vault \"%1$s\" and all its content will be deleted permanently.\nThis action cannot be undone.</string>
     <string name="vault_manage_security">Manage security</string>
@@ -557,7 +558,6 @@
     <string name="full_brightness_view_description">Règle automatiquement la luminosité de l\'écran au maximum lors de la visualisation d\'une photo ou d\'une vidéo en plein écran. La luminosité revient à votre niveau normal lorsque vous quittez la visionneuse.</string>
     <string name="show_date_header_description">Affiche la date et l\'heure de la photo actuelle en haut de l\'écran de la visionneuse multimédia.</string>
     <string name="show_favorite_button_description">Affiche un bouton en forme de cœur dans la barre d\'outils de la visionneuse multimédia, vous permettant d\'ajouter ou de supprimer rapidement la photo actuelle de vos favoris.</string>
-    <string name="audio_focus_description">When enabled, the app requests audio focus during video playback. This pauses other audio apps (music, podcasts) while your video plays.\n\nChanging this setting will restart the app.</string>
     <string name="auto_hide_on_video_play_description">Masque automatiquement les barres supérieure et inférieure lorsqu\'une vidéo commence à être lue, vous offrant une expérience plein écran. Appuyez sur l\'écran pour ramener les commandes.</string>
     <string name="auto_play_video_description">Videos start playing automatically when you swipe to them in the media viewer. Disable this to require a manual tap to play.</string>
     <string name="fancy_blur_description">Applique un effet de flou à l\'arrière-plan derrière les photos dans la visionneuse multimédia. Nécessite Android 12 ou supérieur.</string>
@@ -693,6 +693,7 @@
     <string name="editor_rotate_90">Tourner de 90 degrés</string>
     <string name="editor_aspect_ratio">Ratio d\'aspect</string>
     <string name="editor_apply_crop">Appliquer le recadrage</string>
+    <string name="editor_crop">Crop</string>
     <string name="editor_cancel_markup">Annuler le marquage</string>
     <string name="editor_apply_markup">Appliquer le marquage</string>
     <string name="editor_undo">Annuler</string>
