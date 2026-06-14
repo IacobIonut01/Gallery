@@ -329,14 +329,6 @@
     <string name="help_tip_viewer_auto_play_p1_desc">כשמופעל, סרטונים מתחילים להתנגן מיידית כשאתה מחליק אליהם או מקיש כדי לפתוח אותם. כבה זאת אם אתה מעדיף ללחוץ ידנית על נגן, לדוגמה בעת עיון בציבור או בחיבור נתונים מוגבל. סרטונים עדיין יציגו תצוגה מקדימה של תמונה ממוזערת כשההפעלה האוטומטית כבויה.</string>
     <string name="help_tip_viewer_auto_play_p1_s1">עבור להגדרות &gt; מציג מדיה</string>
     <string name="help_tip_viewer_auto_play_p1_s2">החלף את \"הפעלה אוטומטית של סרטונים\"</string>
-    <string name="help_tip_viewer_audio_focus_title">מיקוד שמע</string>
-    <string name="help_tip_viewer_audio_focus_subtitle">שליטה בהתנהגות השמע במהלך ניגון וידאו</string>
-    <string name="help_tip_viewer_audio_focus_p1_title">מיקוד שמע</string>
-    <string name="help_tip_viewer_audio_focus_p1_desc">כשמופעל, הגלריה משהה אוטומטית כל שמע ברקע (מוזיקה, פודקאסטים, ספרי שמע) כשסרטון מתחיל להתנגן, ומחדשת אותו כשהסרטון נעצר. כבה זאת אם תרצה שהמוזיקה שלך תמשיך להתנגן בזמן עיון בסרטונים בשקט.</string>
-    <string name="help_tip_viewer_audio_focus_p1_s1">עבור להגדרות &gt; מציג מדיה</string>
-    <string name="help_tip_viewer_audio_focus_p1_s2">החלף את \"לקיחת מיקוד שמע\"</string>
-    <string name="help_tip_viewer_audio_focus_p1_s3">מופעל: משהה שמע רקע במהלך וידאו</string>
-    <string name="help_tip_viewer_audio_focus_p1_s4">מכובה: שמע רקע ממשיך להתנגן</string>
     <string name="help_tip_viewer_auto_hide_video_title">הסתרה אוטומטית של ממשק בניגון וידאו</string>
     <string name="help_tip_viewer_auto_hide_video_subtitle">הסתרת פקדים כשסרטון מתחיל להתנגן</string>
     <string name="help_tip_viewer_auto_hide_video_p1_title">הסתרה אוטומטית של ממשק</string>
@@ -383,9 +375,9 @@
     <string name="help_tip_edit_rotate_p2_s3">הקש כדי להחיל את השינוי</string>
     <string name="help_tip_edit_rotate_p2_s4">שלב עם חיתוך למסגור מדויק</string>
     <string name="help_tip_edit_filters_title">החלת מסנני תמונה</string>
-    <string name="help_tip_edit_filters_subtitle">Preset filters, including a one-tap Negative, to transform your photos</string>
+    <string name="help_tip_edit_filters_subtitle">20 preset filters to transform your photos</string>
     <string name="help_tip_edit_filters_p1_title">מסנני תמונה</string>
-    <string name="help_tip_edit_filters_p1_desc">Choose from a set of carefully crafted preset filters that transform the mood and tone of your photos. Warm filters (Honey, Desert, Palma) add golden tones, while cool filters (Isla, Clay) add blue or muted tones. The new Negative preset inverts colours in a single tap. Each filter previews instantly so you can compare the effect before applying.</string>
+    <string name="help_tip_edit_filters_p1_desc">Choose from 20 carefully crafted preset filters that transform the mood and tone of your photos. Warm filters (Honey, Desert, Palma) add golden tones. Cool filters (Isla, Clay) add blue or muted tones. Each filter previews instantly so you can compare the effect before applying.</string>
     <string name="help_tip_edit_filters_p2_title">החלת מסנן</string>
     <string name="help_tip_edit_filters_p2_desc">גלול אופקית דרך פס המסננים בתחתית כדי לעיין באפשרויות. הקש על כל מסנן כדי לראות תצוגה מקדימה חיה על התמונה שלך. אם אינך אוהב את התוצאה, פשוט הקש על מסנן אחר או הקש על המקור כדי להסיר אותו. מסננים יכולים להיות משולבים עם התאמות עדינות לשליטה גדולה אף יותר.</string>
     <string name="help_tip_edit_filters_p2_s1">פתח תמונה והקש על עריכה</string>
@@ -1024,8 +1016,8 @@
     <string name="help_release_421_right_align_actions_desc">העברת לחצני פעולות עליונים לימין לשימוש קל יותר ביד אחת</string>
     <string name="help_release_421_vault_overhaul_title">שיפוץ הכספת</string>
     <string name="help_release_421_vault_overhaul_desc">אימות שער, סיסמאות מותאמות, אבטחה לכל כספת וזרימה מייעלת</string>
-    <string name="help_release_421_nomaps_withml_title">Offline WithML variant</string>
-    <string name="help_release_421_nomaps_withml_desc">New build variant with AI models but without online features (maps, cloud, network)</string>
+    <string name="help_release_421_nomaps_withml_title">NoMaps WithML variant</string>
+    <string name="help_release_421_nomaps_withml_desc">New build variant with AI models but without map dependencies</string>
     <string name="help_release_421_bugfixes_title">תיקוני באגים ושיפורים</string>
     <string name="help_release_421_bugfixes_desc">תוקנו: בחירות פנטום, הרשאות הקמה תוקנו וטעינת תמונות שופרה</string>
     <!-- RELEASE NOTES -->
@@ -1229,4 +1221,19 @@
     <string name="help_release_500_location_sheet_desc">Tap a photo\'s location to see a map preview with quick actions to open it in app or externally</string>
     <string name="help_release_500_bugfixes_title">Bug fixes &amp; improvements</string>
     <string name="help_release_500_bugfixes_desc">Fixed panorama mirroring, background audio on focus loss, picker album thumbnails, file descriptor leaks, vault UX issues, duplicate-key crashes, and SD card copy/move destinations</string>
+    <!-- RELEASE NOTES: 5.0.1 -->
+    <string name="help_release_501_formats_title">More image formats</string>
+    <string name="help_release_501_formats_desc">View PSD, JPEG 2000, TIFF, and SVG files in the timeline and viewer, each with crisp pinch-to-zoom</string>
+    <string name="help_release_501_heif_title">Faster HEIC &amp; AVIF</string>
+    <string name="help_release_501_heif_desc">Hardware-accelerated HEIC/AVIF decoding with fixed AVIF color artifacts</string>
+    <string name="help_release_501_system_font_title">Use system font</string>
+    <string name="help_release_501_system_font_desc">New display option to switch the app over to your device\'s system font instead of the bundled typeface</string>
+    <string name="help_release_501_jxl_zoom_title">High-quality JXL zoom</string>
+    <string name="help_release_501_jxl_zoom_desc">JPEG XL images now zoom sharply in the viewer through a dedicated region decoder</string>
+    <string name="help_release_501_video_fixes_title">Smoother video playback</string>
+    <string name="help_release_501_video_fixes_desc">Video follows the media volume stream, zoom and pinch behave naturally on rotation, and the info section stays open when auto-hide fires</string>
+    <string name="help_release_501_scroll_fixes_title">Stable scrolling &amp; navigation</string>
+    <string name="help_release_501_scroll_fixes_desc">Timeline and settings scroll positions are preserved, and viewer exit transitions no longer break</string>
+    <string name="help_release_501_bugfixes_title">Bug fixes</string>
+    <string name="help_release_501_bugfixes_desc">Improved editor markup gestures and crop box interactions, fixed launch crash on null MediaStore columns, black screen after deleting in the standalone viewer, panorama compass and gyro on rotation, album cover mismatch, date-field text, scrubber near zero, widget self-healing, and updated Simplified Chinese translations</string>
 </resources>
