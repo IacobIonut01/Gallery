@@ -329,14 +329,6 @@
     <string name="help_tip_viewer_auto_play_p1_desc">Kada je omogućeno, videozapisi se počinju reproducirati odmah kada prijeđeš prstom do njih ili ih dodirneš za otvaranje. Onemogući ovo ako radije ručno pokrećeš reprodukciju, na primjer kada pregledavaš na javnom mjestu ili uz ograničenu podatkovnu vezu. Videozapisi će i dalje prikazivati sličicu pregleda kada je automatska reprodukcija isključena.</string>
     <string name="help_tip_viewer_auto_play_p1_s1">Idi na Postavke &gt; Preglednik medija</string>
     <string name="help_tip_viewer_auto_play_p1_s2">Uključi/isključi \'Automatski reproduciraj videozapise\'</string>
-    <string name="help_tip_viewer_audio_focus_title">Audio fokus</string>
-    <string name="help_tip_viewer_audio_focus_subtitle">Upravljaj ponašanjem zvuka tijekom reprodukcije videozapisa</string>
-    <string name="help_tip_viewer_audio_focus_p1_title">Audio fokus</string>
-    <string name="help_tip_viewer_audio_focus_p1_desc">Kada je omogućeno, Galerija automatski pauzira sav pozadinski zvuk (glazbu, podcaste, audioknjige) kada videozapis započne s reprodukcijom i nastavlja ga kada se videozapis zaustavi. Onemogući ovo ako želiš da tvoja glazba nastavi svirati dok tiho pregledavaš videozapise.</string>
-    <string name="help_tip_viewer_audio_focus_p1_s1">Idi na Postavke &gt; Preglednik medija</string>
-    <string name="help_tip_viewer_audio_focus_p1_s2">Uključi/isključi \'Preuzmi audio fokus\'</string>
-    <string name="help_tip_viewer_audio_focus_p1_s3">Omogućeno: pauzira pozadinski zvuk tijekom videozapisa</string>
-    <string name="help_tip_viewer_audio_focus_p1_s4">Onemogućeno: pozadinski zvuk nastavlja svirati</string>
     <string name="help_tip_viewer_auto_hide_video_title">Automatski sakrij sučelje pri reprodukciji videozapisa</string>
     <string name="help_tip_viewer_auto_hide_video_subtitle">Sakrij kontrole kada videozapis započne s reprodukcijom</string>
     <string name="help_tip_viewer_auto_hide_video_p1_title">Automatsko skrivanje sučelja</string>
@@ -383,9 +375,9 @@
     <string name="help_tip_edit_rotate_p2_s3">Dodirni za primjenu transformacije</string>
     <string name="help_tip_edit_rotate_p2_s4">Kombiniraj s obrezivanjem za precizno kadriranje</string>
     <string name="help_tip_edit_filters_title">Primijeni filtre za fotografije</string>
-    <string name="help_tip_edit_filters_subtitle">Unaprijed postavljeni filtri, uključujući Negativ jednim dodirom, za transformaciju tvojih fotografija</string>
+    <string name="help_tip_edit_filters_subtitle">20 preset filters to transform your photos</string>
     <string name="help_tip_edit_filters_p1_title">Filtri za fotografije</string>
-    <string name="help_tip_edit_filters_p1_desc">Odaberi iz skupa pažljivo izrađenih unaprijed postavljenih filtara koji mijenjaju ugođaj i ton tvojih fotografija. Topli filtri (Honey, Desert, Palma) dodaju zlatne tonove, dok hladni filtri (Isla, Clay) dodaju plave ili prigušene tonove. Novi unaprijed postavljeni filtar Negativ invertira boje jednim dodirom. Svaki filtar nudi trenutačni pregled kako bi mogao usporediti efekt prije primjene.</string>
+    <string name="help_tip_edit_filters_p1_desc">Choose from 20 carefully crafted preset filters that transform the mood and tone of your photos. Warm filters (Honey, Desert, Palma) add golden tones. Cool filters (Isla, Clay) add blue or muted tones. Each filter previews instantly so you can compare the effect before applying.</string>
     <string name="help_tip_edit_filters_p2_title">Primijeni filtar</string>
     <string name="help_tip_edit_filters_p2_desc">Kreći se vodoravno kroz traku s filtrima na dnu kako bi pregledao opcije. Dodirni bilo koji filtar za prikaz uživo na svojoj fotografiji. Ako ti se ne sviđa rezultat, jednostavno dodirni drugi filtar ili dodirni original kako bi ga uklonuo. Filtri se mogu kombinirati s preciznim prilagodbama za još veću kontrolu.</string>
     <string name="help_tip_edit_filters_p2_s1">Otvori fotografiju i dodirni uredi</string>
@@ -1024,8 +1016,8 @@
     <string name="help_release_421_right_align_actions_desc">Pomakni gornje akcijske gumbe na desnu stranu za lakše korištenje jednom rukom</string>
     <string name="help_release_421_vault_overhaul_title">Redizajn sefa</string>
     <string name="help_release_421_vault_overhaul_desc">Provjera autentičnosti na ulazu, prilagođene lozinke, sigurnost po sefu i pojednostavljen postupak</string>
-    <string name="help_release_421_nomaps_withml_title">Izvanmrežna varijanta s WithML-om</string>
-    <string name="help_release_421_nomaps_withml_desc">Nova varijanta gradnje s AI modelima, ali bez internetskih značajki (karte, oblak, mreža)</string>
+    <string name="help_release_421_nomaps_withml_title">NoMaps WithML variant</string>
+    <string name="help_release_421_nomaps_withml_desc">New build variant with AI models but without map dependencies</string>
     <string name="help_release_421_bugfixes_title">Ispravci pogrešaka i poboljšanja</string>
     <string name="help_release_421_bugfixes_desc">Ispravljeni \"fantomski\" odabiri, ispravljene dozvole postavljanja i poboljšano učitavanje slika</string>
     <!-- RELEASE NOTES -->
@@ -1229,4 +1221,19 @@
     <string name="help_release_500_location_sheet_desc">Dodirni lokaciju fotografije za prikaz pregleda karte s brzim radnjama za otvaranje u aplikaciji ili vanjskom programu</string>
     <string name="help_release_500_bugfixes_title">Ispravci pogrešaka i poboljšanja</string>
     <string name="help_release_500_bugfixes_desc">Ispravljeno zrcaljenje panorama, pozadinski zvuk pri gubitku fokusa, sličice u biraču albuma, curenje deskriptora datoteka, problemi sa sefom, rušenja zbog dupliciranih ključeva i odredišta kopiranja/premještanja na SD karticu</string>
+    <!-- RELEASE NOTES: 5.0.1 -->
+    <string name="help_release_501_formats_title">More image formats</string>
+    <string name="help_release_501_formats_desc">View PSD, JPEG 2000, TIFF, and SVG files in the timeline and viewer, each with crisp pinch-to-zoom</string>
+    <string name="help_release_501_heif_title">Faster HEIC &amp; AVIF</string>
+    <string name="help_release_501_heif_desc">Hardware-accelerated HEIC/AVIF decoding with fixed AVIF color artifacts</string>
+    <string name="help_release_501_system_font_title">Use system font</string>
+    <string name="help_release_501_system_font_desc">New display option to switch the app over to your device\'s system font instead of the bundled typeface</string>
+    <string name="help_release_501_jxl_zoom_title">High-quality JXL zoom</string>
+    <string name="help_release_501_jxl_zoom_desc">JPEG XL images now zoom sharply in the viewer through a dedicated region decoder</string>
+    <string name="help_release_501_video_fixes_title">Smoother video playback</string>
+    <string name="help_release_501_video_fixes_desc">Video follows the media volume stream, zoom and pinch behave naturally on rotation, and the info section stays open when auto-hide fires</string>
+    <string name="help_release_501_scroll_fixes_title">Stable scrolling &amp; navigation</string>
+    <string name="help_release_501_scroll_fixes_desc">Timeline and settings scroll positions are preserved, and viewer exit transitions no longer break</string>
+    <string name="help_release_501_bugfixes_title">Bug fixes</string>
+    <string name="help_release_501_bugfixes_desc">Improved editor markup gestures and crop box interactions, fixed launch crash on null MediaStore columns, black screen after deleting in the standalone viewer, panorama compass and gyro on rotation, album cover mismatch, date-field text, scrubber near zero, widget self-healing, and updated Simplified Chinese translations</string>
 </resources>
