@@ -343,14 +343,14 @@
     <string name="ai_models_source_url">github.com/IacobIonut01/ReFra</string>
     <string name="ai_models_files">Model Files</string>
     <string name="ai_models_feature_search">Search by Description</string>
-    <string name="ai_models_feature_categories">Automatic Categories</string>
+    <string name="ai_models_feature_categories">الفئات التلقائية</string>
     <!-- New Category System -->
     <string name="add_category">أضف فئة</string>
     <string name="edit_category">حرِّر فئة</string>
     <string name="delete_category_title">احذف الفئة؟</string>
     <string name="delete_category_confirmation">أمتأكد من رغبتك في حذف هذه الفئة؟ لا يمكن التراجع عن هذا الإجراء.</string>
     <string name="category_name">اسم الفئة</string>
-    <string name="category_name_hint">e.g., Nature, Food, Travel</string>
+    <string name="category_name_hint">على سبيل المثال: الطبيعة، الطعام، السفر</string>
     <string name="search_terms">Search terms</string>
     <string name="search_terms_hint">Comma-separated keywords to match images</string>
     <string name="search_terms_example">sunset, sunrise, golden hour, sky</string>
@@ -363,17 +363,17 @@
     <string name="matching_photos_count">%1$d matching</string>
     <string name="recommended">recommended</string>
     <string name="no_matching_photos">No matching photos found</string>
-    <string name="category_helper_text">Add a name, search terms and adjust the accuracy to create your category</string>
-    <string name="reset_categories">Reset categories</string>
+    <string name="category_helper_text">أدخل اسمًا ومصطلحات بحث واضبط مستوى الدقة لإنشاء فئتك</string>
+    <string name="reset_categories">صفّر الفئات</string>
     <string name="reset_categories_summary">Delete all categories and reinitialize with defaults</string>
     <string name="create">Create</string>
     <string name="save">Save</string>
-    <string name="browse_categories">Browse categories</string>
-    <string name="category_media_count">%1$d items</string>
+    <string name="browse_categories">تصفح الفئات</string>
+    <string name="category_media_count">%1$d عناصر</string>
     <!-- Category Editor (unified create/edit) -->
-    <string name="new_category">New category</string>
+    <string name="new_category">فئة جديدة</string>
     <string name="describe_content">Describe what to include</string>
-    <string name="describe_content_hint">Describe what photos this category should contain</string>
+    <string name="describe_content_hint">صف الصور التي ينبغي أن تتضمنها هذه الفئة</string>
     <string name="describe_content_example">e.g., photos of my dog at the beach</string>
     <string name="quick_start">Quick start</string>
     <string name="quick_start_subtitle">Tap a suggestion to get started</string>
@@ -389,9 +389,9 @@
     <string name="sensitivity_exact">Exact</string>
     <string name="sensitivity_exact_desc">Near-perfect matches only</string>
     <string name="fine_tune">Fine-tune</string>
-    <string name="category_created">Category created — classifying photos…</string>
-    <string name="category_updated">Category updated — reclassifying…</string>
-    <string name="category_deleted">Category deleted</string>
+    <string name="category_created">أُنشئت فئة — يصنّف الصور…</string>
+    <string name="category_updated">حُدثت الفئة — يعيد التصنيف…</string>
+    <string name="category_deleted">حُذفت الفئة</string>
     <!-- Reference images (image-to-image search) -->
     <string name="reference_images">Reference photos</string>
     <string name="reference_images_hint">Add photos to find visually similar ones</string>
@@ -405,7 +405,7 @@
     <string name="launch_on_library">Launch on Library</string>
     <string name="categories">الفئات</string>
     <string name="classified_media">%1$s classified media</string>
-    <string name="scan_for_new_categories">Scan for new categories</string>
+    <string name="scan_for_new_categories">افحص عن فئات جديدة</string>
     <string name="ai_models_not_available">AI models are not downloaded. Download them from Settings → Smart Features.</string>
     <string name="scanning_media">يفحص الوسائط...</string>
     <string name="date_header_title">ترويسة التاريخ</string>
@@ -640,12 +640,12 @@
     <string name="other">أخرى</string>
     <string name="settings_trash_confirmation_title">تطلب تأكيد عند المهملات</string>
     <string name="settings_trash_confirmation_summary">فعِّل طلب تأكيد إضافي قبل نقل الوسائط إلى المهملات</string>
-    <string name="categories_settings">Categories Settings</string>
+    <string name="categories_settings">إعدادات الفئات</string>
     <string name="categories_settings_subtitle">Manage scanning, categories and classification</string>
     <string name="locations_count">%1$d locations</string>
     <string name="no_locations_found">No locations found</string>
     <string name="locations">Locations</string>
-    <string name="no_categories_found">No categories found</string>
+    <string name="no_categories_found">لم يُعثر على فئات</string>
     <!-- Dynamic search carousels -->
     <string name="media_types">Media Types</string>
     <string name="camera_models">Camera Models</string>
