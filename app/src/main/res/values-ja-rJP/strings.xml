@@ -111,6 +111,9 @@
     <string name="allow_gif_animation_summary">タイムラインやアルバムグリッドでGIFアニメーションを再生します。GIFファイルが多いフォルダでの動作の遅延を抑えるには、この機能を無効にしてください</string>
     <string name="amoled_mode_title">AMOLED モードを使用</string>
     <string name="amoled_mode_summary">高コントラストで、AMOLED スクリーンに最適です</string>
+    <string name="use_system_font_title">Use system font</string>
+    <string name="use_system_font_summary">Use your device\'s default font instead of the built-in one</string>
+    <string name="use_system_font_description">When enabled, the app uses your device\'s system font instead of the built-in Google Sans font. This can improve readability if you use a custom system font.</string>
     <string name="color_palette_preview_description">アイコンやテキストなどが、壁紙の色に合わせて表示されます</string>
     <string name="color_palette_wallpaper_colors">壁紙の色</string>
     <string name="color_palette_other_colors">その他の色</string>
@@ -310,8 +313,6 @@
     <string name="location">ロケーション</string>
     <string name="support_the_project">プロジェクトをサポートする</string>
     <string name="click_to_copy">クリックしてコピー</string>
-    <string name="take_audio_focus_title">オーディオフォーカス</string>
-    <string name="take_audio_focus_summary">これを有効にすると、メディア再生時にオーディオフォーカスがかかります。バックグラウンドで再生中のメディアは、ビデオ再生中に一時停止します。(アプリの再起動が必要です)</string>
     <string name="full_brightness_view_title">表示時の明るさを最大にする</string>
     <string name="full_brightness_view_summary">画像やビデオを見るときは、画面の明るさを最大にする</string>
     <string name="auto_hide_on_video_play">ビデオ再生時にUIを隠す</string>
@@ -490,7 +491,7 @@
     <string name="vault_hide_in_progress">メディアを非表示にしています…</string>
     <string name="vault_setup_password_prompt">この保管庫にカスタムパスワードを設定しますか？</string>
     <string name="vault_skip_password">端末のセキュリティを使用する</string>
-    <string name="vault_set_password">Set password</string>
+    <string name="vault_set_password">Set custom password</string>
     <string name="vault_deletion_title_named">「%1$s」を削除しますか？</string>
     <string name="vault_deletion_summary_named">保管庫「%1$s」およびそのすべてのコンテンツが完全に削除されます。\nこの操作は元に戻せません。</string>
     <string name="vault_manage_security">Manage security</string>
@@ -557,7 +558,6 @@
     <string name="full_brightness_view_description">写真やビデオをフルスクリーンで表示するときに画面の明るさを自動的に最大に設定します。 ビューアーから離れると、通常の明るさに戻ります。</string>
     <string name="show_date_header_description">メディアビューアーの上部に、写真の日付と時刻を表示します。</string>
     <string name="show_favorite_button_description">メディアビューアーツールバーにハートボタンを表示します。お気に入りから写真を素早く追加または削除できます。</string>
-    <string name="audio_focus_description">有効にすると、アプリはビデオ再生中にオーディオフォーカスを要求します。ビデオ再生中に他のオーディオ アプリ (音楽、ポッドキャスト) を一時停止します。\n\nこの設定を変更するとアプリが再起動します。</string>
     <string name="auto_hide_on_video_play_description">ビデオの再生が開始されると、画面上部と下部のバーが自動的に非表示になり、フルスクリーンの操作が可能になります。画面をタップするとコントロールが戻ります。</string>
     <string name="auto_play_video_description">メディアビューアーでスワイプ中に動画を選択すると、自動的に再生が開始されます。手動でタップして再生するようにするには、この設定をオフにしてください。</string>
     <string name="fancy_blur_description">メディアビューアー内の写真の背景にぼかし効果を適用します。Android 12 以降が必要です。</string>
@@ -691,6 +691,7 @@
     <string name="editor_rotate_90">90°回転</string>
     <string name="editor_aspect_ratio">アスペクト比</string>
     <string name="editor_apply_crop">トリミングを適用</string>
+    <string name="editor_crop">Crop</string>
     <string name="editor_cancel_markup">マークアップをキャンセル</string>
     <string name="editor_apply_markup">マークアップを適用</string>
     <string name="editor_undo">元に戻す</string>
