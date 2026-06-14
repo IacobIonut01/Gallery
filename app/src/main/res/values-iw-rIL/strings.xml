@@ -111,6 +111,9 @@
     <string name="allow_gif_animation_summary">הפעלת אנימציות GIF בציר הזמן וברשת האלבומים. כיבוי יפחית עיכוב בתיקיות עם הרבה GIF</string>
     <string name="amoled_mode_title">שימוש במצב Amoled</string>
     <string name="amoled_mode_summary">ניגודיות גבוהה יותר, מתאים במיוחד למסכי Amoled</string>
+    <string name="use_system_font_title">Use system font</string>
+    <string name="use_system_font_summary">Use your device\'s default font instead of the built-in one</string>
+    <string name="use_system_font_description">When enabled, the app uses your device\'s system font instead of the built-in Google Sans font. This can improve readability if you use a custom system font.</string>
     <string name="color_palette_preview_description">סמלים, טקסט ועוד מתאימים לצבעי הטפט שלך</string>
     <string name="color_palette_wallpaper_colors">צבעי הטפט</string>
     <string name="color_palette_other_colors">צבעים אחרים</string>
@@ -310,8 +313,6 @@
     <string name="location">מיקום</string>
     <string name="support_the_project">תמיכה בפרויקט</string>
     <string name="click_to_copy">לחץ להעתקה</string>
-    <string name="take_audio_focus_title">לקיחת מיקוד שמע</string>
-    <string name="take_audio_focus_summary">הפעלת אפשרות זו תיקח את מיקוד השמע בעת ניגון מדיה. כל מדיה שמתנגנת ברקע תושהה בזמן הפעלת הוידאו. (נדרשת הפעלה מחדש של האפליקציה)</string>
     <string name="full_brightness_view_title">בהירות מלאה בעת צפייה</string>
     <string name="full_brightness_view_summary">הגברת בהירות המסך למקסימום בעת צפייה בתמונות ובסרטונים</string>
     <string name="auto_hide_on_video_play">הסתרת הממשק בהפעלת וידאו</string>
@@ -490,7 +491,7 @@
     <string name="vault_hide_in_progress">מסתיר מדיה…</string>
     <string name="vault_setup_password_prompt">האם תרצה להגדיר סיסמה מותאמת לכספת זו?</string>
     <string name="vault_skip_password">שימוש באבטחת המכשיר</string>
-    <string name="vault_set_password">Set password</string>
+    <string name="vault_set_password">Set custom password</string>
     <string name="vault_deletion_title_named">למחוק את \"%1$s\"?</string>
     <string name="vault_deletion_summary_named">הכספת \"%1$s\" וכל תוכנה יימחקו לצמיתות.\nלא ניתן לבטל פעולה זו.</string>
     <string name="vault_manage_security">ניהול אבטחה</string>
@@ -557,7 +558,6 @@
     <string name="full_brightness_view_description">מגדיר אוטומטית את בהירות המסך למקסימום בעת צפייה בתמונה או בסרטון במצב מסך מלא. הבהירות חוזרת לרמה הרגילה שלך כשאתה יוצא מהמציג.</string>
     <string name="show_date_header_description">מציג את התאריך והשעה של התמונה הנוכחית בראש מסך מציג המדיה.</string>
     <string name="show_favorite_button_description">מציג לחצן לב בסרגל הכלים של מציג המדיה, ומאפשר לך להוסיף או להסיר במהירות את התמונה הנוכחית מהמועדפים שלך.</string>
-    <string name="audio_focus_description">כשמופעל, האפליקציה מבקשת מיקוד שמע במהלך ניגון וידאו. זה משהה אפליקציות שמע אחרות (מוזיקה, פודקאסטים) בזמן שהסרטון שלך מתנגן.\n\nשינוי הגדרה זו יפעיל מחדש את האפליקציה.</string>
     <string name="auto_hide_on_video_play_description">מסתיר אוטומטית את הסרגלים העליון והתחתון כשסרטון מתחיל להתנגן, ונותן לך חוויית מסך מלא. הקש על המסך כדי להחזיר את הפקדים.</string>
     <string name="auto_play_video_description">סרטונים מתחילים להתנגן אוטומטית כשמחליקים אליהם במציג המדיה. כבה כדי לדרוש הקשה ידנית כדי לנגן.</string>
     <string name="fancy_blur_description">מחיל אפקט טשטוש על הרקע מאחורי התמונות במציג המדיה. דורש Android 12 ומעלה.</string>
@@ -697,6 +697,7 @@
     <string name="editor_rotate_90">סיבוב 90 מעלות</string>
     <string name="editor_aspect_ratio">יחס גובה-רוחב</string>
     <string name="editor_apply_crop">החלת חיתוך</string>
+    <string name="editor_crop">Crop</string>
     <string name="editor_cancel_markup">ביטול הסימון</string>
     <string name="editor_apply_markup">החלת הסימון</string>
     <string name="editor_undo">בטל</string>
