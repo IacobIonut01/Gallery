@@ -733,11 +733,11 @@
     <string name="filter_style_ember">Ember</string>
     <string name="filter_style_airy">Airy</string>
     <!-- Aspect ratios -->
-    <string name="aspect_freeform">Freeform</string>
-    <string name="aspect_square">Square</string>
+    <string name="aspect_freeform">自由</string>
+    <string name="aspect_square">正方形</string>
     <!-- Auto presets -->
-    <string name="preset_enhance">Enhance</string>
-    <string name="preset_dynamic">Dynamic</string>
+    <string name="preset_enhance">增强</string>
+    <string name="preset_dynamic">动态</string>
     <!-- Album Groups -->
     <string name="create_album_group">创建相册分组</string>
     <string name="add_to_group">添加至分组</string>
@@ -1305,25 +1305,25 @@
     <string name="cloud_upload_details">上传详情</string>
     <string name="cloud_upload_details_idle">没有正在进行的上传</string>
     <string name="cloud_upload_details_empty">在此开始备份以查看上传进度</string>
-    <string name="cloud_upload_details_not_running">Upload idle</string>
-    <string name="cloud_upload_uploading_count">Uploading %1$d of %2$d</string>
-    <string name="cloud_upload_completed_count">%1$d completed</string>
-    <string name="cloud_upload_failed_count">%1$d failed</string>
-    <string name="cloud_upload_item_done">Completed</string>
-    <string name="cloud_upload_item_failed">Failed</string>
-    <string name="cloud_upload_item_uploading">Uploading…</string>
-    <string name="cloud_upload_item_pending">Waiting…</string>
+    <string name="cloud_upload_details_not_running">上传未运行</string>
+    <string name="cloud_upload_uploading_count">正在上传 %1$d / %2$d</string>
+    <string name="cloud_upload_completed_count">%1$d 已完成</string>
+    <string name="cloud_upload_failed_count">%1$d 失败</string>
+    <string name="cloud_upload_item_done">已完成</string>
+    <string name="cloud_upload_item_failed">失败</string>
+    <string name="cloud_upload_item_uploading">正在上传…</string>
+    <string name="cloud_upload_item_pending">正在等待…</string>
     <!-- Person birthday -->
-    <string name="cloud_person_add_birthday">Add a birthday</string>
-    <string name="cloud_person_edit_birthday">Edit birthday</string>
-    <string name="cloud_person_birthday_hint">Birthday</string>
-    <string name="cloud_person_birthday_set">Birthday: %1$s</string>
+    <string name="cloud_person_add_birthday">添加生日</string>
+    <string name="cloud_person_edit_birthday">编辑生日</string>
+    <string name="cloud_person_birthday_hint">生日</string>
+    <string name="cloud_person_birthday_set">生日：%1$s</string>
     <!-- Networking editing -->
-    <string name="cloud_net_current_server">Current server address</string>
-    <string name="cloud_net_edit_wifi">Edit Wi-Fi name</string>
-    <string name="cloud_net_edit_local_url">Edit local server URL</string>
-    <string name="cloud_net_use_current">Use current connection</string>
-    <string name="cloud_net_add_external">Add external URL</string>
+    <string name="cloud_net_current_server">当前服务器地址</string>
+    <string name="cloud_net_edit_wifi">编辑 Wi-Fi 名称</string>
+    <string name="cloud_net_edit_local_url">编辑服务器本地 URL</string>
+    <string name="cloud_net_use_current">使用当前连接</string>
+    <string name="cloud_net_add_external">添加外部 URL</string>
     <string name="cloud_net_external_hint">https://immich.example.com</string>
-    <string name="cloud_net_remove">Remove</string>
+    <string name="cloud_net_remove">移除</string>
 </resources>
