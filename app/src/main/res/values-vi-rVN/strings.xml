@@ -111,6 +111,9 @@
     <string name="allow_gif_animation_summary">Phát ảnh GIF động trong dòng thời gian và lưới album. Tắt tính năng này để giảm giật lag trong các thư mục chứa nhiều ảnh GIF</string>
     <string name="amoled_mode_title">Sử dụng chế độ siêu tối</string>
     <string name="amoled_mode_summary">Độ tương phản cao hơn, phù hợp nhất với Màn hình Amoled</string>
+    <string name="use_system_font_title">Use system font</string>
+    <string name="use_system_font_summary">Use your device\'s default font instead of the built-in one</string>
+    <string name="use_system_font_description">When enabled, the app uses your device\'s system font instead of the built-in Google Sans font. This can improve readability if you use a custom system font.</string>
     <string name="color_palette_preview_description">Biểu tượng, văn bản và các thành phần giao diện khác sẽ đồng bộ màu sắc với hình nền của bạn</string>
     <string name="color_palette_wallpaper_colors">Màu hình nền</string>
     <string name="color_palette_other_colors">Màu khác</string>
@@ -310,8 +313,6 @@
     <string name="location">Vị trí</string>
     <string name="support_the_project">Hỗ trợ dự án</string>
     <string name="click_to_copy">Nhấn để sao chép</string>
-    <string name="take_audio_focus_title">Chiếm quyền phát âm thanh</string>
-    <string name="take_audio_focus_summary">Khi bật, ứng dụng sẽ chiếm quyền phát âm thanh khi phát phương tiện. Các nội dung đang phát trong nền sẽ tạm dừng khi đoạn phim được phát. (Cần khởi động lại ứng dụng)</string>
     <string name="full_brightness_view_title">Độ sáng tối đa khi xem</string>
     <string name="full_brightness_view_summary">Tự động tăng độ sáng màn hình lên mức tối đa khi xem ảnh và đoạn phim</string>
     <string name="auto_hide_on_video_play">Ẩn giao diện khi phát đoạn phim</string>
@@ -490,7 +491,7 @@
     <string name="vault_hide_in_progress">Đang ẩn phương tiện…</string>
     <string name="vault_setup_password_prompt">Bạn có muốn đặt mật khẩu tùy chỉnh cho két này không?</string>
     <string name="vault_skip_password">Sử dụng bảo mật của thiết bị</string>
-    <string name="vault_set_password">Set password</string>
+    <string name="vault_set_password">Set custom password</string>
     <string name="vault_deletion_title_named">Xóa \"%1$s\"?</string>
     <string name="vault_deletion_summary_named">Két \"%1$s\" và toàn bộ nội dung của nó sẽ bị xóa vĩnh viễn.\nHành động này không thể hoàn tác.</string>
     <string name="vault_manage_security">Quản lý bảo mật</string>
@@ -557,7 +558,6 @@
     <string name="full_brightness_view_description">Tự động đặt độ sáng màn hình ở mức tối đa khi xem ảnh hoặc đoạn phim toàn màn hình. Độ sáng sẽ trở về mức bình thường khi bạn thoát khỏi trình xem.</string>
     <string name="show_date_header_description">Hiển thị ngày và giờ của ảnh hiện tại ở phía trên cùng của màn hình trình xem ảnh.</string>
     <string name="show_favorite_button_description">Hiển thị nút yêu thích trên thanh công cụ của trình xem ảnh, cho phép bạn nhanh chóng thêm hoặc xóa ảnh hiện tại khỏi mục Yêu thích.</string>
-    <string name="audio_focus_description">Khi bật, ứng dụng sẽ yêu cầu quyền ưu tiên âm thanh khi phát đoạn phim. Điều này sẽ tạm dừng các ứng dụng âm thanh khác (nhạc, podcast, v.v.) trong khi đoạn phim đang phát.\n\nThay đổi cài đặt này sẽ khởi động lại ứng dụng.</string>
     <string name="auto_hide_on_video_play_description">Tự động ẩn thanh trên và dưới khi đoạn phim bắt đầu phát, mang lại trải nghiệm toàn màn hình. Chạm vào màn hình để hiện chúng lại.</string>
     <string name="auto_play_video_description">Các đoạn phim sẽ tự động phát khi bạn vuốt đến chúng trong trình xem phương tiện. Tắt tùy chọn này nếu muốn chạm thủ công để phát đoạn phim.</string>
     <string name="fancy_blur_description">Áp dụng hiệu ứng làm mờ cho nền phía sau ảnh trong trình xem ảnh. Yêu cầu Android 12 trở lên.</string>
@@ -691,6 +691,7 @@
     <string name="editor_rotate_90">Rotate 90 degrees</string>
     <string name="editor_aspect_ratio">Aspect ratio</string>
     <string name="editor_apply_crop">Apply crop</string>
+    <string name="editor_crop">Crop</string>
     <string name="editor_cancel_markup">Cancel markup</string>
     <string name="editor_apply_markup">Apply markup</string>
     <string name="editor_undo">Undo</string>
