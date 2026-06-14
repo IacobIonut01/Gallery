@@ -111,6 +111,9 @@
     <string name="allow_gif_animation_summary">Reproduciraj GIF animacije na vremenskoj crti i u mreži albuma. Isključi kako bi se smanjilo usporavanje u mapama s mnogo GIF-ova</string>
     <string name="amoled_mode_title">Koristi AMOLED način rada</string>
     <string name="amoled_mode_summary">Veći kontrast, najbolje za AMOLED ekrane</string>
+    <string name="use_system_font_title">Use system font</string>
+    <string name="use_system_font_summary">Use your device\'s default font instead of the built-in one</string>
+    <string name="use_system_font_description">When enabled, the app uses your device\'s system font instead of the built-in Google Sans font. This can improve readability if you use a custom system font.</string>
     <string name="color_palette_preview_description">Ikone, tekst i ostalo usklađuju se s bojama vaše pozadine</string>
     <string name="color_palette_wallpaper_colors">Boje pozadine</string>
     <string name="color_palette_other_colors">Ostale boje</string>
@@ -310,8 +313,6 @@
     <string name="location">Lokacija</string>
     <string name="support_the_project">Podržite projekt</string>
     <string name="click_to_copy">Kliknite za kopiranje</string>
-    <string name="take_audio_focus_title">Preuzmi audio fokus</string>
-    <string name="take_audio_focus_summary">Omogućavanje ove opcije preuzet će audio fokus prilikom reprodukcije medija. Svi medijski sadržaji koji se reproduciraju u pozadini bit će pauzirani dok se video prikazuje. (Potrebno je ponovno pokretanje aplikacije)</string>
     <string name="full_brightness_view_title">Maksimalna svjetlina tijekom gledanja</string>
     <string name="full_brightness_view_summary">Povećaj svjetlinu zaslona na maksimum prilikom gledanja slika i videozapisa</string>
     <string name="auto_hide_on_video_play">Sakrij korisničko sučelje prilikom reprodukcije videozapisa</string>
@@ -490,7 +491,7 @@
     <string name="vault_hide_in_progress">Skrivanje medija…</string>
     <string name="vault_setup_password_prompt">Želite li postaviti prilagođenu lozinku za ovaj trezor?</string>
     <string name="vault_skip_password">Koristi sigurnost uređaja</string>
-    <string name="vault_set_password">Postavi lozinku</string>
+    <string name="vault_set_password">Set custom password</string>
     <string name="vault_deletion_title_named">Izbrisati „%1$s”?</string>
     <string name="vault_deletion_summary_named">Trezor „%1$s” i sav njegov sadržaj bit će trajno izbrisani.\nOva se radnja ne može poništiti.</string>
     <string name="vault_manage_security">Upravljanje sigurnošću</string>
@@ -557,7 +558,6 @@
     <string name="full_brightness_view_description">Automatski postavlja svjetlinu zaslona na maksimum prilikom pregledavanja fotografije ili videozapisa preko cijelog zaslona. Svjetlina se vraća na vašu normalnu razinu kada izađete iz preglednika.</string>
     <string name="show_date_header_description">Prikazuje datum i vrijeme trenutne fotografije na vrhu zaslona preglednika medija.</string>
     <string name="show_favorite_button_description">Prikazuje ikonu srca na alatnoj traci preglednika medija, omogućujući vam brzo dodavanje ili uklanjanje trenutne fotografije iz omiljenih.</string>
-    <string name="audio_focus_description">Kada je omogućeno, aplikacija zahtijeva audio fokus tijekom reprodukcije videozapisa. Ovo pauzira druge aplikacije sa zvukom (glazba, podcasti) dok se vaš video reproducira.\n\nPromjena ove postavke ponovno će pokrenuti aplikaciju.</string>
     <string name="auto_hide_on_video_play_description">Automatski sakriva gornju i donju traku kada se videozapis počne reproducirati, pružajući vam iskustvo preko cijelog zaslona. Dodirnite zaslon za povratak kontrola.</string>
     <string name="auto_play_video_description">Videozapisi se automatski počinju reproducirati kada prijeđete na njih u pregledniku medija. Onemogućite ovo kako biste zahtijevali ručni dodir za reprodukciju.</string>
     <string name="fancy_blur_description">Primjenjuje efekt zamućenja na pozadinu iza fotografija u pregledniku medija. Zahtijeva Android 12 ili noviji.</string>
@@ -695,6 +695,7 @@
     <string name="editor_rotate_90">Zakreni za 90 stupnjeva</string>
     <string name="editor_aspect_ratio">Omjer slike</string>
     <string name="editor_apply_crop">Primijeni obrezivanje</string>
+    <string name="editor_crop">Crop</string>
     <string name="editor_cancel_markup">Odustani od označavanja</string>
     <string name="editor_apply_markup">Primijeni označavanje</string>
     <string name="editor_undo">Poništi</string>
