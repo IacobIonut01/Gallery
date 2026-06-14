@@ -54,7 +54,7 @@
     <string name="location_cd">Emplacement du média</string>
     <string name="location_map_cd">Carte de localisation</string>
     <string name="show_in_app">Afficher dans l\'application</string>
-    <string name="open_externally">Open externally</string>
+    <string name="open_externally">Ouvrir extérieurement</string>
     <string name="no_map_app">Aucune application disponible pour afficher la localisation</string>
     <string name="app_dev">par %s</string>
     <string name="app_dev_name">IacobIonut01</string>
@@ -269,13 +269,13 @@
     <string name="setup_confirmation_type">Type</string>
     <string name="setup_confirmation_location">Lieu</string>
     <string name="setup_confirmation_albums">Albums</string>
-    <string name="setup_confirmation_regex">Pattern</string>
+    <string name="setup_confirmation_regex">Motif</string>
     <string name="setup_confirmation_preview">Aperçu</string>
     <string name="setup_type_single">Album unique</string>
     <string name="setup_type_multiple">Albums multiples</string>
-    <string name="setup_type_regex">Regex Pattern</string>
-    <string name="setup_album_regex_placeholder">Enter regex pattern</string>
-    <string name="setup_album_regex_matched">%1$d albums matched</string>
+    <string name="setup_type_regex">Motif Regex</string>
+    <string name="setup_album_regex_placeholder">Entrer le motif regex</string>
+    <string name="setup_album_regex_matched">%1$d albums correspondants</string>
     <string name="setup_album_multiple_select">Sélectionner les albums à ignorer</string>
     <string name="setup_album_single_select">Sélectionnez un album à ignorer</string>
     <string name="action_edit">Éditer</string>
@@ -341,7 +341,7 @@
     <string name="ai_models_privacy_description">Tout le traitement de l\'IA est entièrement effectué sur votre appareil. Aucune image, requête de recherche ou donnée de classification ne quitte votre téléphone. Les modèles s\'exécutent localement à l\'aide de l\'environnement d\'exécution ONNX et ne nécessitent pas de connexion Internet une fois téléchargés. Vos médias restent entièrement privés.</string>
     <string name="ai_models_source">Source</string>
     <string name="ai_models_source_url">github.com/IacobIonut01/ReFra</string>
-    <string name="ai_models_files">Model Files</string>
+    <string name="ai_models_files">Fichiers modèles</string>
     <string name="ai_models_feature_search">Recherche par Description</string>
     <string name="ai_models_feature_categories">Catégories Automatiques</string>
     <!-- New Category System -->
@@ -351,8 +351,8 @@
     <string name="delete_category_confirmation">Êtes-vous sûr de vouloir supprimer cette catégorie ? Cette action ne peut pas être annulée.</string>
     <string name="category_name">Nom de la catégorie</string>
     <string name="category_name_hint">ex : Nature, Nourriture, Voyage</string>
-    <string name="search_terms">Search terms</string>
-    <string name="search_terms_hint">Comma-separated keywords to match images</string>
+    <string name="search_terms">Termes de recherche</string>
+    <string name="search_terms_hint">Mots-clés séparés par des virgules pour faire correspondre les images</string>
     <string name="search_terms_example">coucher de soleil, lever de soleil, heure dorée, ciel</string>
     <string name="accuracy_threshold">Seuil de précision</string>
     <string name="more_results">Plus de résultats</string>
