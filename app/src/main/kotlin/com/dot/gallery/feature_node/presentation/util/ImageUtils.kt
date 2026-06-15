@@ -52,10 +52,12 @@ import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaMetadata
 import com.dot.gallery.feature_node.domain.model.Vault
 import com.dot.gallery.feature_node.domain.util.getUri
+import com.dot.gallery.feature_node.domain.util.isCloud
 import com.dot.gallery.feature_node.domain.util.isEncrypted
 import com.dot.gallery.feature_node.presentation.mediaview.components.retrieveMetadata
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import com.dot.gallery.cloud.util.CloudMediaDownloader
 import java.io.File
 import java.io.FileOutputStream
 
@@ -143,7 +145,8 @@ fun Bitmap.rotate(degrees: Float): Bitmap {
     return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
 }
 
-fun List<Media>.canBeTrashed(): Boolean {
+fun List<Media>.canBeTrashed(hasFullAccess: Boolean = false): Boolean {
+    if (hasFullAccess) return true
     return find { it.path.matches(sdcardRegex) } == null
 }
 
@@ -151,7 +154,8 @@ fun List<Media>.canBeTrashed(): Boolean {
  * first pair = trashable
  * second pair = non-trashable
  */
-fun List<Media>.mediaPair(): Pair<List<Media>, List<Media>> {
+fun List<Media>.mediaPair(hasFullAccess: Boolean = false): Pair<List<Media>, List<Media>> {
+    if (hasFullAccess) return this to emptyList()
     val trashableMedia = ArrayList<Media>()
     val nonTrashableMedia = ArrayList<Media>()
     forEach {
@@ -164,7 +168,8 @@ fun List<Media>.mediaPair(): Pair<List<Media>, List<Media>> {
     return trashableMedia to nonTrashableMedia
 }
 
-fun Media.canBeTrashed(): Boolean {
+fun Media.canBeTrashed(hasFullAccess: Boolean = false): Boolean {
+    if (hasFullAccess) return true
     return !path.matches(sdcardRegex)
 }
 
@@ -235,20 +240,50 @@ fun <T : Media> rememberMediaInfo(
     }
 }
 
-fun Uri.authorizedUri(context: Context): Uri = if (this.toString()
-        .startsWith("content://")
-) this else FileProvider.getUriForFile(
-    context,
-    BuildConfig.CONTENT_AUTHORITY,
-    this.toFile()
-)
+fun Uri.authorizedUri(context: Context): Uri = when {
+    this.toString().startsWith("content://") -> this
+    this.scheme == "cloud" -> this // cloud URIs need async resolution; see resolveShareableUri
+    else -> FileProvider.getUriForFile(
+        context,
+        BuildConfig.CONTENT_AUTHORITY,
+        this.toFile()
+    )
+}
 
-fun <T : Media> Context.copyMediaToClipboard(media: T) {
-    val clipboardManager = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-    val uri = media.getUri().authorizedUri(this)
-    val clip = ClipData.newUri(contentResolver, media.label, uri)
-    clipboardManager.setPrimaryClip(clip)
-    Toast.makeText(this, getString(R.string.copied_to_clipboard), Toast.LENGTH_SHORT).show()
+suspend fun <T : Media> Context.resolveShareableUri(media: T): Uri = withContext(Dispatchers.IO) {
+    val originalUri = media.getUri()
+    if (!media.isCloud) {
+        return@withContext if (originalUri.toString().startsWith("content://")) {
+            originalUri
+        } else {
+            FileProvider.getUriForFile(this@resolveShareableUri, BuildConfig.CONTENT_AUTHORITY, originalUri.toFile())
+        }
+    }
+    // Download cloud media to a temp file
+    val remoteId = originalUri.pathSegments.firstOrNull()
+        ?: throw IllegalStateException("No remoteId in cloud URI")
+    val stream = CloudMediaDownloader.downloadCloudMedia(originalUri)
+        ?: throw Exception("Failed to download cloud media")
+
+    val ext = media.label.substringAfterLast('.', "jpg")
+    val tempFile = File(cacheDir, "cloud_share_${remoteId.take(8)}.$ext")
+    stream.use { input ->
+        FileOutputStream(tempFile).use { output -> input.copyTo(output) }
+    }
+
+    FileProvider.getUriForFile(this@resolveShareableUri, BuildConfig.CONTENT_AUTHORITY, tempFile)
+}
+
+suspend fun <T : Media> Context.copyMediaToClipboard(media: T) {
+    val uri = resolveShareableUri(media)
+    withContext(Dispatchers.Main) {
+        val clipboardManager = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clip = ClipData.newUri(contentResolver, media.label, uri)
+        clipboardManager.setPrimaryClip(clip)
+        if (!SdkCompat.showsClipboardConfirmation) {
+            Toast.makeText(this@copyMediaToClipboard, getString(R.string.copied_to_clipboard), Toast.LENGTH_SHORT).show()
+        }
+    }
 }
 
 suspend fun <T : Media> Context.copyEncryptedMediaToClipboard(
@@ -269,11 +304,13 @@ suspend fun <T : Media> Context.copyEncryptedMediaToClipboard(
                 putString("android.content.extra.IS_SENSITIVE", "false")
             }
             clipboardManager.setPrimaryClip(clip)
-            Toast.makeText(
-                this@copyEncryptedMediaToClipboard,
-                getString(R.string.copied_to_clipboard),
-                Toast.LENGTH_SHORT
-            ).show()
+            if (!SdkCompat.showsClipboardConfirmation) {
+                Toast.makeText(
+                    this@copyEncryptedMediaToClipboard,
+                    getString(R.string.copied_to_clipboard),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
         }
     } catch (e: Exception) {
         e.printStackTrace()
@@ -287,36 +324,35 @@ suspend fun <T : Media> Context.copyEncryptedMediaToClipboard(
     }
 }
 
-fun <T : Media> Context.shareMedia(media: T) {
-    val originalUri = media.getUri()
-    val uri = if (originalUri.toString()
-            .startsWith("content://")
-    ) originalUri else FileProvider.getUriForFile(
-        this,
-        BuildConfig.CONTENT_AUTHORITY,
-        originalUri.toFile()
-    )
+suspend fun <T : Media> Context.shareMedia(media: T) {
+    val uri = resolveShareableUri(media)
 
-    ShareCompat
-        .IntentBuilder(this)
-        .setType(media.mimeType)
-        .addStream(uri)
-        .startChooser()
+    withContext(Dispatchers.Main) {
+        ShareCompat
+            .IntentBuilder(this@shareMedia)
+            .setType(media.mimeType)
+            .addStream(uri)
+            .startChooser()
+    }
 }
 
-fun <T : Media> Context.shareMedia(mediaList: List<T>) {
+suspend fun <T : Media> Context.shareMedia(mediaList: List<T>) {
     val mimeTypes =
         if (mediaList.find { it.duration != null } != null) {
             if (mediaList.find { it.duration == null } != null) "video/*,image/*" else "video/*"
         } else "image/*"
 
-    val shareCompat = ShareCompat
-        .IntentBuilder(this)
-        .setType(mimeTypes)
-    mediaList.forEach {
-        shareCompat.addStream(it.getUri())
+    val uris = withContext(Dispatchers.IO) {
+        mediaList.map { resolveShareableUri(it) }
     }
-    shareCompat.startChooser()
+
+    withContext(Dispatchers.Main) {
+        val shareCompat = ShareCompat
+            .IntentBuilder(this@shareMedia)
+            .setType(mimeTypes)
+        uris.forEach { shareCompat.addStream(it) }
+        shareCompat.startChooser()
+    }
 }
 
 /**
@@ -389,18 +425,7 @@ suspend fun <T : Media> Context.shareMediaWithVaultSupport(
                     shareStreams.add(media.getUri())
                 }
             } else {
-                // Handle regular media
-                val originalUri = media.getUri()
-                val uri = if (originalUri.toString().startsWith("content://")) {
-                    originalUri
-                } else {
-                    FileProvider.getUriForFile(
-                        this@shareMediaWithVaultSupport,
-                        BuildConfig.CONTENT_AUTHORITY,
-                        originalUri.toFile()
-                    )
-                }
-                shareStreams.add(uri)
+                shareStreams.add(resolveShareableUri(media))
             }
         }
         
@@ -447,7 +472,7 @@ private fun <T : Media> createDecryptedTempFile(
     
     // Decrypt the media
     val decryptedMedia = keychainHolder.decryptVaultMedia(encryptedFile)
-    
+
     // Create temp file with appropriate extension
     val extension = when {
         media.mimeType.startsWith("image/") -> when (media.mimeType) {
@@ -478,6 +503,7 @@ private fun <T : Media> createDecryptedTempFile(
             input.copyTo(outputStream)
         }
     }
+    decryptedMedia.cleanup()
     
     return tempFile
 }

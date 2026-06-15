@@ -33,12 +33,16 @@ import androidx.compose.material.icons.outlined.AddCircleOutline
 import androidx.compose.material.icons.outlined.CreateNewFolder
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.FileOpen
+import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.LockOpen
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material.icons.outlined.RemoveCircleOutline
 import androidx.compose.material.icons.outlined.Restore
+import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.SdCard
+import androidx.compose.ui.graphics.Color
+import com.dot.gallery.core.presentation.components.util.advancedShadow
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material.icons.outlined.Wallpaper
 import androidx.compose.material3.Icon
@@ -98,6 +102,7 @@ fun AlbumComponent(
     onDeleteAlbumThumbnailClick: ((Album) -> Unit)? = null,
     onAddToGroup: ((Album) -> Unit)? = null,
     onRemoveFromGroup: ((Album) -> Unit)? = null,
+    onMoveToSection: ((Album) -> Unit)? = null,
     onToggleMergeSubfolders: ((Album) -> Unit)? = null,
     isMergedSubfolder: Boolean = false
 ) {
@@ -118,6 +123,7 @@ fun AlbumComponent(
             onDeleteAlbumThumbnailClick = onDeleteAlbumThumbnailClick,
             onAddToGroup = onAddToGroup,
             onRemoveFromGroup = onRemoveFromGroup,
+            onMoveToSection = onMoveToSection,
             onToggleMergeSubfolders = onToggleMergeSubfolders,
             isMergedSubfolder = isMergedSubfolder
         )
@@ -149,6 +155,22 @@ fun AlbumComponent(
                     tint = MaterialTheme.colorScheme.onSurface
                 )
             }
+            if (album.relativePath.startsWith("cloud/")) {
+                Icon(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(8.dp)
+                        .size(18.dp)
+                        .advancedShadow(
+                            cornersRadius = 9.dp,
+                            shadowBlurRadius = 6.dp,
+                            alpha = 0.3f
+                        ),
+                    imageVector = Icons.Outlined.Cloud,
+                    contentDescription = null,
+                    tint = Color.White.copy(alpha = 0.7f)
+                )
+            }
         }
         Text(
             modifier = Modifier
@@ -169,7 +191,7 @@ fun AlbumComponent(
                     id = R.plurals.item_count,
                     count = album.count.toInt(),
                     album.count
-                ) + " (${formatSize(album.size)})",
+                ) + if (album.size > 0) " (${formatSize(album.size)})" else "",
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1,
                 style = MaterialTheme.typography.labelMedium,
@@ -192,6 +214,7 @@ fun AlbumRowComponent(
     onToggleIgnoreClick: ((Album) -> Unit)? = null,
     onToggleLockClick: ((Album) -> Unit)? = null,
     onAddToGroup: ((Album) -> Unit)? = null,
+    onMoveToSection: ((Album) -> Unit)? = null,
     onToggleMergeSubfolders: ((Album) -> Unit)? = null,
     isMergedSubfolder: Boolean = false
 ) {
@@ -224,6 +247,7 @@ fun AlbumRowComponent(
             onToggleIgnoreClick = onToggleIgnoreClick,
             onToggleLockClick = onToggleLockClick,
             onAddToGroup = onAddToGroup,
+            onMoveToSection = onMoveToSection,
             onToggleMergeSubfolders = onToggleMergeSubfolders,
             isMergedSubfolder = isMergedSubfolder
         )
@@ -255,6 +279,22 @@ fun AlbumRowComponent(
                     tint = MaterialTheme.colorScheme.onSurface
                 )
             }
+            if (album.relativePath.startsWith("cloud/")) {
+                Icon(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(8.dp)
+                        .size(18.dp)
+                        .advancedShadow(
+                            cornersRadius = 9.dp,
+                            shadowBlurRadius = 6.dp,
+                            alpha = 0.3f
+                        ),
+                    imageVector = Icons.Outlined.Cloud,
+                    contentDescription = null,
+                    tint = Color.White.copy(alpha = 0.7f)
+                )
+            }
         }
 
         Column(
@@ -274,7 +314,7 @@ fun AlbumRowComponent(
                     id = R.plurals.item_count,
                     count = album.count.toInt(),
                     album.count
-                ) + " (${formatSize(album.size)})",
+                ) + if (album.size > 0) " (${formatSize(album.size)})" else "",
                 style = MaterialTheme.typography.labelMedium,
                 maxLines = 1
             )
@@ -293,9 +333,11 @@ fun AlbumOptionSheet(
     onDeleteAlbumThumbnailClick: ((Album) -> Unit)? = null,
     onAddToGroup: ((Album) -> Unit)? = null,
     onRemoveFromGroup: ((Album) -> Unit)? = null,
+    onMoveToSection: ((Album) -> Unit)? = null,
     onToggleMergeSubfolders: ((Album) -> Unit)? = null,
     isMergedSubfolder: Boolean = false
 ) {
+    val isCloudAlbum = remember(album) { album.relativePath.startsWith("cloud/") }
     val scope = rememberCoroutineScope()
     val trashTitle = stringResource(R.string.move_album_to_trash)
     val pinTitle = stringResource(R.string.pin)
@@ -304,6 +346,7 @@ fun AlbumOptionSheet(
     val lockTitle = stringResource(if (album.isLocked) R.string.unlock_album else R.string.lock_album)
     val addToGroupTitle = stringResource(R.string.add_to_group)
     val removeFromGroupTitle = stringResource(R.string.remove_album_from_group)
+    val moveToSectionTitle = stringResource(R.string.move_to_section)
     val mergeSubfoldersTitle = stringResource(
         if (isMergedSubfolder) R.string.unmerge_subfolders else R.string.merge_subfolders
     )
@@ -352,37 +395,44 @@ fun AlbumOptionSheet(
             )
         )
     }
-    val optionList = remember(onMoveAlbumToTrash, onTogglePinClick, onToggleIgnoreClick, onToggleLockClick, album.isLocked) {
-        mutableListOf(
-            OptionItem(
-                icon = Icons.Outlined.Delete,
-                text = trashTitle,
-                enabled = onMoveAlbumToTrash != null,
-                onClick = {
-                    scope.launch {
-                        appBottomSheetState.hide()
-                        onMoveAlbumToTrash?.invoke(album)
+    val optionList = remember(onMoveAlbumToTrash, onTogglePinClick, onToggleIgnoreClick, onToggleLockClick, album.isLocked, isCloudAlbum) {
+        mutableListOf<OptionItem>().apply {
+            add(
+                OptionItem(
+                    icon = Icons.Outlined.Delete,
+                    text = trashTitle,
+                    enabled = onMoveAlbumToTrash != null,
+                    onClick = {
+                        scope.launch {
+                            appBottomSheetState.hide()
+                            onMoveAlbumToTrash?.invoke(album)
+                        }
                     }
-                }
-            ),
-            OptionItem(
-                icon = Icons.Outlined.PushPin,
-                text = pinTitle,
-                enabled = onTogglePinClick != null,
-                onClick = {
-                    scope.launch {
-                        appBottomSheetState.hide()
-                        onTogglePinClick?.invoke(album)
-                    }
-                }
-            ),
-            OptionItem(
-                icon = Icons.Outlined.Wallpaper,
-                text = changeThumbnailTitle,
-                onClick = { isSelectingThumbnail = true }
-            ),
-        ).apply {
-            if (onToggleLockClick != null) {
+                )
+            )
+            if (!isCloudAlbum) {
+                add(
+                    OptionItem(
+                        icon = Icons.Outlined.PushPin,
+                        text = pinTitle,
+                        enabled = onTogglePinClick != null,
+                        onClick = {
+                            scope.launch {
+                                appBottomSheetState.hide()
+                                onTogglePinClick?.invoke(album)
+                            }
+                        }
+                    )
+                )
+                add(
+                    OptionItem(
+                        icon = Icons.Outlined.Wallpaper,
+                        text = changeThumbnailTitle,
+                        onClick = { isSelectingThumbnail = true }
+                    )
+                )
+            }
+            if (onToggleLockClick != null && !isCloudAlbum) {
                 add(
                     OptionItem(
                         icon = if (album.isLocked) Icons.Outlined.LockOpen else Icons.Outlined.Lock,
@@ -410,7 +460,7 @@ fun AlbumOptionSheet(
                     )
                 )
             }
-            if (onAddToGroup != null) {
+            if (onAddToGroup != null && !isCloudAlbum) {
                 add(
                     OptionItem(
                         icon = Icons.Outlined.CreateNewFolder,
@@ -424,7 +474,21 @@ fun AlbumOptionSheet(
                     )
                 )
             }
-            if (onRemoveFromGroup != null) {
+            if (onMoveToSection != null && !isCloudAlbum) {
+                add(
+                    OptionItem(
+                        icon = Icons.Outlined.Folder,
+                        text = moveToSectionTitle,
+                        onClick = {
+                            scope.launch {
+                                appBottomSheetState.hide()
+                                onMoveToSection(album)
+                            }
+                        }
+                    )
+                )
+            }
+            if (onRemoveFromGroup != null && !isCloudAlbum) {
                 add(
                     OptionItem(
                         icon = Icons.Outlined.RemoveCircleOutline,
@@ -438,7 +502,7 @@ fun AlbumOptionSheet(
                     )
                 )
             }
-            if (onToggleMergeSubfolders != null) {
+            if (onToggleMergeSubfolders != null && !isCloudAlbum) {
                 add(
                     OptionItem(
                         icon = Icons.Outlined.AccountTree,

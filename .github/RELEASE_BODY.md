@@ -1,26 +1,38 @@
-## What's new in 4.3.0
+## What's new in 5.0.1
+
+ReFra 5.0.1 is a polish release that follows up 5.0 with a wave of bug fixes across the viewer, timeline, and panorama playback. It also broadens image format support — PSD, JPEG 2000, TIFF, and SVG now open directly, HEIC/AVIF decode on hardware, and there's a new system-font display option plus high-quality JPEG XL zoom.
 
 ### New Features
 
-- **Story Cards** — A new horizontal carousel above the timeline surfaces highlights from your recent photos, albums, categories, locations, and favorites. Tap any card to open an immersive full-screen story viewer with auto-advancing slides and progress indicators. Fully configurable: toggle card types, reorder them, and adjust viewer timing in Settings > Timeline & albums > Story cards.
-- **Redesigned Video Controls** — Video control buttons (subtitle, speed, volume, rotate) have been consolidated into a single "more options" button that expands into a blurred animated popup with scale+fade transitions. Uses row layout in landscape, column in portrait.
-- **Video Auto-Contrast** — Auto-contrast and adaptive surfaceContainer colors now extend to the video options popup, matching the viewer's luminance-based theme.
-
-### Performance
-
-- **Faster Cold Startup** — Cold startup optimized from ~900 ms to ~350 ms through lazy Keystore SecretKey caching, deferred database passphrase validation, async media distribution loading, and eager permission checks.
+- **More image formats** — Added full decoding for PSD (8BPS), JPEG 2000, TIFF, and SVG across both the timeline grid (Glide) and the media viewer (Sketch), with magic-byte sniffing since MIME types are unreliable for some of these. Each format also gets a generic region decoder so pinch-to-zoom stays crisp in the viewer.
+- **Hardware-accelerated HEIC/AVIF** — HEIC and AVIF now decode hardware-first via `ImageDecoder` (HEVC/AV1 codec) with a HeifCoder software fallback, and AVIF center-crop color artifacts are fixed by forcing RGBA_8888 in the Glide HEIF decoders.
+- **Use system font** — A new display option switches the app over to your device's system font instead of the bundled typeface (#931).
+- **High-quality JXL zoom** — JPEG XL images now zoom sharply in the viewer through a dedicated JxlCoder region decoder.
 
 ### Improvements
 
-- Improved shared element transitions: single stable registration per media item, switched from sharedBounds to sharedElement, Long-based keys for more accurate photo-to-viewer animations
-- Loading shimmer now shows during timeline startup instead of a blank screen
+- **Media-volume video playback** — Video now plays only through the media volume stream. 'Request audio focus' option is removed.
+- **Dismissible What's New card** — The What's New card on the timeline can now be dismissed without opening it (#935).
+- Removed the pause-image-loading-while-flinging behaviour for smoother, more consistent scrolling.
+- Updated Simplified Chinese translations (Vault renamed to 保险箱, Private Folder strings translated).
 
 ### Bug Fixes
 
-- Fixed move/copy failing for albums outside Pictures/DCIM when app has MANAGE_MEDIA permission (#875)
-- Fixed forced screen orientation not resetting when leaving video player (#880)
-- Fixed status bar icons not syncing with followTheme logic in media viewer
-- Fixed ClassCastException when viewing media from lock screen after unlock (StandaloneActivity) (#877)
-- Fixed grid realignment glitch on back navigation caused by animated sticky header offset
-- Fixed empty-media/loading overlapping above-grid content; hidden collection card when albums list is empty
-
+- Improved editor markup text gestures (top-right handle now rotates, text stays within canvas bounds, correct two-finger centroid when zoomed) and crop box interactions (move small boxes, two-finger pinch resize, auto zoom-to-fit, clearer Crop action button) (#936)
+- Fixed timeline scroll position not being preserved when returning from the media viewer
+- Fixed settings categories losing their scroll position when navigating to a detail page
+- Fixed album cover not matching the first item shown inside the album
+- Fixed broken viewer exit animations by restricting the shared-element transition to the current page
+- Fixed a black screen in the standalone viewer after deleting the current photo
+- Fixed a crash on launch when MediaStore returned null string columns
+- Fixed video zoom on forced rotation and made pinch-to-zoom feel natural
+- Fixed the back gesture being ignored on videos when controls were hidden (#918)
+- Fixed the video info section closing when auto-hide fired (#930)
+- Fixed the panorama compass not updating on portrait/landscape rotation
+- Fixed panorama gyro axes not being remapped for display rotation
+- Fixed text disappearing and the cursor jumping in date format fields
+- Fixed the scrubber value resetting to its default near zero (#934)
+- Fixed home screen widgets by self-healing when the cached bitmap is missing
+- Fixed Facebook export photos showing future dates in the timeline
+- Fixed the search bar placeholder overflowing to a second line
+- Fixed the erroneous "Copied to clipboard" toast on Android 13+ (#928)

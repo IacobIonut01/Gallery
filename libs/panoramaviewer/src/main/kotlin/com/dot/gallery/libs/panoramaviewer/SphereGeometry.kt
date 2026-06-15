@@ -76,8 +76,9 @@ internal object SphereGeometry {
                 vertices.put(y)
                 vertices.put(z)
 
-                // Flip U so the image is not mirrored when viewed from inside
-                val u = 1f - lon.toFloat() / lonSegments
+                // U increases with longitude so the image is not mirrored when
+                // viewed from inside the sphere (screen-right maps to increasing phi).
+                val u = lon.toFloat() / lonSegments
                 val v = lat.toFloat() / latSegments
                 texCoords.put(u)
                 texCoords.put(v)
@@ -139,7 +140,9 @@ internal object SphereGeometry {
             val angle = startAngle + arcRad * t
             val x = radius * cos(angle).toFloat()
             val z = radius * sin(angle).toFloat()
-            val u = 1f - t.toFloat()
+            // U increases along the arc so the image is not mirrored when viewed
+            // from inside the cylinder (screen-right maps to increasing angle).
+            val u = t.toFloat()
 
             // Bottom vertex
             vertices.put(x)

@@ -24,6 +24,8 @@ import com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.Vari
 import com.dot.gallery.feature_node.presentation.edit.components.adjustment.AdjustScrubber
 import com.dot.gallery.feature_node.presentation.edit.components.colour.ColourSection
 import com.dot.gallery.feature_node.presentation.edit.components.colour.toVariableFilterType
+import com.dot.gallery.feature_node.presentation.edit.components.effects.EffectsSection
+import com.dot.gallery.feature_node.presentation.edit.components.effects.toVariableFilterType
 import com.dot.gallery.feature_node.presentation.edit.components.filters.FiltersSelector
 import com.dot.gallery.feature_node.presentation.edit.components.lighting.LightingSection
 import com.dot.gallery.feature_node.presentation.edit.components.lighting.toVariableFilterType
@@ -78,6 +80,7 @@ fun EditorNavigator(
                             EditorItems.Filters -> EditorDestination.Filters
                             EditorItems.Markup -> EditorDestination.Markup
                             EditorItems.Colour -> EditorDestination.Colour
+                            EditorItems.Effects -> EditorDestination.Effects
                             EditorItems.More -> EditorDestination.More
                         }
                         navController.navigate(dest)
@@ -119,6 +122,22 @@ fun EditorNavigator(
             )
         }
 
+        // Effects tab
+        composable<EditorDestination.Effects> {
+            EffectsSection(
+                appliedAdjustments = appliedAdjustments,
+                isSupportingPanel = isSupportingPanel,
+                onItemClick = { tool ->
+                    navController.navigate(
+                        EditorDestination.AdjustDetail(tool.toVariableFilterType())
+                    )
+                },
+                onLongItemClick = { tool ->
+                    onAdjustItemLongClick(tool.toVariableFilterType())
+                }
+            )
+        }
+
         // More tab → directly show external editors
         composable<EditorDestination.More> {
             ExternalEditor(
@@ -131,13 +150,17 @@ fun EditorNavigator(
         composable<EditorDestination.AdjustDetail> {
             val params = it.toRoute<EditorDestination.AdjustDetail>()
             val isRotate = params.adjustment == VariableFilterTypes.Rotate
+            val isHue = params.adjustment == VariableFilterTypes.Hue
 
             AdjustScrubber(
                 modifier = Modifier.padding(bottom = 16.dp),
                 adjustment = params.adjustment,
                 displayValue = { value ->
-                    (value * if (isRotate) 1f else 100f).roundToInt()
-                        .toString() + if (isRotate) "°" else ""
+                    when {
+                        isRotate -> "${value.roundToInt()}°"
+                        isHue -> "${(value * 180f).roundToInt()}°"
+                        else -> (value * 100f).roundToInt().toString()
+                    }
                 },
                 onAdjustmentChange = onAdjustmentChange,
                 onAdjustmentPreview = onAdjustmentPreview,

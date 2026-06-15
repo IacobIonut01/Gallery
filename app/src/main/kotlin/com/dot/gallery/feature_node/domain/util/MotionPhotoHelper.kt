@@ -1,9 +1,13 @@
 package com.dot.gallery.feature_node.domain.util
 
+import android.content.ContentValues
 import android.content.Context
 import android.graphics.Bitmap
 import android.media.MediaMetadataRetriever
 import android.net.Uri
+import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
 import com.dot.gallery.feature_node.presentation.util.printDebug
 import com.dot.gallery.feature_node.presentation.util.printWarning
 import com.drew.imaging.ImageMetadataReader
@@ -264,5 +268,68 @@ object MotionPhotoHelper {
             try { retriever.release() } catch (_: Exception) {}
         }
         frames
+    }
+
+    /**
+     * Extract the embedded video from the Motion Photo at [uri] and save it to the
+     * gallery as a standalone MP4, mirroring Google Photos' "Save as video" export.
+     *
+     * The video is written into [relativeDir] (a [MediaStore] relative path such as
+     * `Movies` or `DCIM/Camera`) with the file name derived from [sourceLabel].
+     *
+     * @return The content [Uri] of the newly saved video, or `null` if the source was
+     *         not a Motion Photo or the export failed.
+     */
+    suspend fun saveVideoToGallery(
+        context: Context,
+        uri: Uri,
+        sourceLabel: String,
+        relativeDir: String = Environment.DIRECTORY_MOVIES
+    ): Uri? = withContext(Dispatchers.IO) {
+        val info = parseInfo(context, uri) ?: return@withContext null
+        val tmpFile = extractVideo(context, uri, info) ?: return@withContext null
+        try {
+            val baseName = sourceLabel.substringBeforeLast('.', sourceLabel)
+            val displayName = "${baseName}_motion.mp4"
+
+            val collection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+            } else {
+                MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+            }
+
+            val resolver = context.contentResolver
+            val values = ContentValues().apply {
+                put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
+                put(MediaStore.MediaColumns.MIME_TYPE, "video/mp4")
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, relativeDir)
+                    put(MediaStore.MediaColumns.IS_PENDING, 1)
+                }
+            }
+
+            val insertUri = resolver.insert(collection, values) ?: return@withContext null
+
+            resolver.openOutputStream(insertUri)?.use { output ->
+                tmpFile.inputStream().use { input -> input.copyTo(output) }
+            } ?: run {
+                resolver.delete(insertUri, null, null)
+                return@withContext null
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                values.clear()
+                values.put(MediaStore.MediaColumns.IS_PENDING, 0)
+                resolver.update(insertUri, values, null, null)
+            }
+
+            printDebug("MotionPhoto: saved extracted video to $insertUri")
+            insertUri
+        } catch (e: Exception) {
+            printWarning("MotionPhoto: saveVideoToGallery failed: ${e.message}")
+            null
+        } finally {
+            tmpFile.delete()
+        }
     }
 }

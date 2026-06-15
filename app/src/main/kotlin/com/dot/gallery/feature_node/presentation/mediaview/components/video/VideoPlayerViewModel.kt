@@ -7,7 +7,6 @@ import androidx.annotation.OptIn
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
@@ -21,11 +20,14 @@ import androidx.media3.exoplayer.SeekParameters
 import com.dot.gallery.feature_node.domain.model.SubtitleTrack
 import com.dot.gallery.feature_node.data.data_source.KeychainHolder
 import java.util.Locale
+import com.dot.gallery.cloud.media.CloudDataSource
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.util.getUri
+import com.dot.gallery.feature_node.domain.util.isCloud
 import com.dot.gallery.feature_node.domain.util.isEncrypted
 import com.dot.gallery.feature_node.presentation.util.printDebug
 import com.dot.gallery.feature_node.presentation.util.printWarning
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -106,7 +108,10 @@ class VideoPlayerViewModel @AssistedInject constructor(
 
     @OptIn(UnstableApi::class)
     private fun createExoPlayer(): ExoPlayer {
-        return ExoPlayer.Builder(appContext).build().apply {
+        val dataSourceFactory = CloudDataSource.Factory(appContext)
+        return ExoPlayer.Builder(appContext)
+            .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory))
+            .build().apply {
             setSeekParameters(SeekParameters.EXACT)
             repeatMode = Player.REPEAT_MODE_ONE
             // Ensure text tracks are not disabled so embedded subtitles are available
@@ -241,6 +246,10 @@ class VideoPlayerViewModel @AssistedInject constructor(
     }
 
     private fun retrieveFrameRate(encrypted: Boolean) {
+        if (media.isCloud) {
+            _state.update { it.copy(frameRate = 30f) }
+            return
+        }
         viewModelScope.launch(Dispatchers.IO) {
             val fps = try {
                 MediaMetadataRetriever().use { r ->
@@ -264,6 +273,13 @@ class VideoPlayerViewModel @AssistedInject constructor(
         if (player.isPlaying) player.pause() else player.play()
     }
 
+    fun pause() {
+        if (player.isReleased) return
+        player.playWhenReady = false
+        player.pause()
+        _state.update { it.copy(isPlaying = false) }
+    }
+
     fun seekTo(positionMs: Long) {
         player.seekTo(positionMs)
         _state.update { it.copy(positionMs = positionMs) }
@@ -275,17 +291,6 @@ class VideoPlayerViewModel @AssistedInject constructor(
         player.playWhenReady = targetPlay
         if (targetPlay) player.play() else player.pause()
         _state.update { it.copy(isPlaying = targetPlay) }
-    }
-
-    fun applyAudioFocusPreference(wantsFocus: Boolean) {
-        val usage = if (wantsFocus) C.USAGE_MEDIA else C.USAGE_NOTIFICATION
-        val contentType =
-            if (wantsFocus) C.AUDIO_CONTENT_TYPE_MOVIE else C.AUDIO_CONTENT_TYPE_SONIFICATION
-        val attrs = AudioAttributes.Builder()
-            .setUsage(usage)
-            .setContentType(contentType)
-            .build()
-        player.setAudioAttributes(attrs, /* handleAudioFocus = */ wantsFocus)
     }
 
     fun retryDecryption() {

@@ -71,6 +71,8 @@ import com.dot.gallery.core.LocalEventHandler
 import com.dot.gallery.core.LocalMediaSelector
 import com.dot.gallery.core.Settings
 import com.dot.gallery.core.Settings.Misc.rememberGridSize
+import com.dot.gallery.core.Settings.Misc.rememberVaultGroupByDate
+import com.dot.gallery.core.Settings.Misc.rememberVaultGroupMethod
 import com.dot.gallery.core.navigate
 import com.dot.gallery.core.presentation.components.EmptyMedia
 import com.dot.gallery.core.presentation.components.ModalSheet
@@ -95,7 +97,6 @@ import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetStat
 import com.dot.gallery.feature_node.presentation.util.selectedMedia
 import com.dot.gallery.feature_node.presentation.vault.components.AddToVaultSheet
 import com.dot.gallery.feature_node.presentation.vault.components.DeleteVaultSheet
-import com.dot.gallery.feature_node.presentation.vault.components.NewVaultSheet
 import com.dot.gallery.feature_node.presentation.vault.components.RemovePasswordSheet
 import com.dot.gallery.feature_node.presentation.vault.components.RestoreVaultSheet
 import com.dot.gallery.feature_node.presentation.vault.components.SelectVaultSheet
@@ -119,7 +120,6 @@ fun VaultDisplay(
     vaultState: State<VaultState>,
     currentVault: MutableStateFlow<Vault?>,
     createMediaState: (Vault?) -> StateFlow<MediaState<Media.UriMedia>>,
-    onCreateVaultClick: () -> Unit,
     deleteLeftovers: (result: ActivityResultLauncher<IntentSenderRequest>, uris: List<Uri>) -> Unit,
     setVault: (Vault) -> Unit,
     deleteVault: (Vault) -> Unit,
@@ -269,7 +269,6 @@ fun VaultDisplay(
         }
     }
 
-    val newVaultSheetState = rememberAppBottomSheetState()
     val decryptVaultSheetState = rememberAppBottomSheetState()
     val deleteVaultSheetState = rememberAppBottomSheetState()
     val actionsSheetState = rememberAppBottomSheetState()
@@ -442,12 +441,17 @@ fun VaultDisplay(
                     state = pinchState,
                     indicatorTopPadding = scaffoldPadding.calculateTopPadding() + 16.dp,
                 ) {
+                    val vaultGroupByDate by rememberVaultGroupByDate()
+                    val vaultGroupMethod by rememberVaultGroupMethod()
                     MediaGridView(
                         mediaState = mediaState,
                         metadataState = metadataState,
                         paddingValues = scaffoldPadding,
                         showSearchBar = false,
                         allowSelection = true,
+                        allowHeaders = vaultGroupByDate,
+                        enableStickyHeaders = vaultGroupByDate,
+                        groupMethod = if (vaultGroupByDate) vaultGroupMethod else Settings.Misc.GROUP_NORMAL,
                         canScroll = canScroll,
                         aboveGridContent = {},
                         isScrolling = remember { mutableStateOf(false) },
@@ -487,10 +491,6 @@ fun VaultDisplay(
             onBehaviorChanged = { vaultEncryptBehavior = it }
         )
 
-        NewVaultSheet(
-            state = newVaultSheetState,
-            onConfirm = onCreateVaultClick
-        )
         DeleteVaultSheet(
             state = deleteVaultSheetState,
             vaultName = currentVaultValue?.name
@@ -507,7 +507,6 @@ fun VaultDisplay(
         VaultActionsSheet(
             state = actionsSheetState,
             hasCustomPassword = hasCustomPassword,
-            onNewVault = { scope.launch { newVaultSheetState.show() } },
             onDecryptVault = { scope.launch { decryptVaultSheetState.show() } },
             onCustomPassword = {
                 if (hasCustomPassword) {
@@ -516,6 +515,7 @@ fun VaultDisplay(
                     scope.launch { passwordSetupSheetState.show() }
                 }
             },
+            onChangePassword = { scope.launch { passwordSetupSheetState.show() } },
             onDeleteVault = { scope.launch { deleteVaultSheetState.show() } }
         )
     }
@@ -526,61 +526,63 @@ fun VaultDisplay(
 private fun VaultActionsSheet(
     state: AppBottomSheetState,
     hasCustomPassword: Boolean,
-    onNewVault: () -> Unit,
     onDecryptVault: () -> Unit,
     onCustomPassword: () -> Unit,
+    onChangePassword: () -> Unit,
     onDeleteVault: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
-    val newVaultLabel = stringResource(R.string.new_vault)
     val decryptLabel = stringResource(R.string.decrypt_vault)
     val customPasswordLabel = stringResource(
         if (hasCustomPassword) R.string.vault_remove_custom_password
         else R.string.vault_custom_password
     )
+    val changePasswordLabel = stringResource(R.string.vault_change_custom_password)
     val deleteVaultLabel = stringResource(R.string.delete_vault)
 
     val options = remember(
         hasCustomPassword,
-        newVaultLabel,
         decryptLabel,
         customPasswordLabel,
+        changePasswordLabel,
         deleteVaultLabel
     ) {
-        listOf(
-            OptionItem(
-                icon = Icons.Outlined.Add,
-                text = newVaultLabel,
-                onClick = {
-                    scope.launch { state.hide() }
-                    onNewVault()
-                }
-            ),
-            OptionItem(
+        buildList {
+            add(OptionItem(
                 icon = Icons.Outlined.Restore,
                 text = decryptLabel,
                 onClick = {
                     scope.launch { state.hide() }
                     onDecryptVault()
                 }
-            ),
-            OptionItem(
-                icon = if (hasCustomPassword) Icons.Outlined.Lock else Icons.Outlined.LockOpen,
+            ))
+            if (hasCustomPassword) {
+                add(OptionItem(
+                    icon = Icons.Outlined.Lock,
+                    text = changePasswordLabel,
+                    onClick = {
+                        scope.launch { state.hide() }
+                        onChangePassword()
+                    }
+                ))
+            }
+            add(OptionItem(
+                icon = if (hasCustomPassword) Icons.Outlined.LockOpen else Icons.Outlined.Lock,
                 text = customPasswordLabel,
                 onClick = {
                     scope.launch { state.hide() }
                     onCustomPassword()
                 }
-            ),
-            OptionItem(
+            ))
+            add(OptionItem(
                 icon = Icons.Default.DeleteOutline,
                 text = deleteVaultLabel,
                 onClick = {
                     scope.launch { state.hide() }
                     onDeleteVault()
                 }
-            ),
-        ).toMutableStateList()
+            ))
+        }.toMutableStateList()
     }
 
     OptionSheet(

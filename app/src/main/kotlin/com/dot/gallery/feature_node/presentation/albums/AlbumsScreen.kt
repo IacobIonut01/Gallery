@@ -58,6 +58,8 @@ import com.dot.gallery.core.presentation.components.FilterOption
 import com.dot.gallery.core.presentation.components.LoadingAlbum
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.AlbumGroupWithAlbums
+import com.dot.gallery.feature_node.domain.model.AlbumSectionWithAlbums
+import com.dot.gallery.feature_node.presentation.albums.components.AlbumSectionHeader
 import com.dot.gallery.feature_node.domain.model.CollectionWithCount
 import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.domain.util.MediaOrder
@@ -101,6 +103,8 @@ fun AlbumsScreen(
     onCollectionTogglePin: (CollectionWithCount) -> Unit = {},
     onCollectionEditAlbums: (CollectionWithCount) -> Unit = {},
     onCreateCollection: () -> Unit = {},
+    onMoveToSection: ((Album) -> Unit)? = null,
+    onToggleSectionExpanded: (AlbumSectionWithAlbums, Boolean) -> Unit = { _, _ -> },
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
 ) {
@@ -205,7 +209,7 @@ fun AlbumsScreen(
                                 key = "filterButton"
                             ) {
                                 AnimatedVisibility(
-                                    visible = albumsState.value.albumsUnpinned.isNotEmpty(),
+                                    visible = albumsState.value.albumsUnpinned.isNotEmpty() || albumsState.value.albumSections.isNotEmpty(),
                                     enter = enterAnimation,
                                     exit = exitAnimation
                                 ) {
@@ -232,6 +236,54 @@ fun AlbumsScreen(
                                     onEditGroup = onEditGroup
                                 )
                             }
+                            // Album Sections (when enabled)
+                            albumsState.value.albumSections.forEach { sectionWithAlbums ->
+                                item(
+                                    span = { GridItemSpan(maxLineSpan) },
+                                    key = "section_header_${sectionWithAlbums.section.id}"
+                                ) {
+                                    AlbumSectionHeader(
+                                        modifier = Modifier.animateItem(),
+                                        sectionWithAlbums = sectionWithAlbums,
+                                        onToggleExpanded = { expanded ->
+                                            onToggleSectionExpanded(sectionWithAlbums, expanded)
+                                        }
+                                    )
+                                }
+                                if (sectionWithAlbums.section.isExpanded) {
+                                    items(
+                                        items = sectionWithAlbums.albums,
+                                        key = { item -> "section_${sectionWithAlbums.section.id}_${item}" }
+                                    ) { item ->
+                                        val trashResult = rememberActivityResult()
+                                        with(sharedTransitionScope) {
+                                            AlbumComponent(
+                                                modifier = Modifier
+                                                    .pinchItem(key = "section_${sectionWithAlbums.section.id}_${item}")
+                                                    .animateItem(),
+                                                thumbnailModifier = Modifier
+                                                    .mediaSharedElement(
+                                                        album = item,
+                                                        animatedVisibilityScope = animatedContentScope
+                                                    ),
+                                                album = item,
+                                                onItemClick = onAlbumClick,
+                                                onTogglePinClick = onAlbumLongClick,
+                                                onMoveAlbumToTrash = {
+                                                    onMoveAlbumToTrash(trashResult, it)
+                                                },
+                                                onToggleIgnoreClick = onIgnoreAlbum,
+                                                onToggleLockClick = onLockAlbum,
+                                                onAddToGroup = onAddToGroup,
+                                                onMoveToSection = onMoveToSection,
+                                                onToggleMergeSubfolders = onToggleMergeSubfolders,
+                                                isMergedSubfolder = item.id in mergedSubfolderIds
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                            // Unpinned albums (flat list, when sections are disabled)
                             items(
                                 items = albumsState.value.albumsUnpinned,
                                 key = { item -> item.toString() }
@@ -256,6 +308,7 @@ fun AlbumsScreen(
                                         onToggleIgnoreClick = onIgnoreAlbum,
                                         onToggleLockClick = onLockAlbum,
                                         onAddToGroup = onAddToGroup,
+                                        onMoveToSection = onMoveToSection,
                                         onToggleMergeSubfolders = onToggleMergeSubfolders,
                                         isMergedSubfolder = item.id in mergedSubfolderIds
                                     )
@@ -325,7 +378,7 @@ fun AlbumsScreen(
                                 key = "emptyAlbums"
                             ) {
                                 AnimatedVisibility(
-                                    visible = albumsState.value.albums.isEmpty() && albumsState.value.error.isEmpty(),
+                                    visible = albumsState.value.albums.isEmpty() && albumsState.value.error.isEmpty() && !albumsState.value.isLoading,
                                     enter = enterAnimation,
                                     exit = exitAnimation
                                 ) {
@@ -393,7 +446,7 @@ fun AlbumsScreen(
 
                         item("filterButton") {
                             AnimatedVisibility(
-                                visible = albumsState.value.albumsUnpinned.isNotEmpty(),
+                                visible = albumsState.value.albumsUnpinned.isNotEmpty() || albumsState.value.albumSections.isNotEmpty(),
                                 enter = enterAnimation,
                                 exit = exitAnimation
                             ) {
@@ -420,6 +473,50 @@ fun AlbumsScreen(
                             )
                         }
 
+                        // Album Sections (when enabled) - LIST view
+                        albumsState.value.albumSections.forEach { sectionWithAlbums ->
+                            item(key = "section_header_${sectionWithAlbums.section.id}") {
+                                AlbumSectionHeader(
+                                    modifier = Modifier.animateItem(),
+                                    sectionWithAlbums = sectionWithAlbums,
+                                    onToggleExpanded = { expanded ->
+                                        onToggleSectionExpanded(sectionWithAlbums, expanded)
+                                    }
+                                )
+                            }
+                            if (sectionWithAlbums.section.isExpanded) {
+                                items(
+                                    items = sectionWithAlbums.albums,
+                                    key = { item -> "section_${sectionWithAlbums.section.id}_${item}" }
+                                ) { item ->
+                                    val trashResult = rememberActivityResult()
+                                    with(sharedTransitionScope) {
+                                        AlbumRowComponent(
+                                            modifier = Modifier.animateItem(),
+                                            thumbnailModifier = Modifier
+                                                .mediaSharedElement(
+                                                    album = item,
+                                                    animatedVisibilityScope = animatedContentScope
+                                                ),
+                                            album = item,
+                                            onItemClick = onAlbumClick,
+                                            onTogglePinClick = onAlbumLongClick,
+                                            onMoveAlbumToTrash = {
+                                                onMoveAlbumToTrash(trashResult, it)
+                                            },
+                                            onToggleIgnoreClick = onIgnoreAlbum,
+                                            onToggleLockClick = onLockAlbum,
+                                            onAddToGroup = onAddToGroup,
+                                            onMoveToSection = onMoveToSection,
+                                            onToggleMergeSubfolders = onToggleMergeSubfolders,
+                                            isMergedSubfolder = item.id in mergedSubfolderIds
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        // Unpinned albums (flat list, when sections are disabled) - LIST view
                         items(
                             items = albumsState.value.albumsUnpinned,
                             key = { it.toString() }
@@ -443,6 +540,7 @@ fun AlbumsScreen(
                                     onToggleIgnoreClick = onIgnoreAlbum,
                                     onToggleLockClick = onLockAlbum,
                                     onAddToGroup = onAddToGroup,
+                                    onMoveToSection = onMoveToSection,
                                     onToggleMergeSubfolders = onToggleMergeSubfolders,
                                     isMergedSubfolder = item.id in mergedSubfolderIds
                                 )
@@ -500,7 +598,7 @@ fun AlbumsScreen(
 
                         item(key = "emptyAlbums") {
                             AnimatedVisibility(
-                                visible = albumsState.value.albums.isEmpty() && albumsState.value.error.isEmpty(),
+                                visible = albumsState.value.albums.isEmpty() && albumsState.value.error.isEmpty() && !albumsState.value.isLoading,
                                 enter = enterAnimation,
                                 exit = exitAnimation
                             ) {

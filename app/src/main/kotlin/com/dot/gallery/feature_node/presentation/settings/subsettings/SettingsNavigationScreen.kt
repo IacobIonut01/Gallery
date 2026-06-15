@@ -56,6 +56,8 @@ import com.dot.gallery.core.Settings.Misc.rememberLastScreen
 import com.dot.gallery.core.Settings.Misc.rememberOldNavbar
 import com.dot.gallery.core.Settings.Misc.rememberSelectionSheetConfig
 import com.dot.gallery.core.Settings.Misc.rememberShowSelectionTitles
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import com.dot.gallery.core.SettingsEntity
 import com.dot.gallery.feature_node.presentation.settings.components.BaseSettingsScreen
 import com.dot.gallery.feature_node.presentation.settings.components.ChooserPreferenceDetailScreen
@@ -77,6 +79,7 @@ private const val DETAIL_SELECTION_TITLES = "selection_titles"
 @Composable
 fun SettingsNavigationScreen() {
     var detailKey by rememberSaveable { mutableStateOf<String?>(null) }
+    val listState = rememberLazyListState()
 
     var lastScreen by rememberLastScreen()
     var forcedLastScreen by rememberForcedLastScreen()
@@ -173,6 +176,7 @@ fun SettingsNavigationScreen() {
                 showSelectionTitles = showSelectionTitles,
                 onSelectionTitlesChange = { showSelectionTitles = it },
                 onDetailClick = { detailKey = it },
+                listState = listState,
             )
         }
     }
@@ -380,6 +384,7 @@ private fun NavigationListScreen(
     showSelectionTitles: Boolean,
     onSelectionTitlesChange: (Boolean) -> Unit,
     onDetailClick: (String) -> Unit,
+    listState: LazyListState,
 ) {
     @Composable
     fun settings(): SnapshotStateList<SettingsEntity> {
@@ -487,5 +492,6 @@ private fun NavigationListScreen(
     BaseSettingsScreen(
         title = stringResource(R.string.settings_navigation),
         settingsList = settings(),
+        listState = listState,
     )
 }

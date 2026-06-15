@@ -17,5 +17,6 @@ fun <T: Media> createDecryptedVideoFile(keychainHolder: KeychainHolder, decrypte
             input.copyTo(output)
         }
     }
+    decrypted.cleanup()
     return tempFile
 }

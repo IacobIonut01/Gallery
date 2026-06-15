@@ -85,16 +85,16 @@ import androidx.media3.exoplayer.SeekParameters
 import com.dot.gallery.R
 import com.dot.gallery.feature_node.domain.model.PlaybackSpeed
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
+import com.dot.gallery.feature_node.presentation.util.hazeEffectScaled
 import com.dot.gallery.feature_node.presentation.util.formatMinSec
 import com.dot.gallery.feature_node.presentation.util.rememberGestureNavigationEnabled
 import com.dot.gallery.ui.theme.isDarkTheme
-import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlin.math.roundToInt
 
 @UnstableApi
-@OptIn(ExperimentalMaterial3Api::class, UnstableApi::class, ExperimentalHazeMaterialsApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalHazeMaterialsApi::class)
 @Composable
 fun VideoPlayerController(
     paddingValues: PaddingValues,
@@ -236,7 +236,7 @@ fun VideoPlayerController(
                         val panelModifier = Modifier
                             .clip(RoundedCornerShape(28.dp))
                             .background(surfaceContainer)
-                            .hazeEffect(
+                            .hazeEffectScaled(
                                 state = hazeState,
                                 style = HazeMaterials.regular(
                                     containerColor = surfaceContainer
@@ -368,7 +368,7 @@ fun VideoPlayerController(
                                 .size(48.dp)
                                 .clip(CircleShape)
                                 .background(surfaceContainer)
-                                .hazeEffect(
+                                .hazeEffectScaled(
                                     state = hazeState,
                                     style = HazeMaterials.regular(
                                         containerColor = surfaceContainer

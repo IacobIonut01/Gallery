@@ -18,6 +18,7 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
+import android.view.Surface
 import kotlin.math.abs
 
 /**
@@ -134,6 +135,16 @@ internal class PanoramaGLSurfaceView(
         setEGLContextClientVersion(2)
         setRenderer(renderer)
         renderMode = RENDERMODE_CONTINUOUSLY
+        // On viewport size changes (e.g. device rotation) the visible horizontal span
+        // changes with the aspect ratio. Re-emit camera state so overlays (compass)
+        // update, and reload the detail region for the new aspect.
+        renderer.onViewportChanged = {
+            post {
+                lastDetailFov = Float.MAX_VALUE
+                notifyCameraChanged()
+                scheduleDetailLoad()
+            }
+        }
         PanoramaLog.d("init() projectionType=$projectionType gyroscope=$gyroscopeEnabled")
     }
 
@@ -469,18 +480,32 @@ internal class PanoramaGLSurfaceView(
     override fun onSensorChanged(event: SensorEvent) {
         if (!gyroscopeEnabled || pointerCount > 0) return
         if (event.sensor.type == Sensor.TYPE_GYROSCOPE) {
-            // Gyroscope gives rotation rate in rad/s
-            val axisX = event.values[0] // pitch rate
-            val axisY = event.values[1] // yaw rate
+            // Gyroscope gives rotation rate in rad/s around the fixed device axes.
+            // The sensor frame does NOT rotate with the display, so the raw axes must
+            // be remapped onto the on-screen yaw (screen-up axis) and pitch (screen-right
+            // axis) according to the current display rotation. Without this, gyro pan is
+            // swapped/reversed in landscape.
+            val rateX = event.values[0]
+            val rateY = event.values[1]
             val dt = GYRO_DT
 
-            renderer.yaw += Math.toDegrees(axisY.toDouble()).toFloat() * dt
+            val rotation = display?.rotation ?: Surface.ROTATION_0
+            val yawRate: Float
+            val pitchRate: Float
+            when (rotation) {
+                Surface.ROTATION_90 -> { yawRate = rateX; pitchRate = -rateY }
+                Surface.ROTATION_180 -> { yawRate = -rateY; pitchRate = -rateX }
+                Surface.ROTATION_270 -> { yawRate = -rateX; pitchRate = rateY }
+                else -> { yawRate = rateY; pitchRate = rateX }
+            }
+
+            renderer.yaw += Math.toDegrees(yawRate.toDouble()).toFloat() * dt
             clampYaw()
             val maxPitch = when (projectionType) {
                 ProjectionType.SPHERE -> PanoramaRenderer.MAX_PITCH_SPHERE
                 ProjectionType.CYLINDER -> PanoramaRenderer.MAX_PITCH_CYLINDER
             }
-            renderer.pitch = (renderer.pitch + Math.toDegrees(axisX.toDouble()).toFloat() * dt)
+            renderer.pitch = (renderer.pitch + Math.toDegrees(pitchRate.toDouble()).toFloat() * dt)
                 .coerceIn(-maxPitch, maxPitch)
             scheduleDetailLoad()
             notifyCameraChanged()
@@ -500,6 +525,7 @@ internal class PanoramaGLSurfaceView(
                 yaw = renderer.yaw,
                 pitch = renderer.pitch,
                 fov = renderer.fov,
+                horizontalFov = renderer.horizontalFov,
                 arcDegrees = renderer.cylinderArcDegrees,
                 projectionType = projectionType
             )

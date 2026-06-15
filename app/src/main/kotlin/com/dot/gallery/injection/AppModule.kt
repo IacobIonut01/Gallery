@@ -39,6 +39,9 @@ import com.dot.gallery.core.decryption.MediaMetadataSidecarCache
 import com.dot.gallery.core.memory.AdaptiveDecryptConfig
 import com.dot.gallery.core.metrics.MetricsCollector
 import com.dot.gallery.core.memory.ByteArrayPool
+import com.dot.gallery.cloud.core.ProviderRegistry
+import com.dot.gallery.cloud.data.dao.CloudMediaDao
+import com.dot.gallery.cloud.data.repository.CloudRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -92,10 +95,11 @@ object AppModule {
         @ApplicationContext context: Context,
         workManager: WorkManager,
         repository: MediaRepository,
+        cloudRepository: CloudRepository,
         eventHandler: EventHandler,
         database: InternalDatabase
     ): MediaDistributor = StartupTracer.trace("AppModule.provideMediaDistributor") {
-        MediaDistributorImpl(context, repository, eventHandler, workManager, database.getScannedMediaDao())
+        MediaDistributorImpl(context, repository, cloudRepository, eventHandler, workManager, database.getScannedMediaDao())
     }
 
     @Provides
@@ -108,8 +112,10 @@ object AppModule {
         @ApplicationContext context: Context,
         mediaRepository: MediaRepository,
         workManager: WorkManager,
+        providerRegistry: ProviderRegistry,
+        cloudMediaDao: CloudMediaDao,
     ): MediaHandler = StartupTracer.trace("AppModule.provideMediaHandler") {
-        MediaHandlerImpl(mediaRepository, context, workManager)
+        MediaHandlerImpl(mediaRepository, context, workManager, providerRegistry, cloudMediaDao)
     }
 
     @Provides

@@ -94,11 +94,13 @@ private const val DETAIL_AMOLED = "amoled"
 private const val DETAIL_BLUR = "blur"
 private const val DETAIL_AUTO_CONTRAST = "auto_contrast"
 private const val DETAIL_SHARED = "shared"
+private const val DETAIL_SYSTEM_FONT = "system_font"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ColorPaletteScreen() {
     var detailKey by rememberSaveable { mutableStateOf<String?>(null) }
+    val contentScrollState = rememberScrollState()
     var themeColorSeed by Settings.Misc.rememberThemeColorSeed()
     var forceTheme by Settings.Misc.rememberForceTheme()
     var darkModeValue by Settings.Misc.rememberIsDarkMode()
@@ -107,6 +109,7 @@ fun ColorPaletteScreen() {
     var allowBlur by Settings.Misc.rememberAllowBlur()
     var autoContrast by Settings.Misc.rememberAutoContrast()
     var sharedElements by Settings.Misc.rememberSharedElements()
+    var useSystemFont by Settings.Misc.rememberUseSystemFont()
     val isDark = isDarkTheme()
 
     when (detailKey) {
@@ -172,6 +175,16 @@ fun ColorPaletteScreen() {
                 isChecked = sharedElements,
                 onCheckedChange = { sharedElements = it },
                 description = stringResource(R.string.shared_elements_description),
+            )
+            return
+        }
+        DETAIL_SYSTEM_FONT -> {
+            BackHandler { detailKey = null }
+            SwitchPreferenceDetailScreen(
+                title = stringResource(R.string.use_system_font_title),
+                isChecked = useSystemFont,
+                onCheckedChange = { useSystemFont = it },
+                description = stringResource(R.string.use_system_font_description),
             )
             return
         }
@@ -306,6 +319,19 @@ fun ColorPaletteScreen() {
             screenPosition = Position.Bottom
         )
 
+        val fontHeader = remember {
+            SettingsEntity.Header(title = "Font")
+        }
+        val useSystemFontPref = rememberSwitchPreference(
+            useSystemFont,
+            title = stringResource(R.string.use_system_font_title),
+            summary = stringResource(R.string.use_system_font_summary),
+            isChecked = useSystemFont,
+            onCheck = { useSystemFont = it },
+            onClick = { detailKey = DETAIL_SYSTEM_FONT },
+            screenPosition = Position.Alone
+        )
+
         val swatchesContent: @Composable () -> Unit = {
             AnimatedContent(
                 targetState = selectedTab,
@@ -433,7 +459,7 @@ fun ColorPaletteScreen() {
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight()
-                        .verticalScroll(rememberScrollState()),
+                        .verticalScroll(contentScrollState),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Spacer(modifier = Modifier.height(16.dp))
@@ -466,6 +492,10 @@ fun ColorPaletteScreen() {
                     SettingsItem(item = autoContrastPref)
                     SettingsItem(item = sharedElementsPref)
 
+                    Spacer(modifier = Modifier.height(16.dp))
+                    SettingsItem(item = fontHeader)
+                    SettingsItem(item = useSystemFontPref)
+
                     Spacer(modifier = Modifier.height(32.dp))
                 }
             }
@@ -474,7 +504,7 @@ fun ColorPaletteScreen() {
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .verticalScroll(rememberScrollState()),
+                    .verticalScroll(contentScrollState),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Spacer(modifier = Modifier.height(16.dp))
@@ -515,6 +545,10 @@ fun ColorPaletteScreen() {
                 SettingsItem(item = allowBlurPref)
                 SettingsItem(item = autoContrastPref)
                 SettingsItem(item = sharedElementsPref)
+
+                Spacer(modifier = Modifier.height(16.dp))
+                SettingsItem(item = fontHeader)
+                SettingsItem(item = useSystemFontPref)
 
                 Spacer(modifier = Modifier.height(32.dp))
             }

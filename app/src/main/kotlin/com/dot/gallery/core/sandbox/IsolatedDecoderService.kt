@@ -67,6 +67,13 @@ class IsolatedDecoderService : Service() {
                 replyTo.send(reply)
             } catch (_: Exception) {
                 // Client is gone
+            } finally {
+                // The fd backing the output SharedMemory is duplicated into the Binder
+                // transaction during send(); the original handle in this process still
+                // remains open and must be closed explicitly to avoid leaking ashmem fds.
+                reply.data?.let { it.classLoader = SharedMemory::class.java.classLoader }
+                @Suppress("DEPRECATION")
+                reply.data?.getParcelable<SharedMemory>(KEY_OUTPUT_SHM)?.close()
             }
         }
     }

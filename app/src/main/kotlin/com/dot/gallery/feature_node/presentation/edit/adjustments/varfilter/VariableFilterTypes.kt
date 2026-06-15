@@ -6,13 +6,18 @@ import androidx.compose.material.icons.outlined.Brightness4
 import androidx.compose.material.icons.outlined.Brightness5
 import androidx.compose.material.icons.outlined.Circle
 import androidx.compose.material.icons.outlined.Contrast
+import androidx.compose.material.icons.outlined.CropDin
 import androidx.compose.material.icons.outlined.Details
 import androidx.compose.material.icons.outlined.FilterDrama
+import androidx.compose.material.icons.outlined.FilterBAndW
+import androidx.compose.material.icons.outlined.GridOn
+import androidx.compose.material.icons.outlined.Gradient
 import androidx.compose.material.icons.outlined.InvertColors
 import androidx.compose.material.icons.outlined.Layers
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.RadioButtonUnchecked
 import androidx.compose.material.icons.outlined.Rotate90DegreesCcw
+import androidx.compose.material.icons.outlined.Texture
 import androidx.compose.material.icons.outlined.Thermostat
 import androidx.compose.material.icons.outlined.Tonality
 import androidx.compose.material.icons.outlined.Vignette
@@ -30,7 +35,9 @@ enum class VariableFilterTypes {
     // Lighting
     Tone, BlackPoint, WhitePoint, Highlights, Shadows, Vignette,
     // Colour
-    Warmth, Tint, SkinTone, BlueTone,
+    Warmth, Tint, SkinTone, BlueTone, Hue, BlackWhite,
+    // Effects
+    Posterize, Edges, Borders,
     // Actions
     Pop, Sharpen, Denoise;
 
@@ -50,6 +57,11 @@ enum class VariableFilterTypes {
             Tint -> com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.Tint(value)
             SkinTone -> com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.SkinTone(value)
             BlueTone -> com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.BlueTone(value)
+            Hue -> com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.Hue(value)
+            BlackWhite -> com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.BlackWhite(value)
+            Posterize -> com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.Posterize(value)
+            Edges -> com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.Edges(value)
+            Borders -> com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.Borders(value)
             Pop -> com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.Pop(value)
             Sharpen -> Sharpness(value)
             Denoise -> com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.Denoise(value)
@@ -71,6 +83,11 @@ enum class VariableFilterTypes {
             Tint -> com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.Tint()
             SkinTone -> com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.SkinTone()
             BlueTone -> com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.BlueTone()
+            Hue -> com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.Hue()
+            BlackWhite -> com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.BlackWhite()
+            Posterize -> com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.Posterize()
+            Edges -> com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.Edges()
+            Borders -> com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.Borders()
             Pop -> com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.Pop()
             Sharpen -> Sharpness()
             Denoise -> com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.Denoise()
@@ -92,6 +109,11 @@ enum class VariableFilterTypes {
             Tint -> Icons.Outlined.Palette
             SkinTone -> Icons.Outlined.InvertColors
             BlueTone -> Icons.Outlined.Waves
+            Hue -> Icons.Outlined.Gradient
+            BlackWhite -> Icons.Outlined.FilterBAndW
+            Posterize -> Icons.Outlined.Texture
+            Edges -> Icons.Outlined.GridOn
+            Borders -> Icons.Outlined.CropDin
             Pop -> Icons.Outlined.Contrast
             Sharpen -> Icons.Outlined.Details
             Denoise -> Icons.Outlined.Brightness4

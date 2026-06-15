@@ -18,8 +18,10 @@ import org.gradle.api.provider.Property
  * **Built-in placeholders:**
  * - `{versionName}` – `defaultConfig.versionName`
  * - `{versionCode}` – computed per-flavor version code
- * - `{flavorName}` – product flavor name
+ * - `{flavorName}` – combined product flavor name (e.g. `arm64-v8aNoML`)
  * - `{buildType}` – build type name (debug / release / …)
+ * - `{<dimension>}` – per-dimension flavor name, verbatim
+ *   (e.g. `{abi}` → `arm64-v8a`, `{ml}` → `NoML`)
  *
  * **Custom placeholders** are added via [variables]; any `{key}` in the
  * template is replaced with the corresponding value.
@@ -29,7 +31,7 @@ import org.gradle.api.provider.Property
  * apkVersioning {
  *     flavorVersionCodes.set(mapOf("arm64-v8a" to 4, "x86_64" to 2))
  *     versionCodeMultiplier.set(10)
- *     outputFileName.set("{appName}-{versionName}-{versionCode}{suffix}-{flavorName}-{buildType}")
+ *     outputFileName.set("{appName}-{versionName}-{versionCode}{suffix}-{ml}-{abi}-{buildType}")
  *     variables.put("appName", "MyApp")
  *     variables.put("suffix", "-full")
  * }

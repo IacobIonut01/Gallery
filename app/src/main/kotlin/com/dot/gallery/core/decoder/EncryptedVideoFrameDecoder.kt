@@ -129,6 +129,7 @@ private class EncryptedVideoFrameDecodeHelper(
                 input.copyTo(output)
             }
         }
+        decrypted.cleanup()
 
         return tempFile
     }

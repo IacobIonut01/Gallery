@@ -31,7 +31,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.outlined.FolderCopy
 import androidx.compose.material.icons.outlined.PhotoAlbum
 import androidx.compose.material.icons.outlined.WavingHand
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -83,10 +82,10 @@ import com.dot.gallery.core.SettingsEntity
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
 import com.dot.gallery.feature_node.presentation.util.PreviewHost
 import com.dot.gallery.feature_node.presentation.util.maybeApply
-import com.dot.gallery.ui.core.Icons as GalleryIcons
 import com.dot.gallery.ui.core.icons.RegularExpression
 import com.github.panpf.sketch.AsyncImage
 import kotlin.math.roundToLong
+import com.dot.gallery.ui.core.Icons as GalleryIcons
 
 /**
  * A single preference item, which can be of type default, switch or seek.
@@ -192,6 +191,7 @@ fun SettingsItem(
     }
     val switch: @Composable () -> Unit = {
         Switch(
+            modifier = Modifier.padding(start = 16.dp),
             checked = checked,
             onCheckedChange = { isChecked ->
                 item.onCheck?.let {

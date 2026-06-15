@@ -38,6 +38,7 @@ import com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.Vign
 import com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.VariableFilterTypes
 import com.dot.gallery.feature_node.presentation.util.overlayBitmaps
 import com.dot.gallery.feature_node.presentation.util.applyColorMatrix
+import com.dot.gallery.feature_node.presentation.util.resizeBitmap
 import com.dot.gallery.core.workers.EditBackupWorker
 import com.dot.gallery.core.workers.revertEditBackup
 import com.dot.gallery.feature_node.presentation.util.printDebug
@@ -50,6 +51,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -681,6 +684,23 @@ class EditViewModel @Inject constructor(
         _previewSharpness.value = 0f
     }
 
+    /**
+     * Cached downscaled copy of a base bitmap used to keep non-matrix
+     * filter previews (Posterize, Edges, Borders) responsive while scrubbing.
+     */
+    private var previewBaseCache: Pair<Bitmap, Bitmap>? = null
+
+    private fun previewBaseFor(base: Bitmap): Bitmap {
+        previewBaseCache?.let { (original, scaled) ->
+            if (original === base) return scaled
+        }
+        val scaled = if (base.width > 1280 || base.height > 1280) {
+            resizeBitmap(base, 1280, 1280)
+        } else base
+        previewBaseCache = base to scaled
+        return scaled
+    }
+
     fun previewAdjustment(adjustment: Adjustment) {
         _previewJob?.cancel()
         when {
@@ -724,6 +744,32 @@ class EditViewModel @Inject constructor(
                 _currentBitmap.value = baseBitmap ?: lastRealBitmap()
                 _previewMatrix.value = adjustment.colorMatrix()
                 clearGpuPreviewEffects()
+            }
+            adjustment is VariableFilter -> {
+                // Non-matrix variable filters (Posterize, Edges, Borders): render apply()
+                // on a downscaled copy of the base bitmap so scrubbing stays responsive.
+                val baseBitmap = bitmaps.toList()
+                    .filter { !it.second?.name.equals(adjustment.name, ignoreCase = true) }
+                    .lastOrNull()?.first ?: lastRealBitmap()
+                _previewMatrix.value = null
+                clearGpuPreviewEffects()
+                if (baseBitmap == null || adjustment.value == adjustment.defaultValue) {
+                    _currentBitmap.value = baseBitmap
+                } else {
+                    _previewJob = viewModelScope.launch(Dispatchers.Default) {
+                        // Debounce rapid scrubber ticks: a newer tick cancels this job
+                        // during the delay, so only the latest value is rendered. This
+                        // prevents out-of-order results from flickering on screen.
+                        delay(48)
+                        if (!isActive) return@launch
+                        val preview = previewBaseFor(baseBitmap)
+                        val result = adjustment.apply(preview)
+                        if (!isActive) return@launch
+                        withContext(Dispatchers.Main) {
+                            _currentBitmap.value = result
+                        }
+                    }
+                }
             }
             else -> {
                 clearGpuPreviewEffects()

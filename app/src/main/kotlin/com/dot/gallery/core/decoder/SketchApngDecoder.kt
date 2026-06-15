@@ -1,14 +1,38 @@
 package com.dot.gallery.core.decoder
 
+import android.graphics.ImageDecoder
+import android.graphics.drawable.AnimatedImageDrawable
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.annotation.WorkerThread
 import com.github.panpf.sketch.ComponentRegistry
+import com.github.panpf.sketch.asImage
+import com.github.panpf.sketch.decode.DecodeConfig
 import com.github.panpf.sketch.decode.Decoder
-import com.github.panpf.sketch.decode.internal.ImageDecoderAnimatedDecoder
+import com.github.panpf.sketch.decode.ImageInfo
+import com.github.panpf.sketch.decode.internal.readImageInfoWithIgnoreExifOrientation
+import com.github.panpf.sketch.drawable.ScaledAnimatableDrawable
 import com.github.panpf.sketch.fetch.FetchResult
+import com.github.panpf.sketch.request.ANIMATION_REPEAT_INFINITE
+import com.github.panpf.sketch.request.ImageData
 import com.github.panpf.sketch.request.RequestContext
+import com.github.panpf.sketch.request.animationEndCallback
+import com.github.panpf.sketch.request.animationStartCallback
 import com.github.panpf.sketch.request.disallowAnimatedImage
+import com.github.panpf.sketch.request.get
+import com.github.panpf.sketch.request.repeatCount
+import com.github.panpf.sketch.source.AssetDataSource
+import com.github.panpf.sketch.source.ByteArrayDataSource
+import com.github.panpf.sketch.source.ContentDataSource
 import com.github.panpf.sketch.source.DataSource
+import com.github.panpf.sketch.source.ResourceDataSource
+import com.github.panpf.sketch.source.getFileOrNull
+import com.github.panpf.sketch.util.Size
+import com.github.panpf.sketch.util.animatable2CompatCallbackOf
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import java.nio.ByteBuffer
 
 /**
  * Extension function to add APNG animated image support to Sketch.
@@ -23,51 +47,124 @@ fun ComponentRegistry.Builder.supportApng(): ComponentRegistry.Builder = apply {
 /**
  * Decoder for Animated PNG (APNG) images using Android's ImageDecoder.
  *
- * APNG files are PNG files that contain animation frames via the `acTL`
- * (Animation Control) chunk. Android's ImageDecoder natively produces
- * AnimatedImageDrawable for APNG, which the base
- * [ImageDecoderAnimatedDecoder] handles properly.
- *
- * Detection: checks for PNG signature + presence of `acTL` chunk in
- * the header bytes, OR the `image/apng` MIME type.
+ * Uses the same direct-decode approach as [decodeAnimatedAvif] to ensure
+ * animation works correctly with the compose rendering pipeline.
  */
 @RequiresApi(Build.VERSION_CODES.P)
 class SketchApngDecoder(
-    requestContext: RequestContext,
-    dataSource: DataSource,
-) : ImageDecoderAnimatedDecoder(requestContext, dataSource) {
+    private val requestContext: RequestContext,
+    private val dataSource: DataSource,
+) : Decoder {
+
+    @WorkerThread
+    override suspend fun decode(): ImageData {
+        val context = requestContext.request.context
+        val source = when (dataSource) {
+            is AssetDataSource -> {
+                ImageDecoder.createSource(context.assets, dataSource.fileName)
+            }
+            is ResourceDataSource -> {
+                ImageDecoder.createSource(dataSource.resources, dataSource.resId)
+            }
+            is ContentDataSource -> {
+                ImageDecoder.createSource(context.contentResolver, dataSource.contentUri)
+            }
+            is ByteArrayDataSource -> {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    ImageDecoder.createSource(dataSource.data)
+                } else {
+                    ImageDecoder.createSource(ByteBuffer.wrap(dataSource.data))
+                }
+            }
+            else -> {
+                val file = dataSource.getFileOrNull(requestContext.sketch)
+                    ?: throw Exception("Unsupported DataSource: ${dataSource::class}")
+                ImageDecoder.createSource(file.toFile())
+            }
+        }
+
+        var imageInfo: ImageInfo? = null
+        var imageDecoder: ImageDecoder? = null
+        val request = requestContext.request
+        val drawable = try {
+            ImageDecoder.decodeDrawable(source) { decoder, info, _ ->
+                imageDecoder = decoder
+                imageInfo = ImageInfo(
+                    width = info.size.width,
+                    height = info.size.height,
+                    mimeType = info.mimeType,
+                )
+                decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
+                val decodeConfig = DecodeConfig(request, info.mimeType, isOpaque = true)
+                decodeConfig.colorSpace?.let { decoder.setTargetColorSpace(it) }
+            }
+        } finally {
+            imageDecoder?.close()
+        }
+        requireNotNull(imageInfo)
+
+        if (drawable !is AnimatedImageDrawable) {
+            // Not animated, fall back to static rendering
+            return ImageData(
+                image = drawable.asImage(),
+                imageInfo = imageInfo,
+                dataFrom = dataSource.dataFrom,
+                resize = requestContext.computeResize(Size(imageInfo!!.width, imageInfo!!.height)),
+                transformeds = null,
+                extras = null,
+            )
+        }
+
+        drawable.repeatCount = request.repeatCount
+            ?.takeIf { it != ANIMATION_REPEAT_INFINITE }
+            ?: AnimatedImageDrawable.REPEAT_INFINITE
+
+        @Suppress("OPT_IN_USAGE")
+        val scaledDrawable = ScaledAnimatableDrawable(drawable).apply {
+            val onStart = request.animationStartCallback
+            val onEnd = request.animationEndCallback
+            if (onStart != null || onEnd != null) {
+                GlobalScope.launch(Dispatchers.Main) {
+                    registerAnimationCallback(animatable2CompatCallbackOf(onStart, onEnd))
+                }
+            }
+        }
+
+        val imageSize = Size(imageInfo!!.width, imageInfo!!.height)
+        val resize = requestContext.computeResize(imageSize)
+
+        return ImageData(
+            image = scaledDrawable.asImage(),
+            imageInfo = imageInfo,
+            dataFrom = dataSource.dataFrom,
+            resize = resize,
+            transformeds = null,
+            extras = null,
+        )
+    }
+
+    override suspend fun getImageInfo(): ImageInfo {
+        return dataSource.readImageInfoWithIgnoreExifOrientation()
+    }
 
     companion object {
-        const val SORT_WEIGHT = 14 // Higher priority than GIF/WebP decoders (15)
+        const val SORT_WEIGHT = 14
 
-        // PNG file signature: 8 bytes
         private val PNG_SIGNATURE = byteArrayOf(
             0x89.toByte(), 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A
         )
 
-        // "acTL" chunk type that indicates APNG animation control
         private val ACTL_CHUNK = byteArrayOf(0x61, 0x63, 0x54, 0x4C)
 
-        /**
-         * Checks if the byte array starts with the PNG signature.
-         */
         fun ByteArray.isPng(): Boolean {
             if (size < PNG_SIGNATURE.size) return false
             return PNG_SIGNATURE.indices.all { this[it] == PNG_SIGNATURE[it] }
         }
 
-        /**
-         * Checks if the byte array is an APNG (has PNG signature and
-         * contains an acTL chunk before the first IDAT chunk).
-         *
-         * PNG chunk layout: 4-byte length + 4-byte type + data + 4-byte CRC.
-         * We scan chunks starting after the 8-byte PNG signature.
-         */
         fun ByteArray.isApng(): Boolean {
             if (!isPng()) return false
-            var offset = 8 // Skip PNG signature
+            var offset = 8
             while (offset + 8 <= size) {
-                // Read chunk length (big-endian)
                 val length = ((this[offset].toInt() and 0xFF) shl 24) or
                         ((this[offset + 1].toInt() and 0xFF) shl 16) or
                         ((this[offset + 2].toInt() and 0xFF) shl 8) or
@@ -76,7 +173,6 @@ class SketchApngDecoder(
                 val typeOffset = offset + 4
                 if (typeOffset + 4 > size) break
 
-                // Check for acTL chunk → APNG
                 if (this[typeOffset] == ACTL_CHUNK[0] &&
                     this[typeOffset + 1] == ACTL_CHUNK[1] &&
                     this[typeOffset + 2] == ACTL_CHUNK[2] &&
@@ -85,16 +181,14 @@ class SketchApngDecoder(
                     return true
                 }
 
-                // Check for IDAT chunk → stop searching (acTL must come before IDAT)
-                if (this[typeOffset] == 0x49.toByte() && // 'I'
-                    this[typeOffset + 1] == 0x44.toByte() && // 'D'
-                    this[typeOffset + 2] == 0x41.toByte() && // 'A'
-                    this[typeOffset + 3] == 0x54.toByte()    // 'T'
+                if (this[typeOffset] == 0x49.toByte() &&
+                    this[typeOffset + 1] == 0x44.toByte() &&
+                    this[typeOffset + 2] == 0x41.toByte() &&
+                    this[typeOffset + 3] == 0x54.toByte()
                 ) {
                     return false
                 }
 
-                // Move to the next chunk: 4 (length) + 4 (type) + length (data) + 4 (CRC)
                 offset += 4 + 4 + length + 4
             }
             return false
@@ -112,15 +206,14 @@ class SketchApngDecoder(
         ): SketchApngDecoder? {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) return null
             if (requestContext.request.disallowAnimatedImage == true) return null
-            if (!isApplicable(fetchResult)) return null
+            if (!isApplicable(requestContext, fetchResult)) return null
             return SketchApngDecoder(requestContext, fetchResult.dataSource)
         }
 
-        private fun isApplicable(fetchResult: FetchResult): Boolean {
-            // Check MIME type first (fast path)
-            val mimeType = fetchResult.dataFrom?.toString() ?: ""
-            if (mimeType == "image/apng") return true
-            // Check header bytes for APNG signature (acTL chunk)
+        private fun isApplicable(requestContext: RequestContext, fetchResult: FetchResult): Boolean {
+            val realMimeType = requestContext.request.extras?.get("realMimeType") as? String
+            if (realMimeType == "image/apng") return true
+            if (fetchResult.mimeType == "image/apng") return true
             return fetchResult.headerBytes.isApng()
         }
 

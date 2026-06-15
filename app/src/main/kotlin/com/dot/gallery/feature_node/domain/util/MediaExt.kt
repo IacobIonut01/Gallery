@@ -3,6 +3,8 @@ package com.dot.gallery.feature_node.domain.util
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
+import android.os.Environment
+import android.provider.MediaStore
 import com.dot.gallery.BuildConfig
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.IgnoredAlbum
@@ -60,6 +62,40 @@ val Media.volume: String
     get() = path.substringBeforeLast("/").removeSuffix(relativePath.removeSuffix("/"))
 
 /**
+ * Resolves a destination path (absolute or relative) into a pair of
+ * (MediaStore volume name, relative path).
+ *
+ * - Absolute paths like `/storage/emulated/0/DCIM/Camera/` resolve to
+ *   `(VOLUME_EXTERNAL_PRIMARY, "DCIM/Camera/")`
+ * - SD card paths like `/storage/71F8-2C0A/DCIM/Camera/` resolve to
+ *   `("71f8-2c0a", "DCIM/Camera/")`
+ * - Relative paths like `DCIM/Camera/` resolve to
+ *   `(VOLUME_EXTERNAL_PRIMARY, "DCIM/Camera/")`
+ */
+fun resolveMediaStoreVolume(path: String): Pair<String, String> {
+    val primaryStorage = Environment.getExternalStorageDirectory().absolutePath.trimEnd('/')
+
+    return when {
+        path.startsWith("$primaryStorage/") -> {
+            val relativePath = path.removePrefix("$primaryStorage/")
+            MediaStore.VOLUME_EXTERNAL_PRIMARY to relativePath
+        }
+        path.startsWith("/storage/") -> {
+            val afterStorage = path.removePrefix("/storage/")
+            val volumeId = afterStorage.substringBefore("/").lowercase()
+            val relativePath = afterStorage.substringAfter("/", "")
+            volumeId to relativePath
+        }
+        else -> {
+            MediaStore.VOLUME_EXTERNAL_PRIMARY to path
+        }
+    }
+}
+
+val Media.mediaStoreVolumeName: String
+    get() = resolveMediaStoreVolume(path).first
+
+/**
  * Used to determine if the Media object is not accessible
  * via MediaStore.
  * This happens when the user tries to open media from an app
@@ -92,11 +128,31 @@ val Media.isRawFile: Boolean get() = mimeType in listOf(
 )
 
 val Media.isApng: Boolean
-    get() = mimeType == "image/apng" || (mimeType == "image/png" && label.endsWith(".apng", ignoreCase = true))
+    get() = mimeType == "image/apng" || label.endsWith(".apng", ignoreCase = true)
 
 val Media.isAvif: Boolean
     get() = mimeType == "image/avif" || mimeType == "image/avis" ||
             label.endsWith(".avif", ignoreCase = true)
+
+val Media.isJxl: Boolean
+    get() = mimeType == "image/jxl" || label.endsWith(".jxl", ignoreCase = true)
+
+val Media.isPsd: Boolean
+    get() = mimeType == "image/vnd.adobe.photoshop" || mimeType == "image/x-photoshop" ||
+            label.endsWith(".psd", ignoreCase = true) || label.endsWith(".psb", ignoreCase = true)
+
+val Media.isJp2: Boolean
+    get() = mimeType == "image/jp2" || mimeType == "image/jpeg2000" || mimeType == "image/jpx" ||
+            label.endsWith(".jp2", ignoreCase = true) || label.endsWith(".j2k", ignoreCase = true) ||
+            label.endsWith(".jpf", ignoreCase = true) || label.endsWith(".jpx", ignoreCase = true) ||
+            label.endsWith(".j2c", ignoreCase = true) || label.endsWith(".jpc", ignoreCase = true)
+
+val Media.isTiff: Boolean
+    get() = mimeType == "image/tiff" || mimeType == "image/tif" ||
+            label.endsWith(".tif", ignoreCase = true) || label.endsWith(".tiff", ignoreCase = true)
+
+val Media.isSvg: Boolean
+    get() = mimeType == "image/svg+xml" || label.endsWith(".svg", ignoreCase = true)
 
 val Media.isTrashed: Boolean get() = trashed == 1
 
@@ -105,6 +161,9 @@ val Media.isFavorite: Boolean get() = favorite == 1
 val Media.isEncrypted: Boolean
     get() = instanceOf(Media.UriMedia::class) && getUri().toString()
         .contains(BuildConfig.APPLICATION_ID)
+
+val Media.isCloud: Boolean
+    get() = instanceOf(Media.UriMedia::class) && getUri().scheme == "cloud"
 
 val Media.isLocalContent: Boolean
     get() = instanceOf(Media.UriMedia::class) && getUri().toString().startsWith("content://media")
@@ -265,6 +324,18 @@ private val BURST_PATTERNS = listOf(
     Regex("^DSC(PDC)?_\\d+_BURST(?<key>\\d{17})(_COVER)?$"),
 )
 
+// Pre-compiled regex patterns for groupBaseName suffix stripping.
+// These were previously created inline on every groupBaseName access,
+// causing ~8 Regex compilations × 670 items = 5360 compilations per pass.
+private val PIXEL_SUFFIX_REGEX = Regex("\\.(ORIGINAL|RAW-\\d+|NIGHT|PORTRAIT|LONG_EXPOSURE|MP|MOTION-\\d+|PANO|TOP|BOTTOM|COVER|BURST\\d*)", RegexOption.IGNORE_CASE)
+private val COPY_PARENS_REGEX = Regex("\\(\\d+\\)$")
+private val COPY_TILDE_REGEX = Regex("~\\d+$")
+private val EDITED_UNDERSCORE_REGEX = Regex("_edited$", RegexOption.IGNORE_CASE)
+private val EDITED_DASH_REGEX = Regex("-edited$", RegexOption.IGNORE_CASE)
+private val COVER_SUFFIX_REGEX = Regex("_COVER$", RegexOption.IGNORE_CASE)
+private val BURST_SUFFIX_REGEX = Regex("_BURST\\d*$", RegexOption.IGNORE_CASE)
+private val HDR_SUFFIX_REGEX = Regex("_HDR$", RegexOption.IGNORE_CASE)
+
 /**
  * Extracts the base filename used for grouping related media.
  * Strips the file extension and common edit/burst/RAW suffixes so that
@@ -292,27 +363,37 @@ val Media.groupBaseName: String
         // Fall back to generic suffix stripping for RAW pairs, edits, etc.
         return nameWithoutExt
             // Pixel-style dot-separated suffixes
-            .replace(Regex("\\.(ORIGINAL|RAW-\\d+|NIGHT|PORTRAIT|LONG_EXPOSURE|MP|MOTION-\\d+|PANO|TOP|BOTTOM|COVER|BURST\\d*)", RegexOption.IGNORE_CASE), "")
+            .replace(PIXEL_SUFFIX_REGEX, "")
             // Copy / duplicate suffixes
-            .replace(Regex("\\(\\d+\\)$"), "")           // (1), (2), etc.
-            .replace(Regex("~\\d+$"), "")                 // ~2, ~3, etc.
+            .replace(COPY_PARENS_REGEX, "")           // (1), (2), etc.
+            .replace(COPY_TILDE_REGEX, "")                 // ~2, ~3, etc.
             // Edit suffixes
-            .replace(Regex("_edited$", RegexOption.IGNORE_CASE), "")
-            .replace(Regex("-edited$", RegexOption.IGNORE_CASE), "")
+            .replace(EDITED_UNDERSCORE_REGEX, "")
+            .replace(EDITED_DASH_REGEX, "")
             // Burst / cover suffixes (generic, after manufacturer-specific failed)
-            .replace(Regex("_COVER$", RegexOption.IGNORE_CASE), "")
-            .replace(Regex("_BURST\\d*$", RegexOption.IGNORE_CASE), "")
+            .replace(COVER_SUFFIX_REGEX, "")
+            .replace(BURST_SUFFIX_REGEX, "")
             // HDR suffix
-            .replace(Regex("_HDR$", RegexOption.IGNORE_CASE), "")
+            .replace(HDR_SUFFIX_REGEX, "")
             .trim()
     }
 
 /**
  * Group key combines the base filename with the relative path
  * so that files in different directories are never grouped together.
+ * Cloud media uses only the base filename so it can match with
+ * local copies that share the same name but different path prefixes.
  */
 val Media.groupKey: String
-    get() = "$relativePath/$groupBaseName"
+    get() = if (isCloud) "cloud_match/$groupBaseName" else "$relativePath/$groupBaseName"
+
+/**
+ * Cloud-aware group key that strips path prefixes to allow matching
+ * between cloud and local copies of the same media.
+ * Used only when CLOUD_LOCAL grouping is enabled.
+ */
+val Media.cloudGroupKey: String
+    get() = groupBaseName
 
 /**
  * Selects the "best" representative from a group of related media items.
@@ -321,9 +402,10 @@ val Media.groupKey: String
 fun <T : Media> List<T>.selectRepresentative(): T {
     if (size == 1) return first()
     return sortedWith(
-        compareBy<T> { it.isRaw }             // non-RAW first (false < true)
+        compareBy<T> { it.isCloud }           // local first (false < true)
+            .thenBy { it.isRaw }              // non-RAW first (false < true)
             .thenBy { it.label != it.groupBaseName + "." + it.label.substringAfterLast(".") } // original first
-            .thenByDescending { it.size }      // larger files first
+            .thenByDescending { it.size }     // larger files first
     ).first()
 }
 
@@ -333,16 +415,22 @@ fun <T : Media> List<T>.selectRepresentative(): T {
 enum class MediaGroupType {
     BURST,
     RAW_JPG,
-    EDITS
+    EDITS,
+    CLOUD_LOCAL
 }
 
 /**
  * Classifies a group of related media items into a [MediaGroupType].
+ * - CLOUD_LOCAL: group contains both cloud and local copies of the same media
  * - BURST: at least one filename matches a burst pattern
  * - RAW_JPG: group contains both RAW and non-RAW files
  * - EDITS: fallback for any other multi-member group (edit copies, HDR, etc.)
  */
 fun <T : Media> List<T>.classifyGroupType(): MediaGroupType {
+    val hasCloud = any { it.isCloud }
+    val hasLocal = any { !it.isCloud }
+    if (hasCloud && hasLocal) return MediaGroupType.CLOUD_LOCAL
+
     val hasRaw = any { it.isRaw }
     val hasNonRaw = any { !it.isRaw }
     if (hasRaw && hasNonRaw) return MediaGroupType.RAW_JPG

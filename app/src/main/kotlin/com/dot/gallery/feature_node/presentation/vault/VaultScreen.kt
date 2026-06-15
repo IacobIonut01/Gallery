@@ -3,11 +3,13 @@ package com.dot.gallery.feature_node.presentation.vault
 import android.graphics.Color
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
+import androidx.activity.compose.BackHandler
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -321,23 +323,29 @@ fun VaultScreen(
                 }
                 composable<VaultScreens.VaultPasswordSetup> {
                     val currentVaultValue by viewModel.currentVault.collectAsStateWithLifecycle()
-                    val isFirstVault = vaultState.value.vaults.size <= 1
+                    val isFirstVault = vaultState.value.vaults.isEmpty()
 
                     fun afterPasswordSetup() {
                         addNewVault = false
-                        if (isFirstVault) {
-                            // First vault → show gate security setup
-                            navController.navigate(VaultScreens.VaultGateSetup) {
-                                popUpTo<VaultScreens.VaultPasswordSetup> { inclusive = true }
-                                launchSingleTop = true
+                        val vault = currentVaultValue ?: return
+                        val first = isFirstVault
+                        viewModel.setVault(
+                            vault = vault,
+                            onFailed = { /* name was already validated in VaultSetup */ },
+                            onSuccess = {
+                                if (first) {
+                                    navController.navigate(VaultScreens.VaultGateSetup) {
+                                        popUpTo<VaultScreens.VaultPasswordSetup> { inclusive = true }
+                                        launchSingleTop = true
+                                    }
+                                } else {
+                                    navController.navigate(VaultScreens.VaultSelect) {
+                                        popUpTo<VaultScreens.VaultPasswordSetup> { inclusive = true }
+                                        launchSingleTop = true
+                                    }
+                                }
                             }
-                        } else {
-                            // Subsequent vaults → go to vault selector
-                            navController.navigate(VaultScreens.VaultSelect) {
-                                popUpTo<VaultScreens.VaultPasswordSetup> { inclusive = true }
-                                launchSingleTop = true
-                            }
-                        }
+                        )
                     }
 
                     VaultPasswordSetupScreen(
@@ -392,12 +400,6 @@ fun VaultScreen(
                             deleteLeftovers = viewModel::deleteLeftovers,
                             deleteVault = viewModel::deleteVault,
                             setVault = { vault -> viewModel.setVault(vault) {} },
-                            onCreateVaultClick = {
-                                addNewVault = true
-                                navController.navigate(VaultScreens.VaultSetup) {
-                                    launchSingleTop = true
-                                }
-                            },
                             onAuthenticateVault = { vault ->
                                 authenticateVault(vault)
                             },
@@ -450,6 +452,18 @@ fun VaultScreen(
             }
         }
 
+        // Intercept system back button when password dialogs are visible
+        BackHandler(enabled = showGatePasswordDialog) {
+            showGatePasswordDialog = false
+            gatePasswordError = null
+            globalEventHandler.navigateUp()
+        }
+        BackHandler(enabled = showPasswordDialog) {
+            showPasswordDialog = false
+            passwordError = null
+            pendingAuthVault = null
+        }
+
         // Gate password/PIN/pattern dialog
         AnimatedVisibility(
             visible = showGatePasswordDialog,
@@ -460,6 +474,11 @@ fun VaultScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.surface)
+                    .clickable(
+                        interactionSource = null,
+                        indication = null,
+                        onClick = {}
+                    )
             ) {
                 VaultPasswordUnlockDialog(
                     authType = gateAuthType,
@@ -506,6 +525,11 @@ fun VaultScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.surface)
+                    .clickable(
+                        interactionSource = null,
+                        indication = null,
+                        onClick = {}
+                    )
             ) {
                 VaultPasswordUnlockDialog(
                     authType = detectedAuthType,

@@ -24,11 +24,13 @@ import com.dot.gallery.core.setFollowTheme
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.Vault
 import com.dot.gallery.feature_node.domain.util.canMakeActions
+import com.dot.gallery.feature_node.domain.util.isCloud
 import com.dot.gallery.feature_node.domain.util.isEncrypted
 import com.dot.gallery.feature_node.domain.util.isTrashed
 import com.dot.gallery.feature_node.domain.util.isVideo
 import com.dot.gallery.feature_node.domain.util.readUriOnly
 import com.dot.gallery.feature_node.presentation.mediaview.components.actionbuttons.CopyToClipboardButton
+import com.dot.gallery.feature_node.presentation.mediaview.components.actionbuttons.DownloadButton
 import com.dot.gallery.feature_node.presentation.mediaview.components.actionbuttons.EditButton
 import com.dot.gallery.feature_node.presentation.mediaview.components.actionbuttons.FavoriteButton
 import com.dot.gallery.feature_node.presentation.mediaview.components.actionbuttons.MediaViewButton
@@ -119,7 +121,7 @@ fun <T : Media> MediaViewQuickBottomBar(
             )
             // Favorite Component
             val showFavoriteButton by rememberShowFavoriteButton()
-            if (showFavoriteButton && currentMedia.canMakeActions && SdkCompat.supportsFavorites) {
+            if (showFavoriteButton && (currentMedia.canMakeActions && SdkCompat.supportsFavorites || currentMedia.isCloud)) {
                 FavoriteButton(
                     media = currentMedia,
                     enabled = enabled,
@@ -139,6 +141,14 @@ fun <T : Media> MediaViewQuickBottomBar(
                     media = currentMedia,
                     currentVault = currentVault,
                     restoreMedia = restoreMedia,
+                    followTheme = followTheme
+                )
+            }
+            // Download (cloud only)
+            if (currentMedia.isCloud) {
+                DownloadButton(
+                    media = currentMedia,
+                    enabled = enabled,
                     followTheme = followTheme
                 )
             }

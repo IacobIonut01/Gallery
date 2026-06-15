@@ -82,7 +82,7 @@ class ModelManager @Inject constructor(
      * Whether AI features (categories, smart search, etc.) should be shown in the UI.
      * True when models are bundled (withML builds) OR the app can download them (has INTERNET).
      * This decouples AI feature visibility from INTERNET permission so that
-     * nomaps-withML builds (which strip INTERNET but bundle models) still expose AI features.
+     * offline-withML builds (which strip INTERNET but bundle models) still expose AI features.
      */
     val areAiFeaturesAvailable: Boolean by lazy {
         BuildConfig.ML_MODELS_BUNDLED || hasInternetPermission

@@ -8,7 +8,6 @@ package com.dot.gallery.feature_node.presentation.mediaview.components.media
 import android.os.Build
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -24,16 +23,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
-import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.bumptech.glide.integration.compose.GlideImage
-import com.bumptech.glide.load.resource.gif.GifDrawable
 import com.dot.gallery.core.Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION
 import com.dot.gallery.core.Settings
+import com.dot.gallery.cloud.core.ProviderType
+import com.dot.gallery.cloud.image.CloudImageSource
 import com.dot.gallery.core.decoder.EncryptedRegionDecoder
+import com.dot.gallery.core.decoder.FullImageRegionDecoder
+import com.dot.gallery.core.decoder.JxlRegionDecoder
 import com.dot.gallery.core.presentation.components.util.LocalBatteryStatus
 import com.dot.gallery.core.presentation.components.util.ProvideBatteryStatus
 import com.dot.gallery.core.presentation.components.util.swipe
@@ -43,21 +43,29 @@ import com.dot.gallery.feature_node.domain.util.asSubsamplingImage
 import com.dot.gallery.feature_node.domain.util.getUri
 import com.dot.gallery.feature_node.domain.util.isApng
 import com.dot.gallery.feature_node.domain.util.isAvif
+import com.dot.gallery.feature_node.domain.util.isCloud
 import com.dot.gallery.feature_node.domain.util.isEncrypted
-import com.dot.gallery.feature_node.presentation.util.GlideInvalidation
+import com.dot.gallery.feature_node.domain.util.isJp2
+import com.dot.gallery.feature_node.domain.util.isJxl
+import com.dot.gallery.feature_node.domain.util.isPsd
+import com.dot.gallery.feature_node.domain.util.isSvg
+import com.dot.gallery.feature_node.domain.util.isTiff
+import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
 import com.dot.gallery.feature_node.presentation.util.rememberFeedbackManager
+import com.github.panpf.sketch.AsyncImage
+import com.github.panpf.sketch.PainterState
 import com.github.panpf.sketch.rememberAsyncImagePainter
+import com.github.panpf.sketch.rememberAsyncImageState
 import com.github.panpf.sketch.request.ComposableImageRequest
-import com.github.panpf.zoomimage.GlideZoomAsyncImage
+import com.github.panpf.sketch.resize.Precision
 import com.github.panpf.zoomimage.ZoomImage
-import com.github.panpf.zoomimage.compose.glide.ExperimentalGlideComposeApi
-import com.github.panpf.zoomimage.rememberGlideZoomState
+import com.github.panpf.zoomimage.rememberSketchZoomState
+import com.github.panpf.zoomimage.subsampling.SubsamplingImage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-@OptIn(com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi::class)
 @Composable
-fun <T: Media> BlurredMediaBackground(
+fun <T : Media> BlurredMediaBackground(
     media: T,
     uiEnabled: Boolean,
 ) {
@@ -65,38 +73,39 @@ fun <T: Media> BlurredMediaBackground(
         val allowBlur by Settings.Misc.rememberAllowBlur()
         val isPowerSavingMode = LocalBatteryStatus.current.isPowerSavingMode
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && allowBlur && !isPowerSavingMode) {
+            val isEncrypted = remember(media) {
+                media.isEncrypted
+            }
             val blurAlpha by animateFloatAsState(
                 animationSpec = tween(DEFAULT_TOP_BAR_ANIMATION_DURATION),
                 targetValue = if (uiEnabled) 0.7f else 0f,
                 label = "blurAlpha"
             )
-            GlideImage(
+            AsyncImage(
+                request = ComposableImageRequest(media.getUri().toString()) {
+                    resize(width = 600, height = 600, precision = Precision.LESS_PIXELS)
+                    crossfade(false)
+                    setExtra("realMimeType", media.mimeType)
+                    if (isEncrypted) {
+                        setExtra(key = "mediaKeyPreviewEnc", value = media.idLessKey)
+                    }
+                },
                 modifier = Modifier
                     .fillMaxSize()
                     .alpha(blurAlpha)
                     .blur(100.dp),
-                model = media.getUri(),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                requestBuilderTransform = {
-                    it.override(600)
-                        .signature(GlideInvalidation.signature(media))
-                        .thumbnail(it.clone().sizeMultiplier(0.1f))
-                }
             )
         }
     }
 }
 
-@OptIn(ExperimentalGlideComposeApi::class,
-    com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi::class
-)
 @Stable
 @Composable
-fun <T: Media> BoxScope.ZoomablePagerImage(
+fun <T : Media> ZoomablePagerImage(
     modifier: Modifier = Modifier,
     media: T,
-    uiEnabled: Boolean,
     rotationDisabled: Boolean,
     onImageRotated: (newRotation: Int) -> Unit,
     onItemClick: () -> Unit,
@@ -109,139 +118,146 @@ fun <T: Media> BoxScope.ZoomablePagerImage(
         targetValue = if (isRotating) 90f else 0f,
         label = "rotationAnimation"
     )
-    val zoomState = rememberGlideZoomState()
+    val zoomState = rememberSketchZoomState()
     val scope = rememberCoroutineScope()
 
-    if (media.isEncrypted) {
-        val painter = rememberAsyncImagePainter(
-            request = ComposableImageRequest(media.getUri().toString()) {
-                crossfade(durationMillis = 200)
-                setExtra(
-                    key = "mediaKeyPreviewEnc",
-                    value = media.idLessKey,
-                )
-                setExtra("realMimeType", media.mimeType)
-            },
-            contentScale = ContentScale.Fit,
-            filterQuality = FilterQuality.None,
-        )
-        val context = LocalContext.current
-        val keychainHolder = remember {
-            KeychainHolder(context)
+    val context = LocalContext.current
+    val mediaUri = remember(media) {
+        media.getUri().toString()
+    }
+    val isEncrypted = remember(media) {
+        media.isEncrypted
+    }
+    val isJxl = remember(media) { media.isJxl }
+    val isAnimated = remember(media) {
+        media.isApng || media.isJxl || (media.isAvif && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+    }
+    // Region decoder for formats Android's BitmapRegionDecoder can't subsample (PSD/JP2/TIFF/SVG).
+    // Without this they only show the screen-resolution base painter and look blurry when zoomed.
+    val customRegionFactory = remember(media) {
+        when {
+            media.isPsd -> FullImageRegionDecoder.forPsd()
+            media.isJp2 -> FullImageRegionDecoder.forJp2()
+            media.isTiff -> FullImageRegionDecoder.forTiff()
+            media.isSvg -> FullImageRegionDecoder.forSvg()
+            else -> null
         }
-        LaunchedEffect(zoomState.subsampling) {
-            zoomState.subsampling.setRegionDecoders(listOf(EncryptedRegionDecoder.Factory(keychainHolder)))
+    }
+
+    // Fast low-res preview painter, shown until full image loads
+    val previewPainter = rememberAsyncImagePainter(
+        request = ComposableImageRequest(mediaUri) {
+            resize(width = 600, height = 600, precision = Precision.LESS_PIXELS)
+            crossfade(false)
+            setExtra("realMimeType", media.mimeType)
+            if (isEncrypted) {
+                setExtra(key = "mediaKeyPreviewEnc", value = media.idLessKey)
+            }
+        },
+        contentScale = ContentScale.Fit
+    )
+
+    // Full-res painter with state tracking
+    val fullImageState = rememberAsyncImageState()
+    val fullPainter = rememberAsyncImagePainter(
+        request = ComposableImageRequest(mediaUri) {
+            if (isEncrypted || isAnimated) {
+                crossfade(durationMillis = 200)
+            }
+            setExtra("realMimeType", media.mimeType)
+            if (isEncrypted) {
+                setExtra(key = "mediaKeyPreviewEnc", value = media.idLessKey)
+            }
+        },
+        state = fullImageState,
+        contentScale = ContentScale.Fit
+    )
+
+    val isFullImageLoaded by rememberedDerivedState(media) {
+        fullImageState.painterState is PainterState.Success
+    }
+    val activePainter = remember(isFullImageLoaded) {
+        if (isFullImageLoaded) fullPainter else previewPainter
+    }
+
+    val isCloudMedia = remember(media) { media.isCloud }
+
+    if (isEncrypted) {
+        val keychainHolder = remember { KeychainHolder(context) }
+        LaunchedEffect(media, isFullImageLoaded, zoomState.subsampling) {
             zoomState.setSubsamplingImage(media.asSubsamplingImage(context))
         }
-        ZoomImage(
-            zoomState = zoomState,
-            painter = painter,
-            modifier = Modifier
-                .fillMaxSize()
-                .swipe(
-                    onSwipeDown = onSwipeDown
+        LaunchedEffect(zoomState.subsampling, media) {
+            zoomState.subsampling.setRegionDecoders(
+                listOf(
+                    EncryptedRegionDecoder.Factory(
+                        keychainHolder
+                    )
                 )
-                .graphicsLayer {
-                    rotationZ = if (isRotating) rotationAnimation else 0f
-                }.then(modifier),
-            onTap = { onItemClick() },
-            onLongPress = {
-                if (!rotationDisabled) {
-                    scope.launch {
-                        isRotating = true
-                        feedbackManager.vibrate()
-                        currentRotation += 90
-                        onImageRotated(currentRotation)
-                        delay(350)
-                        zoomState.zoomable.rotate(currentRotation)
-                        isRotating = false
-                    }
-                }
-            },
-            alignment = Alignment.Center,
-            contentDescription = media.label,
-            scrollBar = null
-        )
-    } else if (media.isApng || (media.isAvif && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)) {
-        val painter = rememberAsyncImagePainter(
-            request = ComposableImageRequest(media.getUri().toString()) {
-                crossfade(durationMillis = 200)
-            },
-            contentScale = ContentScale.Fit,
-            filterQuality = FilterQuality.None,
-        )
-        ZoomImage(
-            zoomState = zoomState,
-            painter = painter,
-            modifier = Modifier
-                .fillMaxSize()
-                .swipe(
-                    onSwipeDown = onSwipeDown
-                )
-                .graphicsLayer {
-                    rotationZ = if (isRotating) rotationAnimation else 0f
-                }.then(modifier),
-            onTap = { onItemClick() },
-            onLongPress = {
-                if (!rotationDisabled) {
-                    scope.launch {
-                        isRotating = true
-                        feedbackManager.vibrate()
-                        currentRotation += 90
-                        onImageRotated(currentRotation)
-                        delay(350)
-                        zoomState.zoomable.rotate(currentRotation)
-                        isRotating = false
-                    }
-                }
-            },
-            alignment = Alignment.Center,
-            contentDescription = media.label,
-            scrollBar = null
-        )
-    } else {
-        GlideZoomAsyncImage(
-            zoomState = zoomState,
-            model = media.getUri(),
-            modifier = Modifier
-                .fillMaxSize()
-                .swipe(
-                    onSwipeDown = onSwipeDown
-                )
-                .graphicsLayer {
-                    rotationZ = if (isRotating) rotationAnimation else 0f
-                }
-                .then(modifier),
-            onTap = { onItemClick() },
-            onLongPress = {
-                if (!rotationDisabled) {
-                    scope.launch {
-                        isRotating = true
-                        feedbackManager.vibrate()
-                        currentRotation += 90
-                        onImageRotated(currentRotation)
-                        delay(350)
-                        zoomState.zoomable.rotate(currentRotation)
-                        isRotating = false
-                    }
-                }
-            },
-            alignment = Alignment.Center,
-            contentDescription = media.label,
-            requestBuilderTransform = {
-                var builder = it
-                    .signature(GlideInvalidation.signature(media))
-                    .thumbnail(it.clone().sizeMultiplier(0.1f))
-
-                if (media.label.contains(".gif", ignoreCase = true)) {
-                    builder = builder.decode(GifDrawable::class.java)
-                }
-
-                builder
-            },
-            scrollBar = null
-        )
+            )
+        }
+    } else if (isCloudMedia) {
+        LaunchedEffect(media, isFullImageLoaded, zoomState.subsampling) {
+            val uri = media.getUri()
+            val providerName = uri.authority ?: return@LaunchedEffect
+            val providerType = try { ProviderType.valueOf(providerName) } catch (_: Exception) { return@LaunchedEffect }
+            val remoteId = uri.pathSegments?.firstOrNull() ?: return@LaunchedEffect
+            val cloudSource = CloudImageSource(providerType, remoteId)
+            zoomState.setSubsamplingImage(SubsamplingImage(imageSource = cloudSource))
+        }
+    } else if (isJxl) {
+        // Android's BitmapRegionDecoder can't decode JXL, so enable subsampling backed by a
+        // JxlCoder region decoder for high-resolution zoom. Animated JXL is rejected by the
+        // decoder and falls back to the animated base painter.
+        LaunchedEffect(media, isFullImageLoaded, zoomState.subsampling) {
+            zoomState.setSubsamplingImage(media.asSubsamplingImage(context))
+        }
+        LaunchedEffect(zoomState.subsampling, media) {
+            zoomState.subsampling.setRegionDecoders(listOf(JxlRegionDecoder.Factory()))
+        }
+    } else if (customRegionFactory != null) {
+        // PSD/JP2/TIFF/SVG: no native BitmapRegionDecoder support, so subsample via a
+        // full-decode-then-crop (PSD/JP2/TIFF) or high-res render (SVG) region decoder.
+        LaunchedEffect(media, isFullImageLoaded, zoomState.subsampling) {
+            zoomState.setSubsamplingImage(media.asSubsamplingImage(context))
+        }
+        LaunchedEffect(zoomState.subsampling, media) {
+            zoomState.subsampling.setRegionDecoders(listOf(customRegionFactory))
+        }
+    } else if (!isAnimated) {
+        LaunchedEffect(media, isFullImageLoaded, zoomState.subsampling) {
+            zoomState.setSubsamplingImage(media.asSubsamplingImage(context))
+        }
     }
+
+    ZoomImage(
+        zoomState = zoomState,
+        painter = activePainter,
+        modifier = Modifier
+            .fillMaxSize()
+            .swipe(onSwipeDown = onSwipeDown)
+            .graphicsLayer {
+                rotationZ = if (isRotating) rotationAnimation else 0f
+            }
+            .then(modifier),
+        onTap = { onItemClick() },
+        onLongPress = {
+            if (!rotationDisabled) {
+                scope.launch {
+                    isRotating = true
+                    feedbackManager.vibrate()
+                    currentRotation += 90
+                    onImageRotated(currentRotation)
+                    delay(350)
+                    zoomState.zoomable.rotate(currentRotation)
+                    isRotating = false
+                }
+            }
+        },
+        alignment = Alignment.Center,
+        contentDescription = media.label,
+        scrollBar = null
+    )
 }
 
 

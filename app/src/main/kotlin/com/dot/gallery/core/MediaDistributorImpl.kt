@@ -1,6 +1,7 @@
 package com.dot.gallery.core
 
 import android.content.Context
+import android.net.Uri
 import android.media.MediaScannerConnection
 import androidx.compose.runtime.compositionLocalOf
 import androidx.work.WorkInfo
@@ -13,6 +14,11 @@ import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.AlbumGroup
 import com.dot.gallery.feature_node.domain.model.AlbumGroupMember
 import com.dot.gallery.feature_node.domain.model.AlbumGroupWithAlbums
+import com.dot.gallery.feature_node.domain.model.AlbumSection
+import com.dot.gallery.feature_node.domain.model.AlbumSectionMember
+import com.dot.gallery.feature_node.domain.model.AlbumSectionType
+import com.dot.gallery.feature_node.domain.model.AlbumSectionWithAlbums
+import com.dot.gallery.feature_node.domain.util.AlbumClassifier
 import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.domain.model.AlbumThumbnail
 import com.dot.gallery.feature_node.domain.model.CollectionWithCount
@@ -33,16 +39,27 @@ import com.dot.gallery.feature_node.domain.model.VaultState
 import com.dot.gallery.feature_node.domain.model.ScannedMedia
 import com.dot.gallery.feature_node.domain.model.shouldIgnore
 import com.dot.gallery.feature_node.data.data_source.ScannedMediaDao
+import com.dot.gallery.cloud.core.CloudAlbum
+import com.dot.gallery.cloud.core.ConnectionState
+import com.dot.gallery.cloud.core.SyncState
+import com.dot.gallery.cloud.core.stableIdHash
+import com.dot.gallery.cloud.data.entity.CloudMediaEntity
+import com.dot.gallery.cloud.data.repository.CloudRepository
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.domain.util.EventHandler
 import com.dot.gallery.feature_node.domain.util.MediaOrder
 import com.dot.gallery.feature_node.domain.util.OrderType
 import com.dot.gallery.feature_node.domain.util.MediaGroupType
+import com.dot.gallery.feature_node.domain.util.cloudGroupKey
+import com.dot.gallery.feature_node.domain.util.groupKey
+import com.dot.gallery.feature_node.domain.util.getUri
+import com.dot.gallery.feature_node.domain.util.isCloud
 import com.dot.gallery.feature_node.domain.util.mapLocked
 import com.dot.gallery.feature_node.domain.util.mapPinned
 import com.dot.gallery.feature_node.domain.util.removeBlacklisted
 import com.dot.gallery.feature_node.presentation.util.mapMediaToItem
 import com.dot.gallery.feature_node.presentation.util.mediaFlow
+
 import dagger.hilt.android.qualifiers.ApplicationContext
 import android.provider.MediaStore
 import com.dot.gallery.core.metrics.StartupTracer
@@ -58,7 +75,11 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.distinctUntilChangedBy
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
@@ -79,6 +100,7 @@ val LocalMediaDistributor = compositionLocalOf<MediaDistributor> {
 class MediaDistributorImpl @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val repository: MediaRepository,
+    private val cloudRepository: CloudRepository,
     private val eventHandler: EventHandler,
     workManager: WorkManager,
     private val scannedMediaDao: ScannedMediaDao
@@ -115,6 +137,10 @@ class MediaDistributorImpl @Inject constructor(
             context.contentResolver.notifyChange(
                 MediaStore.Files.getContentUri("external"), null
             )
+            // Refresh cloud data if providers are connected
+            if (cloudRepository.hasConfiguredProviders) {
+                refreshCloudData()
+            }
         }
         delay(1500)
         isRefreshing.value = false
@@ -125,6 +151,7 @@ class MediaDistributorImpl @Inject constructor(
      */
     private val albumMediaSortFlow: StateFlow<Settings.Album.LastSort> = 
         Settings.Album.getAlbumMediaSortFlow(context)
+            .distinctUntilChanged()
             .stateIn(appScope, SharingStarted.Eagerly, Settings.Album.LastSort(OrderType.Descending, FilterKind.DATE))
 
     /**
@@ -138,7 +165,8 @@ class MediaDistributorImpl @Inject constructor(
         repository.getSetting(WEEKLY_DATE_FORMAT, Constants.WEEKLY_DATE_FORMAT)
     ) { defaultDateFormat, extendedDateFormat, weeklyDateFormat ->
         Triple(defaultDateFormat, extendedDateFormat, weeklyDateFormat)
-    }.stateIn(
+    }.distinctUntilChanged()
+    .stateIn(
         scope = appScope,
         started = prioritySharingMethod,
         initialValue = Triple(
@@ -157,21 +185,35 @@ class MediaDistributorImpl @Inject constructor(
             }
         }
 
+    override var groupByYear: Boolean
+        get() = settingsFlow.value?.groupTimelineByYear == true
+        set(value) {
+            appScope.launch {
+                settingsFlow.value?.copy(groupTimelineByYear = value)?.let {
+                    repository.updateTimelineSettings(it)
+                }
+            }
+        }
+
     override val groupSimilarMedia: StateFlow<Boolean> =
         repository.getSetting(Settings.Misc.GROUP_SIMILAR_MEDIA, true)
+            .distinctUntilChanged()
             .stateIn(appScope, prioritySharingMethod, true)
 
     override val enabledGroupTypes: StateFlow<Set<MediaGroupType>> = combine(
         repository.getSetting(Settings.Misc.GROUP_RAW_JPG, true),
         repository.getSetting(Settings.Misc.GROUP_EDITED_COPIES, true),
-        repository.getSetting(Settings.Misc.GROUP_BURST_SEQUENCES, true)
-    ) { rawJpg, editedCopies, burstSequences ->
+        repository.getSetting(Settings.Misc.GROUP_BURST_SEQUENCES, true),
+        repository.getSetting(Settings.Misc.GROUP_CLOUD_LOCAL, true)
+    ) { rawJpg, editedCopies, burstSequences, cloudLocal ->
         buildSet {
             if (rawJpg) add(MediaGroupType.RAW_JPG)
             if (editedCopies) add(MediaGroupType.EDITS)
             if (burstSequences) add(MediaGroupType.BURST)
+            if (cloudLocal) add(MediaGroupType.CLOUD_LOCAL)
         }
-    }.stateIn(appScope, prioritySharingMethod, MediaGroupType.entries.toSet())
+    }.distinctUntilChanged()
+    .stateIn(appScope, prioritySharingMethod, MediaGroupType.entries.toSet())
 
     override val mergeAlbumsByName: StateFlow<Boolean> =
         repository.getSetting(Settings.Album.MERGE_ALBUMS_BY_NAME, true)
@@ -181,6 +223,7 @@ class MediaDistributorImpl @Inject constructor(
      * Settings
      */
     override val settingsFlow: StateFlow<TimelineSettings?> = repository.getTimelineSettings()
+        .distinctUntilChanged()
         .stateIn(
             scope = appScope,
             started = prioritySharingMethod,
@@ -190,8 +233,24 @@ class MediaDistributorImpl @Inject constructor(
     /**
      * Albums
      */
+    private val _blacklistedAlbumsInternal = MutableStateFlow<List<IgnoredAlbum>?>(null)
+
+    init {
+        // Eagerly load blacklisted albums via a one-shot query that uses a read
+        // connection, bypassing Room's InvalidationTracker setup (which serializes
+        // all DAO Flow observers through the write connection and adds ~1.7s).
+        // After the initial load, the reactive DAO Flow takes over for live updates.
+        appScope.launch {
+            _blacklistedAlbumsInternal.value = repository.getBlacklistedAlbumsAsync()
+            repository.getBlacklistedAlbums().collect {
+                _blacklistedAlbumsInternal.value = it
+            }
+        }
+    }
+
     override val blacklistedAlbumsFlow: StateFlow<List<IgnoredAlbum>> =
-        repository.getBlacklistedAlbums()
+        _blacklistedAlbumsInternal
+            .map { it ?: emptyList() }
             .stateIn(
                 scope = appScope,
                 started = prioritySharingMethod,
@@ -231,6 +290,159 @@ class MediaDistributorImpl @Inject constructor(
                 }
             }
         }
+
+    // === Cloud integration at distributor level ===
+
+    private val _cloudAlbumsFlow = MutableStateFlow<List<CloudAlbum>>(emptyList())
+    private val _cloudAlbumMemberRemoteIds = MutableStateFlow<Set<String>>(emptySet())
+
+    companion object {
+        private const val UNSORTED_ALBUM_SENTINEL = "__unsorted__"
+    }
+
+    // Eagerly load cached cloud media so the timeline can merge them.
+    // The one-shot Room query runs on IO and typically completes before
+    // the slower MediaStore query.
+    // distinctUntilChangedBy avoids redundant combine passes when the
+    // reactive Room Flow re-emits the same data as the one-shot query.
+    private val _cloudCachedMedia: StateFlow<List<Media.UriMedia>> = flow {
+        emit(withContext(Dispatchers.IO) {
+            cloudRepository.getCachedMediaAsync().map { it.toUriMedia() }
+        })
+        emitAll(cloudRepository.getCachedMedia().map { entities ->
+            entities.map { it.toUriMedia() }
+        })
+    }.distinctUntilChangedBy { it.size }
+     .stateIn(appScope, SharingStarted.Eagerly, emptyList())
+
+    private val _cloudCachedFavorites: StateFlow<List<Media.UriMedia>> = flow {
+        emit(withContext(Dispatchers.IO) {
+            cloudRepository.getCachedFavoritesAsync().map { it.toUriMedia() }
+        })
+        emitAll(cloudRepository.getCachedFavorites().map { entities ->
+            entities.map { it.toUriMedia() }
+        })
+    }.distinctUntilChangedBy { it.size }
+     .stateIn(appScope, SharingStarted.Eagerly, emptyList())
+
+    private val _cloudCachedTrashed: StateFlow<List<Media.UriMedia>> = flow {
+        emit(withContext(Dispatchers.IO) {
+            cloudRepository.getCachedTrashedAsync().map { it.toUriMedia() }
+        })
+        emitAll(cloudRepository.getCachedTrashed().map { entities ->
+            entities.map { it.toUriMedia() }
+        })
+    }.distinctUntilChangedBy { it.size }
+     .stateIn(appScope, SharingStarted.Eagerly, emptyList())
+
+    override val cloudSyncStates: StateFlow<Map<Long, SyncState>> =
+        cloudRepository.getCachedMedia().map { entities ->
+            entities.associate { stableIdHash(it.remoteId) to it.syncState }
+        }.stateIn(appScope, SharingStarted.Eagerly, emptyMap())
+
+    init {
+        appScope.launch {
+            cloudRepository.connectionStates.collect { states ->
+                val hasConnected = states.any { it.value == ConnectionState.CONNECTED }
+                if (hasConnected) {
+                    refreshCloudData()
+                } else {
+                    _cloudAlbumsFlow.value = emptyList()
+                }
+            }
+        }
+    }
+
+    private suspend fun refreshCloudData() {
+        try {
+            cloudRepository.getAllRemoteAlbums().collect { resource ->
+                when (resource) {
+                    is Resource.Success -> _cloudAlbumsFlow.value = resource.data ?: emptyList()
+                    is Resource.Error -> _cloudAlbumsFlow.value = resource.data ?: emptyList()
+                }
+            }
+        } catch (_: Exception) { }
+        // Collect all asset IDs that belong to at least one cloud album
+        try {
+            val albums = _cloudAlbumsFlow.value
+            val memberIds = HashSet<String>()
+            for (album in albums) {
+                val resource = cloudRepository.getAlbumMedia(album.providerType, album.remoteId).first()
+                if (resource is Resource.Success) {
+                    resource.data?.forEach { memberIds.add(it.remoteId) }
+                }
+            }
+            _cloudAlbumMemberRemoteIds.value = memberIds
+        } catch (_: Exception) { }
+        // Fetch trashed items into cache so the trash screen has cloud data
+        try {
+            cloudRepository.getRemoteTrashed().first()
+        } catch (_: Exception) { }
+    }
+
+    private fun isCloudAlbumId(albumId: Long): Boolean {
+        if (albumId >= 0) return false
+        // Check unsorted virtual albums
+        if (isUnsortedCloudAlbumId(albumId)) return true
+        return _cloudAlbumsFlow.value.any {
+            (CloudAlbum.CLOUD_ALBUM_ID_BASE - stableIdHash(it.remoteId)) == albumId
+        }
+    }
+
+    private fun isUnsortedCloudAlbumId(albumId: Long): Boolean {
+        return com.dot.gallery.cloud.core.ProviderType.remoteTypes().any { providerType ->
+            (CloudAlbum.CLOUD_ALBUM_ID_BASE - stableIdHash(UNSORTED_ALBUM_SENTINEL + providerType.name)) == albumId
+        }
+    }
+
+    /**
+     * Virtual "unsorted" album per connected cloud provider.
+     * Contains all cached (non-trashed) cloud media that don't belong to any cloud album.
+     */
+    private val _unsortedCloudAlbumsFlow: StateFlow<List<Album>> = combine(
+        _cloudCachedMedia,
+        _cloudAlbumMemberRemoteIds
+    ) { cachedMedia, memberIds ->
+        if (cachedMedia.isEmpty()) return@combine emptyList()
+        // Group cached media by provider (derive provider from URI authority)
+        val byProvider = cachedMedia.groupBy { media ->
+            media.getUri().authority ?: ""
+        }.filterKeys { it.isNotEmpty() }
+        byProvider.mapNotNull { (providerName, providerMedia) ->
+            val providerType = try {
+                com.dot.gallery.cloud.core.ProviderType.valueOf(providerName)
+            } catch (_: Exception) { return@mapNotNull null }
+            val unsortedMedia = providerMedia.filter { media ->
+                val remoteId = media.getUri().pathSegments.firstOrNull()
+                remoteId != null && remoteId !in memberIds
+            }
+            if (unsortedMedia.isEmpty()) return@mapNotNull null
+            val thumbUri = unsortedMedia.maxByOrNull { it.definedTimestamp }
+                ?.getUri()?.let { uri ->
+                    uri.buildUpon().clearQuery().appendQueryParameter("size", "thumbnail").build()
+                } ?: Uri.EMPTY
+            Album(
+                id = CloudAlbum.CLOUD_ALBUM_ID_BASE - stableIdHash(UNSORTED_ALBUM_SENTINEL + providerType.name),
+                label = providerType.displayName,
+                uri = thumbUri,
+                pathToThumbnail = thumbUri.toString(),
+                relativePath = "cloud/${providerType.name}",
+                timestamp = unsortedMedia.maxOf { it.definedTimestamp },
+                count = unsortedMedia.size.toLong(),
+                size = 0L
+            )
+        }
+    }.stateIn(appScope, SharingStarted.Eagerly, emptyList())
+
+    // === End cloud integration ===
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val _rawAlbumsFlow: StateFlow<Resource<List<Album>>?> =
+        hasPermission.flatMapLatest { granted ->
+            if (!granted) flowOf(null)
+            else repository.getAlbums(mediaOrder = albumOrder)
+                .map<Resource<List<Album>>, Resource<List<Album>>?> { it }
+        }.stateIn(appScope, prioritySharingMethod, null)
 
     private val albumThumbnails = repository.getAlbumThumbnails()
         .stateIn(
@@ -278,18 +490,33 @@ class MediaDistributorImpl @Inject constructor(
     override fun collectionAlbumIdsInCollection(collectionId: Long): Flow<List<Long>> =
         repository.getAlbumIdsInCollection(collectionId)
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    override val albumsFlow: StateFlow<AlbumState> = hasPermission.flatMapLatest { granted ->
-        if (!granted) flowOf(AlbumState())
-        else {
-            StartupTracer.begin("albums.permission_granted→combine_setup").also { s -> StartupTracer.end(s) }
-            combine(
-            repository.getAlbums(mediaOrder = albumOrder)
-                .onEach { StartupTracer.begin("albums.dep.getAlbums(${it.data?.size ?: 0})").also { s -> StartupTracer.end(s) } },
+    private val albumSectionsDbFlow: StateFlow<List<AlbumSection>> =
+        repository.getAllAlbumSections()
+            .stateIn(
+                scope = appScope,
+                started = prioritySharingMethod,
+                initialValue = emptyList()
+            )
+
+    private val albumSectionMembersDbFlow: StateFlow<List<AlbumSectionMember>> =
+        repository.getAllSectionMembers()
+            .stateIn(
+                scope = appScope,
+                started = prioritySharingMethod,
+                initialValue = emptyList()
+            )
+
+    private val sectionsEnabled: StateFlow<Boolean> =
+        repository.getSetting(Settings.Album.ALBUM_SECTIONS_ENABLED, false)
+            .stateIn(appScope, prioritySharingMethod, false)
+
+    override val albumsFlow: StateFlow<AlbumState> = combine(
+            _rawAlbumsFlow
+                .onEach { StartupTracer.begin("albums.dep.getAlbums(${it?.data?.size ?: 0})").also { s -> StartupTracer.end(s) } },
             pinnedAlbumsFlow
                 .onEach { StartupTracer.begin("albums.dep.pinned(${it.size})").also { s -> StartupTracer.end(s) } },
-            blacklistedAlbumsFlow
-                .onEach { StartupTracer.begin("albums.dep.blacklisted(${it.size})").also { s -> StartupTracer.end(s) } },
+            _blacklistedAlbumsInternal
+                .onEach { StartupTracer.begin("albums.dep.blacklisted(${it?.size ?: -1})").also { s -> StartupTracer.end(s) } },
             lockedAlbumsFlow
                 .onEach { StartupTracer.begin("albums.dep.locked(${it.size})").also { s -> StartupTracer.end(s) } },
             settingsFlow
@@ -308,14 +535,26 @@ class MediaDistributorImpl @Inject constructor(
                 .onEach { StartupTracer.begin("albums.dep.collections(${it.size})").also { s -> StartupTracer.end(s) } },
             collectionAlbumIdsFlow
                 .onEach { StartupTracer.begin("albums.dep.collectionAlbumIds(${it.size})").also { s -> StartupTracer.end(s) } },
+            _cloudAlbumsFlow
+                .onEach { StartupTracer.begin("albums.dep.cloudAlbums(${it.size})").also { s -> StartupTracer.end(s) } },
+            _unsortedCloudAlbumsFlow
+                .onEach { StartupTracer.begin("albums.dep.unsortedCloud(${it.size})").also { s -> StartupTracer.end(s) } },
+            albumSectionsDbFlow
+                .onEach { StartupTracer.begin("albums.dep.sections(${it.size})").also { s -> StartupTracer.end(s) } },
+            albumSectionMembersDbFlow
+                .onEach { StartupTracer.begin("albums.dep.sectionMembers(${it.size})").also { s -> StartupTracer.end(s) } },
+            sectionsEnabled
+                .onEach { StartupTracer.begin("albums.dep.sectionsEnabled=$it").also { s -> StartupTracer.end(s) } },
         ) { values ->
-            val combineSpan = StartupTracer.begin("albums.combine_body(${(values[0] as Resource<*>).data?.let { (it as? List<*>)?.size } ?: 0} albums)")
             @Suppress("UNCHECKED_CAST")
-            val result = values[0] as Resource<List<Album>>
+            val result = values[0] as Resource<List<Album>>?
+            @Suppress("UNCHECKED_CAST")
+            val blacklistedAlbums = values[2] as List<IgnoredAlbum>?
+            // Keep loading until both albums and blacklisted albums are loaded from their sources
+            if (result == null || blacklistedAlbums == null) return@combine AlbumState()
+            val combineSpan = StartupTracer.begin("albums.combine_body(${result.data?.size ?: 0} albums)")
             @Suppress("UNCHECKED_CAST")
             val pinnedAlbums = values[1] as List<PinnedAlbum>
-            @Suppress("UNCHECKED_CAST")
-            val blacklistedAlbums = values[2] as List<IgnoredAlbum>
             @Suppress("UNCHECKED_CAST")
             val lockedAlbums = values[3] as List<LockedAlbum>
             val settings = values[4] as TimelineSettings?
@@ -332,12 +571,22 @@ class MediaDistributorImpl @Inject constructor(
             val collections = values[10] as List<CollectionWithCount>
             @Suppress("UNCHECKED_CAST")
             val collectionAlbumIds = values[11] as Set<Long>
+            @Suppress("UNCHECKED_CAST")
+            val cloudAlbums = values[12] as List<CloudAlbum>
+            @Suppress("UNCHECKED_CAST")
+            val unsortedCloudAlbums = values[13] as List<Album>
+            @Suppress("UNCHECKED_CAST")
+            val sections = values[14] as List<AlbumSection>
+            @Suppress("UNCHECKED_CAST")
+            val sectionMembers = values[15] as List<AlbumSectionMember>
+            val areSectionsEnabled = values[16] as Boolean
             val newOrder = settings?.albumMediaOrder ?: albumOrder
             val thumbnailMap = thumbnails.associateBy { it.albumId }
-            val data = newOrder.sortAlbums(result.data ?: emptyList()).map { album ->
+            val localAlbums = newOrder.sortAlbums(result.data ?: emptyList()).map { album ->
                 val thumbnail = thumbnailMap[album.id] ?: return@map album
                 album.copy(uri = thumbnail.thumbnailUri)
             }
+            val data = localAlbums + cloudAlbums.map { it.toAlbum() } + unsortedCloudAlbums
             val cleanData = data.removeBlacklisted(blacklistedAlbums)
                 .mapPinned(pinnedAlbums)
                 .mapLocked(lockedAlbums)
@@ -369,27 +618,47 @@ class MediaDistributorImpl @Inject constructor(
                 }
                 .mapTo(HashSet()) { it.id }
 
+            val unpinnedUngrouped = mergedData.filter { album ->
+                !album.isPinned && album.id !in groupedMergedIds &&
+                    (if (album.isMerged) album.mergedAlbumIds.none { it in collectionAlbumIds }
+                     else album.id !in collectionAlbumIds)
+            }
+
+            val albumSections = if (areSectionsEnabled && sections.isNotEmpty()) {
+                val manualOverrides = sectionMembers.associate { it.albumId to it.sectionId }
+                val sectionIdByType = sections.associate { it.sectionType to it.id }
+                val classified = AlbumClassifier.classifyAlbums(
+                    unpinnedUngrouped, manualOverrides, sectionIdByType
+                )
+                sections
+                    .filter { it.isVisible }
+                    .map { section ->
+                        AlbumSectionWithAlbums(
+                            section = section,
+                            albums = classified[section.id] ?: emptyList()
+                        )
+                    }
+                    .filter { it.albums.isNotEmpty() }
+            } else emptyList()
+
             AlbumState(
                 albums = mergedData,
                 albumsWithBlacklisted = data,
-                albumsUnpinned = mergedData.filter { album ->
-                    !album.isPinned && album.id !in groupedMergedIds &&
-                        (if (album.isMerged) album.mergedAlbumIds.none { it in collectionAlbumIds }
-                         else album.id !in collectionAlbumIds)
-                },
+                albumsUnpinned = if (areSectionsEnabled && sections.isNotEmpty()) emptyList() else unpinnedUngrouped,
                 albumsPinned = mergedData.filter { album ->
                     album.isPinned &&
                         (if (album.isMerged) album.mergedAlbumIds.none { it in collectionAlbumIds }
                          else album.id !in collectionAlbumIds)
                 }.sortedBy { it.label },
                 albumGroups = albumGroups,
+                albumSections = albumSections,
                 collections = collections,
                 isLoading = false,
                 error = if (result is Resource.Error) result.message ?: "An error occurred" else ""
-            ).also { StartupTracer.end(combineSpan) }
-        }
-        }
-    }.stateIn(appScope, started = prioritySharingMethod, AlbumState())
+            ).also {
+                StartupTracer.end(combineSpan)
+            }
+        }.stateIn(appScope, started = prioritySharingMethod, AlbumState())
 
     /**
      * Media
@@ -403,76 +672,153 @@ class MediaDistributorImpl @Inject constructor(
     @Suppress("UNCHECKED_CAST")
     override fun albumTimelineMediaFlow(albumId: Long): StateFlow<MediaState<Media.UriMedia>> =
         albumTimelineCache.getOrPut(albumId) {
-            hasPermission.flatMapLatest { granted ->
-                if (!granted) flowOf(MediaState<Media.UriMedia>())
-                else {
-                    // Build a reactive media flow for this album.
-                    // For merged albums, we need the mergedAlbumIds which come from albumsFlow.
-                    // Use flatMapLatest on albumsFlow so that if the album becomes merged/unmerged,
-                    // we switch to the appropriate media source.
-                    albumsFlow.map { state -> state.albums.find { it.id == albumId } }
-                        .distinctUntilChanged()
-                        .flatMapLatest { album ->
-                            val mediaSource: Flow<Resource<List<Media.UriMedia>>> =
-                                if (album != null && album.isMerged && album.mergedAlbumIds.size > 1) {
-                                    // Combine media from all sub-albums reactively
-                                    val subFlows = album.mergedAlbumIds.map { subId ->
-                                        repository.mediaFlow(subId, null)
-                                    }
-                                    combine(subFlows) { results ->
-                                        val merged = results.flatMap { it.data ?: emptyList() }
-                                        Resource.Success(merged) as Resource<List<Media.UriMedia>>
-                                    }
-                                } else {
-                                    repository.mediaFlow(albumId, null)
-                                }
-                            combine(
-                                mediaSource,
-                                settingsFlow,
-                                blacklistedAlbumsFlow,
-                                dateFormatsFlow,
-                                albumMediaSortFlow,
-                                groupSimilarMedia,
-                                enabledGroupTypes
-                            ) { values ->
-                                val mediaResult = values[0] as Resource<List<Media.UriMedia>>
-                                val settings = values[1] as TimelineSettings?
-                                @Suppress("UNCHECKED_CAST")
-                                val blacklistedAlbums = values[2] as List<IgnoredAlbum>
-                                @Suppress("UNCHECKED_CAST")
-                                val dateFormats = values[3] as Triple<String, String, String>
-                                val albumSort = values[4] as Settings.Album.LastSort
-                                val shouldGroupSimilar = values[5] as Boolean
-                                @Suppress("UNCHECKED_CAST")
-                                val groupTypes = values[6] as Set<MediaGroupType>
+            if (isUnsortedCloudAlbumId(albumId)) {
+                unsortedCloudAlbumTimelineMediaFlow(albumId)
+            } else if (isCloudAlbumId(albumId)) {
+                cloudAlbumTimelineMediaFlow(albumId)
+            } else {
+                localAlbumTimelineMediaFlow(albumId)
+            }
+        }
 
-                                val (defaultDateFormat, extendedDateFormat, weeklyDateFormat) = dateFormats
-
-                                val sorter = when (albumSort.kind) {
-                                    FilterKind.DATE -> MediaOrder.Date(albumSort.orderType)
-                                    FilterKind.DATE_MODIFIED -> MediaOrder.DateModified(albumSort.orderType)
-                                    FilterKind.NAME -> MediaOrder.Label(albumSort.orderType)
-                                }
-
-                                val filtered = (mediaResult.data ?: emptyList()).toMutableList().apply {
-                                    removeAll { media -> blacklistedAlbums.any { it.shouldIgnore(media, albumId) } }
-                                }
-                                mapMediaToItem(
-                                    data = sorter.sortMedia(filtered),
-                                    error = if (mediaResult is Resource.Error) mediaResult.message ?: "" else "",
-                                    albumId = albumId,
-                                    groupByMonth = settings?.groupTimelineByMonth == true,
-                                    groupSimilarMedia = shouldGroupSimilar,
-                                    enabledGroupTypes = groupTypes,
-                                    defaultDateFormat = defaultDateFormat,
-                                    extendedDateFormat = extendedDateFormat,
-                                    weeklyDateFormat = weeklyDateFormat
-                                )
-                            }
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun cloudAlbumTimelineMediaFlow(albumId: Long): StateFlow<MediaState<Media.UriMedia>> =
+        _cloudAlbumsFlow
+            .map { albums ->
+                albums.find {
+                    (CloudAlbum.CLOUD_ALBUM_ID_BASE - stableIdHash(it.remoteId)) == albumId
+                }
+            }
+            .distinctUntilChanged()
+            .flatMapLatest { cloudAlbum ->
+                if (cloudAlbum == null) {
+                    flowOf(MediaState<Media.UriMedia>(error = "Cloud album not found"))
+                } else {
+                    combine(
+                        cloudRepository.getAlbumMedia(cloudAlbum.providerType, cloudAlbum.remoteId),
+                        settingsFlow,
+                        dateFormatsFlow,
+                        albumMediaSortFlow,
+                        _cloudCachedMedia
+                    ) { values ->
+                        @Suppress("UNCHECKED_CAST")
+                        val resource = values[0] as Resource<List<CloudMediaEntity>>
+                        val settings = values[1] as TimelineSettings?
+                        @Suppress("UNCHECKED_CAST")
+                        val dateFormats = values[2] as Triple<String, String, String>
+                        val albumSort = values[3] as Settings.Album.LastSort
+                        @Suppress("UNCHECKED_CAST")
+                        val cachedNonTrashed = values[4] as List<Media.UriMedia>
+                        val cachedIds = cachedNonTrashed.mapTo(HashSet()) { it.id }
+                        val allMedia = when (resource) {
+                            is Resource.Success -> resource.data?.map { it.toUriMedia() } ?: emptyList()
+                            is Resource.Error -> resource.data?.map { it.toUriMedia() } ?: emptyList()
                         }
+                        // Filter out items that are no longer in the non-trashed cache
+                        val media = if (cachedIds.isNotEmpty()) allMedia.filter { it.id in cachedIds } else allMedia
+                        val error = if (resource is Resource.Error) resource.message ?: "" else ""
+                        val (defaultDateFormat, extendedDateFormat, weeklyDateFormat) = dateFormats
+                        val sorter = when (albumSort.kind) {
+                            FilterKind.DATE -> MediaOrder.Date(albumSort.orderType)
+                            FilterKind.DATE_MODIFIED -> MediaOrder.DateModified(albumSort.orderType)
+                            FilterKind.NAME -> MediaOrder.Label(albumSort.orderType)
+                        }
+                        mapMediaToItem(
+                            data = sorter.sortMedia(media),
+                            error = error,
+                            albumId = albumId,
+                            groupByMonth = settings?.groupTimelineByMonth == true,
+                            groupByYear = settings?.groupTimelineByYear == true,
+                            defaultDateFormat = defaultDateFormat,
+                            extendedDateFormat = extendedDateFormat,
+                            weeklyDateFormat = weeklyDateFormat
+                        )
+                    }
                 }
             }.stateIn(appScope, sharingMethod, MediaState())
-        }
+
+    private fun unsortedCloudAlbumTimelineMediaFlow(albumId: Long): StateFlow<MediaState<Media.UriMedia>> =
+        combine(
+            _cloudCachedMedia,
+            _cloudAlbumMemberRemoteIds,
+            settingsFlow,
+            dateFormatsFlow,
+            albumMediaSortFlow
+        ) { cachedMedia, memberIds, settings, dateFormats, albumSort ->
+            val unsortedMedia = cachedMedia.filter { media ->
+                val remoteId = media.getUri().pathSegments.firstOrNull()
+                remoteId != null && remoteId !in memberIds
+            }
+            val (defaultDateFormat, extendedDateFormat, weeklyDateFormat) = dateFormats
+            val sorter = when (albumSort.kind) {
+                FilterKind.DATE -> MediaOrder.Date(albumSort.orderType)
+                FilterKind.DATE_MODIFIED -> MediaOrder.DateModified(albumSort.orderType)
+                FilterKind.NAME -> MediaOrder.Label(albumSort.orderType)
+            }
+            mapMediaToItem(
+                data = sorter.sortMedia(unsortedMedia),
+                error = "",
+                albumId = albumId,
+                groupByMonth = settings?.groupTimelineByMonth == true,
+                groupByYear = settings?.groupTimelineByYear == true,
+                defaultDateFormat = defaultDateFormat,
+                extendedDateFormat = extendedDateFormat,
+                weeklyDateFormat = weeklyDateFormat
+            )
+        }.stateIn(appScope, sharingMethod, MediaState())
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Suppress("UNCHECKED_CAST")
+    private fun localAlbumTimelineMediaFlow(albumId: Long): StateFlow<MediaState<Media.UriMedia>> =
+        hasPermission.flatMapLatest { granted ->
+            if (!granted) flowOf(MediaState())
+            else {
+                combine(
+                    repository.mediaFlow(albumId, null),
+                    settingsFlow,
+                    blacklistedAlbumsFlow,
+                    dateFormatsFlow,
+                    albumMediaSortFlow,
+                    groupSimilarMedia,
+                    enabledGroupTypes
+                ) { values ->
+                    val mediaResult = values[0] as Resource<List<Media.UriMedia>>
+                    val settings = values[1] as TimelineSettings?
+                    @Suppress("UNCHECKED_CAST")
+                    val blacklistedAlbums = values[2] as List<IgnoredAlbum>
+                    @Suppress("UNCHECKED_CAST")
+                    val dateFormats = values[3] as Triple<String, String, String>
+                    val albumSort = values[4] as Settings.Album.LastSort
+                    val shouldGroupSimilar = values[5] as Boolean
+                    @Suppress("UNCHECKED_CAST")
+                    val groupTypes = values[6] as Set<MediaGroupType>
+
+                    val (defaultDateFormat, extendedDateFormat, weeklyDateFormat) = dateFormats
+
+                    val sorter = when (albumSort.kind) {
+                        FilterKind.DATE -> MediaOrder.Date(albumSort.orderType)
+                        FilterKind.DATE_MODIFIED -> MediaOrder.DateModified(albumSort.orderType)
+                        FilterKind.NAME -> MediaOrder.Label(albumSort.orderType)
+                    }
+
+                    val filtered = (mediaResult.data ?: emptyList()).toMutableList().apply {
+                        removeAll { media -> blacklistedAlbums.any { it.shouldIgnore(media, albumId) } }
+                    }
+                    mapMediaToItem(
+                        data = sorter.sortMedia(filtered),
+                        error = if (mediaResult is Resource.Error) mediaResult.message ?: "" else "",
+                        albumId = albumId,
+                        groupByMonth = settings?.groupTimelineByMonth == true,
+                        groupByYear = settings?.groupTimelineByYear == true,
+                        groupSimilarMedia = shouldGroupSimilar,
+                        enabledGroupTypes = groupTypes,
+                        defaultDateFormat = defaultDateFormat,
+                        extendedDateFormat = extendedDateFormat,
+                        weeklyDateFormat = weeklyDateFormat
+                    )
+                }
+            }
+        }.stateIn(appScope, prioritySharingMethod, MediaState())
 
 
     override val favoritesMediaFlow: SharedFlow<MediaState<Media.UriMedia>> =
@@ -497,6 +843,15 @@ class MediaDistributorImpl @Inject constructor(
         else {
             StartupTracer.begin("$tag.permission_granted→combine_setup")
             combineEmissionCount = 0
+            val isMainTimeline = albumId == -1L && target == null
+            val isFavorites = target == Constants.Target.TARGET_FAVORITES
+            val isTrash = target == Constants.Target.TARGET_TRASH
+            val cloudMediaSource: Flow<List<Media.UriMedia>> = when {
+                isMainTimeline -> _cloudCachedMedia
+                isFavorites -> _cloudCachedFavorites
+                isTrash -> _cloudCachedTrashed
+                else -> flowOf(emptyList())
+            }
             combine(
             repository.mediaFlow(albumId, target)
                 .onEach { StartupTracer.begin("$tag.mediaStore_first_emit(${it.data?.size ?: 0} items)").also { s -> StartupTracer.end(s) } },
@@ -513,7 +868,9 @@ class MediaDistributorImpl @Inject constructor(
             groupSimilarMedia
                 .onEach { StartupTracer.begin("$tag.dep.groupSimilar=$it").also { s -> StartupTracer.end(s) } },
             enabledGroupTypes
-                .onEach { StartupTracer.begin("$tag.dep.enabledGroupTypes(${it.size})").also { s -> StartupTracer.end(s) } }
+                .onEach { StartupTracer.begin("$tag.dep.enabledGroupTypes(${it.size})").also { s -> StartupTracer.end(s) } },
+            cloudMediaSource
+                .onEach { StartupTracer.begin("$tag.dep.cloudMedia(${it.size})").also { s -> StartupTracer.end(s) } }
         ) { values ->
             combineEmissionCount++
             val combineSpan = StartupTracer.begin("$tag.combine_body(#$combineEmissionCount)")
@@ -529,6 +886,8 @@ class MediaDistributorImpl @Inject constructor(
             val shouldGroupSimilar = values[6] as Boolean
             @Suppress("UNCHECKED_CAST")
             val groupTypes = values[7] as Set<MediaGroupType>
+            @Suppress("UNCHECKED_CAST")
+            val cloudMedia = values[8] as List<Media.UriMedia>
             
             val (defaultDateFormat, extendedDateFormat, weeklyDateFormat) = dateFormats
             
@@ -552,10 +911,36 @@ class MediaDistributorImpl @Inject constructor(
             val lockedAlbumIds = lockedAlbums.mapTo(HashSet()) { it.id }
             val data = (result.data ?: emptyList()).toMutableList().apply {
                 removeAll { media -> blacklistedAlbums.any { it.shouldIgnore(media, albumId) } }
-                // Hide media from locked albums in the main timeline
-                if (albumId == -1L && target == null) {
+                if (isMainTimeline) {
                     removeAll { media -> media.albumID in lockedAlbumIds }
                 }
+                if (isMainTimeline || isFavorites || isTrash) {
+                    addAll(cloudMedia)
+                }
+            }
+            // Pre-compute cloud→local group key overrides so cloud items
+            // are grouped with their local counterparts by the standard groupBy.
+            val cloudOverrides = if (
+                shouldGroupSimilar &&
+                MediaGroupType.CLOUD_LOCAL in groupTypes &&
+                cloudMedia.isNotEmpty()
+            ) {
+                val localByBasename = HashMap<String, String>(data.size)
+                for (m in data) {
+                    if (!m.isCloud) {
+                        localByBasename.putIfAbsent(m.cloudGroupKey, m.groupKey)
+                    }
+                }
+                val overrides = HashMap<Long, String>(cloudMedia.size)
+                for (c in cloudMedia) {
+                    val localKey = localByBasename[c.cloudGroupKey]
+                    if (localKey != null) {
+                        overrides[c.id] = localKey
+                    }
+                }
+                overrides
+            } else {
+                emptyMap()
             }
             val mapSpan = StartupTracer.begin("$tag.mapMediaToItem(${data.size} items)")
             val state = mapMediaToItem(
@@ -563,8 +948,10 @@ class MediaDistributorImpl @Inject constructor(
                 error = result.message ?: "",
                 albumId = albumId,
                 groupByMonth = settings?.groupTimelineByMonth == true,
+                groupByYear = settings?.groupTimelineByYear == true,
                 groupSimilarMedia = shouldGroupSimilar,
                 enabledGroupTypes = groupTypes,
+                cloudGroupKeyOverrides = cloudOverrides,
                 defaultDateFormat = defaultDateFormat,
                 extendedDateFormat = extendedDateFormat,
                 weeklyDateFormat = weeklyDateFormat
@@ -581,8 +968,19 @@ class MediaDistributorImpl @Inject constructor(
         // Fire-and-forget: don't block data delivery on the DB insert
         appScope.launch {
             val rescanSpan = StartupTracer.begin("$tag.triggerRescan(${it.media.size} items)")
-            triggerRescanForMissingDateTaken(it.media)
+            val scannedItems = triggerRescanForMissingDateTaken(it.media)
             StartupTracer.end(rescanSpan)
+            // Insert scanned IDs in a separate step so the rescan span stays fast.
+            // Defer the heavy DB write well past startup so it doesn't block
+            // Room's DAO Flow InvalidationTracker setup on the write connection.
+            // With a warm page cache the insert takes ~5ms; with a cold cache
+            // it takes 650ms+ and delays settingsFlow/all #2 combines.
+            if (scannedItems.isNotEmpty()) {
+                delay(3000)
+                val dbSpan = StartupTracer.begin("rescan.insertScannedIds(${scannedItems.size})")
+                scannedMediaDao.insertAll(scannedItems)
+                StartupTracer.end(dbSpan)
+            }
         }
         if (it.media.isNotEmpty()) {
             StartupTracer.begin("$tag.READY(${it.media.size} items, ${it.mappedMedia.size} mapped)").also { s -> StartupTracer.end(s) }
@@ -618,21 +1016,25 @@ class MediaDistributorImpl @Inject constructor(
         gpsLocationNameCountry: String
     ): Flow<MediaState<Media.UriMedia>> = combine(
         repository.getMetadata(),
-        repository.getCompleteMedia()
-    ) { metadata, media ->
+        timelineMediaFlow,
+        groupSimilarMedia,
+        enabledGroupTypes
+    ) { metadata, timelineState, shouldGroupSimilar, groupTypes ->
         val matchingMediaIds = metadata
             .filter {
                 it.gpsLocationNameCity == gpsLocationNameCity &&
                         it.gpsLocationNameCountry == gpsLocationNameCountry
             }
             .mapTo(HashSet()) { it.mediaId }
-        val filteredMedia = media.data.orEmpty().filter {
+        val filteredMedia = timelineState.media.filter {
             it.id in matchingMediaIds
-        }
+        }.deduplicateCloudLocal()
         return@combine mapMediaToItem(
             data = filteredMedia,
-            error = media.message ?: "",
+            error = timelineState.error,
             albumId = -1L,
+            groupSimilarMedia = shouldGroupSimilar,
+            enabledGroupTypes = groupTypes,
             defaultDateFormat = dateFormatsFlow.value.first,
             extendedDateFormat = dateFormatsFlow.value.second,
             weeklyDateFormat = dateFormatsFlow.value.third
@@ -643,8 +1045,9 @@ class MediaDistributorImpl @Inject constructor(
         repository.getMetadata(),
         timelineMediaFlow
     ) { metadata, timelineState ->
-        val mediaById = HashMap<Long, Media.UriMedia>(timelineState.media.size)
-        for (m in timelineState.media) { mediaById[m.id] = m }
+        val dedupedMedia = timelineState.media.deduplicateCloudLocal()
+        val mediaById = HashMap<Long, Media.UriMedia>(dedupedMedia.size)
+        for (m in dedupedMedia) { mediaById[m.id] = m }
 
         val locationGroupMap = LinkedHashMap<String, Media.UriMedia>()
         val geoList = ArrayList<GeoMedia>(metadata.size / 2)
@@ -704,6 +1107,7 @@ class MediaDistributorImpl @Inject constructor(
             error = result.message ?: "",
             albumId = -1L,
             groupByMonth = settings?.groupTimelineByMonth == true,
+            groupByYear = settings?.groupTimelineByYear == true,
             defaultDateFormat = defaultDateFormat,
             extendedDateFormat = extendedDateFormat,
             weeklyDateFormat = weeklyDateFormat
@@ -752,6 +1156,7 @@ class MediaDistributorImpl @Inject constructor(
                 error = allMediaResult.message ?: "",
                 albumId = collectionId,
                 groupByMonth = settings?.groupTimelineByMonth == true,
+                groupByYear = settings?.groupTimelineByYear == true,
                 groupSimilarMedia = shouldGroupSimilar,
                 enabledGroupTypes = groupTypes,
                 defaultDateFormat = defaultDateFormat,
@@ -779,9 +1184,9 @@ class MediaDistributorImpl @Inject constructor(
      * to read EXIF immediately, populating DATE_TAKEN and triggering a
      * ContentResolver change notification that refreshes the timeline.
      */
-    private suspend fun triggerRescanForMissingDateTaken(media: List<Media.UriMedia>) {
+    private fun triggerRescanForMissingDateTaken(media: List<Media.UriMedia>): List<ScannedMedia> {
         val toScan = media.filter { it.takenTimestamp == null && rescanRequestedIds.add(it.id) }
-        if (toScan.isEmpty()) return
+        if (toScan.isEmpty()) return emptyList()
         StartupTracer.begin("rescan.found(${toScan.size}/${media.size} missing DATE_TAKEN)").also { s -> StartupTracer.end(s) }
         val paths = toScan.mapNotNull { it.path.takeIf { p -> p.isNotBlank() } }.toTypedArray()
         val mimeTypes = toScan.map { it.mimeType }.toTypedArray()
@@ -790,9 +1195,7 @@ class MediaDistributorImpl @Inject constructor(
             MediaScannerConnection.scanFile(context, paths, mimeTypes, null)
             StartupTracer.end(scanSpan)
         }
-        val dbSpan = StartupTracer.begin("rescan.insertScannedIds(${toScan.size})")
-        scannedMediaDao.insertAll(toScan.map { ScannedMedia(it.id) })
-        StartupTracer.end(dbSpan)
+        return toScan.map { ScannedMedia(it.id) }
     }
 
     private fun mergeSubfolderAlbums(
@@ -862,6 +1265,20 @@ class MediaDistributorImpl @Inject constructor(
                 )
             }
         }
+    }
+
+    /**
+     * Remove cloud duplicates when a local counterpart with the same
+     * [cloudGroupKey] exists. Keeps local items and cloud-only items.
+     */
+    private fun List<Media.UriMedia>.deduplicateCloudLocal(): List<Media.UriMedia> {
+        if (none { it.isCloud }) return this
+        val localKeys = HashSet<String>()
+        for (m in this) {
+            if (!m.isCloud) localKeys.add(m.cloudGroupKey)
+        }
+        if (localKeys.isEmpty()) return this
+        return filter { !it.isCloud || it.cloudGroupKey !in localKeys }
     }
 
 }

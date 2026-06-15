@@ -34,8 +34,8 @@
 ## Frequent Questions
 - Why 'ReFra'?
     - Refra is a short form of 'refraction', which is the bending of light when it passes through different mediums. This app aims to refract our perception of media files, making them more accessible and easier to manage.
-- What is the `nomaps` variant?
-    - The `nomaps` variant is a version of the app that does not include the maps features - Map Preview, Location Map Viewer. This is useful for users who do not need this feature and want to remove unecessary permissions like INTERNET access.
+- What is the `offline` variant?
+    - The `offline` variant is a version of the app with all online features removed — maps, cloud provider support (Immich, ownCloud, etc.), and any functionality that requires an internet connection, even on a local network. This is useful for users who want a fully self-contained gallery with no network permissions.
 - Why Google Play version is 'Paid'?
     - It's just another way to support the project while getting back automatic updates via Google Play
 - Why Android 11 is the minimum version required?
@@ -50,4 +50,4 @@
 - Will you add [X] feature?
     - Please open a new feature request under 'Issues' tab and if the feature will be considered useful and possible can be added.
 - Can you remove permission [X]?
-    - Several permissions (e.g. Internet connectivity, location) are for showing a map preview of your current photo location data. If you do not need this feature, you can download a `nomaps` release from the [Releases page](https://github.com/IacobIonut01/Gallery/releases).
+    - Several permissions (e.g. Internet connectivity, location) are for showing a map preview of your current photo location data. If you do not need this feature, you can download an `offline` release from the [Releases page](https://github.com/IacobIonut01/ReFra/releases).

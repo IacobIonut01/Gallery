@@ -12,6 +12,20 @@ plugins {
     id("kotlin-parcelize")
     alias(libs.plugins.kotlinSerialization)
     id("apk-versioning")
+    id("manifest-config")
+}
+
+manifestConfig {
+    if (isOffline) {
+        stripPermissions.set(
+            listOf(
+                "android.permission.INTERNET",
+                "android.permission.ACCESS_WIFI_STATE",
+                "android.permission.ACCESS_NETWORK_STATE",
+                "android.permission.CHANGE_WIFI_MULTICAST_STATE"
+            )
+        )
+    }
 }
 
 val abiVersionCodes = mapOf(
@@ -25,9 +39,10 @@ val abiVersionCodes = mapOf(
 apkVersioning {
     flavorVersionCodes.set(abiVersionCodes)
     versionCodeMultiplier.set(10)
-    outputFileName.set("{appName}-{versionName}-{versionCode}{suffix}-{flavorName}-{buildType}")
+    outputFileName.set("{appName}-{versionName}-{versionCode}{suffix}-{ml}-{abi}-{buildType}")
     variables.put("appName", "ReFra")
-    variables.put("suffix", if (includeMaps) "" else "-nomaps")
+    val offlineSuffix = if (isOffline) "-offline" else ""
+    variables.put("suffix", offlineSuffix)
 }
 
 android {
@@ -38,15 +53,15 @@ android {
         applicationId = "com.dot.gallery"
         minSdk = 29
         targetSdk = 37
-        versionCode = 43001
-        versionName = "4.3.0"
+        versionCode = 50101
+        versionName = "5.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
-        val mapsPrefix = if (includeMaps) "" else "-nomaps"
-        base.archivesName.set("ReFra-${versionName}-$versionCode$mapsPrefix")
+        val offlinePrefix = if (isOffline) "-offline" else ""
+        base.archivesName.set("ReFra-${versionName}-$versionCode$offlinePrefix")
     }
 
     lint.baseline = file("lint-baseline.xml")
@@ -66,13 +81,17 @@ android {
             versionNameSuffix = "-debug"
             manifestPlaceholders["appProvider"] = "com.dot.gallery.debug.media_provider"
             buildConfigField("Boolean", "ALLOW_ALL_FILES_ACCESS", "$allowAllFilesAccess")
+            buildConfigField("Boolean", "OFFLINE_MODE", "$isOffline")
             buildConfigField("Boolean", "MAPS_ENABLED", "$includeMaps")
+            buildConfigField("Boolean", "IMMICH_ENABLED", "$includeImmich")
+            buildConfigField("Boolean", "OWNCLOUD_ENABLED", "$includeOwncloud")
             buildConfigField(
                 "String",
                 "CONTENT_AUTHORITY",
                 "\"com.dot.gallery.debug.media_provider\""
             )
             buildConfigField("Boolean", "ENABLE_INDEXING", "false")
+            buildConfigField("Boolean", "ALLOW_INSECURE_TLS", "true")
         }
         getByName("release") {
             manifestPlaceholders += mapOf(
@@ -88,9 +107,13 @@ android {
             )
             signingConfig = signingConfigs.getByName("release")
             buildConfigField("Boolean", "ALLOW_ALL_FILES_ACCESS", "$allowAllFilesAccess")
+            buildConfigField("Boolean", "OFFLINE_MODE", "$isOffline")
             buildConfigField("Boolean", "MAPS_ENABLED", "$includeMaps")
+            buildConfigField("Boolean", "IMMICH_ENABLED", "$includeImmich")
+            buildConfigField("Boolean", "OWNCLOUD_ENABLED", "$includeOwncloud")
             buildConfigField("String", "CONTENT_AUTHORITY", "\"com.dot.gallery.media_provider\"")
             buildConfigField("Boolean", "ENABLE_INDEXING", "true")
+            buildConfigField("Boolean", "ALLOW_INSECURE_TLS", "true")
         }
         create("staging") {
             initWith(getByName("release"))
@@ -105,8 +128,28 @@ android {
                 "CONTENT_AUTHORITY",
                 "\"com.dot.staging.debug.media_provider\""
             )
+            buildConfigField("Boolean", "ALLOW_ALL_FILES_ACCESS", "$allowAllFilesAccess")
             buildConfigField("Boolean", "ENABLE_INDEXING", "true")
+            buildConfigField("Boolean", "OFFLINE_MODE", "$isOffline")
             buildConfigField("Boolean", "MAPS_ENABLED", "$includeMaps")
+            buildConfigField("Boolean", "IMMICH_ENABLED", "$includeImmich")
+            buildConfigField("Boolean", "OWNCLOUD_ENABLED", "$includeOwncloud")
+            buildConfigField("Boolean", "ALLOW_INSECURE_TLS", "true")
+        }
+        create("gplay") {
+            initWith(getByName("release"))
+            matchingFallbacks += "release"
+            applicationIdSuffix = ".gplay"
+            ndk.debugSymbolLevel = "FULL"
+            manifestPlaceholders["appProvider"] = "com.dot.gallery.gplay.media_provider"
+            buildConfigField("Boolean", "ALLOW_ALL_FILES_ACCESS", "false")
+            buildConfigField("Boolean", "OFFLINE_MODE", "$isOffline")
+            buildConfigField("Boolean", "MAPS_ENABLED", "$includeMaps")
+            buildConfigField("Boolean", "IMMICH_ENABLED", "$includeImmich")
+            buildConfigField("Boolean", "OWNCLOUD_ENABLED", "$includeOwncloud")
+            buildConfigField("String", "CONTENT_AUTHORITY", "\"com.dot.gallery.gplay.media_provider\"")
+            buildConfigField("Boolean", "ENABLE_INDEXING", "true")
+            buildConfigField("Boolean", "ALLOW_INSECURE_TLS", "false")
         }
     }
 
@@ -133,11 +176,28 @@ android {
 
     sourceSets {
         getByName("main") {
-            // Conditional maps/nomaps source set
-            if (includeMaps) {
+            // Conditional maps/offline source set
+            if (!isOffline) {
                 kotlin.srcDir("src/maps/kotlin")
             } else {
-                kotlin.srcDir("src/nomaps/kotlin")
+                kotlin.srcDir("src/offline/kotlin")
+            }
+            // Conditional cloud networking source set
+            if (!isOffline) {
+                kotlin.srcDir("src/cloud/kotlin")
+            } else {
+                kotlin.srcDir("src/nocloud/kotlin")
+            }
+            // Conditional cloud provider source sets
+            if (includeImmich) {
+                kotlin.srcDir("src/immich/kotlin")
+            } else {
+                kotlin.srcDir("src/noimmich/kotlin")
+            }
+            if (includeOwncloud) {
+                kotlin.srcDir("src/owncloud/kotlin")
+            } else {
+                kotlin.srcDir("src/noowncloud/kotlin")
             }
         }
         // For withML APK builds, include ML model assets directly
@@ -146,7 +206,7 @@ android {
             it.contains("bundle", ignoreCase = true)
         }
         if (!isBundleBuild) {
-            maybeCreate("withML").apply {
+            maybeCreate("WithML").apply {
                 assets.srcDirs("../ml-models/src/main/assets")
             }
         }
@@ -164,11 +224,11 @@ android {
                 }
             }
         }
-        create("withML") {
+        create("WithML") {
             dimension = "ml"
             buildConfigField("Boolean", "ML_MODELS_BUNDLED", "true")
         }
-        create("noML") {
+        create("NoML") {
             dimension = "ml"
             buildConfigField("Boolean", "ML_MODELS_BUNDLED", "false")
         }
@@ -266,6 +326,10 @@ dependencies {
     // Coders
     implementation(libs.jxl.coder.coil)
     implementation(libs.avif.coder.coil)
+    // Vendored AAR resolved via the flatDir repo declared in settings.gradle.kts; @aar is required
+    // so flatDir looks for jp2-android-1.0.3.aar instead of a non-existent .jar.
+    implementation("${libs.jp2.android.get().module}:${libs.jp2.android.get().version}@aar")
+    implementation(libs.androidsvg)
 
     // Sketch
     implementation(libs.sketch.compose)
@@ -308,6 +372,7 @@ dependencies {
 
     // Subsampling
     implementation(libs.zoomimage.compose.glide)
+    implementation(libs.zoomimage.compose.sketch)
 
     // Splashscreen
     implementation(libs.androidx.core.splashscreen)
@@ -323,7 +388,7 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
 
     // Composable - Scrollbar
-    implementation(libs.lazycolumnscrollbar)
+    implementation(project(":libs:scrollbar"))
 
     // ONNX Runtime (CPU + NNAPI)
     implementation(libs.onnxruntime.android)
@@ -337,6 +402,18 @@ dependencies {
         implementation(libs.maplibre.native)
     }
 
+    implementation(libs.okhttp)
+    if (includeImmich || includeOwncloud) {
+        implementation(libs.okhttp.logging)
+    }
+
+    // Immich
+    if (includeImmich) {
+        implementation(libs.retrofit)
+        implementation(libs.retrofit.kotlinx.serialization)
+        implementation(libs.retrofit.converter.gson)
+    }
+
     // Tests
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)
@@ -345,17 +422,20 @@ dependencies {
     debugRuntimeOnly(libs.compose.ui.test.manifest)
 }
 
-val includeMaps: Boolean
+val isOffline: Boolean
     get() {
         val fl = rootProject.file("app.properties")
         return try {
             val properties = Properties()
             properties.load(FileInputStream(fl))
-            properties.getProperty("INCLUDE_MAPS", "true").toBoolean()
+            properties.getProperty("OFFLINE", "false").toBoolean()
         } catch (_: Exception) {
-            true
+            false
         }
     }
+
+val includeMaps: Boolean
+    get() = !isOffline
 
 val allowAllFilesAccess: Boolean
     get() {
@@ -367,5 +447,31 @@ val allowAllFilesAccess: Boolean
             properties.getProperty("ALL_FILES_ACCESS", "true").toBoolean()
         } catch (_: Exception) {
             true
+        }
+    }
+
+val includeImmich: Boolean
+    get() {
+        if (isOffline) return false
+        val fl = rootProject.file("app.properties")
+        return try {
+            val properties = Properties()
+            properties.load(FileInputStream(fl))
+            properties.getProperty("INCLUDE_IMMICH", "false").toBoolean()
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+val includeOwncloud: Boolean
+    get() {
+        if (isOffline) return false
+        val fl = rootProject.file("app.properties")
+        return try {
+            val properties = Properties()
+            properties.load(FileInputStream(fl))
+            properties.getProperty("INCLUDE_OWNCLOUD", "false").toBoolean()
+        } catch (_: Exception) {
+            false
         }
     }

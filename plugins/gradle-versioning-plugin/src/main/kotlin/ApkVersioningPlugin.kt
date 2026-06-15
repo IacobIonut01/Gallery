@@ -49,12 +49,16 @@ class ApkVersioningPlugin : Plugin<Project> {
 
                 // Only rename APK when outputFileName is explicitly set
                 if (extension.outputFileName.isPresent) {
+                    // Per-dimension flavor placeholders (e.g. {abi}, {ml})
+                    val dimensionVars = variant.productFlavors.associate { (dimension, name) ->
+                        dimension to name
+                    }
                     val builtins = mapOf(
                         "versionName" to versionName,
                         "versionCode" to computedVersionCode.toString(),
                         "flavorName" to flavorName,
                         "buildType" to buildType
-                    )
+                    ) + dimensionVars
                     val allVars = builtins + extension.variables.get()
                     val resolvedName = allVars.entries.fold(extension.outputFileName.get()) { name, (key, value) ->
                         name.replace("{$key}", value)

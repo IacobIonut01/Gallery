@@ -52,6 +52,11 @@ import com.dot.gallery.feature_node.domain.model.GeoMedia
 import com.dot.gallery.feature_node.domain.model.LocationMedia
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
 import com.dot.gallery.feature_node.domain.util.getUri
+import com.dot.gallery.feature_node.domain.util.isCloud
+import androidx.compose.material.icons.outlined.Cloud
+import androidx.compose.material3.Icon
+import androidx.compose.ui.graphics.Color
+import com.dot.gallery.core.presentation.components.util.advancedShadow
 import com.dot.gallery.feature_node.presentation.library.components.LibrarySmallItem
 import com.dot.gallery.feature_node.presentation.util.GlideInvalidation
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
@@ -242,19 +247,39 @@ internal fun MediaGridPanel(
                 }
 
                 is MapGridItem.MediaCell -> {
-                    GlideImage(
-                        model = item.geoMedia.media.getUri(),
-                        contentDescription = item.geoMedia.media.label,
-                        contentScale = ContentScale.Crop,
+                    Box(
                         modifier = Modifier
                             .aspectRatio(1f)
-                            .clickable { onMediaClick(item.geoMedia) },
-                        requestBuilderTransform = {
-                            it.centerCrop()
-                                .diskCacheStrategy(DiskCacheStrategy.ALL)
-                                .signature(GlideInvalidation.signature(item.geoMedia.media))
+                            .clickable { onMediaClick(item.geoMedia) }
+                    ) {
+                        GlideImage(
+                            model = item.geoMedia.media.getUri(),
+                            contentDescription = item.geoMedia.media.label,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize(),
+                            requestBuilderTransform = {
+                                it.centerCrop()
+                                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                                    .signature(GlideInvalidation.signature(item.geoMedia.media))
+                            }
+                        )
+                        if (item.geoMedia.media.isCloud) {
+                            Icon(
+                                modifier = Modifier
+                                    .align(Alignment.BottomStart)
+                                    .padding(6.dp)
+                                    .size(10.dp)
+                                    .advancedShadow(
+                                        cornersRadius = 5.dp,
+                                        shadowBlurRadius = 4.dp,
+                                        alpha = 0.3f
+                                    ),
+                                imageVector = Icons.Outlined.Cloud,
+                                contentDescription = null,
+                                tint = Color.White.copy(alpha = 0.7f)
+                            )
                         }
-                    )
+                    }
                 }
             }
         }

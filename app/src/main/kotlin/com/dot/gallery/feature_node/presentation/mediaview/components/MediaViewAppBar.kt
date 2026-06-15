@@ -55,10 +55,10 @@ import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.util.isVideo
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
+import com.dot.gallery.feature_node.presentation.util.hazeEffectScaled
 import com.dot.gallery.ui.theme.BlackScrim
 import com.dot.gallery.ui.theme.WhiterBlackScrim
 import com.dot.gallery.ui.theme.isDarkTheme
-import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 
@@ -156,7 +156,7 @@ fun MediaViewAppBar(
                         .padding(horizontal = 8.dp)
                         .clip(CircleShape)
                         .then(backgroundModifier)
-                        .hazeEffect(
+                        .hazeEffectScaled(
                             state = LocalHazeState.current,
                             style = HazeMaterials.ultraThin(
                                 containerColor = surfaceContainer
@@ -199,7 +199,7 @@ fun MediaViewAppBar(
                         .padding(horizontal = 8.dp)
                         .clip(CircleShape)
                         .then(backgroundModifier)
-                        .hazeEffect(
+                        .hazeEffectScaled(
                             state = LocalHazeState.current,
                             style = HazeMaterials.ultraThin(
                                 containerColor = surfaceContainer

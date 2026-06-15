@@ -18,8 +18,11 @@ package com.dot.gallery.libs.panoramaviewer
  * @property pitch Vertical rotation in degrees.
  *   Positive values look up, negative values look down.
  *   Clamped to ±90° for spheres, ±45° for cylinders.
- * @property fov Current field of view in degrees (zoomed via pinch gesture).
+ * @property fov Current vertical field of view in degrees (zoomed via pinch gesture).
  *   Range: 30°–110°.
+ * @property horizontalFov The effective horizontal field of view in degrees, derived
+ *   from [fov] and the current viewport aspect ratio. Reflects the actual visible
+ *   horizontal span and updates when the device rotates between portrait and landscape.
  * @property arcDegrees The horizontal angular span of the panorama geometry.
  *   360° for full spheres and full-wrap cylinders; less for partial panoramas.
  * @property projectionType The active projection mode.
@@ -30,6 +33,7 @@ data class CameraState(
     val yaw: Float = 0f,
     val pitch: Float = 0f,
     val fov: Float = PanoramaRenderer.DEFAULT_FOV,
+    val horizontalFov: Float = PanoramaRenderer.DEFAULT_FOV,
     val arcDegrees: Float = 360f,
     val projectionType: ProjectionType = ProjectionType.SPHERE
 )

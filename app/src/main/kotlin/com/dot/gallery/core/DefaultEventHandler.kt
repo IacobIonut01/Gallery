@@ -12,7 +12,12 @@ val LocalEventHandler = compositionLocalOf<EventHandler> {
 
 class DefaultEventHandler : EventHandler {
 
-    private val updater = Channel<UIEvent>()
+    // Use an unlimited buffer so trySend never drops events. A zero-capacity
+    // (rendezvous) channel only delivers when a receiver is suspended at that exact
+    // moment; under main-thread load (e.g. constant recomposition during video
+    // playback) the collector is often busy and events like NavigationUpEvent were
+    // silently dropped, causing the back gesture to be ignored on videos.
+    private val updater = Channel<UIEvent>(capacity = Channel.UNLIMITED)
     override val updaterFlow = updater.receiveAsFlow()
     override var navigateAction: (String) -> Unit = {}
     override var toggleNavigationBarAction: (Boolean) -> Unit = {}

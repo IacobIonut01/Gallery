@@ -62,7 +62,10 @@ class MediaViewViewModel @Inject constructor(
     fun ensureMetadataAvailable(media: Media?, metadataState: MediaMetadataState) {
         if (media == null) return
         if (media.id == lastMetadataFetchId) return
-        if (metadataState.metadata.any { it.mediaId == media.id }) return
+        val existing = metadataState.metadata.firstOrNull { it.mediaId == media.id }
+        if (existing != null && (existing.imageWidth > 0 || existing.manufacturerName != null)) {
+            return
+        }
         lastMetadataFetchId = media.id
         viewModelScope.launch(Dispatchers.IO) {
             repository.collectMetadataFor(media)

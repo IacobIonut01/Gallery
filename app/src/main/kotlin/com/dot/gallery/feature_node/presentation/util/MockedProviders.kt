@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import com.dot.gallery.cloud.core.SyncState
 import com.dot.gallery.core.MediaDistributor
 import com.dot.gallery.core.presentation.components.MediaImageRenderer
 import com.dot.gallery.core.MediaHandler
@@ -55,6 +56,7 @@ open class MockedMediaDistributor: MediaDistributor {
     override val hasPermission: MutableStateFlow<Boolean> = MutableStateFlow(true)
     override val dateFormatsFlow: StateFlow<Triple<String, String, String>> = MutableStateFlow(Triple("", "", ""))
     override var groupByMonth: Boolean = false
+    override var groupByYear: Boolean = false
     override val groupSimilarMedia: StateFlow<Boolean> = MutableStateFlow(false)
     override val enabledGroupTypes: StateFlow<Set<MediaGroupType>> = MutableStateFlow(MediaGroupType.entries.toSet())
     override val mergeAlbumsByName: StateFlow<Boolean> = MutableStateFlow(false)
@@ -68,6 +70,7 @@ open class MockedMediaDistributor: MediaDistributor {
     override fun albumTimelineMediaFlow(albumId: Long): StateFlow<MediaState<Media.UriMedia>> = MutableStateFlow(MediaState())
     override val favoritesMediaFlow: StateFlow<MediaState<Media.UriMedia>> = MutableStateFlow(MediaState())
     override val trashMediaFlow: StateFlow<MediaState<Media.UriMedia>> = MutableStateFlow(MediaState())
+    override val cloudSyncStates: StateFlow<Map<Long, SyncState>> = MutableStateFlow(emptyMap())
     override val metadataFlow: StateFlow<MediaMetadataState> = MutableStateFlow(MediaMetadataState())
     override val locationsMediaFlow: SharedFlow<List<LocationMedia>> = MutableStateFlow(emptyList())
     override val geoMediaFlow: StateFlow<List<GeoMedia>> = MutableStateFlow(emptyList())
@@ -166,6 +169,7 @@ class MockedMediaHandler: MediaHandler {
         media: T,
         degrees: Int
     ): UUID = UUID.randomUUID()
+    override suspend fun <T : Media> downloadCloudMedia(mediaList: List<T>): Result<Int> = Result.success(0)
 }
 
 class MockedMediaSelector: MediaSelector {

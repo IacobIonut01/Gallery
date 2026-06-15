@@ -28,12 +28,18 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Archive
+import androidx.compose.material.icons.outlined.Backup
+import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.FolderOff
 import androidx.compose.material.icons.outlined.ImageSearch
+import androidx.compose.material.icons.outlined.Link
+import androidx.compose.material.icons.outlined.People
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.Icon
@@ -45,7 +51,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -148,6 +153,9 @@ fun LibraryScreen(
     val modelStatus by viewModel.modelStatus.collectAsStateWithLifecycle()
     val aiAvailable = viewModel.areAiFeaturesAvailable
     var noClassification by rememberNoClassification()
+
+    // Cloud state
+    val cloudState by viewModel.cloudState.collectAsStateWithLifecycle()
 
     Scaffold(
         modifier = Modifier.padding(
@@ -330,6 +338,88 @@ fun LibraryScreen(
                     }
                 }
 
+                // Cloud section — shown when cloud providers are configured
+                if (cloudState.hasCloud) {
+                    item(
+                        span = { GridItemSpan(maxLineSpan) },
+                        key = "cloudSection"
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .animateItem()
+                                .fillMaxWidth()
+                                .pinchItem(key = "cloudSection")
+                                .padding(horizontal = 16.dp)
+                                .padding(top = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(
+                                    16.dp,
+                                    Alignment.CenterHorizontally
+                                )
+                            ) {
+                                if (cloudState.hasArchive) {
+                                    LibrarySmallItem(
+                                        title = stringResource(R.string.cloud_archive),
+                                        icon = Icons.Outlined.Archive,
+                                        contentColor = MaterialTheme.colorScheme.secondary,
+                                        useIndicator = true,
+                                        indicatorCounter = cloudState.archivedCount,
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clickable {
+                                                eventHandler.navigate(Screen.CloudArchiveScreen.route)
+                                            }
+                                    )
+                                }
+                                if (cloudState.hasShareLink) {
+                                    LibrarySmallItem(
+                                        title = stringResource(R.string.cloud_shared_links),
+                                        icon = Icons.Outlined.Link,
+                                        contentColor = MaterialTheme.colorScheme.tertiary,
+                                        useIndicator = true,
+                                        indicatorCounter = cloudState.sharedLinkCount,
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clickable {
+                                                eventHandler.navigate(Screen.SharedLinksScreen.route)
+                                            }
+                                    )
+                                }
+                            }
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(
+                                    16.dp,
+                                    Alignment.CenterHorizontally
+                                )
+                            ) {
+                                LibrarySmallItem(
+                                    title = stringResource(R.string.cloud_backup_and_sync),
+                                    icon = Icons.Outlined.Backup,
+                                    contentColor = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clickable {
+                                            eventHandler.navigate(Screen.CloudBackupAndSyncScreen.route)
+                                        }
+                                )
+                                LibrarySmallItem(
+                                    title = stringResource(R.string.cloud_accounts),
+                                    icon = Icons.Outlined.Cloud,
+                                    contentColor = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clickable {
+                                            eventHandler.navigate(Screen.CloudAccountsScreen.route)
+                                        }
+                                )
+                            }
+                        }
+                    }
+
+                }
+
                 // Locations section
                 if (!noLocationsFound) {
                     item(
@@ -450,6 +540,87 @@ fun LibraryScreen(
                                             textAlign = TextAlign.Center,
                                             overflow = TextOverflow.MiddleEllipsis
                                         )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // People section — circle heads row (below locations)
+                if (cloudState.hasCloud && cloudState.hasPeople && cloudState.people.isNotEmpty()) {
+                    item(
+                        span = { GridItemSpan(maxLineSpan) },
+                        key = "PeopleHeader"
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .animateItem()
+                                .pinchItem(key = "PeopleHeader")
+                                .padding(horizontal = 16.dp)
+                                .padding(top = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            LibrarySmallItem(
+                                title = stringResource(R.string.cloud_people),
+                                icon = null,
+                                contentColor = MaterialTheme.colorScheme.onSurface,
+                                containerColor = MaterialTheme.colorScheme.surface,
+                                useIndicator = true,
+                                indicatorCounter = cloudState.people.size,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        eventHandler.navigate(Screen.PeopleListScreen.route)
+                                    }
+                            )
+                        }
+                    }
+                    item(
+                        span = { GridItemSpan(maxLineSpan) },
+                        key = "PeopleList"
+                    ) {
+                        LazyRow(
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp)
+                                .padding(top = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(
+                                items = cloudState.people,
+                                key = { it.id }
+                            ) { person ->
+                                Box(
+                                    modifier = Modifier
+                                        .size(80.dp)
+                                        .clip(CircleShape)
+                                        .clickable {
+                                            eventHandler.navigate(
+                                                Screen.PersonDetailScreen.personId(person.id)
+                                            )
+                                        }
+                                ) {
+                                    if (person.thumbnailUrl != null) {
+                                        GlideImage(
+                                            model = android.net.Uri.parse(person.thumbnailUrl),
+                                            contentDescription = person.name,
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentScale = ContentScale.Crop,
+                                        )
+                                    } else {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Outlined.People,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(32.dp),
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
                                     }
                                 }
                             }

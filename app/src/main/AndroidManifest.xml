@@ -6,6 +6,9 @@
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- Required to query Android Advanced Protection Mode (AAPM) state on Android 16+ -->
+    <uses-permission android:name="android.permission.QUERY_ADVANCED_PROTECTION_MODE" />
+
     <!-- Required to access images for SDK 33+ -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 
@@ -124,6 +127,7 @@
             android:name=".feature_node.presentation.standalone.StandaloneActivity"
             android:exported="true"
             android:launchMode="singleTask"
+            android:taskAffinity=""
             android:configChanges="orientation|keyboard|keyboardHidden|screenSize|screenLayout|smallestScreenSize|uiMode"
             android:theme="@style/Theme.Gallery">
             <intent-filter android:label="@string/app_name">
@@ -160,6 +164,24 @@
                 <data android:pathPattern=".*\\..*\\..*\\.jxl" />
                 <data android:pathPattern=".*\\..*\\..*\\..*\\.jxl" />
 
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <data android:scheme="content"/>
+                <data android:scheme="file"/>
+
+                <!-- Open APNG files -->
+                <data android:mimeType="image/apng"/>
+                <data android:host="*" />
+
+                <data android:mimeType="*/*" />
+                <data android:pathPattern=".*\\.apng" />
+                <data android:pathPattern=".*\\..*\\.apng" />
+                <data android:pathPattern=".*\\..*\\..*\\.apng" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.apng" />
 
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />

@@ -63,7 +63,7 @@ open class PickerViewModel @Inject constructor(
                 ) { blacklisted, lockedAlbums, mediaResult ->
                     val lockedIds = lockedAlbums.mapTo(HashSet()) { it.id }
                     val data = (mediaResult.data ?: emptyList()).toMutableList().apply {
-                        removeAll { media -> blacklisted.any { it.matchesMedia(media) && it.hiddenInTimeline } }
+                        removeAll { media -> blacklisted.any { it.shouldIgnore(media) } }
                         if (value == -1L) {
                             removeAll { media -> media.albumID in lockedIds }
                         }
@@ -120,13 +120,19 @@ open class PickerViewModel @Inject constructor(
         combine(
             repository.getBlacklistedAlbums(),
             repository.getLockedAlbums(),
-            repository.getAlbumsWithType(allowedMedia)
-        ) { blacklisted, lockedAlbums, albumsResult ->
+            repository.getAlbumsWithType(allowedMedia),
+            repository.getAlbumThumbnails()
+        ) { blacklisted, lockedAlbums, albumsResult, thumbnails ->
             val lockedIds = lockedAlbums.mapTo(HashSet()) { it.id }
+            val thumbnailMap = thumbnails.associateBy { it.albumId }
             val data = (albumsResult.data ?: emptyList()).toMutableList().apply {
                 removeAll { album -> blacklisted.any { it.matchesAlbum(album) && it.hiddenInAlbums } }
             }.map { album ->
-                album.copy(isLocked = album.id in lockedIds)
+                val customThumbnail = thumbnailMap[album.id]
+                album.copy(
+                    isLocked = album.id in lockedIds,
+                    uri = customThumbnail?.thumbnailUri ?: album.uri
+                )
             }
             val error = if (albumsResult is Resource.Error) albumsResult.message
                 ?: "An error occurred" else ""

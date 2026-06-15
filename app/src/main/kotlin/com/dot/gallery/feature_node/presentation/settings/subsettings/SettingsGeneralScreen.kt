@@ -44,6 +44,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import com.dot.gallery.R
 import com.dot.gallery.core.Position
 import com.dot.gallery.core.Settings
@@ -73,6 +75,7 @@ private const val DETAIL_VAULT_ENCRYPT = "vault_encrypt"
 @Composable
 fun SettingsGeneralScreen() {
     var detailKey by rememberSaveable { mutableStateOf<String?>(null) }
+    val listState = rememberLazyListState()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -167,6 +170,7 @@ fun SettingsGeneralScreen() {
                 appNameAlias = appNameAlias,
                 vaultEncryptBehavior = vaultEncryptBehavior,
                 onDetailClick = { detailKey = it },
+                listState = listState,
             )
         }
     }
@@ -185,6 +189,7 @@ private fun GeneralListScreen(
     appNameAlias: String,
     vaultEncryptBehavior: String,
     onDetailClick: (String) -> Unit,
+    listState: LazyListState,
 ) {
     @Composable
     fun settings(): SnapshotStateList<SettingsEntity> {
@@ -287,6 +292,7 @@ private fun GeneralListScreen(
     BaseSettingsScreen(
         title = stringResource(R.string.settings_general),
         settingsList = settings(),
+        listState = listState,
     )
 }
 

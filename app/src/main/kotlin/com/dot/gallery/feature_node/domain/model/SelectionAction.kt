@@ -11,6 +11,7 @@ import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Collections
 import androidx.compose.material.icons.outlined.CopyAll
 import androidx.compose.material.icons.outlined.DeleteOutline
+import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.EnhancedEncryption
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -113,6 +114,11 @@ enum class SelectionAction(
         labelRes = R.string.rotate,
         descriptionRes = R.string.action_desc_rotate,
         zone = ActionZone.BOTTOM,
+    ),
+    DOWNLOAD(
+        labelRes = R.string.download,
+        descriptionRes = R.string.action_desc_download,
+        zone = ActionZone.BOTTOM,
     );
 
     val icon: ImageVector
@@ -129,6 +135,7 @@ enum class SelectionAction(
             ADD_TO_VAULT -> Icons.Outlined.EnhancedEncryption
             EDIT -> Icons.Outlined.Edit
             ROTATE -> Icons.AutoMirrored.Outlined.RotateRight
+            DOWNLOAD -> Icons.Outlined.Download
         }
 }
 

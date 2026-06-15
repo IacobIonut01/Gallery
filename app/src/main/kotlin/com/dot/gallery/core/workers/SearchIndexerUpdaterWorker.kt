@@ -8,6 +8,8 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.dot.gallery.BuildConfig
+import com.dot.gallery.cloud.core.stableIdHash
+import com.dot.gallery.cloud.data.dao.CloudMediaDao
 import com.dot.gallery.core.ml.ModelManager
 import com.dot.gallery.feature_node.domain.model.ImageEmbedding
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
@@ -33,6 +35,7 @@ import kotlinx.coroutines.yield
 class SearchIndexerUpdaterWorker @AssistedInject constructor(
     private val repository: MediaRepository,
     private val modelManager: ModelManager,
+    private val cloudMediaDao: CloudMediaDao,
     @Assisted private val appContext: Context,
     @Assisted workerParams: WorkerParameters
 ) : CoroutineWorker(appContext, workerParams) {
@@ -50,21 +53,33 @@ class SearchIndexerUpdaterWorker @AssistedInject constructor(
         printInfo("Starting indexing media items")
         val media = repository.getCompleteMedia().map { it.data ?: emptyList() }.firstOrNull()
         val records = repository.getImageEmbeddings().firstOrNull()
+        val indexedIds = records?.mapTo(HashSet()) { it.id } ?: emptySet()
         val toBeIndexed = media?.filter { mediaItem ->
-            records?.none { it.id == mediaItem.id } ?: true
+            mediaItem.id !in indexedIds
         } ?: emptyList()
-        if (toBeIndexed.isEmpty()) {
-            printInfo("No media items to index")
+
+        // Collect cloud media that needs indexing
+        val cloudEntities = cloudMediaDao.getAllCachedAsync()
+        val cloudToBeIndexed = cloudEntities.filter { entity ->
+            stableIdHash(entity.remoteId) !in indexedIds
+        }
+
+        val totalLocal = toBeIndexed.size
+        val totalCloud = cloudToBeIndexed.size
+        val totalItems = totalLocal + totalCloud
+
+        if (totalItems == 0) {
+            printInfo("No media items to index (local: 0, cloud: 0)")
             return Result.success()
         }
-        printInfo("Found ${toBeIndexed.size} media items to index")
+        printInfo("Found $totalItems media items to index (local: $totalLocal, cloud: $totalCloud)")
         setProgress(workDataOf("progress" to 0f))
         visionHelper.setupVisionSession().use { session ->
-            val total = toBeIndexed.size
+            // Index local media
             toBeIndexed.fastForEachIndexed { index, mediaItem ->
                 if (!currentCoroutineContext().isActive || isStopped) return@use
                 val startMillis = System.currentTimeMillis()
-                val pct = if (total <= 1) 100f else ((index.toFloat() / (total - 1).toFloat()) * 100f)
+                val pct = if (totalItems <= 1) 100f else ((index.toFloat() / (totalItems - 1).toFloat()) * 100f)
                 setProgress(workDataOf("progress" to pct))
                 val request = ImageRequest(appContext, mediaItem.getUri().toString()) {
                     colorSpace(BitmapColorSpace(ColorSpace.Named.SRGB))
@@ -74,7 +89,7 @@ class SearchIndexerUpdaterWorker @AssistedInject constructor(
                 val bitmap = result.image?.asBitmapOrNull()
                 if (bitmap != null) {
                     val embedding = visionHelper.getImageEmbedding(session, bitmap)
-                    printInfo("Indexed media item $index/${total - 1} in ${System.currentTimeMillis() - startMillis} ms")
+                    printInfo("Indexed local media $index/${totalItems - 1} in ${System.currentTimeMillis() - startMillis} ms")
                     repository.addImageEmbedding(
                         ImageEmbedding(
                             id = mediaItem.id,
@@ -87,9 +102,39 @@ class SearchIndexerUpdaterWorker @AssistedInject constructor(
                 }
                 yield()
             }
+
+            // Index cloud media
+            cloudToBeIndexed.fastForEachIndexed { index, entity ->
+                if (!currentCoroutineContext().isActive || isStopped) return@use
+                val startMillis = System.currentTimeMillis()
+                val globalIndex = totalLocal + index
+                val pct = if (totalItems <= 1) 100f else ((globalIndex.toFloat() / (totalItems - 1).toFloat()) * 100f)
+                setProgress(workDataOf("progress" to pct))
+                val cloudMedia = entity.toUriMedia()
+                val request = ImageRequest(appContext, cloudMedia.getUri().toString()) {
+                    colorSpace(BitmapColorSpace(ColorSpace.Named.SRGB))
+                    size(224, 224)
+                }
+                val result = appContext.sketch.execute(request)
+                val bitmap = result.image?.asBitmapOrNull()
+                if (bitmap != null) {
+                    val embedding = visionHelper.getImageEmbedding(session, bitmap)
+                    printInfo("Indexed cloud media $globalIndex/${totalItems - 1} in ${System.currentTimeMillis() - startMillis} ms")
+                    repository.addImageEmbedding(
+                        ImageEmbedding(
+                            id = cloudMedia.id,
+                            date = cloudMedia.timestamp,
+                            embedding = embedding
+                        )
+                    )
+                } else {
+                    printInfo("Failed to decode bitmap for cloud media: ${entity.remoteId} (${entity.providerType})")
+                }
+                yield()
+            }
         }
         if (currentCoroutineContext().isActive) {
-            printInfo("Indexing completed for ${toBeIndexed.size} media items")
+            printInfo("Indexing completed for $totalItems media items (local: $totalLocal, cloud: $totalCloud)")
             setProgress(workDataOf("progress" to 100f))
         } else {
             printWarning("Indexing cancelled before completion")

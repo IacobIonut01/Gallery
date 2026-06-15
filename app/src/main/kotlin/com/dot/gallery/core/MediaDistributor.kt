@@ -1,5 +1,6 @@
 package com.dot.gallery.core
 
+import com.dot.gallery.cloud.core.SyncState
 import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.domain.model.CollectionWithCount
 import com.dot.gallery.feature_node.domain.model.GeoMedia
@@ -35,6 +36,7 @@ interface MediaDistributor {
     val hasPermission: MutableStateFlow<Boolean>
     val dateFormatsFlow: StateFlow<Triple<String, String, String>>
     var groupByMonth: Boolean
+    var groupByYear: Boolean
     val groupSimilarMedia: StateFlow<Boolean>
     val enabledGroupTypes: StateFlow<Set<MediaGroupType>>
     val mergeAlbumsByName: StateFlow<Boolean>
@@ -60,6 +62,11 @@ interface MediaDistributor {
     fun albumTimelineMediaFlow(albumId: Long): StateFlow<MediaState<Media.UriMedia>>
     val favoritesMediaFlow: SharedFlow<MediaState<Media.UriMedia>>
     val trashMediaFlow: SharedFlow<MediaState<Media.UriMedia>>
+
+    /**
+     * Cloud Sync States (media id → SyncState)
+     */
+    val cloudSyncStates: StateFlow<Map<Long, SyncState>>
 
     /**
      * Media Metadata

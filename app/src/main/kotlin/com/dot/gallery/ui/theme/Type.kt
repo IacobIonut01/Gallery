@@ -36,3 +36,5 @@ val Typography = Typography(
     labelMedium = defaultTypography.labelMedium.copy(fontFamily = GoogleSansFontFamily),
     labelSmall = defaultTypography.labelSmall.copy(fontFamily = GoogleSansFontFamily),
 )
+
+val SystemTypography = Typography()

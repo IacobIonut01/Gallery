@@ -9,7 +9,7 @@ import androidx.media3.common.Player
 import androidx.media3.ui.SubtitleView
 import androidx.annotation.OptIn
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -34,11 +34,11 @@ import androidx.compose.runtime.MutableLongState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -46,6 +46,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -58,6 +59,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
@@ -67,7 +71,6 @@ import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
-import com.dot.gallery.core.Settings.Misc.rememberAudioFocus
 import com.dot.gallery.core.Settings.Misc.rememberVideoAutoplay
 import com.dot.gallery.core.presentation.components.util.swipe
 import com.dot.gallery.feature_node.domain.model.Media
@@ -75,6 +78,7 @@ import com.dot.gallery.feature_node.domain.model.SubtitleTrack
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
 import com.dot.gallery.feature_node.presentation.util.rememberSurfaceCapture
 import dev.chrisbanes.haze.hazeSource
+import kotlinx.coroutines.launch
 
 @OptIn(UnstableApi::class)
 @Composable
@@ -85,7 +89,8 @@ fun <T : Media> VideoPlayer(
     videoController: @Composable (ExoPlayer, MutableState<Boolean>, MutableLongState, Long, Int, Float, VideoControllerState) -> Unit,
     onItemClick: () -> Unit,
     onSwipeDown: () -> Unit,
-    onZoomChange: (Boolean) -> Unit = {}
+    onZoomChange: (Boolean) -> Unit = {},
+    captureBlur: Boolean = true
 ) {
     // Acquire or create the ViewModel for this media id
     val vm: VideoPlayerViewModel =
@@ -123,10 +128,19 @@ fun <T : Media> VideoPlayer(
         }
     }
 
-    // Audio focus preferences
-    val audioFocus by rememberAudioFocus()
-    LaunchedEffect(audioFocus) {
-        vm.applyAudioFocusPreference(audioFocus)
+    // Pause playback when the app loses focus (Home, app switch, screen lock) so
+    // audio does not keep playing in the background.
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner, vm) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_STOP) {
+                vm.pause()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
     }
 
     // Keep screen awake while playing
@@ -176,74 +190,63 @@ fun <T : Media> VideoPlayer(
     val hazeState = LocalHazeState.current
     val videoCapture by rememberSurfaceCapture(
         view = surfaceViewRef,
-        enabled = allowBlur
+        enabled = allowBlur && captureBlur
     )
 
-    // Zoom state
-    var targetScale by rememberSaveable(media.id) { mutableFloatStateOf(1f) }
-    var targetOffsetX by rememberSaveable(media.id) { mutableFloatStateOf(0f) }
-    var targetOffsetY by rememberSaveable(media.id) { mutableFloatStateOf(0f) }
+    // Zoom state — mirrors the zoomimage image viewer feel: live pinch/pan is
+    // applied instantly (snapTo, no animation lag) and anchored at the gesture
+    // centroid, while double-tap and reset use smooth animations (animateTo).
+    val scope = rememberCoroutineScope()
+    val scaleAnim = remember(media.id) { Animatable(1f) }
+    val offsetXAnim = remember(media.id) { Animatable(0f) }
+    val offsetYAnim = remember(media.id) { Animatable(0f) }
 
-    val scale by animateFloatAsState(
-        targetValue = targetScale,
-        animationSpec = tween(durationMillis = 200),
-        label = "videoZoomScale"
-    )
-    val offsetX by animateFloatAsState(
-        targetValue = targetOffsetX,
-        animationSpec = tween(durationMillis = 200),
-        label = "videoZoomOffsetX"
-    )
-    val offsetY by animateFloatAsState(
-        targetValue = targetOffsetY,
-        animationSpec = tween(durationMillis = 200),
-        label = "videoZoomOffsetY"
-    )
+    val scale = scaleAnim.value
+    val offsetX = offsetXAnim.value
+    val offsetY = offsetYAnim.value
 
-    val isZoomed = targetScale > 1.01f
+    var isZoomed by remember(media.id) { mutableStateOf(false) }
     val updatedOnZoomChange by rememberUpdatedState(onZoomChange)
-
     LaunchedEffect(isZoomed) {
         updatedOnZoomChange(isZoomed)
     }
 
-    // Clamp offsets within the zoomed content bounds
-    fun clampOffsets() {
-        if (targetScale <= 1f) {
-            targetOffsetX = 0f
-            targetOffsetY = 0f
-            return
-        }
-        val maxX = (targetScale - 1f) * videoSize.width / 2f
-        val maxY = (targetScale - 1f) * videoSize.height / 2f
-        targetOffsetX = targetOffsetX.coerceIn(-maxX, maxX)
-        targetOffsetY = targetOffsetY.coerceIn(-maxY, maxY)
+    // Maximum pan offset so the zoomed video edges stay within view
+    fun maxOffsetFor(targetScale: Float): Offset {
+        if (targetScale <= 1f) return Offset.Zero
+        return Offset(
+            x = (targetScale - 1f) * videoSize.width / 2f,
+            y = (targetScale - 1f) * videoSize.height / 2f
+        )
     }
-
-    // Container size for offset clamping during gestures
-    var containerSize by remember { mutableStateOf(IntSize.Zero) }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .onGloballyPositioned { containerSize = it.size }
             .pointerInput(Unit) {
                 detectTapGestures(
                     onTap = { updatedOnClick() },
                     onDoubleTap = { tapOffset ->
-                        if (isZoomed) {
-                            // Zoom out
-                            targetScale = 1f
-                            targetOffsetX = 0f
-                            targetOffsetY = 0f
+                        if (scaleAnim.value > 1.01f) {
+                            // Reset zoom
+                            isZoomed = false
+                            scope.launch { scaleAnim.animateTo(1f, tween(300)) }
+                            scope.launch { offsetXAnim.animateTo(0f, tween(300)) }
+                            scope.launch { offsetYAnim.animateTo(0f, tween(300)) }
                         } else {
-                            // Zoom to 2.5x centered on tap position
-                            targetScale = 2.5f
-                            val centerX = containerSize.width / 2f
-                            val centerY = containerSize.height / 2f
-                            targetOffsetX = (centerX - tapOffset.x) * (2.5f - 1f)
-                            targetOffsetY = (centerY - tapOffset.y) * (2.5f - 1f)
-                            clampOffsets()
+                            // Zoom to 2.5x anchored on the tap position
+                            val targetScale = 2.5f
+                            val center = Offset(size.width / 2f, size.height / 2f)
+                            val focal = (center - tapOffset) * (targetScale - 1f)
+                            val max = maxOffsetFor(targetScale)
+                            isZoomed = true
+                            scope.launch { scaleAnim.animateTo(targetScale, tween(300)) }
+                            scope.launch {
+                                offsetXAnim.animateTo(focal.x.coerceIn(-max.x, max.x), tween(300))
+                            }
+                            scope.launch {
+                                offsetYAnim.animateTo(focal.y.coerceIn(-max.y, max.y), tween(300))
+                            }
                         }
                     }
                 )
@@ -252,27 +255,42 @@ fun <T : Media> VideoPlayer(
                 awaitEachGesture {
                     awaitFirstDown(requireUnconsumed = false)
                     do {
-                        val event = awaitPointerEvent()
+                        // Poll on the Initial pass so the pinch claims the gesture
+                        // before the HorizontalPager / overlay can start a swipe,
+                        // mirroring the timeline's prioritized pinch handling.
+                        val event = awaitPointerEvent(PointerEventPass.Initial)
                         val pointerCount = event.changes.count { it.pressed }
                         if (pointerCount >= 2) {
                             val zoomChange = event.calculateZoom()
                             val panChange = event.calculatePan()
-                            val newScale = (targetScale * zoomChange).coerceIn(1f, 5f)
-                            targetScale = newScale
-                            if (targetScale > 1f) {
-                                targetOffsetX += panChange.x
-                                targetOffsetY += panChange.y
-                                clampOffsets()
-                            } else {
-                                targetOffsetX = 0f
-                                targetOffsetY = 0f
+                            val centroid = event.calculateCentroid()
+                            val oldScale = scaleAnim.value
+                            val newScale = (oldScale * zoomChange).coerceIn(1f, 5f)
+                            val k = newScale / oldScale
+                            val center = Offset(size.width / 2f, size.height / 2f)
+                            val r = centroid - center
+                            // Focal-point zoom: keep the content under the fingers fixed
+                            val max = maxOffsetFor(newScale)
+                            val newX = (r.x * (1f - k) + k * offsetXAnim.value + panChange.x)
+                                .coerceIn(-max.x, max.x)
+                            val newY = (r.y * (1f - k) + k * offsetYAnim.value + panChange.y)
+                                .coerceIn(-max.y, max.y)
+                            scope.launch {
+                                scaleAnim.snapTo(newScale)
+                                offsetXAnim.snapTo(newX)
+                                offsetYAnim.snapTo(newY)
                             }
+                            isZoomed = newScale > 1.01f
                             event.changes.forEach { it.consume() }
-                        } else if (pointerCount == 1 && isZoomed) {
+                        } else if (pointerCount == 1 && scaleAnim.value > 1.01f) {
                             val panChange = event.calculatePan()
-                            targetOffsetX += panChange.x
-                            targetOffsetY += panChange.y
-                            clampOffsets()
+                            val max = maxOffsetFor(scaleAnim.value)
+                            val newX = (offsetXAnim.value + panChange.x).coerceIn(-max.x, max.x)
+                            val newY = (offsetYAnim.value + panChange.y).coerceIn(-max.y, max.y)
+                            scope.launch {
+                                offsetXAnim.snapTo(newX)
+                                offsetYAnim.snapTo(newY)
+                            }
                             event.changes.forEach { it.consume() }
                         }
                     } while (event.changes.any { it.pressed })

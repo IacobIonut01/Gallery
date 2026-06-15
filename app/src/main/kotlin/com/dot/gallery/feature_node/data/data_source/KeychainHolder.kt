@@ -467,7 +467,7 @@ class KeychainHolder @Inject constructor(
     fun decryptToTempFile(file: File, cacheDir: File? = null): DecryptedVaultMedia {
         val vaultUuidStr = file.parentFile?.name ?: error("Cannot determine vault UUID from path")
         val vault = Vault(uuid = UUID.fromString(vaultUuidStr), name = "")
-        val tmpDir = cacheDir ?: filesDir
+        val tmpDir = cacheDir ?: context.cacheDir
         val tempFile = File.createTempFile("vault_dec_", ".tmp", tmpDir)
         FileOutputStream(tempFile).use { out ->
             decryptPortableStream(vault, file, out)

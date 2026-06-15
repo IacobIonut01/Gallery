@@ -53,6 +53,7 @@ import com.dot.gallery.core.LocalMediaSelector
 import com.dot.gallery.core.Settings
 import com.dot.gallery.core.Settings.Album.rememberAlbumMediaSort
 import com.dot.gallery.core.Settings.Album.rememberHideTimelineOnAlbum
+import com.dot.gallery.core.Settings.Misc.rememberAlbumsGroupMethod
 import com.dot.gallery.core.Settings.Misc.rememberGridSize
 import com.dot.gallery.core.Settings.Misc.rememberMosaicGridSize
 import com.dot.gallery.core.Settings.Misc.rememberTimelineLayoutType
@@ -68,6 +69,7 @@ import com.dot.gallery.feature_node.presentation.common.components.MediaGridView
 import com.dot.gallery.feature_node.presentation.common.components.MosaicMediaGrid
 import com.dot.gallery.feature_node.presentation.common.components.MosaicPinchZoomLayout
 import com.dot.gallery.feature_node.presentation.common.components.TimelineScroller
+import com.dot.gallery.feature_node.presentation.common.components.rememberMosaicMonthSegments
 import com.dot.gallery.feature_node.presentation.common.components.rememberMosaicPinchZoomState
 import com.dot.gallery.feature_node.presentation.common.components.TwoLinedDateToolbarTitle
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
@@ -180,6 +182,7 @@ fun CollectionViewScreen(
             }
         ) { it ->
             val hideTimelineOnAlbum by rememberHideTimelineOnAlbum()
+            val albumsGroupMethod by rememberAlbumsGroupMethod()
             val timelineLayoutType by rememberTimelineLayoutType()
             val isMosaicLayout = timelineLayoutType == Settings.Misc.LAYOUT_MOSAIC && !hideTimelineOnAlbum
             if (isMosaicLayout) {
@@ -196,9 +199,13 @@ fun CollectionViewScreen(
                     lastMosaicCellIndex = mosaicPinchState.currentColumnsIndex
                 }
 
-                val mappedData by remember(mediaState) {
+                val mappedData by remember(mediaState, albumsGroupMethod) {
                     derivedStateOf {
-                        mediaState.value.mappedMedia.toMutableStateList()
+                        when (albumsGroupMethod) {
+                            Settings.Misc.GROUP_MONTHLY -> mediaState.value.mappedMediaWithMonthly
+                            Settings.Misc.GROUP_YEARLY -> mediaState.value.mappedMediaWithYearly
+                            else -> mediaState.value.mappedMedia
+                        }.toMutableStateList()
                     }
                 }
                 val headers by remember(mediaState) {
@@ -219,7 +226,12 @@ fun CollectionViewScreen(
                         .padding(mosaicPaddingValues)
                         .padding(top = 32.dp)
                         .padding(vertical = 32.dp),
-                    mappedData = mappedData,
+                    segments = rememberMosaicMonthSegments(
+                        mappedData = mappedData,
+                        columns = currentColumns,
+                        allowHeaders = true,
+                        leadingItemCount = 0,
+                    ),
                     headers = headers,
                     state = mosaicGridState,
                 ) {
@@ -261,13 +273,13 @@ fun CollectionViewScreen(
                         allowSelection = true,
                         showSearchBar = false,
                         enableStickyHeaders = !hideTimelineOnAlbum,
+                        groupMethod = if (!hideTimelineOnAlbum) albumsGroupMethod else Settings.Misc.GROUP_NORMAL,
                         paddingValues = PaddingValues(
                             top = it.calculateTopPadding(),
                             bottom = paddingValues.calculateBottomPadding() + 128.dp
                         ),
                         canScroll = canScroll,
                         allowHeaders = !hideTimelineOnAlbum,
-                        showMonthlyHeader = false,
                         aboveGridContent = null,
                         isScrolling = isScrolling,
                         emptyContent = {

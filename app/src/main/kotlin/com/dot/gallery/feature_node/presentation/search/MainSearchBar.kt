@@ -41,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -168,7 +169,10 @@ fun MainSearchBar(
 
                 Text(
                     modifier = weightModifier.padding(end = if (searchBarTrailingIcon != null) 0.dp else 16.dp),
-                    text = stringResource(R.string.search)
+                    text = stringResource(R.string.search),
+                    maxLines = 1,
+                    softWrap = false,
+                    overflow = TextOverflow.Ellipsis
                 )
 
                 if (searchBarTrailingIcon != null) {

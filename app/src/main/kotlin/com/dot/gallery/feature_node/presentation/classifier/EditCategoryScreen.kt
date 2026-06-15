@@ -45,7 +45,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberBottomSheetScaffoldState
-import androidx.compose.material3.rememberStandardBottomSheetState
+import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -123,9 +123,8 @@ fun EditCategoryScreen(
     var lastCellIndex by rememberGridSize()
     var showDeleteDialog by remember { mutableStateOf(false) }
     val scaffoldState = rememberBottomSheetScaffoldState(
-        bottomSheetState = rememberStandardBottomSheetState(
-            initialValue = SheetValue.Hidden,
-            skipHiddenState = false
+        bottomSheetState = rememberBottomSheetState(
+            initialValue = SheetValue.Hidden
         )
     )
 
@@ -227,7 +226,7 @@ fun EditCategoryScreen(
                             ),
                             canScroll = true,
                             allowHeaders = false,
-                            showMonthlyHeader = false,
+                            
                             isScrolling = isScrolling,
                             emptyContent = {
                                 EmptyMedia(

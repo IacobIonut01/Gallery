@@ -23,8 +23,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.NewReleases
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -47,7 +49,8 @@ import com.dot.gallery.feature_node.presentation.util.PreviewHost
 fun WhatsNewHeroCard(
     versionName: String,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onDismiss: (() -> Unit)? = null
 ) {
     val colorPrimary = MaterialTheme.colorScheme.primaryContainer
     val colorTertiary = MaterialTheme.colorScheme.tertiaryContainer
@@ -96,6 +99,7 @@ fun WhatsNewHeroCard(
             .padding(all = 24.dp)
     ) {
         Row(
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -116,6 +120,16 @@ fun WhatsNewHeroCard(
                     )
                     .padding(horizontal = 12.dp, vertical = 4.dp)
             )
+            if (onDismiss != null) {
+                Spacer(Modifier.weight(1f))
+                IconButton(onClick = onDismiss) {
+                    Icon(
+                        imageVector = Icons.Outlined.Close,
+                        contentDescription = stringResource(R.string.dismiss),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
         }
         Spacer(Modifier.height(12.dp))
         Text(

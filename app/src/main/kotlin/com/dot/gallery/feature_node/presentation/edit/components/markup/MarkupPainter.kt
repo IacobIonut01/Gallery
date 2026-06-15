@@ -95,6 +95,11 @@ fun MarkupPainter(
     // Text annotation drag state
     var isDraggingText by remember { mutableStateOf(false) }
     var isResizingText by remember { mutableStateOf(false) }
+    var isRotatingText by remember { mutableStateOf(false) }
+    // Rotation gesture tracking (single-finger rotate handle)
+    var rotateCenter by remember { mutableStateOf(Offset.Zero) }
+    var rotateStartAngle by remember { mutableFloatStateOf(0f) }
+    var rotateStartRotation by remember { mutableFloatStateOf(0f) }
     var canvasLayoutSize by remember { mutableStateOf(IntSize.Zero) }
 
     // Keep fresh references for pointer-input lambdas (captured once per key change)
@@ -155,8 +160,14 @@ fun MarkupPainter(
                                     )
                                     val ann = latestTextAnnotations[latestSelectedTextIndex]
                                     val bounds = measureTextBounds(ann, sz)
+                                    // This handler runs outside the graphicsLayer, so the
+                                    // centroid is in screen space. Map it back into content
+                                    // space (graphicsLayer scales around the center).
+                                    val layerCenter = Offset(sz.width / 2f, sz.height / 2f)
+                                    val contentCentroid = layerCenter +
+                                            (centroid - canvasOffset - layerCenter) / canvasScale
                                     val localCentroid =
-                                        inverseRotatePoint(centroid, bounds.center, ann.rotation)
+                                        inverseRotatePoint(contentCentroid, bounds.center, ann.rotation)
                                     val hitPad = 40f
                                     val hitRect = Rect(
                                         bounds.left - hitPad, bounds.top - hitPad,
@@ -227,17 +238,33 @@ fun MarkupPainter(
                                 latestOnSelectedTextIndexChange(-1)
                                 isDraggingText = false
                                 isResizingText = false
+                                isRotatingText = false
                                 pointerInputChange.consume()
                                 return@dragMotionEvent
-                            } else if (corner > 0) {
-                                // Corner handles = resize
+                            } else if (corner == 2) {
+                                // Top-right = rotate
+                                val ann = latestTextAnnotations[latestSelectedTextIndex]
+                                val bounds = measureTextBounds(ann, sz)
+                                rotateCenter = bounds.center
+                                rotateStartAngle = kotlin.math.atan2(
+                                    pos.y - bounds.center.y,
+                                    pos.x - bounds.center.x
+                                )
+                                rotateStartRotation = ann.rotation
+                                isRotatingText = true
+                                isResizingText = false
+                                isDraggingText = false
+                                pointerInputChange.consume()
+                            } else if (corner == 1 || corner == 3) {
+                                // Bottom corners = resize
                                 isResizingText = true
                                 isDraggingText = false
+                                isRotatingText = false
                                 pointerInputChange.consume()
                             }
                         }
                         // Only do body hit-test when no corner handle was engaged
-                        if (!isResizingText) {
+                        if (!isResizingText && !isRotatingText) {
                             val hitIdx = hitTestTextAnnotation(pos, latestTextAnnotations, canvasLayoutSize)
                             if (hitIdx >= 0) {
                                 latestOnSelectedTextIndexChange(hitIdx)
@@ -262,6 +289,22 @@ fun MarkupPainter(
                 onDrag = { pointerInputChange ->
                     if (isZooming) {
                         pointerInputChange.consume()
+                    } else if (drawMode == DrawMode.Text && isRotatingText && latestSelectedTextIndex >= 0) {
+                        // Rotate the selected text annotation via the top-right handle
+                        val pos = pointerInputChange.position
+                        val currentAngle = kotlin.math.atan2(
+                            pos.y - rotateCenter.y,
+                            pos.x - rotateCenter.x
+                        )
+                        val deltaDeg =
+                            Math.toDegrees((currentAngle - rotateStartAngle).toDouble()).toFloat()
+                        val updated = latestTextAnnotations.toMutableList()
+                        val ann = updated[latestSelectedTextIndex]
+                        updated[latestSelectedTextIndex] = ann.copy(
+                            rotation = rotateStartRotation + deltaDeg
+                        )
+                        latestOnTextAnnotationsChange(updated)
+                        pointerInputChange.consume()
                     } else if (drawMode == DrawMode.Text && isResizingText && latestSelectedTextIndex >= 0) {
                         // Resize the selected text annotation via corner drag
                         val change = pointerInputChange.positionChange()
@@ -274,21 +317,30 @@ fun MarkupPainter(
                         latestOnTextAnnotationsChange(updated)
                         pointerInputChange.consume()
                     } else if (drawMode == DrawMode.Text && isDraggingText && latestSelectedTextIndex >= 0) {
-                        // Drag the selected text annotation
+                        // Drag the selected text annotation, keeping its box within the canvas
                         val change = pointerInputChange.positionChange()
                         val dx = change.x / canvasLayoutSize.width.coerceAtLeast(1)
                         val dy = change.y / canvasLayoutSize.height.coerceAtLeast(1)
                         val updated = latestTextAnnotations.toMutableList()
                         val ann = updated[latestSelectedTextIndex]
+                        val sz = Size(
+                            canvasLayoutSize.width.toFloat(),
+                            canvasLayoutSize.height.toFloat()
+                        )
+                        val bounds = measureTextBounds(ann, sz)
+                        val normW = if (sz.width > 0f) bounds.width / sz.width else 0f
+                        val normH = if (sz.height > 0f) bounds.height / sz.height else 0f
+                        // position.x is the box left; box top (normalized) = position.y - fontSize
+                        val (minX, maxX) = if (normW <= 1f) 0f to (1f - normW) else (1f - normW) to 0f
+                        val (minTop, maxTop) = if (normH <= 1f) 0f to (1f - normH) else (1f - normH) to 0f
+                        val newX = (ann.position.x + dx).coerceIn(minX, maxX)
+                        val newTop = (ann.position.y - ann.fontSize + dy).coerceIn(minTop, maxTop)
                         updated[latestSelectedTextIndex] = ann.copy(
-                            position = Offset(
-                                (ann.position.x + dx).coerceIn(0f, 1f),
-                                (ann.position.y + dy).coerceIn(0f, 1f)
-                            )
+                            position = Offset(newX, newTop + ann.fontSize)
                         )
                         latestOnTextAnnotationsChange(updated)
                         pointerInputChange.consume()
-                    } else if (drawMode == DrawMode.Touch || (drawMode == DrawMode.Text && !isResizingText && !isDraggingText)) {
+                    } else if (drawMode == DrawMode.Touch || (drawMode == DrawMode.Text && !isResizingText && !isDraggingText && !isRotatingText)) {
                         val change = pointerInputChange.positionChange()
                         canvasOffset += change * canvasScale
                         pointerInputChange.consume()
@@ -308,6 +360,7 @@ fun MarkupPainter(
                     } else if (drawMode == DrawMode.Text) {
                         isDraggingText = false
                         isResizingText = false
+                        isRotatingText = false
                     } else if (drawMode != DrawMode.Touch) {
                         painterMotionEvent = PainterMotionEvent.Up
                     }

@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisallowComposableCalls
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -46,7 +47,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
+import com.dot.gallery.core.LocalMediaDistributor
 import com.dot.gallery.core.LocalMediaSelector
+import com.dot.gallery.core.Settings.Misc.rememberFavoriteIconPosition
 import com.dot.gallery.core.presentation.components.Error
 import com.dot.gallery.core.presentation.components.LoadingMedia
 import com.dot.gallery.core.presentation.components.MediaItemHeader
@@ -79,6 +82,7 @@ fun <T : Media> GridPinchZoomScope.MediaGrid(
     allowSelection: Boolean,
     canScroll: Boolean,
     allowHeaders: Boolean,
+    bigHeaders: Boolean = false,
     aboveGridContent: @Composable() (() -> Unit)?,
     isScrolling: MutableState<Boolean>,
     emptyContent: @Composable () -> Unit,
@@ -156,8 +160,10 @@ fun <T : Media> GridPinchZoomScope.MediaGrid(
                 paddingValues = paddingValues,
                 allowSelection = allowSelection,
                 canScroll = canScroll,
+                bigHeaders = bigHeaders,
                 onMediaClick = onMediaClick,
                 topContent = topContent,
+                leadingItemCount = if (aboveGridContent != null) 1 else 0,
                 sharedTransitionScope = sharedTransitionScope,
                 animatedContentScope = animatedContentScope,
                 metadataState = metadataState
@@ -190,8 +196,10 @@ private fun <T : Media> GridPinchZoomScope.MediaGridContentWithHeaders(
     paddingValues: PaddingValues,
     allowSelection: Boolean,
     canScroll: Boolean,
+    bigHeaders: Boolean,
     onMediaClick: @DisallowComposableCalls (media: T) -> Unit,
     topContent: LazyGridScope.() -> Unit,
+    leadingItemCount: Int,
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
 ) {
@@ -207,7 +215,7 @@ private fun <T : Media> GridPinchZoomScope.MediaGridContentWithHeaders(
             .padding(paddingValues)
             .padding(top = 32.dp)
             .padding(vertical = 32.dp),
-        mappedData = mappedData,
+        segments = rememberMonthSegments(mappedData, leadingItemCount),
         headers = headers,
         state = gridState,
     ) {
@@ -272,6 +280,12 @@ private fun <T : Media> GridPinchZoomScope.MediaGridContentWithHeaders(
             }
         }
 
+        val favoriteIconPosition by rememberFavoriteIconPosition()
+        val cloudSyncStates by LocalMediaDistributor.current.cloudSyncStates.collectAsStateWithLifecycle()
+        val cellState = remember(isSelectionActive, selectedMedia.value, favoriteIconPosition, cloudSyncStates) {
+            MediaCellState(isSelectionActive, selectedMedia.value, favoriteIconPosition, cloudSyncStates)
+        }
+        CompositionLocalProvider(LocalMediaCellState provides cellState) {
         LazyVerticalGrid(
             state = gridState,
             modifier = modifier
@@ -331,7 +345,8 @@ private fun <T : Media> GridPinchZoomScope.MediaGridContentWithHeaders(
                                 .replace("Today", stringToday)
                                 .replace("Yesterday", stringYesterday)
                         },
-                        showAsBig = remember(it) { it.key.isBigHeaderKey },
+                        showAsBig = remember(it, bigHeaders) { it.key.isBigHeaderKey || bigHeaders },
+                        bigHeaderOnly = bigHeaders,
                         isChecked = isChecked
                     ) {
                         if (allowSelection) {
@@ -357,11 +372,12 @@ private fun <T : Media> GridPinchZoomScope.MediaGridContentWithHeaders(
                                 )
                                 .animateItem(
                                     fadeInSpec = null,
-                                    fadeOutSpec = spring()
+                                    fadeOutSpec = if (isScrolling) null else spring()
                                 )
                                 .pinchItem(key = it.key),
                             media = it.media,
                             stackCount = it.stackCount,
+                            isCloudGroup = it.isCloudGroup,
                             canClick = { canScroll },
                             onMediaClick = { onMediaClick(it) },
                             metadataState = metadataState,
@@ -380,6 +396,7 @@ private fun <T : Media> GridPinchZoomScope.MediaGridContentWithHeaders(
             }
 
 
+        }
         }
     }
 }
@@ -426,8 +443,15 @@ private fun <T : Media> GridPinchZoomScope.MediaGridContent(
         canAnimate = !isScrolling
     }
     val selector = LocalMediaSelector.current
+    val selectionActive by selector.isSelectionActive.collectAsStateWithLifecycle()
     val selectedMedia = selector.selectedMedia.collectAsStateWithLifecycle()
+    val favoriteIconPosition by rememberFavoriteIconPosition()
+    val cloudSyncStates by LocalMediaDistributor.current.cloudSyncStates.collectAsStateWithLifecycle()
+    val cellState = remember(selectionActive, selectedMedia.value, favoriteIconPosition, cloudSyncStates) {
+        MediaCellState(selectionActive, selectedMedia.value, favoriteIconPosition, cloudSyncStates)
+    }
 
+    CompositionLocalProvider(LocalMediaCellState provides cellState) {
     LazyVerticalGrid(
         state = gridState,
         modifier = modifier
@@ -467,7 +491,7 @@ private fun <T : Media> GridPinchZoomScope.MediaGridContent(
                         )
                         .animateItem(
                             fadeInSpec = null,
-                            fadeOutSpec = spring()
+                            fadeOutSpec = if (isScrolling) null else spring()
                         )
                         .pinchItem(key = media.key),
                     media = media,
@@ -486,5 +510,6 @@ private fun <T : Media> GridPinchZoomScope.MediaGridContent(
                 )
             }
         }
+    }
     }
 }

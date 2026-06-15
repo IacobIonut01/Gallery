@@ -63,13 +63,15 @@ class EncryptedRegionDecoder(
         val decrypted = keychainHolder.decryptVaultMedia(
             (imageSource as ContentImageSource).uri.toFile()
         )
+        val bytes = decrypted.readBytes()
+        decrypted.cleanup()
 
         bitmapRegionDecoder = kotlin.runCatching {
             if (VERSION.SDK_INT >= VERSION_CODES.S) {
-                BitmapRegionDecoder.newInstance(decrypted.readBytes(), 0, decrypted.readBytes().size)
+                BitmapRegionDecoder.newInstance(bytes, 0, bytes.size)
             } else {
                 @Suppress("DEPRECATION")
-                BitmapRegionDecoder.newInstance(decrypted.readBytes(), 0, decrypted.readBytes().size, false)
+                BitmapRegionDecoder.newInstance(bytes, 0, bytes.size, false)
             }
         }.apply {
             if (isFailure) {

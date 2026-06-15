@@ -71,6 +71,7 @@ import com.dot.gallery.feature_node.domain.util.canMakeActions
 import com.dot.gallery.feature_node.domain.util.fileExtension
 import com.dot.gallery.feature_node.domain.util.getCategory
 import com.dot.gallery.feature_node.domain.util.getUri
+import com.dot.gallery.feature_node.domain.util.isCloud
 import com.dot.gallery.feature_node.domain.util.isEncrypted
 import com.dot.gallery.feature_node.domain.util.isRaw
 import com.dot.gallery.feature_node.domain.util.isTrashed
@@ -82,6 +83,7 @@ import com.dot.gallery.feature_node.presentation.mediaview.components.media.Moti
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
 import com.dot.gallery.feature_node.presentation.util.GlideInvalidation
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
+import com.dot.gallery.feature_node.presentation.util.hazeEffectScaled
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.feature_node.presentation.util.launchWriteRequest
 import com.dot.gallery.feature_node.presentation.util.printDebug
@@ -89,7 +91,6 @@ import com.dot.gallery.feature_node.presentation.util.rememberActivityResult
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.rememberMediaInfo
 import com.dot.gallery.feature_node.presentation.util.writeRequest
-import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlinx.coroutines.launch
@@ -107,6 +108,9 @@ fun <T : Media> MediaViewSheetDetails(
 ) {
     val metadata by rememberedDerivedState(metadataState.value, currentMedia) {
         currentMedia?.id?.let { metadataState.value.metadataMap[it] }
+    }
+    LaunchedEffect(metadata) {
+        printDebug("Available metadata for ${currentMedia?.id}:\n${metadata.toString()}")
     }
     val handler = LocalMediaHandler.current
     val isBlurEnabled by rememberAllowBlur()
@@ -177,7 +181,7 @@ fun <T : Media> MediaViewSheetDetails(
                 )
             )
             .then(sheetBackgroundModifier)
-            .hazeEffect(
+            .hazeEffectScaled(
                 state = LocalHazeState.current,
                 style = sheetHazeStyle
             )
@@ -304,7 +308,7 @@ fun <T : Media> MediaViewSheetDetails(
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(16.dp))
                                 .then(sheetCardBackgroundModifier)
-                                .hazeEffect(
+                                .hazeEffectScaled(
                                     state = LocalHazeState.current,
                                     style = sheetCardHazeStyle
                                 )
@@ -347,15 +351,26 @@ fun <T : Media> MediaViewSheetDetails(
                                         contentColor = MaterialTheme.colorScheme.onError
                                     )
                                 }
+                                if (currentMedia.isCloud) {
+                                    MediaInfoChip(
+                                        text = stringResource(R.string.cloud_media),
+                                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                }
                             }
                             LocationItem(
                                 iconBackgroundModifier = Modifier
                                     .then(iconBackgroundModifier)
-                                    .hazeEffect(
+                                    .hazeEffectScaled(
                                         state = LocalHazeState.current,
                                         style = iconBackgroundHazeStyle
                                     ),
-                                locationData = locationData
+                                locationData = locationData,
+                                mediaUri = currentMedia.getUri(),
+                                onShowInApp = {
+                                    allMetadataEventHandler.navigate(Screen.LocationsScreen())
+                                }
                             )
                             AnimatedVisibility(
                                 visible = currentMedia.canMakeActions
@@ -416,7 +431,7 @@ fun <T : Media> MediaViewSheetDetails(
                                                 .fillMaxWidth()
                                                 .clip(RoundedCornerShape(12.dp))
                                                 .then(buttonBackgroundModifier)
-                                                .hazeEffect(
+                                                .hazeEffectScaled(
                                                     state = LocalHazeState.current,
                                                     style = sheetCardButtonHazeStyle
                                                 )
@@ -462,7 +477,7 @@ fun <T : Media> MediaViewSheetDetails(
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(16.dp))
                                     .then(sheetCardBackgroundModifier)
-                                    .hazeEffect(
+                                    .hazeEffectScaled(
                                         state = LocalHazeState.current,
                                         style = sheetCardHazeStyle
                                     )
@@ -477,7 +492,7 @@ fun <T : Media> MediaViewSheetDetails(
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(16.dp))
                                 .then(sheetCardBackgroundModifier)
-                                .hazeEffect(
+                                .hazeEffectScaled(
                                     state = LocalHazeState.current,
                                     style = sheetCardHazeStyle
                                 )
@@ -493,7 +508,7 @@ fun <T : Media> MediaViewSheetDetails(
                                     icon = it.icon,
                                     iconBackgroundModifier = Modifier
                                         .then(iconBackgroundModifier)
-                                        .hazeEffect(
+                                        .hazeEffectScaled(
                                             state = LocalHazeState.current,
                                             style = iconBackgroundHazeStyle
                                         ),
@@ -526,7 +541,7 @@ fun <T : Media> MediaViewSheetDetails(
                                     icon = Icons.Outlined.Info,
                                     iconBackgroundModifier = Modifier
                                         .then(iconBackgroundModifier)
-                                        .hazeEffect(
+                                        .hazeEffectScaled(
                                             state = LocalHazeState.current,
                                             style = iconBackgroundHazeStyle
                                         ),
@@ -553,7 +568,7 @@ fun <T : Media> MediaViewSheetDetails(
                                     ),
                                     iconBackgroundModifier = Modifier
                                         .then(iconBackgroundModifier)
-                                        .hazeEffect(
+                                        .hazeEffectScaled(
                                             state = LocalHazeState.current,
                                             style = iconBackgroundHazeStyle
                                         ),

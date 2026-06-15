@@ -30,6 +30,7 @@ import com.dot.gallery.core.Settings.Misc.rememberForceTheme
 import com.dot.gallery.core.Settings.Misc.rememberIsAmoledMode
 import com.dot.gallery.core.Settings.Misc.rememberIsDarkMode
 import com.dot.gallery.core.Settings.Misc.rememberThemeColorSeed
+import com.dot.gallery.core.Settings.Misc.rememberUseSystemFont
 import com.google.android.material.color.utilities.Hct
 import com.google.android.material.color.utilities.SchemeTonalSpot
 import com.google.android.material.color.utilities.TonalPalette
@@ -127,6 +128,7 @@ fun GalleryTheme(
     }
     val isAmoledMode by rememberIsAmoledMode()
     val themeColorSeed by rememberThemeColorSeed()
+    val useSystemFont by rememberUseSystemFont()
     val context = LocalContext.current
     val colorScheme = remember(dynamicColor, forcedDarkTheme, isAmoledMode, themeColorSeed) {
         if (themeColorSeed == Settings.Misc.THEME_SEED_NEUTRAL) {
@@ -147,7 +149,7 @@ fun GalleryTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography
+        typography = if (useSystemFont) SystemTypography else Typography
     ) {
         CompositionLocalProvider(
             value = LocalOverscrollFactory provides null,

@@ -54,6 +54,7 @@ import com.dot.gallery.core.LocalMediaDistributor
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import com.dot.gallery.feature_node.domain.model.Album
+import com.dot.gallery.feature_node.domain.model.AlbumSectionWithAlbums
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import com.dot.gallery.core.Constants.Animation.navigateInAnimation
@@ -65,7 +66,9 @@ import com.dot.gallery.core.LocalMediaSelector
 import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
 import com.dot.gallery.core.Settings.Misc.rememberForcedLastScreen
 import com.dot.gallery.core.Settings.Misc.rememberLastScreen
+import com.dot.gallery.core.Settings
 import com.dot.gallery.core.Settings.Misc.rememberTimelineGroupByMonth
+import com.dot.gallery.core.Settings.Misc.rememberTimelineGroupByYear
 import com.dot.gallery.core.navigate
 import com.dot.gallery.core.presentation.components.util.OnLifecycleEvent
 import com.dot.gallery.core.presentation.components.util.permissionGranted
@@ -116,8 +119,37 @@ import com.dot.gallery.feature_node.presentation.settings.subsettings.SettingsTi
 import com.dot.gallery.feature_node.presentation.settings.subsettings.EditBackupsViewerScreen
 import com.dot.gallery.feature_node.presentation.settings.subsettings.AIModelsManagerScreen
 import com.dot.gallery.feature_node.presentation.settings.subsettings.SettingsSecurityScreen
+import com.dot.gallery.feature_node.presentation.settings.subsettings.SettingsBackupScreen
+import com.dot.gallery.feature_node.presentation.settings.subsettings.SettingsBackupExportScreen
+import com.dot.gallery.feature_node.presentation.settings.subsettings.SettingsBackupImportScreen
 import com.dot.gallery.feature_node.presentation.settings.subsettings.SettingsSmartFeaturesScreen
+import com.dot.gallery.cloud.core.ProviderType
+import com.dot.gallery.cloud.ui.CloudAccountsScreen
+import com.dot.gallery.cloud.ui.CloudAddServerScreen
+import com.dot.gallery.cloud.ui.CloudTimelineScreen
+import com.dot.gallery.cloud.ui.CloudUploadSettingsScreen
+import com.dot.gallery.cloud.ui.archive.CloudArchiveScreen
+import com.dot.gallery.cloud.ui.archive.CloudArchiveViewModel
+import com.dot.gallery.cloud.ui.library.CloudLibraryScreen
+import com.dot.gallery.cloud.ui.backup.BackupOptionsScreen
+import com.dot.gallery.cloud.ui.backup.CloudBackupAndSyncScreen
+import com.dot.gallery.cloud.ui.backup.CloudBackupScreen
+import com.dot.gallery.cloud.ui.backup.UploadDetailsScreen
+import com.dot.gallery.cloud.ui.memories.MemoriesScreen
+import com.dot.gallery.cloud.ui.people.PeopleListScreen
+import com.dot.gallery.cloud.ui.people.PersonDetailScreen
+import com.dot.gallery.cloud.ui.people.PersonDetailViewModel
+import com.dot.gallery.cloud.ui.profile.CloudProfileScreen
+import com.dot.gallery.cloud.ui.sharing.SharedLinksScreen
+import com.dot.gallery.cloud.ui.settings.CloudAdvancedSettingsScreen
+import com.dot.gallery.cloud.ui.settings.CloudNetworkingScreen
+import com.dot.gallery.cloud.ui.settings.CloudNotificationSettingsScreen
+import com.dot.gallery.cloud.ui.settings.CloudProviderSettingsScreen
+import com.dot.gallery.cloud.ui.settings.CloudViewerSettingsScreen
+import com.dot.gallery.cloud.ui.space.FreeUpSpaceScreen
+import com.dot.gallery.cloud.ui.sync.SyncStatusScreen
 import com.dot.gallery.feature_node.presentation.setup.SetupScreen
+
 import com.dot.gallery.feature_node.presentation.storycards.StoryCardsSettingsScreen
 import com.dot.gallery.feature_node.presentation.storycards.StoryCardsViewModel
 import com.dot.gallery.feature_node.presentation.storycards.StoryViewerScreen
@@ -151,6 +183,7 @@ fun NavigationComp(
     val bottomNavEntries = rememberNavigationItems()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val groupTimelineByMonth by rememberTimelineGroupByMonth()
+    val groupTimelineByYear by rememberTimelineGroupByYear()
     val context = LocalContext.current
     var permissionState by rememberSaveable { mutableStateOf(context.permissionGranted(Constants.PERMISSIONS)) }
     rememberMultiplePermissionsState(Constants.PERMISSIONS) {
@@ -206,9 +239,11 @@ fun NavigationComp(
     // Preloaded viewModels
     val distributor = LocalMediaDistributor.current
     val albumsState = navViewModel.albumsState.collectAsStateWithLifecycle()
-    val timelineState = navViewModel.timelineMediaState.collectAsStateWithLifecycle()
+    val localTimelineState = navViewModel.timelineMediaState.collectAsStateWithLifecycle()
     val metadataState = navViewModel.metadataState.collectAsStateWithLifecycle()
     val vaultState = navViewModel.vaultState.collectAsStateWithLifecycle()
+
+    val timelineState = localTimelineState
 
     LaunchedEffect(permissionState) {
         navViewModel.updatePermissionGranted(permissionState)
@@ -216,6 +251,10 @@ fun NavigationComp(
 
     LaunchedEffect(groupTimelineByMonth) {
         navViewModel.updateGroupByMonth(groupTimelineByMonth)
+    }
+
+    LaunchedEffect(groupTimelineByYear) {
+        navViewModel.updateGroupByYear(groupTimelineByYear)
     }
 
     val searchViewModel = hiltViewModel<SearchViewModel>()
@@ -282,6 +321,12 @@ fun NavigationComp(
                 route = Screen.AlbumsScreen()
             ) {
                 val albumsViewModel = hiltViewModel<AlbumsViewModel>()
+                val albumSectionsEnabled by Settings.Album.rememberAlbumSectionsEnabled()
+                LaunchedEffect(albumSectionsEnabled) {
+                    if (albumSectionsEnabled) {
+                        albumsViewModel.ensureDefaultSections()
+                    }
+                }
                 val scope = rememberCoroutineScope()
                 var pendingAlbum by remember { mutableStateOf<Album?>(null) }
                 var biometricAction by remember { mutableStateOf<String?>(null) }
@@ -420,6 +465,31 @@ fun NavigationComp(
                     }
                 )
 
+                // Move to section sheet state
+                val moveToSectionSheetState = rememberAppBottomSheetState()
+                var pendingMoveAlbum by remember { mutableStateOf<Album?>(null) }
+                var pendingMoveCurrentSectionId by remember { mutableStateOf<Long?>(null) }
+
+                MoveToSectionSheet(
+                    sheetState = moveToSectionSheetState,
+                    sections = albumsStateForGroups.albumSections,
+                    currentSectionId = pendingMoveCurrentSectionId,
+                    onMoveToSection = { sectionId ->
+                        pendingMoveAlbum?.let { album ->
+                            albumsViewModel.moveAlbumToSection(album.id, sectionId)
+                        }
+                        pendingMoveAlbum = null
+                        pendingMoveCurrentSectionId = null
+                    },
+                    onResetOverride = {
+                        pendingMoveAlbum?.let { album ->
+                            albumsViewModel.resetAlbumSectionOverride(album.id)
+                        }
+                        pendingMoveAlbum = null
+                        pendingMoveCurrentSectionId = null
+                    }
+                )
+
                 AlbumsScreen(
                     isScrolling = isScrolling,
                     onAlbumClick = onAlbumClickWithLock,
@@ -480,6 +550,19 @@ fun NavigationComp(
                         collectionDialogId = null
                         collectionDialogInitialName = ""
                         scope.launch { collectionSheetState.show() }
+                    },
+                    onMoveToSection = if (albumSectionsEnabled) { album ->
+                        pendingMoveAlbum = album
+                        pendingMoveCurrentSectionId = albumsStateForGroups.albumSections
+                            .firstOrNull { swa -> swa.albums.any { it.id == album.id } }
+                            ?.section?.id
+                        scope.launch { moveToSectionSheetState.show() }
+                    } else null,
+                    onToggleSectionExpanded = { sectionWithAlbums, expanded ->
+                        albumsViewModel.toggleSectionExpanded(
+                            sectionWithAlbums.section.id,
+                            expanded
+                        )
                     },
                     sharedTransitionScope = this@SharedTransitionLayout,
                     animatedContentScope = this
@@ -701,10 +784,13 @@ fun NavigationComp(
                 val target: String? = remember(backStackEntry) {
                     backStackEntry.arguments?.getString("target")
                 }
-                val mediaState = remember(target) {
+                val archiveViewModel: CloudArchiveViewModel? =
+                    if (target == "cloud_archive") hiltViewModel() else null
+                val mediaState = remember(target, archiveViewModel) {
                     when (target) {
                         TARGET_FAVORITES -> navViewModel.favoriteMediaState
                         TARGET_TRASH -> navViewModel.trashedMediaState
+                        "cloud_archive" -> archiveViewModel!!.mediaState
                         else -> navViewModel.timelineMediaState
                     }
                 }.collectAsStateWithLifecycle()
@@ -1154,11 +1240,259 @@ fun NavigationComp(
             composable(Screen.SettingsSecurityScreen()) {
                 SettingsSecurityScreen()
             }
+            composable(Screen.SettingsBackupScreen()) {
+                SettingsBackupScreen(
+                    onExport = { navController.navigate(Screen.SettingsBackupExportScreen()) },
+                    onImport = { navController.navigate(Screen.SettingsBackupImportScreen()) }
+                )
+            }
+            composable(Screen.SettingsBackupExportScreen()) {
+                SettingsBackupExportScreen(
+                    navigateUp = { navController.navigateUp() }
+                )
+            }
+            composable(Screen.SettingsBackupImportScreen()) {
+                SettingsBackupImportScreen(
+                    navigateUp = { navController.navigateUp() }
+                )
+            }
             composable(Screen.SettingsSelectionActionsScreen()) {
                 SettingsSelectionActionsScreen()
             }
+            composable(Screen.CloudAccountsScreen()) {
+                CloudAccountsScreen()
+            }
+            composable(Screen.CloudTimelineScreen()) {
+                CloudTimelineScreen()
+            }
+            composable(
+                route = Screen.CloudAddServerScreen.providerType(),
+                arguments = listOf(
+                    navArgument(name = "providerType") {
+                        type = NavType.StringType
+                        defaultValue = ProviderType.IMMICH.name
+                    }
+                )
+            ) { backStackEntry ->
+                val typeName = remember(backStackEntry) {
+                    backStackEntry.arguments?.getString("providerType") ?: ProviderType.IMMICH.name
+                }
+                val type = remember(typeName) {
+                    try { ProviderType.valueOf(typeName) } catch (_: Exception) { ProviderType.IMMICH }
+                }
+                CloudAddServerScreen(
+                    providerType = type,
+                    onSaved = { navController.navigateUp() }
+                )
+            }
+            composable(
+                route = Screen.CloudEditServerScreen.configId(),
+                arguments = listOf(
+                    navArgument(name = "configId") {
+                        type = NavType.LongType
+                        defaultValue = -1L
+                    }
+                )
+            ) { backStackEntry ->
+                val configId = remember(backStackEntry) {
+                    backStackEntry.arguments?.getLong("configId") ?: -1L
+                }
+                CloudAddServerScreen(
+                    providerType = ProviderType.IMMICH,
+                    configId = configId,
+                    onSaved = { navController.navigateUp() }
+                )
+            }
+            composable(Screen.CloudUploadSettingsScreen()) {
+                CloudUploadSettingsScreen(
+                    navigateUp = { navController.navigateUp() }
+                )
+            }
+            composable(
+                route = Screen.CloudProviderSettingsScreen.configId(),
+                arguments = listOf(
+                    navArgument(name = "configId") {
+                        type = NavType.LongType
+                        defaultValue = -1L
+                    }
+                )
+            ) { backStackEntry ->
+                val configId = remember(backStackEntry) {
+                    backStackEntry.arguments?.getLong("configId") ?: -1L
+                }
+                CloudProviderSettingsScreen(
+                    configId = configId,
+                    onDeleted = { navController.navigateUp() }
+                )
+            }
             composable(Screen.EditBackupsViewerScreen()) {
                 EditBackupsViewerScreen()
+            }
+
+            composable(Screen.CloudLibraryScreen()) {
+                CloudLibraryScreen(
+                    paddingValues = paddingValues,
+                    navigate = { route ->
+                        navController.navigate(route) {
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
+
+            composable(Screen.CloudArchiveScreen()) {
+                val archiveViewModel = hiltViewModel<CloudArchiveViewModel>()
+                val archiveMediaState = archiveViewModel.mediaState.collectAsStateWithLifecycle()
+                CloudArchiveScreen(
+                    paddingValues = paddingValues,
+                    mediaState = archiveMediaState,
+                    metadataState = metadataState,
+                    clearSelection = selector::clearSelection,
+                    sharedTransitionScope = this@SharedTransitionLayout,
+                    animatedContentScope = this
+                )
+            }
+
+            composable(Screen.CloudProfileScreen()) {
+                CloudProfileScreen()
+            }
+
+            composable(Screen.SyncStatusScreen()) {
+                SyncStatusScreen()
+            }
+
+            composable(Screen.CloudBackupScreen()) {
+                CloudBackupScreen(
+                    onNavigateToAlbumPicker = {
+                        navController.navigate(Screen.CloudUploadSettingsScreen())
+                    },
+                    onNavigateToBackupOptions = {
+                        navController.navigate(Screen.BackupOptionsScreen())
+                    },
+                    onNavigateToUploadDetails = {
+                        navController.navigate(Screen.UploadDetailsScreen())
+                    }
+                )
+            }
+
+            composable(Screen.CloudBackupAndSyncScreen()) {
+                CloudBackupAndSyncScreen(
+                    onNavigateToAlbumPicker = {
+                        navController.navigate(Screen.CloudUploadSettingsScreen())
+                    },
+                    onNavigateToBackupOptions = {
+                        navController.navigate(Screen.BackupOptionsScreen())
+                    },
+                    onNavigateToUploadDetails = {
+                        navController.navigate(Screen.UploadDetailsScreen())
+                    }
+                )
+            }
+
+            composable(Screen.BackupOptionsScreen()) {
+                BackupOptionsScreen()
+            }
+
+            composable(Screen.UploadDetailsScreen()) {
+                UploadDetailsScreen()
+            }
+
+            composable(Screen.SharedLinksScreen()) {
+                SharedLinksScreen()
+            }
+
+            composable(Screen.PeopleListScreen()) {
+                PeopleListScreen(
+                    onPersonClick = { personId ->
+                        navController.navigate(Screen.PersonDetailScreen.personId(personId))
+                    }
+                )
+            }
+
+            composable(
+                route = Screen.PersonDetailScreen.personId(),
+                arguments = listOf(
+                    navArgument("personId") { defaultValue = "" }
+                )
+            ) {
+                PersonDetailScreen(
+                    metadataState = metadataState,
+                    sharedTransitionScope = this@SharedTransitionLayout,
+                    animatedContentScope = this,
+                )
+            }
+
+            composable(
+                route = Screen.MediaViewScreen.idAndPerson(),
+                arguments = listOf(
+                    navArgument(name = "mediaId") {
+                        type = NavType.LongType
+                        defaultValue = -1
+                    },
+                    navArgument(name = "personId") {
+                        type = NavType.StringType
+                        defaultValue = ""
+                    }
+                )
+            ) { backStackEntry ->
+                val mediaId: Long = remember(backStackEntry) {
+                    backStackEntry.arguments?.getLong("mediaId") ?: -1
+                }
+                val personId: String = remember(backStackEntry) {
+                    backStackEntry.arguments?.getString("personId").orEmpty()
+                }
+                // hiltViewModel reads personId from this entry's SavedStateHandle (the nav arg),
+                // so the viewer pages over the person's media instead of the whole timeline.
+                val personViewModel = hiltViewModel<PersonDetailViewModel>()
+                val mediaState = personViewModel.mediaState.collectAsStateWithLifecycle()
+
+                MediaViewScreenRoute(
+                    toggleRotate = toggleRotate,
+                    paddingValues = paddingValues,
+                    mediaId = mediaId,
+                    target = "person_$personId",
+                    mediaState = mediaState,
+                    metadataState = metadataState,
+                    albumsState = albumsState,
+                    vaultState = vaultState,
+                    sharedTransitionScope = this@SharedTransitionLayout,
+                    animatedContentScope = this
+                )
+            }
+
+            composable(Screen.CloudPlacesScreen()) {
+                val locationsViewModel = hiltViewModel<CategoriesViewModel>()
+                val locations by locationsViewModel.locations.collectAsStateWithLifecycle()
+                val geoMedia by locationsViewModel.geoMedia.collectAsStateWithLifecycle()
+                LocationsScreen(
+                    metadataState = metadataState,
+                    locations = locations,
+                    geoMedia = geoMedia
+                )
+            }
+
+            composable(Screen.FreeUpSpaceScreen()) {
+                FreeUpSpaceScreen()
+            }
+
+            composable(Screen.MemoriesScreen()) {
+                MemoriesScreen()
+            }
+
+            composable(Screen.CloudNotificationSettingsScreen()) {
+                CloudNotificationSettingsScreen()
+            }
+
+            composable(Screen.CloudNetworkingScreen()) {
+                CloudNetworkingScreen()
+            }
+
+            composable(Screen.CloudViewerSettingsScreen()) {
+                CloudViewerSettingsScreen()
+            }
+
+            composable(Screen.CloudAdvancedSettingsScreen()) {
+                CloudAdvancedSettingsScreen()
             }
 
             composable(Screen.SearchScreen()) {
@@ -1320,10 +1654,14 @@ fun NavigationComp(
                 }
                 val storyCardsViewModel = hiltViewModel<StoryCardsViewModel>()
                 val cards by storyCardsViewModel.allCards.collectAsStateWithLifecycle()
+                val metadata by storyCardsViewModel.metadataFlow.collectAsStateWithLifecycle()
+                val metadataMap = remember(metadata) { metadata.associateBy { it.mediaId } }
 
                 StoryViewerScreen(
                     cards = cards,
                     initialCardId = cardId,
+                    metadataMap = metadataMap,
+                    onEnsureMetadata = storyCardsViewModel::ensureMetadataAvailable,
                     onDismiss = { navController.navigateUp() }
                 )
             }

@@ -13,6 +13,8 @@ android {
         }
         create("nonMinifiedStaging") {
         }
+        create("gplay") {
+        }
     }
     flavorDimensions += listOf("abi")
     productFlavors {

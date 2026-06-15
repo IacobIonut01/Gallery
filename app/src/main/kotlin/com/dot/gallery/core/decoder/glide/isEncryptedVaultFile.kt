@@ -15,9 +15,12 @@ fun isEncryptedVaultFile(file: File): Boolean =
 fun decryptVaultFile(file: File, context: Context): EncryptedMediaStream {
     val keychainHolder = KeychainHolder(context)
     val decrypted = keychainHolder.decryptVaultMedia(file)
+    val bytes = decrypted.readBytes()
+    val mimeType = decrypted.mimeType
+    decrypted.cleanup()
     return EncryptedMediaStream(
-        bytes = decrypted.readBytes(),
-        mimeType = decrypted.mimeType,
-        isVideo = decrypted.mimeType.startsWith("video")
+        bytes = bytes,
+        mimeType = mimeType,
+        isVideo = mimeType.startsWith("video")
     )
 }

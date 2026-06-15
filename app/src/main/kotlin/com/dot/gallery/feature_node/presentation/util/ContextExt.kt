@@ -63,6 +63,7 @@ import com.dot.gallery.core.Settings.Misc.rememberFullBrightnessView
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.util.getUri
+import com.dot.gallery.feature_node.domain.util.isCloud
 import com.dot.gallery.feature_node.domain.util.isImage
 import com.dot.gallery.feature_node.presentation.edit.EditActivity
 import kotlinx.coroutines.CoroutineScope
@@ -344,40 +345,49 @@ fun Context.launchEditImageIntent(packageName: String, uri: Uri) {
     startActivity(intent)
 }
 
-fun <T: Media>  Context.launchEditIntent(media: T) {
-    if (media.isImage) {
-        EditActivity.launchEditor(this@launchEditIntent, media.getUri().authorizedUri(this@launchEditIntent))
-    } else {
-        val intent = Intent(Intent.ACTION_EDIT).apply {
-            addCategory(Intent.CATEGORY_DEFAULT)
-            setDataAndType(media.getUri().authorizedUri(this@launchEditIntent), media.mimeType)
-            putExtra("mimeType", media.mimeType)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+suspend fun <T: Media> Context.launchEditIntent(media: T) {
+    val uri = if (media.isCloud) resolveShareableUri(media) else media.getUri().authorizedUri(this)
+    withContext(Dispatchers.Main) {
+        if (media.isImage) {
+            EditActivity.launchEditor(this@launchEditIntent, uri)
+        } else {
+            val intent = Intent(Intent.ACTION_EDIT).apply {
+                addCategory(Intent.CATEGORY_DEFAULT)
+                setDataAndType(uri, media.mimeType)
+                putExtra("mimeType", media.mimeType)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            startActivity(Intent.createChooser(intent, getString(R.string.edit)))
         }
-        startActivity(Intent.createChooser(intent, getString(R.string.edit)))
     }
 }
 
 suspend fun <T: Media> Context.launchUseAsIntent(media: T) =
     withContext(Dispatchers.Default) {
-        val intent = Intent(Intent.ACTION_ATTACH_DATA).apply {
-            addCategory(Intent.CATEGORY_DEFAULT)
-            setDataAndType(media.getUri().authorizedUri(this@launchUseAsIntent), media.mimeType)
-            putExtra("mimeType", media.mimeType)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        val uri = if (media.isCloud) resolveShareableUri(media) else media.getUri().authorizedUri(this@launchUseAsIntent)
+        withContext(Dispatchers.Main) {
+            val intent = Intent(Intent.ACTION_ATTACH_DATA).apply {
+                addCategory(Intent.CATEGORY_DEFAULT)
+                setDataAndType(uri, media.mimeType)
+                putExtra("mimeType", media.mimeType)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            startActivity(Intent.createChooser(intent, getString(R.string.set_as)))
         }
-        startActivity(Intent.createChooser(intent, getString(R.string.set_as)))
     }
 
 suspend fun <T: Media> Context.launchOpenWithIntent(media: T) =
     withContext(Dispatchers.Default) {
-        val intent = Intent(Intent.ACTION_VIEW).apply {
-            addCategory(Intent.CATEGORY_DEFAULT)
-            setDataAndType(media.getUri().authorizedUri(this@launchOpenWithIntent), media.mimeType)
-            putExtra("mimeType", media.mimeType)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        val uri = if (media.isCloud) resolveShareableUri(media) else media.getUri().authorizedUri(this@launchOpenWithIntent)
+        withContext(Dispatchers.Main) {
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                addCategory(Intent.CATEGORY_DEFAULT)
+                setDataAndType(uri, media.mimeType)
+                putExtra("mimeType", media.mimeType)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            startActivity(Intent.createChooser(intent, getString(R.string.open_with)))
         }
-        startActivity(Intent.createChooser(intent, getString(R.string.open_with)))
     }
 
 @Composable

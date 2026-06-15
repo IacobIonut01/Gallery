@@ -25,6 +25,9 @@ sealed class EditorDestination {
     data object Colour : EditorDestination()
 
     @Serializable
+    data object Effects : EditorDestination()
+
+    @Serializable
     data object More : EditorDestination()
 
     @Serializable

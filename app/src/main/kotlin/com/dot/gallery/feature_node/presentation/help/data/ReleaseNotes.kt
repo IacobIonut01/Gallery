@@ -19,7 +19,7 @@ data class ReleaseNotes(
 @Immutable
 data class ReleaseHighlight(
     val tipId: String? = null,
-    @StringRes val title: Int,
-    @StringRes val description: Int,
+    @param:StringRes val title: Int,
+    @param:StringRes val description: Int,
     val icon: HelpIcon
 )

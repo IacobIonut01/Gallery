@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -41,6 +42,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -51,44 +53,47 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
-import com.bumptech.glide.integration.compose.GlideImage
+import com.dot.gallery.core.LocalEventHandler
 import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
 import com.dot.gallery.core.Settings.Misc.rememberStoryViewerAutoAdvance
 import com.dot.gallery.core.Settings.Misc.rememberStoryViewerDuration
+import com.dot.gallery.core.setFollowTheme
+import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.model.MediaMetadata
 import com.dot.gallery.feature_node.domain.model.StoryCard
-import com.dot.gallery.feature_node.domain.util.getUri
 import com.dot.gallery.feature_node.presentation.mediaview.components.actionbuttons.FavoriteButton
 import com.dot.gallery.feature_node.presentation.mediaview.components.actionbuttons.ShareButton
-import com.dot.gallery.feature_node.presentation.mediaview.components.media.BlurredMediaBackground
+import com.dot.gallery.feature_node.presentation.mediaview.components.media.MediaPreviewComponent
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
-import com.dot.gallery.feature_node.presentation.util.GlideInvalidation
-import com.dot.gallery.feature_node.presentation.util.LocalHazeState
 import com.dot.gallery.feature_node.presentation.util.rememberWindowInsetsController
 import dev.chrisbanes.haze.hazeEffect
-import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalGlideComposeApi::class, ExperimentalHazeMaterialsApi::class)
+@OptIn(ExperimentalHazeMaterialsApi::class)
 @Composable
 fun StoryViewerScreen(
     cards: List<StoryCard>?,
     initialCardId: Long = -1L,
+    metadataMap: Map<Long, MediaMetadata> = emptyMap(),
+    onEnsureMetadata: (Media?) -> Unit = {},
     onDismiss: () -> Unit
 ) {
     // Force light status bar icons (white) on dark background, restore on exit
     val windowInsetsController = rememberWindowInsetsController()
+    val eventHandler = LocalEventHandler.current
     DisposableEffect(Unit) {
         val previousLight = windowInsetsController.isAppearanceLightStatusBars
         windowInsetsController.isAppearanceLightStatusBars = false
+        eventHandler.setFollowTheme(false)
         onDispose {
             windowInsetsController.isAppearanceLightStatusBars = previousLight
+            eventHandler.setFollowTheme(true)
         }
     }
 
@@ -129,6 +134,8 @@ fun StoryViewerScreen(
         }
     }
 
+    val scope = rememberCoroutineScope()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -149,18 +156,32 @@ fun StoryViewerScreen(
             StoryCardViewer(
                 card = card,
                 isCurrentPage = isCurrentPage,
-                onDismiss = onDismiss
+                metadataMap = metadataMap,
+                onEnsureMetadata = onEnsureMetadata,
+                onDismiss = onDismiss,
+                onCardFinished = {
+                    scope.launch {
+                        if (pagerState.currentPage < cards.lastIndex) {
+                            pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                        } else {
+                            onDismiss()
+                        }
+                    }
+                }
             )
         }
     }
 }
 
-@OptIn(ExperimentalGlideComposeApi::class, ExperimentalHazeMaterialsApi::class)
+@OptIn(ExperimentalHazeMaterialsApi::class)
 @Composable
 private fun StoryCardViewer(
     card: StoryCard,
     isCurrentPage: Boolean,
-    onDismiss: () -> Unit
+    metadataMap: Map<Long, MediaMetadata> = emptyMap(),
+    onEnsureMetadata: (Media?) -> Unit = {},
+    onDismiss: () -> Unit,
+    onCardFinished: () -> Unit
 ) {
     val mediaList = card.mediaList
     if (mediaList.isEmpty()) {
@@ -182,7 +203,7 @@ private fun StoryCardViewer(
     var isPaused by rememberSaveable { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val allowBlur by rememberAllowBlur()
-    val hazeState = LocalHazeState.current
+    val hazeState = com.dot.gallery.feature_node.presentation.util.LocalHazeState.current
 
     val progress = remember { Animatable(0f) }
 
@@ -197,11 +218,11 @@ private fun StoryCardViewer(
                 easing = LinearEasing
             )
         )
-        // Advance to next media or dismiss
+        // Advance to next media or advance to next card
         if (currentMediaIndex < mediaList.lastIndex) {
             currentMediaIndex++
         } else {
-            onDismiss()
+            onCardFinished()
         }
     }
 
@@ -221,57 +242,72 @@ private fun StoryCardViewer(
     val fallbackContainerColor = remember {
         Color.Black.copy(alpha = 0.4f)
     }
+    val playWhenReady = remember { mutableStateOf(true) }
+
+    // Look up metadata for the current media and trigger collection if needed
+    val mediaMetadata by rememberedDerivedState(metadataMap, currentMedia) {
+        metadataMap[currentMedia.id]
+    }
+    LaunchedEffect(currentMedia.id) {
+        onEnsureMetadata(currentMedia)
+    }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onTap = { offset ->
-                        val width = size.width
-                        if (offset.x < width / 3f) {
-                            if (currentMediaIndex > 0) {
-                                currentMediaIndex--
-                                scope.launch { progress.snapTo(0f) }
-                            }
-                        } else if (offset.x > width * 2f / 3f) {
-                            if (currentMediaIndex < mediaList.lastIndex) {
-                                currentMediaIndex++
-                                scope.launch { progress.snapTo(0f) }
-                            } else {
-                                onDismiss()
-                            }
-                        }
-                    },
-                    onLongPress = {
-                        isPaused = true
-                    },
-                    onPress = {
-                        awaitRelease()
-                        if (isPaused) {
-                            isPaused = false
-                        }
-                    }
-                )
-            }
+        modifier = Modifier.fillMaxSize()
     ) {
-        // Blurred background behind media (like ZoomablePagerImage)
-        BlurredMediaBackground(
-            media = currentMedia,
-            uiEnabled = true
-        )
+        // Media display using the same component as the media view screen
+        // key() forces full tear-down/rebuild when media changes, ensuring
+        // the VideoPlayer's SurfaceView and ExoPlayer are properly recycled
+        key(currentMedia.id) {
+            MediaPreviewComponent(
+                media = currentMedia,
+                uiEnabled = true,
+                playWhenReady = playWhenReady,
+                onItemClick = { /* handled by gesture overlay */ },
+                onSwipeDown = onDismiss,
+                rotationDisabled = true,
+                onImageRotated = {},
+                offset = IntOffset.Zero,
+                isPanorama = mediaMetadata?.isPanorama == true,
+                isPhotosphere = mediaMetadata?.isPhotosphere == true,
+                isMotionPhoto = mediaMetadata?.isMotionPhoto == true,
+                videoController = { _, _, _, _, _, _, _ -> }
+            )
+        }
 
-        // Media display (haze source for blur)
-        GlideImage(
+        // Gesture overlay for story navigation (left/right tap, long-press to pause)
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .hazeSource(hazeState),
-            contentScale = ContentScale.Fit,
-            model = currentMedia.getUri(),
-            contentDescription = currentMedia.label,
-            requestBuilderTransform = {
-                it.signature(GlideInvalidation.signature(currentMedia))
-            }
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onTap = { offset ->
+                            val width = size.width
+                            if (offset.x < width / 3f) {
+                                if (currentMediaIndex > 0) {
+                                    currentMediaIndex--
+                                    scope.launch { progress.snapTo(0f) }
+                                }
+                            } else if (offset.x > width * 2f / 3f) {
+                                if (currentMediaIndex < mediaList.lastIndex) {
+                                    currentMediaIndex++
+                                    scope.launch { progress.snapTo(0f) }
+                                } else {
+                                    onCardFinished()
+                                }
+                            }
+                        },
+                        onLongPress = {
+                            isPaused = true
+                        },
+                        onPress = {
+                            awaitRelease()
+                            if (isPaused) {
+                                isPaused = false
+                            }
+                        }
+                    )
+                }
         )
 
         // Top gradient overlay

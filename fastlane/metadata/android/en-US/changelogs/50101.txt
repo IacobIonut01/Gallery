@@ -1,0 +1,30 @@
+What's new in 5.0.1:
+
+• More image formats — View PSD, JPEG 2000, TIFF, and SVG files, with crisp pinch-to-zoom for each
+• Faster HEIC/AVIF — Hardware-accelerated decoding with fixed AVIF color artifacts
+• Use system font — New display option to switch the app over to your device's system font
+• High-quality JXL zoom — Sharp JPEG XL zoom in the viewer via a dedicated region decoder
+
+Improvements:
+• Video now plays only through the media volume stream. 'Request audio focus' option is removed.
+• Dismiss the What's New card without having to open it
+
+Bug fixes:
+• Fixed editor markup text gestures (rotate handle, stay-in-bounds) and crop box interactions
+• Fixed timeline scroll position not being preserved when returning from the viewer
+• Fixed settings scroll position resetting when opening a detail page
+• Fixed album cover not matching the first item shown inside the album
+• Fixed broken viewer exit animations from shared-element transitions
+• Fixed black screen in the standalone viewer after deleting the current photo
+• Fixed a crash on launch when MediaStore returned null columns
+• Fixed video zoom on forced rotation and made pinch-to-zoom feel natural
+• Fixed the back gesture being ignored on videos when controls were hidden
+• Fixed the video info section closing when auto-hide fired
+• Fixed panorama compass and gyro axes on rotation
+• Fixed text disappearing and the cursor jumping in date format fields
+• Fixed the scrubber resetting to its default value near zero
+• Fixed home screen widgets when the cached bitmap was missing
+• Fixed Facebook export photos showing future dates in the timeline
+• Fixed the search bar placeholder overflowing to a second line
+• Removed the erroneous 'Copied to clipboard' toast on Android 13+
+• Updated Simplified Chinese translations

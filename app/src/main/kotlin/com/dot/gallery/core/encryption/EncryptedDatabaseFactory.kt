@@ -43,6 +43,7 @@ object EncryptedDatabaseFactory {
     private const val PREF_WRAPPED_PASSPHRASE = "wrapped_passphrase"
     private const val FLAG_DB_ENCRYPTED = "db_encrypted"
     private const val GCM_TAG_LENGTH = 128
+    private const val PREF_RAW_KEY_MIGRATED = "raw_key_migrated"
 
     fun create(context: Context): InternalDatabase {
         val createSpan = StartupTracer.begin("EncryptedDB.create")
@@ -67,7 +68,19 @@ object EncryptedDatabaseFactory {
             migrateUnencryptedDbIfNeeded(context, passphrase)
         }
 
-        val factory = SupportOpenHelperFactory(passphrase)
+        // Convert the hex passphrase to raw-key format: x'<hex>'
+        // This tells SQLCipher to use the 256-bit key directly, skipping
+        // the expensive PBKDF2-HMAC-SHA512 (256k iterations, ~630ms).
+        val hexString = String(passphrase, Charsets.UTF_8)
+        val rawKeyPassphrase = "x'$hexString'".toByteArray(Charsets.UTF_8)
+
+        // Migrate existing databases from passphrase-based KDF to raw key.
+        // This must happen before Room opens the database.
+        StartupTracer.trace("EncryptedDB.rekeyIfNeeded") {
+            migrateToRawKeyIfNeeded(context, passphrase, hexString)
+        }
+
+        val factory = SupportOpenHelperFactory(rawKeyPassphrase)
         val db = StartupTracer.trace("EncryptedDB.roomBuilder") {
             Room.databaseBuilder(
                 context,
@@ -81,8 +94,79 @@ object EncryptedDatabaseFactory {
                 .build()
         }
 
+        // Eagerly open the database connection in the background to start
+        // SQLCipher key derivation early, rather than lazily on first query.
+        // This overlaps the expensive PBKDF2 work with other startup tasks.
+        Thread({
+            val rawDb = StartupTracer.trace("EncryptedDB.warmup") {
+                db.openHelper.writableDatabase
+            }
+            // Disable secure memory wiping — reduces per-page alloc/free overhead.
+            // Safe for a gallery app where the DB key is already in process memory.
+            try { rawDb.query("PRAGMA cipher_memory_security = OFF").close() } catch (_: Exception) {}
+            // Warm SQLCipher's page cache by reading catalog + data tables.
+            // Without this, the first Room query pays ~1.3s of cold-cache
+            // overhead decrypting system pages from disk.
+            StartupTracer.trace("EncryptedDB.cacheWarmup") {
+                rawDb.query("SELECT * FROM room_master_table").close()
+                rawDb.query("SELECT * FROM blacklist").close()
+                try {
+                    val c = rawDb.query("SELECT * FROM cloud_media WHERE trashed = 0 AND archived = 0 ORDER BY timestamp DESC")
+                    while (c.moveToNext()) { /* iterate to decrypt SQLCipher pages into cache */ }
+                    c.close()
+                } catch (_: Exception) { }
+            }
+        }, "db-warmup").start()
+
         StartupTracer.end(createSpan)
         return db
+    }
+
+    /**
+     * One-time migration: rekey an existing database from passphrase-based
+     * KDF (PBKDF2, ~630ms per open) to raw-key format (~0ms per open).
+     *
+     * Opens the DB with the old passphrase, then issues PRAGMA rekey with
+     * the raw key prefix so subsequent opens skip KDF entirely.
+     */
+    private fun migrateToRawKeyIfNeeded(context: Context, passphrase: ByteArray, hexString: String) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        if (prefs.getBoolean(PREF_RAW_KEY_MIGRATED, false)) return
+
+        val dbFile = context.getDatabasePath(InternalDatabase.NAME)
+        if (!dbFile.exists() || dbFile.length() == 0L) {
+            // New database — will be created with raw key directly
+            prefs.edit { putBoolean(PREF_RAW_KEY_MIGRATED, true) }
+            return
+        }
+
+        try {
+            // Open with the old passphrase (triggers PBKDF2 one last time)
+            val oldDb = SQLiteDatabase.openDatabase(
+                dbFile.absolutePath,
+                String(passphrase, Charsets.UTF_8),
+                null,
+                SQLiteDatabase.OPEN_READWRITE,
+                null,
+                null
+            )
+            try {
+                // Verify the old passphrase works
+                oldDb.rawQuery("SELECT COUNT(*) FROM sqlite_schema", null)
+                    .use { it.moveToFirst() }
+                // Rekey to raw-key format — rewrites the file header so future
+                // opens with x'<hex>' skip KDF entirely.
+                oldDb.rawExecSQL("PRAGMA rekey = \"x'$hexString'\"")
+                printDebug("EncryptedDatabaseFactory: rekeyed DB from passphrase → raw key")
+            } finally {
+                oldDb.close()
+            }
+            prefs.edit { putBoolean(PREF_RAW_KEY_MIGRATED, true) }
+        } catch (e: Exception) {
+            // If rekey fails, we'll fall back to raw-key open which will fail,
+            // and Room will recreate the DB. Log but don't crash.
+            printWarning("EncryptedDatabaseFactory: raw-key migration failed: ${e.message}")
+        }
     }
 
     /**
@@ -118,16 +202,18 @@ object EncryptedDatabaseFactory {
                 if (it.exists()) it.renameTo(File(backupFile.absolutePath + "-shm"))
             }
 
-            val passphraseStr = String(passphrase)
+            val hexString = String(passphrase, Charsets.UTF_8)
+            val rawKeyStr = "x'$hexString'"
 
             // Pre-create an empty encrypted database at the original path.
             // SQLCipher's ATTACH cannot create a new file when the main
             // connection was opened in plaintext mode (null key) — the
             // internal open() call omits O_CREAT, causing SQLITE_CANTOPEN.
             // By pre-creating the target, ATTACH just opens an existing file.
+            // Use raw-key format directly so no PBKDF2 rekey is needed later.
             SQLiteDatabase.openDatabase(
                 dbFile.absolutePath,
-                passphraseStr,
+                rawKeyStr,
                 null,
                 SQLiteDatabase.CREATE_IF_NECESSARY or SQLiteDatabase.OPEN_READWRITE,
                 null,
@@ -152,7 +238,7 @@ object EncryptedDatabaseFactory {
                 // SupportOpenHelperFactory converts byte[] → String via new String(byte[]),
                 // so we must use the same conversion for the KEY clause.
                 plainDb.rawExecSQL(
-                    "ATTACH DATABASE '${dbFile.absolutePath}' AS encrypted KEY '$passphraseStr'"
+                    "ATTACH DATABASE '${dbFile.absolutePath}' AS encrypted KEY \"$rawKeyStr\""
                 )
 
                 // Export all tables, indexes, triggers from plaintext → encrypted
@@ -171,8 +257,11 @@ object EncryptedDatabaseFactory {
             File(backupFile.absolutePath + "-shm").delete()
             backupFile.delete()
 
-            flags.edit {putBoolean(FLAG_DB_ENCRYPTED, true)}
-            printDebug("EncryptedDatabaseFactory: migrated plaintext DB → encrypted via sqlcipher_export")
+            flags.edit {
+                putBoolean(FLAG_DB_ENCRYPTED, true)
+                putBoolean(PREF_RAW_KEY_MIGRATED, true)
+            }
+            printDebug("EncryptedDatabaseFactory: migrated plaintext DB → encrypted (raw key) via sqlcipher_export")
         } catch (e: Exception) {
             printWarning("EncryptedDatabaseFactory: migration failed: ${e.message}")
             // Delete any partially-created encrypted DB at the original path

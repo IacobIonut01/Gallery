@@ -16,6 +16,8 @@ import com.dot.gallery.core.Settings
 import com.dot.gallery.core.sandbox.IsolatedMetadataParser
 import com.dot.gallery.core.util.ProgressThrottler
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
+import com.dot.gallery.cloud.core.stableIdHash
+import com.dot.gallery.feature_node.domain.model.MediaMetadata
 import com.dot.gallery.feature_node.domain.model.MediaVersion
 import com.dot.gallery.feature_node.domain.model.retrieveExtraMediaMetadata
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
@@ -50,10 +52,14 @@ class MetadataCollectionWorker @AssistedInject constructor(
 ) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result = runCatching {
-        if (!BuildConfig.ENABLE_INDEXING) return Result.success()
+        if (!BuildConfig.ENABLE_INDEXING) {
+            collectCloudMediaMetadata()
+            return Result.success()
+        }
         val forceReload = inputData.getBoolean("forceReload", false)
         if (database.isMetadataUpToDate(appContext) && !forceReload) {
             printDebug("Metadata is up to date")
+            collectCloudMediaMetadata()
             return Result.success()
         }
         printDebug("Updating metadata...")
@@ -71,11 +77,16 @@ class MetadataCollectionWorker @AssistedInject constructor(
         printDebug("Found ${differentMedia?.size ?: 0} new or updated media items.")
         media?.let {
             printDebug("Deleting forgotten metadata...")
-            database.getMetadataDao().deleteForgottenMetadata(it.fastMap { m -> m.id })
+            val localIds = it.fastMap { m -> m.id }
+            val cloudIds = try {
+                database.getCloudMediaDao().getAllAsync().map { c -> stableIdHash(c.remoteId) }
+            } catch (_: Exception) { emptyList() }
+            database.getMetadataDao().deleteForgottenMetadata(localIds + cloudIds)
         }
         differentMedia?.let { diffMedia ->
             if (diffMedia.isEmpty()) {
                 printDebug("No new media to update metadata for.")
+                collectCloudMediaMetadata()
                 setProgress(workDataOf("progress" to 100))
                 return Result.success()
             }
@@ -97,10 +108,89 @@ class MetadataCollectionWorker @AssistedInject constructor(
         }
         printDebug("Metadata update complete")
         database.getMetadataDao().setMediaVersion(MediaVersion(appContext.mediaStoreVersion))
+
+        // Also populate metadata for cached cloud media
+        collectCloudMediaMetadata()
+
         setProgress(workDataOf("progress" to 100))
         return Result.success()
     }.getOrElse { exception ->
         printDebug("MetadataCollectionWorker failed with exception: ${exception.message}")
         return Result.failure()
+    }
+
+    private suspend fun collectCloudMediaMetadata() {
+        try {
+            val cloudEntities = database.getCloudMediaDao().getAllAsync()
+            printDebug("collectCloudMediaMetadata: found ${cloudEntities.size} cloud entities")
+            if (cloudEntities.isEmpty()) return
+            val metadataDao = database.getMetadataDao()
+            var count = 0
+            var skipped = 0
+            for (entity in cloudEntities) {
+                val mediaId = stableIdHash(entity.remoteId)
+                val existing = metadataDao.getCoreMetadata(mediaId)
+                if (existing != null && (existing.imageWidth > 0 || existing.manufacturerName != null)) {
+                    skipped++
+                    continue
+                }
+                if (entity.width == 0 && entity.cameraMake == null) {
+                    skipped++
+                    continue
+                }
+                val locationName = listOfNotNull(entity.city, entity.state, entity.country)
+                    .joinToString(", ").ifBlank { null }
+                val isVideo = entity.mimeType.startsWith("video")
+                val metadata = MediaMetadata(
+                    mediaId = mediaId,
+                    imageDescription = entity.imageDescription,
+                    dateTimeOriginal = entity.dateTimeOriginal,
+                    manufacturerName = entity.cameraMake,
+                    modelName = entity.cameraModel,
+                    lensModel = entity.lensModel,
+                    aperture = entity.aperture,
+                    exposureTime = entity.exposureTime,
+                    iso = entity.iso?.toString(),
+                    focalLength = entity.focalLength,
+                    gpsLatitude = entity.latitude,
+                    gpsLongitude = entity.longitude,
+                    gpsLocationName = locationName,
+                    gpsLocationNameCountry = entity.country,
+                    gpsLocationNameCity = entity.city,
+                    imageWidth = entity.width,
+                    imageHeight = entity.height,
+                    imageResolutionX = null,
+                    imageResolutionY = null,
+                    resolutionUnit = null,
+                    durationMs = if (isVideo) entity.duration?.let { parseDurationToMs(it) } else null,
+                    videoWidth = if (isVideo) entity.width else null,
+                    videoHeight = if (isVideo) entity.height else null,
+                    frameRate = null,
+                    bitRate = null,
+                    isNightMode = false,
+                    isPanorama = false,
+                    isPhotosphere = false,
+                    isLongExposure = false,
+                    isMotionPhoto = false
+                )
+                metadataDao.addMetadata(metadata)
+                count++
+            }
+            printDebug("collectCloudMediaMetadata: populated=$count, skipped=$skipped (already existed)")
+        } catch (e: Exception) {
+            printDebug("collectCloudMediaMetadata: error: ${e.message}")
+        }
+    }
+
+    private fun parseDurationToMs(duration: String): Long? {
+        return try {
+            val parts = duration.split(":")
+            if (parts.size == 3) {
+                val hours = parts[0].toLong()
+                val minutes = parts[1].toLong()
+                val seconds = parts[2].toDouble()
+                ((hours * 3600 + minutes * 60) * 1000 + (seconds * 1000)).toLong()
+            } else null
+        } catch (_: Exception) { null }
     }
 }

@@ -3,6 +3,7 @@ package com.dot.gallery.feature_node.domain.model.editor;
 import android.os.Parcelable
 import androidx.annotation.Keep
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AutoFixHigh
 import androidx.compose.material.icons.outlined.Draw
 import androidx.compose.material.icons.outlined.Filter
 import androidx.compose.material.icons.outlined.MoreHoriz
@@ -24,6 +25,7 @@ enum class EditorItems : Parcelable {
     Filters,
     Markup,
     Colour,
+    Effects,
     More;
 
     @get:Composable
@@ -33,6 +35,7 @@ enum class EditorItems : Parcelable {
             Filters -> stringResource(R.string.filters)
             Markup -> stringResource(R.string.markup)
             Colour -> stringResource(R.string.editor_colour)
+            Effects -> stringResource(R.string.editor_effects)
             More -> stringResource(R.string.editor_more)
         }
 
@@ -43,6 +46,7 @@ enum class EditorItems : Parcelable {
             Filters -> Icons.Outlined.Filter
             Markup -> Icons.Outlined.Draw
             Colour -> Icons.Outlined.Palette
+            Effects -> Icons.Outlined.AutoFixHigh
             More -> Icons.Outlined.MoreHoriz
         }
 }

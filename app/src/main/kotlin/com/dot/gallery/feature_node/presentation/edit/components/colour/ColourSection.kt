@@ -52,7 +52,7 @@ fun ColourSection(
             val filterType = tool.toVariableFilterType()
             SelectableItem(
                 icon = tool.icon,
-                title = tool.name,
+                title = tool.translatedName,
                 selected = appliedAdjustments.isApplied(filterType),
                 horizontal = isSupportingPanel,
                 onItemClick = { onItemClick(tool) },
@@ -68,4 +68,6 @@ fun ColourTool.toVariableFilterType(): VariableFilterTypes = when (this) {
     ColourTool.Tint -> VariableFilterTypes.Tint
     ColourTool.SkinTone -> VariableFilterTypes.SkinTone
     ColourTool.BlueTone -> VariableFilterTypes.BlueTone
+    ColourTool.Hue -> VariableFilterTypes.Hue
+    ColourTool.BlackWhite -> VariableFilterTypes.BlackWhite
 }

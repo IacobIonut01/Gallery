@@ -29,6 +29,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.DragHandle
+import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.ImageSearch
@@ -152,11 +153,11 @@ fun StoryCardsSettingsScreen(
 
             // ── Card Type Items (drag-to-reorder) ──
             itemsIndexed(
-                items = config.cardOrder,
+                items = config.normalizedOrder,
                 key = { _, type -> "card_${type.name}" }
             ) { index, type ->
                 val isEnabled = type !in config.disabledTypes
-                val position = cardItemPosition(index, config.cardOrder.size)
+                val position = cardItemPosition(index, config.normalizedOrder.size)
                 val isDragged = draggingIndex == index
 
                 CardTypeListItem(
@@ -173,8 +174,8 @@ fun StoryCardsSettingsScreen(
                     onDrag = { delta ->
                         dragOffsetY += delta
                         val swapThreshold = itemHeightPx * 0.5f
-                        if (dragOffsetY > swapThreshold && draggingIndex < config.cardOrder.lastIndex) {
-                            val list = config.cardOrder.toMutableList()
+                        if (dragOffsetY > swapThreshold && draggingIndex < config.normalizedOrder.lastIndex) {
+                            val list = config.normalizedOrder.toMutableList()
                             val item = list.removeAt(draggingIndex)
                             list.add(draggingIndex + 1, item)
                             config = config.copy(cardOrder = list)
@@ -182,7 +183,7 @@ fun StoryCardsSettingsScreen(
                             dragOffsetY -= itemHeightPx
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         } else if (dragOffsetY < -swapThreshold && draggingIndex > 0) {
-                            val list = config.cardOrder.toMutableList()
+                            val list = config.normalizedOrder.toMutableList()
                             val item = list.removeAt(draggingIndex)
                             list.add(draggingIndex - 1, item)
                             config = config.copy(cardOrder = list)
@@ -448,6 +449,7 @@ private val StoryCardType.settingsIcon: ImageVector
         StoryCardType.CATEGORIES -> Icons.Outlined.ImageSearch
         StoryCardType.LOCATIONS -> Icons.Outlined.LocationOn
         StoryCardType.FAVORITES -> Icons.Outlined.Favorite
+        StoryCardType.CLOUD_MEMORIES -> Icons.Outlined.Cloud
     }
 
 private val StoryCardType.displayName: String
@@ -457,6 +459,7 @@ private val StoryCardType.displayName: String
         StoryCardType.CATEGORIES -> "Categories"
         StoryCardType.LOCATIONS -> "Locations"
         StoryCardType.FAVORITES -> "Favorites"
+        StoryCardType.CLOUD_MEMORIES -> "Cloud Memories"
     }
 
 private val StoryCardType.description: String
@@ -466,4 +469,5 @@ private val StoryCardType.description: String
         StoryCardType.CATEGORIES -> "AI-classified photo categories"
         StoryCardType.LOCATIONS -> "Photos organized by location"
         StoryCardType.FAVORITES -> "Your favorite photos"
+        StoryCardType.CLOUD_MEMORIES -> "\"On this day\" memories from your cloud server"
     }

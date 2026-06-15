@@ -53,7 +53,8 @@ fun <T : Media> PanoramaImageViewer(
     isPhotosphere: Boolean,
     modifier: Modifier = Modifier,
     onItemClick: () -> Unit = {},
-    currentVault: Vault? = null
+    currentVault: Vault? = null,
+    captureBlur: Boolean = true
 ) {
     val projectionType = if (isPhotosphere) ProjectionType.SPHERE else ProjectionType.CYLINDER
 
@@ -78,7 +79,7 @@ fun <T : Media> PanoramaImageViewer(
     val hazeState = LocalHazeState.current
     val panoramaCapture by rememberSurfaceCapture(
         view = glViewRef,
-        enabled = allowBlur,
+        enabled = allowBlur && captureBlur,
         captureWidth = 64
     )
 
@@ -125,7 +126,9 @@ private fun PanoramaCompass(
 ) {
     val arcDeg = cameraState.arcDegrees
     val totalH = if (cameraState.projectionType == ProjectionType.SPHERE) 360f else arcDeg
-    val fovFraction = (cameraState.fov / totalH).coerceIn(0.01f, 1f)
+    // Use the horizontal FOV so the visible-span arc reflects the actual on-screen
+    // width and updates correctly when rotating between portrait and landscape.
+    val fovFraction = (cameraState.horizontalFov / totalH).coerceIn(0.01f, 1f)
 
     // Normalize yaw to [0, totalH] range
     val yawNorm = if (cameraState.projectionType == ProjectionType.SPHERE) {

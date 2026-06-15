@@ -43,6 +43,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,7 +60,9 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
@@ -621,12 +624,22 @@ fun DateFormatPreview(
         var isDateHeaderFormatError by rememberSaveable {
             mutableStateOf(false)
         }
+        var textFieldValue by remember { mutableStateOf(TextFieldValue(dateFormat)) }
+        LaunchedEffect(dateFormat) {
+            if (dateFormat != textFieldValue.text) {
+                textFieldValue = TextFieldValue(
+                    text = dateFormat,
+                    selection = TextRange(dateFormat.length)
+                )
+            }
+        }
         OutlinedTextField(
-            value = dateFormat,
-            onValueChange = { newFormat ->
+            value = textFieldValue,
+            onValueChange = { newValue ->
+                textFieldValue = newValue
                 try {
-                    SimpleDateFormat(newFormat, Locale.getDefault())
-                    onDateFormatChange(newFormat)
+                    SimpleDateFormat(newValue.text, Locale.getDefault())
+                    onDateFormatChange(newValue.text)
                     isDateHeaderFormatError = false
                 } catch (_: IllegalArgumentException) {
                     isDateHeaderFormatError = true

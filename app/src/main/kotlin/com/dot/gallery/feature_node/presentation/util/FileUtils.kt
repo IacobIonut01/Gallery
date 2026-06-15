@@ -170,24 +170,24 @@ class FileUtils(var context: Context) {
          *     * move to the first row in the Cursor, get the data,
          *     * and display it.
          * */
-        val nameIndex = returnCursor!!.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-        returnCursor.moveToFirst()
-        val name = returnCursor.getString(nameIndex)
-        returnCursor.close()
+        val name = returnCursor!!.use {
+            it.moveToFirst()
+            it.getString(it.getColumnIndex(OpenableColumns.DISPLAY_NAME))
+        }
         val file = File(context.cacheDir, name)
         try {
-            val inputStream = context.contentResolver.openInputStream(uri)
-            val outputStream = FileOutputStream(file)
-            var read: Int
-            val maxBufferSize = 1 * 1024 * 1024
-            val bytesAvailable = inputStream!!.available()
-            val bufferSize = min(bytesAvailable, maxBufferSize)
-            val buffers = ByteArray(bufferSize)
-            while (inputStream.read(buffers).also { read = it } != -1) {
-                outputStream.write(buffers, 0, read)
+            context.contentResolver.openInputStream(uri)!!.use { inputStream ->
+                FileOutputStream(file).use { outputStream ->
+                    var read: Int
+                    val maxBufferSize = 1 * 1024 * 1024
+                    val bytesAvailable = inputStream.available()
+                    val bufferSize = min(bytesAvailable, maxBufferSize)
+                    val buffers = ByteArray(bufferSize)
+                    while (inputStream.read(buffers).also { read = it } != -1) {
+                        outputStream.write(buffers, 0, read)
+                    }
+                }
             }
-            inputStream.close()
-            outputStream.close()
         } catch (e: Exception) {
             Log.e(TAG, e.message!!)
         }
@@ -213,10 +213,10 @@ class FileUtils(var context: Context) {
          *     * move to the first row in the Cursor, get the data,
          *     * and display it.
          * */
-        val nameIndex = returnCursor!!.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-        returnCursor.moveToFirst()
-        val name = returnCursor.getString(nameIndex)
-        returnCursor.close()
+        val name = returnCursor!!.use {
+            it.moveToFirst()
+            it.getString(it.getColumnIndex(OpenableColumns.DISPLAY_NAME))
+        }
         val output: File = if (newDirName != "") {
             val randomCollisionAvoidance = UUID.randomUUID().toString()
             val dir =
@@ -229,16 +229,16 @@ class FileUtils(var context: Context) {
             File(context.filesDir.toString() + File.separator + name)
         }
         try {
-            val inputStream = context.contentResolver.openInputStream(uri)
-            val outputStream = FileOutputStream(output)
-            var read: Int
-            val bufferSize = 1024
-            val buffers = ByteArray(bufferSize)
-            while (inputStream!!.read(buffers).also { read = it } != -1) {
-                outputStream.write(buffers, 0, read)
+            context.contentResolver.openInputStream(uri)!!.use { inputStream ->
+                FileOutputStream(output).use { outputStream ->
+                    var read: Int
+                    val bufferSize = 1024
+                    val buffers = ByteArray(bufferSize)
+                    while (inputStream.read(buffers).also { read = it } != -1) {
+                        outputStream.write(buffers, 0, read)
+                    }
+                }
             }
-            inputStream.close()
-            outputStream.close()
         } catch (e: Exception) {
             Log.e(TAG, e.message!!)
         }

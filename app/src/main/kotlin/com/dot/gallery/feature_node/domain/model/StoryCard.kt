@@ -18,7 +18,8 @@ enum class StoryCardType {
     ALBUMS,
     CATEGORIES,
     LOCATIONS,
-    FAVORITES
+    FAVORITES,
+    CLOUD_MEMORIES
 }
 
 /**
@@ -30,8 +31,15 @@ data class StoryCardsConfig(
     val cardOrder: List<StoryCardType> = StoryCardType.entries.toList(),
     val disabledTypes: Set<StoryCardType> = emptySet()
 ) {
+    /** cardOrder with any newly-added types appended (handles config persisted before the type existed). */
+    val normalizedOrder: List<StoryCardType>
+        get() {
+            val missing = StoryCardType.entries - cardOrder.toSet()
+            return if (missing.isEmpty()) cardOrder else cardOrder + missing
+        }
+
     val activeTypes: List<StoryCardType>
-        get() = if (enabled) cardOrder.filter { it !in disabledTypes } else emptyList()
+        get() = if (enabled) normalizedOrder.filter { it !in disabledTypes } else emptyList()
 }
 
 /**

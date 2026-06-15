@@ -6,12 +6,14 @@
 package com.dot.gallery.feature_node.presentation.settings
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Backup
 import androidx.compose.material.icons.outlined.Dashboard
 import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material.icons.outlined.Fullscreen
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
+import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.SettingsSuggest
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -35,6 +37,7 @@ import com.dot.gallery.feature_node.presentation.settings.components.SettingsApp
 import com.dot.gallery.feature_node.presentation.settings.components.SettingsAppHeaderCompact
 import com.dot.gallery.feature_node.presentation.settings.components.SettingsItem
 import com.dot.gallery.feature_node.presentation.settings.components.rememberPreference
+import com.dot.gallery.cloud.core.ProviderType
 import com.dot.gallery.feature_node.presentation.util.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -97,6 +100,25 @@ fun SettingsScreen() {
             },
             screenPosition = Position.Middle
         )
+        val backupPref = rememberPreference(
+            icon = Icons.Outlined.Backup,
+            title = stringResource(R.string.settings_backup),
+            summary = stringResource(R.string.settings_backup_summary),
+            onClick = {
+                eventHandler.navigate(Screen.SettingsBackupScreen())
+            },
+            screenPosition = Position.Middle
+        )
+        val hasCloudProviders = remember { ProviderType.hasAnyRemoteProvider() }
+        val cloudPref = if (hasCloudProviders) rememberPreference(
+            icon = Icons.Outlined.Cloud,
+            title = stringResource(R.string.settings_cloud_accounts),
+            summary = stringResource(R.string.settings_cloud_accounts_summary),
+            onClick = {
+                eventHandler.navigate(Screen.CloudAccountsScreen())
+            },
+            screenPosition = Position.Middle
+        ) else null
         val smartPref = rememberPreference(
             icon = Icons.Outlined.SettingsSuggest,
             title = stringResource(R.string.ai_category),
@@ -117,12 +139,15 @@ fun SettingsScreen() {
         )
         return remember(
             appearancePref, timelineAlbumsPref, mediaViewerPref,
-            navigationPref, generalPref, securityPref, smartPref, helpPref
+            navigationPref, generalPref, securityPref, backupPref, cloudPref, smartPref, helpPref
         ) {
-            mutableStateListOf(
+            mutableStateListOf<SettingsEntity>(
                 appearancePref, timelineAlbumsPref, mediaViewerPref,
-                navigationPref, generalPref, securityPref, smartPref, helpPref
-            )
+                navigationPref, generalPref, securityPref, backupPref,
+            ).apply {
+                if (cloudPref != null) add(cloudPref)
+                addAll(listOf(smartPref, helpPref))
+            }
         }
     }
 
@@ -183,8 +208,8 @@ fun SettingsScreen() {
                         iconVector = icon,
                         iconUri = iconUri,
                         iconRes = iconRes,
-                        containerColor = backgroundColors[index],
-                        contentColor = onBackgroundColors[index]
+                        containerColor = backgroundColors[index % backgroundColors.size],
+                        contentColor = onBackgroundColors[index % onBackgroundColors.size]
                     )
                 }
             )

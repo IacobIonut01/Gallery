@@ -13,6 +13,7 @@ import androidx.compose.material.icons.outlined.NightsStay
 import androidx.compose.material.icons.outlined.Panorama
 import androidx.compose.material.icons.outlined.PanoramaPhotosphere
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.room.ColumnInfo
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
@@ -41,9 +42,13 @@ data class MediaMetadataCore(
     val dateTimeOriginal: String?,
     val manufacturerName: String?,
     val modelName: String?,
+    @ColumnInfo(defaultValue = "")
+    val lensModel: String? = null,
     val aperture: String?,
     val exposureTime: String?,
     val iso: String?,
+    @ColumnInfo(defaultValue = "0.0")
+    val focalLength: Double? = null,
     val gpsLatitude: Double?,
     val gpsLongitude: Double?,
     val gpsLocationName: String?,
@@ -98,9 +103,11 @@ data class MediaMetadata(
     val dateTimeOriginal: String?,
     val manufacturerName: String?,
     val modelName: String?,
+    val lensModel: String? = null,
     val aperture: String?,
     val exposureTime: String?,
     val iso: String?,
+    val focalLength: Double? = null,
     val gpsLatitude: Double?,
     val gpsLongitude: Double?,
     val gpsLocationName: String?,
@@ -364,9 +371,11 @@ fun MediaMetadata.toCore() = MediaMetadataCore(
     dateTimeOriginal = dateTimeOriginal,
     manufacturerName = manufacturerName,
     modelName = modelName,
+    lensModel = lensModel,
     aperture = aperture,
     exposureTime = exposureTime,
     iso = iso,
+    focalLength = focalLength,
     gpsLatitude = gpsLatitude,
     gpsLongitude = gpsLongitude,
     gpsLocationName = gpsLocationName,
@@ -406,9 +415,11 @@ fun FullMediaMetadata.toMediaMetadata(): MediaMetadata {
         dateTimeOriginal = core.dateTimeOriginal,
         manufacturerName = core.manufacturerName,
         modelName = core.modelName,
+        lensModel = core.lensModel,
         aperture = core.aperture,
         exposureTime = core.exposureTime,
         iso = core.iso,
+        focalLength = core.focalLength,
         gpsLatitude = core.gpsLatitude,
         gpsLongitude = core.gpsLongitude,
         gpsLocationName = core.gpsLocationName,

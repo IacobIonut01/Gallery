@@ -99,6 +99,7 @@ import com.dot.gallery.feature_node.presentation.common.components.MosaicMediaGr
 import com.dot.gallery.feature_node.presentation.common.components.MosaicPinchZoomLayout
 import com.dot.gallery.feature_node.presentation.common.components.SettingsOptionLayout
 import com.dot.gallery.feature_node.presentation.common.components.TimelineScroller
+import com.dot.gallery.feature_node.presentation.common.components.rememberMosaicMonthSegments
 import com.dot.gallery.feature_node.presentation.common.components.rememberMosaicPinchZoomState
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
@@ -687,7 +688,12 @@ fun SearchScreen(
                                 .padding(mosaicPaddingValues)
                                 .padding(top = 32.dp)
                                 .padding(vertical = 32.dp),
-                            mappedData = mappedData,
+                            segments = rememberMosaicMonthSegments(
+                                mappedData = mappedData,
+                                columns = currentColumns,
+                                allowHeaders = true,
+                                leadingItemCount = if (sortChipsContent != null) 1 else 0,
+                            ),
                             headers = headers,
                             state = mosaicGridState,
                         ) {
@@ -733,7 +739,7 @@ fun SearchScreen(
                                 },
                                 canScroll = canScroll,
                                 allowHeaders = !useRelevanceOrder,
-                                showMonthlyHeader = false,
+                                
                                 aboveGridContent = sortChipsContent,
                                 isScrolling = isScrolling,
                                 emptyContent = { EmptyMedia() },

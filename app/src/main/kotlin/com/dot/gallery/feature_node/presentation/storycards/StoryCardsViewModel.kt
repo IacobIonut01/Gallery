@@ -8,7 +8,11 @@ package com.dot.gallery.feature_node.presentation.storycards
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dot.gallery.cloud.core.MemoryInfo
+import com.dot.gallery.cloud.core.ProviderRegistry
+import com.dot.gallery.cloud.core.capabilities.MemoriesCapableProvider
 import com.dot.gallery.core.MediaDistributor
+import com.dot.gallery.core.Resource
 import com.dot.gallery.core.Settings
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaMetadata
@@ -18,11 +22,14 @@ import com.dot.gallery.feature_node.domain.model.StoryCardsConfig
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import java.util.Calendar
 import javax.inject.Inject
 
@@ -30,7 +37,8 @@ import javax.inject.Inject
 class StoryCardsViewModel @Inject constructor(
     private val repository: MediaRepository,
     private val distributor: MediaDistributor,
-    @ApplicationContext private val context: Context
+    private val providerRegistry: ProviderRegistry,
+    @param:ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val configFlow = Settings.Misc.getStoryCardsConfig(context)
@@ -45,7 +53,7 @@ class StoryCardsViewModel @Inject constructor(
         .map { it.media }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    private val metadataFlow = repository.getMetadata()
+    val metadataFlow = repository.getMetadata()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     private val topCategories = repository.getTopCategories(5)
@@ -80,10 +88,54 @@ class StoryCardsViewModel @Inject constructor(
                 StoryCardType.CATEGORIES -> {
                     // Categories are handled in the separate combine below
                 }
+                StoryCardType.CLOUD_MEMORIES -> {
+                    // Cloud memories are handled in the separate _cloudMemoryCards flow
+                }
             }
         }
         cards
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    private val _cloudMemoryCards = MutableStateFlow<List<StoryCard>>(emptyList())
+
+    init {
+        loadCloudMemories()
+    }
+
+    private fun loadCloudMemories() {
+        val providers = providerRegistry.getByCapability<MemoriesCapableProvider>()
+        if (providers.isEmpty()) return
+        viewModelScope.launch {
+            for (provider in providers) {
+                provider.getMemories().collect { resource ->
+                    when (resource) {
+                        is Resource.Success -> {
+                            val memories = resource.data ?: emptyList()
+                            _cloudMemoryCards.value = buildCloudMemoryCards(memories)
+                        }
+                        is Resource.Error -> { /* Silently ignore — local memories still work */ }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun buildCloudMemoryCards(memories: List<MemoryInfo>): List<StoryCard> {
+        return memories.filter { it.media.isNotEmpty() }.mapIndexed { index, memory ->
+            val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+            val yearsAgo = currentYear - memory.year
+            StoryCard(
+                id = 6_000_000L + memory.year.toLong() * 100 + index,
+                type = StoryCardType.CLOUD_MEMORIES,
+                title = if (yearsAgo > 0) "$yearsAgo ${if (yearsAgo == 1) "year" else "years"} ago"
+                    else "This year",
+                subtitle = if (memory.year > 0) "${memory.year}" else null,
+                thumbnailMedia = memory.media.firstOrNull(),
+                mediaList = memory.media,
+                year = memory.year
+            )
+        }
+    }
 
     val categoryCards: StateFlow<List<StoryCard>> = combine(
         configFlow,
@@ -115,22 +167,38 @@ class StoryCardsViewModel @Inject constructor(
         configFlow,
         storyCards,
         categoryCards,
+        _cloudMemoryCards,
         timelineMedia
-    ) { config, cards, catCards, media ->
+    ) { config, cards, catCards, cloudCards, media ->
         // null = still loading (timeline hasn't loaded yet)
         if (media.isEmpty()) return@combine null
         if (!config.enabled) return@combine emptyList()
         val merged = mutableListOf<StoryCard>()
         val orderedTypes = config.activeTypes
         for (type in orderedTypes) {
-            if (type == StoryCardType.CATEGORIES) {
-                merged.addAll(catCards)
-            } else {
-                merged.addAll(cards.filter { it.type == type })
+            when (type) {
+                StoryCardType.CATEGORIES -> merged.addAll(catCards)
+                StoryCardType.CLOUD_MEMORIES -> merged.addAll(cloudCards)
+                else -> merged.addAll(cards.filter { it.type == type })
             }
         }
         merged
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    private var lastMetadataFetchId: Long? = null
+
+    fun ensureMetadataAvailable(media: Media?) {
+        if (media == null) return
+        if (media.id == lastMetadataFetchId) return
+        val existing = metadataFlow.value.firstOrNull { it.mediaId == media.id }
+        if (existing != null && (existing.imageWidth > 0 || existing.manufacturerName != null)) {
+            return
+        }
+        lastMetadataFetchId = media.id
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.collectMetadataFor(media)
+        }
+    }
 
     private fun buildMemoryCards(media: List<Media.UriMedia>): List<StoryCard> {
         val today = Calendar.getInstance()

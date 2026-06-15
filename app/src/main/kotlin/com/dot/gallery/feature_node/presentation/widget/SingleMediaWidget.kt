@@ -15,6 +15,9 @@ import com.dot.gallery.R
 import com.dot.gallery.feature_node.presentation.main.MainActivity
 import com.dot.gallery.feature_node.presentation.widget.data.WidgetBitmapLoader
 import com.dot.gallery.feature_node.presentation.widget.data.WidgetPreferences
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class SingleMediaWidgetReceiver : AppWidgetProvider() {
 
@@ -23,8 +26,31 @@ class SingleMediaWidgetReceiver : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray
     ) {
+        // Render immediately from cache so the widget is never blank while reloading.
         for (appWidgetId in appWidgetIds) {
             updateWidget(context, appWidgetManager, appWidgetId)
+        }
+
+        // Self-heal: if a cached bitmap is missing (e.g. after an app update, reboot
+        // or the system clearing app cache) but the URIs are still persisted,
+        // reload and re-cache the bitmap, then push the update again.
+        val appContext = context.applicationContext
+        val pendingResult = goAsync()
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val awm = AppWidgetManager.getInstance(appContext)
+                for (appWidgetId in appWidgetIds) {
+                    if (WidgetBitmapLoader.loadCachedBitmap(appContext, appWidgetId, 0) != null) continue
+                    val uris = WidgetPreferences.getMediaUris(appContext, appWidgetId)
+                    val uri = uris.firstOrNull() ?: continue
+                    val cached = WidgetBitmapLoader.loadAndCacheBitmap(appContext, uri, appWidgetId, 0)
+                    if (cached) {
+                        updateWidget(appContext, awm, appWidgetId)
+                    }
+                }
+            } finally {
+                pendingResult.finish()
+            }
         }
     }
 

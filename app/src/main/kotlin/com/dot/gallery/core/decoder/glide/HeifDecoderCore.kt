@@ -4,7 +4,9 @@ import android.graphics.Bitmap
 import android.util.Log
 import com.bumptech.glide.load.engine.bitmap_recycle.BitmapPool
 import com.bumptech.glide.load.resource.bitmap.BitmapResource
+import com.dot.gallery.core.decoder.format.HardwareHeifDecoder
 import com.radzivon.bartoshyk.avif.coder.HeifCoder
+import com.radzivon.bartoshyk.avif.coder.PreferredColorConfig
 
 /**
  * Shared core for HEIF/AVIF decoding using [HeifCoder]. Centralizes size fetch, target dimension
@@ -25,6 +27,11 @@ internal class HeifDecoderCore(
         requestedH: Int,
         mime: String?
     ): Result {
+        // Hardware-first: ImageDecoder routes HEIC/AVIF to the device HEVC/AV1 hardware codec.
+        // Returns null when unsupported on this device/OS, in which case we fall back to HeifCoder.
+        HardwareHeifDecoder.decode(bytes, requestedW, requestedH)?.let {
+            return Result(BitmapResource.obtain(it, bitmapPool), true)
+        }
         return try {
             val size = coder.getSize(bytes)
             if (size == null) {
@@ -33,7 +40,9 @@ internal class HeifDecoderCore(
             } else {
                 val tw = if (requestedW > 0) requestedW else size.width
                 val th = if (requestedH > 0) requestedH else size.height
-                val bmp = coder.decodeSampled(bytes, tw, th)
+                // Force RGBA_8888: the default config can yield a HARDWARE/F16 bitmap that Glide's
+                // centerCrop transformation corrupts, producing pink/white color artifacts in the grid.
+                val bmp = coder.decodeSampled(bytes, tw, th, PreferredColorConfig.RGBA_8888)
                 // Success: intentionally no verbose log to reduce noise.
                 Result(BitmapResource.obtain(bmp, bitmapPool), true)
             }

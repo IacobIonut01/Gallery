@@ -50,6 +50,8 @@ import com.dot.gallery.feature_node.data.data_source.mediastore.queries.MediaUri
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.AlbumGroup
 import com.dot.gallery.feature_node.domain.model.AlbumGroupMember
+import com.dot.gallery.feature_node.domain.model.AlbumSection
+import com.dot.gallery.feature_node.domain.model.AlbumSectionMember
 import com.dot.gallery.feature_node.domain.model.Collection
 import com.dot.gallery.feature_node.domain.model.CollectionMedia
 import com.dot.gallery.feature_node.domain.model.CollectionWithCount
@@ -72,6 +74,7 @@ import com.dot.gallery.feature_node.domain.model.TimelineSettings
 import com.dot.gallery.feature_node.domain.model.Vault
 import com.dot.gallery.feature_node.domain.model.retrieveExtraMediaMetadata
 import com.dot.gallery.feature_node.domain.model.toMediaMetadata
+import com.dot.gallery.feature_node.domain.util.isCloud
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.domain.util.MediaOrder
 import com.dot.gallery.feature_node.domain.util.OrderType
@@ -82,6 +85,8 @@ import com.dot.gallery.feature_node.domain.util.getUri
 import com.dot.gallery.feature_node.domain.util.isImage
 import com.dot.gallery.feature_node.domain.util.isRawFile
 import com.dot.gallery.feature_node.domain.util.isVideo
+import com.dot.gallery.feature_node.domain.util.mediaStoreVolumeName
+import com.dot.gallery.feature_node.domain.util.resolveMediaStoreVolume
 import com.dot.gallery.feature_node.domain.util.migrate
 import com.dot.gallery.feature_node.domain.util.toEncryptedMedia2
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia
@@ -314,6 +319,30 @@ class MediaRepositoryImpl(
         result.launch(senderRequest, ActivityOptionsCompat.makeTaskLaunchBehind())
     }
 
+    override suspend fun <T : Media> trashMediaDirectly(
+        mediaList: List<T>,
+        trash: Boolean
+    ): Boolean = withContext(Dispatchers.IO) {
+        var allSuccess = true
+        mediaList.forEach { media ->
+            runCatching {
+                val values = ContentValues().apply {
+                    put(MediaStore.Files.FileColumns.IS_TRASHED, if (trash) 1 else 0)
+                }
+                contentResolver.update(media.getUri(), values, null, null) > 0
+            }.onFailure {
+                printWarning("Failed to trash media ${media.id} directly: ${it.message}")
+                allSuccess = false
+            }.onSuccess { success ->
+                if (!success) {
+                    printWarning("ContentResolver update returned 0 for media ${media.id}")
+                    allSuccess = false
+                }
+            }
+        }
+        allSuccess
+    }
+
     override suspend fun <T : Media> deleteMedia(
         result: ActivityResultLauncher<IntentSenderRequest>,
         mediaList: List<T>
@@ -367,10 +396,67 @@ class MediaRepositoryImpl(
     override suspend fun <T : Media> moveMedia(
         media: T,
         newPath: String
-    ): Boolean = context.updateMedia(
-        media = media,
-        contentValues = relativePath(newPath)
-    )
+    ): Boolean {
+        val (destVolume, destRelPath) = resolveMediaStoreVolume(newPath)
+        val sourceVolume = media.mediaStoreVolumeName
+
+        if (destVolume == sourceVolume) {
+            return context.updateMedia(
+                media = media,
+                contentValues = relativePath(destRelPath)
+            )
+        }
+
+        return crossVolumeMove(media, destVolume, destRelPath)
+    }
+
+    private suspend fun <T : Media> crossVolumeMove(
+        media: T,
+        destVolume: String,
+        destRelPath: String
+    ): Boolean = withContext(Dispatchers.IO) {
+        val cr = context.contentResolver
+        try {
+            val srcUri = media.getUri()
+            val mediaType = cr.getType(srcUri) ?: return@withContext false
+            val isVideo = mediaType.startsWith("video")
+
+            val targetUri = cr.insert(
+                if (isVideo) MediaStore.Video.Media.getContentUri(destVolume)
+                else MediaStore.Images.Media.getContentUri(destVolume),
+                ContentValues().apply {
+                    put(MediaStore.MediaColumns.DISPLAY_NAME, media.label)
+                    put(MediaStore.MediaColumns.MIME_TYPE, media.mimeType)
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, destRelPath)
+                    put(MediaStore.MediaColumns.IS_PENDING, 1)
+                }
+            ) ?: return@withContext false
+
+            cr.openInputStream(srcUri)?.use { input ->
+                cr.openOutputStream(targetUri)?.use { output ->
+                    input.copyTo(output)
+                }
+            } ?: run {
+                cr.delete(targetUri, null, null)
+                return@withContext false
+            }
+
+            cr.update(
+                targetUri,
+                ContentValues().apply {
+                    put(MediaStore.MediaColumns.IS_PENDING, 0)
+                    put(MediaStore.MediaColumns.DATE_MODIFIED, System.currentTimeMillis() / 1000)
+                },
+                null, null
+            )
+
+            cr.delete(srcUri, null, null)
+            true
+        } catch (e: Exception) {
+            printWarning("Cross-volume move failed: ${e.message}")
+            false
+        }
+    }
 
     override suspend fun <T : Media> deleteMediaGPSMetadata(media: T): Boolean =
         context.updateMediaExif(
@@ -1019,6 +1105,10 @@ class MediaRepositoryImpl(
         database.getAlbumThumbnailDao().getAlbumThumbnailsFlow()
 
     override suspend fun collectMetadataFor(media: Media) {
+        if (media.isCloud) {
+            collectCloudMetadata(media)
+            return
+        }
         val metadata = context.retrieveExtraMediaMetadata(isolatedParser, geocoder, media, shouldUsePerFileIsolation())
         if (metadata != null) {
             database.getMetadataDao().addMetadata(metadata)
@@ -1026,6 +1116,66 @@ class MediaRepositoryImpl(
         } else {
             printWarning("collectMetadataFor: no metadata returned for ${media.id} (uri=${media.getUri()})")
         }
+    }
+
+    private suspend fun collectCloudMetadata(media: Media) = withContext(Dispatchers.IO) {
+        val uri = media.getUri()
+        val providerName = uri.authority ?: return@withContext
+        val remoteId = uri.pathSegments.firstOrNull() ?: return@withContext
+        val providerType = try {
+            com.dot.gallery.cloud.core.ProviderType.valueOf(providerName)
+        } catch (_: Exception) { return@withContext }
+        val entity = database.getCloudMediaDao().getByRemoteId(remoteId, providerType)
+            ?: return@withContext
+        val locationName = listOfNotNull(entity.city, entity.state, entity.country)
+            .joinToString(", ").ifBlank { null }
+        val metadata = MediaMetadata(
+            mediaId = media.id,
+            imageDescription = entity.imageDescription,
+            dateTimeOriginal = entity.dateTimeOriginal,
+            manufacturerName = entity.cameraMake,
+            modelName = entity.cameraModel,
+            lensModel = entity.lensModel,
+            aperture = entity.aperture,
+            exposureTime = entity.exposureTime,
+            iso = entity.iso?.toString(),
+            focalLength = entity.focalLength,
+            gpsLatitude = entity.latitude,
+            gpsLongitude = entity.longitude,
+            gpsLocationName = locationName,
+            gpsLocationNameCountry = entity.country,
+            gpsLocationNameCity = entity.city,
+            imageWidth = entity.width,
+            imageHeight = entity.height,
+            imageResolutionX = null,
+            imageResolutionY = null,
+            resolutionUnit = null,
+            durationMs = entity.duration?.let { parseDurationToMs(it) },
+            videoWidth = if (media.duration != null) entity.width else null,
+            videoHeight = if (media.duration != null) entity.height else null,
+            frameRate = null,
+            bitRate = null,
+            isNightMode = false,
+            isPanorama = false,
+            isPhotosphere = false,
+            isLongExposure = false,
+            isMotionPhoto = false
+        )
+        database.getMetadataDao().addMetadata(metadata)
+        printDebug("collectMetadataFor: saved cloud metadata for ${media.id}")
+    }
+
+    private fun parseDurationToMs(duration: String): Long? {
+        // Immich duration format: "0:00:05.123456" or "HH:MM:SS.fraction"
+        return try {
+            val parts = duration.split(":")
+            if (parts.size == 3) {
+                val hours = parts[0].toLong()
+                val minutes = parts[1].toLong()
+                val seconds = parts[2].toDouble()
+                ((hours * 3600 + minutes * 60) * 1000 + (seconds * 1000)).toLong()
+            } else null
+        } catch (_: Exception) { null }
     }
 
     override suspend fun addImageEmbedding(imageEmbedding: ImageEmbedding) {
@@ -1165,6 +1315,56 @@ class MediaRepositoryImpl(
 
     override fun getAlbumIdsInCollection(collectionId: Long): Flow<List<Long>> =
         collectionDao.getAlbumIdsInCollection(collectionId)
+
+    // ============ Album Sections ============
+
+    override suspend fun insertAlbumSection(section: AlbumSection): Long =
+        database.getAlbumSectionDao().insertSection(section)
+
+    override suspend fun updateAlbumSection(section: AlbumSection) =
+        database.getAlbumSectionDao().updateSection(section)
+
+    override suspend fun deleteAlbumSection(sectionId: Long) =
+        database.getAlbumSectionDao().deleteSection(sectionId)
+
+    override fun getAllAlbumSections(): Flow<List<AlbumSection>> =
+        database.getAlbumSectionDao().getAllSections()
+
+    override suspend fun getAllAlbumSectionsAsync(): List<AlbumSection> =
+        database.getAlbumSectionDao().getAllSectionsAsync()
+
+    override suspend fun getAlbumSectionAsync(sectionId: Long): AlbumSection? =
+        database.getAlbumSectionDao().getSectionAsync(sectionId)
+
+    override suspend fun getAlbumSectionByType(type: Int): AlbumSection? =
+        database.getAlbumSectionDao().getSectionByType(type)
+
+    override suspend fun updateSectionDisplayOrder(sectionId: Long, order: Int) =
+        database.getAlbumSectionDao().updateDisplayOrder(sectionId, order)
+
+    override suspend fun updateSectionVisibility(sectionId: Long, visible: Boolean) =
+        database.getAlbumSectionDao().updateVisibility(sectionId, visible)
+
+    override suspend fun updateSectionExpanded(sectionId: Long, expanded: Boolean) =
+        database.getAlbumSectionDao().updateExpanded(sectionId, expanded)
+
+    override suspend fun getAlbumSectionCount(): Int =
+        database.getAlbumSectionDao().getSectionCount()
+
+    override suspend fun addAlbumToSection(member: AlbumSectionMember) =
+        database.getAlbumSectionDao().addAlbumToSection(member)
+
+    override suspend fun removeAlbumFromSection(member: AlbumSectionMember) =
+        database.getAlbumSectionDao().removeAlbumFromSection(member)
+
+    override suspend fun removeAlbumFromAllSections(albumId: Long) =
+        database.getAlbumSectionDao().removeAlbumFromAllSections(albumId)
+
+    override fun getAllSectionMembers(): Flow<List<AlbumSectionMember>> =
+        database.getAlbumSectionDao().getAllSectionMembers()
+
+    override suspend fun getSectionIdForAlbum(albumId: Long): Long? =
+        database.getAlbumSectionDao().getSectionIdForAlbum(albumId)
 
     companion object {
         private fun relativePath(newPath: String) = ContentValues().apply {

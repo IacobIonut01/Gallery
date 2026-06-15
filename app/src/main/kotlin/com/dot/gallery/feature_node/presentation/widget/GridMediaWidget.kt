@@ -20,6 +20,9 @@ import com.dot.gallery.R
 import com.dot.gallery.feature_node.presentation.main.MainActivity
 import com.dot.gallery.feature_node.presentation.widget.data.WidgetBitmapLoader
 import com.dot.gallery.feature_node.presentation.widget.data.WidgetPreferences
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class GridMediaWidgetReceiver : AppWidgetProvider() {
 
@@ -28,8 +31,36 @@ class GridMediaWidgetReceiver : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray
     ) {
+        // Render immediately from cache so the widget is never blank while reloading.
         for (appWidgetId in appWidgetIds) {
             updateWidget(context, appWidgetManager, appWidgetId)
+        }
+
+        // Self-heal: if cached bitmaps are missing (e.g. after an app update, reboot
+        // or the system clearing app cache) but the URIs are still persisted,
+        // reload and re-cache them, then push the update again.
+        val appContext = context.applicationContext
+        val pendingResult = goAsync()
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val awm = AppWidgetManager.getInstance(appContext)
+                for (appWidgetId in appWidgetIds) {
+                    val uris = WidgetPreferences.getMediaUris(appContext, appWidgetId)
+                    if (uris.isEmpty()) continue
+                    var reloaded = false
+                    uris.forEachIndexed { index, uri ->
+                        if (WidgetBitmapLoader.loadCachedBitmap(appContext, appWidgetId, index) != null) return@forEachIndexed
+                        if (WidgetBitmapLoader.loadAndCacheBitmap(appContext, uri, appWidgetId, index)) {
+                            reloaded = true
+                        }
+                    }
+                    if (reloaded) {
+                        updateWidget(appContext, awm, appWidgetId)
+                    }
+                }
+            } finally {
+                pendingResult.finish()
+            }
         }
     }
 

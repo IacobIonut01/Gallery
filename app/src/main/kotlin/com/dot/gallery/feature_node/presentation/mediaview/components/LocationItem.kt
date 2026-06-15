@@ -1,7 +1,7 @@
 package com.dot.gallery.feature_node.presentation.mediaview.components
 
+import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -20,6 +20,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,7 +39,9 @@ import com.dot.gallery.feature_node.domain.model.LocationData
 import com.dot.gallery.feature_node.presentation.util.StaticMapURL
 import com.dot.gallery.feature_node.presentation.util.connectivityState
 import com.dot.gallery.feature_node.presentation.util.launchMap
+import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 
 @Suppress("KotlinConstantConditions")
 @OptIn(ExperimentalCoroutinesApi::class,
@@ -48,8 +51,14 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 fun LocationItem(
     modifier: Modifier = Modifier,
     iconBackgroundModifier: Modifier = Modifier,
-    locationData: LocationData?
+    locationData: LocationData?,
+    mediaUri: Uri? = null,
+    onShowInApp: (() -> Unit)? = null,
 ) {
+    val mapsEnabled = remember { BuildConfig.MAPS_ENABLED }
+    val locationSheetState = rememberAppBottomSheetState()
+    val scope = rememberCoroutineScope()
+
     AnimatedVisibility(
         visible = locationData != null,
         enter = enterAnimation,
@@ -62,7 +71,11 @@ fun LocationItem(
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
                     .clickable {
-                        context.launchMap(locationData.latitude, locationData.longitude)
+                        if (mapsEnabled) {
+                            scope.launch { locationSheetState.show() }
+                        } else {
+                            context.launchMap(locationData.latitude, locationData.longitude)
+                        }
                     }
                     .padding(vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -122,6 +135,15 @@ fun LocationItem(
                             .clip(RoundedCornerShape(10.dp))
                     )
                 }
+            }
+
+            if (mapsEnabled && locationSheetState.isVisible) {
+                LocationDetailSheet(
+                    state = locationSheetState,
+                    locationData = locationData,
+                    mediaUri = mediaUri,
+                    onShowInApp = onShowInApp ?: {},
+                )
             }
         }
     }

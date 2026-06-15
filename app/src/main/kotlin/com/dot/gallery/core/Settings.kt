@@ -51,7 +51,9 @@ import com.dot.gallery.feature_node.domain.util.OrderType
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.feature_node.presentation.util.printDebug
+import com.dot.gallery.core.security.AdvancedProtectionMonitor
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parcelize
@@ -191,6 +193,12 @@ object Settings {
         @Composable
         fun rememberMergeAlbumsByName() =
             rememberPreference(key = MERGE_ALBUMS_BY_NAME, defaultValue = true)
+
+        val ALBUM_SECTIONS_ENABLED = booleanPreferencesKey("album_sections_enabled")
+
+        @Composable
+        fun rememberAlbumSectionsEnabled() =
+            rememberPreference(key = ALBUM_SECTIONS_ENABLED, defaultValue = false)
     }
 
     object Search {
@@ -454,6 +462,12 @@ object Settings {
         fun rememberTimelineGroupByMonth() =
             rememberPreference(key = TIMELINE_GROUP_BY_MONTH, defaultValue = false)
 
+        private val TIMELINE_GROUP_BY_YEAR = booleanPreferencesKey("timeline_group_by_year")
+
+        @Composable
+        fun rememberTimelineGroupByYear() =
+            rememberPreference(key = TIMELINE_GROUP_BY_YEAR, defaultValue = false)
+
         val GROUP_SIMILAR_MEDIA = booleanPreferencesKey("group_similar_media")
 
         @Composable
@@ -477,6 +491,18 @@ object Settings {
         @Composable
         fun rememberGroupBurstSequences() =
             rememberPreference(key = GROUP_BURST_SEQUENCES, defaultValue = true)
+
+        val GROUP_CLOUD_LOCAL = booleanPreferencesKey("group_cloud_local")
+
+        @Composable
+        fun rememberGroupCloudLocal() =
+            rememberPreference(key = GROUP_CLOUD_LOCAL, defaultValue = true)
+
+        private val USE_SYSTEM_FONT = booleanPreferencesKey("use_system_font")
+
+        @Composable
+        fun rememberUseSystemFont() =
+            rememberPreference(key = USE_SYSTEM_FONT, defaultValue = false)
 
         private val ALLOW_BLUR = booleanPreferencesKey("allow_blur")
 
@@ -513,12 +539,6 @@ object Settings {
         @Composable
         fun rememberAutoHideNavBar() =
             rememberPreference(key = AUTO_HIDE_NAVIGATIONBAR, defaultValue = true)
-
-        private val AUDIO_FOCUS = booleanPreferencesKey("audio_focus")
-
-        @Composable
-        fun rememberAudioFocus() =
-            rememberPreference(key = AUDIO_FOCUS, defaultValue = true)
 
         private val FULL_BRIGHTNESS_VIEW = booleanPreferencesKey("full_brightness_view")
 
@@ -650,11 +670,81 @@ object Settings {
         fun rememberShowFavoriteButton() =
             rememberPreference(key = SHOW_FAVORITE_BUTTON, defaultValue = true)
 
+        private val SHOW_SEARCHBAR_FAVORITE_BUTTON = booleanPreferencesKey("show_searchbar_favorite_button")
+
+        @Composable
+        fun rememberShowSearchBarFavoriteButton() =
+            rememberPreference(key = SHOW_SEARCHBAR_FAVORITE_BUTTON, defaultValue = true)
+
         private val SHOW_FILTER_BUTTON = booleanPreferencesKey("show_filter_button")
 
         @Composable
         fun rememberShowFilterButton() =
             rememberPreference(key = SHOW_FILTER_BUTTON, defaultValue = true)
+
+        private val FAVORITES_GROUP_BY_DATE = booleanPreferencesKey("favorites_group_by_date")
+
+        @Composable
+        fun rememberFavoritesGroupByDate() =
+            rememberPreference(key = FAVORITES_GROUP_BY_DATE, defaultValue = true)
+
+        private val TIMELINE_GROUP_BY_DATE = booleanPreferencesKey("timeline_group_by_date")
+
+        @Composable
+        fun rememberTimelineGroupByDate() =
+            rememberPreference(key = TIMELINE_GROUP_BY_DATE, defaultValue = true)
+
+        private val VAULT_GROUP_BY_DATE = booleanPreferencesKey("vault_group_by_date")
+
+        @Composable
+        fun rememberVaultGroupByDate() =
+            rememberPreference(key = VAULT_GROUP_BY_DATE, defaultValue = true)
+
+        private val CLOUD_ARCHIVE_GROUP_BY_DATE = booleanPreferencesKey("cloud_archive_group_by_date")
+
+        @Composable
+        fun rememberCloudArchiveGroupByDate() =
+            rememberPreference(key = CLOUD_ARCHIVE_GROUP_BY_DATE, defaultValue = false)
+
+        private val LOCATION_GROUP_BY_DATE = booleanPreferencesKey("location_group_by_date")
+
+        @Composable
+        fun rememberLocationGroupByDate() =
+            rememberPreference(key = LOCATION_GROUP_BY_DATE, defaultValue = true)
+
+        const val GROUP_NORMAL = "normal"
+        const val GROUP_MONTHLY = "monthly"
+        const val GROUP_YEARLY = "yearly"
+
+        private val TIMELINE_GROUP_METHOD = stringPreferencesKey("timeline_group_method")
+        @Composable
+        fun rememberTimelineGroupMethod() =
+            rememberPreference(key = TIMELINE_GROUP_METHOD, defaultValue = GROUP_NORMAL)
+
+        private val ALBUMS_GROUP_METHOD = stringPreferencesKey("albums_group_method")
+        @Composable
+        fun rememberAlbumsGroupMethod() =
+            rememberPreference(key = ALBUMS_GROUP_METHOD, defaultValue = GROUP_NORMAL)
+
+        private val FAVORITES_GROUP_METHOD = stringPreferencesKey("favorites_group_method")
+        @Composable
+        fun rememberFavoritesGroupMethod() =
+            rememberPreference(key = FAVORITES_GROUP_METHOD, defaultValue = GROUP_NORMAL)
+
+        private val VAULT_GROUP_METHOD = stringPreferencesKey("vault_group_method")
+        @Composable
+        fun rememberVaultGroupMethod() =
+            rememberPreference(key = VAULT_GROUP_METHOD, defaultValue = GROUP_NORMAL)
+
+        private val CLOUD_ARCHIVE_GROUP_METHOD = stringPreferencesKey("cloud_archive_group_method")
+        @Composable
+        fun rememberCloudArchiveGroupMethod() =
+            rememberPreference(key = CLOUD_ARCHIVE_GROUP_METHOD, defaultValue = GROUP_NORMAL)
+
+        private val LOCATION_GROUP_METHOD = stringPreferencesKey("location_group_method")
+        @Composable
+        fun rememberLocationGroupMethod() =
+            rememberPreference(key = LOCATION_GROUP_METHOD, defaultValue = GROUP_NORMAL)
 
         private val ALLOW_GIF_ANIMATION = booleanPreferencesKey("allow_gif_animation")
 
@@ -724,8 +814,18 @@ object Settings {
         fun rememberMetadataIsolationMode() =
             rememberPreference(key = METADATA_ISOLATION_MODE, defaultValue = METADATA_ISOLATION_SHARED)
 
+        /**
+         * Effective metadata isolation mode. When Android Advanced Protection Mode
+         * (AAPM) is enabled, the "shared" mode is raised to "hybrid" automatically;
+         * the user's stored preference is left untouched and is restored once AAPM
+         * is turned off.
+         */
         fun getMetadataIsolationMode(context: Context) =
-            context.activeDataStore.data.map { it[METADATA_ISOLATION_MODE] ?: METADATA_ISOLATION_SHARED }
+            context.activeDataStore.data
+                .map { it[METADATA_ISOLATION_MODE] ?: METADATA_ISOLATION_SHARED }
+                .combine(AdvancedProtectionMonitor.enabled) { mode, aapm ->
+                    if (aapm && mode == METADATA_ISOLATION_SHARED) METADATA_ISOLATION_HYBRID else mode
+                }
 
         private val SANDBOXED_DECODE = booleanPreferencesKey("sandboxed_decode")
 
@@ -733,8 +833,14 @@ object Settings {
         fun rememberSandboxedDecode() =
             rememberPreference(key = SANDBOXED_DECODE, defaultValue = false)
 
+        /**
+         * Effective sandboxed-decode state. Forced on whenever Android Advanced
+         * Protection Mode (AAPM) is enabled, regardless of the stored preference.
+         */
         fun getSandboxedDecode(context: Context) =
-            context.activeDataStore.data.map { it[SANDBOXED_DECODE] ?: false }
+            context.activeDataStore.data
+                .map { it[SANDBOXED_DECODE] ?: false }
+                .combine(AdvancedProtectionMonitor.enabled) { pref, aapm -> pref || aapm }
 
         private val PRIVATE_FOLDER_ENABLED = booleanPreferencesKey("private_folder_enabled")
 

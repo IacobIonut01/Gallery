@@ -36,9 +36,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -46,6 +49,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.LocalMediaSelector
+import com.dot.gallery.core.Settings
 import com.dot.gallery.core.Settings.Misc.rememberAutoHideSearchBar
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
@@ -71,7 +75,7 @@ fun <T : Media> GridPinchZoomScope.MediaGridView(
     allowHeaders: Boolean = true,
     enableStickyHeaders: Boolean = false,
     hasToolbarOffset: Boolean = true,
-    showMonthlyHeader: Boolean = false,
+    groupMethod: String = Settings.Misc.GROUP_NORMAL,
     aboveGridContent: @Composable (() -> Unit)? = null,
     isScrolling: MutableState<Boolean>,
     emptyContent: @Composable () -> Unit,
@@ -79,9 +83,12 @@ fun <T : Media> GridPinchZoomScope.MediaGridView(
     animatedContentScope: AnimatedContentScope,
     onMediaClick: @DisallowComposableCalls (media: T) -> Unit = {},
 ) {
-    val mappedData by rememberedDerivedState(mediaState, showMonthlyHeader) {
-        if (showMonthlyHeader) mediaState.value.mappedMediaWithMonthly
-        else mediaState.value.mappedMedia
+    val mappedData by rememberedDerivedState(mediaState, groupMethod) {
+        when (groupMethod) {
+            Settings.Misc.GROUP_MONTHLY -> mediaState.value.mappedMediaWithMonthly
+            Settings.Misc.GROUP_YEARLY -> mediaState.value.mappedMediaWithYearly
+            else -> mediaState.value.mappedMedia
+        }
     }
     val selector = LocalMediaSelector.current
     val isSelectionActive by selector.isSelectionActive.collectAsStateWithLifecycle()
@@ -96,7 +103,13 @@ fun <T : Media> GridPinchZoomScope.MediaGridView(
      * That shows the grid at the bottom after content is loaded
      */
     var hasScrolledToTop by rememberSaveable { mutableStateOf(false) }
+    // Only counter the "grid renders at the bottom" glitch on the initial cold
+    // load (loading -> loaded). If the grid is (re)created with data already
+    // present - e.g. when returning from the media viewer - keep the restored
+    // scroll position instead of jumping back to the top.
+    val loadedOnEntry = remember { !mediaState.value.isLoading }
     LaunchedEffect(gridState, mediaState.value) {
+        if (loadedOnEntry) return@LaunchedEffect
         snapshotFlow { mediaState.value.isLoading }
             .collectLatest { isLoading ->
                 if (!isLoading  && !hasScrolledToTop) {
@@ -151,9 +164,18 @@ fun <T : Media> GridPinchZoomScope.MediaGridView(
                     exit = exitAnimation
                 ) {
                     val text by rememberedDerivedState(stickyHeaderItem) { stickyHeaderItem ?: "" }
+                    val isDarkTheme = isSystemInDarkTheme()
                     Text(
                         text = text,
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.titleMedium.let { style ->
+                            if (!isDarkTheme) style.copy(
+                                shadow = Shadow(
+                                    color = Color.White,
+                                    offset = Offset.Zero,
+                                    blurRadius = 10f
+                                )
+                            ) else style
+                        },
                         color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier
                             .background(
@@ -184,6 +206,7 @@ fun <T : Media> GridPinchZoomScope.MediaGridView(
                 allowSelection = allowSelection,
                 canScroll = canScroll,
                 allowHeaders = allowHeaders,
+                bigHeaders = groupMethod != Settings.Misc.GROUP_NORMAL,
                 aboveGridContent = aboveGridContent,
                 isScrolling = isScrolling,
                 emptyContent = emptyContent,
@@ -203,6 +226,7 @@ fun <T : Media> GridPinchZoomScope.MediaGridView(
             allowSelection = allowSelection,
             canScroll = canScroll,
             allowHeaders = allowHeaders,
+            bigHeaders = groupMethod != Settings.Misc.GROUP_NORMAL,
             aboveGridContent = aboveGridContent,
             isScrolling = isScrolling,
             emptyContent = emptyContent,

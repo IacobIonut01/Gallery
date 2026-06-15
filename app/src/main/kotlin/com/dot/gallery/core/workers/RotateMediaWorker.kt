@@ -18,6 +18,10 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.awxkee.jxlcoder.JxlCoder
+import com.dot.gallery.cloud.core.ProviderRegistry
+import com.dot.gallery.cloud.core.ProviderType
+import com.dot.gallery.cloud.core.capabilities.SyncCapableProvider
+import com.dot.gallery.cloud.util.CloudMediaDownloader
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.util.getUri
 import com.github.panpf.sketch.util.rotate
@@ -26,6 +30,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.InputStream
 import java.util.UUID
 
 fun WorkManager.rotateImage(
@@ -38,6 +43,7 @@ fun WorkManager.rotateImage(
                 RotateMediaWorker.KEY_MEDIA_URI to media.getUri().toString(),
                 RotateMediaWorker.KEY_ROTATION_DEGREES to degrees,
                 RotateMediaWorker.KEY_MIME_TYPE to media.mimeType,
+                RotateMediaWorker.KEY_LABEL to media.label,
             )
         )
         .build()
@@ -49,6 +55,7 @@ fun WorkManager.rotateImage(
 class RotateMediaWorker @AssistedInject constructor(
     @Assisted private val appContext: Context,
     @Assisted params: WorkerParameters,
+    private val registry: ProviderRegistry
 ) : CoroutineWorker(appContext, params) {
 
     private val cr: ContentResolver = appContext.contentResolver
@@ -65,10 +72,14 @@ class RotateMediaWorker @AssistedInject constructor(
         val mime = inputData.getString(KEY_MIME_TYPE)
             ?: (cr.getType(sourceUri) ?: "image/jpeg")
 
+        val isCloud = sourceUri.scheme == "cloud"
         try {
             update(Status.DECODING, "Decoding original")
-            val original = decodeFullResolution(sourceUri, mime)
-                ?: return@withContext failure("Decode failed")
+            val original = if (isCloud) {
+                decodeCloudFullResolution(sourceUri, mime)
+            } else {
+                decodeFullResolution(sourceUri, mime)
+            } ?: return@withContext failure("Decode failed")
 
             update(Status.ROTATING, "Applying rotation=$degrees")
             val rotated = original.rotate(degrees)
@@ -76,14 +87,57 @@ class RotateMediaWorker @AssistedInject constructor(
 
             update(Status.SAVING, "Saving")
             val format = chooseCompressFormat(mime)
-            val saved = saveRotatedInPlace(
-                sourceUri = sourceUri,
-                rotated = rotated,
-                format = format,
-                quality = 95
-            )
-            rotated.recycle()
-            if (!saved) return@withContext failure("Save failed")
+            if (isCloud) {
+                val label = inputData.getString(KEY_LABEL) ?: "rotated"
+                val localUri = saveRotatedAsNewLocalUri(rotated, format, 95, mime, label)
+                rotated.recycle()
+                if (localUri == null) return@withContext failure("Save failed")
+
+                // Upload back to cloud
+                update(Status.SAVING, "Uploading to cloud")
+                val providerName = sourceUri.authority
+                val providerType = providerName?.let {
+                    try { ProviderType.valueOf(it) } catch (_: Exception) { null }
+                }
+                val syncProvider = providerType?.let { registry.get(it) as? SyncCapableProvider }
+                if (syncProvider != null) {
+                    val tempMedia = Media.UriMedia(
+                        id = 0,
+                        label = "rotated_$label",
+                        uri = localUri,
+                        path = localUri.toString(),
+                        relativePath = "Pictures",
+                        albumID = 0,
+                        albumLabel = "",
+                        timestamp = System.currentTimeMillis() / 1000,
+                        expiryTimestamp = null,
+                        takenTimestamp = null,
+                        fullDate = "",
+                        mimeType = mime,
+                        favorite = 0,
+                        trashed = 0,
+                        size = 0,
+                        duration = null,
+                    )
+                    val uploadResult = syncProvider.uploadAsset(tempMedia)
+                    // Delete local copy regardless of upload success
+                    try { cr.delete(localUri, null, null) } catch (_: Exception) {}
+                    if (uploadResult.isFailure) {
+                        return@withContext failure("Upload failed: ${uploadResult.exceptionOrNull()?.message}")
+                    }
+                } else {
+                    // No sync provider available, keep local copy
+                }
+            } else {
+                val saved = saveRotatedInPlace(
+                    sourceUri = sourceUri,
+                    rotated = rotated,
+                    format = format,
+                    quality = 95
+                )
+                rotated.recycle()
+                if (!saved) return@withContext failure("Save failed")
+            }
 
             update(Status.COMPLETED, "Done")
             success("Rotation applied")
@@ -124,32 +178,80 @@ class RotateMediaWorker @AssistedInject constructor(
         }
     }
 
+    private fun decodeCloudFullResolution(cloudUri: Uri, mime: String): Bitmap? {
+        val inputStream = openCloudInputStream(cloudUri) ?: return null
+        return inputStream.use { input -> decodeFromStream(input, mime) }
+    }
+
+    private fun openCloudInputStream(cloudUri: Uri): InputStream? {
+        return CloudMediaDownloader.downloadCloudMedia(cloudUri)
+    }
+
+    private fun saveRotatedAsNewLocalUri(
+        rotated: Bitmap,
+        format: Bitmap.CompressFormat,
+        quality: Int,
+        mime: String,
+        label: String
+    ): Uri? {
+        try {
+            val isVideo = mime.startsWith("video")
+            val targetUri = cr.insert(
+                if (isVideo) MediaStore.Video.Media.getContentUri("external")
+                else MediaStore.Images.Media.getContentUri("external"),
+                ContentValues().apply {
+                    put(MediaStore.MediaColumns.DISPLAY_NAME, "rotated_$label")
+                    put(MediaStore.MediaColumns.MIME_TYPE, mime)
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, "Pictures")
+                    put(MediaStore.MediaColumns.IS_PENDING, 1)
+                }
+            ) ?: return null
+
+            cr.openOutputStream(targetUri)?.use { out ->
+                if (!rotated.compress(format, quality, out)) return null
+            } ?: return null
+
+            val updateValues = ContentValues().apply {
+                put(MediaStore.MediaColumns.IS_PENDING, 0)
+                put(MediaStore.MediaColumns.DATE_MODIFIED, System.currentTimeMillis() / 1000)
+            }
+            cr.update(targetUri, updateValues, null, null)
+            return targetUri
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return null
+        }
+    }
+
     private fun decodeFullResolution(uri: Uri, mime: String): Bitmap? {
         val lower = mime.lowercase()
-        return cr.openInputStream(uri)?.use { input ->
-            when {
-                lower.contains("jxl") -> {
-                    val bytes = input.readBytes()
-                    val size = JxlCoder.getSize(bytes) ?: return null
-                    JxlCoder.decodeSampled(bytes, size.width, size.height)
-                }
+        return cr.openInputStream(uri)?.use { input -> decodeFromStream(input, mime) }
+    }
 
-                lower.contains("heic") || lower.contains("heif") || lower.contains("avif") || lower.contains(
-                    "avis"
-                ) -> {
-                    val bytes = input.readBytes()
-                    val coder = HeifCoder()
-                    val size = coder.getSize(bytes) ?: return null
-                    coder.decodeSampled(bytes, size.width, size.height)
-                }
+    private fun decodeFromStream(input: InputStream, mime: String): Bitmap? {
+        val lower = mime.lowercase()
+        return when {
+            lower.contains("jxl") -> {
+                val bytes = input.readBytes()
+                val size = JxlCoder.getSize(bytes) ?: return null
+                JxlCoder.decodeSampled(bytes, size.width, size.height)
+            }
 
-                else -> {
-                    val opts = BitmapFactory.Options().apply {
-                        inPreferredConfig = Bitmap.Config.ARGB_8888
-                        inMutable = false
-                    }
-                    BitmapFactory.decodeStream(input, null, opts)
+            lower.contains("heic") || lower.contains("heif") || lower.contains("avif") || lower.contains(
+                "avis"
+            ) -> {
+                val bytes = input.readBytes()
+                val coder = HeifCoder()
+                val size = coder.getSize(bytes) ?: return null
+                coder.decodeSampled(bytes, size.width, size.height)
+            }
+
+            else -> {
+                val opts = BitmapFactory.Options().apply {
+                    inPreferredConfig = Bitmap.Config.ARGB_8888
+                    inMutable = false
                 }
+                BitmapFactory.decodeStream(input, null, opts)
             }
         }
     }
@@ -192,6 +294,7 @@ class RotateMediaWorker @AssistedInject constructor(
         const val KEY_MEDIA_URI = "media_uri"
         const val KEY_ROTATION_DEGREES = "rotation_degrees"
         const val KEY_MIME_TYPE = "mime_type"
+        const val KEY_LABEL = "label"
 
         const val KEY_STATUS = "status"
         const val KEY_MESSAGE = "message"

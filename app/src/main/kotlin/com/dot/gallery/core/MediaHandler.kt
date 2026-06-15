@@ -77,4 +77,6 @@ interface MediaHandler {
     suspend fun <T : Media> addMedia(vault: Vault, media: T)
 
     fun <T: Media> rotateImage(media: T, degrees: Int): UUID
+
+    suspend fun <T: Media> downloadCloudMedia(mediaList: List<T>): Result<Int>
 }

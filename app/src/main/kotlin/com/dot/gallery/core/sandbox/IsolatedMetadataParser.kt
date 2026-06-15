@@ -193,13 +193,15 @@ class IsolatedMetadataParser(private val context: Context) {
                 context.contentResolver.openFileDescriptor(uri, "r")
             }.getOrNull() ?: return@withContext null
 
-            val result = sendAndReceive(conn.messenger, MSG_PARSE_IMAGE, Bundle().apply {
-                putParcelable(KEY_PFD, pfd)
-                putString(KEY_LABEL, label)
-            })
-            val elapsedMs = (System.nanoTime() - startNs) / 1_000_000
-            printDebug("IsolatedMetadataParser: image parse took ${elapsedMs}ms (per-file: ${conn.instanceName})")
-            result
+            pfd.use {
+                val result = sendAndReceive(conn.messenger, MSG_PARSE_IMAGE, Bundle().apply {
+                    putParcelable(KEY_PFD, it)
+                    putString(KEY_LABEL, label)
+                })
+                val elapsedMs = (System.nanoTime() - startNs) / 1_000_000
+                printDebug("IsolatedMetadataParser: image parse took ${elapsedMs}ms (per-file: ${conn.instanceName})")
+                result
+            }
         } finally {
             unbindPerFile(conn)
         }
@@ -224,12 +226,14 @@ class IsolatedMetadataParser(private val context: Context) {
                 context.contentResolver.openFileDescriptor(uri, "r")
             }.getOrNull() ?: return@withContext null
 
-            val result = sendAndReceive(conn.messenger, MSG_PARSE_VIDEO, Bundle().apply {
-                putParcelable(KEY_PFD, pfd)
-            })
-            val elapsedMs = (System.nanoTime() - startNs) / 1_000_000
-            printDebug("IsolatedMetadataParser: video parse took ${elapsedMs}ms (per-file: ${conn.instanceName})")
-            result
+            pfd.use {
+                val result = sendAndReceive(conn.messenger, MSG_PARSE_VIDEO, Bundle().apply {
+                    putParcelable(KEY_PFD, it)
+                })
+                val elapsedMs = (System.nanoTime() - startNs) / 1_000_000
+                printDebug("IsolatedMetadataParser: video parse took ${elapsedMs}ms (per-file: ${conn.instanceName})")
+                result
+            }
         } finally {
             unbindPerFile(conn)
         }
@@ -255,15 +259,17 @@ class IsolatedMetadataParser(private val context: Context) {
                 context.contentResolver.openFileDescriptor(uri, "r")
             }.getOrNull() ?: return@withContext emptyList()
 
-            val bundle = sendAndReceive(conn.messenger, MSG_PARSE_RAW_METADATA, Bundle().apply {
-                putParcelable(KEY_PFD, pfd)
-                putBoolean(KEY_IS_VIDEO, isVideo)
-            }) ?: return@withContext emptyList()
+            pfd.use {
+                val bundle = sendAndReceive(conn.messenger, MSG_PARSE_RAW_METADATA, Bundle().apply {
+                    putParcelable(KEY_PFD, it)
+                    putBoolean(KEY_IS_VIDEO, isVideo)
+                }) ?: return@use emptyList()
 
-            val result = unbundleRawMetadata(bundle)
-            val elapsedMs = (System.nanoTime() - startNs) / 1_000_000
-            printDebug("IsolatedMetadataParser: raw metadata parse took ${elapsedMs}ms (per-file: ${conn.instanceName})")
-            result
+                val result = unbundleRawMetadata(bundle)
+                val elapsedMs = (System.nanoTime() - startNs) / 1_000_000
+                printDebug("IsolatedMetadataParser: raw metadata parse took ${elapsedMs}ms (per-file: ${conn.instanceName})")
+                result
+            }
         } finally {
             unbindPerFile(conn)
         }
@@ -285,14 +291,16 @@ class IsolatedMetadataParser(private val context: Context) {
             context.contentResolver.openFileDescriptor(uri, "r")
         }.getOrNull() ?: return@withContext null
 
-        val result = sendAndReceive(MSG_PARSE_IMAGE, Bundle().apply {
-            putParcelable(KEY_PFD, pfd)
-            putString(KEY_LABEL, label)
-        })
+        pfd.use {
+            val result = sendAndReceive(MSG_PARSE_IMAGE, Bundle().apply {
+                putParcelable(KEY_PFD, it)
+                putString(KEY_LABEL, label)
+            })
 
-        val elapsedMs = (System.nanoTime() - startNs) / 1_000_000
-        printDebug("IsolatedMetadataParser: image parse took ${elapsedMs}ms (isolated)")
-        result
+            val elapsedMs = (System.nanoTime() - startNs) / 1_000_000
+            printDebug("IsolatedMetadataParser: image parse took ${elapsedMs}ms (isolated)")
+            result
+        }
     }
 
     /**
@@ -306,13 +314,15 @@ class IsolatedMetadataParser(private val context: Context) {
             context.contentResolver.openFileDescriptor(uri, "r")
         }.getOrNull() ?: return@withContext null
 
-        val result = sendAndReceive(MSG_PARSE_VIDEO, Bundle().apply {
-            putParcelable(KEY_PFD, pfd)
-        })
+        pfd.use {
+            val result = sendAndReceive(MSG_PARSE_VIDEO, Bundle().apply {
+                putParcelable(KEY_PFD, it)
+            })
 
-        val elapsedMs = (System.nanoTime() - startNs) / 1_000_000
-        printDebug("IsolatedMetadataParser: video parse took ${elapsedMs}ms (isolated)")
-        result
+            val elapsedMs = (System.nanoTime() - startNs) / 1_000_000
+            printDebug("IsolatedMetadataParser: video parse took ${elapsedMs}ms (isolated)")
+            result
+        }
     }
 
     /**
@@ -327,15 +337,17 @@ class IsolatedMetadataParser(private val context: Context) {
                 context.contentResolver.openFileDescriptor(uri, "r")
             }.getOrNull() ?: return@withContext emptyList()
 
-            val bundle = sendAndReceive(MSG_PARSE_RAW_METADATA, Bundle().apply {
-                putParcelable(KEY_PFD, pfd)
-                putBoolean(KEY_IS_VIDEO, isVideo)
-            }) ?: return@withContext emptyList()
+            pfd.use {
+                val bundle = sendAndReceive(MSG_PARSE_RAW_METADATA, Bundle().apply {
+                    putParcelable(KEY_PFD, it)
+                    putBoolean(KEY_IS_VIDEO, isVideo)
+                }) ?: return@use emptyList()
 
-            val result = unbundleRawMetadata(bundle)
-            val elapsedMs = (System.nanoTime() - startNs) / 1_000_000
-            printDebug("IsolatedMetadataParser: raw metadata parse took ${elapsedMs}ms (isolated)")
-            result
+                val result = unbundleRawMetadata(bundle)
+                val elapsedMs = (System.nanoTime() - startNs) / 1_000_000
+                printDebug("IsolatedMetadataParser: raw metadata parse took ${elapsedMs}ms (isolated)")
+                result
+            }
         }
 
     // ── IPC internals ─────────────────────────────────────────────────────

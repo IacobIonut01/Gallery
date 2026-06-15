@@ -10,11 +10,13 @@ enum class ImageFilterTypes {
     Original,
     Lite, Playa, Honey, Isla, Desert, Clay, Palma, Blush, Alpaca, Modena,
     West, Metro, Reel, Bazaar, Ollie,
-    Onyx, Eiffel, Vogue, Vista, Astro;
+    Onyx, Eiffel, Vogue, Vista, Astro,
+    Negative;
 
     fun createImageFilter(): ImageFilter =
         when (this) {
             Original -> None()
+            Negative -> Negative()
             Lite -> LiteFilter()
             Playa -> PlayaFilter()
             Honey -> HoneyFilter()
@@ -41,6 +43,6 @@ enum class ImageFilterTypes {
         get() = when (this) {
             Original, Lite, Playa, Honey, Isla, Desert, Clay, Palma, Blush, Alpaca, Modena -> 0
             West, Metro, Reel, Bazaar, Ollie -> 1
-            Onyx, Eiffel, Vogue, Vista, Astro -> 2
+            Onyx, Eiffel, Vogue, Vista, Astro, Negative -> 2
         }
 }

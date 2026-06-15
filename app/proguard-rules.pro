@@ -42,3 +42,9 @@
 -keep class com.awxkee.jxlcoder.** { *; }
 -dontwarn com.radzivon.bartoshyk.avif.**
 -dontwarn com.awxkee.jxlcoder.**
+
+# Cloud provider models (Retrofit DTOs, Room entities, serialization)
+-keep class com.dot.gallery.cloud.** { *; }
+-keep class com.dot.gallery.cloud.data.entity.** { *; }
+-keep class com.dot.gallery.cloud.core.** { *; }
+-keep class com.dot.gallery.cloud.image.** { *; }

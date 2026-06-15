@@ -9,6 +9,7 @@ data class AlbumState(
     val albumsUnpinned: List<Album> = emptyList(),
     val albumsPinned: List<Album> = emptyList(),
     val albumGroups: List<AlbumGroupWithAlbums> = emptyList(),
+    val albumSections: List<AlbumSectionWithAlbums> = emptyList(),
     val collections: List<CollectionWithCount> = emptyList(),
     val error: String = "",
     val isLoading: Boolean = true

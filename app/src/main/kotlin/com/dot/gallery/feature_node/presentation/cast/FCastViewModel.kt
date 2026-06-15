@@ -62,6 +62,7 @@ class FCastViewModel @Inject constructor(
                     input.copyTo(out)
                 }
             }
+            decrypted.cleanup()
             session.castFile(
                 file = tempFile,
                 mimeType = media.mimeType,

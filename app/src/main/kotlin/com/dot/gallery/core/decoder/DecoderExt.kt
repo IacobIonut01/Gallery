@@ -110,6 +110,27 @@ inline fun DataSource.withCustomDecoder(
 }
 
 /**
+ * Wraps an already-decoded [Bitmap] into Sketch [ImageData], applying the request's resize.
+ */
+fun imageDataFromBitmap(
+    bitmap: Bitmap,
+    requestContext: RequestContext,
+    dataFrom: com.github.panpf.sketch.source.DataFrom,
+    mimeType: String,
+): ImageData {
+    val imageInfo = ImageInfo(bitmap.width, bitmap.height, mimeType)
+    val resize = requestContext.computeResize(imageInfo.size)
+    return ImageData(
+        image = bitmap.asImage(),
+        imageInfo = imageInfo,
+        dataFrom = dataFrom,
+        resize = resize,
+        transformeds = null,
+        extras = null
+    )
+}
+
+/**
  * Decodes a static image from pre-read bytes using the provided [getSize] and [decodeSampled]
  * callbacks (typically from HeifCoder). Replicates [withCustomDecoder] logic without re-reading
  * from the DataSource.

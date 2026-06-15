@@ -13,3 +13,8 @@ api.properties
 /.vscode
 **/build
 **/.kotlin
+
+# Signing material (PQC hybrid signing, #901) — never commit
+new_release.jks
+*.lineage
+*.keystore

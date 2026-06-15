@@ -30,7 +30,6 @@ import androidx.compose.ui.unit.dp
 import com.dot.gallery.R
 import com.dot.gallery.core.presentation.components.SetupWizard
 import com.dot.gallery.feature_node.domain.model.Vault
-import com.dot.gallery.feature_node.presentation.util.printError
 import com.dot.gallery.ui.core.Icons
 import com.dot.gallery.ui.core.icons.Encrypted
 
@@ -71,19 +70,13 @@ fun VaultSetup(
             )
             SetupButton(
                 onClick = {
-                    vm.setVault(
-                        vault = newVault,
-                        onFailed = {
-                            val newError = if (it.contains("Already exists")) {
-                                context.getString(R.string.vault_already_exists, newVault.name)
-                            } else it
-                            printError("Error: $newError")
-                            nameError = newError
-                        },
-                        onSuccess = {
-                            onCreate()
-                        }
-                    )
+                    val nameExists = vm.vaultState.value.vaults.any { it.name == newVault.name }
+                    if (nameExists) {
+                        nameError = context.getString(R.string.vault_already_exists, newVault.name)
+                    } else {
+                        vm.currentVault.value = newVault
+                        onCreate()
+                    }
                 },
                 enabled = isBiometricAvailable && nameError.isEmpty() && newVault.name.isNotEmpty(),
                 modifier = Modifier.weight(1f),

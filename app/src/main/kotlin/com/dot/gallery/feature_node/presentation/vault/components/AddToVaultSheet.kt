@@ -95,7 +95,7 @@ fun AddToVaultSheet(
                             shape = RoundedCornerShape(12.dp)
                         )
                         .padding(16.dp),
-                    text = stringResource(R.string.vault_delete_originals),
+                    text = stringResource(R.string.vault_originals_question),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center

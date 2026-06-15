@@ -40,7 +40,7 @@ data class MetadataViewState(
 @HiltViewModel
 class MetadataViewViewModel @Inject constructor(
     private val isolatedParser: IsolatedMetadataParser,
-    @ApplicationContext private val appContext: Context
+    @param:ApplicationContext private val appContext: Context
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(MetadataViewState())

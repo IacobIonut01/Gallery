@@ -29,10 +29,23 @@ class TempVaultCleanupWorker @AssistedInject constructor(
         val cutoff = System.currentTimeMillis() - TimeUnit.HOURS.toMillis(maxAgeHours)
         val cacheDir = appContext.cacheDir ?: return@runCatching Result.success()
         var deletedCount = 0
+        // Clean vault_stream_*.tmp and vault_dec_*.tmp from cacheDir
         cacheDir.listFiles()?.forEach { f ->
-            if (f.isFile && f.name.startsWith(TEMP_PREFIX) && f.name.endsWith(".tmp")) {
+            if (f.isFile && f.name.endsWith(".tmp") &&
+                (f.name.startsWith(TEMP_PREFIX) || f.name.startsWith(TEMP_DEC_PREFIX))) {
                 if (f.lastModified() < cutoff) {
                     if (f.delete()) deletedCount++
+                }
+            }
+        }
+        // Also clean any leftover vault_dec_*.tmp from filesDir (legacy location before fix)
+        val filesDir = appContext.filesDir
+        if (filesDir != null) {
+            filesDir.listFiles()?.forEach { f ->
+                if (f.isFile && f.name.startsWith(TEMP_DEC_PREFIX) && f.name.endsWith(".tmp")) {
+                    if (f.lastModified() < cutoff) {
+                        if (f.delete()) deletedCount++
+                    }
                 }
             }
         }
@@ -60,8 +73,11 @@ class TempVaultCleanupWorker @AssistedInject constructor(
 
     companion object {
         private const val TEMP_PREFIX = "vault_stream_"
+        private const val TEMP_DEC_PREFIX = "vault_dec_"
         private const val DEFAULT_MAX_AGE_HOURS = 12L
         private const val UNIQUE_WORK = "TempVaultCleanup"
+        private const val PREFS_NAME = "vault_cleanup_prefs"
+        private const val KEY_LEGACY_CLEANUP_DONE = "legacy_filesdir_cleanup_done"
         const val KEY_MAX_AGE_HOURS = "maxAgeHours"
 
         fun schedule(workManager: WorkManager, maxAgeHours: Long = DEFAULT_MAX_AGE_HOURS) {
@@ -78,6 +94,43 @@ class TempVaultCleanupWorker @AssistedInject constructor(
                 ExistingPeriodicWorkPolicy.UPDATE,
                 req
             )
+        }
+
+        /**
+         * One-time cleanup for users upgrading from versions that leaked vault_dec_*.tmp
+         * files into filesDir. Deletes ALL such files unconditionally (no age cutoff)
+         * since they are all orphaned. Guarded by a SharedPreferences flag so it only
+         * runs once per install.
+         */
+        fun runLegacyFilesdirCleanup(context: Context) {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            if (prefs.getBoolean(KEY_LEGACY_CLEANUP_DONE, false)) return
+
+            val filesDir = context.filesDir ?: return
+            var deletedCount = 0
+            var freedBytes = 0L
+            filesDir.listFiles()?.forEach { f ->
+                if (f.isFile && f.name.startsWith(TEMP_DEC_PREFIX) && f.name.endsWith(".tmp")) {
+                    freedBytes += f.length()
+                    if (f.delete()) deletedCount++
+                }
+            }
+            // Also sweep vault subfolders for any orphaned .tmp files
+            filesDir.listFiles()?.forEach { dir ->
+                if (dir.isDirectory) {
+                    dir.listFiles()?.forEach { f ->
+                        if (f.isFile && f.name.startsWith(TEMP_DEC_PREFIX) && f.name.endsWith(".tmp")) {
+                            freedBytes += f.length()
+                            if (f.delete()) deletedCount++
+                        }
+                    }
+                }
+            }
+            if (deletedCount > 0) {
+                val freedMB = freedBytes / (1024 * 1024)
+                printDebug("Legacy vault temp cleanup: deleted $deletedCount files, freed ${freedMB}MB")
+            }
+            prefs.edit().putBoolean(KEY_LEGACY_CLEANUP_DONE, true).apply()
         }
     }
 }

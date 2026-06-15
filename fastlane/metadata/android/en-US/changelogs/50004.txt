@@ -1,0 +1,25 @@
+What's new in 5.0.0:
+
+• Cloud media & Immich — Connect your self-hosted server and browse your remote library in a unified timeline with local/remote dedup, full-quality streaming, EXIF, server albums, people, map, and CLIP smart search
+• Cloud photo backup — Back up selected albums with deduplication and Wi-Fi/cellular controls
+• Backup & restore wizard — Export/import settings, favorites, cloud configs, and vaults, with optional password encryption
+• New editor effects — Posterize, Edges, Borders, Hue, black & white, and a one-tap Negative preset
+• Flexible date grouping — Group media by day, month, or year, configured per screen
+• Album sections — Collapsible Common, Apps, and Other album sections
+• Save motion photo as video — Export the embedded clip as a standalone MP4
+• Android Advanced Protection — Auto-hardens decoding and metadata isolation when enabled (Android 16+)
+• Location detail sheet — Map preview with quick open actions
+
+Performance:
+• Smoother timeline scrolling with optimized grid rendering and paused loading while fast-scrolling
+• New Sketch-based viewer image pipeline with grid-click prefetching
+• Faster startup and reduced bottom-sheet blur lag
+
+Bug fixes:
+• Fixed panorama horizontal mirroring
+• Fixed background audio when the app loses focus
+• Fixed album thumbnails and content in the picker
+• Fixed file descriptor leaks and vault decryption temp-file bloat
+• Fixed several vault UX issues and duplicate-key crashes
+• Fixed copy/move to SD card destinations
+• Fixed trashing external storage media

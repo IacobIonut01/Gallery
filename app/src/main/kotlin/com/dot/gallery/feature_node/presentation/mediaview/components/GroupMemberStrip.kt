@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
@@ -48,10 +49,12 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.dot.gallery.R
 import com.dot.gallery.core.presentation.components.CheckBox
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.util.getUri
+import com.dot.gallery.feature_node.domain.util.isCloud
 import com.github.panpf.sketch.AsyncImage
 import kotlinx.coroutines.launch
 import kotlin.math.abs
@@ -67,6 +70,7 @@ fun <T : Media> GroupMemberStrip(
     selectedId: Long,
     onSelect: (Long) -> Unit,
     modifier: Modifier = Modifier,
+    showCloudLabels: Boolean = false,
     multiSelectMode: Boolean = false,
     multiSelectedIds: Set<Long> = emptySet(),
     onEnterMultiSelect: (Long) -> Unit = {},
@@ -187,6 +191,27 @@ fun <T : Media> GroupMemberStrip(
                             .padding(2.dp)
                     ) {
                         CheckBox(isChecked = isMultiSelected)
+                    }
+                }
+                if (showCloudLabels) {
+                    val labelShape = RoundedCornerShape(bottomStart = 8.dp, bottomEnd = 8.dp)
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .fillMaxWidth()
+                            .background(
+                                color = Color.Black.copy(alpha = 0.55f),
+                                shape = labelShape
+                            )
+                            .padding(vertical = 2.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = if (member.isCloud) "Cloud" else "Local",
+                            color = Color.White,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontSize = 9.sp
+                        )
                     }
                 }
             }

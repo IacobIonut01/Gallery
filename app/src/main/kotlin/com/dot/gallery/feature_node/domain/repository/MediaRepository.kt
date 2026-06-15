@@ -15,6 +15,8 @@ import com.dot.gallery.feature_node.data.data_source.CategoryWithMediaCount
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.AlbumGroup
 import com.dot.gallery.feature_node.domain.model.AlbumGroupMember
+import com.dot.gallery.feature_node.domain.model.AlbumSection
+import com.dot.gallery.feature_node.domain.model.AlbumSectionMember
 import com.dot.gallery.feature_node.domain.model.AlbumThumbnail
 import com.dot.gallery.feature_node.domain.model.Category
 import com.dot.gallery.feature_node.domain.model.Collection
@@ -97,6 +99,11 @@ interface MediaRepository {
         mediaList: List<T>,
         trash: Boolean
     )
+
+    suspend fun <T: Media> trashMediaDirectly(
+        mediaList: List<T>,
+        trash: Boolean
+    ): Boolean
 
     suspend fun <T: Media> copyMedia(
         from: T,
@@ -353,5 +360,39 @@ interface MediaRepository {
     fun getAllAlbumIdsInCollections(): Flow<List<Long>>
 
     fun getAlbumIdsInCollection(collectionId: Long): Flow<List<Long>>
+
+    // ============ Album Sections ============
+
+    suspend fun insertAlbumSection(section: AlbumSection): Long
+
+    suspend fun updateAlbumSection(section: AlbumSection)
+
+    suspend fun deleteAlbumSection(sectionId: Long)
+
+    fun getAllAlbumSections(): Flow<List<AlbumSection>>
+
+    suspend fun getAllAlbumSectionsAsync(): List<AlbumSection>
+
+    suspend fun getAlbumSectionAsync(sectionId: Long): AlbumSection?
+
+    suspend fun getAlbumSectionByType(type: Int): AlbumSection?
+
+    suspend fun updateSectionDisplayOrder(sectionId: Long, order: Int)
+
+    suspend fun updateSectionVisibility(sectionId: Long, visible: Boolean)
+
+    suspend fun updateSectionExpanded(sectionId: Long, expanded: Boolean)
+
+    suspend fun getAlbumSectionCount(): Int
+
+    suspend fun addAlbumToSection(member: AlbumSectionMember)
+
+    suspend fun removeAlbumFromSection(member: AlbumSectionMember)
+
+    suspend fun removeAlbumFromAllSections(albumId: Long)
+
+    fun getAllSectionMembers(): Flow<List<AlbumSectionMember>>
+
+    suspend fun getSectionIdForAlbum(albumId: Long): Long?
 
 }

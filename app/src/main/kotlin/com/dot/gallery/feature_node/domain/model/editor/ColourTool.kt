@@ -2,6 +2,8 @@ package com.dot.gallery.feature_node.domain.model.editor
 
 import androidx.annotation.Keep
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.FilterBAndW
+import androidx.compose.material.icons.outlined.Gradient
 import androidx.compose.material.icons.outlined.InvertColors
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Thermostat
@@ -20,7 +22,9 @@ enum class ColourTool {
     Warmth,
     Tint,
     SkinTone,
-    BlueTone;
+    BlueTone,
+    Hue,
+    BlackWhite;
 
     @get:Composable
     val translatedName: String
@@ -30,6 +34,8 @@ enum class ColourTool {
             Tint -> stringResource(R.string.tool_tint)
             SkinTone -> stringResource(R.string.tool_skin_tone)
             BlueTone -> stringResource(R.string.tool_blue_tone)
+            Hue -> stringResource(R.string.tool_hue)
+            BlackWhite -> stringResource(R.string.tool_black_white)
         }
 
     val icon: ImageVector
@@ -39,6 +45,8 @@ enum class ColourTool {
             Tint -> Icons.Outlined.Palette
             SkinTone -> Icons.Outlined.InvertColors
             BlueTone -> Icons.Outlined.Waves
+            Hue -> Icons.Outlined.Gradient
+            BlackWhite -> Icons.Outlined.FilterBAndW
         }
 
     val minValue: Float get() = -1f

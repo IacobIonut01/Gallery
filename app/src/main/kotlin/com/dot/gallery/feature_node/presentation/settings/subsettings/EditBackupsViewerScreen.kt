@@ -121,6 +121,7 @@ import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION
 import com.dot.gallery.core.LocalEventHandler
+import com.dot.gallery.core.setFollowTheme
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.presentation.mediaview.components.media.MediaPreviewComponent
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
@@ -213,6 +214,7 @@ fun EditBackupsViewerScreen(
             val insetsController = WindowCompat.getInsetsController(window, window.decorView)
             val wasLight = insetsController.isAppearanceLightStatusBars
             insetsController.isAppearanceLightStatusBars = !isDark
+            eventHandler.setFollowTheme(true)
             onDispose {
                 insetsController.isAppearanceLightStatusBars = wasLight
             }
@@ -278,8 +280,10 @@ fun EditBackupsViewerScreen(
         val insetsController = WindowCompat.getInsetsController(window, window.decorView)
         val wasLight = insetsController.isAppearanceLightStatusBars
         insetsController.isAppearanceLightStatusBars = false
+        eventHandler.setFollowTheme(false)
         onDispose {
             insetsController.isAppearanceLightStatusBars = wasLight
+            eventHandler.setFollowTheme(true)
         }
     }
 

@@ -47,7 +47,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.SheetValue
+import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -98,6 +99,7 @@ import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.domain.model.SelectionAction
 import com.dot.gallery.feature_node.domain.model.Vault
 import com.dot.gallery.feature_node.domain.util.getUri
+import com.dot.gallery.feature_node.domain.util.isCloud
 import com.dot.gallery.feature_node.presentation.collection.CollectionViewModel
 import com.dot.gallery.feature_node.presentation.collection.components.AddToCollectionSheet
 import com.dot.gallery.feature_node.presentation.exif.CopyMediaSheet
@@ -114,6 +116,7 @@ import com.dot.gallery.feature_node.presentation.util.rememberMediaInfo
 import com.dot.gallery.feature_node.presentation.util.shareMediaWithVaultSupport
 import com.dot.gallery.feature_node.presentation.vault.VaultViewModel
 import com.dot.gallery.feature_node.presentation.vault.components.AddToVaultSheet
+import com.dot.gallery.feature_node.presentation.vault.components.ConfirmationSheet
 import com.dot.gallery.feature_node.presentation.vault.components.SelectVaultSheet
 import com.dot.gallery.ui.theme.Shapes
 import dev.chrisbanes.haze.hazeEffect
@@ -148,6 +151,8 @@ fun <T : Media> BoxScope.SelectionSheet(
     val collectionViewModel = hiltViewModel<CollectionViewModel>()
     val vaultViewModel = hiltViewModel<VaultViewModel>()
     val vaultSheetState = rememberAppBottomSheetState()
+    val vaultDeleteConfirmState = rememberAppBottomSheetState()
+    val vaultRestoreConfirmState = rememberAppBottomSheetState()
     // Tracks what the vault sheet is for: "hide", "copy", or "move"
     var vaultSheetAction by rememberSaveable { mutableStateOf("hide") }
     var vaultEncryptBehavior by Settings.Vault.rememberVaultEncryptBehavior()
@@ -450,13 +455,7 @@ fun <T : Media> BoxScope.SelectionSheet(
                                         tabletMode = tabletMode,
                                         title = stringResource(R.string.trash_delete)
                                     ) {
-                                        scope.launch {
-                                            val vault = currentVault ?: vaultViewModel.currentVault.value ?: return@launch
-                                            selectedMedia.filterIsInstance<Media.UriMedia>().forEach { media ->
-                                                vaultViewModel.deleteMedia(vault, media) {}
-                                            }
-                                            selector.clearSelection()
-                                        }
+                                        scope.launch { vaultDeleteConfirmState.show() }
                                     }
                                 } else {
                                     val trashEnabledRes = remember(trashEnabled) {
@@ -490,13 +489,7 @@ fun <T : Media> BoxScope.SelectionSheet(
                                     )
                                 ) {
                                     if (isInVault) {
-                                        scope.launch {
-                                            val vault = currentVault ?: vaultViewModel.currentVault.value ?: return@launch
-                                            selectedMedia.filterIsInstance<Media.UriMedia>().forEach { media ->
-                                                vaultViewModel.restoreMedia(vault, media) {}
-                                            }
-                                            selector.clearSelection()
-                                        }
+                                        scope.launch { vaultRestoreConfirmState.show() }
                                     } else {
                                         vaultSheetAction = "hide"
                                         scope.launch { vaultSheetState.show() }
@@ -510,7 +503,7 @@ fun <T : Media> BoxScope.SelectionSheet(
                                     title = stringResource(action.labelRes)
                                 ) {
                                     selectedMedia.firstOrNull()?.let { media ->
-                                        context.launchEditIntent(media)
+                                        scope.launch { context.launchEditIntent(media) }
                                     }
                                 }
                             }
@@ -524,6 +517,31 @@ fun <T : Media> BoxScope.SelectionSheet(
                                         handler.rotateImage(media, 90)
                                     }
                                     selector.clearSelection()
+                                }
+                            }
+                            SelectionAction.DOWNLOAD -> {
+                                val cloudItems = selectedMedia.filter { it.isCloud }
+                                if (cloudItems.isNotEmpty()) {
+                                    val downloadingText = context.getString(R.string.downloading)
+                                    val completeText = context.getString(R.string.download_complete)
+                                    val failedText = context.getString(R.string.download_failed)
+                                    SelectionBarColumn(
+                                        imageVector = action.icon,
+                                        tabletMode = tabletMode,
+                                        title = stringResource(action.labelRes)
+                                    ) {
+                                        scope.launch {
+                                            Toast.makeText(context, downloadingText, Toast.LENGTH_SHORT).show()
+                                            val result = handler.downloadCloudMedia(cloudItems)
+                                            val count = result.getOrDefault(0)
+                                            if (count > 0) {
+                                                Toast.makeText(context, completeText, Toast.LENGTH_SHORT).show()
+                                            } else {
+                                                Toast.makeText(context, failedText, Toast.LENGTH_SHORT).show()
+                                            }
+                                            selector.clearSelection()
+                                        }
+                                    }
                                 }
                             }
                             else -> {} // Top-zone actions don't appear in bottom bar
@@ -666,6 +684,36 @@ fun <T : Media> BoxScope.SelectionSheet(
         }
     }
 
+    ConfirmationSheet(
+        state = vaultDeleteConfirmState,
+        title = stringResource(R.string.vault_confirm_delete_items_title),
+        summary = stringResource(R.string.vault_confirm_delete_items_summary),
+        onConfirm = {
+            scope.launch {
+                val vault = currentVault ?: vaultViewModel.currentVault.value ?: return@launch
+                selectedMedia.filterIsInstance<Media.UriMedia>().forEach { media ->
+                    vaultViewModel.deleteMedia(vault, media) {}
+                }
+                selector.clearSelection()
+            }
+        }
+    )
+
+    ConfirmationSheet(
+        state = vaultRestoreConfirmState,
+        title = stringResource(R.string.vault_confirm_restore_title),
+        summary = stringResource(R.string.vault_confirm_restore_summary),
+        onConfirm = {
+            scope.launch {
+                val vault = currentVault ?: vaultViewModel.currentVault.value ?: return@launch
+                selectedMedia.filterIsInstance<Media.UriMedia>().forEach { media ->
+                    vaultViewModel.restoreMedia(vault, media) {}
+                }
+                selector.clearSelection()
+            }
+        }
+    )
+
     AddToCollectionSheet(
         visible = showCollectionSheet,
         collections = albumsState.value.collections,
@@ -699,7 +747,7 @@ fun <T : Media> BoxScope.SelectionSheet(
         )
         ModalBottomSheet(
             onDismissRequest = { showInfoSheet = false },
-            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            sheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden, enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded)),
         ) {
             Column(
                 modifier = Modifier
@@ -744,7 +792,7 @@ private fun isActionVisible(
     }
     return when (action.requiresCondition) {
         ActionCondition.NONE -> true
-        ActionCondition.SUPPORTS_FAVORITES -> showFavoriteButton && SdkCompat.supportsFavorites
+        ActionCondition.SUPPORTS_FAVORITES -> showFavoriteButton
         ActionCondition.IN_COLLECTION -> collectionId != null
     }
 }

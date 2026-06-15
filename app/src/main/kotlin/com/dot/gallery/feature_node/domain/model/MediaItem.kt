@@ -21,7 +21,8 @@ sealed class MediaItem<T: Media> {
     data class MediaViewItem<T: Media> (
         override val key: String,
         val media: T,
-        val stackCount: Int = 1
+        val stackCount: Int = 1,
+        val isCloudGroup: Boolean = false
     ) : MediaItem<T>()
 
 }

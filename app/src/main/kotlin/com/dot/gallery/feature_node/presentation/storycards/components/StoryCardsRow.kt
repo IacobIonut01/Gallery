@@ -22,6 +22,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.ImageSearch
@@ -44,18 +45,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
-import com.bumptech.glide.integration.compose.GlideImage
 import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
 import com.dot.gallery.feature_node.domain.model.StoryCard
 import com.dot.gallery.feature_node.domain.model.StoryCardType
 import com.dot.gallery.feature_node.domain.util.getUri
-import com.dot.gallery.feature_node.presentation.util.GlideInvalidation
+import com.github.panpf.sketch.AsyncImage
+import com.github.panpf.sketch.request.ComposableImageRequest
+import com.github.panpf.sketch.resize.Precision
 import com.dot.gallery.ui.theme.BlackScrim
 import com.dot.gallery.ui.theme.WhiterBlackScrim
 import com.dot.gallery.ui.theme.isDarkTheme
 
-@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 fun StoryCardsRow(
     cards: List<StoryCard>,
@@ -82,7 +82,6 @@ fun StoryCardsRow(
     }
 }
 
-@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 private fun StoryCardItem(
     card: StoryCard,
@@ -106,14 +105,14 @@ private fun StoryCardItem(
             .clickable(onClick = onClick)
     ) {
         if (card.thumbnailMedia != null) {
-            GlideImage(
+            AsyncImage(
+                request = ComposableImageRequest(card.thumbnailMedia.getUri().toString()) {
+                    resize(width = 300, height = 440, precision = Precision.LESS_PIXELS)
+                    crossfade(false)
+                },
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
-                model = card.thumbnailMedia.getUri(),
                 contentDescription = card.title,
-                requestBuilderTransform = {
-                    it.signature(GlideInvalidation.signature(card.thumbnailMedia))
-                }
             )
         } else {
             Box(
@@ -195,4 +194,5 @@ private val StoryCardType.icon: ImageVector
         StoryCardType.CATEGORIES -> Icons.Outlined.ImageSearch
         StoryCardType.LOCATIONS -> Icons.Outlined.LocationOn
         StoryCardType.FAVORITES -> Icons.Outlined.Favorite
+        StoryCardType.CLOUD_MEMORIES -> Icons.Outlined.Cloud
     }

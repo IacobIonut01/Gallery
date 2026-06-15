@@ -362,11 +362,26 @@ suspend fun <T : Media> Context.updateMedia(
 ): Boolean = withContext(Dispatchers.IO) {
     runCatching {
         contentResolver.update(media.getUri(), contentValues, null, null) > 0
-    }.onSuccess {
-        MediaScannerConnection.scanFile(
-            this@updateMedia, arrayOf(media.path.removeSuffix(media.label)),
-            arrayOf(media.mimeType), null
-        )
+    }.onSuccess { updated ->
+        if (updated) {
+            // If RELATIVE_PATH changed (move), scan the new file location;
+            // otherwise scan the current file path.
+            val newRelPath = contentValues.getAsString(MediaStore.MediaColumns.RELATIVE_PATH)
+            val scanPath = if (newRelPath != null) {
+                // Derive volume prefix from the media's current path so this
+                // works for both primary storage and SD cards.
+                val volumePrefix = media.path.substringBeforeLast("/")
+                    .removeSuffix(media.relativePath.removeSuffix("/"))
+                    .trimEnd('/')
+                volumePrefix + "/" + newRelPath.trimEnd('/') + "/" + media.label
+            } else {
+                media.path
+            }
+            MediaScannerConnection.scanFile(
+                this@updateMedia, arrayOf(scanPath),
+                arrayOf(media.mimeType), null
+            )
+        }
     }.getOrElse {
         printWarning(it.message.toString())
         false

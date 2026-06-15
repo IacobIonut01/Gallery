@@ -8,7 +8,7 @@ package com.dot.gallery.feature_node.presentation.util
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,7 +28,14 @@ fun rememberAppBottomSheetState(
     positionalThreshold: Dp = 56.dp,
     velocityThreshold: Dp = 125.dp,
 ): AppBottomSheetState {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = skipPartiallyExpanded)
+    val sheetState = rememberBottomSheetState(
+        initialValue = SheetValue.Hidden,
+        enabledValues = buildSet {
+            add(SheetValue.Hidden)
+            add(SheetValue.Expanded)
+            if (!skipPartiallyExpanded) add(SheetValue.PartiallyExpanded)
+        }
+    )
     val density = LocalDensity.current
     val positionalThresholdToPx = { with(density) { positionalThreshold.toPx() } }
     val velocityThresholdToPx = { with(density) { velocityThreshold.toPx() } }
@@ -81,12 +88,15 @@ class AppBottomSheetState(
             restore = { savedValue ->
                 AppBottomSheetState(
                     SheetState(
-                        skipPartiallyExpanded,
+                        enabledValues = buildSet {
+                            if (!skipHiddenState) add(SheetValue.Hidden)
+                            if (!skipPartiallyExpanded) add(SheetValue.PartiallyExpanded)
+                            add(SheetValue.Expanded)
+                        },
                         positionalThreshold,
                         velocityThreshold,
                         savedValue.first,
                         confirmValueChange,
-                        skipHiddenState,
                     ),
                     savedValue.second
                 )

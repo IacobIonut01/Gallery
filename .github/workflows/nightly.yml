@@ -29,7 +29,7 @@ jobs:
         id: versionname
         run: echo "versionName=$(grep -E '^\s+versionName\s*=' app/build.gradle.kts | head -1 | awk -F\" '{ print $2 }')" >> $GITHUB_OUTPUT
 
-  build_nomaps:
+  build_offline:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     strategy:
@@ -51,10 +51,8 @@ jobs:
         run: |
           echo "org.gradle.jvmargs=-Xmx4g -Dfile.encoding=UTF-8" >> gradle.properties
           echo "org.gradle.workers.max=2" >> gradle.properties
-      - name: Strip internet permission
-        run: chmod +x ./strip_permission.sh && ./strip_permission.sh
-      - name: Disable maps
-        run: echo "INCLUDE_MAPS=false" >> ./app.properties
+      - name: Enable offline mode
+        run: echo "OFFLINE=true" >> ./app.properties
       - name: Decode Keystore
         id: decode_keystore
         uses: timheuer/base64-to-file@v1
@@ -70,7 +68,7 @@ jobs:
           SIGNING_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
       - uses: actions/upload-artifact@v5
         with:
-          name: nomaps-${{ matrix.arch }}
+          name: offline-${{ matrix.arch }}
           path: app/build/outputs/apk-renamed/**/*.apk
 
   build_withml:
@@ -95,10 +93,8 @@ jobs:
         run: |
           echo "org.gradle.jvmargs=-Xmx4g -Dfile.encoding=UTF-8" >> gradle.properties
           echo "org.gradle.workers.max=2" >> gradle.properties
-      - name: Strip internet permission
-        run: chmod +x ./strip_permission.sh && ./strip_permission.sh
-      - name: Disable maps
-        run: echo "INCLUDE_MAPS=false" >> ./app.properties
+      - name: Enable offline mode
+        run: echo "OFFLINE=true" >> ./app.properties
       - name: Decode Keystore
         id: decode_keystore
         uses: timheuer/base64-to-file@v1
@@ -158,16 +154,20 @@ jobs:
           path: app/build/outputs/apk-renamed/**/*.apk
 
   release:
-    needs: [prepare, build_nomaps, build_withml, build_maps]
+    needs: [prepare, build_offline, build_withml, build_maps]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
       VERSION: ${{ needs.prepare.outputs.versionName }}-${{ needs.prepare.outputs.versionCode }}
     steps:
+      - uses: actions/checkout@v6
+        with:
+          sparse-checkout: .github/VARIANT_INFO.md
+          sparse-checkout-cone-mode: false
       - uses: actions/download-artifact@v5
         with:
-          pattern: nomaps-*
-          path: artifacts/nomaps
+          pattern: offline-*
+          path: artifacts/offline
           merge-multiple: true
       - uses: actions/download-artifact@v5
         with:
@@ -181,15 +181,48 @@ jobs:
           merge-multiple: true
       - name: List downloaded artifacts
         run: find artifacts -name "*.apk" -type f | sort
-      - name: Generate SHA256
+      - name: Generate changelog
         run: |
+          generate_table() {
+            local dir="$1" tag="$2"
+            echo "| Architecture | Download | SHA256 |"
+            echo "|:---|:---|:---|"
+            find "$dir" -name "*.apk" -type f | sort | while IFS= read -r apk; do
+              local name hash url arch
+              name=$(basename "$apk")
+              hash=$(sha256sum "$apk" | awk '{print $1}')
+              url="https://github.com/IacobIonut01/ReFra/releases/download/${tag}/${name}"
+              case "$name" in
+                *-arm64-v8a-release.apk) arch="arm64-v8a" ;;
+                *-armeabi-v7a-release.apk) arch="armeabi-v7a" ;;
+                *-x86_64-release.apk) arch="x86_64" ;;
+                *-x86-release.apk) arch="x86" ;;
+                *-universal-release.apk) arch="Universal" ;;
+                *) arch="Unknown" ;;
+              esac
+              echo "| ${arch} | [Click Here](${url}) | \`${hash}\` |"
+            done
+          }
+
+          TAG="${VERSION}-nightly"
           CHANGELOG="${VERSION}-nightly-changelog.txt"
-          echo "### Checksums" >> "$CHANGELOG"
-          find artifacts -name "ReFra-*.apk" -type f | sort | while IFS= read -r apk; do
-            hash=$(sha256sum "$apk" | awk '{print $1}')
-            name=$(basename "$apk")
-            echo "**${name}**: \`${hash}\`" >> "$CHANGELOG"
-          done
+
+          cat .github/VARIANT_INFO.md >> "$CHANGELOG"
+          echo "" >> "$CHANGELOG"
+
+          echo "### Standard (NoML)" >> "$CHANGELOG"
+          echo "" >> "$CHANGELOG"
+          generate_table "artifacts/maps" "$TAG" >> "$CHANGELOG"
+          echo "" >> "$CHANGELOG"
+
+          echo "### Offline (NoML)" >> "$CHANGELOG"
+          echo "" >> "$CHANGELOG"
+          generate_table "artifacts/offline" "$TAG" >> "$CHANGELOG"
+          echo "" >> "$CHANGELOG"
+
+          echo "### Offline (WithML)" >> "$CHANGELOG"
+          echo "" >> "$CHANGELOG"
+          generate_table "artifacts/withml" "$TAG" >> "$CHANGELOG"
       - name: Create Release
         id: create_release
         uses: softprops/action-gh-release@v3

@@ -9,6 +9,7 @@ import com.bumptech.glide.load.engine.Resource
 import com.bumptech.glide.load.engine.bitmap_recycle.BitmapPool
 import com.bumptech.glide.load.resource.bitmap.BitmapResource
 import com.radzivon.bartoshyk.avif.coder.HeifCoder
+import com.radzivon.bartoshyk.avif.coder.PreferredColorConfig
 import java.io.FileInputStream
 import java.io.IOException
 
@@ -65,7 +66,7 @@ class HeifPfdBitmapDecoder(
             val size = coder.getSize(bytes) ?: return null
             val tw = if (width > 0) width else size.width
             val th = if (height > 0) height else size.height
-            val bmp = coder.decodeSampled(bytes, tw, th)
+            val bmp = coder.decodeSampled(bytes, tw, th, PreferredColorConfig.RGBA_8888)
             Log.d(TAG, "decode() size=${size.width}x${size.height} -> ${bmp.width}x${bmp.height}")
             return BitmapResource.obtain(bmp, bitmapPool)
         }

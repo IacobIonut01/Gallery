@@ -12,3 +12,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "build-logic"
 include(":gradle-versioning-plugin")
+include(":gradle-manifest-config-plugin")

@@ -30,6 +30,7 @@ import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisallowComposableCalls
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -57,7 +58,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
+import com.dot.gallery.core.LocalMediaDistributor
 import com.dot.gallery.core.LocalMediaSelector
+import com.dot.gallery.core.Settings.Misc.rememberFavoriteIconPosition
 import com.dot.gallery.core.presentation.components.Error
 import com.dot.gallery.core.presentation.components.LoadingMedia
 import com.dot.gallery.core.presentation.components.MediaItemHeader
@@ -219,6 +222,7 @@ fun <T : Media> MosaicMediaGrid(
     allowSelection: Boolean,
     canScroll: Boolean,
     allowHeaders: Boolean,
+    bigHeaders: Boolean = false,
     aboveGridContent: @Composable (() -> Unit)?,
     isScrolling: MutableState<Boolean>,
     emptyContent: @Composable () -> Unit,
@@ -360,6 +364,12 @@ fun <T : Media> MosaicMediaGrid(
 
     Box {
         bottomContent()
+        val favoriteIconPosition by rememberFavoriteIconPosition()
+        val cloudSyncStates by LocalMediaDistributor.current.cloudSyncStates.collectAsStateWithLifecycle()
+        val cellState = remember(isSelectionActive, selectedMedia.value, favoriteIconPosition, cloudSyncStates) {
+            MediaCellState(isSelectionActive, selectedMedia.value, favoriteIconPosition, cloudSyncStates)
+        }
+        CompositionLocalProvider(LocalMediaCellState provides cellState) {
         LazyVerticalGrid(
             state = gridState,
             modifier = modifier
@@ -433,7 +443,8 @@ fun <T : Media> MosaicMediaGrid(
                                     .replace("Today", stringToday)
                                     .replace("Yesterday", stringYesterday)
                             },
-                            showAsBig = remember(header) { header.key.isBigHeaderKey },
+                            showAsBig = remember(header, bigHeaders) { header.key.isBigHeaderKey || bigHeaders },
+                            bigHeaderOnly = bigHeaders,
                             isChecked = isChecked
                         ) {
                             if (allowSelection) {
@@ -458,9 +469,10 @@ fun <T : Media> MosaicMediaGrid(
                                         media = mi.media,
                                         animatedVisibilityScope = animatedContentScope
                                     )
-                                    .animateItem(fadeInSpec = null, fadeOutSpec = spring()),
+                                    .animateItem(fadeInSpec = null, fadeOutSpec = if (scrolling) null else spring()),
                                 media = mi.media,
                                 stackCount = mi.stackCount,
+                                isCloudGroup = mi.isCloudGroup,
                                 aspectRatio = item.dynamicAspectRatio,
                                 canClick = { canScroll },
                                 onMediaClick = { onMediaClick(it) },
@@ -498,6 +510,7 @@ fun <T : Media> MosaicMediaGrid(
                                                         ),
                                                     media = mi.media,
                                                     stackCount = mi.stackCount,
+                                                    isCloudGroup = mi.isCloudGroup,
                                                     canClick = { canScroll },
                                                     onMediaClick = { onMediaClick(it) },
                                                     metadataState = metadataState,
@@ -533,6 +546,7 @@ fun <T : Media> MosaicMediaGrid(
                                                         ),
                                                     media = mi.media,
                                                     stackCount = mi.stackCount,
+                                                    isCloudGroup = mi.isCloudGroup,
                                                     canClick = { canScroll },
                                                     onMediaClick = { onMediaClick(it) },
                                                     metadataState = metadataState,
@@ -573,6 +587,7 @@ fun <T : Media> MosaicMediaGrid(
                                                     ),
                                                 media = mi.media,
                                                 stackCount = mi.stackCount,
+                                                isCloudGroup = mi.isCloudGroup,
                                                 canClick = { canScroll },
                                                 onMediaClick = { onMediaClick(it) },
                                                 metadataState = metadataState,
@@ -602,9 +617,10 @@ fun <T : Media> MosaicMediaGrid(
                                         media = mi.media,
                                         animatedVisibilityScope = animatedContentScope
                                     )
-                                    .animateItem(fadeInSpec = null, fadeOutSpec = spring()),
+                                    .animateItem(fadeInSpec = null, fadeOutSpec = if (scrolling) null else spring()),
                                 media = mi.media,
                                 stackCount = mi.stackCount,
+                                isCloudGroup = mi.isCloudGroup,
                                 canClick = { canScroll },
                                 onMediaClick = { onMediaClick(it) },
                                 metadataState = metadataState,
@@ -622,6 +638,7 @@ fun <T : Media> MosaicMediaGrid(
                     }
                 }
             }
+        }
         }
     }
 }

@@ -6,6 +6,7 @@
 package com.dot.gallery.core.util
 
 import android.os.Build
+import android.os.Environment
 
 /**
  * SDK compatibility helpers for features that differ between API 29 and 30+.
@@ -42,9 +43,27 @@ object SdkCompat {
         get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
 
     /**
+     * Whether the OS itself shows a visual confirmation when content is copied to the clipboard.
+     * Available on Android 13 (API 33) and above, so the app should not show its own
+     * "Copied to clipboard" toast to avoid duplicate notifications.
+     */
+    val showsClipboardConfirmation: Boolean
+        get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+
+    /**
      * Whether the device runs Android 10 (API 29) where scoped storage is opt-in
      * and IS_TRASHED/IS_FAVORITE columns don't exist.
      */
     val isApi29: Boolean
         get() = Build.VERSION.SDK_INT == Build.VERSION_CODES.Q
+
+    /**
+     * Whether the app has been granted MANAGE_EXTERNAL_STORAGE (All Files Access).
+     * On API 30+ this enables direct file operations on external volumes (SD cards).
+     * On API 29 and below, legacy storage grants full access by default.
+     */
+    val hasFullFileAccess: Boolean
+        get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
+            Environment.isExternalStorageManager()
+        else true
 }

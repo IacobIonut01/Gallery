@@ -84,7 +84,7 @@ val MIGRATION_12_13 = object : Migration(12, 13) {
                 } ?: false
                 
                 val newLabel = if (isValidLabel) {
-                    oldLabel!!
+                    oldLabel
                 } else {
                     generateUniqueLabel(type, existingLabels)
                 }

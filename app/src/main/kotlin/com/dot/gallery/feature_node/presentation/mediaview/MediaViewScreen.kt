@@ -6,7 +6,6 @@
 package com.dot.gallery.feature_node.presentation.mediaview
 
 import android.content.pm.ActivityInfo
-import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.Rect
 import android.net.Uri
@@ -110,6 +109,7 @@ import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.domain.model.Vault
 import com.dot.gallery.feature_node.domain.model.VaultState
 import com.dot.gallery.feature_node.domain.util.getUri
+import com.dot.gallery.feature_node.domain.util.isCloud
 import com.dot.gallery.feature_node.domain.util.isImage
 import com.dot.gallery.feature_node.domain.util.isVideo
 import com.dot.gallery.feature_node.domain.util.readUriOnly
@@ -132,6 +132,7 @@ import com.dot.gallery.feature_node.presentation.cast.components.CastStatusBanne
 import com.dot.gallery.feature_node.presentation.util.shareMedia
 import com.dot.gallery.feature_node.presentation.util.FullBrightnessWindow
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
+import com.dot.gallery.feature_node.presentation.util.hazeEffectScaled
 import com.dot.gallery.feature_node.presentation.util.ProvideInsets
 import com.dot.gallery.feature_node.presentation.util.ViewScreenConstants.BOTTOM_BAR_HEIGHT
 import com.dot.gallery.feature_node.presentation.util.ViewScreenConstants.ImageOnly
@@ -147,7 +148,6 @@ import com.dot.gallery.ui.theme.isDarkTheme
 import com.github.panpf.sketch.BitmapImage
 import com.github.panpf.sketch.request.ImageRequest
 import com.github.panpf.sketch.sketch
-import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlinx.coroutines.Dispatchers
@@ -280,7 +280,8 @@ fun <T : Media> MediaViewScreen(
     val pagerItems by rememberedDerivedState(mediaState.value, pendingTrashIds) {
         val pager = mediaState.value.pagerMedia
         val items = pager.ifEmpty { mediaState.value.media }
-        if (pendingTrashIds.isEmpty()) items else items.filter { it.id !in pendingTrashIds }
+        val filtered = if (pendingTrashIds.isEmpty()) items else items.filter { it.id !in pendingTrashIds }
+        filtered.distinctBy { it.id }
     }
 
     // Use only primitive ids/sizes as saveable keys (avoid passing full media list object)
@@ -346,7 +347,7 @@ fun <T : Media> MediaViewScreen(
         ensureMetadataAvailable(currentMedia, metadataState.value)
     }
 
-    LaunchedEffect(initialPage, mediaState.value.isLoading) {
+    LaunchedEffect(mediaId, initialPage, mediaState.value.isLoading) {
         if (!mediaState.value.isLoading && !initialPageSetup) {
             if (pagerState.currentPage != initialPage) {
                 pagerState.scrollToPage(initialPage)
@@ -422,25 +423,18 @@ fun <T : Media> MediaViewScreen(
         }
     }
 
-    val configuration = LocalConfiguration.current
-    val isLandscape = remember(configuration) {
-        configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-    }
     val isGestureEnabled = rememberGestureNavigationEnabled()
     // Extra padding for navigation bar with 3/2-buttons
-    val extraPaddingWithNavButtons by remember(isLandscape, isGestureEnabled) {
+    val extraPaddingWithNavButtons by remember(isGestureEnabled) {
         mutableStateOf(
-            if (!isGestureEnabled && !isLandscape) {
+            if (!isGestureEnabled) {
                 32.dp
             } else 0.dp
         )
     }
     val navigationBarHeight = rememberNavigationBarHeight()
-    val bottomBarHeightDefault by remember(isGestureEnabled, isLandscape) {
-        mutableStateOf(
-            if (!isGestureEnabled && isLandscape) 84.dp
-            else BOTTOM_BAR_HEIGHT
-        )
+    val bottomBarHeightDefault by remember {
+        mutableStateOf(BOTTOM_BAR_HEIGHT)
     }
 
     val bottomPadding = remember(paddingValues) {
@@ -705,7 +699,7 @@ fun <T : Media> MediaViewScreen(
                             MediaPreviewComponent(
                                 modifier = Modifier
                                     .mediaSharedElement(
-                                        allowAnimation = canAnimateContent,
+                                        allowAnimation = canAnimateContent && index == currentPage,
                                         media = sharedElementMedia,
                                         animatedVisibilityScope = animatedContentScope
                                     ),
@@ -756,8 +750,10 @@ fun <T : Media> MediaViewScreen(
                                     LaunchedEffect(isPlaying.value, hideUiOnPlay) {
                                         if (isPlaying.value && showUI && hideUiOnPlay && !uiInteracted) {
                                             delay(2.seconds)
-                                            showUI = false
-                                            windowInsetsController.toggleSystemBars(false)
+                                            if (sheetState.currentDetent == imageOnlyDetent) {
+                                                showUI = false
+                                                windowInsetsController.toggleSystemBars(false)
+                                            }
                                         }
                                     }
                                     // Mute local player while casting to avoid double audio
@@ -770,8 +766,9 @@ fun <T : Media> MediaViewScreen(
                                         }
                                     }
                                     val resources = LocalResources.current
+                                    val videoConfiguration = LocalConfiguration.current
                                     val width =
-                                        remember(context) { resources.displayMetrics.widthPixels }
+                                        remember(videoConfiguration) { resources.displayMetrics.widthPixels }
                                     if (!isVideoZoomed) {
                                         Spacer(
                                             modifier = Modifier
@@ -917,11 +914,14 @@ fun <T : Media> MediaViewScreen(
             val isCurrentVideo by rememberedDerivedState(currentMedia) {
                 currentMedia?.isVideo == true
             }
-            LaunchedEffect(isTopDark, autoContrast, isDarkTheme, allowBlur, isCurrentVideo) {
+            val configuration = LocalConfiguration.current
+            LaunchedEffect(isTopDark, autoContrast, isDarkTheme, allowBlur, isCurrentVideo, configuration) {
                 val followTheme = if (autoContrast) !isTopDark
                     else !allowBlur && !isCurrentVideo
                 windowInsetsController.isAppearanceLightStatusBars =
-                    if (followTheme) !isDarkTheme else false
+                    if (followTheme) !isDarkTheme
+                    else if (autoContrast) isTopDark
+                    else false
                 eventHandler.setFollowTheme(followTheme)
             }
             DisposableEffect(Unit) {
@@ -1115,6 +1115,9 @@ fun <T : Media> MediaViewScreen(
                         )
                     }
                     key(currentPagerItemId) {
+                        val hasCloudAndLocal = remember(currentGroupMembers) {
+                            currentGroupMembers.any { it.isCloud } && currentGroupMembers.any { !it.isCloud }
+                        }
                         GroupMemberStrip(
                             members = currentGroupMembers,
                             selectedId = selectedMemberOverrideId
@@ -1123,6 +1126,7 @@ fun <T : Media> MediaViewScreen(
                             onSelect = { id ->
                                 selectedMemberOverrideId = id
                             },
+                            showCloudLabels = hasCloudAndLocal,
                             multiSelectMode = groupMultiSelectMode,
                             multiSelectedIds = groupMultiSelectedIds,
                             onEnterMultiSelect = { id ->
@@ -1222,7 +1226,7 @@ fun <T : Media> MediaViewScreen(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(100))
                                     .then(backgroundModifier)
-                                    .hazeEffect(
+                                    .hazeEffectScaled(
                                         state = LocalHazeState.current,
                                         style = HazeMaterials.ultraThin(
                                             containerColor = surfaceContainer

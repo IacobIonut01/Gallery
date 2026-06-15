@@ -68,7 +68,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetValue
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -232,7 +232,7 @@ fun CategoryEditorScreen(
 
     // Full preview bottom sheet
     if (showPreviewSheet && previewMedia.isNotEmpty()) {
-        val previewSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        val previewSheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden, enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded))
         ModalBottomSheet(
             onDismissRequest = { showPreviewSheet = false },
             sheetState = previewSheetState,
@@ -280,7 +280,7 @@ fun CategoryEditorScreen(
                         paddingValues = PaddingValues(bottom = 128.dp),
                         canScroll = true,
                         allowHeaders = false,
-                        showMonthlyHeader = false,
+                        
                         isScrolling = isScrolling,
                         emptyContent = {
                             EmptyMedia(title = stringResource(R.string.no_matching_photos))

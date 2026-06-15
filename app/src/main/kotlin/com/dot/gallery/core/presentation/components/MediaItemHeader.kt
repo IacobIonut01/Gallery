@@ -36,6 +36,7 @@ fun MediaItemHeader(
     modifier: Modifier = Modifier,
     date: String,
     showAsBig: Boolean = false,
+    bigHeaderOnly: Boolean = false,
     isChecked: MutableState<Boolean>,
     onChecked: (() -> Unit)? = null
 ) {
@@ -48,10 +49,10 @@ fun MediaItemHeader(
             )
             .fillMaxWidth()
     }
-    val bigModifier = remember(modifier) {
+    val bigModifier = remember(modifier, bigHeaderOnly) {
         modifier
             .padding(horizontal = 16.dp)
-            .padding(top = 80.dp)
+            .padding(top = 80.dp, bottom = if (bigHeaderOnly) 16.dp else 0.dp)
     }
     val bigTextStyle = MaterialTheme.typography.headlineMedium.copy(
         fontWeight = FontWeight.Bold

@@ -97,7 +97,12 @@ class AlbumsFlow(
             rawMimeType,
         ).toTypedArray()
 
-        val sortOrder = MediaStore.Files.FileColumns.DATE_MODIFIED + " DESC"
+        // Order by date taken (falling back to date modified) so the album cover
+        // and timestamp match the first item shown inside the album, which is sorted
+        // by the media's definedTimestamp (DATE_TAKEN ?: DATE_MODIFIED) by default.
+        // DATE_TAKEN is stored in milliseconds while DATE_MODIFIED is in seconds.
+        val sortOrder =
+            "COALESCE(${MediaStore.Files.FileColumns.DATE_TAKEN} / 1000, ${MediaStore.Files.FileColumns.DATE_MODIFIED}) DESC"
 
         val queryArgs = Bundle().apply {
             putString(ContentResolver.QUERY_ARG_SQL_SELECTION, selection?.build())
@@ -143,12 +148,12 @@ class AlbumsFlow(
                         val albumId = it.getLong(albumIdIndex)
                         val id = it.getLong(idIndex)
                         val label = it.tryGetString(labelIndex, Build.MODEL)
-                        val thumbnailPath = it.getString(thumbnailPathIndex)
-                        val thumbnailRelativePath = it.getString(thumbnailRelativePathIndex)
+                        val thumbnailPath = it.tryGetString(thumbnailPathIndex).orEmpty()
+                        val thumbnailRelativePath = it.tryGetString(thumbnailRelativePathIndex).orEmpty()
                         val thumbnailDateTaken = it.getLongOrNull(thumbnailDateTakenIndex)
                         val thumbnailDate = it.getLong(thumbnailDateIndex)
                         val size = it.getLong(sizeIndex)
-                        val mimeType = it.getString(mimeTypeIndex)
+                        val mimeType = it.tryGetString(mimeTypeIndex).orEmpty()
                         val contentUri = if (mimeType.contains("image"))
                             MediaStore.Images.Media.EXTERNAL_CONTENT_URI
                         else

@@ -202,13 +202,16 @@ fun Media.retrieveMetadata(
             return "${bestNumerator}/${bestDenominator} sec"
         }
 
-        // 7) Camera + settings
+        // 7) Camera + settings (merged with lens info)
         val cam = listOfNotNull(
             md.manufacturerName,
             md.modelName
         ).joinToString(" ")
         val camDetails = listOfNotNull(
             md.aperture,
+            md.focalLength?.takeIf { it > 0 }?.let { fl ->
+                if (fl == fl.toLong().toDouble()) "${fl.toLong()} mm" else "$fl mm"
+            },
             formatExposureTime(md.exposureTime),
             md.iso?.let { "ISO $it" }
         ).joinToString(" • ")

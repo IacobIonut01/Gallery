@@ -121,6 +121,31 @@ internal class PanoramaRenderer(
     var viewportHeight = 1
         private set
 
+    /**
+     * Invoked on the GL thread whenever the viewport size changes (e.g. when the
+     * device rotates between portrait and landscape). Allows the hosting view to
+     * re-emit camera state and reload the visible detail region for the new aspect.
+     */
+    @Volatile
+    var onViewportChanged: (() -> Unit)? = null
+
+    /**
+     * Effective horizontal field-of-view in degrees, derived from the vertical
+     * [fov] and the current viewport aspect ratio.
+     *
+     * [Matrix.perspectiveM] treats [fov] as the vertical FOV, so the horizontal
+     * span depends on the aspect ratio and changes when the device rotates. Overlay
+     * UI (e.g. the compass) should use this value to reflect the visible horizontal
+     * extent in both orientations.
+     */
+    val horizontalFov: Float
+        get() {
+            val aspect = viewportWidth.toFloat() / viewportHeight.toFloat()
+            val halfV = Math.toRadians((fov / 2.0))
+            val halfH = kotlin.math.atan(kotlin.math.tan(halfV) * aspect)
+            return (Math.toDegrees(halfH) * 2.0).toFloat()
+        }
+
     // ──────────────────────────────────────────────────────────────────────
     // GLSurfaceView.Renderer callbacks
     // ──────────────────────────────────────────────────────────────────────
@@ -154,6 +179,7 @@ internal class PanoramaRenderer(
         viewportWidth = width
         viewportHeight = height
         PanoramaLog.d("onSurfaceChanged() ${width}x${height}")
+        onViewportChanged?.invoke()
     }
 
     override fun onDrawFrame(gl: GL10?) {
@@ -320,13 +346,17 @@ internal class PanoramaRenderer(
 
         val totalHDeg = if (projectionType == ProjectionType.CYLINDER) cylinderArcDegrees else 360f
 
-        // Horizontal: yaw maps to U
-        val uCenter = if (projectionType == ProjectionType.CYLINDER && totalHDeg < 360f) {
-            // Partial cylinder: yaw in [-arc/2, arc/2] → U in [0, 1]
-            (yaw + totalHDeg / 2f) / totalHDeg
+        // Horizontal: yaw maps to U. The geometry maps the view centre direction
+        // (geometry angle = 270° - yaw) to U so the image is not mirrored; the
+        // formulas below mirror that mapping so the high-res detail crop aligns
+        // with what is on screen.
+        val uCenter = if (projectionType == ProjectionType.CYLINDER) {
+            // Cylinder geometry: view centre maps to U = 0.5 - yaw / arc.
+            val c = 0.5f - yaw / totalHDeg
+            if (totalHDeg < 360f) c else ((c % 1f) + 1f) % 1f
         } else {
-            // Full 360° wrap
-            ((yaw % 360f + 360f) % 360f) / 360f
+            // Sphere: U = (270° - yaw) / 360°, wrapped into [0, 1).
+            (((270f - yaw) % 360f) + 360f) % 360f / 360f
         }
         val uHalfExtent = (fov / totalHDeg) * margin
 

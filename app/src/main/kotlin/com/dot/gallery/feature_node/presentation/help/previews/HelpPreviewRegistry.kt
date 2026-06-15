@@ -471,7 +471,6 @@ private fun VaultPreviewMini(modifier: Modifier = Modifier) {
                     vaultState = mockVaultState,
                     currentVault = mockCurrentVault,
                     createMediaState = { mockMediaStateFlow },
-                    onCreateVaultClick = {},
                     deleteLeftovers = { _, _ -> },
                     setVault = {},
                     deleteVault = {},

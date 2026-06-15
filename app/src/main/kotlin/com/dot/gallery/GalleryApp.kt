@@ -12,10 +12,15 @@ import androidx.work.Configuration
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import com.dot.gallery.cloud.core.ProviderRegistry
+import com.dot.gallery.cloud.di.CloudProviderInitializer
+import com.dot.gallery.cloud.image.CloudFetcherRegistryHolder
+import com.dot.gallery.cloud.image.supportCloudMedia
 import com.dot.gallery.core.MediaDistributor
 import com.dot.gallery.core.ml.ModelManager
 import com.dot.gallery.core.sandbox.IsolatedImageDecoder
 import com.dot.gallery.core.sandbox.SandboxedDecoderHolder
+import com.dot.gallery.core.security.AdvancedProtectionMonitor
 import com.dot.gallery.core.decoder.supportApng
 import com.dot.gallery.core.decoder.supportHeifDecoder
 import com.dot.gallery.core.decoder.supportAnimatedJxlDecoder
@@ -24,6 +29,9 @@ import com.dot.gallery.core.decoder.supportSandboxedHeifDecoder
 import com.dot.gallery.core.decoder.supportSandboxedJxlDecoder
 import com.dot.gallery.core.decoder.supportVaultDecoder
 import com.dot.gallery.core.decoder.supportVideoFrame2
+import com.dot.gallery.core.decoder.supportPsdDecoder
+import com.dot.gallery.core.decoder.supportJp2Decoder
+import com.dot.gallery.core.decoder.supportTiffDecoder
 import com.dot.gallery.core.workers.MetadataCollectionWorker
 import com.dot.gallery.core.workers.TempVaultCleanupWorker
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
@@ -48,7 +56,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import com.dot.gallery.core.metrics.StartupTracer
+import okhttp3.OkHttpClient
+import java.security.SecureRandom
 import javax.inject.Inject
+import javax.net.ssl.SSLContext
+import javax.net.ssl.TrustManager
+import javax.net.ssl.X509TrustManager
 
 @HiltAndroidApp
 class GalleryApp : Application(), SingletonSketch.Factory, Configuration.Provider {
@@ -68,7 +81,11 @@ class GalleryApp : Application(), SingletonSketch.Factory, Configuration.Provide
             supportAnimatedJxlDecoder()
             supportHeifDecoder()
             supportJxlDecoder()
+            supportPsdDecoder()
+            supportJp2Decoder()
+            supportTiffDecoder()
             supportVaultDecoder()
+            supportCloudMedia()
         }
         val diskCache = DiskCache.Builder(context, FileSystem.SYSTEM)
             .directory(context.appCacheDirectory())
@@ -117,6 +134,12 @@ class GalleryApp : Application(), SingletonSketch.Factory, Configuration.Provide
     @Inject
     lateinit var isolatedImageDecoder: IsolatedImageDecoder
 
+    @Inject
+    lateinit var providerRegistry: ProviderRegistry
+
+    @Inject
+    lateinit var cloudProviderInitializer: CloudProviderInitializer
+
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onCreate() {
@@ -127,6 +150,25 @@ class GalleryApp : Application(), SingletonSketch.Factory, Configuration.Provide
 
         StartupTracer.trace("App.super.onCreate (Hilt DI)") {
             super.onCreate()
+        }
+
+        CloudFetcherRegistryHolder.registry = providerRegistry
+        if (BuildConfig.ALLOW_INSECURE_TLS) {
+            val trustAllCerts = arrayOf<TrustManager>(object : X509TrustManager {
+                override fun checkClientTrusted(chain: Array<out java.security.cert.X509Certificate>?, authType: String?) {}
+                override fun checkServerTrusted(chain: Array<out java.security.cert.X509Certificate>?, authType: String?) {}
+                override fun getAcceptedIssuers(): Array<java.security.cert.X509Certificate> = arrayOf()
+            })
+            val sslContext = SSLContext.getInstance("TLS")
+            sslContext.init(null, trustAllCerts, SecureRandom())
+            CloudFetcherRegistryHolder.okHttpClient = OkHttpClient.Builder()
+                .sslSocketFactory(sslContext.socketFactory, trustAllCerts[0] as X509TrustManager)
+                .hostnameVerifier { _, _ -> true }
+                .build()
+        }
+
+        StartupTracer.trace("AdvancedProtectionMonitor.init") {
+            AdvancedProtectionMonitor.init(this)
         }
 
         StartupTracer.trace("SandboxedDecoderHolder.init") {
@@ -146,11 +188,21 @@ class GalleryApp : Application(), SingletonSketch.Factory, Configuration.Provide
             TempVaultCleanupWorker.schedule(workManager)
         }
 
+        // One-time cleanup of leaked vault temp files for users upgrading from affected versions
+        appScope.launch(Dispatchers.IO) {
+            TempVaultCleanupWorker.runLegacyFilesdirCleanup(this@GalleryApp)
+        }
+
         // Initialize ML models (copies from assets on withML, checks presence on noML)
         appScope.launch {
             StartupTracer.trace("ModelManager.initializeModels") {
                 modelManager.initializeModels()
             }
+        }
+
+        // Auto-configure cloud providers asynchronously (off main thread)
+        appScope.launch {
+            cloudProviderInitializer.initializeAsync()
         }
 
         StartupTracer.end(onCreateSpan)

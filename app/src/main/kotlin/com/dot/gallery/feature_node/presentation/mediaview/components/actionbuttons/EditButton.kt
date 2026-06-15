@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.dot.gallery.R
@@ -13,6 +14,7 @@ import com.dot.gallery.feature_node.domain.util.getUri
 import com.dot.gallery.feature_node.domain.util.isImage
 import com.dot.gallery.feature_node.presentation.util.launchEditImageIntent
 import com.dot.gallery.feature_node.presentation.util.launchEditIntent
+import kotlinx.coroutines.launch
 
 @Composable
 fun <T : Media> EditButton(
@@ -21,6 +23,7 @@ fun <T : Media> EditButton(
     followTheme: Boolean = false
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val defaultEditor by Settings.Misc.rememberDefaultImageEditor()
     MediaViewButton(
         currentMedia = media,
@@ -33,10 +36,10 @@ fun <T : Media> EditButton(
             try {
                 context.launchEditImageIntent(defaultEditor, it.getUri())
             } catch (_: Exception) {
-                context.launchEditIntent(it)
+                scope.launch { context.launchEditIntent(it) }
             }
         } else {
-            context.launchEditIntent(it)
+            scope.launch { context.launchEditIntent(it) }
         }
     }
 }

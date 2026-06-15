@@ -20,6 +20,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.ImageBitmap
@@ -61,6 +62,10 @@ fun rememberSurfaceCapture(
     intervalMs: Long = 50L
 ): State<ImageBitmap?> {
     val state = remember { mutableStateOf<ImageBitmap?>(null) }
+    // Read the latest `enabled` inside the long-lived loop so toggling it does not
+    // depend on the LaunchedEffect restarting (which is unreliable when this lives
+    // inside AnimatedVisibility content under a non-restartable composable).
+    val enabledState = rememberUpdatedState(enabled)
 
     val pixelCopyThread = remember {
         HandlerThread("PixelCopyThread").apply { start() }
@@ -72,8 +77,8 @@ fun rememberSurfaceCapture(
         onDispose { pixelCopyThread.quitSafely() }
     }
 
-    LaunchedEffect(view, enabled) {
-        if (view == null || !enabled) {
+    LaunchedEffect(view) {
+        if (view == null) {
             state.value = null
             return@LaunchedEffect
         }
@@ -83,7 +88,10 @@ fun rememberSurfaceCapture(
         var reusableBitmap: Bitmap? = null
 
         while (true) {
-            if (!capturing.get()) {
+            // When disabled, skip the capture work (near-zero cost) but keep the last
+            // frame so a currently-visible blur does not disappear. Resumes on the next
+            // tick once re-enabled.
+            if (enabledState.value && !capturing.get()) {
                 val w = surfaceView.width
                 val h = surfaceView.height
                 if (w > 0 && h > 0) {

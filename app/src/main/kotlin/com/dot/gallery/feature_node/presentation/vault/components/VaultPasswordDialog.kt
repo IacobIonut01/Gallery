@@ -71,19 +71,63 @@ import kotlinx.coroutines.launch
 @Composable
 fun VaultPasswordUnlockDialog(
     authType: VaultAuthType? = null,
+    subtitle: String? = null,
     onDismiss: () -> Unit,
     onSubmit: (secret: String) -> Unit,
     errorMessage: String? = null
 ) {
     when (authType ?: VaultAuthType.PASSWORD) {
-        VaultAuthType.PIN -> VaultPinUnlockDialog(onDismiss, onSubmit, errorMessage)
-        VaultAuthType.PATTERN -> VaultPatternUnlockDialog(onDismiss, onSubmit, errorMessage)
-        VaultAuthType.PASSWORD -> VaultTextPasswordUnlockDialog(onDismiss, onSubmit, errorMessage)
+        VaultAuthType.PIN -> VaultPinUnlockDialog(subtitle, onDismiss, onSubmit, errorMessage)
+        VaultAuthType.PATTERN -> VaultPatternUnlockDialog(subtitle, onDismiss, onSubmit, errorMessage)
+        VaultAuthType.PASSWORD -> VaultTextPasswordUnlockDialog(subtitle, onDismiss, onSubmit, errorMessage)
+    }
+}
+
+/**
+ * Bottom-sheet wrapper around [VaultPasswordUnlockDialog]. Presents the type-aware unlock
+ * UI inside a [ModalBottomSheet] so it does not overlap the underlying screen.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun VaultPasswordUnlockSheet(
+    state: AppBottomSheetState,
+    authType: VaultAuthType? = null,
+    subtitle: String? = null,
+    onDismiss: () -> Unit,
+    onSubmit: (secret: String) -> Unit,
+    errorMessage: String? = null
+) {
+    val scope = rememberCoroutineScope()
+    if (state.isVisible) {
+        ModalBottomSheet(
+            sheetState = state.sheetState,
+            onDismissRequest = {
+                scope.launch { state.hide() }
+                onDismiss()
+            },
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+            tonalElevation = 0.dp,
+            dragHandle = { DragHandle() },
+            sheetMaxWidth = Dp.Unspecified,
+            contentWindowInsets = { WindowInsets(0, 0, 0, 0) }
+        ) {
+            VaultPasswordUnlockDialog(
+                authType = authType,
+                subtitle = subtitle,
+                onDismiss = {
+                    scope.launch { state.hide() }
+                    onDismiss()
+                },
+                onSubmit = onSubmit,
+                errorMessage = errorMessage
+            )
+        }
     }
 }
 
 @Composable
 private fun VaultTextPasswordUnlockDialog(
+    subtitle: String? = null,
     onDismiss: () -> Unit,
     onSubmit: (String) -> Unit,
     errorMessage: String? = null
@@ -119,7 +163,7 @@ private fun VaultTextPasswordUnlockDialog(
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = stringResource(R.string.vault_enter_password),
+            text = subtitle ?: stringResource(R.string.vault_enter_password),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
@@ -192,6 +236,7 @@ private fun VaultTextPasswordUnlockDialog(
 
 @Composable
 private fun VaultPinUnlockDialog(
+    subtitle: String? = null,
     onDismiss: () -> Unit,
     onSubmit: (String) -> Unit,
     errorMessage: String? = null
@@ -225,7 +270,7 @@ private fun VaultPinUnlockDialog(
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = stringResource(R.string.vault_enter_pin),
+            text = subtitle ?: stringResource(R.string.vault_enter_pin),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
@@ -257,6 +302,7 @@ private fun VaultPinUnlockDialog(
 
 @Composable
 private fun VaultPatternUnlockDialog(
+    subtitle: String? = null,
     onDismiss: () -> Unit,
     onSubmit: (String) -> Unit,
     errorMessage: String? = null
@@ -282,7 +328,7 @@ private fun VaultPatternUnlockDialog(
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = stringResource(R.string.vault_draw_pattern),
+            text = subtitle ?: stringResource(R.string.vault_draw_pattern),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center

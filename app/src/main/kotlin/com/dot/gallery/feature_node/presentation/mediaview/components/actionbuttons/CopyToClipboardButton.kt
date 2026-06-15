@@ -31,13 +31,13 @@ fun <T : Media> CopyToClipboardButton(
         title = stringResource(R.string.copy_to_clipboard),
         enabled = enabled
     ) {
-        if (it.isEncrypted && currentVault != null) {
-            scope.launch {
+        scope.launch {
+            if (it.isEncrypted && currentVault != null) {
                 val keychainHolder = KeychainHolder(context)
                 context.copyEncryptedMediaToClipboard(it, keychainHolder)
+            } else {
+                context.copyMediaToClipboard(it)
             }
-        } else {
-            context.copyMediaToClipboard(it)
         }
     }
 }

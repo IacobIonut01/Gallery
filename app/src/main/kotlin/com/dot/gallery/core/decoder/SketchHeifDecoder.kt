@@ -9,6 +9,7 @@ import com.github.panpf.sketch.fetch.FetchResult
 import com.github.panpf.sketch.request.RequestContext
 import com.github.panpf.sketch.request.get
 import com.github.panpf.sketch.source.DataSource
+import com.dot.gallery.core.decoder.format.HardwareHeifDecoder
 import com.radzivon.bartoshyk.avif.coder.HeifCoder
 import okio.buffer
 
@@ -81,7 +82,15 @@ class SketchHeifDecoder(
             if (animated != null) return animated
         }
 
-        // Static: use HeifCoder (works on all API levels)
+        // Hardware-first: ImageDecoder routes HEIC/AVIF to the device HEVC/AV1 hardware codec.
+        val target = requestContext.size
+        val reqW = if (target == com.github.panpf.sketch.util.Size.Origin) 0 else target.width
+        val reqH = if (target == com.github.panpf.sketch.util.Size.Origin) 0 else target.height
+        HardwareHeifDecoder.decode(sourceData, reqW, reqH)?.let {
+            return imageDataFromBitmap(it, requestContext, dataSource.dataFrom, mimeType)
+        }
+
+        // Static fallback: software HeifCoder (works on all API levels / unsupported devices)
         return decodeStaticFromBytes(
             sourceData = sourceData,
             requestContext = requestContext,

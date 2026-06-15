@@ -7,9 +7,14 @@ package com.dot.gallery.feature_node.presentation.help.data
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.AutoFixHigh
 import androidx.compose.material.icons.outlined.BugReport
+import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Cast
+import androidx.compose.material.icons.outlined.Cloud
+import androidx.compose.material.icons.outlined.CloudDone
 import androidx.compose.material.icons.outlined.CloudDownload
+import androidx.compose.material.icons.outlined.CloudUpload
 import androidx.compose.material.icons.outlined.Collections
 import androidx.compose.material.icons.outlined.Contrast
 import androidx.compose.material.icons.outlined.Draw
@@ -17,9 +22,11 @@ import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.EditNote
 import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.FolderCopy
+import androidx.compose.material.icons.outlined.Hub
 import androidx.compose.material.icons.outlined.ImageSearch
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Movie
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Panorama
 import androidx.compose.material.icons.outlined.PhotoLibrary
@@ -52,7 +59,8 @@ object HelpRepository {
     fun getMakeMostCategories() = listOf(
         HelpCategory.TIMELINE_ALBUMS, HelpCategory.VIEWING, HelpCategory.VIEWER_ACTIONS,
         HelpCategory.VIEWER_SETTINGS, HelpCategory.EDITING, HelpCategory.SEARCH,
-        HelpCategory.AI_FEATURES, HelpCategory.ALBUMS, HelpCategory.VAULT
+        HelpCategory.AI_FEATURES, HelpCategory.ALBUMS, HelpCategory.VAULT,
+        HelpCategory.CLOUD_SYNC
     )
     fun getExploreMoreCategories() = listOf(
         HelpCategory.FAVORITES_TRASH, HelpCategory.LOCATIONS, HelpCategory.METADATA,
@@ -263,7 +271,14 @@ object HelpRepository {
             pages = listOf(
                 TutorialPage(title = R.string.help_tip_story_cards_p1_title, description = R.string.help_tip_story_cards_p1_desc, previewType = PreviewType.TIMELINE_GRID),
                 TutorialPage(title = R.string.help_tip_story_cards_p2_title, description = R.string.help_tip_story_cards_p2_desc, steps = listOf(R.string.help_tip_story_cards_p2_s1, R.string.help_tip_story_cards_p2_s2, R.string.help_tip_story_cards_p2_s3, R.string.help_tip_story_cards_p2_s4))
-            ), sinceVersion = "4.3.0")
+            ), sinceVersion = "4.3.0"),
+        HelpTip(id = "timeline_group_period", title = R.string.help_tip_timeline_group_period_title, subtitle = R.string.help_tip_timeline_group_period_subtitle,
+            icon = HelpIcon.ofVector(Icons.Outlined.CalendarMonth), category = HelpCategory.TIMELINE_ALBUMS,
+            deepLink = Screen.SettingsTimelineAlbumsScreen(),
+            pages = listOf(
+                TutorialPage(title = R.string.help_tip_timeline_group_period_p1_title, description = R.string.help_tip_timeline_group_period_p1_desc, previewType = PreviewType.TIMELINE_GRID),
+                TutorialPage(title = R.string.help_tip_timeline_group_period_p2_title, description = R.string.help_tip_timeline_group_period_p2_desc, steps = listOf(R.string.help_tip_timeline_group_period_p2_s1, R.string.help_tip_timeline_group_period_p2_s2, R.string.help_tip_timeline_group_period_p2_s3, R.string.help_tip_timeline_group_period_p2_s4))
+            ), sinceVersion = "5.0.0")
     )
     // endregion
 
@@ -355,7 +370,12 @@ object HelpRepository {
             pages = listOf(
                 TutorialPage(title = R.string.help_tip_viewer_cast_p1_title, description = R.string.help_tip_viewer_cast_p1_desc, previewType = PreviewType.MEDIA_VIEWER),
                 TutorialPage(title = R.string.help_tip_viewer_cast_p2_title, description = R.string.help_tip_viewer_cast_p2_desc, steps = listOf(R.string.help_tip_viewer_cast_p2_s1, R.string.help_tip_viewer_cast_p2_s2, R.string.help_tip_viewer_cast_p2_s3, R.string.help_tip_viewer_cast_p2_s4), previewType = PreviewType.MEDIA_VIEWER)
-            ), sinceVersion = "4.2.1")
+            ), sinceVersion = "4.2.1"),
+        HelpTip(id = "action_save_motion_video", title = R.string.help_tip_action_save_motion_video_title, subtitle = R.string.help_tip_action_save_motion_video_subtitle,
+            icon = HelpIcon.ofVector(Icons.Outlined.Movie), category = HelpCategory.VIEWER_ACTIONS,
+            pages = listOf(
+                TutorialPage(title = R.string.help_tip_action_save_motion_video_p1_title, description = R.string.help_tip_action_save_motion_video_p1_desc, steps = listOf(R.string.help_tip_action_save_motion_video_p1_s1, R.string.help_tip_action_save_motion_video_p1_s2, R.string.help_tip_action_save_motion_video_p1_s3, R.string.help_tip_action_save_motion_video_p1_s4), previewType = PreviewType.MEDIA_VIEWER)
+            ), sinceVersion = "5.0.0")
     )
 
     private val VIEWER_SETTINGS_TIPS = listOf(
@@ -370,10 +390,6 @@ object HelpRepository {
             icon = HelpIcon.ofVector(Icons.Outlined.Collections), category = HelpCategory.VIEWER_SETTINGS,
             deepLink = Screen.SettingsMediaViewerScreen(),
             pages = listOf(TutorialPage(title = R.string.help_tip_viewer_auto_play_p1_title, description = R.string.help_tip_viewer_auto_play_p1_desc, steps = listOf(R.string.help_tip_viewer_auto_play_p1_s1, R.string.help_tip_viewer_auto_play_p1_s2))), sinceVersion = "4.0.0"),
-        HelpTip(id = "viewer_audio_focus", title = R.string.help_tip_viewer_audio_focus_title, subtitle = R.string.help_tip_viewer_audio_focus_subtitle,
-            icon = HelpIcon.ofVector(Icons.Outlined.Collections), category = HelpCategory.VIEWER_SETTINGS,
-            deepLink = Screen.SettingsMediaViewerScreen(),
-            pages = listOf(TutorialPage(title = R.string.help_tip_viewer_audio_focus_p1_title, description = R.string.help_tip_viewer_audio_focus_p1_desc, steps = listOf(R.string.help_tip_viewer_audio_focus_p1_s1, R.string.help_tip_viewer_audio_focus_p1_s2, R.string.help_tip_viewer_audio_focus_p1_s3, R.string.help_tip_viewer_audio_focus_p1_s4))), sinceVersion = "4.0.0"),
         HelpTip(id = "viewer_auto_hide_video", title = R.string.help_tip_viewer_auto_hide_video_title, subtitle = R.string.help_tip_viewer_auto_hide_video_subtitle,
             icon = HelpIcon.ofVector(Icons.Outlined.Collections), category = HelpCategory.VIEWER_SETTINGS,
             deepLink = Screen.SettingsMediaViewerScreen(),
@@ -419,6 +435,12 @@ object HelpRepository {
                 TutorialPage(title = R.string.help_tip_edit_filters_p1_title, description = R.string.help_tip_edit_filters_p1_desc, previewType = PreviewType.PHOTO_EDITOR_FILTERS),
                 TutorialPage(title = R.string.help_tip_edit_filters_p2_title, description = R.string.help_tip_edit_filters_p2_desc, steps = listOf(R.string.help_tip_edit_filters_p2_s1, R.string.help_tip_edit_filters_p2_s2, R.string.help_tip_edit_filters_p2_s3, R.string.help_tip_edit_filters_p2_s4, R.string.help_tip_edit_filters_p2_s5), previewType = PreviewType.PHOTO_EDITOR_FILTERS)
             ), sinceVersion = "4.0.0"),
+        HelpTip(id = "edit_effects", title = R.string.help_tip_edit_effects_title, subtitle = R.string.help_tip_edit_effects_subtitle,
+            icon = HelpIcon.ofVector(Icons.Outlined.AutoFixHigh), category = HelpCategory.EDITING,
+            pages = listOf(
+                TutorialPage(title = R.string.help_tip_edit_effects_p1_title, description = R.string.help_tip_edit_effects_p1_desc, previewType = PreviewType.PHOTO_EDITOR_FILTERS),
+                TutorialPage(title = R.string.help_tip_edit_effects_p2_title, description = R.string.help_tip_edit_effects_p2_desc, steps = listOf(R.string.help_tip_edit_effects_p2_s1, R.string.help_tip_edit_effects_p2_s2, R.string.help_tip_edit_effects_p2_s3, R.string.help_tip_edit_effects_p2_s4), previewType = PreviewType.PHOTO_EDITOR_FILTERS)
+            ), sinceVersion = "5.0.0"),
         HelpTip(id = "edit_adjustments", title = R.string.help_tip_edit_adjustments_title, subtitle = R.string.help_tip_edit_adjustments_subtitle,
             icon = HelpIcon.ofVector(Icons.Outlined.Edit), category = HelpCategory.EDITING,
             pages = listOf(
@@ -533,6 +555,12 @@ object HelpRepository {
                 TutorialPage(title = R.string.help_tip_albums_groups_p1_title, description = R.string.help_tip_albums_groups_p1_desc, previewType = PreviewType.ALBUM_GRID),
                 TutorialPage(title = R.string.help_tip_albums_groups_p2_title, description = R.string.help_tip_albums_groups_p2_desc, steps = listOf(R.string.help_tip_albums_groups_p2_s1, R.string.help_tip_albums_groups_p2_s2, R.string.help_tip_albums_groups_p2_s3, R.string.help_tip_albums_groups_p2_s4, R.string.help_tip_albums_groups_p2_s5), previewType = PreviewType.ALBUM_GRID)
             ), sinceVersion = "4.2.0"),
+        HelpTip(id = "albums_sections", title = R.string.help_tip_albums_sections_title, subtitle = R.string.help_tip_albums_sections_subtitle,
+            icon = HelpIcon.ofVector(Icons.Outlined.Collections), category = HelpCategory.ALBUMS,
+            pages = listOf(
+                TutorialPage(title = R.string.help_tip_albums_sections_p1_title, description = R.string.help_tip_albums_sections_p1_desc, previewType = PreviewType.ALBUM_GRID),
+                TutorialPage(title = R.string.help_tip_albums_sections_p2_title, description = R.string.help_tip_albums_sections_p2_desc, steps = listOf(R.string.help_tip_albums_sections_p2_s1, R.string.help_tip_albums_sections_p2_s2, R.string.help_tip_albums_sections_p2_s3, R.string.help_tip_albums_sections_p2_s4), previewType = PreviewType.ALBUM_GRID)
+            ), sinceVersion = "5.0.0"),
         HelpTip(id = "albums_collections", title = R.string.help_tip_albums_collections_title, subtitle = R.string.help_tip_albums_collections_subtitle,
             icon = HelpIcon.ofVector(Icons.Outlined.Collections), category = HelpCategory.ALBUMS,
             pages = listOf(
@@ -580,6 +608,38 @@ object HelpRepository {
                 TutorialPage(title = R.string.help_tip_vault_overhaul_p1_title, description = R.string.help_tip_vault_overhaul_p1_desc, steps = listOf(R.string.help_tip_vault_overhaul_p1_s1, R.string.help_tip_vault_overhaul_p1_s2, R.string.help_tip_vault_overhaul_p1_s3), previewType = PreviewType.VAULT_LOCK),
                 TutorialPage(title = R.string.help_tip_vault_overhaul_p2_title, description = R.string.help_tip_vault_overhaul_p2_desc, steps = listOf(R.string.help_tip_vault_overhaul_p2_s1, R.string.help_tip_vault_overhaul_p2_s2, R.string.help_tip_vault_overhaul_p2_s3), previewType = PreviewType.VAULT_LOCK)
             ), sinceVersion = "4.2.1")
+    )
+    // endregion
+
+    // region Cloud & Sync
+    private val CLOUD_TIPS = listOf(
+        HelpTip(id = "cloud_connect", title = R.string.help_tip_cloud_connect_title, subtitle = R.string.help_tip_cloud_connect_subtitle,
+            icon = HelpIcon.ofVector(Icons.Outlined.Cloud), category = HelpCategory.CLOUD_SYNC,
+            deepLink = Screen.CloudAccountsScreen(),
+            pages = listOf(
+                TutorialPage(title = R.string.help_tip_cloud_connect_p1_title, description = R.string.help_tip_cloud_connect_p1_desc),
+                TutorialPage(title = R.string.help_tip_cloud_connect_p2_title, description = R.string.help_tip_cloud_connect_p2_desc, steps = listOf(R.string.help_tip_cloud_connect_p2_s1, R.string.help_tip_cloud_connect_p2_s2, R.string.help_tip_cloud_connect_p2_s3, R.string.help_tip_cloud_connect_p2_s4))
+            ), sinceVersion = "5.0.0"),
+        HelpTip(id = "cloud_timeline", title = R.string.help_tip_cloud_timeline_title, subtitle = R.string.help_tip_cloud_timeline_subtitle,
+            icon = HelpIcon.ofVector(Icons.Outlined.CloudDone), category = HelpCategory.CLOUD_SYNC,
+            pages = listOf(
+                TutorialPage(title = R.string.help_tip_cloud_timeline_p1_title, description = R.string.help_tip_cloud_timeline_p1_desc, previewType = PreviewType.TIMELINE_GRID),
+                TutorialPage(title = R.string.help_tip_cloud_timeline_p2_title, description = R.string.help_tip_cloud_timeline_p2_desc, previewType = PreviewType.MEDIA_VIEWER)
+            ), sinceVersion = "5.0.0"),
+        HelpTip(id = "cloud_backup", title = R.string.help_tip_cloud_backup_title, subtitle = R.string.help_tip_cloud_backup_subtitle,
+            icon = HelpIcon.ofVector(Icons.Outlined.CloudUpload), category = HelpCategory.CLOUD_SYNC,
+            deepLink = Screen.CloudBackupScreen(),
+            pages = listOf(
+                TutorialPage(title = R.string.help_tip_cloud_backup_p1_title, description = R.string.help_tip_cloud_backup_p1_desc),
+                TutorialPage(title = R.string.help_tip_cloud_backup_p2_title, description = R.string.help_tip_cloud_backup_p2_desc, steps = listOf(R.string.help_tip_cloud_backup_p2_s1, R.string.help_tip_cloud_backup_p2_s2, R.string.help_tip_cloud_backup_p2_s3, R.string.help_tip_cloud_backup_p2_s4))
+            ), sinceVersion = "5.0.0"),
+        HelpTip(id = "cloud_explore", title = R.string.help_tip_cloud_explore_title, subtitle = R.string.help_tip_cloud_explore_subtitle,
+            icon = HelpIcon.ofVector(Icons.Outlined.Hub), category = HelpCategory.CLOUD_SYNC,
+            deepLink = Screen.CloudLibraryScreen(),
+            pages = listOf(
+                TutorialPage(title = R.string.help_tip_cloud_explore_p1_title, description = R.string.help_tip_cloud_explore_p1_desc),
+                TutorialPage(title = R.string.help_tip_cloud_explore_p2_title, description = R.string.help_tip_cloud_explore_p2_desc)
+            ), sinceVersion = "5.0.0")
     )
     // endregion
 
@@ -682,7 +742,15 @@ object HelpRepository {
         HelpTip(id = "settings_vibrations", title = R.string.help_tip_settings_vibrations_title, subtitle = R.string.help_tip_settings_vibrations_subtitle,
             icon = HelpIcon.ofVector(Icons.Outlined.Collections), category = HelpCategory.SETTINGS_GENERAL,
             deepLink = Screen.SettingsGeneralScreen(),
-            pages = listOf(TutorialPage(title = R.string.help_tip_settings_vibrations_p1_title, description = R.string.help_tip_settings_vibrations_p1_desc, steps = listOf(R.string.help_tip_settings_vibrations_p1_s1, R.string.help_tip_settings_vibrations_p1_s2, R.string.help_tip_settings_vibrations_p1_s3))), sinceVersion = "4.0.0")
+            pages = listOf(TutorialPage(title = R.string.help_tip_settings_vibrations_p1_title, description = R.string.help_tip_settings_vibrations_p1_desc, steps = listOf(R.string.help_tip_settings_vibrations_p1_s1, R.string.help_tip_settings_vibrations_p1_s2, R.string.help_tip_settings_vibrations_p1_s3))), sinceVersion = "4.0.0"),
+        HelpTip(id = "settings_backup_restore", title = R.string.help_tip_settings_backup_restore_title, subtitle = R.string.help_tip_settings_backup_restore_subtitle,
+            icon = HelpIcon.ofVector(Icons.Outlined.SettingsBackupRestore), category = HelpCategory.SETTINGS_GENERAL,
+            deepLink = Screen.SettingsBackupScreen(),
+            pages = listOf(
+                TutorialPage(title = R.string.help_tip_settings_backup_restore_p1_title, description = R.string.help_tip_settings_backup_restore_p1_desc),
+                TutorialPage(title = R.string.help_tip_settings_backup_restore_p2_title, description = R.string.help_tip_settings_backup_restore_p2_desc, steps = listOf(R.string.help_tip_settings_backup_restore_p2_s1, R.string.help_tip_settings_backup_restore_p2_s2, R.string.help_tip_settings_backup_restore_p2_s3, R.string.help_tip_settings_backup_restore_p2_s4)),
+                TutorialPage(title = R.string.help_tip_settings_backup_restore_p3_title, description = R.string.help_tip_settings_backup_restore_p3_desc, steps = listOf(R.string.help_tip_settings_backup_restore_p3_s1, R.string.help_tip_settings_backup_restore_p3_s2, R.string.help_tip_settings_backup_restore_p3_s3))
+            ), sinceVersion = "5.0.0")
     )
 
     private val SETTINGS_NAV_TIPS = listOf(
@@ -745,7 +813,14 @@ object HelpRepository {
             pages = listOf(
                 TutorialPage(title = R.string.help_tip_security_private_folder_p1_title, description = R.string.help_tip_security_private_folder_p1_desc),
                 TutorialPage(title = R.string.help_tip_security_private_folder_p2_title, description = R.string.help_tip_security_private_folder_p2_desc, steps = listOf(R.string.help_tip_security_private_folder_p2_s1, R.string.help_tip_security_private_folder_p2_s2, R.string.help_tip_security_private_folder_p2_s3))
-            ), sinceVersion = "4.2.2")
+            ), sinceVersion = "4.2.2"),
+        HelpTip(id = "security_advanced_protection", title = R.string.help_tip_security_aapm_title, subtitle = R.string.help_tip_security_aapm_subtitle,
+            icon = HelpIcon.ofVector(Icons.Outlined.Security), category = HelpCategory.SETTINGS_SECURITY,
+            deepLink = Screen.SettingsSecurityScreen(),
+            pages = listOf(
+                TutorialPage(title = R.string.help_tip_security_aapm_p1_title, description = R.string.help_tip_security_aapm_p1_desc),
+                TutorialPage(title = R.string.help_tip_security_aapm_p2_title, description = R.string.help_tip_security_aapm_p2_desc, steps = listOf(R.string.help_tip_security_aapm_p2_s1, R.string.help_tip_security_aapm_p2_s2, R.string.help_tip_security_aapm_p2_s3))
+            ), sinceVersion = "5.0.0")
     )
     // endregion
 
@@ -808,12 +883,45 @@ object HelpRepository {
     // region Aggregation
     private val ALL_TIPS: List<HelpTip> = BASICS_TIPS + NAVIGATION_TIPS + PERSONALIZATION_TIPS +
         TIMELINE_ALBUM_TIPS + VIEWING_TIPS + VIEWER_ACTION_TIPS + VIEWER_SETTINGS_TIPS +
-        EDITING_TIPS + SEARCH_TIPS + AI_TIPS + ALBUM_TIPS + VAULT_TIPS +
+        EDITING_TIPS + SEARCH_TIPS + AI_TIPS + ALBUM_TIPS + VAULT_TIPS + CLOUD_TIPS +
         FAV_TRASH_TIPS + LOCATION_TIPS + METADATA_TIPS +
         SETTINGS_APPEARANCE_TIPS + SETTINGS_GENERAL_TIPS + SETTINGS_NAV_TIPS + SETTINGS_SMART_TIPS +
         SETTINGS_SECURITY_TIPS + GESTURE_TIPS + SELECTION_TIPS + ACCESSIBILITY_TIPS
 
     private val ALL_RELEASES: List<ReleaseNotes> = listOf(
+        ReleaseNotes(
+            versionName = "5.0.1",
+            versionCode = 50101,
+            releaseDate = "2026-06-14",
+            highlights = listOf(
+                ReleaseHighlight(tipId = "animated_formats", title = R.string.help_release_501_formats_title, description = R.string.help_release_501_formats_desc, icon = HelpIcon.ofVector(Icons.Outlined.PhotoLibrary)),
+                ReleaseHighlight(tipId = "animated_formats", title = R.string.help_release_501_heif_title, description = R.string.help_release_501_heif_desc, icon = HelpIcon.ofVector(Icons.Outlined.Speed)),
+                ReleaseHighlight(tipId = null, title = R.string.help_release_501_system_font_title, description = R.string.help_release_501_system_font_desc, icon = HelpIcon.ofVector(Icons.Outlined.Settings)),
+                ReleaseHighlight(tipId = "animated_formats", title = R.string.help_release_501_jxl_zoom_title, description = R.string.help_release_501_jxl_zoom_desc, icon = HelpIcon.ofVector(Icons.Outlined.ZoomIn)),
+                ReleaseHighlight(tipId = null, title = R.string.help_release_501_video_fixes_title, description = R.string.help_release_501_video_fixes_desc, icon = HelpIcon.ofVector(Icons.Outlined.VideoSettings)),
+                ReleaseHighlight(tipId = null, title = R.string.help_release_501_scroll_fixes_title, description = R.string.help_release_501_scroll_fixes_desc, icon = HelpIcon.ofVector(Icons.Outlined.Collections)),
+                ReleaseHighlight(tipId = null, title = R.string.help_release_501_bugfixes_title, description = R.string.help_release_501_bugfixes_desc, icon = HelpIcon.ofVector(Icons.Outlined.BugReport))
+            )
+        ),
+        ReleaseNotes(
+            versionName = "5.0.0",
+            versionCode = 50004,
+            releaseDate = "2026-06-11",
+            highlights = listOf(
+                ReleaseHighlight(tipId = "cloud_connect", title = R.string.help_release_500_cloud_title, description = R.string.help_release_500_cloud_desc, icon = HelpIcon.ofVector(Icons.Outlined.Cloud)),
+                ReleaseHighlight(tipId = "cloud_backup", title = R.string.help_release_500_cloud_backup_title, description = R.string.help_release_500_cloud_backup_desc, icon = HelpIcon.ofVector(Icons.Outlined.CloudUpload)),
+                ReleaseHighlight(tipId = "settings_backup_restore", title = R.string.help_release_500_backup_restore_title, description = R.string.help_release_500_backup_restore_desc, icon = HelpIcon.ofVector(Icons.Outlined.SettingsBackupRestore)),
+                ReleaseHighlight(tipId = "edit_effects", title = R.string.help_release_500_editor_filters_title, description = R.string.help_release_500_editor_filters_desc, icon = HelpIcon.ofVector(Icons.Outlined.AutoFixHigh)),
+                ReleaseHighlight(tipId = "timeline_group_period", title = R.string.help_release_500_grouping_title, description = R.string.help_release_500_grouping_desc, icon = HelpIcon.ofVector(Icons.Outlined.CalendarMonth)),
+                ReleaseHighlight(tipId = "albums_sections", title = R.string.help_release_500_album_sections_title, description = R.string.help_release_500_album_sections_desc, icon = HelpIcon.ofVector(Icons.Outlined.Collections)),
+                ReleaseHighlight(tipId = "action_save_motion_video", title = R.string.help_release_500_motion_video_title, description = R.string.help_release_500_motion_video_desc, icon = HelpIcon.ofVector(Icons.Outlined.Movie)),
+                ReleaseHighlight(tipId = "security_advanced_protection", title = R.string.help_release_500_aapm_title, description = R.string.help_release_500_aapm_desc, icon = HelpIcon.ofVector(Icons.Outlined.Security)),
+                ReleaseHighlight(tipId = "animated_formats", title = R.string.help_release_500_formats_title, description = R.string.help_release_500_formats_desc, icon = HelpIcon.ofVector(Icons.Outlined.PhotoLibrary)),
+                ReleaseHighlight(tipId = null, title = R.string.help_release_500_performance_title, description = R.string.help_release_500_performance_desc, icon = HelpIcon.ofVector(Icons.Outlined.Speed)),
+                ReleaseHighlight(tipId = "location_viewer", title = R.string.help_release_500_location_sheet_title, description = R.string.help_release_500_location_sheet_desc, icon = HelpIcon.ofVector(Icons.Outlined.LocationOn)),
+                ReleaseHighlight(tipId = null, title = R.string.help_release_500_bugfixes_title, description = R.string.help_release_500_bugfixes_desc, icon = HelpIcon.ofVector(Icons.Outlined.BugReport))
+            )
+        ),
         ReleaseNotes(
             versionName = "4.3.0",
             versionCode = 43001,

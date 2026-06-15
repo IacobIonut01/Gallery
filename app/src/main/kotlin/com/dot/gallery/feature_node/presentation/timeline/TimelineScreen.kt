@@ -12,6 +12,7 @@ import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -53,8 +54,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
@@ -76,6 +79,8 @@ import com.dot.gallery.core.Settings.Misc.rememberGridSize
 import com.dot.gallery.core.Settings.Misc.rememberLastSeenVersion
 import com.dot.gallery.core.Settings.Misc.rememberMosaicGridSize
 import com.dot.gallery.core.Settings.Misc.rememberShowFilterButton
+import com.dot.gallery.core.Settings.Misc.rememberTimelineGroupByDate
+import com.dot.gallery.core.Settings.Misc.rememberTimelineGroupMethod
 import com.dot.gallery.core.Settings.Misc.rememberTimelineLayoutType
 import com.dot.gallery.core.navigate
 import com.dot.gallery.core.presentation.components.EmptyMedia
@@ -96,6 +101,7 @@ import com.dot.gallery.feature_node.presentation.common.components.MosaicMediaGr
 import com.dot.gallery.feature_node.presentation.common.components.MosaicPinchZoomLayout
 import com.dot.gallery.feature_node.presentation.common.components.StickyHeaderGrid
 import com.dot.gallery.feature_node.presentation.common.components.TimelineScroller
+import com.dot.gallery.feature_node.presentation.common.components.rememberMosaicMonthSegments
 import com.dot.gallery.feature_node.presentation.common.components.rememberMosaicPinchZoomState
 import com.dot.gallery.feature_node.presentation.common.components.rememberStickyHeaderItem
 import com.dot.gallery.feature_node.presentation.help.components.WhatsNewHeroCard
@@ -130,7 +136,9 @@ fun TimelineScreen(
     var canScroll by rememberSaveable { mutableStateOf(true) }
     var lastCellIndex by rememberGridSize()
     val timelineLayoutType by rememberTimelineLayoutType()
-    val isMosaicLayout = timelineLayoutType == Settings.Misc.LAYOUT_MOSAIC
+    val timelineGroupByDate by rememberTimelineGroupByDate()
+    val timelineGroupMethod by rememberTimelineGroupMethod()
+    val isMosaicLayout = timelineLayoutType == Settings.Misc.LAYOUT_MOSAIC && timelineGroupByDate
     val eventHandler = LocalEventHandler.current
     val distributor = LocalMediaDistributor.current
     val isRefreshing by distributor.isRefreshing.collectAsStateWithLifecycle()
@@ -191,6 +199,12 @@ fun TimelineScreen(
                         is com.dot.gallery.feature_node.domain.model.MediaItem.Header -> item.data.any { it in filteredIds }
                     }
                 },
+                mappedMediaWithYearly = state.mappedMediaWithYearly.filter { item ->
+                    when (item) {
+                        is com.dot.gallery.feature_node.domain.model.MediaItem.MediaViewItem -> item.media.id in filteredIds
+                        is com.dot.gallery.feature_node.domain.model.MediaItem.Header -> item.data.any { it in filteredIds }
+                    }
+                },
                 headers = state.headers.filter { header -> header.data.any { it in filteredIds } }
             )
         }
@@ -220,6 +234,9 @@ fun TimelineScreen(
                             onClick = {
                                 lastSeenVersion = BuildConfig.VERSION_NAME
                                 eventHandler.navigate(Screen.WhatsNewScreen())
+                            },
+                            onDismiss = {
+                                lastSeenVersion = BuildConfig.VERSION_NAME
                             }
                         )
                     }
@@ -323,8 +340,12 @@ fun TimelineScreen(
                     lastMosaicCellIndex = mosaicPinchState.currentColumnsIndex
                 }
 
-                val mappedData by rememberedDerivedState(filteredMediaState.value) {
-                    filteredMediaState.value.mappedMediaWithMonthly
+                val mappedData by rememberedDerivedState(filteredMediaState.value, timelineGroupMethod) {
+                    when (timelineGroupMethod) {
+                        Settings.Misc.GROUP_MONTHLY -> filteredMediaState.value.mappedMediaWithMonthly
+                        Settings.Misc.GROUP_YEARLY -> filteredMediaState.value.mappedMediaWithYearly
+                        else -> filteredMediaState.value.mappedMedia
+                    }
                 }
                 val headers by rememberedDerivedState(filteredMediaState.value) {
                     filteredMediaState.value.headers
@@ -380,9 +401,18 @@ fun TimelineScreen(
                             exit = exitAnimation
                         ) {
                             val text by rememberedDerivedState(stickyHeaderItem) { stickyHeaderItem ?: "" }
+                            val isDarkTheme = isSystemInDarkTheme()
                             Text(
                                 text = text,
-                                style = MaterialTheme.typography.titleMedium,
+                                style = MaterialTheme.typography.titleMedium.let { style ->
+                                    if (!isDarkTheme) style.copy(
+                                        shadow = Shadow(
+                                            color = Color.White,
+                                            offset = Offset.Zero,
+                                            blurRadius = 10f
+                                        )
+                                    ) else style
+                                },
                                 color = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier
                                     .background(
@@ -409,9 +439,17 @@ fun TimelineScreen(
                             .padding(mosaicPaddingValues)
                             .padding(top = 32.dp)
                             .padding(vertical = 32.dp),
-                        mappedData = mappedData,
+                        segments = rememberMosaicMonthSegments(
+                            mappedData = mappedData,
+                            columns = currentColumns,
+                            allowHeaders = timelineGroupByDate,
+                            leadingItemCount = if (aboveGridContent != null) 1 else 0,
+                        ),
                         headers = headers,
                         state = mosaicGridState,
+                        snapScrollOffset = remember(density, searchBarPaddingPx) {
+                            with(density) { 80.dp.roundToPx() } - (28.roundSpToPx(density) + searchBarPaddingPx)
+                        },
                     ) {
                         MosaicMediaGrid(
                             modifier = Modifier.hazeSource(LocalHazeState.current),
@@ -423,7 +461,8 @@ fun TimelineScreen(
                             paddingValues = mosaicPaddingValues,
                             allowSelection = true,
                             canScroll = !mosaicPinchState.isZooming,
-                            allowHeaders = true,
+                            allowHeaders = timelineGroupByDate,
+                            bigHeaders = timelineGroupMethod != Settings.Misc.GROUP_NORMAL,
                             aboveGridContent = aboveGridContent,
                             isScrolling = isScrolling,
                             emptyContent = { EmptyMedia() },
@@ -457,8 +496,9 @@ fun TimelineScreen(
                         showSearchBar = true,
                         allowSelection = true,
                         canScroll = canScroll,
-                        enableStickyHeaders = true,
-                        showMonthlyHeader = true,
+                        allowHeaders = timelineGroupByDate,
+                        enableStickyHeaders = timelineGroupByDate,
+                        groupMethod = if (timelineGroupByDate) timelineGroupMethod else Settings.Misc.GROUP_NORMAL,
                         aboveGridContent = aboveGridContent,
                         isScrolling = isScrolling,
                         emptyContent = { EmptyMedia() },

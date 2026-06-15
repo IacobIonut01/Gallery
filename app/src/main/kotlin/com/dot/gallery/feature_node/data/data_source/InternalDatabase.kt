@@ -11,8 +11,25 @@ import androidx.room.DeleteColumn
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.room.migration.AutoMigrationSpec
+import com.dot.gallery.cloud.data.CloudConverters
+import com.dot.gallery.cloud.data.dao.CloudAlbumSyncDao
+import com.dot.gallery.cloud.data.dao.CloudMediaDao
+import com.dot.gallery.cloud.data.dao.CloudServerConfigDao
+import com.dot.gallery.cloud.data.dao.CloudUploadPrefDao
+import com.dot.gallery.cloud.data.dao.PersonDao
+import com.dot.gallery.cloud.data.dao.SyncStateDao
+import com.dot.gallery.cloud.data.entity.CloudAlbumSyncEntity
+import com.dot.gallery.cloud.data.entity.CloudMediaEntity
+import com.dot.gallery.cloud.data.entity.CloudServerConfigEntity
+import com.dot.gallery.cloud.data.entity.DetectedFaceEntity
+import com.dot.gallery.cloud.data.entity.OcrResultEntity
+import com.dot.gallery.cloud.data.entity.PersonEntity
+import com.dot.gallery.cloud.data.entity.CloudUploadPrefEntity
+import com.dot.gallery.cloud.data.entity.SyncStateEntity
 import com.dot.gallery.feature_node.domain.model.AlbumGroup
 import com.dot.gallery.feature_node.domain.model.AlbumGroupMember
+import com.dot.gallery.feature_node.domain.model.AlbumSection
+import com.dot.gallery.feature_node.domain.model.AlbumSectionMember
 import com.dot.gallery.feature_node.domain.model.AlbumThumbnail
 import com.dot.gallery.feature_node.domain.model.Category
 import com.dot.gallery.feature_node.domain.model.Collection
@@ -60,9 +77,19 @@ import com.dot.gallery.feature_node.domain.util.Converters
         Collection::class,
         CollectionMedia::class,
         CollectionAlbum::class,
-        ScannedMedia::class
+        ScannedMedia::class,
+        CloudMediaEntity::class,
+        CloudServerConfigEntity::class,
+        PersonEntity::class,
+        DetectedFaceEntity::class,
+        OcrResultEntity::class,
+        SyncStateEntity::class,
+        CloudAlbumSyncEntity::class,
+        CloudUploadPrefEntity::class,
+        AlbumSection::class,
+        AlbumSectionMember::class
     ],
-    version = 23,
+    version = 33,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
@@ -87,9 +114,19 @@ import com.dot.gallery.feature_node.domain.util.Converters
         AutoMigration(from = 20, to = 21),
         AutoMigration(from = 21, to = 22),
         AutoMigration(from = 22, to = 23),
+        AutoMigration(from = 23, to = 24),
+        AutoMigration(from = 24, to = 25),
+        AutoMigration(from = 25, to = 26),
+        AutoMigration(from = 26, to = 27),
+        AutoMigration(from = 27, to = 28),
+        AutoMigration(from = 28, to = 29),
+        AutoMigration(from = 29, to = 30),
+        AutoMigration(from = 30, to = 31),
+        AutoMigration(from = 31, to = 32),
+        AutoMigration(from = 32, to = 33),
     ]
 )
-@TypeConverters(Converters::class)
+@TypeConverters(Converters::class, CloudConverters::class)
 abstract class InternalDatabase : RoomDatabase() {
 
     @DeleteColumn(tableName = "categories", columnName = "iconEmoji")
@@ -124,6 +161,20 @@ abstract class InternalDatabase : RoomDatabase() {
     abstract fun getCollectionDao(): CollectionDao
 
     abstract fun getScannedMediaDao(): ScannedMediaDao
+
+    abstract fun getCloudMediaDao(): CloudMediaDao
+
+    abstract fun getCloudServerConfigDao(): CloudServerConfigDao
+
+    abstract fun getPersonDao(): PersonDao
+
+    abstract fun getSyncStateDao(): SyncStateDao
+
+    abstract fun getCloudAlbumSyncDao(): CloudAlbumSyncDao
+
+    abstract fun getCloudUploadPrefDao(): CloudUploadPrefDao
+
+    abstract fun getAlbumSectionDao(): AlbumSectionDao
 
     companion object {
         const val NAME = "internal_db"

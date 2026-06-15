@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import com.dot.gallery.core.Settings
+import android.graphics.drawable.Drawable
 import android.graphics.drawable.ColorDrawable
 import androidx.core.graphics.drawable.toDrawable
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
@@ -24,6 +25,14 @@ import com.dot.gallery.core.MediaSelector
 import com.dot.gallery.core.presentation.components.LocalMediaImageRenderer
 import com.dot.gallery.core.presentation.components.MediaImageRenderer
 import com.dot.gallery.feature_node.domain.util.EventHandler
+
+/**
+ * Software-decoded image formats with no hardware decoder. They are expensive to decode, so the
+ * timeline renderer avoids the extra 0.4x thumbnail pass for them (which would decode twice).
+ */
+private val HEAVY_CODEC_EXTENSIONS = listOf(
+    ".heic", ".heif", ".avif", ".avis", ".jxl", ".tiff", ".tif", ".psd", ".jp2", ".j2k"
+)
 
 /**
  * Default [MediaImageRenderer] that uses GlideImage with full caching,
@@ -46,6 +55,13 @@ val GlideMediaImageRenderer = object : MediaImageRenderer {
         val allowGifAnimation by Settings.Misc.rememberAllowGifAnimation()
         val signatureStr = signature?.toString() ?: ""
         val isGif = allowGifAnimation && signatureStr.contains(".gif", ignoreCase = true)
+        val isAnimatable = allowGifAnimation && (
+            signatureStr.contains(".avif", ignoreCase = true) ||
+            signatureStr.contains(".apng", ignoreCase = true)
+        )
+        // Heavy software codecs (no hardware decode) are expensive to decode. The default 0.4x
+        // thumbnail pass would decode them twice; skip it so they load closer to PNG speed.
+        val isHeavyCodec = HEAVY_CODEC_EXTENSIONS.any { signatureStr.contains(it, ignoreCase = true) }
         GlideImage(
             modifier = modifier,
             model = model,
@@ -55,12 +71,16 @@ val GlideMediaImageRenderer = object : MediaImageRenderer {
             failure = placeholder(0x33444444.toDrawable()),
             requestBuilderTransform = {
                 var request = it.centerCrop().diskCacheStrategy(DiskCacheStrategy.ALL)
-                request = request.thumbnail(request.clone().sizeMultiplier(0.4f))
+                if (!isHeavyCodec) {
+                    request = request.thumbnail(request.clone().sizeMultiplier(0.4f))
+                }
                 if (signature != null) {
                     request = request.signature(ObjectKey(signatureStr))
                 }
                 if (isGif) {
                     request = request.decode(GifDrawable::class.java)
+                } else if (isAnimatable) {
+                    request = request.decode(Drawable::class.java)
                 }
                 request
             }

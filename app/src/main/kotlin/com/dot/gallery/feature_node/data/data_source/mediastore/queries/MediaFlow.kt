@@ -163,9 +163,9 @@ class MediaFlow(
         var i = 0
 
         val id = it.getLong(indexCache[i++])
-        val path = it.getString(indexCache[i++])
-        val relativePath = it.getString(indexCache[i++])
-        val title = it.getString(indexCache[i++])
+        val path = it.tryGetString(indexCache[i++]).orEmpty()
+        val relativePath = it.tryGetString(indexCache[i++]).orEmpty()
+        val title = it.tryGetString(indexCache[i++]).orEmpty()
         val albumID = it.getLong(indexCache[i++])
         val albumLabel = it.tryGetString(indexCache[i++], Build.MODEL)
         val takenTimestamp = it.tryGetLong(indexCache[i++])
@@ -173,7 +173,7 @@ class MediaFlow(
         val modifiedTimestamp = it.getLong(indexCache[i++])
         val duration = it.tryGetString(indexCache[i++])
         val size = it.getLong(indexCache[i++])
-        val mimeType = it.getString(indexCache[i++])
+        val mimeType = it.tryGetString(indexCache[i++]).orEmpty()
         // IS_FAVORITE and IS_TRASHED are only available on API 30+
         val isFavorite = if (SdkCompat.supportsFavorites) it.getInt(indexCache[i++]) else 0
         val isTrashAlbum = buckedId == MediaStoreBuckets.MEDIA_STORE_BUCKET_TRASH.id

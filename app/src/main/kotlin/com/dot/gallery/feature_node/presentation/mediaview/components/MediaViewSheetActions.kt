@@ -20,8 +20,10 @@ import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.Collections
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.CopyAll
+import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.MovieCreation
 import androidx.compose.material.icons.outlined.Restore
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Icon
@@ -47,6 +49,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.dot.gallery.R
+import com.dot.gallery.core.LocalMediaHandler
 import com.dot.gallery.core.Settings
 import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
 import com.dot.gallery.core.util.SdkCompat
@@ -57,15 +60,18 @@ import com.dot.gallery.feature_node.domain.model.Vault
 import com.dot.gallery.feature_node.domain.model.VaultState
 import com.dot.gallery.feature_node.domain.util.canMakeActions
 import com.dot.gallery.feature_node.domain.util.getUri
+import com.dot.gallery.feature_node.domain.util.isCloud
 import com.dot.gallery.feature_node.domain.util.isEncrypted
 import com.dot.gallery.feature_node.domain.util.isImage
 import com.dot.gallery.feature_node.domain.util.isLocalContent
 import com.dot.gallery.feature_node.domain.util.isVideo
+import com.dot.gallery.feature_node.domain.util.MotionPhotoHelper
 import com.dot.gallery.feature_node.presentation.collection.CollectionViewModel
 import com.dot.gallery.feature_node.presentation.collection.components.AddToCollectionSheet
 import com.dot.gallery.feature_node.presentation.exif.CopyMediaSheet
 import com.dot.gallery.feature_node.presentation.exif.MoveMediaSheet
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
+import com.dot.gallery.feature_node.presentation.util.hazeEffectScaled
 import com.dot.gallery.feature_node.presentation.util.copyEncryptedMediaToClipboard
 import com.dot.gallery.feature_node.presentation.util.copyMediaToClipboard
 import com.dot.gallery.feature_node.presentation.util.launchEditImageIntent
@@ -78,8 +84,8 @@ import com.dot.gallery.feature_node.presentation.util.shareEncryptedMedia
 import com.dot.gallery.feature_node.presentation.util.shareMedia
 import com.dot.gallery.feature_node.presentation.vault.VaultViewModel
 import com.dot.gallery.feature_node.presentation.vault.components.AddToVaultSheet
+import com.dot.gallery.feature_node.presentation.vault.components.ConfirmationSheet
 import com.dot.gallery.feature_node.presentation.vault.components.SelectVaultSheet
-import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlinx.coroutines.Dispatchers
@@ -99,6 +105,7 @@ fun <T : Media> MediaViewSheetActions(
 
     // Sheet states for complex actions
     val hideSheetState = rememberAppBottomSheetState()
+    val restoreConfirmState = rememberAppBottomSheetState()
     val copySheetState = rememberAppBottomSheetState()
     val moveSheetState = rememberAppBottomSheetState()
     var showCollectionSheet by rememberSaveable { mutableStateOf(false) }
@@ -116,13 +123,32 @@ fun <T : Media> MediaViewSheetActions(
     val moveText = stringResource(R.string.move)
     val editText = stringResource(R.string.edit)
     val addToCollectionText = stringResource(R.string.add_to_collection)
+    val downloadText = stringResource(R.string.download)
+    val downloadingText = stringResource(R.string.downloading)
+    val downloadCompleteText = stringResource(R.string.download_complete)
+    val downloadFailedText = stringResource(R.string.download_failed)
+    val exportVideoText = stringResource(R.string.motion_photo_export_video)
+    val exportingText = stringResource(R.string.motion_photo_exporting)
+    val exportSuccessText = stringResource(R.string.motion_photo_export_success)
+    val exportFailedText = stringResource(R.string.motion_photo_export_failed)
+    val handler = LocalMediaHandler.current
     // Lazily create a single KeychainHolder for encrypted operations
     val keychainHolder = remember(currentVault) {
         if (currentVault != null) lazy { KeychainHolder(context) } else null
     }
 
+    // Detect Motion Photo (embedded video) to offer a "Save as video" export
+    var isMotionPhoto by remember(media) { mutableStateOf(false) }
+    LaunchedEffect(media) {
+        isMotionPhoto = if (!media.isEncrypted && !media.isCloud && media.isImage) {
+            withContext(Dispatchers.IO) {
+                MotionPhotoHelper.parseInfo(context, media.getUri()) != null
+            }
+        } else false
+    }
+
     // Build action list
-    val actions = remember(media, albumsState.value, vaults.value, currentVault) {
+    val actions = remember(media, albumsState.value, vaults.value, currentVault, isMotionPhoto) {
         buildList<ActionGridItem> {
             // Share
             add(ActionGridItem(
@@ -143,22 +169,29 @@ fun <T : Media> MediaViewSheetActions(
                 icon = Icons.Outlined.ContentCopy,
                 text = copyToClipboardText,
                 onClick = {
-                    if (media.isEncrypted && currentVault != null && keychainHolder != null) {
-                        scope.launch {
+                    scope.launch {
+                        if (media.isEncrypted && currentVault != null && keychainHolder != null) {
                             context.copyEncryptedMediaToClipboard(media, keychainHolder.value)
+                        } else {
+                            context.copyMediaToClipboard(media)
                         }
-                    } else {
-                        context.copyMediaToClipboard(media)
                     }
                 }
             ))
             // Hide
             if (media.isLocalContent) {
+                val noVaults = vaults.value.vaults.isEmpty()
+                val createFirstText = context.getString(R.string.vault_create_first)
                 add(ActionGridItem(
                     icon = Icons.Outlined.Lock,
                     text = hideText,
-                    enabled = vaults.value.vaults.isNotEmpty(),
-                    onClick = { scope.launch { hideSheetState.show() } }
+                    onClick = {
+                        if (noVaults) {
+                            Toast.makeText(context, createFirstText, Toast.LENGTH_SHORT).show()
+                        } else {
+                            scope.launch { hideSheetState.show() }
+                        }
+                    }
                 ))
             }
             // Restore
@@ -166,7 +199,7 @@ fun <T : Media> MediaViewSheetActions(
                 add(ActionGridItem(
                     icon = Icons.Outlined.Restore,
                     text = restoreText,
-                    onClick = { scope.launch { restoreMedia(currentVault, media) {} } }
+                    onClick = { scope.launch { restoreConfirmState.show() } }
                 ))
             }
             // Open As / Use As
@@ -180,6 +213,28 @@ fun <T : Media> MediaViewSheetActions(
                     }
                 }
             ))
+            // Save Motion Photo embedded video as a standalone file
+            if (isMotionPhoto) {
+                add(ActionGridItem(
+                    icon = Icons.Outlined.MovieCreation,
+                    text = exportVideoText,
+                    onClick = {
+                        scope.launch {
+                            Toast.makeText(context, exportingText, Toast.LENGTH_SHORT).show()
+                            val saved = MotionPhotoHelper.saveVideoToGallery(
+                                context = context,
+                                uri = media.getUri(),
+                                sourceLabel = media.label
+                            )
+                            Toast.makeText(
+                                context,
+                                if (saved != null) exportSuccessText else exportFailedText,
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                ))
+            }
             // Copy & Move
             if (albumsState.value.albums.isNotEmpty() && media.canMakeActions) {
                 add(ActionGridItem(
@@ -203,10 +258,10 @@ fun <T : Media> MediaViewSheetActions(
                             try {
                                 context.launchEditImageIntent(defaultEditor, media.getUri())
                             } catch (_: Exception) {
-                                context.launchEditIntent(media)
+                                scope.launch { context.launchEditIntent(media) }
                             }
                         } else {
-                            context.launchEditIntent(media)
+                            scope.launch { context.launchEditIntent(media) }
                         }
                     }
                 ))
@@ -217,6 +272,25 @@ fun <T : Media> MediaViewSheetActions(
                     icon = Icons.Outlined.Collections,
                     text = addToCollectionText,
                     onClick = { showCollectionSheet = true }
+                ))
+            }
+            // Download (cloud only)
+            if (media.isCloud) {
+                add(ActionGridItem(
+                    icon = Icons.Outlined.Download,
+                    text = downloadText,
+                    onClick = {
+                        scope.launch {
+                            Toast.makeText(context, downloadingText, Toast.LENGTH_SHORT).show()
+                            val result = handler.downloadCloudMedia(listOf(media))
+                            val count = result.getOrDefault(0)
+                            if (count > 0) {
+                                Toast.makeText(context, downloadCompleteText, Toast.LENGTH_SHORT).show()
+                            } else {
+                                Toast.makeText(context, downloadFailedText, Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
                 ))
             }
         }
@@ -249,6 +323,18 @@ fun <T : Media> MediaViewSheetActions(
     }
 
     // --- Complex action sheets ---
+
+    // Restore confirmation
+    if (media.isEncrypted && restoreMedia != null && currentVault != null) {
+        ConfirmationSheet(
+            state = restoreConfirmState,
+            title = stringResource(R.string.vault_confirm_restore_title),
+            summary = stringResource(R.string.vault_confirm_restore_summary),
+            onConfirm = {
+                scope.launch { restoreMedia(currentVault, media) {} }
+            }
+        )
+    }
 
     // Hide (vault selection)
     if (media.isLocalContent) {
@@ -393,7 +479,7 @@ private fun ActionGridCell(
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))
             .then(backgroundModifier)
-            .hazeEffect(
+            .hazeEffectScaled(
                 state = LocalHazeState.current,
                 style = hazeStyle
             )
