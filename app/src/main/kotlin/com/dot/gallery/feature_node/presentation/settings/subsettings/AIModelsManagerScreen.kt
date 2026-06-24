@@ -58,6 +58,17 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.border
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
@@ -199,6 +210,12 @@ fun AIModelsManagerScreen(
                         modifier = Modifier.weight(1f).fillMaxHeight()
                     ) {
                         CategoriesPreview()
+                    }
+                    FeaturePreviewCard(
+                        label = stringResource(R.string.ai_models_feature_cutout),
+                        modifier = Modifier.weight(1f).fillMaxHeight()
+                    ) {
+                        CutoutPreview()
                     }
                 }
             }
@@ -479,5 +496,64 @@ private fun MiniCategoryCard(
                 maxLines = 1
             )
         }
+    }
+}
+
+@Composable
+private fun CutoutPreview() {
+    val checkerLight = Color.LightGray.copy(alpha = 0.2f)
+    val checkerDark = Color.LightGray.copy(alpha = 0.4f)
+    val shapeColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.8f)
+    val dotColor = Color(0xFF4CAF50)
+
+    val infiniteTransition = rememberInfiniteTransition(label = "glowTransitionPreview")
+    val glowRadius by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 4f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "glowRadiusPreview"
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .drawBehind {
+                // Draw checkerboard background
+                val sizeVal = 8.dp.toPx()
+                val cols = (size.width / sizeVal).toInt() + 1
+                val rows = (size.height / sizeVal).toInt() + 1
+                for (r in 0 until rows) {
+                    for (c in 0 until cols) {
+                        val color = if ((r + c) % 2 == 0) checkerLight else checkerDark
+                        drawRect(
+                            color = color,
+                            topLeft = Offset(c * sizeVal, r * sizeVal),
+                            size = androidx.compose.ui.geometry.Size(sizeVal, sizeVal)
+                        )
+                    }
+                }
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        // Draw subject (a circle representing a person/object) with white glow border
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .background(shapeColor, shape = CircleShape)
+                .border(glowRadius.dp, Color.White, shape = CircleShape)
+                .shadow(2.dp, shape = CircleShape)
+        )
+        // Draw the prompt point marker (green dot)
+        Box(
+            modifier = Modifier
+                .size(8.dp)
+                .background(dotColor, shape = CircleShape)
+                .border(1.dp, Color.White, shape = CircleShape)
+        )
     }
 }

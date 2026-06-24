@@ -403,6 +403,7 @@ fun <T : Media> MediaViewScreen(
     val showInfo by rememberedDerivedState { currentMedia?.trashed == 0 && !isReadOnly }
 
     var showUI by rememberSaveable { mutableStateOf(true) }
+    var isCutoutActive by rememberSaveable { mutableStateOf(false) }
     var isTopDark by remember { mutableStateOf(false) }
     var isBottomDark by remember { mutableStateOf(false) }
     val autoContrast by rememberAutoContrast()
@@ -765,7 +766,17 @@ fun <T : Media> MediaViewScreen(
                                         windowInsetsController.toggleSystemBars(showUI)
                                     }
                                 },
-                                onZoomChange = { zoomed -> isVideoZoomed = zoomed }
+                                onZoomChange = { zoomed -> isVideoZoomed = zoomed },
+                                onCutoutStateChanged = { active ->
+                                    isCutoutActive = active
+                                    if (active) {
+                                        showUI = false
+                                        windowInsetsController.toggleSystemBars(show = false)
+                                    } else {
+                                        showUI = true
+                                        windowInsetsController.toggleSystemBars(show = true)
+                                    }
+                                }
                             ) { player, isPlaying, currentTime, totalTime, buffer, frameRate, subtitleState ->
                                 val subtitleTracks = subtitleState.subtitleTracks
                                 val onSelectSubtitle = subtitleState.onSelectSubtitle
@@ -1242,15 +1253,16 @@ fun <T : Media> MediaViewScreen(
                 animationSpec = tween(DEFAULT_TOP_BAR_ANIMATION_DURATION),
                 label = "MediaViewActionsAlpha"
             )
-            BottomSheet(
-                state = sheetState,
-                enabled = showUI && target != TARGET_TRASH && showInfo,
-                modifier = Modifier
-                    .graphicsLayer {
-                        alpha = bottomSheetAlpha
-                    }
-                    .fillMaxWidth()
-            ) {
+            if (!isCutoutActive) {
+                BottomSheet(
+                    state = sheetState,
+                    enabled = showUI && target != TARGET_TRASH && showInfo,
+                    modifier = Modifier
+                        .graphicsLayer {
+                            alpha = bottomSheetAlpha
+                        }
+                        .fillMaxWidth()
+                ) {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -1353,6 +1365,7 @@ fun <T : Media> MediaViewScreen(
                         motionPhotoState = motionPhotoState,
                     )
                 }
+            }
             }
         }
     }

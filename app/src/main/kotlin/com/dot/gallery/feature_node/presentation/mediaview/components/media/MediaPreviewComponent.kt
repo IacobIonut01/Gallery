@@ -48,6 +48,7 @@ fun <T : Media> MediaPreviewComponent(
     motionPhotoState: MotionPhotoState? = null,
     currentVault: Vault? = null,
     onZoomChange: (Boolean) -> Unit = {},
+    onCutoutStateChanged: (Boolean) -> Unit = {},
     videoController: @Composable (ExoPlayer, MutableState<Boolean>, MutableLongState, Long, Int, Float, VideoControllerState) -> Unit,
 ) {
     AnimatedVisibility(
@@ -101,7 +102,8 @@ fun <T : Media> MediaPreviewComponent(
                         rotationDisabled = rotationDisabled,
                         onImageRotated = onImageRotated,
                         onItemClick = onItemClick,
-                        onSwipeDown = onSwipeDown
+                        onSwipeDown = onSwipeDown,
+                        onCutoutStateChanged = onCutoutStateChanged
                     )
                 }
 

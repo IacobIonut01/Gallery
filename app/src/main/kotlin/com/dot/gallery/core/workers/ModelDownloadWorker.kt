@@ -84,7 +84,12 @@ class ModelDownloadWorker @AssistedInject constructor(
                     fileSizes[fileName] = destFile.length()
                 } else {
                     try {
-                        val conn = URL("${ModelManager.BASE_DOWNLOAD_URL}$fileName").openConnection() as HttpURLConnection
+                        val fileUrl = when (fileName) {
+                            "mobile_sam_image_encoder.onnx" -> "https://huggingface.co/Acly/MobileSAM/resolve/main/mobile_sam_image_encoder.onnx"
+                            "sam_mask_decoder_single.onnx" -> "https://huggingface.co/Acly/MobileSAM/resolve/main/sam_mask_decoder_single.onnx"
+                            else -> "${ModelManager.BASE_DOWNLOAD_URL}$fileName"
+                        }
+                        val conn = URL(fileUrl).openConnection() as HttpURLConnection
                         conn.requestMethod = "HEAD"
                         conn.connectTimeout = 15_000
                         conn.connect()
@@ -118,7 +123,11 @@ class ModelDownloadWorker @AssistedInject constructor(
                     return@forEach
                 }
 
-                val url = "${ModelManager.BASE_DOWNLOAD_URL}$fileName"
+                val url = when (fileName) {
+                    "mobile_sam_image_encoder.onnx" -> "https://huggingface.co/Acly/MobileSAM/resolve/main/mobile_sam_image_encoder.onnx"
+                    "sam_mask_decoder_single.onnx" -> "https://huggingface.co/Acly/MobileSAM/resolve/main/sam_mask_decoder_single.onnx"
+                    else -> "${ModelManager.BASE_DOWNLOAD_URL}$fileName"
+                }
                 val tempFile = File(modelsDir, "$fileName.tmp")
 
                 try {
@@ -280,8 +289,8 @@ class ModelDownloadWorker @AssistedInject constructor(
         const val CHANNEL_ID = "model_download"
         const val NOTIFICATION_ID = 42042
 
-        // ~200 MB to be safe (models are ~147 MB but we need temp space)
-        const val MINIMUM_REQUIRED_BYTES = 200L * 1024 * 1024
+        // ~150 MB to be safe (models are ~80 MB but we need temp space)
+        const val MINIMUM_REQUIRED_BYTES = 150L * 1024 * 1024
     }
 }
 

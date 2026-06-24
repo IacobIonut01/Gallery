@@ -339,13 +339,14 @@
     <string name="ai_models_delete_confirm">Are you sure you want to delete the AI models? You will need to download them again to use AI features.</string>
     <string name="ai_models_size">Model size: %s</string>
     <string name="ai_models_unavailable">Unavailable — Requires AI Models Feature</string>
-    <string name="ai_models_description">AI models enable intelligent image search and automatic media classification. The app uses CLIP (Contrastive Language-Image Pretraining) models in ONNX format to understand the content of your photos.</string>
+    <string name="ai_models_description">AI models enable intelligent image search, automatic media classification, and interactive subject cutout extraction. The app uses CLIP (Contrastive Language-Image Pretraining) and MobileSAM (Segment Anything) models in ONNX format to understand the content of your photos and segment subjects.</string>
     <string name="ai_models_privacy_description">All AI processing is performed entirely on your device. No images, search queries, or classification data ever leave your phone. The models run locally using ONNX Runtime and do not require an internet connection once downloaded. Your media remains fully private.</string>
     <string name="ai_models_source">Source</string>
     <string name="ai_models_source_url">github.com/IacobIonut01/ReFra</string>
     <string name="ai_models_files">Model Files</string>
     <string name="ai_models_feature_search">Search by Description</string>
     <string name="ai_models_feature_categories">Automatic Categories</string>
+    <string name="ai_models_feature_cutout">Subject Cutout</string>
 
     <!-- New Category System -->
     <string name="add_category">Add category</string>

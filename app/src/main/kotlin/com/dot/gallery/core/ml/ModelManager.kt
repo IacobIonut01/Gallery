@@ -105,6 +105,12 @@ class ModelManager @Inject constructor(
 
             if (BuildConfig.ML_MODELS_BUNDLED) {
                 copyBundledModels()
+                if (checkModelsPresent()) {
+                    _status.value = ModelStatus.READY
+                } else {
+                    _status.value = ModelStatus.NOT_INSTALLED
+                    printInfo("ModelManager: Bundled models copy pass completed, but some required models are missing (will download on-demand)")
+                }
             } else {
                 _status.value = ModelStatus.NOT_INSTALLED
                 printInfo("ModelManager: Models not installed (noML build)")
@@ -236,17 +242,21 @@ class ModelManager @Inject constructor(
             REQUIRED_FILES.forEachIndexed { index, fileName ->
                 val destFile = File(modelsDir, fileName)
                 if (!destFile.exists() || destFile.length() == 0L) {
-                    printDebug("ModelManager: Copying asset $fileName to filesDir")
-                    assetManager.open(fileName).use { input ->
-                        destFile.outputStream().use { output ->
-                            input.copyTo(output, bufferSize = 65536)
+                    try {
+                        printDebug("ModelManager: Copying asset $fileName to filesDir")
+                        assetManager.open(fileName).use { input ->
+                            destFile.outputStream().use { output ->
+                                input.copyTo(output, bufferSize = 65536)
+                            }
                         }
+                    } catch (e: java.io.FileNotFoundException) {
+                        printWarning("ModelManager: Bundled asset $fileName not found in assets, skipping copy.")
                     }
                 }
                 _downloadProgress.value = ((index + 1).toFloat() / totalFiles) * 100f
             }
             _status.value = ModelStatus.READY
-            printInfo("ModelManager: Bundled models copied to filesDir")
+            printInfo("ModelManager: Bundled models copy pass completed")
         } catch (e: Exception) {
             _status.value = ModelStatus.ERROR
             _errorMessage.value = "Failed to copy bundled models: ${e.message}"
@@ -261,7 +271,9 @@ class ModelManager @Inject constructor(
             "visual_quant.onnx",
             "textual_quant.onnx",
             "vocab.json",
-            "merges.txt"
+            "merges.txt",
+            "mobile_sam_image_encoder.onnx",
+            "sam_mask_decoder_single.onnx"
         )
 
         const val BASE_DOWNLOAD_URL =
@@ -271,7 +283,9 @@ class ModelManager @Inject constructor(
             "visual_quant.onnx" to "a2fbb26b5f6ab5c79dd9bf99ab2dbac4711abc88dc2e20afc02a0827aa3d59c2",
             "textual_quant.onnx" to "1ebb71a5ea1897823a829af8fc8168c5cfff761969bb62aee1fafdf5a2788aba",
             "vocab.json" to "e089ad92ba36837a0d31433e555c8f45fe601ab5c221d4f607ded32d9f7a4349",
-            "merges.txt" to "9fd691f7c8039210e0fced15865466c65820d09b63988b0174bfe25de299051a"
+            "merges.txt" to "9fd691f7c8039210e0fced15865466c65820d09b63988b0174bfe25de299051a",
+            "mobile_sam_image_encoder.onnx" to "580f5fb648ea1062c0aabc26217aed56921985f03f0cbbd852bba81d760cc749",
+            "sam_mask_decoder_single.onnx" to "93915fc7c993ab9d59ab8c9ccd3bce37f7509c81ab4150a74abd4d2abdd8570d"
         )
     }
 }

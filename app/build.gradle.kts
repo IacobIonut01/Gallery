@@ -45,6 +45,20 @@ apkVersioning {
     variables.put("suffix", offlineSuffix)
 }
 
+val copySegmentModelsTask = tasks.register<Copy>("copySegmentModels") {
+    from(file("../ml-models/segment")) {
+        include("mobile_sam_image_encoder.onnx")
+        include("sam_mask_decoder_single.onnx")
+    }
+    into(layout.buildDirectory.dir("generated/assets/ml-models"))
+}
+
+tasks.configureEach {
+    if (name.contains("merge", ignoreCase = true) && name.contains("Assets", ignoreCase = true)) {
+        dependsOn(copySegmentModelsTask)
+    }
+}
+
 android {
     namespace = "com.dot.gallery"
     compileSdk = 37
@@ -207,7 +221,10 @@ android {
         }
         if (!isBundleBuild) {
             maybeCreate("WithML").apply {
-                assets.srcDirs("../ml-models/src/main/assets")
+                assets.srcDirs(
+                    "../ml-models/src/main/assets",
+                    "${layout.buildDirectory.get().asFile}/generated/assets/ml-models"
+                )
             }
         }
     }
