@@ -382,41 +382,47 @@ fun <T : Media> ZoomablePagerImage(
                 if (!cutoutState.isActive && !cutoutState.isProcessing) {
                     scope.launch {
                         cutoutState.isProcessing = true
-                        feedbackManager.vibrate()
-                        val contentPoint = zoomState.zoomable.touchPointToContentPoint(offset)
+                        try {
+                            feedbackManager.vibrate()
+                            val contentPoint = zoomState.zoomable.touchPointToContentPoint(offset)
 
-                        val session = CutoutHelper.CutoutSession(context, media, modelManager)
-                        val initOk = session.initAndRunEncoder()
+                            val session = CutoutHelper.CutoutSession(context, media, modelManager)
+                            val initOk = session.initAndRunEncoder()
 
-                        if (initOk) {
-                            val contentSize = zoomState.zoomable.contentSize
-                            val scaleX = if (contentSize.width > 0) session.widthOrig.toFloat() / contentSize.width.toFloat() else 1f
-                            val scaleY = if (contentSize.height > 0) session.heightOrig.toFloat() / contentSize.height.toFloat() else 1f
+                            if (initOk) {
+                                val contentSize = zoomState.zoomable.contentSize
+                                val scaleX = if (contentSize.width > 0) session.widthOrig.toFloat() / contentSize.width.toFloat() else 1f
+                                val scaleY = if (contentSize.height > 0) session.heightOrig.toFloat() / contentSize.height.toFloat() else 1f
 
-                            val scaledX = contentPoint.x * scaleX
-                            val scaledY = contentPoint.y * scaleY
+                                val scaledX = contentPoint.x * scaleX
+                                val scaledY = contentPoint.y * scaleY
 
-                            val initialPoint = CutoutHelper.PromptPoint(
-                                x = scaledX,
-                                y = scaledY,
-                                isPositive = true
-                            )
-                            val pointsList = listOf(initialPoint)
-                            cutoutState.initSession(session, pointsList)
+                                val initialPoint = CutoutHelper.PromptPoint(
+                                    x = scaledX,
+                                    y = scaledY,
+                                    isPositive = true
+                                )
+                                val pointsList = listOf(initialPoint)
+                                val result = session.runDecoder(pointsList)
 
-                            val result = session.runDecoder(pointsList)
-                            if (result != null) {
-                                feedbackManager.vibrate()
-                                cutoutState.updateResult(result, null)
+                                if (result != null) {
+                                    // Only hoist session into state once we have a valid mask
+                                    cutoutState.initSession(session, pointsList)
+                                    feedbackManager.vibrate()
+                                    cutoutState.updateResult(result, null)
+                                } else {
+                                    // No mask found — clean up without touching cutoutState
+                                    session.close()
+                                    Toast.makeText(context, context.getString(R.string.cutout_no_object), Toast.LENGTH_SHORT).show()
+                                }
                             } else {
-                                cutoutState.dismiss()
-                                Toast.makeText(context, context.getString(R.string.cutout_no_object), Toast.LENGTH_SHORT).show()
+                                session.close()
+                                Toast.makeText(context, context.getString(R.string.cutout_init_failed), Toast.LENGTH_SHORT).show()
                             }
-                        } else {
-                            session.close()
-                            Toast.makeText(context, context.getString(R.string.cutout_init_failed), Toast.LENGTH_SHORT).show()
+                        } finally {
+                            // Always reset — even on OOM, ONNX crash, or coroutine cancellation
+                            cutoutState.isProcessing = false
                         }
-                        cutoutState.isProcessing = false
                     }
                 }
             },
