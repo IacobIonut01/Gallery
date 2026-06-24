@@ -15,6 +15,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
+import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
@@ -25,6 +26,7 @@ import android.os.PersistableBundle
 import android.widget.Toast
 import androidx.core.content.FileProvider
 import androidx.core.app.ShareCompat
+import androidx.exifinterface.media.ExifInterface
 import com.dot.gallery.BuildConfig
 import com.dot.gallery.R
 import com.dot.gallery.core.util.SdkCompat
@@ -118,14 +120,64 @@ object CutoutHelper {
                     context.resolveShareableUri(media)
                 }
 
-                context.contentResolver.openInputStream(uri)?.use { stream ->
-                    originalBitmap = BitmapFactory.decodeStream(stream)
+                var orientation = ExifInterface.ORIENTATION_NORMAL
+                try {
+                    context.contentResolver.openInputStream(uri)?.use { stream ->
+                        val exifInterface = ExifInterface(stream)
+                        orientation = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
 
+                val options = BitmapFactory.Options().apply {
+                    inJustDecodeBounds = true
+                }
+                context.contentResolver.openInputStream(uri)?.use { stream ->
+                    BitmapFactory.decodeStream(stream, null, options)
+                }
+
+                var inSampleSize = 1
+                if (options.outWidth > 0 && options.outHeight > 0) {
+                    val maxDim = maxOf(options.outWidth, options.outHeight)
+                    while (maxDim / inSampleSize > 4096) {
+                        inSampleSize *= 2
+                    }
+                }
+
+                val decodeOptions = BitmapFactory.Options().apply {
+                    this.inSampleSize = inSampleSize
+                }
+                val rawBitmap = context.contentResolver.openInputStream(uri)?.use { stream ->
+                    BitmapFactory.decodeStream(stream, null, decodeOptions)
+                }
+
+                val rotatedBitmap = if (rawBitmap != null) {
+                    val degrees = when (orientation) {
+                        ExifInterface.ORIENTATION_ROTATE_90 -> 90
+                        ExifInterface.ORIENTATION_ROTATE_180 -> 180
+                        ExifInterface.ORIENTATION_ROTATE_270 -> 270
+                        else -> 0
+                    }
+                    if (degrees != 0) {
+                        val matrix = Matrix().apply { postRotate(degrees.toFloat()) }
+                        val rotated = Bitmap.createBitmap(rawBitmap, 0, 0, rawBitmap.width, rawBitmap.height, matrix, true)
+                        if (rotated != rawBitmap) {
+                            rawBitmap.recycle()
+                        }
+                        rotated
+                    } else {
+                        rawBitmap
+                    }
+                } else {
+                    null
+                }
+
+                originalBitmap = rotatedBitmap
                 val orig = originalBitmap ?: return@withContext false
                 widthOrig = orig.width
                 heightOrig = orig.height
-                printInfo("CutoutSession: Loaded original image: ${widthOrig}x${heightOrig}")
+                printInfo("CutoutSession: Loaded original image (sampleSize $inSampleSize): ${widthOrig}x${heightOrig}")
 
                 // 2. Preprocess SAM image (Aspect-ratio preserved scaling + top-left padding)
                 scaleSam = 1024f / maxOf(widthOrig, heightOrig)
@@ -160,9 +212,13 @@ object CutoutHelper {
                 }
 
                 printInfo("CutoutSession: Creating OrtSessions...")
-                val modelsDir = modelManager.modelsDir
-                encoderSession = env.createSession(File(modelsDir, "mobile_sam_image_encoder.onnx").absolutePath, cpuOptions)
-                decoderSession = env.createSession(File(modelsDir, "sam_mask_decoder_single.onnx").absolutePath, cpuOptions)
+                try {
+                    val modelsDir = modelManager.modelsDir
+                    encoderSession = env.createSession(File(modelsDir, "mobile_sam_image_encoder.onnx").absolutePath, cpuOptions)
+                    decoderSession = env.createSession(File(modelsDir, "sam_mask_decoder_single.onnx").absolutePath, cpuOptions)
+                } finally {
+                    cpuOptions.close()
+                }
 
                 // 4. Run SAM Encoder
                 val inputTensor = OnnxTensor.createTensor(env, FloatBuffer.wrap(inputBuffer), longArrayOf(1024, 1024, 3))
@@ -227,98 +283,95 @@ object CutoutHelper {
                     Triple(coords, labels, numPoints)
                 }
 
-                // Create OnnxTensors
-                val pointCoordsTensor = OnnxTensor.createTensor(env, FloatBuffer.wrap(coordsArray), longArrayOf(1, finalN.toLong(), 2))
-                val pointLabelsTensor = OnnxTensor.createTensor(env, FloatBuffer.wrap(labelsArray), longArrayOf(1, finalN.toLong()))
+                // Create OnnxTensors and ensure they are all closed correctly via .use
+                OnnxTensor.createTensor(env, FloatBuffer.wrap(coordsArray), longArrayOf(1, finalN.toLong(), 2)).use { pointCoordsTensor ->
+                    OnnxTensor.createTensor(env, FloatBuffer.wrap(labelsArray), longArrayOf(1, finalN.toLong())).use { pointLabelsTensor ->
+                        OnnxTensor.createTensor(env, FloatBuffer.wrap(FloatArray(256 * 256)), longArrayOf(1, 1, 256, 256)).use { maskInputTensor ->
+                            OnnxTensor.createTensor(env, floatArrayOf(0.0f)).use { hasMaskInputTensor ->
+                                OnnxTensor.createTensor(env, floatArrayOf(heightOrig.toFloat(), widthOrig.toFloat())).use { origImSizeTensor ->
+                                    val inputs = mapOf(
+                                        "image_embeddings" to embeddings,
+                                        "point_coords" to pointCoordsTensor,
+                                        "point_labels" to pointLabelsTensor,
+                                        "mask_input" to maskInputTensor,
+                                        "has_mask_input" to hasMaskInputTensor,
+                                        "orig_im_size" to origImSizeTensor
+                                    )
 
-                val maskInputTensor = OnnxTensor.createTensor(env, FloatBuffer.wrap(FloatArray(256 * 256)), longArrayOf(1, 1, 256, 256))
-                val hasMaskInputTensor = OnnxTensor.createTensor(env, floatArrayOf(0.0f))
-                val origImSizeTensor = OnnxTensor.createTensor(env, floatArrayOf(heightOrig.toFloat(), widthOrig.toFloat()))
+                                    decoder.run(inputs).use { result ->
+                                        (result.get(0) as OnnxTensor).use { masksTensor ->
+                                            val buffer = masksTensor.floatBuffer
 
-                val inputs = mapOf(
-                    "image_embeddings" to embeddings,
-                    "point_coords" to pointCoordsTensor,
-                    "point_labels" to pointLabelsTensor,
-                    "mask_input" to maskInputTensor,
-                    "has_mask_input" to hasMaskInputTensor,
-                    "orig_im_size" to origImSizeTensor
-                )
+                                            // Find bounding box of SAM mask (logit > 0.0f)
+                                            var minX = widthOrig
+                                            var maxX = -1
+                                            var minY = heightOrig
+                                            var maxY = -1
 
-                val result = decoder.run(inputs)
-                val masksTensor = result.get(0) as OnnxTensor
-                val buffer = masksTensor.floatBuffer
+                                            buffer.rewind()
+                                            for (y in 0 until heightOrig) {
+                                                for (x in 0 until widthOrig) {
+                                                    val logit = buffer.get(y * widthOrig + x)
+                                                    if (logit > 0.0f) {
+                                                        if (x < minX) minX = x
+                                                        if (x > maxX) maxX = x
+                                                        if (y < minY) minY = y
+                                                        if (y > maxY) maxY = y
+                                                    }
+                                                }
+                                            }
 
-                // Find bounding box of SAM mask (logit > 0.0f)
-                var minX = widthOrig
-                var maxX = -1
-                var minY = heightOrig
-                var maxY = -1
+                                            if (maxX == -1 || maxY == -1) return@withContext null
 
-                buffer.rewind()
-                for (y in 0 until heightOrig) {
-                    for (x in 0 until widthOrig) {
-                        val logit = buffer.get(y * widthOrig + x)
-                        if (logit > 0.0f) {
-                            if (x < minX) minX = x
-                            if (x > maxX) maxX = x
-                            if (y < minY) minY = y
-                            if (y > maxY) maxY = y
+                                            val bw = maxX - minX + 1
+                                            val bh = maxY - minY + 1
+
+                                            val orig = originalBitmap ?: return@withContext null
+                                            val cutoutBitmap = Bitmap.createBitmap(bw, bh, Bitmap.Config.ARGB_8888)
+                                            val originalPixels = IntArray(bw * bh)
+                                            orig.getPixels(originalPixels, 0, bw, minX, minY, bw, bh)
+
+                                            // Refinement - Extract binary mask, apply box blur and contrast LUT remapping
+                                            val maskPixels = IntArray(bw * bh)
+                                            for (y in 0 until bh) {
+                                                for (x in 0 until bw) {
+                                                    val logit = buffer.get((minY + y) * widthOrig + (minX + x))
+                                                    val alpha = if (logit > 0.0f) 255 else 0
+                                                    maskPixels[y * bw + x] = (alpha shl 24) or 0x00FFFFFF
+                                                }
+                                            }
+
+                                            refineMask(maskPixels, bw, bh, points, minX, minY)
+
+                                            val maxDim = maxOf(bw, bh)
+                                            val blurR = Math.round(maxDim * 0.005f).coerceIn(1, 8)
+                                            boxBlur(maskPixels, bw, bh, blurR)
+
+                                            val cutoutPixels = IntArray(bw * bh)
+                                            for (y in 0 until bh) {
+                                                for (x in 0 until bw) {
+                                                    val idx = y * bw + x
+                                                    val origColor = originalPixels[idx]
+                                                    val rawAlpha = (maskPixels[idx] shr 24) and 0xFF
+                                                    val remappedAlpha = (contrastLUT[rawAlpha] * 255f).toInt()
+                                                    cutoutPixels[idx] = (remappedAlpha shl 24) or (origColor and 0x00FFFFFF)
+                                                }
+                                            }
+                                            cutoutBitmap.setPixels(cutoutPixels, 0, bw, 0, 0, bw, bh)
+
+                                            val cutoutResult = CutoutResult(
+                                                bitmap = cutoutBitmap,
+                                                originalBounds = Rect(minX, minY, maxX + 1, maxY + 1)
+                                            )
+                                            lastCutoutResult = cutoutResult
+                                            cutoutResult
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
-
-                // Cleanup input tensors
-                pointCoordsTensor.close()
-                pointLabelsTensor.close()
-                maskInputTensor.close()
-                hasMaskInputTensor.close()
-                origImSizeTensor.close()
-                result.close()
-
-                if (maxX == -1 || maxY == -1) return@withContext null
-
-                val bw = maxX - minX + 1
-                val bh = maxY - minY + 1
-
-                val orig = originalBitmap ?: return@withContext null
-                val cutoutBitmap = Bitmap.createBitmap(bw, bh, Bitmap.Config.ARGB_8888)
-                val originalPixels = IntArray(bw * bh)
-                orig.getPixels(originalPixels, 0, bw, minX, minY, bw, bh)
-
-                // Refinement - Extract binary mask, apply box blur and contrast LUT remapping
-                val maskPixels = IntArray(bw * bh)
-                for (y in 0 until bh) {
-                    for (x in 0 until bw) {
-                        val logit = buffer.get((minY + y) * widthOrig + (minX + x))
-                        val alpha = if (logit > 0.0f) 255 else 0
-                        maskPixels[y * bw + x] = (alpha shl 24) or 0x00FFFFFF
-                    }
-                }
-
-                refineMask(maskPixels, bw, bh, points, minX, minY)
-
-                val maxDim = maxOf(bw, bh)
-                val blurR = Math.round(maxDim * 0.005f).coerceIn(1, 8)
-                boxBlur(maskPixels, bw, bh, blurR)
-
-                val cutoutPixels = IntArray(bw * bh)
-                for (y in 0 until bh) {
-                    for (x in 0 until bw) {
-                        val idx = y * bw + x
-                        val origColor = originalPixels[idx]
-                        val rawAlpha = (maskPixels[idx] shr 24) and 0xFF
-                        val remappedAlpha = (contrastLUT[rawAlpha] * 255f).toInt()
-                        cutoutPixels[idx] = (remappedAlpha shl 24) or (origColor and 0x00FFFFFF)
-                    }
-                }
-                cutoutBitmap.setPixels(cutoutPixels, 0, bw, 0, 0, bw, bh)
-
-                val cutoutResult = CutoutResult(
-                    bitmap = cutoutBitmap,
-                    originalBounds = Rect(minX, minY, maxX + 1, maxY + 1)
-                )
-                lastCutoutResult = cutoutResult
-                cutoutResult
             } catch (e: Exception) {
                 e.printStackTrace()
                 printError("CutoutSession: Error during SAM decoder inference: ${e.message}")
@@ -541,11 +594,24 @@ object CutoutHelper {
         }
     }
 
+    private fun cleanLegacyCacheFiles(context: Context) {
+        try {
+            context.cacheDir.listFiles()?.forEach { file ->
+                if (file.name.startsWith("cutout_") && file.name.endsWith(".png")) {
+                    file.delete()
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
     /**
      * Copy the cutout bitmap to the system clipboard as a transparent PNG.
      */
     suspend fun copyToClipboard(context: Context, bitmap: Bitmap) = withContext(Dispatchers.IO) {
         try {
+            cleanLegacyCacheFiles(context)
             val cacheFile = File(context.cacheDir, "cutout_${System.currentTimeMillis()}.png")
             FileOutputStream(cacheFile).use { out ->
                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
@@ -575,6 +641,7 @@ object CutoutHelper {
      */
     suspend fun shareCutout(context: Context, bitmap: Bitmap) = withContext(Dispatchers.IO) {
         try {
+            cleanLegacyCacheFiles(context)
             val cacheFile = File(context.cacheDir, "cutout_${System.currentTimeMillis()}.png")
             FileOutputStream(cacheFile).use { out ->
                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)

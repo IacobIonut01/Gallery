@@ -103,6 +103,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.DisposableEffect
 import android.graphics.Bitmap
 import androidx.compose.foundation.layout.width
@@ -291,6 +292,9 @@ fun <T : Media> ZoomablePagerImage(
     var activeTool by remember { mutableStateOf(ZoomablePagerImagePointTool.NONE) }
     var isRefining by remember { mutableStateOf(false) }
 
+    var processingCutout by remember { mutableStateOf(false) }
+    var cutoutResult by remember { mutableStateOf<CutoutHelper.CutoutResult?>(null) }
+
     val infiniteTransition = rememberInfiniteTransition(label = "glowTransition")
     val glowRadius by infiniteTransition.animateFloat(
         initialValue = 2f,
@@ -306,11 +310,19 @@ fun <T : Media> ZoomablePagerImage(
         onDispose {
             cutoutSession?.close()
             cutoutSession = null
+            cutoutResult?.bitmap?.recycle()
+            cutoutResult = null
         }
     }
 
-    var processingCutout by remember { mutableStateOf(false) }
-    var cutoutResult by remember { mutableStateOf<CutoutHelper.CutoutResult?>(null) }
+    BackHandler(enabled = cutoutSession != null) {
+        cutoutSession?.close()
+        cutoutSession = null
+        promptPoints = emptyList()
+        cutoutResult?.bitmap?.recycle()
+        cutoutResult = null
+        activeTool = ZoomablePagerImagePointTool.NONE
+    }
 
     LaunchedEffect(cutoutSession != null) {
         onCutoutStateChanged(cutoutSession != null)
@@ -360,6 +372,7 @@ fun <T : Media> ZoomablePagerImage(
                                 processingCutout = true
                                 val res = session.runDecoder(updatedPoints)
                                 if (res != null) {
+                                    cutoutResult?.bitmap?.recycle()
                                     cutoutResult = res
                                 }
                                 processingCutout = false
@@ -370,6 +383,7 @@ fun <T : Media> ZoomablePagerImage(
                         cutoutSession?.close()
                         cutoutSession = null
                         promptPoints = emptyList()
+                        cutoutResult?.bitmap?.recycle()
                         cutoutResult = null
                         activeTool = ZoomablePagerImagePointTool.NONE
                     }
@@ -409,6 +423,7 @@ fun <T : Media> ZoomablePagerImage(
                             val result = session.runDecoder(pointsList)
                             if (result != null) {
                                 feedbackManager.vibrate()
+                                cutoutResult?.bitmap?.recycle()
                                 cutoutResult = result
                             } else {
                                 session.close()
@@ -553,6 +568,7 @@ fun <T : Media> ZoomablePagerImage(
                             cutoutSession?.close()
                             cutoutSession = null
                             promptPoints = emptyList()
+                            cutoutResult?.bitmap?.recycle()
                             cutoutResult = null
                             activeTool = ZoomablePagerImagePointTool.NONE
                         }
@@ -570,6 +586,7 @@ fun <T : Media> ZoomablePagerImage(
                             cutoutSession?.close()
                             cutoutSession = null
                             promptPoints = emptyList()
+                            cutoutResult?.bitmap?.recycle()
                             cutoutResult = null
                             activeTool = ZoomablePagerImagePointTool.NONE
                         }
@@ -588,6 +605,7 @@ fun <T : Media> ZoomablePagerImage(
                         onReset = {
                             // Completely clear all points and stay in cutout mode
                             promptPoints = emptyList()
+                            cutoutResult?.bitmap?.recycle()
                             cutoutResult = null
                         }
                     )
