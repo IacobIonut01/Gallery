@@ -168,7 +168,8 @@ fun <T : Media> ZoomablePagerImage(
     onImageRotated: (newRotation: Int) -> Unit,
     onItemClick: () -> Unit,
     onSwipeDown: () -> Unit,
-    onCutoutStateChanged: (Boolean) -> Unit = {}
+    onCutoutStateChanged: (Boolean) -> Unit = {},
+    isSelected: Boolean = true
 ) {
     val feedbackManager = rememberFeedbackManager()
     var isRotating by rememberSaveable(media) { mutableStateOf(false) }
@@ -353,8 +354,10 @@ fun <T : Media> ZoomablePagerImage(
         activeTool = ZoomablePagerImagePointTool.NONE
     }
 
-    LaunchedEffect(cutoutSession != null) {
-        onCutoutStateChanged(cutoutSession != null)
+    LaunchedEffect(cutoutSession != null, isSelected) {
+        if (isSelected) {
+            onCutoutStateChanged(cutoutSession != null)
+        }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -406,15 +409,6 @@ fun <T : Media> ZoomablePagerImage(
                                 processingCutout = false
                             }
                         }
-                    } else {
-                        // Click outside visible image or tool is NONE -> dismiss cutout
-                        cutoutSession?.close()
-                        cutoutSession = null
-                        promptPoints = emptyList()
-                        promptPointsHistory = emptyList()
-                        historyIndex = -1
-                        updateResultAndCache(null, null)
-                        activeTool = ZoomablePagerImagePointTool.NONE
                     }
                 } else {
                     onItemClick()

@@ -664,7 +664,7 @@ fun <T : Media> MediaViewScreen(
         ) {
             HorizontalPager(
                 modifier = Modifier.fillMaxSize(),
-                userScrollEnabled = if (isLocked || isVideoZoomed) false else userScrollEnabled,
+                userScrollEnabled = if (isLocked || isVideoZoomed || isCutoutActive) false else userScrollEnabled,
                 state = pagerState,
                 flingBehavior = PagerDefaults.flingBehavior(
                     state = pagerState,
@@ -723,6 +723,7 @@ fun <T : Media> MediaViewScreen(
                     val sharedElementMedia = pagerMedia ?: displayMedia
                     with(sharedTransitionScope) {
                             MediaPreviewComponent(
+                                isSelected = index == currentPage,
                                 modifier = Modifier
                                     .mediaSharedElement(
                                         allowAnimation = canAnimateContent && index == currentPage,
