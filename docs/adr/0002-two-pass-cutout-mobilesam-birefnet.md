@@ -1,5 +1,7 @@
 # 0002-two-pass-cutout-mobilesam-birefnet
 
+**Status: Superseded by [ADR 0003](0003-single-pass-cutout-mobilesam-refinement.md)**
+
 We decided to implement a two-pass cutout pipeline combining **MobileSAM** (Segment Anything Model) and **BiRefNet Lite** (Bilateral Reference Network) to resolve the trade-off between user-guided selection and high-resolution edge quality.
 
 ## Context

@@ -18,11 +18,11 @@ We will pivot to a **Single-Pass Cutout Pipeline with Real-Time Refinement**:
     *   Apply a sigmoid contrast lookup table (LUT) remapping to sharpen the blurred alpha transition, producing a smooth, feathered, high-quality edge.
 3.  **Instant Finalization:** The refinement is done during the interactive decoding step. The `finalizeCutout` step becomes a 0ms pass-through returning the pre-calculated, smoothed cutout bitmap.
 4.  **UI & UX Redesign:**
-    *   **Glassmorphic Floating Pills:** Split the toolbar into separate floating glassmorphic pills: `RefinementControlsPill` (bottom-left) and `ActionControlsPill` (bottom-right) to prevent default gallery sheets and actions from overlapping.
+    *   **Combined Cutout Controls Pill:** A single glassmorphic `CombinedCutoutControlsPill` at bottom-center houses refinement tools (Include/Exclude, Undo/Redo, Reset) in the top row and action buttons (Copy/Share/Save) in a bottom row, separated by a divider. The combined layout keeps all controls in one reachable spot.
     *   **Floating Close Button:** A circular Close (`X`) button floats at the top-right corner to exit the cutout mode.
     *   **Glowing Point Markers:** Selected prompt points render with a glowing outer halo and a crisp white border.
     *   **Auto-Refine Gesture:** Refinement mode automatically defaults to `+` (Include) after the initial long press.
-    *   **Dismiss Gesture:** Tapping the dimmed background outside the image content area dismisses the cutout session.
+    *   **No Dismiss on Background Tap:** Tapping the dimmed background outside the image content area does not dismiss the cutout session to prevent accidental loss of prompt points.
 
 ## Consequences
 

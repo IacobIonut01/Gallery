@@ -68,6 +68,8 @@ import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.res.stringResource
+import com.dot.gallery.R
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -291,36 +293,9 @@ fun <T : Media> ZoomablePagerImage(
     }
 
     val modelManager = remember { (context.applicationContext as com.dot.gallery.GalleryApp).modelManager }
-    var cutoutSession by remember { mutableStateOf<CutoutHelper.CutoutSession?>(null) }
-    var promptPoints by remember { mutableStateOf<List<CutoutHelper.PromptPoint>>(emptyList()) }
-    var promptPointsHistory by remember { mutableStateOf<List<List<CutoutHelper.PromptPoint>>>(emptyList()) }
-    var historyIndex by remember { mutableIntStateOf(-1) }
+    val cutoutState = rememberCutoutState()
 
-    val updatePointsWithHistory = { newPoints: List<CutoutHelper.PromptPoint> ->
-        val newHistory = promptPointsHistory.take(historyIndex + 1) + listOf(newPoints)
-        promptPointsHistory = newHistory
-        historyIndex = newHistory.size - 1
-        promptPoints = newPoints
-    }
 
-    var activeTool by remember { mutableStateOf(ZoomablePagerImagePointTool.NONE) }
-    var isRefining by remember { mutableStateOf(false) }
-
-    var processingCutout by remember { mutableStateOf(false) }
-    var cutoutResult by remember { mutableStateOf<CutoutHelper.CutoutResult?>(null) }
-    var lastResultCache by remember { mutableStateOf<Pair<List<CutoutHelper.PromptPoint>, CutoutHelper.CutoutResult>?>(null) }
-
-    val updateResultAndCache = { newResult: CutoutHelper.CutoutResult?, newCache: Pair<List<CutoutHelper.PromptPoint>, CutoutHelper.CutoutResult>? ->
-        val bitmapsToKeep = listOfNotNull(newResult?.bitmap, newCache?.second?.bitmap)
-        cutoutResult?.bitmap?.let { bmp ->
-            if (bmp !in bitmapsToKeep) bmp.recycle()
-        }
-        lastResultCache?.second?.bitmap?.let { bmp ->
-            if (bmp !in bitmapsToKeep) bmp.recycle()
-        }
-        cutoutResult = newResult
-        lastResultCache = newCache
-    }
 
     val infiniteTransition = rememberInfiniteTransition(label = "glowTransition")
     val glowRadius by infiniteTransition.animateFloat(
@@ -335,28 +310,17 @@ fun <T : Media> ZoomablePagerImage(
 
     DisposableEffect(media) {
         onDispose {
-            cutoutSession?.close()
-            cutoutSession = null
-            promptPoints = emptyList()
-            promptPointsHistory = emptyList()
-            historyIndex = -1
-            updateResultAndCache(null, null)
+            cutoutState.dismiss()
         }
     }
 
-    BackHandler(enabled = cutoutSession != null) {
-        cutoutSession?.close()
-        cutoutSession = null
-        promptPoints = emptyList()
-        promptPointsHistory = emptyList()
-        historyIndex = -1
-        updateResultAndCache(null, null)
-        activeTool = ZoomablePagerImagePointTool.NONE
+    BackHandler(enabled = cutoutState.isActive) {
+        cutoutState.dismiss()
     }
 
-    LaunchedEffect(cutoutSession != null, isSelected) {
+    LaunchedEffect(cutoutState.isActive, isSelected) {
         if (isSelected) {
-            onCutoutStateChanged(cutoutSession != null)
+            onCutoutStateChanged(cutoutState.isActive)
         }
     }
 
@@ -372,7 +336,7 @@ fun <T : Media> ZoomablePagerImage(
                 }
                 .then(modifier),
             onTap = { offset ->
-                val session = cutoutSession
+                val session = cutoutState.session
                 if (session != null) {
                     val displayRect = zoomState.zoomable.contentDisplayRect
                     val isInsideImage = offset.x >= displayRect.left &&
@@ -380,7 +344,7 @@ fun <T : Media> ZoomablePagerImage(
                             offset.y >= displayRect.top &&
                             offset.y <= displayRect.bottom
 
-                    if (isInsideImage && (activeTool == ZoomablePagerImagePointTool.ADD || activeTool == ZoomablePagerImagePointTool.REMOVE)) {
+                    if (isInsideImage && (cutoutState.activeTool == ZoomablePagerImagePointTool.ADD || cutoutState.activeTool == ZoomablePagerImagePointTool.REMOVE)) {
                         val contentPoint = zoomState.zoomable.touchPointToContentPoint(offset)
                         val contentSize = zoomState.zoomable.contentSize
                         val scaleX = if (contentSize.width > 0) session.widthOrig.toFloat() / contentSize.width.toFloat() else 1f
@@ -395,18 +359,18 @@ fun <T : Media> ZoomablePagerImage(
                             val newPoint = CutoutHelper.PromptPoint(
                                 x = scaledX,
                                 y = scaledY,
-                                isPositive = activeTool == ZoomablePagerImagePointTool.ADD
+                                isPositive = cutoutState.activeTool == ZoomablePagerImagePointTool.ADD
                             )
-                            val previousPoints = promptPoints
-                            val updatedPoints = promptPoints + newPoint
-                            updatePointsWithHistory(updatedPoints)
+                            val previousPoints = cutoutState.promptPoints
+                            val updatedPoints = cutoutState.promptPoints + newPoint
+                            cutoutState.pushPoints(updatedPoints)
 
                             scope.launch {
-                                processingCutout = true
+                                cutoutState.isProcessing = true
                                 val res = session.runDecoder(updatedPoints)
-                                val newCache = cutoutResult?.let { Pair(previousPoints, it) }
-                                updateResultAndCache(res, newCache)
-                                processingCutout = false
+                                val newCache = cutoutState.result?.let { Pair(previousPoints, it) }
+                                cutoutState.updateResult(res, newCache)
+                                cutoutState.isProcessing = false
                             }
                         }
                     }
@@ -415,18 +379,16 @@ fun <T : Media> ZoomablePagerImage(
                 }
             },
             onLongPress = { offset ->
-                if (cutoutSession == null && !processingCutout) {
+                if (!cutoutState.isActive && !cutoutState.isProcessing) {
                     scope.launch {
-                        processingCutout = true
+                        cutoutState.isProcessing = true
                         feedbackManager.vibrate()
                         val contentPoint = zoomState.zoomable.touchPointToContentPoint(offset)
 
-                        cutoutSession?.close()
                         val session = CutoutHelper.CutoutSession(context, media, modelManager)
                         val initOk = session.initAndRunEncoder()
 
                         if (initOk) {
-                            cutoutSession = session
                             val contentSize = zoomState.zoomable.contentSize
                             val scaleX = if (contentSize.width > 0) session.widthOrig.toFloat() / contentSize.width.toFloat() else 1f
                             val scaleY = if (contentSize.height > 0) session.heightOrig.toFloat() / contentSize.height.toFloat() else 1f
@@ -440,29 +402,21 @@ fun <T : Media> ZoomablePagerImage(
                                 isPositive = true
                             )
                             val pointsList = listOf(initialPoint)
-                            promptPointsHistory = listOf(pointsList)
-                            historyIndex = 0
-                            promptPoints = pointsList
-                            activeTool = ZoomablePagerImagePointTool.ADD // Default to Include mode
+                            cutoutState.initSession(session, pointsList)
 
                             val result = session.runDecoder(pointsList)
                             if (result != null) {
                                 feedbackManager.vibrate()
-                                updateResultAndCache(result, null)
+                                cutoutState.updateResult(result, null)
                             } else {
-                                session.close()
-                                cutoutSession = null
-                                promptPoints = emptyList()
-                                promptPointsHistory = emptyList()
-                                historyIndex = -1
-                                updateResultAndCache(null, null)
-                                Toast.makeText(context, "No object detected under long-press", Toast.LENGTH_SHORT).show()
+                                cutoutState.dismiss()
+                                Toast.makeText(context, context.getString(R.string.cutout_no_object), Toast.LENGTH_SHORT).show()
                             }
                         } else {
                             session.close()
-                            Toast.makeText(context, "Failed to initialize cutout engine", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.cutout_init_failed), Toast.LENGTH_SHORT).show()
                         }
-                        processingCutout = false
+                        cutoutState.isProcessing = false
                     }
                 }
             },
@@ -472,234 +426,17 @@ fun <T : Media> ZoomablePagerImage(
         )
 
         // Dimmed background and cutout overlay
-        if (cutoutSession != null) {
-            val session = cutoutSession!!
-            val result = cutoutResult
-            val displayRect = zoomState.zoomable.contentDisplayRect
-            val originSize = zoomState.zoomable.contentOriginSize
-
-            if (displayRect.width > 0 && originSize.width > 0) {
-                // Dim background (no pointerInput / no touch interception to allow zoom/pan pass-through)
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.5f))
-                )
-
-                // Render cutout subject, its glowing border outline, and point markers directly on a GPU-synchronized Canvas
-                Canvas(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    val displayRect = zoomState.zoomable.contentDisplayRect
-                    if (displayRect.width > 0 && session.widthOrig > 0) {
-                        // 1. Draw the cutout subject and its glowing border (if a cutout is active/calculated)
-                        if (result != null) {
-                            val screenStartX = displayRect.left + (result.originalBounds.left.toFloat() / session.widthOrig.toFloat()) * displayRect.width
-                            val screenStartY = displayRect.top + (result.originalBounds.top.toFloat() / session.heightOrig.toFloat()) * displayRect.height
-                            val screenWidth = ((result.originalBounds.right - result.originalBounds.left).toFloat() / session.widthOrig.toFloat()) * displayRect.width
-                            val screenHeight = ((result.originalBounds.bottom - result.originalBounds.top).toFloat() / session.heightOrig.toFloat()) * displayRect.height
-
-                            drawIntoCanvas { canvas ->
-                                val nativeCanvas = canvas.nativeCanvas
-                                val srcRect = android.graphics.Rect(0, 0, result.bitmap.width, result.bitmap.height)
-                                
-                                val strokeWidthPx = glowRadius.dp.toPx()
-                                val diagOffset = (strokeWidthPx / 1.4142f).toInt()
-                                val strokeWidthInt = strokeWidthPx.toInt()
-
-                                // Draw animated white contour outline by drawing the bitmap shifted in 8 directions
-                                val strokePaint = android.graphics.Paint().apply {
-                                    isAntiAlias = true
-                                    colorFilter = android.graphics.PorterDuffColorFilter(
-                                        android.graphics.Color.WHITE,
-                                        android.graphics.PorterDuff.Mode.SRC_IN
-                                    )
-                                }
-
-                                val offsets = listOf(
-                                    Pair(strokeWidthInt, 0),
-                                    Pair(-strokeWidthInt, 0),
-                                    Pair(0, strokeWidthInt),
-                                    Pair(0, -strokeWidthInt),
-                                    Pair(diagOffset, diagOffset),
-                                    Pair(-diagOffset, diagOffset),
-                                    Pair(diagOffset, -diagOffset),
-                                    Pair(-diagOffset, -diagOffset)
-                                )
-
-                                offsets.forEach { (dx, dy) ->
-                                    val dstRectShifted = android.graphics.Rect(
-                                        screenStartX.toInt() + dx,
-                                        screenStartY.toInt() + dy,
-                                        (screenStartX + screenWidth).toInt() + dx,
-                                        (screenStartY + screenHeight).toInt() + dy
-                                    )
-                                    nativeCanvas.drawBitmap(result.bitmap, srcRect, dstRectShifted, strokePaint)
-                                }
-
-                                // Draw original cutout bitmap on top
-                                val dstRectNormal = android.graphics.Rect(
-                                    screenStartX.toInt(),
-                                    screenStartY.toInt(),
-                                    (screenStartX + screenWidth).toInt(),
-                                    (screenStartY + screenHeight).toInt()
-                                )
-                                val imagePaint = android.graphics.Paint().apply {
-                                    isAntiAlias = true
-                                }
-                                nativeCanvas.drawBitmap(result.bitmap, srcRect, dstRectNormal, imagePaint)
-                            }
-                        }
-
-                        // 2. Draw prompt point markers
-                        promptPoints.forEach { pt ->
-                            val screenX = displayRect.left + (pt.x / session.widthOrig.toFloat()) * displayRect.width
-                            val screenY = displayRect.top + (pt.y / session.heightOrig.toFloat()) * displayRect.height
-
-                            val dotColor = if (pt.isPositive) Color(0xFF4CAF50) else Color(0xFFF44336)
-                            val glowColor = dotColor.copy(alpha = 0.3f)
-
-                            // Glow halo (radius = 10.dp)
-                            drawCircle(
-                                color = glowColor,
-                                radius = 10.dp.toPx(),
-                                center = Offset(screenX, screenY)
-                            )
-                            // White border (radius = 5.dp)
-                            drawCircle(
-                                color = Color.White,
-                                radius = 5.dp.toPx(),
-                                center = Offset(screenX, screenY)
-                            )
-                            // Inner dot (radius = 3.5.dp)
-                            drawCircle(
-                                color = dotColor,
-                                radius = 3.5.dp.toPx(),
-                                center = Offset(screenX, screenY)
-                            )
-                        }
-                    }
-                }
-
-                // Helper to run refinement action
-                val runRefinedAction = { action: suspend (Bitmap) -> Unit ->
-                    if (result != null) {
-                        scope.launch {
-                            isRefining = true
-                            val refined = session.finalizeCutout(result.originalBounds)
-                            isRefining = false
-
-                            val bitmapToUse = refined?.bitmap ?: result.bitmap
-                            action(bitmapToUse)
-
-                            cutoutSession?.close()
-                            cutoutSession = null
-                            promptPoints = emptyList()
-                            promptPointsHistory = emptyList()
-                            historyIndex = -1
-                            updateResultAndCache(null, null)
-                            activeTool = ZoomablePagerImagePointTool.NONE
-                        }
-                    }
-                }
-
-                // Floating close button at top-right
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(end = 24.dp, top = 64.dp)
-                ) {
-                    FloatingCloseButton(
-                        onClose = {
-                            cutoutSession?.close()
-                            cutoutSession = null
-                            promptPoints = emptyList()
-                            promptPointsHistory = emptyList()
-                            historyIndex = -1
-                            updateResultAndCache(null, null)
-                            activeTool = ZoomablePagerImagePointTool.NONE
-                        }
-                    )
-                }
-
-                // Bottom Centered: Combined Controls Pill
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = 64.dp)
-                ) {
-                    val canUndo = historyIndex > 0
-                    val canRedo = historyIndex < promptPointsHistory.size - 1
-
-                    CombinedCutoutControlsPill(
-                        activeTool = activeTool,
-                        onToolChange = { activeTool = it },
-                        onReset = {
-                            // Completely clear all points and stay in cutout mode
-                            val previousPoints = promptPoints
-                            updatePointsWithHistory(emptyList())
-                            val newCache = cutoutResult?.let { Pair(previousPoints, it) }
-                            updateResultAndCache(null, newCache)
-                        },
-                        canUndo = canUndo,
-                        canRedo = canRedo,
-                        onUndo = {
-                            if (historyIndex > 0) {
-                                val previousPoints = promptPoints
-                                historyIndex--
-                                val newPoints = promptPointsHistory[historyIndex]
-                                promptPoints = newPoints
-
-                                val cache = lastResultCache
-                                if (cache != null && cache.first == newPoints) {
-                                    // Instant cache hit swap
-                                    val currentRes = cutoutResult
-                                    updateResultAndCache(cache.second, currentRes?.let { Pair(previousPoints, it) })
-                                } else {
-                                    scope.launch {
-                                        processingCutout = true
-                                        val res = session.runDecoder(newPoints)
-                                        val newCache = cutoutResult?.let { Pair(previousPoints, it) }
-                                        updateResultAndCache(res, newCache)
-                                        processingCutout = false
-                                    }
-                                }
-                            }
-                        },
-                        onRedo = {
-                            if (historyIndex < promptPointsHistory.size - 1) {
-                                val previousPoints = promptPoints
-                                historyIndex++
-                                val newPoints = promptPointsHistory[historyIndex]
-                                promptPoints = newPoints
-
-                                val cache = lastResultCache
-                                if (cache != null && cache.first == newPoints) {
-                                    // Instant cache hit swap
-                                    val currentRes = cutoutResult
-                                    updateResultAndCache(cache.second, currentRes?.let { Pair(previousPoints, it) })
-                                } else {
-                                    scope.launch {
-                                        processingCutout = true
-                                        val res = session.runDecoder(newPoints)
-                                        val newCache = cutoutResult?.let { Pair(previousPoints, it) }
-                                        updateResultAndCache(res, newCache)
-                                        processingCutout = false
-                                    }
-                                }
-                            }
-                        },
-                        hasResult = result != null,
-                        onCopy = { runRefinedAction { CutoutHelper.copyToClipboard(context, it) } },
-                        onShare = { runRefinedAction { CutoutHelper.shareCutout(context, it) } },
-                        onSave = { runRefinedAction { CutoutHelper.saveToGallery(context, it) } }
-                    )
-                }
-            }
-        }
+        CutoutOverlay(
+            state = cutoutState,
+            zoomState = zoomState,
+            glowRadius = glowRadius,
+            onCopy = { CutoutHelper.copyToClipboard(context, it) },
+            onShare = { CutoutHelper.shareCutout(context, it) },
+            onSave = { CutoutHelper.saveToGallery(context, it) }
+        )
 
         // Circular processing/refinement indicator
-        if (processingCutout || isRefining) {
+        if (cutoutState.isProcessing || cutoutState.isRefining) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -713,15 +450,206 @@ fun <T : Media> ZoomablePagerImage(
                     CircularProgressIndicator(
                         color = MaterialTheme.colorScheme.primary
                     )
-                    if (isRefining) {
+                    if (cutoutState.isRefining) {
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "Refining cutout...",
+                            text = stringResource(R.string.cutout_refining),
                             color = Color.White,
                             style = MaterialTheme.typography.titleMedium
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CutoutOverlay(
+    state: CutoutState,
+    zoomState: com.github.panpf.zoomimage.SketchZoomState,
+    glowRadius: Float,
+    onCopy: suspend (Bitmap) -> Unit,
+    onShare: suspend (Bitmap) -> Unit,
+    onSave: suspend (Bitmap) -> Unit,
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val session = state.session ?: return
+    val result = state.result
+    val displayRect = zoomState.zoomable.contentDisplayRect
+    val originSize = zoomState.zoomable.contentOriginSize
+
+    val strokePaint = remember {
+        android.graphics.Paint().apply {
+            isAntiAlias = true
+            colorFilter = android.graphics.PorterDuffColorFilter(
+                android.graphics.Color.WHITE,
+                android.graphics.PorterDuff.Mode.SRC_IN
+            )
+        }
+    }
+    val imagePaint = remember {
+        android.graphics.Paint().apply {
+            isAntiAlias = true
+        }
+    }
+
+    if (displayRect.width > 0 && originSize.width > 0) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            // Dim background (no pointerInput / no touch interception to allow zoom/pan pass-through)
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.5f))
+            )
+
+            // Render cutout subject, its glowing border outline, and point markers directly on a GPU-synchronized Canvas
+            Canvas(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                val displayRect = zoomState.zoomable.contentDisplayRect
+                if (displayRect.width > 0 && session.widthOrig > 0) {
+                    // 1. Draw the cutout subject and its glowing border (if a cutout is active/calculated)
+                    if (result != null) {
+                        val screenStartX = displayRect.left + (result.originalBounds.left.toFloat() / session.widthOrig.toFloat()) * displayRect.width
+                        val screenStartY = displayRect.top + (result.originalBounds.top.toFloat() / session.heightOrig.toFloat()) * displayRect.height
+                        val screenWidth = ((result.originalBounds.right - result.originalBounds.left).toFloat() / session.widthOrig.toFloat()) * displayRect.width
+                        val screenHeight = ((result.originalBounds.bottom - result.originalBounds.top).toFloat() / session.heightOrig.toFloat()) * displayRect.height
+
+                        drawIntoCanvas { canvas ->
+                            val nativeCanvas = canvas.nativeCanvas
+                            val srcRect = android.graphics.Rect(0, 0, result.bitmap.width, result.bitmap.height)
+                            
+                            val strokeWidthPx = glowRadius.dp.toPx()
+                            val diagOffset = (strokeWidthPx / 1.4142f).toInt()
+                            val strokeWidthInt = strokeWidthPx.toInt()
+
+                            val offsets = listOf(
+                                Pair(strokeWidthInt, 0),
+                                Pair(-strokeWidthInt, 0),
+                                Pair(0, strokeWidthInt),
+                                Pair(0, -strokeWidthInt),
+                                Pair(diagOffset, diagOffset),
+                                Pair(-diagOffset, diagOffset),
+                                Pair(diagOffset, -diagOffset),
+                                Pair(-diagOffset, -diagOffset)
+                            )
+
+                            offsets.forEach { (dx, dy) ->
+                                val dstRectShifted = android.graphics.Rect(
+                                    screenStartX.toInt() + dx,
+                                    screenStartY.toInt() + dy,
+                                    (screenStartX + screenWidth).toInt() + dx,
+                                    (screenStartY + screenHeight).toInt() + dy
+                                )
+                                nativeCanvas.drawBitmap(result.bitmap, srcRect, dstRectShifted, strokePaint)
+                            }
+
+                            // Draw original cutout bitmap on top
+                            val dstRectNormal = android.graphics.Rect(
+                                screenStartX.toInt(),
+                                screenStartY.toInt(),
+                                (screenStartX + screenWidth).toInt(),
+                                (screenStartY + screenHeight).toInt()
+                            )
+                            nativeCanvas.drawBitmap(result.bitmap, srcRect, dstRectNormal, imagePaint)
+                        }
+                    }
+
+                    // 2. Draw prompt point markers
+                    state.promptPoints.forEach { pt ->
+                        val screenX = displayRect.left + (pt.x / session.widthOrig.toFloat()) * displayRect.width
+                        val screenY = displayRect.top + (pt.y / session.heightOrig.toFloat()) * displayRect.height
+
+                        val dotColor = if (pt.isPositive) Color(0xFF4CAF50) else Color(0xFFF44336)
+                        val glowColor = dotColor.copy(alpha = 0.3f)
+
+                        // Glow halo (radius = 10.dp)
+                        drawCircle(
+                            color = glowColor,
+                            radius = 10.dp.toPx(),
+                            center = Offset(screenX, screenY)
+                        )
+                        // White border (radius = 5.dp)
+                        drawCircle(
+                            color = Color.White,
+                            radius = 5.dp.toPx(),
+                            center = Offset(screenX, screenY)
+                        )
+                        // Inner dot (radius = 3.5.dp)
+                        drawCircle(
+                            color = dotColor,
+                            radius = 3.5.dp.toPx(),
+                            center = Offset(screenX, screenY)
+                        )
+                    }
+                }
+            }
+
+            // Helper to run refinement action
+            val runRefinedAction = { action: suspend (Bitmap) -> Unit ->
+                if (result != null) {
+                    scope.launch {
+                        state.isRefining = true
+                        val refined = session.finalizeCutout(result.originalBounds)
+                        state.isRefining = false
+
+                        val bitmapToUse = refined?.bitmap ?: result.bitmap
+                        action(bitmapToUse)
+
+                        state.dismiss()
+                    }
+                }
+            }
+
+            // Floating close button at top-right
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(end = 24.dp, top = 64.dp)
+            ) {
+                FloatingCloseButton(
+                    onClose = {
+                        state.dismiss()
+                    }
+                )
+            }
+
+            // Bottom Centered: Combined Controls Pill
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 64.dp)
+            ) {
+                val navigateHistory = { delta: Int ->
+                    val pts = state.navigateHistory(delta)
+                    if (pts != null) {
+                        scope.launch {
+                            state.isProcessing = true
+                            val res = state.session!!.runDecoder(pts.second)
+                            val newCache = state.result?.let { Pair(pts.first, it) }
+                            state.updateResult(res, newCache)
+                            state.isProcessing = false
+                        }
+                    }
+                }
+
+                CombinedCutoutControlsPill(
+                    activeTool = state.activeTool,
+                    onToolChange = { state.activeTool = it },
+                    onReset = {
+                        state.clearPoints()
+                    },
+                    canUndo = state.canUndo,
+                    canRedo = state.canRedo,
+                    onUndo = { navigateHistory(-1) },
+                    onRedo = { navigateHistory(1) },
+                    hasResult = state.hasResult,
+                    onCopy = { runRefinedAction { onCopy(it) } },
+                    onShare = { runRefinedAction { onShare(it) } },
+                    onSave = { runRefinedAction { onSave(it) } }
+                )
             }
         }
     }

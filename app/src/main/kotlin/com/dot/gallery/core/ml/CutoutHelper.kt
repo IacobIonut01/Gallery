@@ -97,7 +97,7 @@ object CutoutHelper {
         // Precomputed lookup table for sigmoid contrast curve
         private val contrastLUT = FloatArray(256) { i ->
             val x = i / 255.0f
-            val remapped = 1.0f / (1.0f + Math.exp(-12.0 * (x - 0.5)).toFloat())
+            val remapped = 1.0f / (1.0f + kotlin.math.exp(-12.0 * (x - 0.5)).toFloat())
             remapped.coerceIn(0f, 1f)
         }
 
@@ -235,10 +235,6 @@ object CutoutHelper {
                 close()
                 false
             }
-        }
-
-        private fun OrtSession.SessionOptions.cpuOptionsForDecoder(): OrtSession.SessionOptions {
-            return this
         }
 
         /**
@@ -631,7 +627,7 @@ object CutoutHelper {
         } catch (e: Exception) {
             e.printStackTrace()
             withContext<Unit>(Dispatchers.Main) {
-                Toast.makeText(context, "Failed to copy cutout object", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.cutout_copy_failed), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -660,7 +656,7 @@ object CutoutHelper {
         } catch (e: Exception) {
             e.printStackTrace()
             withContext<Unit>(Dispatchers.Main) {
-                Toast.makeText(context, "Failed to share cutout object", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.cutout_share_failed), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -679,15 +675,15 @@ object CutoutHelper {
             )
             withContext<Unit>(Dispatchers.Main) {
                 if (savedUri != null) {
-                    Toast.makeText(context, "Saved cutout to Pictures/Cutouts", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.cutout_saved), Toast.LENGTH_SHORT).show()
                 } else {
-                    Toast.makeText(context, "Failed to save cutout object", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.cutout_save_failed), Toast.LENGTH_SHORT).show()
                 }
             }
         } catch (e: Exception) {
             e.printStackTrace()
             withContext<Unit>(Dispatchers.Main) {
-                Toast.makeText(context, "Failed to save cutout object", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.cutout_save_failed), Toast.LENGTH_SHORT).show()
             }
         }
     }

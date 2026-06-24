@@ -1369,5 +1369,14 @@
     <string name="cloud_net_add_external">Add external URL</string>
     <string name="cloud_net_external_hint">https://immich.example.com</string>
     <string name="cloud_net_remove">Remove</string>
+    
+    <!-- Subject Cutout -->
+    <string name="cutout_no_object">No object detected under long-press</string>
+    <string name="cutout_init_failed">Failed to initialize cutout engine</string>
+    <string name="cutout_copy_failed">Failed to copy cutout object</string>
+    <string name="cutout_share_failed">Failed to share cutout object</string>
+    <string name="cutout_save_failed">Failed to save cutout object</string>
+    <string name="cutout_saved">Saved cutout to Pictures/Cutouts</string>
+    <string name="cutout_refining">Refining cutout…</string>
 </resources>
 
