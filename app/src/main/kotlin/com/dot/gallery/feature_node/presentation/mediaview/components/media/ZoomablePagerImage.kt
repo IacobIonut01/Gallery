@@ -307,6 +307,19 @@ fun <T : Media> ZoomablePagerImage(
 
     var processingCutout by remember { mutableStateOf(false) }
     var cutoutResult by remember { mutableStateOf<CutoutHelper.CutoutResult?>(null) }
+    var lastResultCache by remember { mutableStateOf<Pair<List<CutoutHelper.PromptPoint>, CutoutHelper.CutoutResult>?>(null) }
+
+    val updateResultAndCache = { newResult: CutoutHelper.CutoutResult?, newCache: Pair<List<CutoutHelper.PromptPoint>, CutoutHelper.CutoutResult>? ->
+        val bitmapsToKeep = listOfNotNull(newResult?.bitmap, newCache?.second?.bitmap)
+        cutoutResult?.bitmap?.let { bmp ->
+            if (bmp !in bitmapsToKeep) bmp.recycle()
+        }
+        lastResultCache?.second?.bitmap?.let { bmp ->
+            if (bmp !in bitmapsToKeep) bmp.recycle()
+        }
+        cutoutResult = newResult
+        lastResultCache = newCache
+    }
 
     val infiniteTransition = rememberInfiniteTransition(label = "glowTransition")
     val glowRadius by infiniteTransition.animateFloat(
@@ -326,8 +339,7 @@ fun <T : Media> ZoomablePagerImage(
             promptPoints = emptyList()
             promptPointsHistory = emptyList()
             historyIndex = -1
-            cutoutResult?.bitmap?.recycle()
-            cutoutResult = null
+            updateResultAndCache(null, null)
         }
     }
 
@@ -337,8 +349,7 @@ fun <T : Media> ZoomablePagerImage(
         promptPoints = emptyList()
         promptPointsHistory = emptyList()
         historyIndex = -1
-        cutoutResult?.bitmap?.recycle()
-        cutoutResult = null
+        updateResultAndCache(null, null)
         activeTool = ZoomablePagerImagePointTool.NONE
     }
 
@@ -383,16 +394,15 @@ fun <T : Media> ZoomablePagerImage(
                                 y = scaledY,
                                 isPositive = activeTool == ZoomablePagerImagePointTool.ADD
                             )
+                            val previousPoints = promptPoints
                             val updatedPoints = promptPoints + newPoint
                             updatePointsWithHistory(updatedPoints)
 
                             scope.launch {
                                 processingCutout = true
                                 val res = session.runDecoder(updatedPoints)
-                                if (res != null) {
-                                    cutoutResult?.bitmap?.recycle()
-                                    cutoutResult = res
-                                }
+                                val newCache = cutoutResult?.let { Pair(previousPoints, it) }
+                                updateResultAndCache(res, newCache)
                                 processingCutout = false
                             }
                         }
@@ -403,8 +413,7 @@ fun <T : Media> ZoomablePagerImage(
                         promptPoints = emptyList()
                         promptPointsHistory = emptyList()
                         historyIndex = -1
-                        cutoutResult?.bitmap?.recycle()
-                        cutoutResult = null
+                        updateResultAndCache(null, null)
                         activeTool = ZoomablePagerImagePointTool.NONE
                     }
                 } else {
@@ -445,14 +454,14 @@ fun <T : Media> ZoomablePagerImage(
                             val result = session.runDecoder(pointsList)
                             if (result != null) {
                                 feedbackManager.vibrate()
-                                cutoutResult?.bitmap?.recycle()
-                                cutoutResult = result
+                                updateResultAndCache(result, null)
                             } else {
                                 session.close()
                                 cutoutSession = null
                                 promptPoints = emptyList()
                                 promptPointsHistory = emptyList()
                                 historyIndex = -1
+                                updateResultAndCache(null, null)
                                 Toast.makeText(context, "No object detected under long-press", Toast.LENGTH_SHORT).show()
                             }
                         } else {
@@ -594,8 +603,7 @@ fun <T : Media> ZoomablePagerImage(
                             promptPoints = emptyList()
                             promptPointsHistory = emptyList()
                             historyIndex = -1
-                            cutoutResult?.bitmap?.recycle()
-                            cutoutResult = null
+                            updateResultAndCache(null, null)
                             activeTool = ZoomablePagerImagePointTool.NONE
                         }
                     }
@@ -614,8 +622,7 @@ fun <T : Media> ZoomablePagerImage(
                             promptPoints = emptyList()
                             promptPointsHistory = emptyList()
                             historyIndex = -1
-                            cutoutResult?.bitmap?.recycle()
-                            cutoutResult = null
+                            updateResultAndCache(null, null)
                             activeTool = ZoomablePagerImagePointTool.NONE
                         }
                     )
@@ -635,47 +642,56 @@ fun <T : Media> ZoomablePagerImage(
                         onToolChange = { activeTool = it },
                         onReset = {
                             // Completely clear all points and stay in cutout mode
+                            val previousPoints = promptPoints
                             updatePointsWithHistory(emptyList())
-                            cutoutResult?.bitmap?.recycle()
-                            cutoutResult = null
+                            val newCache = cutoutResult?.let { Pair(previousPoints, it) }
+                            updateResultAndCache(null, newCache)
                         },
                         canUndo = canUndo,
                         canRedo = canRedo,
                         onUndo = {
                             if (historyIndex > 0) {
+                                val previousPoints = promptPoints
                                 historyIndex--
                                 val newPoints = promptPointsHistory[historyIndex]
                                 promptPoints = newPoints
-                                scope.launch {
-                                    processingCutout = true
-                                    val res = session.runDecoder(newPoints)
-                                    if (res != null) {
-                                        cutoutResult?.bitmap?.recycle()
-                                        cutoutResult = res
-                                    } else {
-                                        cutoutResult?.bitmap?.recycle()
-                                        cutoutResult = null
+
+                                val cache = lastResultCache
+                                if (cache != null && cache.first == newPoints) {
+                                    // Instant cache hit swap
+                                    val currentRes = cutoutResult
+                                    updateResultAndCache(cache.second, currentRes?.let { Pair(previousPoints, it) })
+                                } else {
+                                    scope.launch {
+                                        processingCutout = true
+                                        val res = session.runDecoder(newPoints)
+                                        val newCache = cutoutResult?.let { Pair(previousPoints, it) }
+                                        updateResultAndCache(res, newCache)
+                                        processingCutout = false
                                     }
-                                    processingCutout = false
                                 }
                             }
                         },
                         onRedo = {
                             if (historyIndex < promptPointsHistory.size - 1) {
+                                val previousPoints = promptPoints
                                 historyIndex++
                                 val newPoints = promptPointsHistory[historyIndex]
                                 promptPoints = newPoints
-                                scope.launch {
-                                    processingCutout = true
-                                    val res = session.runDecoder(newPoints)
-                                    if (res != null) {
-                                        cutoutResult?.bitmap?.recycle()
-                                        cutoutResult = res
-                                    } else {
-                                        cutoutResult?.bitmap?.recycle()
-                                        cutoutResult = null
+
+                                val cache = lastResultCache
+                                if (cache != null && cache.first == newPoints) {
+                                    // Instant cache hit swap
+                                    val currentRes = cutoutResult
+                                    updateResultAndCache(cache.second, currentRes?.let { Pair(previousPoints, it) })
+                                } else {
+                                    scope.launch {
+                                        processingCutout = true
+                                        val res = session.runDecoder(newPoints)
+                                        val newCache = cutoutResult?.let { Pair(previousPoints, it) }
+                                        updateResultAndCache(res, newCache)
+                                        processingCutout = false
                                     }
-                                    processingCutout = false
                                 }
                             }
                         },
