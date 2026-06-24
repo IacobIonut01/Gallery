@@ -337,16 +337,25 @@ object CutoutHelper {
             val size = w * h
             if (size == 0) return
 
-            // 1. Fill all inner holes (background regions not connected to the outer boundary)
-            val visitedBg = BooleanArray(size)
-            val stack = IntArray(size)
+            // Calculate dynamic thresholds based on crop area
+            val cropArea = w * h
+            val maxHoleSizeToFill = (cropArea * 0.005f).coerceIn(100f, 2000f).toInt()
+            val maxIslandSizeToRemove = (cropArea * 0.002f).coerceIn(50f, 500f).toInt()
+
+            val STATE_UNVISITED: Byte = 0
+            val STATE_BG: Byte = 1
+            val STATE_HOLE: Byte = 2
+            val STATE_FG: Byte = 3
+
+            val state = ByteArray(size) // Stores current state of each pixel
+            val stack = IntArray(size)  // Reusable BFS queue/stack to avoid garbage collection
             var stackPtr = 0
 
-            // Helper to push to stack
+            // Helper to push boundary-connected background to stack
             fun pushBg(x: Int, y: Int) {
                 val idx = y * w + x
-                if (idx in 0 until size && !visitedBg[idx] && (mask[idx] ushr 24) == 0) {
-                    visitedBg[idx] = true
+                if (idx in 0 until size && state[idx] == STATE_UNVISITED && (mask[idx] ushr 24) == 0) {
+                    state[idx] = STATE_BG
                     stack[stackPtr++] = idx
                 }
             }
@@ -361,7 +370,7 @@ object CutoutHelper {
                 pushBg(w - 1, y)
             }
 
-            // Run BFS/DFS to mark reachable background
+            // Run BFS to mark reachable background
             while (stackPtr > 0) {
                 val idx = stack[--stackPtr]
                 val x = idx % w
@@ -374,43 +383,69 @@ object CutoutHelper {
                 if (y < h - 1) pushBg(x, y + 1)
             }
 
-            // Fill unreached background (holes)
-            for (i in 0 until size) {
-                if (!visitedBg[i] && (mask[i] ushr 24) == 0) {
-                    mask[i] = 0xFFFFFFFF.toInt() // Fill hole
+            // 1. Fill small inner holes (unvisited background regions)
+            for (y in 0 until h) {
+                for (x in 0 until w) {
+                    val startIdx = y * w + x
+                    if ((mask[startIdx] ushr 24) == 0 && state[startIdx] == STATE_UNVISITED) {
+                        var holeSize = 0
+                        state[startIdx] = STATE_HOLE
+                        stack[holeSize++] = startIdx
+
+                        var holeReadPtr = 0
+                        while (holeReadPtr < holeSize) {
+                            val idx = stack[holeReadPtr++]
+                            val cx = idx % w
+                            val cy = idx / w
+
+                            fun checkAndAddHole(nx: Int, ny: Int) {
+                                val nidx = ny * w + nx
+                                if (nidx in 0 until size && (mask[nidx] ushr 24) == 0 && state[nidx] == STATE_UNVISITED) {
+                                    state[nidx] = STATE_HOLE
+                                    stack[holeSize++] = nidx
+                                }
+                            }
+
+                            if (cx > 0) checkAndAddHole(cx - 1, cy)
+                            if (cx < w - 1) checkAndAddHole(cx + 1, cy)
+                            if (cy > 0) checkAndAddHole(cx, cy - 1)
+                            if (cy < h - 1) checkAndAddHole(cx, cy + 1)
+                        }
+
+                        // Fill the hole if it is smaller than the threshold
+                        if (holeSize < maxHoleSizeToFill) {
+                            for (i in 0 until holeSize) {
+                                mask[stack[i]] = 0xFFFFFFFF.toInt()
+                            }
+                        }
+                    }
                 }
             }
 
-            // 2. Remove small isolated foreground islands (smaller than 200 pixels and containing no prompt points)
-            val visitedFg = BooleanArray(size)
-            val fgComponent = IntArray(size)
-
-            // Convert prompt points to crop coordinates
+            // 2. Remove small isolated foreground islands
             val cropPoints = points.map { pt ->
-                Pair((pt.x - minX).toInt(), (pt.y - minY).toInt())
+                Pair(Math.round(pt.x - minX), Math.round(pt.y - minY))
             }
 
             for (y in 0 until h) {
                 for (x in 0 until w) {
                     val startIdx = y * w + x
-                    if ((mask[startIdx] ushr 24) != 0 && !visitedFg[startIdx]) {
-                        // Found an unvisited foreground component, flood-fill it
+                    if ((mask[startIdx] ushr 24) != 0 && state[startIdx] != STATE_FG) {
                         var compSize = 0
-                        
-                        visitedFg[startIdx] = true
-                        fgComponent[compSize++] = startIdx
+                        state[startIdx] = STATE_FG
+                        stack[compSize++] = startIdx
 
                         var compReadPtr = 0
                         while (compReadPtr < compSize) {
-                            val idx = fgComponent[compReadPtr++]
+                            val idx = stack[compReadPtr++]
                             val cx = idx % w
                             val cy = idx / w
 
                             fun checkAndAddFg(nx: Int, ny: Int) {
                                 val nidx = ny * w + nx
-                                if (nidx in 0 until size && (mask[nidx] ushr 24) != 0 && !visitedFg[nidx]) {
-                                    visitedFg[nidx] = true
-                                    fgComponent[compSize++] = nidx
+                                if (nidx in 0 until size && (mask[nidx] ushr 24) != 0 && state[nidx] != STATE_FG) {
+                                    state[nidx] = STATE_FG
+                                    stack[compSize++] = nidx
                                 }
                             }
 
@@ -423,7 +458,7 @@ object CutoutHelper {
                         // Check if component contains any prompt point
                         var containsPrompt = false
                         for (i in 0 until compSize) {
-                            val idx = fgComponent[i]
+                            val idx = stack[i]
                             val cx = idx % w
                             val cy = idx / w
                             if (cropPoints.any { (px, py) -> px == cx && py == cy }) {
@@ -432,10 +467,10 @@ object CutoutHelper {
                             }
                         }
 
-                        // If component is small (< 200 pixels) and contains no prompt points, erase it
-                        if (compSize < 200 && !containsPrompt) {
+                        // Erase component if it is small and has no prompt points
+                        if (compSize < maxIslandSizeToRemove && !containsPrompt) {
                             for (i in 0 until compSize) {
-                                mask[fgComponent[i]] = 0x00FFFFFF // Erase to background
+                                mask[stack[i]] = 0x00FFFFFF // Erase to transparent background
                             }
                         }
                     }
