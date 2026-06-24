@@ -6,6 +6,7 @@
 package com.dot.gallery.feature_node.presentation.mediaview.components.media
 
 import android.os.Build
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.fillMaxSize
@@ -84,6 +85,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.automirrored.filled.Undo
+import androidx.compose.material.icons.automirrored.filled.Redo
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.border
 import androidx.compose.material3.CircularProgressIndicator
@@ -94,6 +97,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.VerticalDivider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.shadow
@@ -288,6 +292,15 @@ fun <T : Media> ZoomablePagerImage(
     val modelManager = remember { (context.applicationContext as com.dot.gallery.GalleryApp).modelManager }
     var cutoutSession by remember { mutableStateOf<CutoutHelper.CutoutSession?>(null) }
     var promptPoints by remember { mutableStateOf<List<CutoutHelper.PromptPoint>>(emptyList()) }
+    var promptPointsHistory by remember { mutableStateOf<List<List<CutoutHelper.PromptPoint>>>(emptyList()) }
+    var historyIndex by remember { mutableIntStateOf(-1) }
+
+    val updatePointsWithHistory = { newPoints: List<CutoutHelper.PromptPoint> ->
+        val newHistory = promptPointsHistory.take(historyIndex + 1) + listOf(newPoints)
+        promptPointsHistory = newHistory
+        historyIndex = newHistory.size - 1
+        promptPoints = newPoints
+    }
 
     var activeTool by remember { mutableStateOf(ZoomablePagerImagePointTool.NONE) }
     var isRefining by remember { mutableStateOf(false) }
@@ -310,6 +323,9 @@ fun <T : Media> ZoomablePagerImage(
         onDispose {
             cutoutSession?.close()
             cutoutSession = null
+            promptPoints = emptyList()
+            promptPointsHistory = emptyList()
+            historyIndex = -1
             cutoutResult?.bitmap?.recycle()
             cutoutResult = null
         }
@@ -319,6 +335,8 @@ fun <T : Media> ZoomablePagerImage(
         cutoutSession?.close()
         cutoutSession = null
         promptPoints = emptyList()
+        promptPointsHistory = emptyList()
+        historyIndex = -1
         cutoutResult?.bitmap?.recycle()
         cutoutResult = null
         activeTool = ZoomablePagerImagePointTool.NONE
@@ -366,7 +384,7 @@ fun <T : Media> ZoomablePagerImage(
                                 isPositive = activeTool == ZoomablePagerImagePointTool.ADD
                             )
                             val updatedPoints = promptPoints + newPoint
-                            promptPoints = updatedPoints
+                            updatePointsWithHistory(updatedPoints)
 
                             scope.launch {
                                 processingCutout = true
@@ -383,6 +401,8 @@ fun <T : Media> ZoomablePagerImage(
                         cutoutSession?.close()
                         cutoutSession = null
                         promptPoints = emptyList()
+                        promptPointsHistory = emptyList()
+                        historyIndex = -1
                         cutoutResult?.bitmap?.recycle()
                         cutoutResult = null
                         activeTool = ZoomablePagerImagePointTool.NONE
@@ -417,6 +437,8 @@ fun <T : Media> ZoomablePagerImage(
                                 isPositive = true
                             )
                             val pointsList = listOf(initialPoint)
+                            promptPointsHistory = listOf(pointsList)
+                            historyIndex = 0
                             promptPoints = pointsList
                             activeTool = ZoomablePagerImagePointTool.ADD // Default to Include mode
 
@@ -429,6 +451,8 @@ fun <T : Media> ZoomablePagerImage(
                                 session.close()
                                 cutoutSession = null
                                 promptPoints = emptyList()
+                                promptPointsHistory = emptyList()
+                                historyIndex = -1
                                 Toast.makeText(context, "No object detected under long-press", Toast.LENGTH_SHORT).show()
                             }
                         } else {
@@ -568,6 +592,8 @@ fun <T : Media> ZoomablePagerImage(
                             cutoutSession?.close()
                             cutoutSession = null
                             promptPoints = emptyList()
+                            promptPointsHistory = emptyList()
+                            historyIndex = -1
                             cutoutResult?.bitmap?.recycle()
                             cutoutResult = null
                             activeTool = ZoomablePagerImagePointTool.NONE
@@ -586,6 +612,8 @@ fun <T : Media> ZoomablePagerImage(
                             cutoutSession?.close()
                             cutoutSession = null
                             promptPoints = emptyList()
+                            promptPointsHistory = emptyList()
+                            historyIndex = -1
                             cutoutResult?.bitmap?.recycle()
                             cutoutResult = null
                             activeTool = ZoomablePagerImagePointTool.NONE
@@ -593,37 +621,69 @@ fun <T : Media> ZoomablePagerImage(
                     )
                 }
 
-                // Bottom start (left): Refinement Controls Pill
+                // Bottom Centered: Combined Controls Pill
                 Box(
                     modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(start = 24.dp, bottom = 64.dp)
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 64.dp)
                 ) {
-                    RefinementControlsPill(
+                    val canUndo = historyIndex > 0
+                    val canRedo = historyIndex < promptPointsHistory.size - 1
+
+                    CombinedCutoutControlsPill(
                         activeTool = activeTool,
                         onToolChange = { activeTool = it },
                         onReset = {
                             // Completely clear all points and stay in cutout mode
-                            promptPoints = emptyList()
+                            updatePointsWithHistory(emptyList())
                             cutoutResult?.bitmap?.recycle()
                             cutoutResult = null
-                        }
+                        },
+                        canUndo = canUndo,
+                        canRedo = canRedo,
+                        onUndo = {
+                            if (historyIndex > 0) {
+                                historyIndex--
+                                val newPoints = promptPointsHistory[historyIndex]
+                                promptPoints = newPoints
+                                scope.launch {
+                                    processingCutout = true
+                                    val res = session.runDecoder(newPoints)
+                                    if (res != null) {
+                                        cutoutResult?.bitmap?.recycle()
+                                        cutoutResult = res
+                                    } else {
+                                        cutoutResult?.bitmap?.recycle()
+                                        cutoutResult = null
+                                    }
+                                    processingCutout = false
+                                }
+                            }
+                        },
+                        onRedo = {
+                            if (historyIndex < promptPointsHistory.size - 1) {
+                                historyIndex++
+                                val newPoints = promptPointsHistory[historyIndex]
+                                promptPoints = newPoints
+                                scope.launch {
+                                    processingCutout = true
+                                    val res = session.runDecoder(newPoints)
+                                    if (res != null) {
+                                        cutoutResult?.bitmap?.recycle()
+                                        cutoutResult = res
+                                    } else {
+                                        cutoutResult?.bitmap?.recycle()
+                                        cutoutResult = null
+                                    }
+                                    processingCutout = false
+                                }
+                            }
+                        },
+                        hasResult = result != null,
+                        onCopy = { runRefinedAction { CutoutHelper.copyToClipboard(context, it) } },
+                        onShare = { runRefinedAction { CutoutHelper.shareCutout(context, it) } },
+                        onSave = { runRefinedAction { CutoutHelper.saveToGallery(context, it) } }
                     )
-                }
-
-                // Bottom end (right): Action Controls Pill
-                if (result != null) {
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .padding(end = 24.dp, bottom = 64.dp)
-                    ) {
-                        ActionControlsPill(
-                            onCopy = { runRefinedAction { CutoutHelper.copyToClipboard(context, it) } },
-                            onShare = { runRefinedAction { CutoutHelper.shareCutout(context, it) } },
-                            onSave = { runRefinedAction { CutoutHelper.saveToGallery(context, it) } }
-                        )
-                    }
                 }
             }
         }
@@ -660,83 +720,115 @@ fun <T : Media> ZoomablePagerImage(
 enum class ZoomablePagerImagePointTool { NONE, ADD, REMOVE }
 
 @Composable
-fun RefinementControlsPill(
+fun CombinedCutoutControlsPill(
     activeTool: ZoomablePagerImagePointTool,
     onToolChange: (ZoomablePagerImagePointTool) -> Unit,
     onReset: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        shape = CircleShape,
-        color = Color.Black.copy(alpha = 0.6f),
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f)),
-        modifier = modifier.shadow(8.dp, shape = CircleShape)
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            ToolbarIconButton(
-                onClick = { onToolChange(if (activeTool == ZoomablePagerImagePointTool.ADD) ZoomablePagerImagePointTool.NONE else ZoomablePagerImagePointTool.ADD) },
-                icon = androidx.compose.material.icons.Icons.Default.Add,
-                label = "Include",
-                selected = activeTool == ZoomablePagerImagePointTool.ADD,
-                selectedColor = Color(0xFF4CAF50).copy(alpha = 0.8f)
-            )
-            ToolbarIconButton(
-                onClick = { onToolChange(if (activeTool == ZoomablePagerImagePointTool.REMOVE) ZoomablePagerImagePointTool.NONE else ZoomablePagerImagePointTool.REMOVE) },
-                icon = androidx.compose.material.icons.Icons.Default.Remove,
-                label = "Exclude",
-                selected = activeTool == ZoomablePagerImagePointTool.REMOVE,
-                selectedColor = Color(0xFFF44336).copy(alpha = 0.8f)
-            )
-            ToolbarIconButton(
-                onClick = onReset,
-                icon = androidx.compose.material.icons.Icons.Default.Refresh,
-                label = "Reset",
-                selected = false
-            )
-        }
-    }
-}
-
-@Composable
-fun ActionControlsPill(
+    canUndo: Boolean,
+    canRedo: Boolean,
+    onUndo: () -> Unit,
+    onRedo: () -> Unit,
+    hasResult: Boolean,
     onCopy: () -> Unit,
     onShare: () -> Unit,
     onSave: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Surface(
-        shape = CircleShape,
-        color = Color.Black.copy(alpha = 0.6f),
+        shape = if (hasResult) RoundedCornerShape(20.dp) else CircleShape,
+        color = Color.Black.copy(alpha = 0.65f),
         border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f)),
-        modifier = modifier.shadow(8.dp, shape = CircleShape)
+        modifier = modifier
+            .animateContentSize()
+            .shadow(8.dp, shape = if (hasResult) RoundedCornerShape(20.dp) else CircleShape)
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            ToolbarIconButton(
-                onClick = onCopy,
-                icon = Icons.Default.ContentCopy,
-                label = "Copy",
-                selected = false
-            )
-            ToolbarIconButton(
-                onClick = onShare,
-                icon = Icons.Default.Share,
-                label = "Share",
-                selected = false
-            )
-            ToolbarIconButton(
-                onClick = onSave,
-                icon = Icons.Default.Save,
-                label = "Save",
-                selected = false
-            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                ToolbarIconButton(
+                    onClick = { onToolChange(if (activeTool == ZoomablePagerImagePointTool.ADD) ZoomablePagerImagePointTool.NONE else ZoomablePagerImagePointTool.ADD) },
+                    icon = androidx.compose.material.icons.Icons.Default.Add,
+                    label = "Include",
+                    selected = activeTool == ZoomablePagerImagePointTool.ADD,
+                    selectedColor = Color(0xFF4CAF50).copy(alpha = 0.8f)
+                )
+                ToolbarIconButton(
+                    onClick = { onToolChange(if (activeTool == ZoomablePagerImagePointTool.REMOVE) ZoomablePagerImagePointTool.NONE else ZoomablePagerImagePointTool.REMOVE) },
+                    icon = androidx.compose.material.icons.Icons.Default.Remove,
+                    label = "Exclude",
+                    selected = activeTool == ZoomablePagerImagePointTool.REMOVE,
+                    selectedColor = Color(0xFFF44336).copy(alpha = 0.8f)
+                )
+                
+                VerticalDivider(
+                    modifier = Modifier.height(24.dp),
+                    color = Color.White.copy(alpha = 0.15f)
+                )
+                
+                ToolbarIconButton(
+                    onClick = onUndo,
+                    icon = androidx.compose.material.icons.Icons.AutoMirrored.Filled.Undo,
+                    label = "Undo",
+                    selected = false,
+                    enabled = canUndo
+                )
+                ToolbarIconButton(
+                    onClick = onRedo,
+                    icon = androidx.compose.material.icons.Icons.AutoMirrored.Filled.Redo,
+                    label = "Redo",
+                    selected = false,
+                    enabled = canRedo
+                )
+                
+                VerticalDivider(
+                    modifier = Modifier.height(24.dp),
+                    color = Color.White.copy(alpha = 0.15f)
+                )
+                
+                ToolbarIconButton(
+                    onClick = onReset,
+                    icon = androidx.compose.material.icons.Icons.Default.Refresh,
+                    label = "Reset",
+                    selected = false
+                )
+            }
+
+            if (hasResult) {
+                HorizontalDivider(
+                    color = Color.White.copy(alpha = 0.12f),
+                    thickness = 1.dp,
+                    modifier = Modifier.width(200.dp)
+                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    ToolbarIconButton(
+                        onClick = onCopy,
+                        icon = Icons.Default.ContentCopy,
+                        label = "Copy",
+                        selected = false
+                    )
+                    ToolbarIconButton(
+                        onClick = onShare,
+                        icon = Icons.Default.Share,
+                        label = "Share",
+                        selected = false
+                    )
+                    ToolbarIconButton(
+                        onClick = onSave,
+                        icon = Icons.Default.Save,
+                        label = "Save",
+                        selected = false
+                    )
+                }
+            }
         }
     }
 }
@@ -771,13 +863,16 @@ private fun ToolbarIconButton(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
     selected: Boolean,
-    selectedColor: Color = MaterialTheme.colorScheme.primaryContainer
+    selectedColor: Color = MaterialTheme.colorScheme.primaryContainer,
+    enabled: Boolean = true
 ) {
     androidx.compose.material3.IconButton(
         onClick = onClick,
+        enabled = enabled,
         colors = androidx.compose.material3.IconButtonDefaults.iconButtonColors(
             containerColor = if (selected) selectedColor else Color.Transparent,
-            contentColor = if (selected) Color.White else Color.White.copy(alpha = 0.8f)
+            contentColor = if (selected) Color.White else Color.White.copy(alpha = 0.8f),
+            disabledContentColor = Color.White.copy(alpha = 0.3f)
         ),
         modifier = Modifier.size(40.dp)
     ) {
