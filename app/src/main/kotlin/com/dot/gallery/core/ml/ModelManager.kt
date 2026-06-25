@@ -90,6 +90,22 @@ class ModelManager @Inject constructor(
 
     val modelsDir: File get() = File(context.filesDir, MODELS_DIR)
 
+    fun getDestinationFile(name: String): File {
+        val subDir = when (name) {
+            "mobile_sam_image_encoder.onnx", "sam_mask_decoder_single.onnx" -> "sam"
+            else -> "clip"
+        }
+        return File(modelsDir, "$subDir/$name")
+    }
+
+    fun getTempFile(name: String): File {
+        val subDir = when (name) {
+            "mobile_sam_image_encoder.onnx", "sam_mask_decoder_single.onnx" -> "sam"
+            else -> "clip"
+        }
+        return File(modelsDir, "$subDir/$name.tmp")
+    }
+
     /**
      * Initialize models on app start.
      * For withML builds: copies bundled assets to filesDir if not already present.
@@ -123,7 +139,7 @@ class ModelManager @Inject constructor(
      */
     fun checkModelsPresent(): Boolean {
         return REQUIRED_FILES.all { fileName ->
-            val file = File(modelsDir, fileName)
+            val file = getDestinationFile(fileName)
             file.exists() && file.length() > 0
         }
     }
@@ -134,7 +150,7 @@ class ModelManager @Inject constructor(
      */
     fun getModelFile(name: String): File {
         if (!isReady) throw ModelsNotAvailableException()
-        val file = File(modelsDir, name)
+        val file = getDestinationFile(name)
         if (!file.exists()) throw ModelsNotAvailableException("Model file not found: $name")
         return file
     }
@@ -144,7 +160,7 @@ class ModelManager @Inject constructor(
      */
     fun getInstalledSize(): Long {
         if (!checkModelsPresent()) return 0L
-        return REQUIRED_FILES.sumOf { File(modelsDir, it).length() }
+        return REQUIRED_FILES.sumOf { getDestinationFile(it).length() }
     }
 
     /**
@@ -153,7 +169,7 @@ class ModelManager @Inject constructor(
     fun getFileInfos(): List<ModelFileInfo> {
         if (!checkModelsPresent()) return emptyList()
         return REQUIRED_FILES.map { fileName ->
-            val file = File(modelsDir, fileName)
+            val file = getDestinationFile(fileName)
             val hash = file.sha256()
             ModelFileInfo(
                 name = fileName,
@@ -240,7 +256,8 @@ class ModelManager @Inject constructor(
             val assetManager = context.assets
             val totalFiles = REQUIRED_FILES.size
             REQUIRED_FILES.forEachIndexed { index, fileName ->
-                val destFile = File(modelsDir, fileName)
+                val destFile = getDestinationFile(fileName)
+                destFile.parentFile?.mkdirs()
                 if (!destFile.exists() || destFile.length() == 0L) {
                     try {
                         printDebug("ModelManager: Copying asset $fileName to filesDir")
@@ -265,7 +282,7 @@ class ModelManager @Inject constructor(
     }
 
     companion object {
-        const val MODELS_DIR = "models/clip"
+        const val MODELS_DIR = "models"
 
         val REQUIRED_FILES = listOf(
             "visual_quant.onnx",

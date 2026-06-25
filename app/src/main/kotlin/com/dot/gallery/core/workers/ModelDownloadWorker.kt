@@ -79,7 +79,7 @@ class ModelDownloadWorker @AssistedInject constructor(
             var totalAllBytes = 0L
             val fileSizes = mutableMapOf<String, Long>()
             filesToDownload.forEach { fileName ->
-                val destFile = File(modelsDir, fileName)
+                val destFile = modelManager.getDestinationFile(fileName)
                 if (destFile.exists() && destFile.length() > 0) {
                     fileSizes[fileName] = destFile.length()
                 } else {
@@ -106,11 +106,12 @@ class ModelDownloadWorker @AssistedInject constructor(
 
             filesToDownload.forEach { fileName ->
                 if (!currentCoroutineContext().isActive || isStopped) {
-                    cleanupPartialFiles(modelsDir, filesToDownload)
+                    cleanupPartialFiles(filesToDownload)
                     return@withContext Result.failure()
                 }
 
-                val destFile = File(modelsDir, fileName)
+                val destFile = modelManager.getDestinationFile(fileName)
+                destFile.parentFile?.mkdirs()
 
                 // Skip files that already exist and are non-empty
                 if (destFile.exists() && destFile.length() > 0) {
@@ -128,7 +129,8 @@ class ModelDownloadWorker @AssistedInject constructor(
                     "sam_mask_decoder_single.onnx" -> "https://huggingface.co/Acly/MobileSAM/resolve/main/sam_mask_decoder_single.onnx"
                     else -> "${ModelManager.BASE_DOWNLOAD_URL}$fileName"
                 }
-                val tempFile = File(modelsDir, "$fileName.tmp")
+                val tempFile = modelManager.getTempFile(fileName)
+                tempFile.parentFile?.mkdirs()
 
                 try {
                     downloadFile(url, tempFile, fileName, completedFiles, totalFiles, downloadedBytes, totalAllBytes)
@@ -249,9 +251,9 @@ class ModelDownloadWorker @AssistedInject constructor(
         }
     }
 
-    private fun cleanupPartialFiles(modelsDir: File, files: List<String>) {
+    private fun cleanupPartialFiles(files: List<String>) {
         files.forEach { fileName ->
-            File(modelsDir, "$fileName.tmp").delete()
+            modelManager.getTempFile(fileName).delete()
         }
     }
 

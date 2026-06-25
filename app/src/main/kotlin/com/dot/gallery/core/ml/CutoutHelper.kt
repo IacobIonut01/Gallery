@@ -7,6 +7,9 @@ package com.dot.gallery.core.ml
 
 import ai.onnxruntime.OnnxTensor
 import ai.onnxruntime.OrtEnvironment
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.runBlocking
 import ai.onnxruntime.OrtSession
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -92,7 +95,9 @@ object CutoutHelper {
             private set
 
         private var tempFile: File? = null
-        private var lastCutoutResult: CutoutResult? = null
+
+        private val sessionMutex = Mutex()
+        private var isClosed = false
 
         // Precomputed lookup table for sigmoid contrast curve
         private val contrastLUT = FloatArray(256) { i ->
@@ -187,7 +192,9 @@ object CutoutHelper {
                 val resizedSam = Bitmap.createScaledBitmap(orig, newW, newH, true)
                 val pixels = IntArray(newW * newH)
                 resizedSam.getPixels(pixels, 0, newW, 0, 0, newW, newH)
-                resizedSam.recycle()
+                if (resizedSam != orig) {
+                    resizedSam.recycle()
+                }
 
                 // Fill interleaved float array of size [1024, 1024, 3] with padding initialized to 0.0f
                 val inputBuffer = FloatArray(1024 * 1024 * 3)
@@ -213,9 +220,10 @@ object CutoutHelper {
 
                 printInfo("CutoutSession: Creating OrtSessions...")
                 try {
-                    val modelsDir = modelManager.modelsDir
-                    encoderSession = env.createSession(File(modelsDir, "mobile_sam_image_encoder.onnx").absolutePath, cpuOptions)
-                    decoderSession = env.createSession(File(modelsDir, "sam_mask_decoder_single.onnx").absolutePath, cpuOptions)
+                    val encoderFile = modelManager.getModelFile("mobile_sam_image_encoder.onnx")
+                    val decoderFile = modelManager.getModelFile("sam_mask_decoder_single.onnx")
+                    encoderSession = env.createSession(encoderFile.absolutePath, cpuOptions)
+                    decoderSession = env.createSession(decoderFile.absolutePath, cpuOptions)
                 } finally {
                     cpuOptions.close()
                 }
@@ -224,8 +232,18 @@ object CutoutHelper {
                 val inputTensor = OnnxTensor.createTensor(env, FloatBuffer.wrap(inputBuffer), longArrayOf(1024, 1024, 3))
                 printInfo("CutoutSession: Running Encoder Session...")
                 val outputs = encoderSession!!.run(Collections.singletonMap("input_image", inputTensor))
-                imageEmbeddings = outputs.get(0) as OnnxTensor
+                outputs.use {
+                    val originalTensor = outputs.get(0) as OnnxTensor
+                    val floatBuffer = originalTensor.floatBuffer
+                    val copyArray = FloatArray(floatBuffer.capacity())
+                    floatBuffer.rewind()
+                    floatBuffer.get(copyArray)
+                    val shape = originalTensor.info.shape
+                    imageEmbeddings = OnnxTensor.createTensor(env, FloatBuffer.wrap(copyArray), shape)
+                }
                 inputTensor.close()
+                encoderSession?.close()
+                encoderSession = null
 
                 printInfo("CutoutSession: Encoder completed successfully.")
                 true
@@ -241,145 +259,139 @@ object CutoutHelper {
          * Run decoder using positive/negative prompt points and return a cropped transparent cutout.
          */
         suspend fun runDecoder(points: List<PromptPoint>): CutoutResult? = withContext(Dispatchers.Default) {
-            val decoder = decoderSession ?: return@withContext null
-            val embeddings = imageEmbeddings ?: return@withContext null
+            sessionMutex.withLock {
+                if (isClosed) return@withLock null
+                val decoder = decoderSession ?: return@withLock null
+                val embeddings = imageEmbeddings ?: return@withLock null
 
-            try {
-                val numPoints = points.size
-                if (numPoints == 0) return@withContext null
+                try {
+                    val numPoints = points.size
+                    if (numPoints == 0) return@withLock null
 
-                // Format coordinates to the 1024x1024 scaled image space
-                val scaledPoints = points.map { pt ->
-                    PromptPoint(
-                        x = pt.x * scaleSam,
-                        y = pt.y * scaleSam,
-                        isPositive = pt.isPositive
-                    )
-                }
-
-                // If K=1, pad with a dummy point
-                val (coordsArray, labelsArray, finalN) = if (numPoints == 1) {
-                    val coords = floatArrayOf(
-                        scaledPoints[0].x, scaledPoints[0].y,
-                        0.0f, 0.0f
-                    )
-                    val labels = floatArrayOf(
-                        if (scaledPoints[0].isPositive) 1.0f else 0.0f,
-                        -1.0f
-                    )
-                    Triple(coords, labels, 2)
-                } else {
-                    val coords = FloatArray(numPoints * 2)
-                    val labels = FloatArray(numPoints)
-                    for (i in 0 until numPoints) {
-                        coords[i * 2] = scaledPoints[i].x
-                        coords[i * 2 + 1] = scaledPoints[i].y
-                        labels[i] = if (scaledPoints[i].isPositive) 1.0f else 0.0f
+                    // Format coordinates to the 1024x1024 scaled image space
+                    val scaledPoints = points.map { pt ->
+                        PromptPoint(
+                            x = pt.x * scaleSam,
+                            y = pt.y * scaleSam,
+                            isPositive = pt.isPositive
+                        )
                     }
-                    Triple(coords, labels, numPoints)
-                }
 
-                // Create OnnxTensors and ensure they are all closed correctly via .use
-                OnnxTensor.createTensor(env, FloatBuffer.wrap(coordsArray), longArrayOf(1, finalN.toLong(), 2)).use { pointCoordsTensor ->
-                    OnnxTensor.createTensor(env, FloatBuffer.wrap(labelsArray), longArrayOf(1, finalN.toLong())).use { pointLabelsTensor ->
-                        OnnxTensor.createTensor(env, FloatBuffer.wrap(FloatArray(256 * 256)), longArrayOf(1, 1, 256, 256)).use { maskInputTensor ->
-                            OnnxTensor.createTensor(env, floatArrayOf(0.0f)).use { hasMaskInputTensor ->
-                                OnnxTensor.createTensor(env, floatArrayOf(heightOrig.toFloat(), widthOrig.toFloat())).use { origImSizeTensor ->
-                                    val inputs = mapOf(
-                                        "image_embeddings" to embeddings,
-                                        "point_coords" to pointCoordsTensor,
-                                        "point_labels" to pointLabelsTensor,
-                                        "mask_input" to maskInputTensor,
-                                        "has_mask_input" to hasMaskInputTensor,
-                                        "orig_im_size" to origImSizeTensor
-                                    )
+                    // If K=1, pad with a dummy point
+                    val (coordsArray, labelsArray, finalN) = if (numPoints == 1) {
+                        val coords = floatArrayOf(
+                            scaledPoints[0].x, scaledPoints[0].y,
+                            0.0f, 0.0f
+                        )
+                        val labels = floatArrayOf(
+                            if (scaledPoints[0].isPositive) 1.0f else 0.0f,
+                            -1.0f
+                        )
+                        Triple(coords, labels, 2)
+                    } else {
+                        val coords = FloatArray(numPoints * 2)
+                        val labels = FloatArray(numPoints)
+                        for (i in 0 until numPoints) {
+                            coords[i * 2] = scaledPoints[i].x
+                            coords[i * 2 + 1] = scaledPoints[i].y
+                            labels[i] = if (scaledPoints[i].isPositive) 1.0f else 0.0f
+                        }
+                        Triple(coords, labels, numPoints)
+                    }
 
-                                    decoder.run(inputs).use { result ->
-                                        (result.get(0) as OnnxTensor).use { masksTensor ->
-                                            val buffer = masksTensor.floatBuffer
+                    // Create OnnxTensors and ensure they are all closed correctly via .use
+                    OnnxTensor.createTensor(env, FloatBuffer.wrap(coordsArray), longArrayOf(1, finalN.toLong(), 2)).use { pointCoordsTensor ->
+                        OnnxTensor.createTensor(env, FloatBuffer.wrap(labelsArray), longArrayOf(1, finalN.toLong())).use { pointLabelsTensor ->
+                            OnnxTensor.createTensor(env, FloatBuffer.wrap(FloatArray(256 * 256)), longArrayOf(1, 1, 256, 256)).use { maskInputTensor ->
+                                OnnxTensor.createTensor(env, floatArrayOf(0.0f)).use { hasMaskInputTensor ->
+                                    OnnxTensor.createTensor(env, floatArrayOf(heightOrig.toFloat(), widthOrig.toFloat())).use { origImSizeTensor ->
+                                        val inputs = mapOf(
+                                            "image_embeddings" to embeddings,
+                                            "point_coords" to pointCoordsTensor,
+                                            "point_labels" to pointLabelsTensor,
+                                            "mask_input" to maskInputTensor,
+                                            "has_mask_input" to hasMaskInputTensor,
+                                            "orig_im_size" to origImSizeTensor
+                                        )
 
-                                            // Find bounding box of SAM mask (logit > 0.0f)
-                                            var minX = widthOrig
-                                            var maxX = -1
-                                            var minY = heightOrig
-                                            var maxY = -1
+                                        decoder.run(inputs).use { result ->
+                                            (result.get(0) as OnnxTensor).use { masksTensor ->
+                                                val buffer = masksTensor.floatBuffer
 
-                                            buffer.rewind()
-                                            for (y in 0 until heightOrig) {
-                                                for (x in 0 until widthOrig) {
-                                                    val logit = buffer.get(y * widthOrig + x)
-                                                    if (logit > 0.0f) {
-                                                        if (x < minX) minX = x
-                                                        if (x > maxX) maxX = x
-                                                        if (y < minY) minY = y
-                                                        if (y > maxY) maxY = y
+                                                // Find bounding box of SAM mask (logit > 0.0f)
+                                                var minX = widthOrig
+                                                var maxX = -1
+                                                var minY = heightOrig
+                                                var maxY = -1
+
+                                                buffer.rewind()
+                                                for (y in 0 until heightOrig) {
+                                                    for (x in 0 until widthOrig) {
+                                                        val logit = buffer.get(y * widthOrig + x)
+                                                        if (logit > 0.0f) {
+                                                            if (x < minX) minX = x
+                                                            if (x > maxX) maxX = x
+                                                            if (y < minY) minY = y
+                                                            if (y > maxY) maxY = y
+                                                        }
                                                     }
                                                 }
-                                            }
 
-                                            if (maxX == -1 || maxY == -1) return@withContext null
+                                                if (maxX == -1 || maxY == -1) return@withLock null
 
-                                            val bw = maxX - minX + 1
-                                            val bh = maxY - minY + 1
+                                                val bw = maxX - minX + 1
+                                                val bh = maxY - minY + 1
 
-                                            val orig = originalBitmap ?: return@withContext null
-                                            val cutoutBitmap = Bitmap.createBitmap(bw, bh, Bitmap.Config.ARGB_8888)
-                                            val originalPixels = IntArray(bw * bh)
-                                            orig.getPixels(originalPixels, 0, bw, minX, minY, bw, bh)
+                                                val orig = originalBitmap ?: return@withLock null
+                                                val cutoutBitmap = Bitmap.createBitmap(bw, bh, Bitmap.Config.ARGB_8888)
+                                                val originalPixels = IntArray(bw * bh)
+                                                orig.getPixels(originalPixels, 0, bw, minX, minY, bw, bh)
 
-                                            // Refinement - Extract binary mask, apply box blur and contrast LUT remapping
-                                            val maskPixels = IntArray(bw * bh)
-                                            for (y in 0 until bh) {
-                                                for (x in 0 until bw) {
-                                                    val logit = buffer.get((minY + y) * widthOrig + (minX + x))
-                                                    val alpha = if (logit > 0.0f) 255 else 0
-                                                    maskPixels[y * bw + x] = (alpha shl 24) or 0x00FFFFFF
+                                                // Refinement - Extract binary mask, apply box blur and contrast LUT remapping
+                                                val maskPixels = IntArray(bw * bh)
+                                                for (y in 0 until bh) {
+                                                    for (x in 0 until bw) {
+                                                        val logit = buffer.get((minY + y) * widthOrig + (minX + x))
+                                                        val alpha = if (logit > 0.0f) 255 else 0
+                                                        maskPixels[y * bw + x] = (alpha shl 24) or 0x00FFFFFF
+                                                    }
                                                 }
-                                            }
 
-                                            refineMask(maskPixels, bw, bh, points, minX, minY)
+                                                refineMask(maskPixels, bw, bh, points, minX, minY)
 
-                                            val maxDim = maxOf(bw, bh)
-                                            val blurR = Math.round(maxDim * 0.005f).coerceIn(1, 8)
-                                            boxBlur(maskPixels, bw, bh, blurR)
+                                                val maxDim = maxOf(bw, bh)
+                                                val blurR = Math.round(maxDim * 0.005f).coerceIn(1, 8)
+                                                boxBlur(maskPixels, bw, bh, blurR)
 
-                                            val cutoutPixels = IntArray(bw * bh)
-                                            for (y in 0 until bh) {
-                                                for (x in 0 until bw) {
-                                                    val idx = y * bw + x
-                                                    val origColor = originalPixels[idx]
-                                                    val rawAlpha = (maskPixels[idx] shr 24) and 0xFF
-                                                    val remappedAlpha = (contrastLUT[rawAlpha] * 255f).toInt()
-                                                    cutoutPixels[idx] = (remappedAlpha shl 24) or (origColor and 0x00FFFFFF)
+                                                val cutoutPixels = IntArray(bw * bh)
+                                                for (y in 0 until bh) {
+                                                    for (x in 0 until bw) {
+                                                        val idx = y * bw + x
+                                                        val origColor = originalPixels[idx]
+                                                        val rawAlpha = (maskPixels[idx] shr 24) and 0xFF
+                                                        val remappedAlpha = Math.round(contrastLUT[rawAlpha] * 255f)
+                                                        cutoutPixels[idx] = (remappedAlpha shl 24) or (origColor and 0x00FFFFFF)
+                                                    }
                                                 }
-                                            }
-                                            cutoutBitmap.setPixels(cutoutPixels, 0, bw, 0, 0, bw, bh)
+                                                cutoutBitmap.setPixels(cutoutPixels, 0, bw, 0, 0, bw, bh)
 
-                                            val cutoutResult = CutoutResult(
-                                                bitmap = cutoutBitmap,
-                                                originalBounds = Rect(minX, minY, maxX + 1, maxY + 1)
-                                            )
-                                            lastCutoutResult = cutoutResult
-                                            cutoutResult
+                                                CutoutResult(
+                                                    bitmap = cutoutBitmap,
+                                                    originalBounds = Rect(minX, minY, maxX + 1, maxY + 1)
+                                                )
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
                     }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    printError("CutoutSession: Error during SAM decoder inference: ${e.message}")
+                    null
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                printError("CutoutSession: Error during SAM decoder inference: ${e.message}")
-                null
             }
-        }
-
-        /**
-         * Refinement step is now a quick pass-through of the refined SAM result
-         */
-        suspend fun finalizeCutout(samBounds: Rect): CutoutResult? = withContext(Dispatchers.Default) {
-            lastCutoutResult
         }
 
         private fun refineMask(mask: IntArray, w: Int, h: Int, points: List<PromptPoint>, minX: Int, minY: Int) {
@@ -532,32 +544,48 @@ object CutoutHelper {
             // Horizontal pass
             for (y in 0 until h) {
                 var sum = 0
-                for (x in -radius..radius) {
-                    val color = pixels[y * w + x.coerceIn(0, w - 1)]
+                var count = 0
+                for (x in 0..radius.coerceAtMost(w - 1)) {
+                    val color = pixels[y * w + x]
                     sum += (color shr 24) and 0xFF
+                    count++
                 }
                 for (x in 0 until w) {
-                    temp[y * w + x] = sum / (2 * radius + 1)
+                    temp[y * w + x] = sum / count
                     val nextX = x + radius + 1
                     val prevX = x - radius
-                    val nextColor = pixels[y * w + nextX.coerceIn(0, w - 1)]
-                    val prevColor = pixels[y * w + prevX.coerceIn(0, w - 1)]
-                    sum += ((nextColor shr 24) and 0xFF) - ((prevColor shr 24) and 0xFF)
+                    if (nextX < w) {
+                        val nextColor = pixels[y * w + nextX]
+                        sum += (nextColor shr 24) and 0xFF
+                        count++
+                    }
+                    if (prevX >= 0) {
+                        val prevColor = pixels[y * w + prevX]
+                        sum -= (prevColor shr 24) and 0xFF
+                        count--
+                    }
                 }
             }
             // Vertical pass
             for (x in 0 until w) {
                 var sum = 0
-                for (y in -radius..radius) {
-                    sum += temp[y.coerceIn(0, h - 1) * w + x]
+                var count = 0
+                for (y in 0..radius.coerceAtMost(h - 1)) {
+                    sum += temp[y * w + x]
+                    count++
                 }
                 for (y in 0 until h) {
-                    pixels[y * w + x] = (sum / (2 * radius + 1)) shl 24 or 0x00FFFFFF
+                    pixels[y * w + x] = (sum / count) shl 24 or 0x00FFFFFF
                     val nextY = y + radius + 1
                     val prevY = y - radius
-                    val nextAlpha = temp[nextY.coerceIn(0, h - 1) * w + x]
-                    val prevAlpha = temp[prevY.coerceIn(0, h - 1) * w + x]
-                    sum += nextAlpha - prevAlpha
+                    if (nextY < h) {
+                        sum += temp[nextY * w + x]
+                        count++
+                    }
+                    if (prevY >= 0) {
+                        sum -= temp[prevY * w + x]
+                        count--
+                    }
                 }
             }
         }
@@ -567,33 +595,39 @@ object CutoutHelper {
          */
         fun close() {
             printInfo("CutoutSession: Releasing resources...")
-            try {
-                imageEmbeddings?.close()
-                imageEmbeddings = null
+            runBlocking {
+                sessionMutex.withLock {
+                    if (isClosed) return@withLock
+                    isClosed = true
+                    try {
+                        imageEmbeddings?.close()
+                        imageEmbeddings = null
 
-                encoderSession?.close()
-                encoderSession = null
+                        encoderSession?.close()
+                        encoderSession = null
 
-                decoderSession?.close()
-                decoderSession = null
+                        decoderSession?.close()
+                        decoderSession = null
 
-                originalBitmap?.recycle()
-                originalBitmap = null
+                        originalBitmap?.recycle()
+                        originalBitmap = null
 
-                tempFile?.let {
-                    if (it.exists()) it.delete()
+                        tempFile?.let {
+                            if (it.exists()) it.delete()
+                        }
+                        tempFile = null
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
                 }
-                tempFile = null
-            } catch (e: Exception) {
-                e.printStackTrace()
             }
         }
     }
 
-    private fun cleanLegacyCacheFiles(context: Context) {
+    private fun cleanLegacyCacheFiles(context: Context, excludeFile: File? = null) {
         try {
             context.cacheDir.listFiles()?.forEach { file ->
-                if (file.name.startsWith("cutout_") && file.name.endsWith(".png")) {
+                if (file.name.startsWith("cutout_") && file.name.endsWith(".png") && file != excludeFile) {
                     file.delete()
                 }
             }
@@ -607,12 +641,12 @@ object CutoutHelper {
      */
     suspend fun copyToClipboard(context: Context, bitmap: Bitmap) = withContext(Dispatchers.IO) {
         try {
-            cleanLegacyCacheFiles(context)
             val cacheFile = File(context.cacheDir, "cutout_${System.currentTimeMillis()}.png")
             FileOutputStream(cacheFile).use { out ->
                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
             }
             val uri = FileProvider.getUriForFile(context, BuildConfig.CONTENT_AUTHORITY, cacheFile)
+            cleanLegacyCacheFiles(context, cacheFile)
             withContext<Unit>(Dispatchers.Main) {
                 val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                 val clip = ClipData.newUri(context.contentResolver, "Cutout Object", uri)
@@ -637,12 +671,12 @@ object CutoutHelper {
      */
     suspend fun shareCutout(context: Context, bitmap: Bitmap) = withContext(Dispatchers.IO) {
         try {
-            cleanLegacyCacheFiles(context)
             val cacheFile = File(context.cacheDir, "cutout_${System.currentTimeMillis()}.png")
             FileOutputStream(cacheFile).use { out ->
                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
             }
             val uri = FileProvider.getUriForFile(context, BuildConfig.CONTENT_AUTHORITY, cacheFile)
+            cleanLegacyCacheFiles(context, cacheFile)
             withContext<Unit>(Dispatchers.Main) {
                 val intent = ShareCompat.IntentBuilder(context)
                     .setType("image/png")

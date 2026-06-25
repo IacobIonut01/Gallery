@@ -62,10 +62,8 @@ import com.github.panpf.sketch.resize.Precision
 import com.github.panpf.zoomimage.ZoomImage
 import com.github.panpf.zoomimage.rememberSketchZoomState
 import com.github.panpf.zoomimage.subsampling.SubsamplingImage
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import android.widget.Toast
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.res.stringResource
@@ -75,7 +73,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.height
@@ -106,9 +103,6 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.IntSize
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.DisposableEffect
 import android.graphics.Bitmap
@@ -367,10 +361,13 @@ fun <T : Media> ZoomablePagerImage(
 
                             scope.launch {
                                 cutoutState.isProcessing = true
-                                val res = session.runDecoder(updatedPoints)
-                                val newCache = cutoutState.result?.let { Pair(previousPoints, it) }
-                                cutoutState.updateResult(res, newCache)
-                                cutoutState.isProcessing = false
+                                try {
+                                    val res = session.runDecoder(updatedPoints)
+                                    val newCache = cutoutState.result?.let { Pair(previousPoints, it) }
+                                    cutoutState.updateResult(res, newCache)
+                                } finally {
+                                    cutoutState.isProcessing = false
+                                }
                             }
                         }
                     }
@@ -442,7 +439,7 @@ fun <T : Media> ZoomablePagerImage(
         )
 
         // Circular processing/refinement indicator
-        if (cutoutState.isProcessing || cutoutState.isRefining) {
+        if (cutoutState.isProcessing) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -456,14 +453,6 @@ fun <T : Media> ZoomablePagerImage(
                     CircularProgressIndicator(
                         color = MaterialTheme.colorScheme.primary
                     )
-                    if (cutoutState.isRefining) {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = stringResource(R.string.cutout_refining),
-                            color = Color.White,
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    }
                 }
             }
         }
@@ -501,7 +490,7 @@ private fun CutoutOverlay(
         }
     }
 
-    if (displayRect.width > 0 && originSize.width > 0) {
+    if (displayRect.width > 0 && session.widthOrig > 0) {
         Box(modifier = Modifier.fillMaxSize()) {
             // Dim background (no pointerInput / no touch interception to allow zoom/pan pass-through)
             Box(
@@ -597,13 +586,7 @@ private fun CutoutOverlay(
             val runRefinedAction = { action: suspend (Bitmap) -> Unit ->
                 if (result != null) {
                     scope.launch {
-                        state.isRefining = true
-                        val refined = session.finalizeCutout(result.originalBounds)
-                        state.isRefining = false
-
-                        val bitmapToUse = refined?.bitmap ?: result.bitmap
-                        action(bitmapToUse)
-
+                        action(result.bitmap)
                         state.dismiss()
                     }
                 }
@@ -633,10 +616,13 @@ private fun CutoutOverlay(
                     if (pts != null) {
                         scope.launch {
                             state.isProcessing = true
-                            val res = state.session!!.runDecoder(pts.second)
-                            val newCache = state.result?.let { Pair(pts.first, it) }
-                            state.updateResult(res, newCache)
-                            state.isProcessing = false
+                            try {
+                                val res = state.session!!.runDecoder(pts.second)
+                                val newCache = state.result?.let { Pair(pts.first, it) }
+                                state.updateResult(res, newCache)
+                            } finally {
+                                state.isProcessing = false
+                            }
                         }
                     }
                 }

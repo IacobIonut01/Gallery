@@ -23,7 +23,6 @@ class CutoutState {
     var activeTool by mutableStateOf(ZoomablePagerImagePointTool.NONE)
     var result by mutableStateOf<CutoutResult?>(null)
     var isProcessing by mutableStateOf(false)
-    var isRefining by mutableStateOf(false)
 
     // --- Internal state (not directly observed by UI, but affects transitions) ---
     private var history by mutableStateOf<List<List<PromptPoint>>>(emptyList())
