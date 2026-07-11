@@ -34,6 +34,7 @@ import com.dot.gallery.core.decoder.glide.MimeInputStreamModelLoader
 import com.dot.gallery.core.decoder.glide.PsdBitmapDecoder
 import com.dot.gallery.core.decoder.glide.Jp2BitmapDecoder
 import com.dot.gallery.core.decoder.glide.SvgBitmapDecoder
+import com.dot.gallery.core.decoder.glide.CameraRawMimeInputStreamDecoder
 import com.dot.gallery.core.decoder.glide.TiffMimeInputStreamDecoder
 import com.dot.gallery.core.decoder.glide.StreamingEncryptedVideoFrameDecoder
 import java.io.File
@@ -97,6 +98,12 @@ class GlideModule: AppGlideModule() {
             MimeInputStream::class.java,
             Bitmap::class.java,
             TiffMimeInputStreamDecoder(pool)
+        )
+        // Camera RAW via content Uri MIME (image/x-sony-arw, image/x-canon-cr2, etc.)
+        registry.prepend(
+            MimeInputStream::class.java,
+            Bitmap::class.java,
+            CameraRawMimeInputStreamDecoder(pool)
         )
         // Formats Android can't decode natively, detected by magic bytes (MIME is unreliable):
         // PSD, JPEG 2000, and SVG (rasterized). Registered on the InputStream path.

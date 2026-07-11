@@ -7,6 +7,8 @@ package com.dot.gallery.core.decoder
 
 import android.graphics.Bitmap
 import android.util.Size as AndroidSize
+import com.dot.gallery.core.decoder.format.CameraRawImageDecoder
+import com.dot.gallery.core.decoder.format.CameraRawMime
 import com.dot.gallery.core.decoder.format.Jp2ImageDecoder
 import com.dot.gallery.core.decoder.format.PsdImageDecoder
 import com.dot.gallery.core.decoder.format.SvgImageDecoder
@@ -146,12 +148,15 @@ class FullImageRegionDecoder(
         private val supportedMimeTypes: Set<String>,
         private val decodeFull: (ByteArray) -> Bitmap?,
         private val sizeOf: (ByteArray) -> AndroidSize?,
+        private val customCheckSupport: ((String) -> Boolean?)? = null,
     ) : RegionDecoder.Factory {
 
         override suspend fun accept(subsamplingImage: SubsamplingImage): Boolean = true
 
-        override fun checkSupport(mimeType: String): Boolean? =
-            if (mimeType in supportedMimeTypes) true else null
+        override fun checkSupport(mimeType: String): Boolean? {
+            customCheckSupport?.invoke(mimeType)?.let { return it }
+            return if (mimeType in supportedMimeTypes) true else null
+        }
 
         override fun create(
             subsamplingImage: SubsamplingImage,
@@ -208,6 +213,14 @@ class FullImageRegionDecoder(
             supportedMimeTypes = setOf(SVG_MIMETYPE),
             decodeFull = { SvgImageDecoder.decode(it, SvgImageDecoder.REGION_MAX_DIM, SvgImageDecoder.REGION_MAX_DIM) },
             sizeOf = { SvgImageDecoder.renderSize(it, SvgImageDecoder.REGION_MAX_DIM, SvgImageDecoder.REGION_MAX_DIM) },
+        )
+
+        fun forCameraRaw(): Factory = Factory(
+            mimeType = "image/x-camera-raw",
+            supportedMimeTypes = emptySet(),
+            decodeFull = { CameraRawImageDecoder.decode(it, 0, 0) },
+            sizeOf = { CameraRawImageDecoder.getSize(it) },
+            customCheckSupport = { if (CameraRawMime.isCameraRaw(it)) true else null },
         )
     }
 }

@@ -48,6 +48,7 @@ import com.dot.gallery.feature_node.domain.util.isEncrypted
 import com.dot.gallery.feature_node.domain.util.isJp2
 import com.dot.gallery.feature_node.domain.util.isJxl
 import com.dot.gallery.feature_node.domain.util.isPsd
+import com.dot.gallery.feature_node.domain.util.isRaw
 import com.dot.gallery.feature_node.domain.util.isSvg
 import com.dot.gallery.feature_node.domain.util.isTiff
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
@@ -132,7 +133,7 @@ fun <T : Media> ZoomablePagerImage(
     val isAnimated = remember(media) {
         media.isApng || media.isJxl || (media.isAvif && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
     }
-    // Region decoder for formats Android's BitmapRegionDecoder can't subsample (PSD/JP2/TIFF/SVG).
+    // Region decoder for formats Android's BitmapRegionDecoder can't subsample (PSD/JP2/TIFF/SVG/RAW).
     // Without this they only show the screen-resolution base painter and look blurry when zoomed.
     val customRegionFactory = remember(media) {
         when {
@@ -140,6 +141,7 @@ fun <T : Media> ZoomablePagerImage(
             media.isJp2 -> FullImageRegionDecoder.forJp2()
             media.isTiff -> FullImageRegionDecoder.forTiff()
             media.isSvg -> FullImageRegionDecoder.forSvg()
+            media.isRaw -> FullImageRegionDecoder.forCameraRaw()
             else -> null
         }
     }

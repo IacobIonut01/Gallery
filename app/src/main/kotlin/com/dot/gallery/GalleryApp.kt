@@ -32,6 +32,7 @@ import com.dot.gallery.core.decoder.supportVideoFrame2
 import com.dot.gallery.core.decoder.supportPsdDecoder
 import com.dot.gallery.core.decoder.supportJp2Decoder
 import com.dot.gallery.core.decoder.supportTiffDecoder
+import com.dot.gallery.core.decoder.supportCameraRawDecoder
 import com.dot.gallery.core.workers.MetadataCollectionWorker
 import com.dot.gallery.core.workers.TempVaultCleanupWorker
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
@@ -84,6 +85,7 @@ class GalleryApp : Application(), SingletonSketch.Factory, Configuration.Provide
             supportPsdDecoder()
             supportJp2Decoder()
             supportTiffDecoder()
+            supportCameraRawDecoder()
             supportVaultDecoder()
             supportCloudMedia()
         }

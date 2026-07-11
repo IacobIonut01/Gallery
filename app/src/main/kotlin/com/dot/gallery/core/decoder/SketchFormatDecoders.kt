@@ -7,6 +7,8 @@ package com.dot.gallery.core.decoder
 
 import android.graphics.Bitmap
 import android.os.Build
+import com.dot.gallery.core.decoder.format.CameraRawImageDecoder
+import com.dot.gallery.core.decoder.format.CameraRawMime
 import com.dot.gallery.core.decoder.format.ImageFormatSniffer
 import com.dot.gallery.core.decoder.format.Jp2ImageDecoder
 import com.dot.gallery.core.decoder.format.PsdImageDecoder
@@ -43,6 +45,10 @@ fun ComponentRegistry.Builder.supportJp2Decoder(): ComponentRegistry.Builder = a
 
 fun ComponentRegistry.Builder.supportTiffDecoder(): ComponentRegistry.Builder = apply {
     add(SketchTiffDecoder.Factory())
+}
+
+fun ComponentRegistry.Builder.supportCameraRawDecoder(): ComponentRegistry.Builder = apply {
+    add(SketchCameraRawDecoder.Factory())
 }
 
 private fun DataSource.peekHeader(count: Int): Pair<ByteArray, Int> {
@@ -184,5 +190,44 @@ class SketchTiffDecoder(
         val bytes = dataSource.openSource().buffer().use { it.readByteArray() }
         val size = TiffImageDecoder.getSize(bytes)
         return ImageInfo(size?.width ?: 0, size?.height ?: 0, TIFF_MIMETYPE)
+    }
+}
+
+class SketchCameraRawDecoder(
+    private val requestContext: RequestContext,
+    private val dataSource: DataSource,
+    private val mimeType: String,
+) : Decoder {
+
+    class Factory : Decoder.Factory {
+        override val key: String get() = "CameraRawDecoder"
+        override val sortWeight: Int = 0
+
+        override fun create(requestContext: RequestContext, fetchResult: FetchResult): Decoder? {
+            val realMime = requestContext.request.extras?.get("realMimeType") as String?
+            val mime = realMime ?: fetchResult.mimeType
+            if (CameraRawMime.isCameraRaw(mime)) {
+                return SketchCameraRawDecoder(requestContext, fetchResult.dataSource, mime!!)
+            }
+            return null
+        }
+
+        override fun equals(other: Any?): Boolean = this === other || other is Factory
+        override fun hashCode(): Int = this@Factory::class.hashCode()
+        override fun toString(): String = key
+    }
+
+    override suspend fun decode(): ImageData {
+        val bytes = dataSource.openSource().buffer().use { it.readByteArray() }
+        val (w, h) = requestContext.targetDims()
+        val bitmap = CameraRawImageDecoder.decode(bytes, w, h, mimeType)
+            ?: throw IllegalStateException("Unable to decode camera RAW image")
+        return dataSource.toImageData(bitmap, mimeType, requestContext)
+    }
+
+    override suspend fun getImageInfo(): ImageInfo {
+        val bytes = dataSource.openSource().buffer().use { it.readByteArray() }
+        val size = CameraRawImageDecoder.getSize(bytes, mimeType)
+        return ImageInfo(size?.width ?: 0, size?.height ?: 0, mimeType)
     }
 }
