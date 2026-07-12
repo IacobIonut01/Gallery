@@ -1645,5 +1645,9 @@
     <string name="cutout_save_failed">Failed to save cutout object</string>
     <string name="cutout_saved">Saved cutout to Pictures/Cutouts</string>
     <string name="cutout_refining">Refining cutout…</string>
+    <string name="cutout_action">Cut out subject</string>
+    <string name="long_press_cutout_title">Long-press to cut out</string>
+    <string name="long_press_cutout_summary">Long-press isolates a subject; rotate becomes a button</string>
+    <string name="long_press_cutout_description">Choose what a long-press on an image does in the viewer. When enabled, long-pressing starts an on-device subject cut-out and the rotate action moves to an on-screen button. When disabled (default), long-pressing rotates the image and cut-out is offered as an on-screen button.</string>
 </resources>
 

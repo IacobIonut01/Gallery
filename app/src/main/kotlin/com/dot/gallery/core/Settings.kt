@@ -548,6 +548,14 @@ object Settings {
         fun rememberDisableSmoothing() =
             rememberPreference(key = DISABLE_SMOOTHING, defaultValue = false)
 
+        private val LONG_PRESS_CUTOUT = booleanPreferencesKey("long_press_cutout")
+
+        // false (default): long-press rotates the image, cut-out is offered as an on-screen pill.
+        // true: long-press starts a subject cut-out, rotate is offered as an on-screen pill.
+        @Composable
+        fun rememberLongPressCutout() =
+            rememberPreference(key = LONG_PRESS_CUTOUT, defaultValue = false)
+
         private val OLD_NAVBAR = booleanPreferencesKey("old_navbar")
 
         @Composable

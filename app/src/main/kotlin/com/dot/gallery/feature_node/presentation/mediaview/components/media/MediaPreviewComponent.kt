@@ -107,7 +107,8 @@ fun <T : Media> MediaPreviewComponent(
                         onSwipeDown = onSwipeDown,
                         onSubsamplingLoadingChange = onSubsamplingLoadingChange,
                         onCutoutStateChanged = onCutoutStateChanged,
-                        isSelected = isSelected
+                        isSelected = isSelected,
+                        uiVisible = uiEnabled
                     )
                 }
 

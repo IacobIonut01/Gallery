@@ -95,8 +95,17 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.ScreenRotationAlt
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import com.dot.gallery.R
 import androidx.compose.foundation.layout.Column
@@ -254,7 +263,8 @@ fun <T : Media> ZoomablePagerImage(
     onSwipeDown: () -> Unit,
     onSubsamplingLoadingChange: (Boolean) -> Unit = {},
     onCutoutStateChanged: (Boolean) -> Unit = {},
-    isSelected: Boolean = true
+    isSelected: Boolean = true,
+    uiVisible: Boolean = true
 ) {
     val feedbackManager = rememberFeedbackManager()
     var isRotating by rememberSaveable(media) { mutableStateOf(false) }
@@ -426,10 +436,8 @@ fun <T : Media> ZoomablePagerImage(
         }
         .then(modifier)
 
-    // Long-press rotates the image by 90°. This is only wired to the pixel-perfect path, where the
-    // subject-cutout gesture is unavailable; on the default ZoomImage path long-press starts a
-    // subject-cutout session instead (see below).
-    val rotateLongPress: () -> Unit = {
+    // Rotate the image 90° (visual step; MediaViewScreen persists it via the rotate chip).
+    val rotateImage: () -> Unit = {
         if (!rotationDisabled) {
             scope.launch {
                 isRotating = true
@@ -446,6 +454,9 @@ fun <T : Media> ZoomablePagerImage(
     // --- Subject cutout (on-device MobileSAM) ---
     val modelManager = remember { (context.applicationContext as com.dot.gallery.GalleryApp).modelManager }
     val cutoutState = rememberCutoutState()
+    // When true, long-press starts a cutout session and Rotate is offered as an on-screen pill.
+    // When false (default), long-press rotates and Cut out is offered as an on-screen pill.
+    val longPressStartsCutout by Settings.Misc.rememberLongPressCutout()
 
     val infiniteTransition = rememberInfiniteTransition(label = "glowTransition")
     val glowRadius by infiniteTransition.animateFloat(
@@ -474,34 +485,19 @@ fun <T : Media> ZoomablePagerImage(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        if (usePixelPerfect) {
-            // Pixel-art path: nearest-neighbor rendering, no cutout support. Long-press rotates.
-            PixelPerfectZoomImage(
-                zoomable = zoomState.zoomable,
-                subsampling = zoomState.subsampling,
-                painter = activePainter,
-                modifier = imageModifier,
-                contentDescription = media.label,
-                onTap = { onItemClick() },
-                onLongPress = rotateLongPress,
-            )
-        } else {
-            ZoomImage(
-                zoomState = zoomState,
-                painter = activePainter,
-                modifier = imageModifier,
-                onTap = { offset ->
-                val session = cutoutState.session
-                if (session != null) {
-                    val displayRect = zoomState.zoomable.contentDisplayRect
-                    val isInsideImage = offset.x >= displayRect.left &&
-                            offset.x <= displayRect.right &&
-                            offset.y >= displayRect.top &&
-                            offset.y <= displayRect.bottom
+    // Start a cutout session seeded at the given screen-space point.
+    val startCutoutAt: (Offset) -> Unit = { offset ->
+        if (!cutoutState.isActive && !cutoutState.isProcessing) {
+            scope.launch {
+                cutoutState.isProcessing = true
+                try {
+                    feedbackManager.vibrate()
+                    val contentPoint = zoomState.zoomable.touchPointToContentPoint(offset)
 
-                    if (isInsideImage && (cutoutState.activeTool == ZoomablePagerImagePointTool.ADD || cutoutState.activeTool == ZoomablePagerImagePointTool.REMOVE)) {
-                        val contentPoint = zoomState.zoomable.touchPointToContentPoint(offset)
+                    val session = CutoutHelper.CutoutSession(context, media, modelManager)
+                    val initOk = session.initAndRunEncoder()
+
+                    if (initOk) {
                         val contentSize = zoomState.zoomable.contentSize
                         val scaleX = if (contentSize.width > 0) session.widthOrig.toFloat() / contentSize.width.toFloat() else 1f
                         val scaleY = if (contentSize.height > 0) session.heightOrig.toFloat() / contentSize.height.toFloat() else 1f
@@ -509,116 +505,215 @@ fun <T : Media> ZoomablePagerImage(
                         val scaledX = contentPoint.x * scaleX
                         val scaledY = contentPoint.y * scaleY
 
-                        if (scaledX in 0f..session.widthOrig.toFloat() &&
-                            scaledY in 0f..session.heightOrig.toFloat()
-                        ) {
-                            val newPoint = CutoutHelper.PromptPoint(
-                                x = scaledX,
-                                y = scaledY,
-                                isPositive = cutoutState.activeTool == ZoomablePagerImagePointTool.ADD
-                            )
-                            val previousPoints = cutoutState.promptPoints
-                            val updatedPoints = cutoutState.promptPoints + newPoint
-                            cutoutState.pushPoints(updatedPoints)
+                        val initialPoint = CutoutHelper.PromptPoint(x = scaledX, y = scaledY, isPositive = true)
+                        val pointsList = listOf(initialPoint)
+                        val result = session.runDecoder(pointsList)
 
-                            scope.launch {
-                                cutoutState.isProcessing = true
-                                try {
-                                    val res = session.runDecoder(updatedPoints)
-                                    val newCache = cutoutState.result?.let { Pair(previousPoints, it) }
-                                    cutoutState.updateResult(res, newCache)
-                                } finally {
-                                    cutoutState.isProcessing = false
-                                }
-                            }
+                        if (result != null) {
+                            // Only hoist session into state once we have a valid mask
+                            cutoutState.initSession(session, pointsList)
+                            feedbackManager.vibrate()
+                            cutoutState.updateResult(result, null)
+                        } else {
+                            // No mask found — clean up without touching cutoutState
+                            session.close()
+                            Toast.makeText(context, context.getString(R.string.cutout_no_object), Toast.LENGTH_SHORT).show()
                         }
+                    } else {
+                        session.close()
+                        Toast.makeText(context, context.getString(R.string.cutout_init_failed), Toast.LENGTH_SHORT).show()
                     }
-                } else {
-                    onItemClick()
+                } finally {
+                    // Always reset — even on OOM, ONNX crash, or coroutine cancellation
+                    cutoutState.isProcessing = false
                 }
-            },
-            onLongPress = { offset ->
-                if (!cutoutState.isActive && !cutoutState.isProcessing) {
+            }
+        }
+    }
+
+    // Tap handler: while a cutout session is active, add/remove a prompt point; otherwise pass through.
+    val onImageTap: (Offset) -> Unit = { offset ->
+        val session = cutoutState.session
+        if (session != null) {
+            val displayRect = zoomState.zoomable.contentDisplayRect
+            val isInsideImage = offset.x >= displayRect.left &&
+                    offset.x <= displayRect.right &&
+                    offset.y >= displayRect.top &&
+                    offset.y <= displayRect.bottom
+
+            if (isInsideImage && (cutoutState.activeTool == ZoomablePagerImagePointTool.ADD || cutoutState.activeTool == ZoomablePagerImagePointTool.REMOVE)) {
+                val contentPoint = zoomState.zoomable.touchPointToContentPoint(offset)
+                val contentSize = zoomState.zoomable.contentSize
+                val scaleX = if (contentSize.width > 0) session.widthOrig.toFloat() / contentSize.width.toFloat() else 1f
+                val scaleY = if (contentSize.height > 0) session.heightOrig.toFloat() / contentSize.height.toFloat() else 1f
+
+                val scaledX = contentPoint.x * scaleX
+                val scaledY = contentPoint.y * scaleY
+
+                if (scaledX in 0f..session.widthOrig.toFloat() && scaledY in 0f..session.heightOrig.toFloat()) {
+                    val newPoint = CutoutHelper.PromptPoint(
+                        x = scaledX,
+                        y = scaledY,
+                        isPositive = cutoutState.activeTool == ZoomablePagerImagePointTool.ADD
+                    )
+                    val previousPoints = cutoutState.promptPoints
+                    val updatedPoints = cutoutState.promptPoints + newPoint
+                    cutoutState.pushPoints(updatedPoints)
+
                     scope.launch {
                         cutoutState.isProcessing = true
                         try {
-                            feedbackManager.vibrate()
-                            val contentPoint = zoomState.zoomable.touchPointToContentPoint(offset)
-
-                            val session = CutoutHelper.CutoutSession(context, media, modelManager)
-                            val initOk = session.initAndRunEncoder()
-
-                            if (initOk) {
-                                val contentSize = zoomState.zoomable.contentSize
-                                val scaleX = if (contentSize.width > 0) session.widthOrig.toFloat() / contentSize.width.toFloat() else 1f
-                                val scaleY = if (contentSize.height > 0) session.heightOrig.toFloat() / contentSize.height.toFloat() else 1f
-
-                                val scaledX = contentPoint.x * scaleX
-                                val scaledY = contentPoint.y * scaleY
-
-                                val initialPoint = CutoutHelper.PromptPoint(
-                                    x = scaledX,
-                                    y = scaledY,
-                                    isPositive = true
-                                )
-                                val pointsList = listOf(initialPoint)
-                                val result = session.runDecoder(pointsList)
-
-                                if (result != null) {
-                                    // Only hoist session into state once we have a valid mask
-                                    cutoutState.initSession(session, pointsList)
-                                    feedbackManager.vibrate()
-                                    cutoutState.updateResult(result, null)
-                                } else {
-                                    // No mask found — clean up without touching cutoutState
-                                    session.close()
-                                    Toast.makeText(context, context.getString(R.string.cutout_no_object), Toast.LENGTH_SHORT).show()
-                                }
-                            } else {
-                                session.close()
-                                Toast.makeText(context, context.getString(R.string.cutout_init_failed), Toast.LENGTH_SHORT).show()
-                            }
+                            val res = session.runDecoder(updatedPoints)
+                            val newCache = cutoutState.result?.let { Pair(previousPoints, it) }
+                            cutoutState.updateResult(res, newCache)
                         } finally {
-                            // Always reset — even on OOM, ONNX crash, or coroutine cancellation
                             cutoutState.isProcessing = false
                         }
                     }
                 }
-            },
+            }
+        } else {
+            onItemClick()
+        }
+    }
+
+    // Configurable long-press action (default: rotate).
+    val onImageLongPress: (Offset) -> Unit = { offset ->
+        if (longPressStartsCutout) startCutoutAt(offset) else rotateImage()
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        if (usePixelPerfect) {
+            // Pixel-art path: nearest-neighbor rendering with subsampling.
+            PixelPerfectZoomImage(
+                zoomable = zoomState.zoomable,
+                subsampling = zoomState.subsampling,
+                painter = activePainter,
+                modifier = imageModifier,
+                contentDescription = media.label,
+                onTap = onImageTap,
+                onLongPress = onImageLongPress,
+            )
+        } else {
+            ZoomImage(
+                zoomState = zoomState,
+                painter = activePainter,
+                modifier = imageModifier,
+                onTap = onImageTap,
+                onLongPress = onImageLongPress,
                 alignment = Alignment.Center,
                 contentDescription = media.label,
                 scrollBar = null
             )
+        }
 
-            // Dimmed background and cutout overlay
-            CutoutOverlay(
-                state = cutoutState,
-                zoomState = zoomState,
-                glowRadius = glowRadius,
-                onCopy = { CutoutHelper.copyToClipboard(context, it) },
-                onShare = { CutoutHelper.shareCutout(context, it) },
-                onSave = { CutoutHelper.saveToGallery(context, it) }
-            )
+        // Cutout mask, contour, controls (renders on top of either image path).
+        CutoutOverlay(
+            state = cutoutState,
+            zoomState = zoomState,
+            glowRadius = glowRadius,
+            onCopy = { CutoutHelper.copyToClipboard(context, it) },
+            onShare = { CutoutHelper.shareCutout(context, it) },
+            onSave = { CutoutHelper.saveToGallery(context, it) }
+        )
 
-            // Circular processing/refinement indicator
-            if (cutoutState.isProcessing) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.3f))
-                        .pointerInput(Unit) {
-                            detectTapGestures(onTap = {})
-                        },
-                    contentAlignment = Alignment.Center
+        // Processing / refinement indicator
+        if (cutoutState.isProcessing) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.3f))
+                    .pointerInput(Unit) {
+                        detectTapGestures(onTap = {})
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        CircularProgressIndicator(
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                    Text(
+                        text = stringResource(R.string.cutout_refining),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White
+                    )
                 }
             }
         }
+
+        // The action NOT bound to long-press is offered as an on-screen pill, shown only while the
+        // UI chrome is visible on the current page and no cutout session is in progress.
+        val showActionPill = isSelected && uiVisible && !cutoutState.isActive && !cutoutState.isProcessing
+        AnimatedVisibility(
+            visible = showActionPill && (longPressStartsCutout || !rotationDisabled),
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
+                .padding(bottom = 96.dp)
+        ) {
+            if (longPressStartsCutout) {
+                // Long-press does cutout → offer Rotate as a pill.
+                MediaViewActionPill(
+                    icon = Icons.Outlined.ScreenRotationAlt,
+                    label = stringResource(R.string.rotate),
+                    onClick = rotateImage
+                )
+            } else {
+                // Long-press rotates → offer Cut out as a pill.
+                MediaViewActionPill(
+                    icon = Icons.Outlined.AutoAwesome,
+                    label = stringResource(R.string.cutout_action),
+                    onClick = {
+                        val rect = zoomState.zoomable.contentDisplayRect
+                        startCutoutAt(
+                            Offset(
+                                rect.left + rect.width / 2f,
+                                rect.top + rect.height / 2f
+                            )
+                        )
+                    }
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Small pill button matching the media viewer's motion-photo / rotate chip style, used to expose
+ * whichever long-press action (rotate or cut out) is not currently bound to the long-press gesture.
+ */
+@Composable
+private fun MediaViewActionPill(
+    icon: ImageVector,
+    label: String,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .clip(CircleShape)
+            .background(
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(0.85f),
+                shape = CircleShape
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(20.dp)
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 
@@ -648,8 +743,8 @@ private fun PixelPerfectZoomImage(
     painter: Painter,
     modifier: Modifier,
     contentDescription: String?,
-    onTap: () -> Unit,
-    onLongPress: () -> Unit,
+    onTap: (Offset) -> Unit,
+    onLongPress: (Offset) -> Unit,
 ) {
     zoomable.setContentScale(ContentScale.Fit)
     zoomable.setAlignment(Alignment.Center)
@@ -681,8 +776,8 @@ private fun PixelPerfectZoomImage(
                 .zoomable(
                     zoomable = zoomable,
                     userSetupContentSize = true,
-                    onLongPress = { onLongPress() },
-                    onTap = { onTap() }
+                    onLongPress = { onLongPress(it) },
+                    onTap = { onTap(it) }
                 )
                 .drawWithContent {
                     val transform = zoomable.transform

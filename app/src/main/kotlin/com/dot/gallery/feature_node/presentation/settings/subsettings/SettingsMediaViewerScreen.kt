@@ -90,6 +90,7 @@ import com.dot.gallery.core.Settings.Misc.rememberDateHeaderFormat
 import com.dot.gallery.core.Settings.Misc.rememberAutoHideOnVideoPlay
 import com.dot.gallery.core.Settings.Misc.rememberDefaultImageEditor
 import com.dot.gallery.core.Settings.Misc.rememberDisableSmoothing
+import com.dot.gallery.core.Settings.Misc.rememberLongPressCutout
 import com.dot.gallery.core.Settings.Misc.rememberFullBrightnessView
 import com.dot.gallery.core.Settings.Misc.rememberShowFavoriteButton
 import com.dot.gallery.core.Settings.Misc.rememberShowMediaViewDateHeader
@@ -118,6 +119,7 @@ private const val DETAIL_AUTO_HIDE_VIDEO = "auto_hide_video"
 private const val DETAIL_AUTO_PLAY = "auto_play"
 private const val DETAIL_SURFACE_REBIND = "surface_rebind"
 private const val DETAIL_DISABLE_SMOOTHING = "disable_smoothing"
+private const val DETAIL_LONG_PRESS_CUTOUT = "long_press_cutout"
 
 @Composable
 fun SettingsMediaViewerScreen() {
@@ -133,6 +135,7 @@ fun SettingsMediaViewerScreen() {
     var autoPlayVideo by rememberVideoAutoplay()
     var videoSurfaceRebind by rememberVideoSurfaceRebind()
     var disableSmoothing by rememberDisableSmoothing()
+    var longPressCutout by rememberLongPressCutout()
 
     val editApps = remember(context, context::getEditImageCapableApps)
 
@@ -201,6 +204,15 @@ fun SettingsMediaViewerScreen() {
                 preview = { checked -> SmoothingPreview(disableSmoothing = checked) },
             )
         }
+        DETAIL_LONG_PRESS_CUTOUT -> {
+            BackHandler { detailKey = null }
+            SwitchPreferenceDetailScreen(
+                title = stringResource(R.string.long_press_cutout_title),
+                isChecked = longPressCutout,
+                onCheckedChange = { longPressCutout = it },
+                description = stringResource(R.string.long_press_cutout_description),
+            )
+        }
         DETAIL_AUTO_HIDE_VIDEO -> {
             BackHandler { detailKey = null }
             SwitchPreferenceDetailScreen(
@@ -240,6 +252,8 @@ fun SettingsMediaViewerScreen() {
                 editApps = editApps,
                 disableSmoothing = disableSmoothing,
                 onDisableSmoothingChange = { disableSmoothing = it },
+                longPressCutout = longPressCutout,
+                onLongPressCutoutChange = { longPressCutout = it },
                 autoHideOnVideoPlay = autoHideOnVideoPlay,
                 onAutoHideChange = { autoHideOnVideoPlay = it },
                 autoPlayVideo = autoPlayVideo,
@@ -265,6 +279,8 @@ private fun MediaViewerListScreen(
     editApps: List<android.content.pm.ResolveInfo>,
     disableSmoothing: Boolean,
     onDisableSmoothingChange: (Boolean) -> Unit,
+    longPressCutout: Boolean,
+    onLongPressCutoutChange: (Boolean) -> Unit,
     autoHideOnVideoPlay: Boolean,
     onAutoHideChange: (Boolean) -> Unit,
     autoPlayVideo: Boolean,
@@ -336,6 +352,16 @@ private fun MediaViewerListScreen(
             isChecked = disableSmoothing,
             onCheck = onDisableSmoothingChange,
             onClick = { onDetailClick(DETAIL_DISABLE_SMOOTHING) },
+            screenPosition = Position.Middle
+        )
+
+        val longPressCutoutPref = rememberSwitchPreference(
+            longPressCutout,
+            title = stringResource(R.string.long_press_cutout_title),
+            summary = stringResource(R.string.long_press_cutout_summary),
+            isChecked = longPressCutout,
+            onCheck = onLongPressCutoutChange,
+            onClick = { onDetailClick(DETAIL_LONG_PRESS_CUTOUT) },
             screenPosition = Position.Bottom
         )
 
@@ -375,8 +401,8 @@ private fun MediaViewerListScreen(
 
         return remember(
             fullBrightnessViewPref, showMediaDateHeaderPref, showFavoriteButtonPref,
-            defaultEditorPref, disableSmoothingPref, autoHideOnVideoPlayPref, autoPlayVideoPref,
-            videoSurfaceRebindPref
+            defaultEditorPref, disableSmoothingPref, longPressCutoutPref, autoHideOnVideoPlayPref,
+            autoPlayVideoPref, videoSurfaceRebindPref
         ) {
             mutableStateListOf<SettingsEntity>().apply {
                 add(viewingHeader)
@@ -387,6 +413,7 @@ private fun MediaViewerListScreen(
                 }
                 add(defaultEditorPref)
                 add(disableSmoothingPref)
+                add(longPressCutoutPref)
 
                 add(videoPlaybackHeader)
                 add(autoHideOnVideoPlayPref)
