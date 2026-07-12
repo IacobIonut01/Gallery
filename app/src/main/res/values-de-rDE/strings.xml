@@ -98,7 +98,7 @@
     <string name="rotate_screen_cd">Bildschirm drehen</string>
     <string name="reset">Zurücksetzen</string>
     <string name="set_wallpaper">Hintergrundbild</string>
-    <string name="set_wallpaper_error">Hintergrundbild einstellen nicht möglich, da keine passende App verfügbar ist!</string>
+    <string name="set_wallpaper_error">Hintergrundbild kann nicht gesetzt werden, keine Anwendung verfügbar!</string>
     <string name="monthly_timeline_title">Timeline nach Monat</string>
     <string name="monthly_timeline_summary">Timeline nach Monat statt nach Datum gruppieren (Startet App neu)</string>
     <string name="timeline_layout_type">Timeline-Layout</string>
@@ -123,10 +123,10 @@
     <string name="dialog_delete">Endgültig löschen</string>
     <string name="s_items">%1$s Dateien</string>
     <string name="trashing_items">Verschiebe %1$s Dateien in den Papierkorb...</string>
-    <string name="deleting_items">Lösche %1$s Dateien...</string>
+    <string name="deleting_items">Lösche %1$s Dateien…</string>
     <string name="long_press_to_remove">Lang drücken zum Entfernen</string>
     <string name="dialog_from_trash">Wiederherstellung aus dem Papierkorb</string>
-    <string name="restoring_items">Stelle %1$s Dateien wieder her...</string>
+    <string name="restoring_items">Stelle %1$s Dateien wieder her..</string>
     <string name="trash_incompatible_title">Manche Dateien können nicht in den Papierkorb verschoben werden!</string>
     <string name="trash_incompatible_summary">Diese Dateien werden stattdessen endgültig gelöscht.</string>
     <string name="error_toast">Es ist ein Fehler aufgetreten!</string>
