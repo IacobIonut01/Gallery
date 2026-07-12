@@ -405,6 +405,7 @@ fun <T : Media> MediaViewScreen(
     // True while the current cloud/remote page is downloading its full-size original for
     // subsampling; drives the subtle horizontal loading indicator under the top-center date.
     var subsamplingLoading by remember { mutableStateOf(false) }
+    var isCutoutActive by rememberSaveable { mutableStateOf(false) }
     var isTopDark by remember { mutableStateOf(false) }
     var isBottomDark by remember { mutableStateOf(false) }
     val autoContrast by rememberAutoContrast()
@@ -670,7 +671,7 @@ fun <T : Media> MediaViewScreen(
         ) {
             HorizontalPager(
                 modifier = Modifier.fillMaxSize(),
-                userScrollEnabled = if (isLocked || isVideoZoomed) false else userScrollEnabled,
+                userScrollEnabled = if (isLocked || isVideoZoomed || isCutoutActive) false else userScrollEnabled,
                 state = pagerState,
                 flingBehavior = PagerDefaults.flingBehavior(
                     state = pagerState,
@@ -729,6 +730,7 @@ fun <T : Media> MediaViewScreen(
                     val sharedElementMedia = pagerMedia ?: displayMedia
                     with(sharedTransitionScope) {
                             MediaPreviewComponent(
+                                isSelected = index == currentPage,
                                 modifier = Modifier
                                     .mediaSharedElement(
                                         allowAnimation = canAnimateContent && index == currentPage,
@@ -780,6 +782,16 @@ fun <T : Media> MediaViewScreen(
                                     { loading -> subsamplingLoading = loading }
                                 } else {
                                     {}
+                                },
+                                onCutoutStateChanged = { active ->
+                                    isCutoutActive = active
+                                    if (active) {
+                                        showUI = false
+                                        windowInsetsController.toggleSystemBars(show = false)
+                                    } else {
+                                        showUI = true
+                                        windowInsetsController.toggleSystemBars(show = true)
+                                    }
                                 }
                             ) { player, isPlaying, currentTime, totalTime, buffer, frameRate, subtitleState ->
                                 val subtitleTracks = subtitleState.subtitleTracks
@@ -1258,15 +1270,16 @@ fun <T : Media> MediaViewScreen(
                 animationSpec = tween(DEFAULT_TOP_BAR_ANIMATION_DURATION),
                 label = "MediaViewActionsAlpha"
             )
-            BottomSheet(
-                state = sheetState,
-                enabled = showUI && target != TARGET_TRASH && showInfo,
-                modifier = Modifier
-                    .graphicsLayer {
-                        alpha = bottomSheetAlpha
-                    }
-                    .fillMaxWidth()
-            ) {
+            if (!isCutoutActive) {
+                BottomSheet(
+                    state = sheetState,
+                    enabled = showUI && target != TARGET_TRASH && showInfo,
+                    modifier = Modifier
+                        .graphicsLayer {
+                            alpha = bottomSheetAlpha
+                        }
+                        .fillMaxWidth()
+                ) {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -1373,6 +1386,7 @@ fun <T : Media> MediaViewScreen(
                         cloudBackups = currentCloudBackups,
                     )
                 }
+            }
             }
         }
     }

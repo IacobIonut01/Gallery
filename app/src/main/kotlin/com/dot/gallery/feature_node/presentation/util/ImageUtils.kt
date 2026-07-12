@@ -464,7 +464,7 @@ suspend fun <T : Media> Context.shareMediaWithVaultSupport(
 /**
  * Create a temporary decrypted file from encrypted vault media
  */
-private fun <T : Media> createDecryptedTempFile(
+internal fun <T : Media> createDecryptedTempFile(
     media: T,
     keychainHolder: KeychainHolder
 ): File {

@@ -90,6 +90,22 @@ class ModelManager @Inject constructor(
 
     val modelsDir: File get() = File(context.filesDir, MODELS_DIR)
 
+    fun getDestinationFile(name: String): File {
+        val subDir = when (name) {
+            "mobile_sam_image_encoder.onnx", "sam_mask_decoder_single.onnx" -> "sam"
+            else -> "clip"
+        }
+        return File(modelsDir, "$subDir/$name")
+    }
+
+    fun getTempFile(name: String): File {
+        val subDir = when (name) {
+            "mobile_sam_image_encoder.onnx", "sam_mask_decoder_single.onnx" -> "sam"
+            else -> "clip"
+        }
+        return File(modelsDir, "$subDir/$name.tmp")
+    }
+
     /**
      * Initialize models on app start.
      * For withML builds: copies bundled assets to filesDir if not already present.
@@ -105,6 +121,12 @@ class ModelManager @Inject constructor(
 
             if (BuildConfig.ML_MODELS_BUNDLED) {
                 copyBundledModels()
+                if (checkModelsPresent()) {
+                    _status.value = ModelStatus.READY
+                } else {
+                    _status.value = ModelStatus.NOT_INSTALLED
+                    printInfo("ModelManager: Bundled models copy pass completed, but some required models are missing (will download on-demand)")
+                }
             } else {
                 _status.value = ModelStatus.NOT_INSTALLED
                 printInfo("ModelManager: Models not installed (noML build)")
@@ -117,7 +139,7 @@ class ModelManager @Inject constructor(
      */
     fun checkModelsPresent(): Boolean {
         return REQUIRED_FILES.all { fileName ->
-            val file = File(modelsDir, fileName)
+            val file = getDestinationFile(fileName)
             file.exists() && file.length() > 0
         }
     }
@@ -128,7 +150,7 @@ class ModelManager @Inject constructor(
      */
     fun getModelFile(name: String): File {
         if (!isReady) throw ModelsNotAvailableException()
-        val file = File(modelsDir, name)
+        val file = getDestinationFile(name)
         if (!file.exists()) throw ModelsNotAvailableException("Model file not found: $name")
         return file
     }
@@ -138,7 +160,7 @@ class ModelManager @Inject constructor(
      */
     fun getInstalledSize(): Long {
         if (!checkModelsPresent()) return 0L
-        return REQUIRED_FILES.sumOf { File(modelsDir, it).length() }
+        return REQUIRED_FILES.sumOf { getDestinationFile(it).length() }
     }
 
     /**
@@ -147,7 +169,7 @@ class ModelManager @Inject constructor(
     fun getFileInfos(): List<ModelFileInfo> {
         if (!checkModelsPresent()) return emptyList()
         return REQUIRED_FILES.map { fileName ->
-            val file = File(modelsDir, fileName)
+            val file = getDestinationFile(fileName)
             val hash = file.sha256()
             ModelFileInfo(
                 name = fileName,
@@ -234,19 +256,24 @@ class ModelManager @Inject constructor(
             val assetManager = context.assets
             val totalFiles = REQUIRED_FILES.size
             REQUIRED_FILES.forEachIndexed { index, fileName ->
-                val destFile = File(modelsDir, fileName)
+                val destFile = getDestinationFile(fileName)
+                destFile.parentFile?.mkdirs()
                 if (!destFile.exists() || destFile.length() == 0L) {
-                    printDebug("ModelManager: Copying asset $fileName to filesDir")
-                    assetManager.open(fileName).use { input ->
-                        destFile.outputStream().use { output ->
-                            input.copyTo(output, bufferSize = 65536)
+                    try {
+                        printDebug("ModelManager: Copying asset $fileName to filesDir")
+                        assetManager.open(fileName).use { input ->
+                            destFile.outputStream().use { output ->
+                                input.copyTo(output, bufferSize = 65536)
+                            }
                         }
+                    } catch (e: java.io.FileNotFoundException) {
+                        printWarning("ModelManager: Bundled asset $fileName not found in assets, skipping copy.")
                     }
                 }
                 _downloadProgress.value = ((index + 1).toFloat() / totalFiles) * 100f
             }
             _status.value = ModelStatus.READY
-            printInfo("ModelManager: Bundled models copied to filesDir")
+            printInfo("ModelManager: Bundled models copy pass completed")
         } catch (e: Exception) {
             _status.value = ModelStatus.ERROR
             _errorMessage.value = "Failed to copy bundled models: ${e.message}"
@@ -255,13 +282,15 @@ class ModelManager @Inject constructor(
     }
 
     companion object {
-        const val MODELS_DIR = "models/clip"
+        const val MODELS_DIR = "models"
 
         val REQUIRED_FILES = listOf(
             "visual_quant.onnx",
             "textual_quant.onnx",
             "vocab.json",
-            "merges.txt"
+            "merges.txt",
+            "mobile_sam_image_encoder.onnx",
+            "sam_mask_decoder_single.onnx"
         )
 
         const val BASE_DOWNLOAD_URL =
@@ -271,7 +300,9 @@ class ModelManager @Inject constructor(
             "visual_quant.onnx" to "a2fbb26b5f6ab5c79dd9bf99ab2dbac4711abc88dc2e20afc02a0827aa3d59c2",
             "textual_quant.onnx" to "1ebb71a5ea1897823a829af8fc8168c5cfff761969bb62aee1fafdf5a2788aba",
             "vocab.json" to "e089ad92ba36837a0d31433e555c8f45fe601ab5c221d4f607ded32d9f7a4349",
-            "merges.txt" to "9fd691f7c8039210e0fced15865466c65820d09b63988b0174bfe25de299051a"
+            "merges.txt" to "9fd691f7c8039210e0fced15865466c65820d09b63988b0174bfe25de299051a",
+            "mobile_sam_image_encoder.onnx" to "580f5fb648ea1062c0aabc26217aed56921985f03f0cbbd852bba81d760cc749",
+            "sam_mask_decoder_single.onnx" to "93915fc7c993ab9d59ab8c9ccd3bce37f7509c81ab4150a74abd4d2abdd8570d"
         )
     }
 }

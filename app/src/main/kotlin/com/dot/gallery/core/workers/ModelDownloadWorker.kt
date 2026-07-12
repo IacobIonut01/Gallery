@@ -79,12 +79,17 @@ class ModelDownloadWorker @AssistedInject constructor(
             var totalAllBytes = 0L
             val fileSizes = mutableMapOf<String, Long>()
             filesToDownload.forEach { fileName ->
-                val destFile = File(modelsDir, fileName)
+                val destFile = modelManager.getDestinationFile(fileName)
                 if (destFile.exists() && destFile.length() > 0) {
                     fileSizes[fileName] = destFile.length()
                 } else {
                     try {
-                        val conn = URL("${ModelManager.BASE_DOWNLOAD_URL}$fileName").openConnection() as HttpURLConnection
+                        val fileUrl = when (fileName) {
+                            "mobile_sam_image_encoder.onnx" -> "https://huggingface.co/Acly/MobileSAM/resolve/main/mobile_sam_image_encoder.onnx"
+                            "sam_mask_decoder_single.onnx" -> "https://huggingface.co/Acly/MobileSAM/resolve/main/sam_mask_decoder_single.onnx"
+                            else -> "${ModelManager.BASE_DOWNLOAD_URL}$fileName"
+                        }
+                        val conn = URL(fileUrl).openConnection() as HttpURLConnection
                         conn.requestMethod = "HEAD"
                         conn.connectTimeout = 15_000
                         conn.connect()
@@ -101,11 +106,12 @@ class ModelDownloadWorker @AssistedInject constructor(
 
             filesToDownload.forEach { fileName ->
                 if (!currentCoroutineContext().isActive || isStopped) {
-                    cleanupPartialFiles(modelsDir, filesToDownload)
+                    cleanupPartialFiles(filesToDownload)
                     return@withContext Result.failure()
                 }
 
-                val destFile = File(modelsDir, fileName)
+                val destFile = modelManager.getDestinationFile(fileName)
+                destFile.parentFile?.mkdirs()
 
                 // Skip files that already exist and are non-empty
                 if (destFile.exists() && destFile.length() > 0) {
@@ -118,8 +124,13 @@ class ModelDownloadWorker @AssistedInject constructor(
                     return@forEach
                 }
 
-                val url = "${ModelManager.BASE_DOWNLOAD_URL}$fileName"
-                val tempFile = File(modelsDir, "$fileName.tmp")
+                val url = when (fileName) {
+                    "mobile_sam_image_encoder.onnx" -> "https://huggingface.co/Acly/MobileSAM/resolve/main/mobile_sam_image_encoder.onnx"
+                    "sam_mask_decoder_single.onnx" -> "https://huggingface.co/Acly/MobileSAM/resolve/main/sam_mask_decoder_single.onnx"
+                    else -> "${ModelManager.BASE_DOWNLOAD_URL}$fileName"
+                }
+                val tempFile = modelManager.getTempFile(fileName)
+                tempFile.parentFile?.mkdirs()
 
                 try {
                     downloadFile(url, tempFile, fileName, completedFiles, totalFiles, downloadedBytes, totalAllBytes)
@@ -240,9 +251,9 @@ class ModelDownloadWorker @AssistedInject constructor(
         }
     }
 
-    private fun cleanupPartialFiles(modelsDir: File, files: List<String>) {
+    private fun cleanupPartialFiles(files: List<String>) {
         files.forEach { fileName ->
-            File(modelsDir, "$fileName.tmp").delete()
+            modelManager.getTempFile(fileName).delete()
         }
     }
 
@@ -280,8 +291,8 @@ class ModelDownloadWorker @AssistedInject constructor(
         const val CHANNEL_ID = "model_download"
         const val NOTIFICATION_ID = 42042
 
-        // ~200 MB to be safe (models are ~147 MB but we need temp space)
-        const val MINIMUM_REQUIRED_BYTES = 200L * 1024 * 1024
+        // ~150 MB to be safe (models are ~80 MB but we need temp space)
+        const val MINIMUM_REQUIRED_BYTES = 150L * 1024 * 1024
     }
 }
 

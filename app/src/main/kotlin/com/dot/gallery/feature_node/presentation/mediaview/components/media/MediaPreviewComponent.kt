@@ -49,6 +49,8 @@ fun <T : Media> MediaPreviewComponent(
     currentVault: Vault? = null,
     onZoomChange: (Boolean) -> Unit = {},
     onSubsamplingLoadingChange: (Boolean) -> Unit = {},
+    onCutoutStateChanged: (Boolean) -> Unit = {},
+    isSelected: Boolean = true,
     videoController: @Composable (ExoPlayer, MutableState<Boolean>, MutableLongState, Long, Int, Float, VideoControllerState) -> Unit,
 ) {
     AnimatedVisibility(
@@ -103,7 +105,9 @@ fun <T : Media> MediaPreviewComponent(
                         onImageRotated = onImageRotated,
                         onItemClick = onItemClick,
                         onSwipeDown = onSwipeDown,
-                        onSubsamplingLoadingChange = onSubsamplingLoadingChange
+                        onSubsamplingLoadingChange = onSubsamplingLoadingChange,
+                        onCutoutStateChanged = onCutoutStateChanged,
+                        isSelected = isSelected
                     )
                 }
 

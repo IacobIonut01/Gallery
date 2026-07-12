@@ -6,6 +6,7 @@
 package com.dot.gallery.feature_node.presentation.mediaview.components.media
 
 import android.os.Build
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
@@ -93,6 +94,58 @@ import com.github.panpf.zoomimage.zoom.ScalesCalculator
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
+import android.widget.Toast
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.res.stringResource
+import com.dot.gallery.R
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.automirrored.filled.Undo
+import androidx.compose.material.icons.automirrored.filled.Redo
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.border
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.VerticalDivider
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.activity.compose.BackHandler
+import androidx.compose.runtime.DisposableEffect
+import android.graphics.Bitmap
+import com.dot.gallery.core.ml.CutoutHelper
+import androidx.compose.foundation.Canvas
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
 
 // Extended max zoom: allow zooming in until each source pixel is shown at this many screen pixels,
 // i.e. up to 5000% of the image's native (1:1) resolution. Double-tap zoom is unaffected — it still
@@ -199,7 +252,9 @@ fun <T : Media> ZoomablePagerImage(
     onImageRotated: (newRotation: Int) -> Unit,
     onItemClick: () -> Unit,
     onSwipeDown: () -> Unit,
-    onSubsamplingLoadingChange: (Boolean) -> Unit = {}
+    onSubsamplingLoadingChange: (Boolean) -> Unit = {},
+    onCutoutStateChanged: (Boolean) -> Unit = {},
+    isSelected: Boolean = true
 ) {
     val feedbackManager = rememberFeedbackManager()
     var isRotating by rememberSaveable(media) { mutableStateOf(false) }
@@ -371,7 +426,10 @@ fun <T : Media> ZoomablePagerImage(
         }
         .then(modifier)
 
-    val onLongPress: () -> Unit = {
+    // Long-press rotates the image by 90°. This is only wired to the pixel-perfect path, where the
+    // subject-cutout gesture is unavailable; on the default ZoomImage path long-press starts a
+    // subject-cutout session instead (see below).
+    val rotateLongPress: () -> Unit = {
         if (!rotationDisabled) {
             scope.launch {
                 isRotating = true
@@ -385,27 +443,182 @@ fun <T : Media> ZoomablePagerImage(
         }
     }
 
-    if (usePixelPerfect) {
-        PixelPerfectZoomImage(
-            zoomable = zoomState.zoomable,
-            subsampling = zoomState.subsampling,
-            painter = activePainter,
-            modifier = imageModifier,
-            contentDescription = media.label,
-            onTap = { onItemClick() },
-            onLongPress = onLongPress,
-        )
-    } else {
-        ZoomImage(
-            zoomState = zoomState,
-            painter = activePainter,
-            modifier = imageModifier,
-            onTap = { onItemClick() },
-            onLongPress = { onLongPress() },
-            alignment = Alignment.Center,
-            contentDescription = media.label,
-            scrollBar = null
-        )
+    // --- Subject cutout (on-device MobileSAM) ---
+    val modelManager = remember { (context.applicationContext as com.dot.gallery.GalleryApp).modelManager }
+    val cutoutState = rememberCutoutState()
+
+    val infiniteTransition = rememberInfiniteTransition(label = "glowTransition")
+    val glowRadius by infiniteTransition.animateFloat(
+        initialValue = 2f,
+        targetValue = 6f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "glowRadius"
+    )
+
+    DisposableEffect(media) {
+        onDispose {
+            cutoutState.dismiss()
+        }
+    }
+
+    BackHandler(enabled = cutoutState.isActive) {
+        cutoutState.dismiss()
+    }
+
+    LaunchedEffect(cutoutState.isActive, isSelected) {
+        if (isSelected) {
+            onCutoutStateChanged(cutoutState.isActive)
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        if (usePixelPerfect) {
+            // Pixel-art path: nearest-neighbor rendering, no cutout support. Long-press rotates.
+            PixelPerfectZoomImage(
+                zoomable = zoomState.zoomable,
+                subsampling = zoomState.subsampling,
+                painter = activePainter,
+                modifier = imageModifier,
+                contentDescription = media.label,
+                onTap = { onItemClick() },
+                onLongPress = rotateLongPress,
+            )
+        } else {
+            ZoomImage(
+                zoomState = zoomState,
+                painter = activePainter,
+                modifier = imageModifier,
+                onTap = { offset ->
+                val session = cutoutState.session
+                if (session != null) {
+                    val displayRect = zoomState.zoomable.contentDisplayRect
+                    val isInsideImage = offset.x >= displayRect.left &&
+                            offset.x <= displayRect.right &&
+                            offset.y >= displayRect.top &&
+                            offset.y <= displayRect.bottom
+
+                    if (isInsideImage && (cutoutState.activeTool == ZoomablePagerImagePointTool.ADD || cutoutState.activeTool == ZoomablePagerImagePointTool.REMOVE)) {
+                        val contentPoint = zoomState.zoomable.touchPointToContentPoint(offset)
+                        val contentSize = zoomState.zoomable.contentSize
+                        val scaleX = if (contentSize.width > 0) session.widthOrig.toFloat() / contentSize.width.toFloat() else 1f
+                        val scaleY = if (contentSize.height > 0) session.heightOrig.toFloat() / contentSize.height.toFloat() else 1f
+
+                        val scaledX = contentPoint.x * scaleX
+                        val scaledY = contentPoint.y * scaleY
+
+                        if (scaledX in 0f..session.widthOrig.toFloat() &&
+                            scaledY in 0f..session.heightOrig.toFloat()
+                        ) {
+                            val newPoint = CutoutHelper.PromptPoint(
+                                x = scaledX,
+                                y = scaledY,
+                                isPositive = cutoutState.activeTool == ZoomablePagerImagePointTool.ADD
+                            )
+                            val previousPoints = cutoutState.promptPoints
+                            val updatedPoints = cutoutState.promptPoints + newPoint
+                            cutoutState.pushPoints(updatedPoints)
+
+                            scope.launch {
+                                cutoutState.isProcessing = true
+                                try {
+                                    val res = session.runDecoder(updatedPoints)
+                                    val newCache = cutoutState.result?.let { Pair(previousPoints, it) }
+                                    cutoutState.updateResult(res, newCache)
+                                } finally {
+                                    cutoutState.isProcessing = false
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    onItemClick()
+                }
+            },
+            onLongPress = { offset ->
+                if (!cutoutState.isActive && !cutoutState.isProcessing) {
+                    scope.launch {
+                        cutoutState.isProcessing = true
+                        try {
+                            feedbackManager.vibrate()
+                            val contentPoint = zoomState.zoomable.touchPointToContentPoint(offset)
+
+                            val session = CutoutHelper.CutoutSession(context, media, modelManager)
+                            val initOk = session.initAndRunEncoder()
+
+                            if (initOk) {
+                                val contentSize = zoomState.zoomable.contentSize
+                                val scaleX = if (contentSize.width > 0) session.widthOrig.toFloat() / contentSize.width.toFloat() else 1f
+                                val scaleY = if (contentSize.height > 0) session.heightOrig.toFloat() / contentSize.height.toFloat() else 1f
+
+                                val scaledX = contentPoint.x * scaleX
+                                val scaledY = contentPoint.y * scaleY
+
+                                val initialPoint = CutoutHelper.PromptPoint(
+                                    x = scaledX,
+                                    y = scaledY,
+                                    isPositive = true
+                                )
+                                val pointsList = listOf(initialPoint)
+                                val result = session.runDecoder(pointsList)
+
+                                if (result != null) {
+                                    // Only hoist session into state once we have a valid mask
+                                    cutoutState.initSession(session, pointsList)
+                                    feedbackManager.vibrate()
+                                    cutoutState.updateResult(result, null)
+                                } else {
+                                    // No mask found — clean up without touching cutoutState
+                                    session.close()
+                                    Toast.makeText(context, context.getString(R.string.cutout_no_object), Toast.LENGTH_SHORT).show()
+                                }
+                            } else {
+                                session.close()
+                                Toast.makeText(context, context.getString(R.string.cutout_init_failed), Toast.LENGTH_SHORT).show()
+                            }
+                        } finally {
+                            // Always reset — even on OOM, ONNX crash, or coroutine cancellation
+                            cutoutState.isProcessing = false
+                        }
+                    }
+                }
+            },
+                alignment = Alignment.Center,
+                contentDescription = media.label,
+                scrollBar = null
+            )
+
+            // Dimmed background and cutout overlay
+            CutoutOverlay(
+                state = cutoutState,
+                zoomState = zoomState,
+                glowRadius = glowRadius,
+                onCopy = { CutoutHelper.copyToClipboard(context, it) },
+                onShare = { CutoutHelper.shareCutout(context, it) },
+                onSave = { CutoutHelper.saveToGallery(context, it) }
+            )
+
+            // Circular processing/refinement indicator
+            if (cutoutState.isProcessing) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.3f))
+                        .pointerInput(Unit) {
+                            detectTapGestures(onTap = {})
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -565,4 +778,357 @@ private fun DrawScope.drawSubsamplingTiles(
     foregroundTiles.forEach { drawTile(it) }
 }
 
+@Composable
+private fun CutoutOverlay(
+    state: CutoutState,
+    zoomState: com.github.panpf.zoomimage.SketchZoomState,
+    glowRadius: Float,
+    onCopy: suspend (Bitmap) -> Unit,
+    onShare: suspend (Bitmap) -> Unit,
+    onSave: suspend (Bitmap) -> Unit,
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val session = state.session ?: return
+    val result = state.result
+    val displayRect = zoomState.zoomable.contentDisplayRect
+    val originSize = zoomState.zoomable.contentOriginSize
 
+    val strokePaint = remember {
+        android.graphics.Paint().apply {
+            isAntiAlias = true
+            colorFilter = android.graphics.PorterDuffColorFilter(
+                android.graphics.Color.WHITE,
+                android.graphics.PorterDuff.Mode.SRC_IN
+            )
+        }
+    }
+    val imagePaint = remember {
+        android.graphics.Paint().apply {
+            isAntiAlias = true
+        }
+    }
+
+    if (displayRect.width > 0 && session.widthOrig > 0) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            // Dim background (no pointerInput / no touch interception to allow zoom/pan pass-through)
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.5f))
+            )
+
+            // Render cutout subject, its glowing border outline, and point markers directly on a GPU-synchronized Canvas
+            Canvas(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                val displayRect = zoomState.zoomable.contentDisplayRect
+                if (displayRect.width > 0 && session.widthOrig > 0) {
+                    // 1. Draw the cutout subject and its glowing border (if a cutout is active/calculated)
+                    if (result != null) {
+                        val screenStartX = displayRect.left + (result.originalBounds.left.toFloat() / session.widthOrig.toFloat()) * displayRect.width
+                        val screenStartY = displayRect.top + (result.originalBounds.top.toFloat() / session.heightOrig.toFloat()) * displayRect.height
+                        val screenWidth = ((result.originalBounds.right - result.originalBounds.left).toFloat() / session.widthOrig.toFloat()) * displayRect.width
+                        val screenHeight = ((result.originalBounds.bottom - result.originalBounds.top).toFloat() / session.heightOrig.toFloat()) * displayRect.height
+
+                        drawIntoCanvas { canvas ->
+                            val nativeCanvas = canvas.nativeCanvas
+                            val srcRect = android.graphics.Rect(0, 0, result.bitmap.width, result.bitmap.height)
+                            
+                            val strokeWidthPx = glowRadius.dp.toPx()
+                            val diagOffset = (strokeWidthPx / 1.4142f).toInt()
+                            val strokeWidthInt = strokeWidthPx.toInt()
+
+                            val offsets = listOf(
+                                Pair(strokeWidthInt, 0),
+                                Pair(-strokeWidthInt, 0),
+                                Pair(0, strokeWidthInt),
+                                Pair(0, -strokeWidthInt),
+                                Pair(diagOffset, diagOffset),
+                                Pair(-diagOffset, diagOffset),
+                                Pair(diagOffset, -diagOffset),
+                                Pair(-diagOffset, -diagOffset)
+                            )
+
+                            offsets.forEach { (dx, dy) ->
+                                val dstRectShifted = android.graphics.Rect(
+                                    screenStartX.toInt() + dx,
+                                    screenStartY.toInt() + dy,
+                                    (screenStartX + screenWidth).toInt() + dx,
+                                    (screenStartY + screenHeight).toInt() + dy
+                                )
+                                nativeCanvas.drawBitmap(result.bitmap, srcRect, dstRectShifted, strokePaint)
+                            }
+
+                            // Draw original cutout bitmap on top
+                            val dstRectNormal = android.graphics.Rect(
+                                screenStartX.toInt(),
+                                screenStartY.toInt(),
+                                (screenStartX + screenWidth).toInt(),
+                                (screenStartY + screenHeight).toInt()
+                            )
+                            nativeCanvas.drawBitmap(result.bitmap, srcRect, dstRectNormal, imagePaint)
+                        }
+                    }
+
+                    // 2. Draw prompt point markers
+                    state.promptPoints.forEach { pt ->
+                        val screenX = displayRect.left + (pt.x / session.widthOrig.toFloat()) * displayRect.width
+                        val screenY = displayRect.top + (pt.y / session.heightOrig.toFloat()) * displayRect.height
+
+                        val dotColor = if (pt.isPositive) Color(0xFF4CAF50) else Color(0xFFF44336)
+                        val glowColor = dotColor.copy(alpha = 0.3f)
+
+                        // Glow halo (radius = 10.dp)
+                        drawCircle(
+                            color = glowColor,
+                            radius = 10.dp.toPx(),
+                            center = Offset(screenX, screenY)
+                        )
+                        // White border (radius = 5.dp)
+                        drawCircle(
+                            color = Color.White,
+                            radius = 5.dp.toPx(),
+                            center = Offset(screenX, screenY)
+                        )
+                        // Inner dot (radius = 3.5.dp)
+                        drawCircle(
+                            color = dotColor,
+                            radius = 3.5.dp.toPx(),
+                            center = Offset(screenX, screenY)
+                        )
+                    }
+                }
+            }
+
+            // Helper to run refinement action
+            val runRefinedAction = { action: suspend (Bitmap) -> Unit ->
+                if (result != null) {
+                    scope.launch {
+                        action(result.bitmap)
+                        state.dismiss()
+                    }
+                }
+            }
+
+            // Floating close button at top-right
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(end = 24.dp, top = 64.dp)
+            ) {
+                FloatingCloseButton(
+                    onClose = {
+                        state.dismiss()
+                    }
+                )
+            }
+
+            // Bottom Centered: Combined Controls Pill
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 64.dp)
+            ) {
+                val navigateHistory = { delta: Int ->
+                    val pts = state.navigateHistory(delta)
+                    if (pts != null) {
+                        scope.launch {
+                            state.isProcessing = true
+                            try {
+                                val res = state.session!!.runDecoder(pts.second)
+                                val newCache = state.result?.let { Pair(pts.first, it) }
+                                state.updateResult(res, newCache)
+                            } finally {
+                                state.isProcessing = false
+                            }
+                        }
+                    }
+                }
+
+                CombinedCutoutControlsPill(
+                    activeTool = state.activeTool,
+                    onToolChange = { state.activeTool = it },
+                    onReset = {
+                        state.clearPoints()
+                    },
+                    canUndo = state.canUndo,
+                    canRedo = state.canRedo,
+                    onUndo = { navigateHistory(-1) },
+                    onRedo = { navigateHistory(1) },
+                    hasResult = state.hasResult,
+                    onCopy = { runRefinedAction { onCopy(it) } },
+                    onShare = { runRefinedAction { onShare(it) } },
+                    onSave = { runRefinedAction { onSave(it) } }
+                )
+            }
+        }
+    }
+}
+
+enum class ZoomablePagerImagePointTool { NONE, ADD, REMOVE }
+
+@Composable
+fun CombinedCutoutControlsPill(
+    activeTool: ZoomablePagerImagePointTool,
+    onToolChange: (ZoomablePagerImagePointTool) -> Unit,
+    onReset: () -> Unit,
+    canUndo: Boolean,
+    canRedo: Boolean,
+    onUndo: () -> Unit,
+    onRedo: () -> Unit,
+    hasResult: Boolean,
+    onCopy: () -> Unit,
+    onShare: () -> Unit,
+    onSave: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        shape = if (hasResult) RoundedCornerShape(20.dp) else CircleShape,
+        color = Color.Black.copy(alpha = 0.65f),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f)),
+        modifier = modifier
+            .animateContentSize()
+            .shadow(8.dp, shape = if (hasResult) RoundedCornerShape(20.dp) else CircleShape)
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                ToolbarIconButton(
+                    onClick = { onToolChange(if (activeTool == ZoomablePagerImagePointTool.ADD) ZoomablePagerImagePointTool.NONE else ZoomablePagerImagePointTool.ADD) },
+                    icon = androidx.compose.material.icons.Icons.Default.Add,
+                    label = "Include",
+                    selected = activeTool == ZoomablePagerImagePointTool.ADD,
+                    selectedColor = Color(0xFF4CAF50).copy(alpha = 0.8f)
+                )
+                ToolbarIconButton(
+                    onClick = { onToolChange(if (activeTool == ZoomablePagerImagePointTool.REMOVE) ZoomablePagerImagePointTool.NONE else ZoomablePagerImagePointTool.REMOVE) },
+                    icon = androidx.compose.material.icons.Icons.Default.Remove,
+                    label = "Exclude",
+                    selected = activeTool == ZoomablePagerImagePointTool.REMOVE,
+                    selectedColor = Color(0xFFF44336).copy(alpha = 0.8f)
+                )
+                
+                VerticalDivider(
+                    modifier = Modifier.height(24.dp),
+                    color = Color.White.copy(alpha = 0.15f)
+                )
+                
+                ToolbarIconButton(
+                    onClick = onUndo,
+                    icon = androidx.compose.material.icons.Icons.AutoMirrored.Filled.Undo,
+                    label = "Undo",
+                    selected = false,
+                    enabled = canUndo
+                )
+                ToolbarIconButton(
+                    onClick = onRedo,
+                    icon = androidx.compose.material.icons.Icons.AutoMirrored.Filled.Redo,
+                    label = "Redo",
+                    selected = false,
+                    enabled = canRedo
+                )
+                
+                VerticalDivider(
+                    modifier = Modifier.height(24.dp),
+                    color = Color.White.copy(alpha = 0.15f)
+                )
+                
+                ToolbarIconButton(
+                    onClick = onReset,
+                    icon = androidx.compose.material.icons.Icons.Default.Refresh,
+                    label = "Reset",
+                    selected = false
+                )
+            }
+
+            if (hasResult) {
+                HorizontalDivider(
+                    color = Color.White.copy(alpha = 0.12f),
+                    thickness = 1.dp,
+                    modifier = Modifier.width(200.dp)
+                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    ToolbarIconButton(
+                        onClick = onCopy,
+                        icon = Icons.Default.ContentCopy,
+                        label = "Copy",
+                        selected = false
+                    )
+                    ToolbarIconButton(
+                        onClick = onShare,
+                        icon = Icons.Default.Share,
+                        label = "Share",
+                        selected = false
+                    )
+                    ToolbarIconButton(
+                        onClick = onSave,
+                        icon = Icons.Default.Save,
+                        label = "Save",
+                        selected = false
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun FloatingCloseButton(
+    onClose: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        shape = CircleShape,
+        color = Color.Black.copy(alpha = 0.6f),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f)),
+        modifier = modifier.shadow(8.dp, shape = CircleShape)
+    ) {
+        androidx.compose.material3.IconButton(
+            onClick = onClose,
+            modifier = Modifier.size(40.dp)
+        ) {
+            Icon(
+                imageVector = androidx.compose.material.icons.Icons.Default.Close,
+                contentDescription = "Close Cutout",
+                tint = Color.White
+            )
+        }
+    }
+}
+
+@Composable
+private fun ToolbarIconButton(
+    onClick: () -> Unit,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    selected: Boolean,
+    selectedColor: Color = MaterialTheme.colorScheme.primaryContainer,
+    enabled: Boolean = true
+) {
+    androidx.compose.material3.IconButton(
+        onClick = onClick,
+        enabled = enabled,
+        colors = androidx.compose.material3.IconButtonDefaults.iconButtonColors(
+            containerColor = if (selected) selectedColor else Color.Transparent,
+            contentColor = if (selected) Color.White else Color.White.copy(alpha = 0.8f),
+            disabledContentColor = Color.White.copy(alpha = 0.3f)
+        ),
+        modifier = Modifier.size(40.dp)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = label,
+            modifier = Modifier.size(22.dp)
+        )
+    }
+}

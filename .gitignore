@@ -19,3 +19,10 @@ api.properties
 new_release.jks
 *.lineage
 *.keystore
+
+# others
+skills-lock.json
+.agents/
+yolo_vs_sam/
+
+ml-models/segment/
