@@ -55,7 +55,14 @@ val copySegmentModelsTask = tasks.register<Copy>("copySegmentModels") {
 }
 
 tasks.configureEach {
-    if (name.contains("merge", ignoreCase = true) && name.contains("Assets", ignoreCase = true)) {
+    val mergesAssets = name.contains("merge", ignoreCase = true) &&
+        name.contains("Assets", ignoreCase = true)
+    // The WithML flavor registers the generated ml-models dir as an asset source
+    // set. Lint model/report tasks read that directory too, so they must also
+    // depend on copySegmentModels to avoid Gradle implicit-dependency failures.
+    val readsMlAssets = name.contains("WithML", ignoreCase = true) &&
+        name.contains("Lint", ignoreCase = true)
+    if (mergesAssets || readsMlAssets) {
         dependsOn(copySegmentModelsTask)
     }
 }
