@@ -64,6 +64,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -93,6 +94,9 @@ internal fun CutoutOverlay(
     state: CutoutState,
     zoomState: com.github.panpf.zoomimage.SketchZoomState,
     glowRadius: Float,
+    // Vertical translation (px) applied by the swipe-to-dismiss gesture; the subject + markers
+    // follow the image while the scrim stays anchored to the screen.
+    translationY: Float = 0f,
 ) {
     val session = state.session ?: return
     val result = state.result
@@ -123,8 +127,13 @@ internal fun CutoutOverlay(
                     .background(scrimColor)
             )
 
-            // Cutout subject, animated glowing contour and prompt-point markers.
-            Canvas(modifier = Modifier.fillMaxSize()) {
+            // Cutout subject, animated glowing contour and prompt-point markers. Translated to
+            // follow the image during a swipe-to-dismiss drag.
+            Canvas(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer { this.translationY = translationY }
+            ) {
                 val rect = zoomState.zoomable.contentDisplayRect
                 if (rect.width > 0 && session.widthOrig > 0) {
                     if (result != null) {

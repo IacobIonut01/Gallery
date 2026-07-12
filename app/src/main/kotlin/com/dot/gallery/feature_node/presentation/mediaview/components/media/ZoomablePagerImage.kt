@@ -403,9 +403,12 @@ fun <T : Media> ZoomablePagerImage(
         }
     }
 
+    // Track the swipe-to-dismiss drag offset so the cutout overlay can translate in lockstep with
+    // the image (the swipe modifier only offsets the image itself).
+    var swipeOffsetY by remember { mutableIntStateOf(0) }
     val imageModifier = Modifier
         .fillMaxSize()
-        .swipe(onSwipeDown = onSwipeDown)
+        .swipe(onSwipeDown = onSwipeDown, onOffset = { swipeOffsetY = it.y })
         .graphicsLayer {
             rotationZ = if (isRotating) rotationAnimation else 0f
         }
@@ -675,7 +678,8 @@ fun <T : Media> ZoomablePagerImage(
         CutoutOverlay(
             state = cutoutState,
             zoomState = zoomState,
-            glowRadius = glowRadius
+            glowRadius = glowRadius,
+            translationY = swipeOffsetY.toFloat()
         )
 
         // Processing / refinement indicator
