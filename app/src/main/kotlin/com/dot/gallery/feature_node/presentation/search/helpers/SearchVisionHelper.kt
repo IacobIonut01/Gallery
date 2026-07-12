@@ -5,6 +5,7 @@ import ai.onnxruntime.OrtEnvironment
 import ai.onnxruntime.OrtSession
 import ai.onnxruntime.providers.NNAPIFlags
 import android.graphics.Bitmap
+import com.dot.gallery.core.ml.ModelGroup
 import com.dot.gallery.core.ml.ModelManager
 import com.dot.gallery.core.ml.ModelsNotAvailableException
 import com.dot.gallery.feature_node.presentation.search.tokenizer.ClipTokenizer
@@ -29,7 +30,7 @@ class SearchVisionHelper(private val modelManager: ModelManager) {
     fun setupTextSession() = createOrtSessionWithFallback("textual_quant.onnx")
 
     private fun createOrtSessionWithFallback(modelName: String): OrtSession {
-        if (!modelManager.isReady) throw ModelsNotAvailableException()
+        if (!modelManager.isReady(ModelGroup.SEARCH)) throw ModelsNotAvailableException()
 
         val isQuantized = modelName.contains("quant")
 

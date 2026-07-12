@@ -10,6 +10,7 @@ import androidx.work.WorkManager
 import com.dot.gallery.R
 import com.dot.gallery.core.MediaDistributor
 import com.dot.gallery.core.Settings
+import com.dot.gallery.core.ml.ModelGroup
 import com.dot.gallery.core.ml.ModelManager
 import com.dot.gallery.core.ml.ModelStatus
 import com.dot.gallery.feature_node.domain.model.LocationMedia
@@ -68,12 +69,12 @@ class SearchViewModel @Inject constructor(
     private val context: Context
 ) : ViewModel() {
 
-    val isModelAvailable: StateFlow<Boolean> = modelManager.status
+    val isModelAvailable: StateFlow<Boolean> = modelManager.status(ModelGroup.SEARCH)
         .map { it == ModelStatus.READY }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = modelManager.isReady
+            initialValue = modelManager.isReady(ModelGroup.SEARCH)
         )
 
     private val imageRecords = mediaDistributor.imageEmbeddingsFlow

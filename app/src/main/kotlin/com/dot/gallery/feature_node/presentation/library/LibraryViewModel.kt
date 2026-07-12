@@ -11,6 +11,7 @@ import com.dot.gallery.cloud.data.dao.CloudServerConfigDao
 import com.dot.gallery.cloud.data.repository.CloudRepository
 import com.dot.gallery.core.MediaDistributor
 import com.dot.gallery.core.Resource
+import com.dot.gallery.core.ml.ModelGroup
 import com.dot.gallery.core.ml.ModelManager
 import com.dot.gallery.core.ml.ModelStatus
 import com.dot.gallery.core.util.SdkCompat
@@ -71,7 +72,7 @@ class LibraryViewModel @Inject constructor(
 
     val areAiFeaturesAvailable: Boolean get() = modelManager.areAiFeaturesAvailable
 
-    val modelStatus: StateFlow<ModelStatus> = modelManager.status
+    val modelStatus: StateFlow<ModelStatus> = modelManager.status(ModelGroup.SEARCH)
 
     // === Cloud state ===
     private val _cloudState = MutableStateFlow(CloudLibraryState())

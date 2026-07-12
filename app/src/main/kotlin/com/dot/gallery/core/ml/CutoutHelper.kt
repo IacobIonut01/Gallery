@@ -111,7 +111,7 @@ object CutoutHelper {
          */
         suspend fun initAndRunEncoder(): Boolean = withContext(Dispatchers.Default) {
             try {
-                if (!modelManager.isReady) {
+                if (!modelManager.isReady(ModelGroup.CUTOUT)) {
                     printError("CutoutSession: ModelManager is not ready.")
                     return@withContext false
                 }

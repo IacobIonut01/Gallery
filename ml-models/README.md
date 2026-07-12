@@ -43,7 +43,7 @@ Instant, single-pass instance segmentation models optimized for COCO classes.
     *   **Notes:** Provides significantly cleaner initial segments but has a larger download size. Used for local evaluation and high-performance devices.
 
 ### B. MobileSAM — Interactive Point Refinement
-A two-stage Segment Anything Model optimized for edge devices, allowing users to tap to add/subtract regions to refine the mask.
+A two-stage Segment Anything Model optimized for edge devices, allowing users to tap to add/subtract regions to refine the mask. **These two files are bundled in this module's `src/main/assets/` for the `withML` variant** (and mirrored via `BASE_DOWNLOAD_URL` for on-demand download in `noML` builds).
 *   **Image Encoder:** `mobile_sam_image_encoder.onnx` (~28.1 MB)
     *   **Source:** Acly's MobileSAM ONNX Export (Hugging Face `Acly/MobileSAM`)
     *   **Download URL:** `https://huggingface.co/Acly/MobileSAM/resolve/main/mobile_sam_image_encoder.onnx`
@@ -52,6 +52,12 @@ A two-stage Segment Anything Model optimized for edge devices, allowing users to
     *   **Source:** Acly's MobileSAM Single-Mask ONNX Decoder Export (Hugging Face `Acly/MobileSAM`)
     *   **Download URL:** `https://huggingface.co/Acly/MobileSAM/resolve/main/sam_mask_decoder_single.onnx`
     *   **SHA-256 Checksum:** `93915fc7c993ab9d59ab8c9ccd3bce37f7509c81ab4150a74abd4d2abbd8570d`
+
+> **License & attribution:** MobileSAM is released under the **Apache License 2.0** by Chaoning Zhang et al.
+> ("Faster Segment Anything: Towards Lightweight SAM for Mobile Applications", 2023), building on Meta AI's
+> Segment Anything Model (SAM). The ONNX exports used here are redistributed from the Hugging Face repository
+> [`Acly/MobileSAM`](https://huggingface.co/Acly/MobileSAM) under the same Apache-2.0 terms. The bundled copies
+> in `src/main/assets/` are byte-for-byte identical to the upstream files (verify via the SHA-256 checksums above).
 
 ---
 

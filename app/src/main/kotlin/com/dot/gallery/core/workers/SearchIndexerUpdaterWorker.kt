@@ -13,6 +13,7 @@ import com.dot.gallery.cloud.core.capabilities.RemoteMediaProvider
 import com.dot.gallery.cloud.core.cloudMediaId
 import com.dot.gallery.cloud.data.dao.CloudMediaDao
 import com.dot.gallery.cloud.image.CloudFetcherRegistryHolder
+import com.dot.gallery.core.ml.ModelGroup
 import com.dot.gallery.core.ml.ModelManager
 import com.dot.gallery.feature_node.domain.model.ImageEmbedding
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
@@ -48,7 +49,7 @@ class SearchIndexerUpdaterWorker @AssistedInject constructor(
     override suspend fun doWork(): Result = runCatching {
         setProgress(workDataOf("progress" to -1f))
         if (!BuildConfig.ENABLE_INDEXING) return Result.success()
-        if (!modelManager.isReady) {
+        if (!modelManager.isReady(ModelGroup.SEARCH)) {
             printInfo("ML models not installed, skipping indexing")
             return Result.success()
         }

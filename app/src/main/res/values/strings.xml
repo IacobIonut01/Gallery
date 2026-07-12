@@ -355,6 +355,16 @@
     <string name="ai_models_feature_categories">Automatic Categories</string>
     <string name="ai_models_feature_cutout">Subject Cutout</string>
 
+    <!-- Per-feature model groups -->
+    <string name="ai_models_group_search_title">Search &amp; Categories</string>
+    <string name="ai_models_group_search_desc">CLIP models that power smart search and automatic categories.</string>
+    <string name="ai_models_group_search_download_summary">Download the CLIP models (~147 MB)</string>
+    <string name="ai_models_group_cutout_title">Subject Cutout</string>
+    <string name="ai_models_group_cutout_desc">MobileSAM models that isolate subjects in the media viewer.</string>
+    <string name="ai_models_group_cutout_download_summary">Download the MobileSAM models (~44 MB)</string>
+    <string name="ai_models_group_cutout_ready_summary">Subject cutout is available in the media viewer</string>
+    <string name="ai_models_source_cutout_url">huggingface.co/Acly/MobileSAM</string>
+
     <!-- New Category System -->
     <string name="add_category">Add category</string>
     <string name="edit_category">Edit category</string>
@@ -1619,6 +1629,12 @@
     <string name="setup_ai_feature_search_desc">Find shots using natural language — no manual tags or albums needed.</string>
     <string name="setup_ai_feature_private_title">Private &amp; on-device</string>
     <string name="setup_ai_feature_private_desc">Everything runs locally. Your photos never leave your device.</string>
+    <string name="setup_ai_extra_title">Extras</string>
+    <string name="setup_ai_extra_cutout_title">Subject Cutout</string>
+    <string name="setup_ai_extra_cutout_desc">Tap to isolate a subject and copy, share or save it — powered by MobileSAM.</string>
+    <string name="setup_ai_extra_cutout_download">Add Subject Cutout</string>
+    <string name="setup_ai_extra_cutout_size">Extra one-time download (~44 MB)</string>
+    <string name="setup_ai_extra_cutout_ready">Subject cutout is ready.</string>
     <string name="setup_skip_for_now">Skip for now</string>
 
     <!-- Tips &amp; Tricks page -->

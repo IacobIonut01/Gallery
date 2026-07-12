@@ -72,23 +72,15 @@ import androidx.compose.animation.core.RepeatMode
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
+import com.dot.gallery.core.ml.ModelGroup
 import com.dot.gallery.core.ml.ModelStatus
 import com.dot.gallery.core.presentation.components.NavigationBackButton
-import com.dot.gallery.feature_node.presentation.settings.components.settings
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AIModelsManagerScreen(
     viewModel: SmartFeaturesViewModel = hiltViewModel()
 ) {
-    val context = LocalContext.current
-    val modelStatus by viewModel.modelStatus.collectAsStateWithLifecycle()
-    val downloadProgress by viewModel.downloadProgress.collectAsStateWithLifecycle()
-    val downloadInfo by viewModel.downloadInfo.collectAsStateWithLifecycle()
-    val errorMessage by viewModel.errorMessage.collectAsStateWithLifecycle()
-
-    var showDeleteDialog by remember { mutableStateOf(false) }
-
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
@@ -105,65 +97,8 @@ fun AIModelsManagerScreen(
             )
         }
     ) { padding ->
-        // Resolve all strings outside the non-composable settings{} DSL
         val descriptionText = stringResource(R.string.ai_models_description) + "\n\n" +
                 stringResource(R.string.ai_models_privacy_description)
-        val sourceHeader = stringResource(R.string.ai_models_source)
-        val sourceUrl = "https://github.com/IacobIonut01/ReFra/tree/main/ml-models/src/main/assets"
-        val sourceLabel = stringResource(R.string.ai_models_source_url)
-        val filesHeader = stringResource(R.string.ai_models_files)
-
-        // Action preference strings
-        val actionTitle: String
-        val actionSummary: String
-        val actionEnabled: Boolean
-        val actionClick: () -> Unit
-        when (modelStatus) {
-            ModelStatus.READY -> {
-                val sizeStr = Formatter.formatFileSize(context, viewModel.installedSize)
-                actionTitle = stringResource(R.string.ai_models_delete)
-                actionSummary = stringResource(R.string.ai_models_ready_summary) + "\n" +
-                        stringResource(R.string.ai_models_size, sizeStr)
-                actionEnabled = true
-                actionClick = { showDeleteDialog = true }
-            }
-            ModelStatus.DOWNLOADING, ModelStatus.COPYING -> {
-                actionTitle = stringResource(R.string.ai_models_downloading)
-                val speedStr = Formatter.formatFileSize(context, downloadInfo.speed)
-                val downloadedStr = Formatter.formatFileSize(context, downloadInfo.downloadedBytes)
-                val totalStr = Formatter.formatFileSize(context, downloadInfo.totalBytes)
-                val etaStr = if (downloadInfo.speed > 0 && downloadInfo.totalBytes > 0) {
-                    val remainingBytes = downloadInfo.totalBytes - downloadInfo.downloadedBytes
-                    val remainingSecs = remainingBytes / downloadInfo.speed
-                    formatDuration(remainingSecs)
-                } else ""
-                actionSummary = buildString {
-                    append(downloadInfo.currentFile)
-                    if (downloadInfo.totalBytes > 0) append(" · $downloadedStr / $totalStr")
-                    if (downloadInfo.speed > 0) append(" · $speedStr/s")
-                    if (etaStr.isNotEmpty()) append(" · $etaStr")
-                }
-                actionEnabled = true
-                actionClick = { viewModel.cancelDownload() }
-            }
-            ModelStatus.ERROR -> {
-                actionTitle = stringResource(R.string.ai_models_download)
-                actionSummary = errorMessage ?: "Unknown error"
-                actionEnabled = true
-                actionClick = { viewModel.downloadModels() }
-            }
-            ModelStatus.NOT_INSTALLED -> {
-                actionTitle = stringResource(R.string.ai_models_download)
-                actionSummary = stringResource(R.string.ai_models_download_summary)
-                actionEnabled = true
-                actionClick = { viewModel.downloadModels() }
-            }
-        }
-
-        // File infos (computed only when READY)
-        val fileInfos = remember(modelStatus) {
-            if (modelStatus == ModelStatus.READY) viewModel.getFileInfos() else emptyList()
-        }
 
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -220,74 +155,196 @@ fun AIModelsManagerScreen(
                 }
             }
 
-            // Source (always visible, clickable)
-            settings {
-                Header(sourceHeader)
-
-                Preference(
-                    title = sourceLabel,
-                    summary = sourceUrl,
-                    onClick = {
-                        val intent = Intent(
-                            Intent.ACTION_VIEW,
-                            sourceUrl.toUri()
-                        )
-                        context.startActivity(intent)
-                    }
+            // Two independent feature groups, each with its own status/download/delete + source.
+            item(key = "group_search") {
+                ModelGroupSection(
+                    viewModel = viewModel,
+                    group = ModelGroup.SEARCH,
+                    title = stringResource(R.string.ai_models_group_search_title),
+                    description = stringResource(R.string.ai_models_group_search_desc),
+                    downloadSummary = stringResource(R.string.ai_models_group_search_download_summary),
+                    readySummary = stringResource(R.string.ai_models_ready_summary),
+                    sourceLabel = stringResource(R.string.ai_models_source_url),
+                    sourceUrl = "https://github.com/IacobIonut01/ReFra/tree/main/ml-models/src/main/assets"
                 )
             }
+            item(key = "group_cutout") {
+                ModelGroupSection(
+                    viewModel = viewModel,
+                    group = ModelGroup.CUTOUT,
+                    title = stringResource(R.string.ai_models_group_cutout_title),
+                    description = stringResource(R.string.ai_models_group_cutout_desc),
+                    downloadSummary = stringResource(R.string.ai_models_group_cutout_download_summary),
+                    readySummary = stringResource(R.string.ai_models_group_cutout_ready_summary),
+                    sourceLabel = stringResource(R.string.ai_models_source_cutout_url),
+                    sourceUrl = "https://huggingface.co/Acly/MobileSAM"
+                )
+            }
+        }
+    }
+}
 
-            // Action button with integrated status + progress bar
-            item(key = "action") {
-                val isDownloading = modelStatus == ModelStatus.DOWNLOADING || modelStatus == ModelStatus.COPYING
-                Column(
+/**
+ * A self-contained management card for one [ModelGroup]: title + description, a combined
+ * status/action button (download · cancel · delete) with progress, the model source link, and the
+ * per-file SHA-256 details once installed. Each section observes only its own group so the two
+ * features download and uninstall independently.
+ */
+@Composable
+private fun ModelGroupSection(
+    viewModel: SmartFeaturesViewModel,
+    group: ModelGroup,
+    title: String,
+    description: String,
+    downloadSummary: String,
+    readySummary: String,
+    sourceLabel: String,
+    sourceUrl: String
+) {
+    val context = LocalContext.current
+    val status by viewModel.modelStatus(group).collectAsStateWithLifecycle()
+    val progress by viewModel.downloadProgress(group).collectAsStateWithLifecycle()
+    val info by viewModel.downloadInfo(group).collectAsStateWithLifecycle()
+    val error by viewModel.errorMessage(group).collectAsStateWithLifecycle()
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    val actionTitle: String
+    val actionSummary: String
+    val actionClick: () -> Unit
+    when (status) {
+        ModelStatus.READY -> {
+            val sizeStr = Formatter.formatFileSize(context, viewModel.installedSize(group))
+            actionTitle = stringResource(R.string.ai_models_delete)
+            actionSummary = readySummary + "\n" + stringResource(R.string.ai_models_size, sizeStr)
+            actionClick = { showDeleteDialog = true }
+        }
+        ModelStatus.DOWNLOADING, ModelStatus.COPYING -> {
+            actionTitle = stringResource(R.string.ai_models_downloading)
+            val speedStr = Formatter.formatFileSize(context, info.speed)
+            val downloadedStr = Formatter.formatFileSize(context, info.downloadedBytes)
+            val totalStr = Formatter.formatFileSize(context, info.totalBytes)
+            val etaStr = if (info.speed > 0 && info.totalBytes > 0) {
+                formatDuration((info.totalBytes - info.downloadedBytes) / info.speed)
+            } else ""
+            actionSummary = buildString {
+                append(info.currentFile)
+                if (info.totalBytes > 0) append(" · $downloadedStr / $totalStr")
+                if (info.speed > 0) append(" · $speedStr/s")
+                if (etaStr.isNotEmpty()) append(" · $etaStr")
+            }
+            actionClick = { viewModel.cancelDownload(group) }
+        }
+        ModelStatus.ERROR -> {
+            actionTitle = stringResource(R.string.ai_models_download)
+            actionSummary = error ?: "Unknown error"
+            actionClick = { viewModel.downloadModels(group) }
+        }
+        ModelStatus.NOT_INSTALLED -> {
+            actionTitle = stringResource(R.string.ai_models_download)
+            actionSummary = downloadSummary
+            actionClick = { viewModel.downloadModels(group) }
+        }
+    }
+
+    val fileInfos = remember(status) {
+        if (status == ModelStatus.READY) viewModel.getFileInfos(group) else emptyList()
+    }
+    val isDownloading = status == ModelStatus.DOWNLOADING || status == ModelStatus.COPYING
+
+    Column(
+        modifier = Modifier
+            .widthIn(max = 600.dp)
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .padding(bottom = 16.dp)
+            .clip(RoundedCornerShape(24.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        // Combined status + action button
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                .clickable { actionClick() }
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = actionTitle,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            if (isDownloading) {
+                LinearProgressIndicator(
+                    progress = { progress / 100f },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .padding(bottom = 16.dp)
-                        .clip(RoundedCornerShape(24.dp))
-                        .background(MaterialTheme.colorScheme.surfaceContainer)
-                        .clickable(enabled = actionEnabled) { actionClick() }
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        text = actionTitle,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    if (isDownloading) {
-                        LinearProgressIndicator(
-                            progress = { downloadProgress / 100f },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(8.dp)
-                                .clip(RoundedCornerShape(4.dp)),
-                            trackColor = MaterialTheme.colorScheme.surfaceContainerHighest
-                        )
+                        .height(8.dp)
+                        .clip(RoundedCornerShape(4.dp)),
+                    trackColor = MaterialTheme.colorScheme.surfaceContainerHighest
+                )
+            }
+            Text(
+                text = actionSummary,
+                style = MaterialTheme.typography.bodySmall,
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        // Source (clickable)
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text = stringResource(R.string.ai_models_source),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Text(
+                text = sourceLabel,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable {
+                        context.startActivity(Intent(Intent.ACTION_VIEW, sourceUrl.toUri()))
                     }
+            )
+        }
+
+        // File details when installed (full SHA-256 + verified status)
+        if (fileInfos.isNotEmpty()) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = stringResource(R.string.ai_models_files),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                fileInfos.forEach { fileInfo ->
+                    val fileSizeStr = Formatter.formatFileSize(context, fileInfo.size)
+                    val verifiedStr = if (fileInfo.verified) "(Verified)" else "(Unverified)"
                     Text(
-                        text = actionSummary,
+                        text = "${fileInfo.name}\n$fileSizeStr · SHA-256: ${fileInfo.sha256}\n$verifiedStr",
                         style = MaterialTheme.typography.bodySmall,
-                        fontSize = 14.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                }
-            }
-
-            // File details when installed (full SHA-256 + verified status)
-            if (fileInfos.isNotEmpty()) {
-                settings {
-                    Header(filesHeader)
-
-                    fileInfos.forEach { info ->
-                        val fileSizeStr = Formatter.formatFileSize(context, info.size)
-                        val verifiedStr = if (info.verified) "(Verified)" else "(Unverified)"
-                        Preference(
-                            title = info.name,
-                            summary = "$fileSizeStr\nSHA-256: ${info.sha256}\n$verifiedStr"
-                        )
-                    }
                 }
             }
         }
@@ -302,7 +359,7 @@ fun AIModelsManagerScreen(
                 TextButton(
                     onClick = {
                         showDeleteDialog = false
-                        viewModel.deleteModels()
+                        viewModel.deleteModels(group)
                     }
                 ) {
                     Text(

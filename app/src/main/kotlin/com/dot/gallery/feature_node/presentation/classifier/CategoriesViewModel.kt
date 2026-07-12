@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.work.WorkInfo.State
 import androidx.work.WorkManager
 import com.dot.gallery.core.MediaDistributor
+import com.dot.gallery.core.ml.ModelGroup
 import com.dot.gallery.core.ml.ModelManager
 import com.dot.gallery.core.ml.ModelStatus
 import com.dot.gallery.core.workers.CategoryWorker
@@ -48,7 +49,7 @@ class CategoriesViewModel @Inject constructor(
     private val modelManager: ModelManager
 ) : ViewModel() {
 
-    val modelStatus: StateFlow<ModelStatus> = modelManager.status
+    val modelStatus: StateFlow<ModelStatus> = modelManager.status(ModelGroup.SEARCH)
 
     // ============ Locations ============
     

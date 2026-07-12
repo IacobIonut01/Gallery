@@ -2,6 +2,7 @@ package com.dot.gallery.feature_node.presentation.search
 
 import ai.onnxruntime.OrtSession
 import android.graphics.Bitmap
+import com.dot.gallery.core.ml.ModelGroup
 import com.dot.gallery.core.ml.ModelManager
 import com.dot.gallery.feature_node.presentation.search.helpers.SearchVisionHelper
 import com.dot.gallery.feature_node.presentation.search.util.dot
@@ -14,7 +15,7 @@ class SearchHelperImpl @Inject constructor(
     private val modelManager: ModelManager,
 ) : SearchHelper {
 
-    override val isAvailable: Boolean get() = modelManager.isReady
+    override val isAvailable: Boolean get() = modelManager.isReady(ModelGroup.SEARCH)
 
     private val helper by lazy { SearchVisionHelper(modelManager) }
 

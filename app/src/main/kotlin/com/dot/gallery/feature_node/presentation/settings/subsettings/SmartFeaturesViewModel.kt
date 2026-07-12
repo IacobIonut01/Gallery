@@ -12,6 +12,7 @@ import androidx.work.WorkManager
 import androidx.work.WorkQuery
 import com.dot.gallery.core.ml.DownloadInfo
 import com.dot.gallery.core.ml.ModelFileInfo
+import com.dot.gallery.core.ml.ModelGroup
 import com.dot.gallery.core.ml.ModelManager
 import com.dot.gallery.core.ml.ModelStatus
 import com.dot.gallery.core.workers.cancelModelDownload
@@ -31,15 +32,16 @@ class SmartFeaturesViewModel @Inject constructor(
     private val workManager: WorkManager
 ) : ViewModel() {
 
-    val modelStatus: StateFlow<ModelStatus> = modelManager.status
-    val downloadProgress: StateFlow<Float> = modelManager.downloadProgress
-    val errorMessage: StateFlow<String?> = modelManager.errorMessage
+    // Per-group observable state. UI screens pass the relevant [ModelGroup] (SEARCH for smart
+    // search + categories, CUTOUT for subject cutout) so each feature is managed independently.
+    fun modelStatus(group: ModelGroup): StateFlow<ModelStatus> = modelManager.status(group)
+    fun downloadProgress(group: ModelGroup): StateFlow<Float> = modelManager.downloadProgress(group)
+    fun errorMessage(group: ModelGroup): StateFlow<String?> = modelManager.errorMessage(group)
+    fun downloadInfo(group: ModelGroup): StateFlow<DownloadInfo> = modelManager.downloadInfo(group)
 
-    val downloadInfo: StateFlow<DownloadInfo> = modelManager.downloadInfo
+    fun installedSize(group: ModelGroup): Long = modelManager.getInstalledSize(group)
 
-    val installedSize: Long get() = modelManager.getInstalledSize()
-
-    fun getFileInfos(): List<ModelFileInfo> = modelManager.getFileInfos()
+    fun getFileInfos(group: ModelGroup): List<ModelFileInfo> = modelManager.getFileInfos(group)
 
     val hasInternetPermission: Boolean get() = modelManager.hasInternetPermission
     val areAiFeaturesAvailable: Boolean get() = modelManager.areAiFeaturesAvailable
@@ -65,21 +67,21 @@ class SmartFeaturesViewModel @Inject constructor(
         initialValue = -1
     )
 
-    fun downloadModels() {
+    fun downloadModels(group: ModelGroup) {
         if (!modelManager.hasInternetPermission) return
-        workManager.downloadModels()
+        workManager.downloadModels(group)
     }
 
-    fun cancelDownload() {
-        workManager.cancelModelDownload()
+    fun cancelDownload(group: ModelGroup) {
+        workManager.cancelModelDownload(group)
         viewModelScope.launch {
-            modelManager.deleteModels()
+            modelManager.deleteModels(group)
         }
     }
 
-    fun deleteModels() {
+    fun deleteModels(group: ModelGroup) {
         viewModelScope.launch {
-            modelManager.deleteModels()
+            modelManager.deleteModels(group)
         }
     }
 

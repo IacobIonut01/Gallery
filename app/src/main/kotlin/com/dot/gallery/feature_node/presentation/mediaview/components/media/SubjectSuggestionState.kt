@@ -16,6 +16,7 @@ import androidx.compose.runtime.setValue
 import com.dot.gallery.core.ml.CutoutHelper.CutoutResult
 import com.dot.gallery.core.ml.CutoutHelper.CutoutSession
 import com.dot.gallery.core.ml.CutoutHelper.PromptPoint
+import com.dot.gallery.core.ml.ModelGroup
 import com.dot.gallery.core.ml.ModelManager
 import com.dot.gallery.feature_node.domain.model.Media
 import kotlinx.coroutines.CancellationException
@@ -77,7 +78,7 @@ class SubjectSuggestionState {
             try {
                 // Debounce so fast swiping doesn't kick off (and immediately cancel) expensive work.
                 delay(debounceMs)
-                if (!modelManager.isReady) return@launch
+                if (!modelManager.isReady(ModelGroup.CUTOUT)) return@launch
 
                 isDetecting = true
                 val newSession = CutoutSession(context, media, modelManager)

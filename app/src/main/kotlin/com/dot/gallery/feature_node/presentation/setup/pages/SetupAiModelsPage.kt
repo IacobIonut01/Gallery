@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Category
+import androidx.compose.material.icons.outlined.ContentCut
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.TravelExplore
 import androidx.compose.material3.Icon
@@ -40,6 +41,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.BuildConfig
 import com.dot.gallery.R
+import com.dot.gallery.core.ml.ModelGroup
 import com.dot.gallery.core.ml.ModelStatus
 import com.dot.gallery.core.presentation.components.SetupButton
 import com.dot.gallery.feature_node.presentation.settings.subsettings.SmartFeaturesViewModel
@@ -55,8 +57,10 @@ fun SetupAiModelsPage(
     onSkip: () -> Unit,
     viewModel: SmartFeaturesViewModel = hiltViewModel()
 ) {
-    val modelStatus by viewModel.modelStatus.collectAsStateWithLifecycle()
-    val downloadProgress by viewModel.downloadProgress.collectAsStateWithLifecycle()
+    val modelStatus by viewModel.modelStatus(ModelGroup.SEARCH).collectAsStateWithLifecycle()
+    val downloadProgress by viewModel.downloadProgress(ModelGroup.SEARCH).collectAsStateWithLifecycle()
+    val cutoutStatus by viewModel.modelStatus(ModelGroup.CUTOUT).collectAsStateWithLifecycle()
+    val cutoutProgress by viewModel.downloadProgress(ModelGroup.CUTOUT).collectAsStateWithLifecycle()
     val isBundled = BuildConfig.ML_MODELS_BUNDLED
     val hasInternet = viewModel.hasInternetPermission
     val ready = modelStatus == ModelStatus.READY
@@ -143,12 +147,90 @@ fun SetupAiModelsPage(
                         )
                     }
                     else -> {
-                        DownloadRow(onClick = { viewModel.downloadModels() })
+                        DownloadRow(onClick = { viewModel.downloadModels(ModelGroup.SEARCH) })
                     }
                 }
             }
 
             FeaturesCard()
+
+            // Subject Cutout is an optional extra: it uses a separate model set (MobileSAM) and can
+            // be added independently of the core search/categories models.
+            CutoutExtraCard(
+                status = cutoutStatus,
+                progress = cutoutProgress,
+                isBundled = isBundled,
+                hasInternet = hasInternet,
+                onDownload = { viewModel.downloadModels(ModelGroup.CUTOUT) }
+            )
+        }
+    }
+}
+
+@Composable
+private fun CutoutExtraCard(
+    status: ModelStatus,
+    progress: Float,
+    isBundled: Boolean,
+    hasInternet: Boolean,
+    onDownload: () -> Unit
+) {
+    val ready = status == ModelStatus.READY || isBundled
+    val downloading = status == ModelStatus.DOWNLOADING || status == ModelStatus.COPYING
+    SetupSectionCard(title = stringResource(R.string.setup_ai_extra_title)) {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            FeatureRow(
+                icon = Icons.Outlined.ContentCut,
+                title = stringResource(R.string.setup_ai_extra_cutout_title),
+                description = stringResource(R.string.setup_ai_extra_cutout_desc)
+            )
+            when {
+                ready -> {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Filled.CheckCircle,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Text(
+                            modifier = Modifier.padding(start = 8.dp),
+                            text = stringResource(R.string.setup_ai_extra_cutout_ready),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+                downloading -> {
+                    Text(
+                        text = stringResource(R.string.ai_models_downloading),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    LinearProgressIndicator(
+                        progress = { progress / 100f },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp)
+                            .height(8.dp)
+                            .clip(RoundedCornerShape(4.dp)),
+                        trackColor = MaterialTheme.colorScheme.surfaceContainerHighest
+                    )
+                }
+                !hasInternet -> {
+                    Text(
+                        text = stringResource(R.string.setup_ai_no_internet),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                else -> {
+                    DownloadRow(
+                        onClick = onDownload,
+                        title = stringResource(R.string.setup_ai_extra_cutout_download),
+                        subtitle = stringResource(R.string.setup_ai_extra_cutout_size),
+                        icon = Icons.Outlined.ContentCut
+                    )
+                }
+            }
         }
     }
 }
@@ -213,7 +295,12 @@ private fun FeatureRow(
 }
 
 @Composable
-private fun DownloadRow(onClick: () -> Unit) {
+private fun DownloadRow(
+    onClick: () -> Unit,
+    title: String = stringResource(R.string.setup_ai_download),
+    subtitle: String = stringResource(R.string.setup_ai_download_size),
+    icon: ImageVector = Icons.Outlined.AutoAwesome
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -224,20 +311,20 @@ private fun DownloadRow(onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
-            imageVector = Icons.Outlined.AutoAwesome,
+            imageVector = icon,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onPrimaryContainer,
             modifier = Modifier.size(22.dp)
         )
         Column(modifier = Modifier.padding(start = 12.dp)) {
             Text(
-                text = stringResource(R.string.setup_ai_download),
+                text = title,
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )
             Text(
-                text = stringResource(R.string.setup_ai_download_size),
+                text = subtitle,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
             )

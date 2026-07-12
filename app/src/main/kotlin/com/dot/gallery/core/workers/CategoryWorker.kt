@@ -21,6 +21,7 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.dot.gallery.core.Settings
+import com.dot.gallery.core.ml.ModelGroup
 import com.dot.gallery.core.ml.ModelManager
 import com.dot.gallery.core.util.ProgressThrottler
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
@@ -67,7 +68,7 @@ class CategoryWorker @AssistedInject constructor(
             return Result.success()
         }
 
-        if (!modelManager.isReady) {
+        if (!modelManager.isReady(ModelGroup.SEARCH)) {
             printInfo("CategoryWorker: ML models not installed, skipping")
             return Result.success()
         }

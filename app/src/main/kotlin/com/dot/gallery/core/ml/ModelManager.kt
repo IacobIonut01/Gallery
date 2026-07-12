@@ -47,25 +47,55 @@ enum class ModelStatus {
     ERROR
 }
 
+/**
+ * A downloadable/bundled set of ML model files, grouped by the feature it powers so each feature
+ * can be installed, checked and removed independently.
+ *  - [SEARCH]: CLIP models for smart search + automatic categories.
+ *  - [CUTOUT]: MobileSAM models for the subject-cutout feature in the media viewer.
+ */
+enum class ModelGroup(val subDir: String, val files: List<String>) {
+    SEARCH(
+        subDir = "clip",
+        files = listOf("visual_quant.onnx", "textual_quant.onnx", "vocab.json", "merges.txt")
+    ),
+    CUTOUT(
+        subDir = "sam",
+        files = listOf("mobile_sam_image_encoder.onnx", "sam_mask_decoder_single.onnx")
+    );
+
+    companion object {
+        /** The group a model file belongs to (defaults to [SEARCH] for unknown names). */
+        fun of(fileName: String): ModelGroup = entries.firstOrNull { fileName in it.files } ?: SEARCH
+    }
+}
+
 @Singleton
 class ModelManager @Inject constructor(
     @param:ApplicationContext private val context: Context
 ) {
-    private val _status = MutableStateFlow(ModelStatus.NOT_INSTALLED)
-    val status: StateFlow<ModelStatus> = _status.asStateFlow()
+    // Per-group observable state. Each ModelGroup tracks its own status, progress and errors so the
+    // two feature sets (search/categories vs. subject cutout) install and uninstall independently.
+    private class GroupFlows {
+        val status = MutableStateFlow(ModelStatus.NOT_INSTALLED)
+        val progress = MutableStateFlow(0f)
+        val error = MutableStateFlow<String?>(null)
+        val info = MutableStateFlow(DownloadInfo())
+    }
 
-    private val _downloadProgress = MutableStateFlow(0f)
-    val downloadProgress: StateFlow<Float> = _downloadProgress.asStateFlow()
+    private val flows: Map<ModelGroup, GroupFlows> = ModelGroup.entries.associateWith { GroupFlows() }
+    private fun flows(group: ModelGroup) = flows.getValue(group)
 
-    private val _errorMessage = MutableStateFlow<String?>(null)
-    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
-
-    private val _downloadInfo = MutableStateFlow(DownloadInfo())
-    val downloadInfo: StateFlow<DownloadInfo> = _downloadInfo.asStateFlow()
+    fun status(group: ModelGroup): StateFlow<ModelStatus> = flows(group).status.asStateFlow()
+    fun downloadProgress(group: ModelGroup): StateFlow<Float> = flows(group).progress.asStateFlow()
+    fun errorMessage(group: ModelGroup): StateFlow<String?> = flows(group).error.asStateFlow()
+    fun downloadInfo(group: ModelGroup): StateFlow<DownloadInfo> = flows(group).info.asStateFlow()
 
     private val mutex = Mutex()
 
-    val isReady: Boolean get() = _status.value == ModelStatus.READY
+    fun isReady(group: ModelGroup): Boolean = flows(group).status.value == ModelStatus.READY
+
+    /** True only when every group's models are present. */
+    val isReady: Boolean get() = ModelGroup.entries.all { isReady(it) }
 
     /**
      * Whether the app has INTERNET permission declared in its manifest.
@@ -90,21 +120,11 @@ class ModelManager @Inject constructor(
 
     val modelsDir: File get() = File(context.filesDir, MODELS_DIR)
 
-    fun getDestinationFile(name: String): File {
-        val subDir = when (name) {
-            "mobile_sam_image_encoder.onnx", "sam_mask_decoder_single.onnx" -> "sam"
-            else -> "clip"
-        }
-        return File(modelsDir, "$subDir/$name")
-    }
+    fun getDestinationFile(name: String): File =
+        File(modelsDir, "${ModelGroup.of(name).subDir}/$name")
 
-    fun getTempFile(name: String): File {
-        val subDir = when (name) {
-            "mobile_sam_image_encoder.onnx", "sam_mask_decoder_single.onnx" -> "sam"
-            else -> "clip"
-        }
-        return File(modelsDir, "$subDir/$name.tmp")
-    }
+    fun getTempFile(name: String): File =
+        File(modelsDir, "${ModelGroup.of(name).subDir}/$name.tmp")
 
     /**
      * Initialize models on app start.
@@ -113,32 +133,35 @@ class ModelManager @Inject constructor(
      */
     suspend fun initializeModels() = mutex.withLock {
         withContext(Dispatchers.IO) {
-            if (checkModelsPresent()) {
-                _status.value = ModelStatus.READY
-                printInfo("ModelManager: Models already present in filesDir")
-                return@withContext
-            }
+            ModelGroup.entries.forEach { group -> initializeGroup(group) }
+        }
+    }
 
-            if (BuildConfig.ML_MODELS_BUNDLED) {
-                copyBundledModels()
-                if (checkModelsPresent()) {
-                    _status.value = ModelStatus.READY
-                } else {
-                    _status.value = ModelStatus.NOT_INSTALLED
-                    printInfo("ModelManager: Bundled models copy pass completed, but some required models are missing (will download on-demand)")
-                }
+    private fun initializeGroup(group: ModelGroup) {
+        if (checkModelsPresent(group)) {
+            flows(group).status.value = ModelStatus.READY
+            printInfo("ModelManager: ${group.name} models already present in filesDir")
+            return
+        }
+        if (BuildConfig.ML_MODELS_BUNDLED) {
+            copyBundledModels(group)
+            if (checkModelsPresent(group)) {
+                flows(group).status.value = ModelStatus.READY
             } else {
-                _status.value = ModelStatus.NOT_INSTALLED
-                printInfo("ModelManager: Models not installed (noML build)")
+                flows(group).status.value = ModelStatus.NOT_INSTALLED
+                printInfo("ModelManager: ${group.name} bundled copy pass completed, but some files are missing (will download on-demand)")
             }
+        } else {
+            flows(group).status.value = ModelStatus.NOT_INSTALLED
+            printInfo("ModelManager: ${group.name} models not installed (noML build)")
         }
     }
 
     /**
-     * Check if all required model files are present and non-empty.
+     * Check if all model files for [group] are present and non-empty.
      */
-    fun checkModelsPresent(): Boolean {
-        return REQUIRED_FILES.all { fileName ->
+    fun checkModelsPresent(group: ModelGroup): Boolean {
+        return group.files.all { fileName ->
             val file = getDestinationFile(fileName)
             file.exists() && file.length() > 0
         }
@@ -146,29 +169,30 @@ class ModelManager @Inject constructor(
 
     /**
      * Get a model file by name.
-     * @throws ModelsNotAvailableException if models are not installed.
+     * @throws ModelsNotAvailableException if that file's group is not installed.
      */
     fun getModelFile(name: String): File {
-        if (!isReady) throw ModelsNotAvailableException()
+        val group = ModelGroup.of(name)
+        if (!isReady(group)) throw ModelsNotAvailableException()
         val file = getDestinationFile(name)
         if (!file.exists()) throw ModelsNotAvailableException("Model file not found: $name")
         return file
     }
 
     /**
-     * Get total installed model size in bytes.
+     * Get installed model size in bytes for [group].
      */
-    fun getInstalledSize(): Long {
-        if (!checkModelsPresent()) return 0L
-        return REQUIRED_FILES.sumOf { getDestinationFile(it).length() }
+    fun getInstalledSize(group: ModelGroup): Long {
+        if (!checkModelsPresent(group)) return 0L
+        return group.files.sumOf { getDestinationFile(it).length() }
     }
 
     /**
-     * Get detailed info (name, size, SHA-256) for each installed model file.
+     * Get detailed info (name, size, SHA-256) for each installed file in [group].
      */
-    fun getFileInfos(): List<ModelFileInfo> {
-        if (!checkModelsPresent()) return emptyList()
-        return REQUIRED_FILES.map { fileName ->
+    fun getFileInfos(group: ModelGroup): List<ModelFileInfo> {
+        if (!checkModelsPresent(group)) return emptyList()
+        return group.files.map { fileName ->
             val file = getDestinationFile(fileName)
             val hash = file.sha256()
             ModelFileInfo(
@@ -195,67 +219,71 @@ class ModelManager @Inject constructor(
     /**
      * Delete all downloaded/copied model files.
      */
-    suspend fun deleteModels() = mutex.withLock {
+    suspend fun deleteModels(group: ModelGroup) = mutex.withLock {
         withContext(Dispatchers.IO) {
-            if (modelsDir.exists()) {
-                modelsDir.deleteRecursively()
-                printInfo("ModelManager: Models deleted")
+            val dir = File(modelsDir, group.subDir)
+            if (dir.exists()) {
+                dir.deleteRecursively()
+                printInfo("ModelManager: ${group.name} models deleted")
             }
-            _status.value = ModelStatus.NOT_INSTALLED
-            _downloadProgress.value = 0f
-            _errorMessage.value = null
-            _downloadInfo.value = DownloadInfo()
+            flows(group).apply {
+                status.value = ModelStatus.NOT_INSTALLED
+                progress.value = 0f
+                error.value = null
+                info.value = DownloadInfo()
+            }
+            Unit
         }
     }
 
     /**
-     * Called by ModelDownloadWorker to update download progress.
+     * Called by ModelDownloadWorker to update download progress for [group].
      */
-    fun updateDownloadProgress(progress: Float) {
-        _downloadProgress.value = progress
-        _status.value = ModelStatus.DOWNLOADING
+    fun updateDownloadProgress(group: ModelGroup, progress: Float) {
+        flows(group).progress.value = progress
+        flows(group).status.value = ModelStatus.DOWNLOADING
     }
 
-    fun updateDownloadInfo(info: DownloadInfo) {
-        _downloadInfo.value = info
+    fun updateDownloadInfo(group: ModelGroup, info: DownloadInfo) {
+        flows(group).info.value = info
     }
 
     /**
-     * Called by ModelDownloadWorker when download completes successfully.
+     * Called by ModelDownloadWorker when a group's download completes successfully.
      */
-    fun onDownloadComplete() {
-        if (checkModelsPresent()) {
-            _status.value = ModelStatus.READY
-            _downloadProgress.value = 100f
-            _errorMessage.value = null
-            printInfo("ModelManager: Download complete, models ready")
+    fun onDownloadComplete(group: ModelGroup) {
+        if (checkModelsPresent(group)) {
+            flows(group).status.value = ModelStatus.READY
+            flows(group).progress.value = 100f
+            flows(group).error.value = null
+            printInfo("ModelManager: ${group.name} download complete, models ready")
         } else {
-            _status.value = ModelStatus.ERROR
-            _errorMessage.value = "Download completed but model files are missing"
-            printWarning("ModelManager: Download completed but validation failed")
+            flows(group).status.value = ModelStatus.ERROR
+            flows(group).error.value = "Download completed but model files are missing"
+            printWarning("ModelManager: ${group.name} download completed but validation failed")
         }
     }
 
     /**
-     * Called by ModelDownloadWorker on failure.
+     * Called by ModelDownloadWorker on failure for [group].
      */
-    fun onDownloadFailed(error: String) {
-        _status.value = ModelStatus.ERROR
-        _errorMessage.value = error
-        _downloadProgress.value = 0f
-        printWarning("ModelManager: Download failed: $error")
+    fun onDownloadFailed(group: ModelGroup, error: String) {
+        flows(group).status.value = ModelStatus.ERROR
+        flows(group).error.value = error
+        flows(group).progress.value = 0f
+        printWarning("ModelManager: ${group.name} download failed: $error")
     }
 
     /**
-     * Copy bundled assets to filesDir (withML builds only).
+     * Copy a group's bundled assets to filesDir (withML builds only).
      */
-    private suspend fun copyBundledModels() {
-        _status.value = ModelStatus.COPYING
+    private fun copyBundledModels(group: ModelGroup) {
+        flows(group).status.value = ModelStatus.COPYING
         try {
             modelsDir.mkdirs()
             val assetManager = context.assets
-            val totalFiles = REQUIRED_FILES.size
-            REQUIRED_FILES.forEachIndexed { index, fileName ->
+            val totalFiles = group.files.size
+            group.files.forEachIndexed { index, fileName ->
                 val destFile = getDestinationFile(fileName)
                 destFile.parentFile?.mkdirs()
                 if (!destFile.exists() || destFile.length() == 0L) {
@@ -270,13 +298,12 @@ class ModelManager @Inject constructor(
                         printWarning("ModelManager: Bundled asset $fileName not found in assets, skipping copy.")
                     }
                 }
-                _downloadProgress.value = ((index + 1).toFloat() / totalFiles) * 100f
+                flows(group).progress.value = ((index + 1).toFloat() / totalFiles) * 100f
             }
-            _status.value = ModelStatus.READY
-            printInfo("ModelManager: Bundled models copy pass completed")
+            printInfo("ModelManager: ${group.name} bundled models copy pass completed")
         } catch (e: Exception) {
-            _status.value = ModelStatus.ERROR
-            _errorMessage.value = "Failed to copy bundled models: ${e.message}"
+            flows(group).status.value = ModelStatus.ERROR
+            flows(group).error.value = "Failed to copy bundled models: ${e.message}"
             printWarning("ModelManager: Failed to copy bundled models: ${e.message}")
         }
     }
@@ -284,14 +311,8 @@ class ModelManager @Inject constructor(
     companion object {
         const val MODELS_DIR = "models"
 
-        val REQUIRED_FILES = listOf(
-            "visual_quant.onnx",
-            "textual_quant.onnx",
-            "vocab.json",
-            "merges.txt",
-            "mobile_sam_image_encoder.onnx",
-            "sam_mask_decoder_single.onnx"
-        )
+        /** Flattened list of every model file across all groups. */
+        val REQUIRED_FILES: List<String> get() = ModelGroup.entries.flatMap { it.files }
 
         const val BASE_DOWNLOAD_URL =
             "https://raw.githubusercontent.com/IacobIonut01/ReFra/refs/heads/main/ml-models/src/main/assets/"
@@ -302,7 +323,7 @@ class ModelManager @Inject constructor(
             "vocab.json" to "e089ad92ba36837a0d31433e555c8f45fe601ab5c221d4f607ded32d9f7a4349",
             "merges.txt" to "9fd691f7c8039210e0fced15865466c65820d09b63988b0174bfe25de299051a",
             "mobile_sam_image_encoder.onnx" to "580f5fb648ea1062c0aabc26217aed56921985f03f0cbbd852bba81d760cc749",
-            "sam_mask_decoder_single.onnx" to "93915fc7c993ab9d59ab8c9ccd3bce37f7509c81ab4150a74abd4d2abdd8570d"
+            "sam_mask_decoder_single.onnx" to "93915fc7c993ab9d59ab8c9ccd3bce37f7509c81ab4150a74abd4d2abbd8570d"
         )
     }
 }

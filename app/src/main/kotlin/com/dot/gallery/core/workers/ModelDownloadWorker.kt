@@ -26,6 +26,7 @@ import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.dot.gallery.R
 import com.dot.gallery.core.ml.DownloadInfo
+import com.dot.gallery.core.ml.ModelGroup
 import com.dot.gallery.core.ml.ModelManager
 import com.dot.gallery.feature_node.presentation.util.printInfo
 import com.dot.gallery.feature_node.presentation.util.printWarning
@@ -48,9 +49,13 @@ class ModelDownloadWorker @AssistedInject constructor(
 ) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
+        // Which feature's models this worker instance is responsible for.
+        val group = inputData.getString(KEY_GROUP)
+            ?.let { runCatching { ModelGroup.valueOf(it) }.getOrNull() }
+            ?: ModelGroup.SEARCH
         try {
             setProgress(workDataOf(KEY_PROGRESS to 0f, KEY_STATUS to "Starting download..."))
-            modelManager.updateDownloadProgress(0f)
+            modelManager.updateDownloadProgress(group, 0f)
 
             // Create notification channel and show foreground notification
             createNotificationChannel()
@@ -63,7 +68,7 @@ class ModelDownloadWorker @AssistedInject constructor(
                 val availableMb = availableBytes / (1024 * 1024)
                 val requiredMb = MINIMUM_REQUIRED_BYTES / (1024 * 1024)
                 val error = "Not enough storage (need ${requiredMb} MB, ${availableMb} MB available)"
-                modelManager.onDownloadFailed(error)
+                modelManager.onDownloadFailed(group, error)
                 setProgress(workDataOf(KEY_PROGRESS to 0f, KEY_STATUS to error))
                 return@withContext Result.failure(workDataOf(KEY_ERROR to error))
             }
@@ -71,7 +76,7 @@ class ModelDownloadWorker @AssistedInject constructor(
             val modelsDir = modelManager.modelsDir
             modelsDir.mkdirs()
 
-            val filesToDownload = ModelManager.REQUIRED_FILES
+            val filesToDownload = group.files
             val totalFiles = filesToDownload.size
             var completedFiles = 0
 
@@ -118,7 +123,7 @@ class ModelDownloadWorker @AssistedInject constructor(
                     downloadedBytes += destFile.length()
                     completedFiles++
                     val overallProgress = (completedFiles.toFloat() / totalFiles) * 100f
-                    modelManager.updateDownloadProgress(overallProgress)
+                    modelManager.updateDownloadProgress(group, overallProgress)
                     setProgress(workDataOf(KEY_PROGRESS to overallProgress, KEY_STATUS to "Skipping $fileName (already exists)"))
                     printInfo("ModelDownloadWorker: Skipping $fileName (already exists)")
                     return@forEach
@@ -133,7 +138,7 @@ class ModelDownloadWorker @AssistedInject constructor(
                 tempFile.parentFile?.mkdirs()
 
                 try {
-                    downloadFile(url, tempFile, fileName, completedFiles, totalFiles, downloadedBytes, totalAllBytes)
+                    downloadFile(group, url, tempFile, fileName, completedFiles, totalFiles, downloadedBytes, totalAllBytes)
 
                     // Atomic rename
                     if (!tempFile.renameTo(destFile)) {
@@ -148,7 +153,7 @@ class ModelDownloadWorker @AssistedInject constructor(
                     downloadedBytes += destFile.length()
                     completedFiles++
                     val overallProgress = (completedFiles.toFloat() / totalFiles) * 100f
-                    modelManager.updateDownloadProgress(overallProgress)
+                    modelManager.updateDownloadProgress(group, overallProgress)
                     setProgress(workDataOf(KEY_PROGRESS to overallProgress, KEY_STATUS to "Downloaded $fileName"))
                     printInfo("ModelDownloadWorker: Downloaded $fileName")
 
@@ -159,7 +164,7 @@ class ModelDownloadWorker @AssistedInject constructor(
             }
 
             // Validate all files are present
-            modelManager.onDownloadComplete()
+            modelManager.onDownloadComplete(group)
             setProgress(workDataOf(KEY_PROGRESS to 100f, KEY_STATUS to "Complete"))
             printInfo("ModelDownloadWorker: All models downloaded successfully")
             return@withContext Result.success()
@@ -167,14 +172,14 @@ class ModelDownloadWorker @AssistedInject constructor(
         } catch (e: IOException) {
             // Transient network error — let WorkManager retry with backoff
             val error = "Download failed (will retry): ${e.message}"
-            modelManager.onDownloadFailed(error)
+            modelManager.onDownloadFailed(group, error)
             setProgress(workDataOf(KEY_PROGRESS to 0f, KEY_STATUS to error))
             printWarning("ModelDownloadWorker: $error")
             return@withContext Result.retry()
         } catch (e: Exception) {
             // Non-transient error — permanent failure
             val error = "Download failed: ${e.message}"
-            modelManager.onDownloadFailed(error)
+            modelManager.onDownloadFailed(group, error)
             setProgress(workDataOf(KEY_PROGRESS to 0f, KEY_STATUS to error))
             printWarning("ModelDownloadWorker: $error")
             return@withContext Result.failure(workDataOf(KEY_ERROR to error))
@@ -182,6 +187,7 @@ class ModelDownloadWorker @AssistedInject constructor(
     }
 
     private fun downloadFile(
+        group: ModelGroup,
         url: String,
         destFile: File,
         fileName: String,
@@ -217,13 +223,14 @@ class ModelDownloadWorker @AssistedInject constructor(
                         if (contentLength > 0) {
                             val fileProgress = bytesRead.toFloat() / contentLength.toFloat()
                             val overallProgress = ((completedFiles + fileProgress) / totalFiles) * 100f
-                            modelManager.updateDownloadProgress(overallProgress)
+                            modelManager.updateDownloadProgress(group, overallProgress)
 
                             // Calculate speed
                             val elapsed = System.currentTimeMillis() - startTime
                             val speed = if (elapsed > 0) (bytesRead * 1000L) / elapsed else 0L
                             val totalDownloaded = previousFilesBytes + bytesRead
                             modelManager.updateDownloadInfo(
+                                group,
                                 DownloadInfo(
                                     speed = speed,
                                     downloadedBytes = totalDownloaded,
@@ -286,8 +293,12 @@ class ModelDownloadWorker @AssistedInject constructor(
         const val KEY_PROGRESS = "progress"
         const val KEY_STATUS = "status"
         const val KEY_ERROR = "error"
+        const val KEY_GROUP = "group"
         const val WORK_NAME = "ModelDownloadWorker"
         const val TAG = "ModelDownload"
+
+        /** Unique work name per group so each feature's download runs and is tracked independently. */
+        fun workName(group: ModelGroup) = "${WORK_NAME}_${group.name}"
         const val CHANNEL_ID = "model_download"
         const val NOTIFICATION_ID = 42042
 
@@ -297,9 +308,9 @@ class ModelDownloadWorker @AssistedInject constructor(
 }
 
 /**
- * Extension function to start model download.
+ * Extension function to start a model download for a single feature [group].
  */
-fun WorkManager.downloadModels() {
+fun WorkManager.downloadModels(group: ModelGroup) {
     val constraints = Constraints.Builder()
         .setRequiredNetworkType(NetworkType.CONNECTED)
         .setRequiresStorageNotLow(true)
@@ -308,6 +319,7 @@ fun WorkManager.downloadModels() {
     val request = OneTimeWorkRequestBuilder<ModelDownloadWorker>()
         .setConstraints(constraints)
         .addTag(ModelDownloadWorker.TAG)
+        .setInputData(workDataOf(ModelDownloadWorker.KEY_GROUP to group.name))
         .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30_000L, java.util.concurrent.TimeUnit.MILLISECONDS)
         .apply {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -317,15 +329,15 @@ fun WorkManager.downloadModels() {
         .build()
 
     enqueueUniqueWork(
-        ModelDownloadWorker.WORK_NAME,
+        ModelDownloadWorker.workName(group),
         ExistingWorkPolicy.KEEP,
         request
     )
 }
 
 /**
- * Extension function to cancel model download.
+ * Extension function to cancel a feature [group]'s model download.
  */
-fun WorkManager.cancelModelDownload() {
-    cancelUniqueWork(ModelDownloadWorker.WORK_NAME)
+fun WorkManager.cancelModelDownload(group: ModelGroup) {
+    cancelUniqueWork(ModelDownloadWorker.workName(group))
 }
