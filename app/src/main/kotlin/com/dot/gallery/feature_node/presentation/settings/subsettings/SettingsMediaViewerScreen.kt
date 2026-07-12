@@ -98,8 +98,11 @@ import com.dot.gallery.core.Settings.Misc.rememberVideoAutoplay
 import com.dot.gallery.core.Settings.Misc.rememberVideoSurfaceRebind
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
+import com.dot.gallery.core.LocalEventHandler
+import com.dot.gallery.core.navigate
 import com.dot.gallery.core.SettingsEntity
 import com.dot.gallery.core.util.SdkCompat
+import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.feature_node.presentation.settings.components.BaseSettingsScreen
 import com.dot.gallery.feature_node.presentation.settings.components.ChooserPreferenceDetailScreen
 import com.dot.gallery.feature_node.presentation.settings.components.PreferenceOption
@@ -293,6 +296,7 @@ private fun MediaViewerListScreen(
     @Composable
     fun settings(): SnapshotStateList<SettingsEntity> {
         val context = LocalContext.current
+        val eventHandler = LocalEventHandler.current
 
         val viewingHeader = remember(context) {
             SettingsEntity.Header(title = context.getString(R.string.media_view))
@@ -362,8 +366,17 @@ private fun MediaViewerListScreen(
             isChecked = longPressCutout,
             onCheck = onLongPressCutoutChange,
             onClick = { onDetailClick(DETAIL_LONG_PRESS_CUTOUT) },
-            screenPosition = Position.Bottom
+            screenPosition = Position.Middle
         )
+
+        val slideshowPref = remember(context) {
+            SettingsEntity.Preference(
+                title = context.getString(R.string.slideshow),
+                summary = context.getString(R.string.slideshow_settings_summary),
+                onClick = { eventHandler.navigate(Screen.SlideshowSettingsScreen()) },
+                screenPosition = Position.Bottom
+            )
+        }
 
         val videoPlaybackHeader = remember(context) {
             SettingsEntity.Header(title = context.getString(R.string.video_playback))
@@ -401,8 +414,8 @@ private fun MediaViewerListScreen(
 
         return remember(
             fullBrightnessViewPref, showMediaDateHeaderPref, showFavoriteButtonPref,
-            defaultEditorPref, disableSmoothingPref, longPressCutoutPref, autoHideOnVideoPlayPref,
-            autoPlayVideoPref, videoSurfaceRebindPref
+            defaultEditorPref, disableSmoothingPref, longPressCutoutPref, slideshowPref,
+            autoHideOnVideoPlayPref, autoPlayVideoPref, videoSurfaceRebindPref
         ) {
             mutableStateListOf<SettingsEntity>().apply {
                 add(viewingHeader)
@@ -414,6 +427,7 @@ private fun MediaViewerListScreen(
                 add(defaultEditorPref)
                 add(disableSmoothingPref)
                 add(longPressCutoutPref)
+                add(slideshowPref)
 
                 add(videoPlaybackHeader)
                 add(autoHideOnVideoPlayPref)

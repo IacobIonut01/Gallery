@@ -31,6 +31,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material.icons.outlined.CloudSync
+import androidx.compose.material.icons.outlined.Slideshow
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -94,6 +95,8 @@ import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
 import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.presentation.albumtimeline.components.AlbumSortDropdown
+import com.dot.gallery.feature_node.presentation.albumtimeline.components.SlideshowOptionsSheet
+import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import com.dot.gallery.feature_node.presentation.common.components.MediaGridView
 import com.dot.gallery.feature_node.presentation.common.components.MosaicMediaGrid
 import com.dot.gallery.feature_node.presentation.common.components.MosaicPinchZoomLayout
@@ -170,6 +173,9 @@ fun AlbumTimelineScreen(
     // Media state is already sorted by MediaDistributor based on albumMediaSort
     val mediaState = albumMediaState
 
+    val slideshowSheetState = rememberAppBottomSheetState()
+    val slideshowScope = rememberCoroutineScope()
+
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
         state = rememberTopAppBarState(),
         canScroll = { canScroll },
@@ -236,6 +242,14 @@ fun AlbumTimelineScreen(
                                     contentDescription = if (isSyncEnabled) stringResource(R.string.cloud_sync_disable) else stringResource(R.string.cloud_sync_enable)
                                 )
                             }
+                        }
+                        IconButton(onClick = {
+                            slideshowScope.launch { slideshowSheetState.show() }
+                        }) {
+                            Icon(
+                                imageVector = Icons.Outlined.Slideshow,
+                                contentDescription = stringResource(R.string.slideshow)
+                            )
                         }
                         AlbumSortDropdown(
                             currentSort = albumMediaSort,
@@ -385,6 +399,19 @@ fun AlbumTimelineScreen(
                 .align(Alignment.BottomEnd),
             allMedia = mediaState.value,
             selectedMedia = selectedMediaList
+        )
+        SlideshowOptionsSheet(
+            state = slideshowSheetState,
+            canStart = mediaState.value.media.isNotEmpty(),
+            onStart = {
+                val startId = mediaState.value.pagerMedia.firstOrNull()?.id
+                    ?: mediaState.value.media.firstOrNull()?.id
+                if (startId != null) {
+                    eventHandler.navigate(
+                        Screen.MediaViewScreen.idAndAlbumSlideshow(startId, albumId)
+                    )
+                }
+            }
         )
     }
 }

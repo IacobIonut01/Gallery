@@ -18,9 +18,11 @@ sealed class Screen(val route: String) {
 
         fun idAndTarget() = "$route?mediaId={mediaId}&target={target}"
 
-        fun idAndAlbum() = "$route?mediaId={mediaId}&albumId={albumId}"
+        fun idAndAlbum() = "$route?mediaId={mediaId}&albumId={albumId}&slideshow={slideshow}"
 
-        fun idAndAlbum(id: Long, albumId: Long) = "$route?mediaId=$id&albumId=$albumId"
+        fun idAndAlbum(id: Long, albumId: Long) = "$route?mediaId=$id&albumId=$albumId&slideshow=false"
+
+        fun idAndAlbumSlideshow(id: Long, albumId: Long) = "$route?mediaId=$id&albumId=$albumId&slideshow=true"
 
         fun idAndQuery() = "${route}_search?mediaId={mediaId}"
 
@@ -74,6 +76,7 @@ sealed class Screen(val route: String) {
     data object SettingsBackupExportScreen : Screen("settings_backup_export_screen")
     data object SettingsBackupImportScreen : Screen("settings_backup_import_screen")
     data object SettingsSelectionActionsScreen : Screen("settings_selection_actions_screen")
+    data object SlideshowSettingsScreen : Screen("slideshow_settings_screen")
 
     data object IgnoredScreen : Screen("ignored_screen")
 

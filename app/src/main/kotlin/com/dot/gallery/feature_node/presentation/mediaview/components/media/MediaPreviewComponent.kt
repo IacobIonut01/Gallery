@@ -52,6 +52,10 @@ fun <T : Media> MediaPreviewComponent(
     onCutoutStateChanged: (Boolean) -> Unit = {},
     onCutoutController: (CutoutController?) -> Unit = {},
     isSelected: Boolean = true,
+    // Slideshow mode: mutes video audio and, together with [onVideoEnded], lets the video play
+    // through once (no looping) so the slideshow can advance when playback finishes.
+    slideshowActive: Boolean = false,
+    onVideoEnded: () -> Unit = {},
     // When false the (expensive, fullscreen `.blur(100.dp)`) blurred backdrop is skipped. Used to
     // keep it off the shared-element open/close transition's critical frames — it's imperceptible
     // during the animation but a heavy per-frame RenderEffect pass.
@@ -94,7 +98,9 @@ fun <T : Media> MediaPreviewComponent(
                         onItemClick = onItemClick,
                         onSwipeDown = onSwipeDown,
                         onZoomChange = onZoomChange,
-                        captureBlur = uiEnabled
+                        captureBlur = uiEnabled,
+                        slideshowActive = slideshowActive,
+                        onVideoEnded = onVideoEnded
                     )
                 }
 
@@ -114,7 +120,8 @@ fun <T : Media> MediaPreviewComponent(
                         onCutoutStateChanged = onCutoutStateChanged,
                         onCutoutController = onCutoutController,
                         isSelected = isSelected,
-                        uiVisible = uiEnabled
+                        uiVisible = uiEnabled,
+                        cutoutEnabled = !slideshowActive
                     )
                 }
 

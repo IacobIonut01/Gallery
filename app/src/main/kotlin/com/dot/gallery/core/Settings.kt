@@ -51,6 +51,8 @@ import com.dot.gallery.core.util.rememberPreference
 import com.dot.gallery.core.util.rememberPreferenceSerializable
 import com.dot.gallery.feature_node.domain.model.SearchHistory
 import com.dot.gallery.feature_node.domain.model.SelectionSheetConfig
+import com.dot.gallery.feature_node.domain.model.SlideshowTransition
+import com.dot.gallery.feature_node.presentation.mediaview.slideshow.SlideshowConfig
 import com.dot.gallery.feature_node.domain.util.OrderType
 import com.dot.gallery.feature_node.presentation.library.components.LibraryShortcutPref
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
@@ -211,6 +213,73 @@ object Settings {
         @Composable
         fun rememberPinnedAlbumsAsGrid() =
             rememberPreference(key = PINNED_ALBUMS_AS_GRID, defaultValue = false)
+    }
+
+    object Slideshow {
+        val INTERVAL_SECONDS = intPreferencesKey("slideshow_interval_seconds")
+        val RANDOM_ORDER = booleanPreferencesKey("slideshow_random_order")
+        val REVERSE_ORDER = booleanPreferencesKey("slideshow_reverse_order")
+        val INCLUDE_GIFS = booleanPreferencesKey("slideshow_include_gifs")
+        val INCLUDE_VIDEOS = booleanPreferencesKey("slideshow_include_videos")
+        val LOOP = booleanPreferencesKey("slideshow_loop")
+        val TRANSITION = stringPreferencesKey("slideshow_transition")
+        val KEN_BURNS = booleanPreferencesKey("slideshow_ken_burns")
+
+        const val DEFAULT_INTERVAL = 5
+        const val MIN_INTERVAL = 1
+        const val MAX_INTERVAL = 60
+
+        @Composable
+        fun rememberIntervalSeconds() =
+            rememberPreference(key = INTERVAL_SECONDS, defaultValue = DEFAULT_INTERVAL)
+
+        @Composable
+        fun rememberRandomOrder() =
+            rememberPreference(key = RANDOM_ORDER, defaultValue = false)
+
+        @Composable
+        fun rememberReverseOrder() =
+            rememberPreference(key = REVERSE_ORDER, defaultValue = false)
+
+        @Composable
+        fun rememberIncludeGifs() =
+            rememberPreference(key = INCLUDE_GIFS, defaultValue = true)
+
+        @Composable
+        fun rememberIncludeVideos() =
+            rememberPreference(key = INCLUDE_VIDEOS, defaultValue = true)
+
+        @Composable
+        fun rememberLoop() =
+            rememberPreference(key = LOOP, defaultValue = true)
+
+        @Composable
+        fun rememberTransition() =
+            rememberPreferenceSerializable(
+                keyString = TRANSITION,
+                defaultValue = SlideshowTransition.FADE
+            )
+
+        @Composable
+        fun rememberKenBurns() =
+            rememberPreference(key = KEN_BURNS, defaultValue = false)
+
+        /** Reads the full persisted config synchronously (used to seed the viewer once). */
+        fun readConfig(context: Context): SlideshowConfig = runBlocking {
+            val prefs = context.activeDataStore.data.first()
+            SlideshowConfig(
+                intervalSeconds = prefs[INTERVAL_SECONDS] ?: DEFAULT_INTERVAL,
+                random = prefs[RANDOM_ORDER] ?: false,
+                reverse = prefs[REVERSE_ORDER] ?: false,
+                includeGifs = prefs[INCLUDE_GIFS] ?: true,
+                includeVideos = prefs[INCLUDE_VIDEOS] ?: true,
+                loop = prefs[LOOP] ?: true,
+                transition = prefs[TRANSITION]?.let {
+                    runCatching { Json.decodeFromString<SlideshowTransition>(it) }.getOrNull()
+                } ?: SlideshowTransition.FADE,
+                kenBurns = prefs[KEN_BURNS] ?: false
+            )
+        }
     }
 
     object Library {

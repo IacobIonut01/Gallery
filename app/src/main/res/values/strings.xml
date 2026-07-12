@@ -1678,5 +1678,30 @@
     <string name="long_press_cutout_title">Long-press to cut out</string>
     <string name="long_press_cutout_summary">Long-press isolates a subject; rotate becomes a button</string>
     <string name="long_press_cutout_description">Choose what a long-press on an image does in the viewer. When enabled, long-pressing starts an on-device subject cut-out and the rotate action moves to an on-screen button. When disabled (default), long-pressing rotates the image and cut-out is offered as an on-screen button.</string>
+    <!-- Slideshow -->
+    <string name="slideshow">Slideshow</string>
+    <string name="slideshow_start">Start slideshow</string>
+    <string name="slideshow_more_settings">More settings</string>
+    <string name="slideshow_interval">Interval</string>
+    <string name="slideshow_interval_value">Interval: %1$d s</string>
+    <string name="slideshow_seconds_suffix">s</string>
+    <string name="slideshow_random">Shuffle</string>
+    <string name="slideshow_reverse">Reverse order</string>
+    <string name="slideshow_include_gifs">Include GIFs</string>
+    <string name="slideshow_include_videos">Include videos</string>
+    <string name="slideshow_loop">Loop</string>
+    <string name="slideshow_ken_burns">Ken Burns effect</string>
+    <string name="slideshow_ken_burns_summary">Slowly zoom photos while they are shown</string>
+    <string name="slideshow_transition">Transition</string>
+    <string name="slideshow_transition_fade">Fade</string>
+    <string name="slideshow_transition_slide">Slide</string>
+    <string name="slideshow_transition_ken_burns">Ken Burns</string>
+    <string name="slideshow_content_header">Content</string>
+    <string name="slideshow_settings_summary">Interval, transitions, shuffle and more</string>
+    <string name="slideshow_play">Play</string>
+    <string name="slideshow_pause">Pause</string>
+    <string name="slideshow_next">Next</string>
+    <string name="slideshow_previous">Previous</string>
+    <string name="slideshow_exit">Exit slideshow</string>
 </resources>
 

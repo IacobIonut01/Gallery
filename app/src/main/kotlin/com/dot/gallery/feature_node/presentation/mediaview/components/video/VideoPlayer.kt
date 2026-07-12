@@ -93,7 +93,9 @@ fun <T : Media> VideoPlayer(
     onItemClick: () -> Unit,
     onSwipeDown: () -> Unit,
     onZoomChange: (Boolean) -> Unit = {},
-    captureBlur: Boolean = true
+    captureBlur: Boolean = true,
+    slideshowActive: Boolean = false,
+    onVideoEnded: () -> Unit = {}
 ) {
     // Acquire or create the ViewModel for this media id
     val vm: VideoPlayerViewModel =
@@ -164,6 +166,32 @@ fun <T : Media> VideoPlayer(
         player = currentPlayer,
         keepContentOnReset = true
     )
+
+    // Slideshow mode: play the video through once (no looping) and mute audio, then notify the
+    // host so it can advance to the next item when playback ends.
+    val updatedOnVideoEnded by rememberUpdatedState(onVideoEnded)
+    DisposableEffect(currentPlayer, slideshowActive) {
+        if (!slideshowActive) {
+            return@DisposableEffect onDispose { }
+        }
+        if (!currentPlayer.isReleased) {
+            currentPlayer.repeatMode = Player.REPEAT_MODE_OFF
+            currentPlayer.volume = 0f
+        }
+        val listener = object : Player.Listener {
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                if (playbackState == Player.STATE_ENDED) {
+                    updatedOnVideoEnded()
+                }
+            }
+        }
+        currentPlayer.addListener(listener)
+        onDispose {
+            if (!currentPlayer.isReleased) {
+                currentPlayer.removeListener(listener)
+            }
+        }
+    }
 
     val updatedOnClick by rememberUpdatedState(onItemClick)
     val updatedOnSwipeDown by rememberUpdatedState(onSwipeDown)

@@ -243,7 +243,10 @@ fun <T : Media> ZoomablePagerImage(
     onCutoutStateChanged: (Boolean) -> Unit = {},
     onCutoutController: (CutoutController?) -> Unit = {},
     isSelected: Boolean = true,
-    uiVisible: Boolean = true
+    uiVisible: Boolean = true,
+    // When false (e.g. during a slideshow) both the long-press cut-out gesture and the
+    // background subject-suggestion detection are disabled.
+    cutoutEnabled: Boolean = true
 ) {
     val feedbackManager = rememberFeedbackManager()
     var isRotating by rememberSaveable(media) { mutableStateOf(false) }
@@ -487,7 +490,7 @@ fun <T : Media> ZoomablePagerImage(
     // rotates). Replaces the old always-on "Cut out" pill with an auto-detected, tappable hint.
     // Detection is debounced, off-main and cancelled/cleaned up on deselect, media change or when a
     // cutout is already active; rememberSubjectSuggestionState() disposes it when this leaves screen.
-    val suggestionsEnabled = !longPressStartsCutout
+    val suggestionsEnabled = !longPressStartsCutout && cutoutEnabled
     LaunchedEffect(media, isSelected, suggestionsEnabled, cutoutState.isActive) {
         if (isSelected && suggestionsEnabled && !cutoutState.isActive) {
             // Only start scanning after the image has been continuously visible for 2s, so fast
@@ -609,9 +612,12 @@ fun <T : Media> ZoomablePagerImage(
         }
     }
 
-    // Configurable long-press action (default: rotate).
+    // Configurable long-press action (default: rotate). Disabled entirely when cut-out is off
+    // (e.g. during a slideshow).
     val onImageLongPress: (Offset) -> Unit = { offset ->
-        if (longPressStartsCutout) startCutoutAt(offset) else rotateImage()
+        if (cutoutEnabled) {
+            if (longPressStartsCutout) startCutoutAt(offset) else rotateImage()
+        }
     }
 
     // Undo/redo: re-run the decoder for the target point set unless the result was cached.

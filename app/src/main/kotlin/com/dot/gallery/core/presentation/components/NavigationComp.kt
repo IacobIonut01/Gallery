@@ -115,6 +115,7 @@ import com.dot.gallery.feature_node.presentation.settings.subsettings.SettingsGe
 import com.dot.gallery.feature_node.presentation.settings.subsettings.SettingsMediaViewerScreen
 import com.dot.gallery.feature_node.presentation.settings.subsettings.SettingsNavigationScreen
 import com.dot.gallery.feature_node.presentation.settings.subsettings.SettingsSelectionActionsScreen
+import com.dot.gallery.feature_node.presentation.settings.subsettings.SlideshowSettingsScreen
 import com.dot.gallery.feature_node.presentation.settings.subsettings.SettingsTimelineAlbumsScreen
 import com.dot.gallery.feature_node.presentation.settings.subsettings.EditBackupsViewerScreen
 import com.dot.gallery.feature_node.presentation.settings.subsettings.AIModelsManagerScreen
@@ -735,6 +736,10 @@ fun NavigationComp(
                     navArgument(name = "albumId") {
                         type = NavType.LongType
                         defaultValue = -1L
+                    },
+                    navArgument(name = "slideshow") {
+                        type = NavType.BoolType
+                        defaultValue = false
                     }
                 )
             ) { backStackEntry ->
@@ -743,6 +748,9 @@ fun NavigationComp(
                 }
                 val albumId: Long = remember(backStackEntry) {
                     backStackEntry.arguments?.getLong("albumId") ?: -1L
+                }
+                val slideshow: Boolean = remember(backStackEntry) {
+                    backStackEntry.arguments?.getBoolean("slideshow") ?: false
                 }
                 val isPrivateFolder = albumId == PrivateFolderViewModel.PRIVATE_FOLDER_ALBUM_ID
                 val privateFolderViewModel = if (isPrivateFolder) {
@@ -769,6 +777,7 @@ fun NavigationComp(
                     metadataState = metadataState,
                     albumsState = albumsState,
                     vaultState = vaultState,
+                    slideshow = slideshow,
                     sharedTransitionScope = this@SharedTransitionLayout,
                     animatedContentScope = this
                 )
@@ -1266,6 +1275,9 @@ fun NavigationComp(
             }
             composable(Screen.SettingsSelectionActionsScreen()) {
                 SettingsSelectionActionsScreen()
+            }
+            composable(Screen.SlideshowSettingsScreen()) {
+                SlideshowSettingsScreen()
             }
             composable(Screen.CloudAccountsScreen()) {
                 CloudAccountsScreen()

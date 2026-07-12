@@ -22,6 +22,8 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -68,6 +70,7 @@ import androidx.compose.ui.layout.onVisibilityChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
@@ -88,6 +91,7 @@ import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION
 import com.dot.gallery.core.Constants.Target.TARGET_TRASH
 import com.dot.gallery.core.LocalEventHandler
+import com.dot.gallery.core.Settings
 import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
 import com.dot.gallery.core.Settings.Misc.rememberAutoContrast
 import com.dot.gallery.core.Settings.Misc.rememberAutoHideOnVideoPlay
@@ -102,6 +106,7 @@ import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
 import com.dot.gallery.feature_node.domain.model.MediaState
+import com.dot.gallery.feature_node.domain.model.SlideshowTransition
 import com.dot.gallery.feature_node.domain.model.Vault
 import com.dot.gallery.feature_node.domain.model.VaultState
 import com.dot.gallery.feature_node.domain.util.getUri
@@ -125,6 +130,8 @@ import com.dot.gallery.feature_node.presentation.mediaview.components.media.Cuto
 import com.dot.gallery.feature_node.presentation.mediaview.components.media.MediaPreviewComponent
 import com.dot.gallery.feature_node.presentation.mediaview.components.media.MotionPhotoFilmstrip
 import com.dot.gallery.feature_node.presentation.mediaview.components.media.MotionPhotoState
+import com.dot.gallery.feature_node.presentation.mediaview.components.SlideshowControls
+import com.dot.gallery.feature_node.presentation.mediaview.slideshow.buildSlideshowOrder
 import com.dot.gallery.feature_node.presentation.mediaview.components.video.SubtitleBottomSheet
 import com.dot.gallery.feature_node.presentation.mediaview.components.video.VideoPlayerController
 import com.dot.gallery.feature_node.presentation.util.FullBrightnessWindow
@@ -160,6 +167,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.math.abs
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
@@ -199,6 +207,7 @@ fun <T : Media> MediaViewScreenRoute(
     restoreMedia: ((Vault, T, () -> Unit) -> Unit)? = null,
     deleteMedia: ((Vault, T, () -> Unit) -> Unit)? = null,
     currentVault: Vault? = null,
+    slideshow: Boolean = false,
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
 ) {
@@ -216,6 +225,7 @@ fun <T : Media> MediaViewScreenRoute(
         restoreMedia = restoreMedia,
         deleteMedia = deleteMedia,
         currentVault = currentVault,
+        slideshow = slideshow,
         sharedTransitionScope = sharedTransitionScope,
         animatedContentScope = animatedContentScope,
         ensureMetadataAvailable = viewModel::ensureMetadataAvailable,
@@ -246,6 +256,7 @@ fun <T : Media> MediaViewScreen(
     restoreMedia: ((Vault, T, () -> Unit) -> Unit)? = null,
     deleteMedia: ((Vault, T, () -> Unit) -> Unit)? = null,
     currentVault: Vault? = null,
+    slideshow: Boolean = false,
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
     ensureMetadataAvailable: (Media?, MediaMetadataState) -> Unit = { _, _ -> },
@@ -259,6 +270,19 @@ fun <T : Media> MediaViewScreen(
     val windowInsetsController = rememberWindowInsetsController()
 
     var initialPageSetup by rememberSaveable(mediaId) { mutableStateOf(false) }
+
+    // ── Slideshow mode ──
+    val slideshowConfig = remember(slideshow) {
+        if (slideshow) Settings.Slideshow.readConfig(context) else null
+    }
+    val slideshowSeed = rememberSaveable { System.currentTimeMillis() }
+    var slideshowActive by rememberSaveable { mutableStateOf(slideshow) }
+    var slideshowPaused by rememberSaveable { mutableStateOf(false) }
+    // Whether the minimal slideshow transport bar is currently shown (toggled by tapping the
+    // media). Kept separate from [showUI] so the normal viewer chrome stays hidden in slideshow.
+    var slideshowControlsVisible by rememberSaveable { mutableStateOf(false) }
+    // Signals emitted (with a media id) when a video finishes playing in slideshow mode.
+    val videoEndedFlow = remember { MutableSharedFlow<Long>(extraBufferCapacity = 4) }
 
     // FCast
     val fcastVm: FCastViewModel = hiltViewModel()
@@ -284,10 +308,15 @@ fun <T : Media> MediaViewScreen(
     // pagerMedia is already de-duplicated by id when built in mapMediaToItem (on Dispatchers.IO),
     // so only the raw `media` fallback needs distinctBy. Skipping it on the common path avoids an
     // O(n) list + HashSet allocation on the composition thread when opening large libraries.
-    val pagerItems by rememberedDerivedState(mediaState.value, pendingTrashIds) {
+    val pagerItems by rememberedDerivedState(mediaState.value, pendingTrashIds, slideshowActive) {
         val pager = mediaState.value.pagerMedia
         val items = if (pager.isNotEmpty()) pager else mediaState.value.media.distinctBy { it.id }
-        if (pendingTrashIds.isEmpty()) items else items.filter { it.id !in pendingTrashIds }
+        val filtered = if (pendingTrashIds.isEmpty()) items else items.filter { it.id !in pendingTrashIds }
+        // While the slideshow is active, follow the computed playlist order (filtered/reversed/
+        // randomized) so advancing is always the next page and looping wraps to index 0.
+        if (slideshowActive && slideshowConfig != null) {
+            buildSlideshowOrder(filtered, slideshowConfig, mediaId, slideshowSeed)
+        } else filtered
     }
 
     // Use only primitive ids/sizes as saveable keys (avoid passing full media list object)
@@ -400,8 +429,9 @@ fun <T : Media> MediaViewScreen(
     val canAutoPlay by rememberVideoAutoplay()
     val playWhenReady by rememberedDerivedState(
         currentMedia,
-        canAutoPlay
-    ) { currentMedia?.isVideo == true && canAutoPlay }
+        canAutoPlay,
+        slideshowActive
+    ) { currentMedia?.isVideo == true && (canAutoPlay || slideshowActive) }
     val isReadOnly by rememberedDerivedState { currentMedia?.readUriOnly == true }
     val showInfo by rememberedDerivedState { currentMedia?.trashed == 0 && !isReadOnly }
 
@@ -429,10 +459,35 @@ fun <T : Media> MediaViewScreen(
     val newRotationValue = rememberSaveable(settledRotationKey) { mutableIntStateOf(0) }
     val showRotationHelper = rememberSaveable(settledRotationKey) { mutableStateOf(false) }
 
-    BackHandler(!showUI) {
+    BackHandler(!showUI && !slideshowActive) {
         windowInsetsController.toggleSystemBars(show = true)
         eventHandler.navigateUp()
     }
+
+    // Exiting the slideshow returns to the normal viewer (chrome restored) rather than popping
+    // the screen. A second back then leaves the viewer as usual.
+    val exitSlideshow = {
+        slideshowActive = false
+        slideshowPaused = false
+        slideshowControlsVisible = false
+        showUI = true
+        windowInsetsController.toggleSystemBars(show = true)
+    }
+    BackHandler(slideshowActive) { exitSlideshow() }
+
+    // Hide all chrome and keep the screen awake while the slideshow is running.
+    val slideshowView = LocalView.current
+    LaunchedEffect(slideshowActive) {
+        if (slideshowActive) {
+            showUI = false
+            windowInsetsController.toggleSystemBars(show = false)
+        }
+    }
+    DisposableEffect(slideshowActive, slideshowPaused) {
+        slideshowView.keepScreenOn = slideshowActive && !slideshowPaused
+        onDispose { slideshowView.keepScreenOn = false }
+    }
+
     val activity = LocalActivity.current
 
     // Reset forced orientation when leaving the media view screen
@@ -484,6 +539,18 @@ fun <T : Media> MediaViewScreen(
     }
 
     val userScrollEnabled by rememberedDerivedState { sheetState.currentDetent != FullyExpanded }
+
+    // Tap on the media. In a slideshow we only toggle the minimal transport bar (leaving the
+    // full viewer chrome hidden); otherwise we toggle the normal chrome as before.
+    val onMediaClick = {
+        if (slideshowActive) {
+            slideshowControlsVisible = !slideshowControlsVisible
+        } else if (sheetState.currentDetent == imageOnlyDetent) {
+            showUI = !showUI
+            windowInsetsController.toggleSystemBars(showUI)
+        }
+    }
+
     var isLocked by rememberSaveable { mutableStateOf(false) }
     // Override back button/gesture when locked
     BackHandler(enabled = isLocked) { }
@@ -663,6 +730,41 @@ fun <T : Media> MediaViewScreen(
         }
     }
 
+    // Slideshow auto-advance: images dwell for the configured interval, videos play through once
+    // (advancing when they end). At the end of the list it loops or stops per the config.
+    LaunchedEffect(slideshowActive, slideshowPaused, currentPage, currentMedia?.id, initialPageSetup) {
+        val cfg = slideshowConfig
+        if (!slideshowActive || slideshowPaused || !initialPageSetup || cfg == null) {
+            return@LaunchedEffect
+        }
+        val media = currentMedia ?: return@LaunchedEffect
+        val size = pagerItems.size
+        if (size <= 1 && !cfg.loop) return@LaunchedEffect
+
+        if (media.isVideo) {
+            // Wait for this specific video to report that it finished playing.
+            videoEndedFlow.first { it == media.id }
+        } else {
+            delay(cfg.intervalMillis)
+        }
+        if (!slideshowActive || slideshowPaused) return@LaunchedEffect
+
+        val next = currentPage + 1
+        // The scroll MUST run in an external scope, not this effect: pagerState.currentPage flips
+        // to the target at the half-way point of the animation, which mutates this effect's
+        // `currentPage` key and would cancel animateScrollToPage mid-flight, leaving the pager
+        // stuck at ~50% (half-old/half-new visible). Launching in `scope` lets it finish.
+        if (next >= size) {
+            if (cfg.loop) {
+                if (size > 1) scope.launch { pagerState.animateScrollToPage(0) }
+            } else {
+                exitSlideshow()
+            }
+        } else {
+            scope.launch { pagerState.animateScrollToPage(next) }
+        }
+    }
+
     FullBrightnessWindow {
         val isDarkTheme = isDarkTheme()
         val allowBlur by rememberAllowBlur()
@@ -678,7 +780,7 @@ fun <T : Media> MediaViewScreen(
         ) {
             HorizontalPager(
                 modifier = Modifier.fillMaxSize(),
-                userScrollEnabled = if (isLocked || isVideoZoomed || isCutoutActive) false else userScrollEnabled,
+                userScrollEnabled = if (isLocked || isVideoZoomed || isCutoutActive || (slideshowActive && !slideshowPaused)) false else userScrollEnabled,
                 state = pagerState,
                 flingBehavior = PagerDefaults.flingBehavior(
                     state = pagerState,
@@ -719,12 +821,49 @@ fun <T : Media> MediaViewScreen(
                 }
                 val canPlay = rememberSaveable(media) { mutableStateOf(false) }
                 var canAnimateContent by rememberSaveable(media) { mutableStateOf(true) }
+
+                // ── Slideshow transitions ──
+                val transition = slideshowConfig?.transition
+                val fadeEnabled = slideshowActive &&
+                        (transition == SlideshowTransition.FADE || transition == SlideshowTransition.KEN_BURNS)
+                val kenBurnsEnabled = slideshowActive && media?.isVideo != true &&
+                        slideshowConfig != null &&
+                        (transition == SlideshowTransition.KEN_BURNS || slideshowConfig.kenBurns)
+                val kenBurnsScale = remember(media?.id) { Animatable(1f) }
+                LaunchedEffect(media?.id, index, currentPage, slideshowActive, slideshowPaused, kenBurnsEnabled) {
+                    if (kenBurnsEnabled && index == currentPage && !slideshowPaused) {
+                        kenBurnsScale.snapTo(1f)
+                        kenBurnsScale.animateTo(
+                            targetValue = 1.12f,
+                            animationSpec = tween(
+                                durationMillis = (slideshowConfig?.intervalMillis ?: 5000L).toInt(),
+                                easing = LinearEasing
+                            )
+                        )
+                    } else {
+                        kenBurnsScale.snapTo(1f)
+                    }
+                }
                 AnimatedVisibility(
                     modifier = Modifier
                         .onVisibilityChanged { isVisible ->
                             canPlay.value =
                                 (if (media?.isVideo == true) isVisible && playWhenReady else false)
                             canAnimateContent = isVisible
+                        }
+                        .graphicsLayer {
+                            if (fadeEnabled) {
+                                // Cancel the pager's horizontal translation so pages cross-fade
+                                // in place instead of sliding.
+                                val off = (((pagerState.currentPage - index) +
+                                        pagerState.currentPageOffsetFraction)).coerceIn(-1f, 1f)
+                                translationX = size.width * off
+                                alpha = (1f - abs(off)).coerceIn(0f, 1f)
+                            }
+                            if (kenBurnsEnabled) {
+                                scaleX = kenBurnsScale.value
+                                scaleY = kenBurnsScale.value
+                            }
                         },
                     visible = media != null && initialPageSetup,
                     enter = enterAnimation,
@@ -742,7 +881,11 @@ fun <T : Media> MediaViewScreen(
                                 // shared-element open/close transition is animating — it's
                                 // invisible during the animation but a heavy per-frame render pass
                                 // that stutters the transition. It fades in once the page settles.
-                                renderBackground = !animatedContentScope.transition.isRunning,
+                                // Also skip it during a slideshow cross-fade: two stacked blurred
+                                // backdrops would blend into a "phantom" ghost image behind the
+                                // current page.
+                                renderBackground = !animatedContentScope.transition.isRunning &&
+                                        !fadeEnabled,
                                 modifier = Modifier
                                     .mediaSharedElement(
                                         allowAnimation = canAnimateContent && index == currentPage,
@@ -753,6 +896,10 @@ fun <T : Media> MediaViewScreen(
                                 media = media,
                                 uiEnabled = showUI,
                                 playWhenReady = canPlay,
+                                slideshowActive = slideshowActive,
+                                onVideoEnded = {
+                                    media?.id?.let { videoEndedFlow.tryEmit(it) }
+                                },
                                 onSwipeDown = {
                                     if (!isLocked && !isDismissing) {
                                         isDismissing = true
@@ -780,12 +927,7 @@ fun <T : Media> MediaViewScreen(
                                     newRotationValue.intValue =
                                         (if (showRotationHelper.value) normalizedRotation else 0)
                                 },
-                                onItemClick = {
-                                    if (sheetState.currentDetent == imageOnlyDetent) {
-                                        showUI = !showUI
-                                        windowInsetsController.toggleSystemBars(showUI)
-                                    }
-                                },
+                                onItemClick = { onMediaClick() },
                                 onZoomChange = { zoomed -> isVideoZoomed = zoomed },
                                 // Only the settled/current page drives the top-bar loading
                                 // indicator; neighbour pages that transiently compose during a
@@ -848,10 +990,11 @@ fun <T : Media> MediaViewScreen(
                                             }
                                         }
                                     }
-                                    // Mute local player while casting to avoid double audio
+                                    // Mute local player while casting (avoid double audio) or
+                                    // during a slideshow (videos play muted).
                                     val isCasting = fcastState.connectedDevice != null
-                                    LaunchedEffect(isCasting) {
-                                        if (isCasting) {
+                                    LaunchedEffect(isCasting, slideshowActive) {
+                                        if (isCasting || slideshowActive) {
                                             player.volume = 0f
                                         } else {
                                             player.volume = 1f
@@ -881,14 +1024,7 @@ fun <T : Media> MediaViewScreen(
                                                             player.play()
                                                         }
                                                     },
-                                                    onClick = {
-                                                        if (sheetState.currentDetent == imageOnlyDetent) {
-                                                            showUI = !showUI
-                                                            windowInsetsController.toggleSystemBars(
-                                                                showUI
-                                                            )
-                                                        }
-                                                    }
+                                                    onClick = { onMediaClick() }
                                                 )
                                                 .swipe(onOffset = { offset = it }) {
                                                     if (!isDismissing) {
@@ -918,14 +1054,7 @@ fun <T : Media> MediaViewScreen(
                                                             player.play()
                                                         }
                                                     },
-                                                    onClick = {
-                                                        if (sheetState.currentDetent == imageOnlyDetent) {
-                                                            showUI = !showUI
-                                                            windowInsetsController.toggleSystemBars(
-                                                                showUI
-                                                            )
-                                                        }
-                                                    }
+                                                    onClick = { onMediaClick() }
                                                 )
                                                 .swipe(onOffset = { offset = it }) {
                                                     if (!isDismissing) {
@@ -1426,6 +1555,43 @@ fun <T : Media> MediaViewScreen(
                 cutoutController?.let { controller ->
                     CutoutControlsBar(controller = controller)
                 }
+            }
+
+            // Slideshow controls: minimal transport bar shown when the user taps during a
+            // slideshow. Tapping the media toggles [slideshowControlsVisible] via onMediaClick,
+            // keeping the normal viewer chrome hidden.
+            AnimatedVisibility(
+                visible = slideshowActive && slideshowControlsVisible,
+                enter = enterAnimation(DEFAULT_TOP_BAR_ANIMATION_DURATION),
+                exit = exitAnimation(DEFAULT_TOP_BAR_ANIMATION_DURATION),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = bottomPadding + extraPaddingWithNavButtons + 16.dp)
+                    .padding(horizontal = 16.dp)
+            ) {
+                SlideshowControls(
+                    isPaused = slideshowPaused,
+                    onPlayPause = { slideshowPaused = !slideshowPaused },
+                    onPrevious = {
+                        scope.launch {
+                            val size = pagerItems.size
+                            if (size > 0) {
+                                val prev = if (currentPage - 1 < 0) size - 1 else currentPage - 1
+                                pagerState.animateScrollToPage(prev)
+                            }
+                        }
+                    },
+                    onNext = {
+                        scope.launch {
+                            val size = pagerItems.size
+                            if (size > 0) {
+                                val next = if (currentPage + 1 >= size) 0 else currentPage + 1
+                                pagerState.animateScrollToPage(next)
+                            }
+                        }
+                    },
+                    onExit = { exitSlideshow() }
+                )
             }
         }
     }
