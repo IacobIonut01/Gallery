@@ -22,7 +22,13 @@ fun MarkupToolSelector(
     onToolClick: (MarkupItems) -> Unit = {}
 ) {
     val tools = remember {
-        listOf(MarkupItems.Stylus, MarkupItems.Highlighter, MarkupItems.Text)
+        listOf(
+            MarkupItems.Stylus,
+            MarkupItems.Highlighter,
+            MarkupItems.Blur,
+            MarkupItems.Mosaic,
+            MarkupItems.Text
+        )
     }
 
     val padding = remember(isSupportingPanel) {

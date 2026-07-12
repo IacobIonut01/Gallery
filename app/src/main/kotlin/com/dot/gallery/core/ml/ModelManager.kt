@@ -22,6 +22,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.security.MessageDigest
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -52,6 +53,8 @@ enum class ModelStatus {
  * can be installed, checked and removed independently.
  *  - [SEARCH]: CLIP models for smart search + automatic categories.
  *  - [CUTOUT]: MobileSAM models for the subject-cutout feature in the media viewer.
+ *  - [FACE_DETECT]: UltraFace RFB-320 detector for the editor's auto face-blur.
+ *  - [FACE_RECOGNITION]: ArcFace embedding model for on-device Person grouping.
  */
 enum class ModelGroup(val subDir: String, val files: List<String>) {
     SEARCH(
@@ -61,6 +64,18 @@ enum class ModelGroup(val subDir: String, val files: List<String>) {
     CUTOUT(
         subDir = "sam",
         files = listOf("mobile_sam_image_encoder.onnx", "sam_mask_decoder_single.onnx")
+    ),
+
+    /** UltraFace RFB-320 lightweight face detector — powers auto face-blur in the editor. */
+    FACE_DETECT(
+        subDir = "face_detect",
+        files = listOf("version-RFB-320.onnx")
+    ),
+
+    /** ArcFace/MobileFaceNet face-embedding model — powers on-device Person grouping. */
+    FACE_RECOGNITION(
+        subDir = "face_recog",
+        files = listOf("arcface.onnx")
     );
 
     companion object {
@@ -187,12 +202,22 @@ class ModelManager @Inject constructor(
         return group.files.sumOf { getDestinationFile(it).length() }
     }
 
+    /** Cache of computed per-file SHA-256 infos, so the (potentially expensive, e.g. ~130 MB
+     * ArcFace) hashing runs only once per install rather than on every recomposition. */
+    private val fileInfoCache = ConcurrentHashMap<ModelGroup, List<ModelFileInfo>>()
+
     /**
      * Get detailed info (name, size, SHA-256) for each installed file in [group].
+     * Runs on [Dispatchers.IO] and caches the result, as SHA-256 hashing large model files is
+     * far too slow to do on the main thread / during composition.
      */
-    fun getFileInfos(group: ModelGroup): List<ModelFileInfo> {
-        if (!checkModelsPresent(group)) return emptyList()
-        return group.files.map { fileName ->
+    suspend fun getFileInfos(group: ModelGroup): List<ModelFileInfo> = withContext(Dispatchers.IO) {
+        if (!checkModelsPresent(group)) {
+            fileInfoCache.remove(group)
+            return@withContext emptyList()
+        }
+        fileInfoCache[group]?.let { return@withContext it }
+        val infos = group.files.map { fileName ->
             val file = getDestinationFile(fileName)
             val hash = file.sha256()
             ModelFileInfo(
@@ -202,6 +227,8 @@ class ModelManager @Inject constructor(
                 verified = EXPECTED_CHECKSUMS[fileName] == hash
             )
         }
+        fileInfoCache[group] = infos
+        infos
     }
 
     private fun File.sha256(): String {
@@ -226,6 +253,7 @@ class ModelManager @Inject constructor(
                 dir.deleteRecursively()
                 printInfo("ModelManager: ${group.name} models deleted")
             }
+            fileInfoCache.remove(group)
             flows(group).apply {
                 status.value = ModelStatus.NOT_INSTALLED
                 progress.value = 0f
@@ -323,7 +351,9 @@ class ModelManager @Inject constructor(
             "vocab.json" to "e089ad92ba36837a0d31433e555c8f45fe601ab5c221d4f607ded32d9f7a4349",
             "merges.txt" to "9fd691f7c8039210e0fced15865466c65820d09b63988b0174bfe25de299051a",
             "mobile_sam_image_encoder.onnx" to "580f5fb648ea1062c0aabc26217aed56921985f03f0cbbd852bba81d760cc749",
-            "sam_mask_decoder_single.onnx" to "93915fc7c993ab9d59ab8c9ccd3bce37f7509c81ab4150a74abd4d2abbd8570d"
+            "sam_mask_decoder_single.onnx" to "93915fc7c993ab9d59ab8c9ccd3bce37f7509c81ab4150a74abd4d2abbd8570d",
+            "version-RFB-320.onnx" to "34cd7e60aeff28744c657de7a3dc64e872d506741de66987f3426f2b79f88017",
+            "arcface.onnx" to "ffe014a45c9488506719d37fd578ece6661bb385535b36e8039975fa5d4683db"
         )
     }
 }

@@ -13,6 +13,7 @@ import com.dot.gallery.cloud.data.dao.CloudMediaDao
 import com.dot.gallery.cloud.data.dao.CloudOfflinePinDao
 import com.dot.gallery.cloud.data.dao.CloudServerConfigDao
 import com.dot.gallery.cloud.data.dao.CloudUploadPrefDao
+import com.dot.gallery.cloud.data.dao.DetectedFaceDao
 import com.dot.gallery.cloud.data.dao.PersonDao
 import com.dot.gallery.cloud.data.dao.SyncStateDao
 import com.dot.gallery.cloud.data.repository.CloudRepository
@@ -48,6 +49,11 @@ abstract class CloudModule {
         @Singleton
         fun providePersonDao(database: InternalDatabase): PersonDao =
             database.getPersonDao()
+
+        @Provides
+        @Singleton
+        fun provideDetectedFaceDao(database: InternalDatabase): DetectedFaceDao =
+            database.getDetectedFaceDao()
 
         @Provides
         @Singleton

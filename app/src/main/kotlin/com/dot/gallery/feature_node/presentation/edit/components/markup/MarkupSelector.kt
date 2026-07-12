@@ -23,10 +23,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Face
 import androidx.compose.material.icons.outlined.TextFields
+import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -82,6 +88,9 @@ fun MarkupSelector(
     textAnnotations: List<TextAnnotation> = emptyList(),
     onTextAnnotationsChange: (List<TextAnnotation>) -> Unit = {},
     selectedTextIndex: Int = -1,
+    onDetectFaces: () -> Unit = {},
+    faceDetectAvailable: Boolean = false,
+    isDetectingFaces: Boolean = false,
 ) {
     if (isSupportingPanel) {
         MarkupSelectorTablet(
@@ -91,7 +100,10 @@ fun MarkupSelector(
             setDrawType = setDrawType,
             currentPathProperty = currentPathProperty,
             setCurrentPathProperty = setCurrentPathProperty,
-            onRequestTextInput = onRequestTextInput
+            onRequestTextInput = onRequestTextInput,
+            onDetectFaces = onDetectFaces,
+            faceDetectAvailable = faceDetectAvailable,
+            isDetectingFaces = isDetectingFaces
         )
     } else {
         MarkupSelectorPhone(
@@ -104,7 +116,10 @@ fun MarkupSelector(
             onRequestTextInput = onRequestTextInput,
             textAnnotations = textAnnotations,
             onTextAnnotationsChange = onTextAnnotationsChange,
-            selectedTextIndex = selectedTextIndex
+            selectedTextIndex = selectedTextIndex,
+            onDetectFaces = onDetectFaces,
+            faceDetectAvailable = faceDetectAvailable,
+            isDetectingFaces = isDetectingFaces
         )
     }
 }
@@ -121,71 +136,71 @@ private fun MarkupSelectorPhone(
     textAnnotations: List<TextAnnotation> = emptyList(),
     onTextAnnotationsChange: (List<TextAnnotation>) -> Unit = {},
     selectedTextIndex: Int = -1,
+    onDetectFaces: () -> Unit = {},
+    faceDetectAvailable: Boolean = false,
+    isDetectingFaces: Boolean = false,
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Tool type text tabs (Pen / Highlighter / Text)
+        // Tool type text tabs (Pen / Highlighter / Blur / Mosaic / Text)
+        val isPen = drawMode == DrawMode.Draw && drawType == DrawType.Stylus
+        val isHighlighter = drawMode == DrawMode.Draw && drawType == DrawType.Highlighter
+        val isBlur = drawMode == DrawMode.Draw && drawType == DrawType.Blur
+        val isMosaic = drawMode == DrawMode.Draw && drawType == DrawType.Mosaic
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .horizontalFadingEdge(0.06f)
+                .horizontalScroll(rememberScrollState())
                 .padding(bottom = 12.dp),
             horizontalArrangement = Arrangement.Center
         ) {
-            val isPen = drawMode == DrawMode.Draw && drawType == DrawType.Stylus
-            val isHighlighter = drawMode == DrawMode.Draw && drawType == DrawType.Highlighter
-            val isText = drawMode == DrawMode.Text
-            // Pen tab
-            Text(
-                text = stringResource(R.string.editor_pen),
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontWeight = if (isPen) FontWeight.Bold else FontWeight.Normal,
-                    fontSize = 14.sp
-                ),
-                color = if (isPen) Color.White else Color.White.copy(alpha = 0.5f),
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .clickable {
-                        setDrawMode(DrawMode.Draw)
-                        setDrawType(DrawType.Stylus)
-                    }
-                    .padding(horizontal = 20.dp, vertical = 8.dp)
+            Spacer(modifier = Modifier.width(8.dp))
+            MarkupToolTab(
+                label = stringResource(R.string.editor_pen),
+                selected = isPen,
+                onClick = {
+                    setDrawMode(DrawMode.Draw)
+                    setDrawType(DrawType.Stylus)
+                }
             )
-            // Highlighter tab
-            Text(
-                text = stringResource(R.string.editor_highlighter),
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontWeight = if (isHighlighter) FontWeight.Bold else FontWeight.Normal,
-                    fontSize = 14.sp
-                ),
-                color = if (isHighlighter) Color.White else Color.White.copy(alpha = 0.5f),
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .clickable {
-                        setDrawMode(DrawMode.Draw)
-                        setDrawType(DrawType.Highlighter)
-                    }
-                    .padding(horizontal = 20.dp, vertical = 8.dp)
+            MarkupToolTab(
+                label = stringResource(R.string.editor_highlighter),
+                selected = isHighlighter,
+                onClick = {
+                    setDrawMode(DrawMode.Draw)
+                    setDrawType(DrawType.Highlighter)
+                }
             )
-            // Text tab
-            Text(
-                text = stringResource(R.string.editor_text),
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontWeight = if (isText) FontWeight.Bold else FontWeight.Normal,
-                    fontSize = 14.sp
-                ),
-                color = if (isText) Color.White else Color.White.copy(alpha = 0.5f),
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .clickable {
-                        setDrawMode(DrawMode.Text)
-                        if (textAnnotations.isEmpty()) {
-                            onRequestTextInput()
-                        }
-                    }
-                    .padding(horizontal = 20.dp, vertical = 8.dp)
+            MarkupToolTab(
+                label = stringResource(R.string.type_blur),
+                selected = isBlur,
+                onClick = {
+                    setDrawMode(DrawMode.Draw)
+                    setDrawType(DrawType.Blur)
+                }
             )
+            MarkupToolTab(
+                label = stringResource(R.string.type_mosaic),
+                selected = isMosaic,
+                onClick = {
+                    setDrawMode(DrawMode.Draw)
+                    setDrawType(DrawType.Mosaic)
+                }
+            )
+            MarkupToolTab(
+                label = stringResource(R.string.editor_text),
+                selected = drawMode == DrawMode.Text,
+                onClick = {
+                    setDrawMode(DrawMode.Text)
+                    if (textAnnotations.isEmpty()) {
+                        onRequestTextInput()
+                    }
+                }
+            )
+            Spacer(modifier = Modifier.width(8.dp))
         }
 
         val isText = drawMode == DrawMode.Text
@@ -196,16 +211,33 @@ private fun MarkupSelectorPhone(
             drawMode == DrawMode.Draw && drawType == DrawType.Stylus -> MarkupItems.Stylus.icon
             drawMode == DrawMode.Draw && drawType == DrawType.Highlighter -> MarkupItems.Highlighter.icon
             drawMode == DrawMode.Draw && drawType == DrawType.Marker -> MarkupItems.Marker.icon
+            drawMode == DrawMode.Draw && drawType == DrawType.Blur -> MarkupItems.Blur.icon
+            drawMode == DrawMode.Draw && drawType == DrawType.Mosaic -> MarkupItems.Mosaic.icon
             isText -> Icons.Outlined.TextFields
             drawMode == DrawMode.Erase -> MarkupItems.Eraser.icon
             else -> Icons.Outlined.Edit
         }
+
+        val isEffectBrush = drawMode == DrawMode.Draw &&
+                (drawType == DrawType.Blur || drawType == DrawType.Mosaic)
 
         // Determine the effective selected color
         val effectiveColor = if (isText && selectedTextIndex in textAnnotations.indices) {
             textAnnotations[selectedTextIndex].color
         } else {
             currentPathProperty.color.copy(alpha = 1f)
+        }
+
+        if (isEffectBrush) {
+            BrushEffectControls(
+                toolIcon = toolIcon,
+                currentPathProperty = currentPathProperty,
+                setCurrentPathProperty = setCurrentPathProperty,
+                onDetectFaces = onDetectFaces,
+                faceDetectAvailable = faceDetectAvailable,
+                isDetectingFaces = isDetectingFaces
+            )
+            return@Column
         }
 
         // Color dots row in dark rounded container
@@ -288,6 +320,27 @@ private fun MarkupSelectorPhone(
     }
 }
 
+/** A single selectable text tab in the phone markup tool row. */
+@Composable
+private fun MarkupToolTab(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    Text(
+        text = label,
+        style = MaterialTheme.typography.bodyMedium.copy(
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+            fontSize = 14.sp
+        ),
+        color = if (selected) Color.White else Color.White.copy(alpha = 0.5f),
+        modifier = Modifier
+            .clip(RoundedCornerShape(8.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 20.dp, vertical = 8.dp)
+    )
+}
+
 @Composable
 private fun MarkupSelectorTablet(
     drawMode: DrawMode,
@@ -297,6 +350,9 @@ private fun MarkupSelectorTablet(
     currentPathProperty: PathProperties,
     setCurrentPathProperty: (PathProperties) -> Unit,
     onRequestTextInput: () -> Unit = {},
+    @Suppress("UNUSED_PARAMETER") onDetectFaces: () -> Unit = {},
+    @Suppress("UNUSED_PARAMETER") faceDetectAvailable: Boolean = false,
+    @Suppress("UNUSED_PARAMETER") isDetectingFaces: Boolean = false,
 ) {
     val padding = remember { PaddingValues(0.dp) }
 
@@ -354,6 +410,8 @@ private fun MarkupSelectorTablet(
                         MarkupItems.Stylus -> drawMode == DrawMode.Draw && drawType == DrawType.Stylus
                         MarkupItems.Highlighter -> drawMode == DrawMode.Draw && drawType == DrawType.Highlighter
                         MarkupItems.Marker -> drawMode == DrawMode.Draw && drawType == DrawType.Marker
+                        MarkupItems.Blur -> drawMode == DrawMode.Draw && drawType == DrawType.Blur
+                        MarkupItems.Mosaic -> drawMode == DrawMode.Draw && drawType == DrawType.Mosaic
                         MarkupItems.Text -> drawMode == DrawMode.Text
                         MarkupItems.Eraser -> drawMode == DrawMode.Erase
                         MarkupItems.Pan -> drawMode == DrawMode.Touch
@@ -378,6 +436,14 @@ private fun MarkupSelectorTablet(
                                 setDrawMode(DrawMode.Draw)
                                 setDrawType(DrawType.Marker)
                             }
+                            MarkupItems.Blur -> {
+                                setDrawMode(DrawMode.Draw)
+                                setDrawType(DrawType.Blur)
+                            }
+                            MarkupItems.Mosaic -> {
+                                setDrawMode(DrawMode.Draw)
+                                setDrawType(DrawType.Mosaic)
+                            }
                             MarkupItems.Text -> {
                                 setDrawMode(DrawMode.Text)
                                 onRequestTextInput()
@@ -394,6 +460,110 @@ private fun MarkupSelectorTablet(
                 if (index < MarkupItems.entries.size - 1) {
                     Spacer(modifier = Modifier.size(16.dp))
                 }
+            }
+        }
+    }
+}
+
+/**
+ * Size + strength sliders shown when a blur/mosaic brush is active, replacing the color picker.
+ * Size maps to [PathProperties.strokeWidth]; strength maps to [PathProperties.effectStrength].
+ */
+@Composable
+private fun BrushEffectControls(
+    toolIcon: ImageVector,
+    currentPathProperty: PathProperties,
+    setCurrentPathProperty: (PathProperties) -> Unit,
+    onDetectFaces: () -> Unit = {},
+    faceDetectAvailable: Boolean = false,
+    isDetectingFaces: Boolean = false,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .background(
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                shape = RoundedCornerShape(24.dp)
+            )
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = toolIcon,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = stringResource(R.string.editor_brush_size),
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.White.copy(alpha = 0.7f)
+            )
+            Slider(
+                value = currentPathProperty.strokeWidth,
+                onValueChange = {
+                    setCurrentPathProperty(currentPathProperty.copy(strokeWidth = it))
+                },
+                valueRange = 15f..150f,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 12.dp)
+            )
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = Icons.Outlined.Tune,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = stringResource(R.string.editor_brush_strength),
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.White.copy(alpha = 0.7f)
+            )
+            Slider(
+                value = currentPathProperty.effectStrength,
+                onValueChange = {
+                    setCurrentPathProperty(currentPathProperty.copy(effectStrength = it))
+                },
+                valueRange = 0f..1f,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 12.dp)
+            )
+        }
+        if (faceDetectAvailable) {
+            TextButton(
+                onClick = { if (!isDetectingFaces) onDetectFaces() },
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(top = 4.dp)
+            ) {
+                if (isDetectingFaces) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        strokeWidth = 2.dp,
+                        color = Color.White
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                } else {
+                    Icon(
+                        imageVector = Icons.Outlined.Face,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+                Text(
+                    text = stringResource(R.string.editor_blur_faces),
+                    color = Color.White,
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
         }
     }

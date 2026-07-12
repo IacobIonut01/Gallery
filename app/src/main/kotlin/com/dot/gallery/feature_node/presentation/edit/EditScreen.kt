@@ -161,7 +161,12 @@ fun EditScreen2(
     previewRotation90: Float = 0f,
     previewFlipH: Boolean = false,
     onRotate90: () -> Unit = {},
-    onFlipH: () -> Unit = {}
+    onFlipH: () -> Unit = {},
+    pendingFaceRegions: List<android.graphics.RectF> = emptyList(),
+    onFaceRegionsConsumed: () -> Unit = {},
+    onDetectFaces: () -> Unit = {},
+    faceDetectAvailable: Boolean = false,
+    isDetectingFaces: Boolean = false,
 ) = GalleryTheme(darkTheme = true, ignoreUserPreference = true) {
     val context = LocalContext.current
     val navigator = rememberSupportingPaneScaffoldNavigator(
@@ -670,6 +675,8 @@ fun EditScreen2(
                             onTextAnnotationsChange = { textAnnotations = it },
                             selectedTextIndex = selectedTextIndex,
                             onSelectedTextIndexChange = { selectedTextIndex = it },
+                            pendingFaceRegions = pendingFaceRegions,
+                            onFaceRegionsConsumed = onFaceRegionsConsumed,
                             vignetteIntensity = vignetteIntensity,
                             blurRadius = blurRadius,
                             sharpnessValue = sharpnessValue,
@@ -702,7 +709,10 @@ fun EditScreen2(
                                 onRequestTextInput = onRequestTextInput,
                                 textAnnotations = textAnnotations,
                                 onTextAnnotationsChange = { textAnnotations = it },
-                                selectedTextIndex = selectedTextIndex
+                                selectedTextIndex = selectedTextIndex,
+                                onDetectFaces = onDetectFaces,
+                                faceDetectAvailable = faceDetectAvailable,
+                                isDetectingFaces = isDetectingFaces
                             )
                         }
                     }
@@ -758,7 +768,10 @@ fun EditScreen2(
                         onRequestTextInput = onRequestTextInput,
                         textAnnotations = textAnnotations,
                         onTextAnnotationsChange = { textAnnotations = it },
-                        selectedTextIndex = selectedTextIndex
+                        selectedTextIndex = selectedTextIndex,
+                        onDetectFaces = onDetectFaces,
+                        faceDetectAvailable = faceDetectAvailable,
+                        isDetectingFaces = isDetectingFaces
                     )
                 }
 

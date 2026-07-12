@@ -23,6 +23,7 @@ import com.dot.gallery.feature_node.domain.model.editor.Adjustment
 import com.dot.gallery.feature_node.domain.model.editor.DrawMode
 import com.dot.gallery.feature_node.domain.model.editor.DrawType
 import com.dot.gallery.feature_node.domain.model.editor.ImageFilter
+import com.dot.gallery.feature_node.domain.model.editor.MarkupBrush
 import com.dot.gallery.feature_node.domain.model.editor.PathProperties
 import com.dot.gallery.feature_node.domain.model.editor.SaveFormat
 import com.dot.gallery.feature_node.domain.model.editor.SuggestionPreset
@@ -68,7 +69,44 @@ class EditViewModel @Inject constructor(
     private val mediaHandler: MediaHandler,
     private val editBackupManager: EditBackupManager,
     private val workManager: WorkManager,
+    private val modelManager: com.dot.gallery.core.ml.ModelManager,
 ) : ViewModel() {
+
+    /** Normalized face rects awaiting conversion into markup regions by the painter. */
+    private val _pendingFaceRegions = MutableStateFlow<List<android.graphics.RectF>>(emptyList())
+    val pendingFaceRegions = _pendingFaceRegions.asStateFlow()
+
+    private val _isDetectingFaces = MutableStateFlow(false)
+    val isDetectingFaces = _isDetectingFaces.asStateFlow()
+
+    /** True when the on-device face detector model is installed (gates the "Blur faces" action). */
+    val faceDetectAvailable: Boolean
+        get() = modelManager.isReady(com.dot.gallery.core.ml.ModelGroup.FACE_DETECT)
+
+    /** Run face detection on the current image; results are emitted via [pendingFaceRegions]. */
+    fun detectFacesForMarkup() {
+        if (!faceDetectAvailable) return
+        val bmp = lastRealBitmap() ?: return
+        viewModelScope.launch(Dispatchers.IO) {
+            _isDetectingFaces.value = true
+            val helper = com.dot.gallery.core.ml.FaceHelper(modelManager)
+            try {
+                val faces = helper.detect(bmp)
+                _pendingFaceRegions.value = faces.map {
+                    android.graphics.RectF(it.left, it.top, it.right, it.bottom)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                helper.close()
+                _isDetectingFaces.value = false
+            }
+        }
+    }
+
+    fun consumeFaceRegions() {
+        _pendingFaceRegions.value = emptyList()
+    }
 
     private val _originalBitmap = MutableStateFlow<Bitmap?>(null)
     val originalBitmap = _originalBitmap.asStateFlow()
@@ -285,7 +323,9 @@ class EditViewModel @Inject constructor(
                     _currentPathProperty.value.copy(
                         strokeWidth = 20f,
                         color = _currentPathProperty.value.color.copy(alpha = 1f),
-                        strokeCap = StrokeCap.Round
+                        strokeCap = StrokeCap.Round,
+                        brush = MarkupBrush.Solid,
+                        fillRegion = false
                     )
                 )
             }
@@ -295,7 +335,9 @@ class EditViewModel @Inject constructor(
                     _currentPathProperty.value.copy(
                         strokeWidth = 30f,
                         color = _currentPathProperty.value.color.copy(alpha = 0.4f),
-                        strokeCap = StrokeCap.Square
+                        strokeCap = StrokeCap.Square,
+                        brush = MarkupBrush.Solid,
+                        fillRegion = false
                     )
                 )
             }
@@ -305,7 +347,31 @@ class EditViewModel @Inject constructor(
                     _currentPathProperty.value.copy(
                         strokeWidth = 40f,
                         color = _currentPathProperty.value.color.copy(alpha = 1f),
-                        strokeCap = StrokeCap.Round
+                        strokeCap = StrokeCap.Round,
+                        brush = MarkupBrush.Solid,
+                        fillRegion = false
+                    )
+                )
+            }
+
+            DrawType.Blur -> {
+                setCurrentPathProperty(
+                    _currentPathProperty.value.copy(
+                        strokeWidth = 60f,
+                        strokeCap = StrokeCap.Round,
+                        brush = MarkupBrush.Blur,
+                        fillRegion = false
+                    )
+                )
+            }
+
+            DrawType.Mosaic -> {
+                setCurrentPathProperty(
+                    _currentPathProperty.value.copy(
+                        strokeWidth = 60f,
+                        strokeCap = StrokeCap.Round,
+                        brush = MarkupBrush.Mosaic,
+                        fillRegion = false
                     )
                 )
             }

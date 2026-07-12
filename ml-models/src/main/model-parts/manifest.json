@@ -1,0 +1,15 @@
+{
+    "partBytes": 94371840,
+    "models": [
+        {
+            "asset": "arcface.onnx",
+            "sourceDir": "src/main/assets",
+            "parts": [
+                "arcface.onnx.part000",
+                "arcface.onnx.part001"
+            ],
+            "sha256": "ffe014a45c9488506719d37fd578ece6661bb385535b36e8039975fa5d4683db",
+            "size": 136619444
+        }
+    ]
+}

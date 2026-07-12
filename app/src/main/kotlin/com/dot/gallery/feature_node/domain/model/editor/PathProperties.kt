@@ -10,7 +10,10 @@ class PathProperties(
     var alpha: Float = 1f,
     var strokeCap: StrokeCap = StrokeCap.Round,
     var strokeJoin: StrokeJoin = StrokeJoin.Round,
-    var eraseMode: Boolean = false
+    var eraseMode: Boolean = false,
+    var brush: MarkupBrush = MarkupBrush.Solid,
+    var effectStrength: Float = 0.5f,
+    var fillRegion: Boolean = false
 ) {
 
     fun copy(
@@ -19,9 +22,12 @@ class PathProperties(
         alpha: Float = this.alpha,
         strokeCap: StrokeCap = this.strokeCap,
         strokeJoin: StrokeJoin = this.strokeJoin,
-        eraseMode: Boolean = this.eraseMode
+        eraseMode: Boolean = this.eraseMode,
+        brush: MarkupBrush = this.brush,
+        effectStrength: Float = this.effectStrength,
+        fillRegion: Boolean = this.fillRegion
     ) = PathProperties(
-        strokeWidth, color, alpha, strokeCap, strokeJoin, eraseMode
+        strokeWidth, color, alpha, strokeCap, strokeJoin, eraseMode, brush, effectStrength, fillRegion
     )
 
     fun copyFrom(properties: PathProperties) {
@@ -30,5 +36,8 @@ class PathProperties(
         this.strokeCap = properties.strokeCap
         this.strokeJoin = properties.strokeJoin
         this.eraseMode = properties.eraseMode
+        this.brush = properties.brush
+        this.effectStrength = properties.effectStrength
+        this.fillRegion = properties.fillRegion
     }
 }

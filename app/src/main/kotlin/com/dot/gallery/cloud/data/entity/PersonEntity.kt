@@ -5,6 +5,7 @@
 
 package com.dot.gallery.cloud.data.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
@@ -22,5 +23,7 @@ data class PersonEntity(
     val thumbnailMediaId: Long? = null,
     val thumbnailUrl: String? = null,
     val faceCount: Int = 0,
-    val lastUpdated: Long = 0L
+    val lastUpdated: Long = 0L,
+    @ColumnInfo(defaultValue = "0")
+    val hidden: Boolean = false
 )

@@ -14,16 +14,22 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.PersonSearch
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -49,8 +55,10 @@ import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.dot.gallery.R
 import com.dot.gallery.cloud.core.PersonInfo
+import com.dot.gallery.core.SettingsEntity
 import com.dot.gallery.core.presentation.components.LoadingMedia
 import com.dot.gallery.core.presentation.components.NavigationBackButton
+import com.dot.gallery.feature_node.presentation.settings.components.SettingsItem
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
 import dev.chrisbanes.haze.LocalHazeStyle
 import dev.chrisbanes.haze.hazeEffect
@@ -62,6 +70,8 @@ fun PeopleListScreen(
 ) {
     val viewModel = hiltViewModel<PeopleListViewModel>()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val isScanning by viewModel.isScanning.collectAsStateWithLifecycle()
+    val scanProgress by viewModel.scanProgress.collectAsStateWithLifecycle()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
         state = rememberTopAppBarState()
     )
@@ -76,6 +86,36 @@ fun PeopleListScreen(
                 ),
                 title = { Text(stringResource(R.string.cloud_people)) },
                 navigationIcon = { NavigationBackButton() },
+                actions = {
+                    if (viewModel.localScanAvailable) {
+                        if (isScanning) {
+                            Box(
+                                modifier = Modifier.size(48.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (scanProgress in 0f..100f) {
+                                    CircularProgressIndicator(
+                                        progress = { scanProgress / 100f },
+                                        modifier = Modifier.size(24.dp),
+                                        strokeWidth = 2.dp
+                                    )
+                                } else {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(24.dp),
+                                        strokeWidth = 2.dp
+                                    )
+                                }
+                            }
+                        } else {
+                            IconButton(onClick = { viewModel.scanForPeople() }) {
+                                Icon(
+                                    imageVector = Icons.Outlined.PersonSearch,
+                                    contentDescription = stringResource(R.string.scan_for_people)
+                                )
+                            }
+                        }
+                    }
+                },
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(
                     scrolledContainerColor = MaterialTheme.colorScheme.surface,
@@ -96,10 +136,16 @@ fun PeopleListScreen(
                 EmptyPeople(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(innerPadding)
+                        .padding(innerPadding),
+                    canScan = viewModel.localScanAvailable,
+                    isScanning = isScanning,
+                    onScan = { viewModel.scanForPeople() }
                 )
             }
             else -> {
+                // Group people by their provider so each source (on-device, Immich, …) gets its
+                // own labelled section with a divider.
+                val grouped = state.people.groupBy { it.providerType }
                 LazyVerticalGrid(
                     columns = GridCells.Adaptive(100.dp),
                     modifier = Modifier.fillMaxSize(),
@@ -112,11 +158,19 @@ fun PeopleListScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    items(state.people, key = { it.id }) { person ->
-                        PersonGridItem(
-                            person = person,
-                            onClick = { onPersonClick(person.id) }
-                        )
+                    grouped.forEach { (provider, people) ->
+                        item(
+                            span = { GridItemSpan(maxLineSpan) },
+                            key = "header_${provider.name}"
+                        ) {
+                            ProviderHeader(name = provider.displayName, count = people.size)
+                        }
+                        items(people, key = { it.id }) { person ->
+                            PersonGridItem(
+                                person = person,
+                                onClick = { onPersonClick(person.id) }
+                            )
+                        }
                     }
                 }
             }
@@ -124,8 +178,22 @@ fun PeopleListScreen(
     }
 }
 
+/** Full-span section header shown above each provider's people, styled like settings headers. */
 @Composable
-private fun EmptyPeople(modifier: Modifier = Modifier) {
+private fun ProviderHeader(name: String, count: Int) {
+    SettingsItem(
+        item = SettingsEntity.Header(title = "$name · $count"),
+        applyPaddings = false
+    )
+}
+
+@Composable
+private fun EmptyPeople(
+    modifier: Modifier = Modifier,
+    canScan: Boolean = false,
+    isScanning: Boolean = false,
+    onScan: () -> Unit = {}
+) {
     Column(
         modifier = modifier.padding(top = 64.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -141,6 +209,27 @@ private fun EmptyPeople(modifier: Modifier = Modifier) {
             text = stringResource(R.string.cloud_people_empty),
             style = MaterialTheme.typography.titleLarge
         )
+        if (canScan) {
+            Button(onClick = onScan, enabled = !isScanning) {
+                if (isScanning) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(18.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Outlined.PersonSearch,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+                Text(
+                    text = stringResource(R.string.scan_for_people),
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
+        }
     }
 }
 

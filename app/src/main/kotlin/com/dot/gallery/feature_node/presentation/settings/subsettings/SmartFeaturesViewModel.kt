@@ -41,7 +41,7 @@ class SmartFeaturesViewModel @Inject constructor(
 
     fun installedSize(group: ModelGroup): Long = modelManager.getInstalledSize(group)
 
-    fun getFileInfos(group: ModelGroup): List<ModelFileInfo> = modelManager.getFileInfos(group)
+    suspend fun getFileInfos(group: ModelGroup): List<ModelFileInfo> = modelManager.getFileInfos(group)
 
     val hasInternetPermission: Boolean get() = modelManager.hasInternetPermission
     val areAiFeaturesAvailable: Boolean get() = modelManager.areAiFeaturesAvailable

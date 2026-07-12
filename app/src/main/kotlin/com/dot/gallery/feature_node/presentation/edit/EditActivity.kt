@@ -101,6 +101,8 @@ class EditActivity : ComponentActivity() {
                     val isProcessing by viewModel.isProcessing.collectAsStateWithLifecycle()
                     val previewRotation90 by viewModel.previewRotation90.collectAsStateWithLifecycle()
                     val previewFlipH by viewModel.previewFlipH.collectAsStateWithLifecycle()
+                    val pendingFaceRegions by viewModel.pendingFaceRegions.collectAsStateWithLifecycle()
+                    val isDetectingFaces by viewModel.isDetectingFaces.collectAsStateWithLifecycle()
 
                     val scope = rememberCoroutineScope { Dispatchers.IO }
 
@@ -255,7 +257,12 @@ class EditActivity : ComponentActivity() {
                         previewRotation90 = previewRotation90,
                         previewFlipH = previewFlipH,
                         onRotate90 = viewModel::applyRotate90,
-                        onFlipH = viewModel::applyFlipH
+                        onFlipH = viewModel::applyFlipH,
+                        pendingFaceRegions = pendingFaceRegions,
+                        onFaceRegionsConsumed = viewModel::consumeFaceRegions,
+                        onDetectFaces = viewModel::detectFacesForMarkup,
+                        faceDetectAvailable = viewModel.faceDetectAvailable,
+                        isDetectingFaces = isDetectingFaces
                     )
                 }
             }

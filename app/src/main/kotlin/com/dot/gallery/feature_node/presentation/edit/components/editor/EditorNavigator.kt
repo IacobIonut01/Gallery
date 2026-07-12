@@ -59,6 +59,9 @@ fun EditorNavigator(
     textAnnotations: List<TextAnnotation> = emptyList(),
     onTextAnnotationsChange: (List<TextAnnotation>) -> Unit = {},
     selectedTextIndex: Int = -1,
+    onDetectFaces: () -> Unit = {},
+    faceDetectAvailable: Boolean = false,
+    isDetectingFaces: Boolean = false,
 ) {
 
     NavHost(
@@ -198,6 +201,14 @@ fun EditorNavigator(
                             setDrawMode(DrawMode.Draw)
                             setDrawType(DrawType.Marker)
                         }
+                        MarkupItems.Blur -> {
+                            setDrawMode(DrawMode.Draw)
+                            setDrawType(DrawType.Blur)
+                        }
+                        MarkupItems.Mosaic -> {
+                            setDrawMode(DrawMode.Draw)
+                            setDrawType(DrawType.Mosaic)
+                        }
                         MarkupItems.Text -> {
                             setDrawMode(DrawMode.Text)
                             onRequestTextInput()
@@ -229,7 +240,10 @@ fun EditorNavigator(
                 onRequestTextInput = onRequestTextInput,
                 textAnnotations = textAnnotations,
                 onTextAnnotationsChange = onTextAnnotationsChange,
-                selectedTextIndex = selectedTextIndex
+                selectedTextIndex = selectedTextIndex,
+                onDetectFaces = onDetectFaces,
+                faceDetectAvailable = faceDetectAvailable,
+                isDetectingFaces = isDetectingFaces
             )
         }
 

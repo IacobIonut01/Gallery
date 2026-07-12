@@ -1,7 +1,9 @@
 package com.dot.gallery.feature_node.presentation.edit.components.markup
 
 import android.graphics.Bitmap
+import android.graphics.BitmapShader
 import android.graphics.Paint
+import android.graphics.Shader
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.calculatePan
@@ -27,6 +29,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -42,13 +45,17 @@ import androidx.compose.ui.unit.IntSize
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.dot.gallery.feature_node.domain.model.editor.DrawMode
+import com.dot.gallery.feature_node.domain.model.editor.MarkupBrush
 import com.dot.gallery.feature_node.domain.model.editor.PainterMotionEvent
 import com.dot.gallery.feature_node.domain.model.editor.PathProperties
 import com.dot.gallery.feature_node.domain.model.editor.TextAnnotation
+import com.dot.gallery.feature_node.presentation.edit.utils.ImageObscure
 import com.dot.gallery.feature_node.presentation.edit.utils.dragMotionEvent
+import androidx.core.graphics.scale
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
@@ -76,6 +83,8 @@ fun MarkupPainter(
     onTextAnnotationsChange: (List<TextAnnotation>) -> Unit = {},
     selectedTextIndex: Int = -1,
     onSelectedTextIndexChange: (Int) -> Unit = {},
+    pendingFaceRegions: List<android.graphics.RectF> = emptyList(),
+    onFaceRegionsConsumed: () -> Unit = {},
 ) {
     var graphicsLayer = rememberGraphicsLayer()
 
@@ -114,6 +123,34 @@ fun MarkupPainter(
 
     val mutex = remember { Mutex() }
 
+    // Cache of processed (blurred/mosaicked) copies of the base image, keyed by
+    // (brush, quantized-strength) and scaled to the current canvas size. Reset when either the
+    // source bitmap or the canvas size changes so shader pixels always align with the strokes.
+    val processedCache = remember(currentImage, canvasLayoutSize) {
+        HashMap<Pair<MarkupBrush, Int>, Bitmap>()
+    }
+
+    fun shaderBrushFor(property: PathProperties): ShaderBrush? {
+        if (property.brush == MarkupBrush.Solid) return null
+        val base = currentImage ?: return null
+        val w = canvasLayoutSize.width
+        val h = canvasLayoutSize.height
+        if (w <= 0 || h <= 0) return null
+        val bucket = (property.effectStrength * 20f).roundToInt()
+        val key = property.brush to bucket
+        val bmp = processedCache.getOrPut(key) {
+            val scaled = base.scale(w, h)
+            val processed = when (property.brush) {
+                MarkupBrush.Blur -> ImageObscure.blur(scaled, property.effectStrength)
+                MarkupBrush.Mosaic -> ImageObscure.mosaic(scaled, property.effectStrength)
+                else -> scaled
+            }
+            if (processed != scaled) scaled.recycle()
+            processed
+        }
+        return ShaderBrush(BitmapShader(bmp, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP))
+    }
+
     LaunchedEffect(requestApply) {
         if (requestApply && shouldSaveDrawing) {
             delay(100)
@@ -126,6 +163,27 @@ fun MarkupPainter(
             onApplyHandled()
         } else if (requestApply) {
             onApplyHandled()
+        }
+    }
+
+    // Convert detected face rects (normalized) into filled oval markup regions using the current
+    // effect brush. Runs once the canvas size is known, then clears the pending list.
+    LaunchedEffect(pendingFaceRegions, canvasLayoutSize) {
+        if (pendingFaceRegions.isNotEmpty() && canvasLayoutSize.width > 0 && canvasLayoutSize.height > 0) {
+            val w = canvasLayoutSize.width.toFloat()
+            val h = canvasLayoutSize.height.toFloat()
+            val pad = 0.04f
+            pendingFaceRegions.forEach { r ->
+                val left = (r.left - pad).coerceIn(0f, 1f) * w
+                val top = (r.top - pad).coerceIn(0f, 1f) * h
+                val right = (r.right + pad).coerceIn(0f, 1f) * w
+                val bottom = (r.bottom + pad).coerceIn(0f, 1f) * h
+                if (right > left && bottom > top) {
+                    val path = Path().apply { addOval(Rect(left, top, right, bottom)) }
+                    addPath(path, currentPathProperty.copy(fillRegion = true))
+                }
+            }
+            onFaceRegionsConsumed()
         }
     }
 
@@ -417,16 +475,10 @@ fun MarkupPainter(
                             setCurrentPath(Path())
 
                             // Create new instance of path properties to have new path and properties
-                            // only for the one currently being drawn
-                            setCurrentPathProperty(
-                                PathProperties(
-                                    strokeWidth = currentPathProperty.strokeWidth,
-                                    color = currentPathProperty.color,
-                                    strokeCap = currentPathProperty.strokeCap,
-                                    strokeJoin = currentPathProperty.strokeJoin,
-                                    eraseMode = currentPathProperty.eraseMode
-                                )
-                            )
+                            // only for the one currently being drawn. copy() preserves ALL fields
+                            // (brush, effectStrength, fillRegion, …) so blur/mosaic strokes keep
+                            // their brush on the second and subsequent strokes.
+                            setCurrentPathProperty(currentPathProperty.copy())
                         }
 
                         // Since new path is drawn no need to store paths to undone
@@ -449,15 +501,17 @@ fun MarkupPainter(
                                 val path = it.first
                                 val property = it.second
                                 if (!property.eraseMode) {
-                                    drawPath(
-                                        color = property.color,
-                                        path = path,
-                                        style = Stroke(
-                                            width = property.strokeWidth,
-                                            cap = property.strokeCap,
-                                            join = property.strokeJoin
-                                        )
+                                    val style = if (property.fillRegion) Fill else Stroke(
+                                        width = property.strokeWidth,
+                                        cap = property.strokeCap,
+                                        join = property.strokeJoin
                                     )
+                                    val shaderBrush = shaderBrushFor(property)
+                                    if (shaderBrush != null) {
+                                        drawPath(brush = shaderBrush, path = path, style = style)
+                                    } else {
+                                        drawPath(color = property.color, path = path, style = style)
+                                    }
                                 } else {
 
                                     // Source
@@ -477,15 +531,17 @@ fun MarkupPainter(
                             if (painterMotionEvent != PainterMotionEvent.Idle) {
 
                                 if (!currentPathProperty.eraseMode) {
-                                    drawPath(
-                                        color = currentPathProperty.color,
-                                        path = currentPath,
-                                        style = Stroke(
-                                            width = currentPathProperty.strokeWidth,
-                                            cap = currentPathProperty.strokeCap,
-                                            join = currentPathProperty.strokeJoin
-                                        )
+                                    val shaderBrush = shaderBrushFor(currentPathProperty)
+                                    val style = Stroke(
+                                        width = currentPathProperty.strokeWidth,
+                                        cap = currentPathProperty.strokeCap,
+                                        join = currentPathProperty.strokeJoin
                                     )
+                                    if (shaderBrush != null) {
+                                        drawPath(brush = shaderBrush, path = currentPath, style = style)
+                                    } else {
+                                        drawPath(color = currentPathProperty.color, path = currentPath, style = style)
+                                    }
                                 } else {
                                     drawPath(
                                         color = Color.Transparent,
@@ -514,15 +570,17 @@ fun MarkupPainter(
                             val path = it.first
                             val property = it.second
                             if (!property.eraseMode) {
-                                drawPath(
-                                    color = property.color,
-                                    path = path,
-                                    style = Stroke(
-                                        width = property.strokeWidth,
-                                        cap = property.strokeCap,
-                                        join = property.strokeJoin
-                                    )
+                                val style = if (property.fillRegion) Fill else Stroke(
+                                    width = property.strokeWidth,
+                                    cap = property.strokeCap,
+                                    join = property.strokeJoin
                                 )
+                                val shaderBrush = shaderBrushFor(property)
+                                if (shaderBrush != null) {
+                                    drawPath(brush = shaderBrush, path = path, style = style)
+                                } else {
+                                    drawPath(color = property.color, path = path, style = style)
+                                }
                             } else {
 
                                 // Source
@@ -542,15 +600,17 @@ fun MarkupPainter(
                         if (painterMotionEvent != PainterMotionEvent.Idle) {
 
                             if (!currentPathProperty.eraseMode) {
-                                drawPath(
-                                    color = currentPathProperty.color,
-                                    path = currentPath,
-                                    style = Stroke(
-                                        width = currentPathProperty.strokeWidth,
-                                        cap = currentPathProperty.strokeCap,
-                                        join = currentPathProperty.strokeJoin
-                                    )
+                                val shaderBrush = shaderBrushFor(currentPathProperty)
+                                val style = Stroke(
+                                    width = currentPathProperty.strokeWidth,
+                                    cap = currentPathProperty.strokeCap,
+                                    join = currentPathProperty.strokeJoin
                                 )
+                                if (shaderBrush != null) {
+                                    drawPath(brush = shaderBrush, path = currentPath, style = style)
+                                } else {
+                                    drawPath(color = currentPathProperty.color, path = currentPath, style = style)
+                                }
                             } else {
                                 drawPath(
                                     color = Color.Transparent,

@@ -2,6 +2,8 @@ package com.dot.gallery.feature_node.domain.model.editor
 
 import android.os.Parcelable
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.BlurOn
+import androidx.compose.material.icons.outlined.GridOn
 import androidx.compose.material.icons.outlined.PanTool
 import androidx.compose.material.icons.outlined.TextFields
 import androidx.compose.runtime.Composable
@@ -23,6 +25,8 @@ enum class MarkupItems : Parcelable {
     Stylus,
     Highlighter,
     Marker,
+    Blur,
+    Mosaic,
     Text,
     Eraser,
     Pan;
@@ -32,6 +36,8 @@ enum class MarkupItems : Parcelable {
         Stylus -> stringResource(R.string.type_stylus)
         Highlighter -> stringResource(R.string.type_highlighter)
         Marker -> stringResource(R.string.type_marker)
+        Blur -> stringResource(R.string.type_blur)
+        Mosaic -> stringResource(R.string.type_mosaic)
         Text -> stringResource(R.string.type_text)
         Eraser -> stringResource(R.string.type_erase)
         Pan -> stringResource(R.string.type_pan)
@@ -43,6 +49,8 @@ enum class MarkupItems : Parcelable {
             Stylus -> DotIcons.Stylus
             Highlighter -> DotIcons.InkHighlighter
             Marker -> DotIcons.InkMarker
+            Blur -> Icons.Outlined.BlurOn
+            Mosaic -> Icons.Outlined.GridOn
             Text -> Icons.Outlined.TextFields
             Eraser -> DotIcons.Ink_Eraser
             Pan -> Icons.Outlined.PanTool

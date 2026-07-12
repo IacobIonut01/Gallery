@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -20,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -40,6 +40,7 @@ import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -72,6 +73,7 @@ import androidx.compose.animation.core.RepeatMode
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
+import com.dot.gallery.core.ml.ModelFileInfo
 import com.dot.gallery.core.ml.ModelGroup
 import com.dot.gallery.core.ml.ModelStatus
 import com.dot.gallery.core.presentation.components.NavigationBackButton
@@ -123,34 +125,51 @@ fun AIModelsManagerScreen(
                 )
             }
 
-            // Feature previews
+            // Feature previews — a 2x2 grid (two fixed-height rows) so each model group is
+            // represented. Fixed aspect-ratio cells avoid the IntrinsicSize double-measure pass
+            // that made the list janky while the large app bar collapsed during scroll.
             item(key = "feature_previews") {
-                Row(
+                Column(
                     modifier = Modifier
                         .widthIn(max = 600.dp)
                         .fillMaxWidth()
-                        .height(IntrinsicSize.Max)
                         .padding(horizontal = 24.dp)
                         .padding(bottom = 24.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    FeaturePreviewCard(
-                        label = stringResource(R.string.ai_models_feature_search),
-                        modifier = Modifier.weight(1f).fillMaxHeight()
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        SearchPreview()
+                        FeaturePreviewCard(
+                            label = stringResource(R.string.ai_models_feature_search),
+                            modifier = Modifier.weight(1f).aspectRatio(1f)
+                        ) {
+                            SearchPreview()
+                        }
+                        FeaturePreviewCard(
+                            label = stringResource(R.string.ai_models_feature_categories),
+                            modifier = Modifier.weight(1f).aspectRatio(1f)
+                        ) {
+                            CategoriesPreview()
+                        }
                     }
-                    FeaturePreviewCard(
-                        label = stringResource(R.string.ai_models_feature_categories),
-                        modifier = Modifier.weight(1f).fillMaxHeight()
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        CategoriesPreview()
-                    }
-                    FeaturePreviewCard(
-                        label = stringResource(R.string.ai_models_feature_cutout),
-                        modifier = Modifier.weight(1f).fillMaxHeight()
-                    ) {
-                        CutoutPreview()
+                        FeaturePreviewCard(
+                            label = stringResource(R.string.ai_models_feature_cutout),
+                            modifier = Modifier.weight(1f).aspectRatio(1f)
+                        ) {
+                            CutoutPreview()
+                        }
+                        FeaturePreviewCard(
+                            label = stringResource(R.string.ai_models_feature_faces),
+                            modifier = Modifier.weight(1f).aspectRatio(1f)
+                        ) {
+                            FacesPreview()
+                        }
                     }
                 }
             }
@@ -178,6 +197,30 @@ fun AIModelsManagerScreen(
                     readySummary = stringResource(R.string.ai_models_group_cutout_ready_summary),
                     sourceLabel = stringResource(R.string.ai_models_source_cutout_url),
                     sourceUrl = "https://huggingface.co/Acly/MobileSAM"
+                )
+            }
+            item(key = "group_face_detect") {
+                ModelGroupSection(
+                    viewModel = viewModel,
+                    group = ModelGroup.FACE_DETECT,
+                    title = stringResource(R.string.ai_models_group_face_detect_title),
+                    description = stringResource(R.string.ai_models_group_face_detect_desc),
+                    downloadSummary = stringResource(R.string.ai_models_group_face_detect_download_summary),
+                    readySummary = stringResource(R.string.ai_models_group_face_detect_ready_summary),
+                    sourceLabel = stringResource(R.string.ai_models_source_face_detect_url),
+                    sourceUrl = "https://github.com/onnx/models/tree/main/validated/vision/body_analysis/ultraface"
+                )
+            }
+            item(key = "group_face_recognition") {
+                ModelGroupSection(
+                    viewModel = viewModel,
+                    group = ModelGroup.FACE_RECOGNITION,
+                    title = stringResource(R.string.ai_models_group_face_recognition_title),
+                    description = stringResource(R.string.ai_models_group_face_recognition_desc),
+                    downloadSummary = stringResource(R.string.ai_models_group_face_recognition_download_summary),
+                    readySummary = stringResource(R.string.ai_models_group_face_recognition_ready_summary),
+                    sourceLabel = stringResource(R.string.ai_models_source_face_recognition_url),
+                    sourceUrl = "https://huggingface.co/garavv/arcface-onnx"
                 )
             }
         }
@@ -246,8 +289,10 @@ private fun ModelGroupSection(
         }
     }
 
-    val fileInfos = remember(status) {
-        if (status == ModelStatus.READY) viewModel.getFileInfos(group) else emptyList()
+    // SHA-256 hashing large model files (e.g. ~130 MB ArcFace) is far too slow for the main
+    // thread, so it runs off-thread via the suspend getFileInfos and updates the UI when ready.
+    val fileInfos by produceState(initialValue = emptyList<ModelFileInfo>(), status) {
+        value = if (status == ModelStatus.READY) viewModel.getFileInfos(group) else emptyList()
     }
     val isDownloading = status == ModelStatus.DOWNLOADING || status == ModelStatus.COPYING
 
@@ -552,6 +597,115 @@ private fun MiniCategoryCard(
                 color = Color.White,
                 maxLines = 1
             )
+        }
+    }
+}
+
+@Composable
+private fun FacesPreview() {
+    val tile = MaterialTheme.colorScheme.surfaceContainerHighest
+    val faceColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.75f)
+    val mosaicColor = MaterialTheme.colorScheme.primary
+    val boxColor = MaterialTheme.colorScheme.primary
+    val mosaicAlphas = remember { listOf(0.3f, 0.55f, 0.7f, 0.45f, 0.6f) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Detected face with a detection box (face detection model)
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(tile),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize(0.5f)
+                        .clip(CircleShape)
+                        .background(faceColor)
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(6.dp)
+                        .border(1.5.dp, boxColor, RoundedCornerShape(4.dp))
+                )
+            }
+            // Blurred/mosaic face (privacy blur)
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(tile),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize(0.5f)
+                        .clip(CircleShape)
+                        .background(faceColor)
+                )
+                Column(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .padding(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    repeat(3) { r ->
+                        Row(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(2.dp)
+                        ) {
+                            repeat(3) { c ->
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .fillMaxHeight()
+                                        .clip(RoundedCornerShape(1.dp))
+                                        .background(
+                                            mosaicColor.copy(
+                                                alpha = mosaicAlphas[(r * 3 + c) % mosaicAlphas.size]
+                                            )
+                                        )
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // Grouping: overlapping mini avatars implying "same person" clustering (recognition)
+        Box(
+            modifier = Modifier
+                .height(14.dp)
+                .width(32.dp)
+        ) {
+            repeat(3) { i ->
+                Box(
+                    modifier = Modifier
+                        .offset(x = (i * 9).dp)
+                        .size(14.dp)
+                        .clip(CircleShape)
+                        .background(faceColor)
+                        .border(2.dp, tile, CircleShape)
+                )
+            }
         }
     }
 }

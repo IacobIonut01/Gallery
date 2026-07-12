@@ -61,7 +61,48 @@ A two-stage Segment Anything Model optimized for edge devices, allowing users to
 
 ---
 
-## 3. Alternative/Evaluated Models (Reference Only)
+## 3. Faces & People Models
+
+Used for the editor's automatic face-blur action and fully on-device Person grouping in the Library. **Both files are bundled in this module's `src/main/assets/` for the `withML` variant** and downloaded on-demand from their upstream sources in `noML` builds.
+
+### A. Face Detection — UltraFace RFB-320
+Lightweight single-pass face detector that powers the editor's **"Blur faces"** action.
+*   **Detector:** `version-RFB-320.onnx` (~1.3 MB)
+    *   **Source:** ONNX Model Zoo — UltraFace (Ultra-Light-Fast-Generic-Face-Detector-1MB)
+    *   **Download URL:** `https://github.com/onnx/models/raw/main/validated/vision/body_analysis/ultraface/models/version-RFB-320.onnx`
+    *   **SHA-256 Checksum:** `34cd7e60aeff28744c657de7a3dc64e872d506741de66987f3426f2b79f88017`
+
+### B. Face Recognition — ArcFace
+Face-embedding model (112x112 → 512-d) used to cluster the same person across photos, fully on-device. Requires the detector above.
+*   **Recognizer:** `arcface.onnx` (~130 MB)
+    *   **Source:** Hugging Face `garavv/arcface-onnx` (`arc.onnx`, redistributed as `arcface.onnx`)
+    *   **Download URL:** `https://huggingface.co/garavv/arcface-onnx/resolve/main/arc.onnx`
+    *   **SHA-256 Checksum:** `ffe014a45c9488506719d37fd578ece6661bb385535b36e8039975fa5d4683db`
+
+> **Note:** The bundled copies in `src/main/assets/` are byte-for-byte identical to the upstream files (verify via the SHA-256 checksums above). Detection works independently of recognition, so auto face-blur functions with only the detector installed.
+
+---
+
+## Large models: split & reassemble (GitHub 100 MB limit)
+
+GitHub rejects any file over 100 MB, so oversized model assets (e.g. `arcface.onnx`, ~130 MB) are **not** committed whole. Instead they are split into `<100 MB` parts committed under `src/main/model-parts/`, tracked by `src/main/model-parts/manifest.json`, and reassembled into `src/main/assets/` automatically at build time. This is model-agnostic — nothing is hard-coded to a specific file.
+
+Gradle tasks (module `:ml-models`):
+
+*   **`splitLargeModels`** — developer helper. Detects any asset in `src/main/assets/` over the limit, splits it into `<name>.partNNN` parts under `model-parts/`, records the part list + SHA-256 + size in `manifest.json`, deletes the monolith from `assets/`, and updates the managed block in the repo-root `.gitignore`.
+*   **`assembleModels`** — runs automatically before packaging (APK asset merge and the AAB asset pack). Concatenates the parts back into `src/main/assets/<name>` and verifies the SHA-256.
+*   **`checkModelSizes`** — build/CI guard. Fails the build if an **unmanaged** asset exceeds 100 MB, pointing you to `splitLargeModels`.
+
+### Adding a new large model
+1. Drop the model file into `src/main/assets/`.
+2. Run `./gradlew :ml-models:splitLargeModels`.
+3. Commit the generated `src/main/model-parts/` parts + `manifest.json` and the `.gitignore` change. **Do not** commit the reassembled file in `assets/` (it is git-ignored).
+
+Config lives at the top of `ml-models/build.gradle.kts` (`mlSourceDirs`, `mlPartsDir`, `mlMaxBytes`, `mlPartBytes`). Manual reassembly for inspection: `cat src/main/model-parts/arcface.onnx.part* > src/main/assets/arcface.onnx`.
+
+---
+
+## 4. Alternative/Evaluated Models (Reference Only)
 
 *   **Qualcomm FastSAM-X:**
     *   **Model Files:** `fastsam_x.onnx` (~137 KB) + `fastsam_x.data` (~288 MB)

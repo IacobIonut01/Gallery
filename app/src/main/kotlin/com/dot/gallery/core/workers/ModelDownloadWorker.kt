@@ -89,11 +89,7 @@ class ModelDownloadWorker @AssistedInject constructor(
                     fileSizes[fileName] = destFile.length()
                 } else {
                     try {
-                        val fileUrl = when (fileName) {
-                            "mobile_sam_image_encoder.onnx" -> "https://huggingface.co/Acly/MobileSAM/resolve/main/mobile_sam_image_encoder.onnx"
-                            "sam_mask_decoder_single.onnx" -> "https://huggingface.co/Acly/MobileSAM/resolve/main/sam_mask_decoder_single.onnx"
-                            else -> "${ModelManager.BASE_DOWNLOAD_URL}$fileName"
-                        }
+                        val fileUrl = modelUrlFor(fileName)
                         val conn = URL(fileUrl).openConnection() as HttpURLConnection
                         conn.requestMethod = "HEAD"
                         conn.connectTimeout = 15_000
@@ -129,11 +125,7 @@ class ModelDownloadWorker @AssistedInject constructor(
                     return@forEach
                 }
 
-                val url = when (fileName) {
-                    "mobile_sam_image_encoder.onnx" -> "https://huggingface.co/Acly/MobileSAM/resolve/main/mobile_sam_image_encoder.onnx"
-                    "sam_mask_decoder_single.onnx" -> "https://huggingface.co/Acly/MobileSAM/resolve/main/sam_mask_decoder_single.onnx"
-                    else -> "${ModelManager.BASE_DOWNLOAD_URL}$fileName"
-                }
+                val url = modelUrlFor(fileName)
                 val tempFile = modelManager.getTempFile(fileName)
                 tempFile.parentFile?.mkdirs()
 
@@ -256,6 +248,17 @@ class ModelDownloadWorker @AssistedInject constructor(
         } finally {
             connection.disconnect()
         }
+    }
+
+    /** Resolve the canonical download URL for a model [fileName]. */
+    private fun modelUrlFor(fileName: String): String = when (fileName) {
+        "mobile_sam_image_encoder.onnx" -> "https://huggingface.co/Acly/MobileSAM/resolve/main/mobile_sam_image_encoder.onnx"
+        "sam_mask_decoder_single.onnx" -> "https://huggingface.co/Acly/MobileSAM/resolve/main/sam_mask_decoder_single.onnx"
+        // UltraFace RFB-320 lightweight face detector (ONNX Model Zoo, ~1.2 MB).
+        "version-RFB-320.onnx" -> "https://github.com/onnx/models/raw/main/validated/vision/body_analysis/ultraface/models/version-RFB-320.onnx"
+        // ArcFace 112x112 -> 512-d embedding face-recognition model.
+        "arcface.onnx" -> "https://huggingface.co/garavv/arcface-onnx/resolve/main/arc.onnx"
+        else -> "${ModelManager.BASE_DOWNLOAD_URL}$fileName"
     }
 
     private fun cleanupPartialFiles(files: List<String>) {

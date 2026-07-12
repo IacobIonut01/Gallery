@@ -354,6 +354,7 @@
     <string name="ai_models_feature_search">Search by Description</string>
     <string name="ai_models_feature_categories">Automatic Categories</string>
     <string name="ai_models_feature_cutout">Subject Cutout</string>
+    <string name="ai_models_feature_faces">Faces &amp; People</string>
 
     <!-- Per-feature model groups -->
     <string name="ai_models_group_search_title">Search &amp; Categories</string>
@@ -364,6 +365,16 @@
     <string name="ai_models_group_cutout_download_summary">Download the MobileSAM models (~44 MB)</string>
     <string name="ai_models_group_cutout_ready_summary">Subject cutout is available in the media viewer</string>
     <string name="ai_models_source_cutout_url">huggingface.co/Acly/MobileSAM</string>
+    <string name="ai_models_group_face_detect_title">Face Detection</string>
+    <string name="ai_models_group_face_detect_desc">UltraFace RFB-320, a lightweight face detector that powers the editor\'s automatic \"Blur faces\" action.</string>
+    <string name="ai_models_group_face_detect_download_summary">Download the UltraFace detector (~1.3 MB)</string>
+    <string name="ai_models_group_face_detect_ready_summary">Automatic face blur is available in the photo editor</string>
+    <string name="ai_models_source_face_detect_url">github.com/onnx/models · UltraFace</string>
+    <string name="ai_models_group_face_recognition_title">Face Recognition (People)</string>
+    <string name="ai_models_group_face_recognition_desc">ArcFace face-embedding model that groups the same person across your photos, fully on-device. Requires Face Detection.</string>
+    <string name="ai_models_group_face_recognition_download_summary">Download the ArcFace model (~130 MB)</string>
+    <string name="ai_models_group_face_recognition_ready_summary">On-device People grouping is available in the Library</string>
+    <string name="ai_models_source_face_recognition_url">huggingface.co/garavv/arcface-onnx</string>
 
     <!-- New Category System -->
     <string name="add_category">Add category</string>
@@ -449,6 +460,8 @@
     <string name="type_stylus">Stylus</string>
     <string name="type_highlighter">Highlighter</string>
     <string name="type_marker">Marker</string>
+    <string name="type_blur">Blur</string>
+    <string name="type_mosaic">Mosaic</string>
     <string name="type_text">Text</string>
     <string name="type_erase">Eraser</string>
     <string name="type_pan">Pan</string>
@@ -750,6 +763,9 @@
     <string name="editor_highlighter">Highlighter</string>
     <string name="editor_text">Text</string>
     <string name="editor_add_or_select_text">Add or select a text to change color</string>
+    <string name="editor_brush_size">Size</string>
+    <string name="editor_brush_strength">Strength</string>
+    <string name="editor_blur_faces">Blur faces</string>
     <string name="editor_type_something">Type something</string>
     <string name="editor_remove">Remove</string>
 
@@ -1395,10 +1411,17 @@
     <string name="cloud_people">People</string>
     <string name="cloud_people_empty">No people found</string>
     <string name="cloud_people_unknown">Unknown</string>
+    <string name="scan_for_people">Scan for people</string>
     <string name="cloud_person_detail_title">Person</string>
     <string name="cloud_person_edit_name">Edit name</string>
     <string name="cloud_person_add_name">Add a name</string>
     <string name="cloud_person_name_hint">Name</string>
+    <string name="cloud_person_hide">Hide</string>
+    <string name="cloud_person_merge">Merge</string>
+    <string name="cloud_person_set_cover">Set cover</string>
+    <string name="cloud_person_blur_everywhere">Blur everywhere</string>
+    <string name="cloud_person_blur_everywhere_summary">Obscure this person\'s face in every photo they appear in and save the results as new copies.</string>
+    <string name="cloud_person_blurring_progress">Blurring %1$d / %2$d…</string>
     <string name="cloud_person_photo_count">%1$d photos</string>
     <string name="cloud_profile">Cloud Profile</string>
     <string name="cloud_profile_server">Cloud Server</string>
@@ -1642,6 +1665,17 @@
     <string name="setup_ai_extra_cutout_download">Add Subject Cutout</string>
     <string name="setup_ai_extra_cutout_size">Extra one-time download (~44 MB)</string>
     <string name="setup_ai_extra_cutout_ready">Subject cutout is ready.</string>
+    <string name="setup_ai_faces_title">Faces &amp; People</string>
+    <string name="setup_ai_faces_blur_title">Blur faces</string>
+    <string name="setup_ai_faces_blur_desc">Automatically detect and blur faces in the photo editor.</string>
+    <string name="setup_ai_faces_blur_download">Add face detection</string>
+    <string name="setup_ai_faces_blur_size">Extra one-time download (~1.3 MB)</string>
+    <string name="setup_ai_faces_blur_ready">Face blur is ready.</string>
+    <string name="setup_ai_faces_people_title">People grouping</string>
+    <string name="setup_ai_faces_people_desc">Group photos by the people in them, fully on your device.</string>
+    <string name="setup_ai_faces_people_download">Add People grouping</string>
+    <string name="setup_ai_faces_people_size">Extra one-time download (~130 MB)</string>
+    <string name="setup_ai_faces_people_ready">People grouping is ready.</string>
     <string name="setup_skip_for_now">Skip for now</string>
 
     <!-- Tips &amp; Tricks page -->

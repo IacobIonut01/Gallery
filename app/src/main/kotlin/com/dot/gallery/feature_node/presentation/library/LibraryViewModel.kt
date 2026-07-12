@@ -92,7 +92,11 @@ class LibraryViewModel @Inject constructor(
                 if (hasConnected) {
                     refreshCloudState()
                 } else if (states.isNotEmpty()) {
-                    _cloudState.value = CloudLibraryState(hasCloud = false)
+                    _cloudState.value = _cloudState.value.copy(
+                        hasCloud = false, hasArchive = false, hasMemories = false,
+                        hasShareLink = false, hasMap = false,
+                        archivedCount = 0, sharedLinkCount = 0, totalCloudCount = 0
+                    )
                 }
             }
         }
@@ -100,6 +104,19 @@ class LibraryViewModel @Inject constructor(
         viewModelScope.launch {
             cloudRepository.peopleInvalidation.collect {
                 refreshCloudState()
+            }
+        }
+        // Always-on people collector: combines local (on-device) and cloud people providers, so
+        // on-device Person grouping surfaces in the Library even when no cloud account exists.
+        viewModelScope.launch {
+            cloudRepository.getAllPeople().collect { resource ->
+                if (resource is Resource.Success) {
+                    val people = resource.data ?: emptyList()
+                    _cloudState.value = _cloudState.value.copy(
+                        people = people,
+                        hasPeople = _cloudState.value.hasPeople || people.isNotEmpty()
+                    )
+                }
             }
         }
         // Also run once eagerly for already-connected providers
@@ -134,7 +151,11 @@ class LibraryViewModel @Inject constructor(
         if (!hasCloud) {
             // Don't reset cached state if we have pre-loaded data and providers are still initializing
             if (!_cloudState.value.hasCloud) {
-                _cloudState.value = CloudLibraryState(hasCloud = false)
+                _cloudState.value = _cloudState.value.copy(
+                    hasCloud = false, hasArchive = false, hasMemories = false,
+                    hasShareLink = false, hasMap = false,
+                    archivedCount = 0, sharedLinkCount = 0, totalCloudCount = 0
+                )
             }
             return
         }
@@ -144,7 +165,7 @@ class LibraryViewModel @Inject constructor(
             hasArchive = ProviderCapability.ARCHIVE in allCaps,
             hasMemories = ProviderCapability.MEMORIES in allCaps,
             hasShareLink = ProviderCapability.SHARE_LINK in allCaps,
-            hasPeople = ProviderCapability.PEOPLE in allCaps,
+            hasPeople = _cloudState.value.hasPeople || ProviderCapability.PEOPLE in allCaps,
             hasMap = ProviderCapability.MAP in allCaps
         )
         viewModelScope.launch {

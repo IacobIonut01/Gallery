@@ -17,6 +17,7 @@ import com.dot.gallery.cloud.data.dao.CloudDeleteLocalPrefDao
 import com.dot.gallery.cloud.data.dao.CloudMediaDao
 import com.dot.gallery.cloud.data.dao.CloudOfflinePinDao
 import com.dot.gallery.cloud.data.dao.CloudServerConfigDao
+import com.dot.gallery.cloud.data.dao.DetectedFaceDao
 import com.dot.gallery.cloud.data.dao.CloudUploadPrefDao
 import com.dot.gallery.cloud.data.dao.PersonDao
 import com.dot.gallery.cloud.data.dao.SyncStateDao
@@ -95,7 +96,7 @@ import com.dot.gallery.feature_node.domain.util.Converters
         AlbumSection::class,
         AlbumSectionMember::class
     ],
-    version = 39,
+    version = 40,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
@@ -140,6 +141,7 @@ import com.dot.gallery.feature_node.domain.util.Converters
         // Migration 37 to 38 is handled manually in CloudDeleteLocalPrefMigration.kt
         // (global per-album delete-local table)
         AutoMigration(from = 38, to = 39), // cloud_offline_pin (accounts marked available offline)
+        AutoMigration(from = 39, to = 40), // people.hidden (on-device Person grouping)
     ]
 )
 @TypeConverters(Converters::class, CloudConverters::class)
@@ -183,6 +185,8 @@ abstract class InternalDatabase : RoomDatabase() {
     abstract fun getCloudServerConfigDao(): CloudServerConfigDao
 
     abstract fun getPersonDao(): PersonDao
+
+    abstract fun getDetectedFaceDao(): DetectedFaceDao
 
     abstract fun getSyncStateDao(): SyncStateDao
 

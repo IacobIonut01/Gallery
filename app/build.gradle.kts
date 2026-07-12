@@ -64,6 +64,13 @@ tasks.configureEach {
         name.contains("Lint", ignoreCase = true)
     if (mergesAssets || readsMlAssets) {
         dependsOn(copySegmentModelsTask)
+        // Reassemble any split large models (e.g. arcface.onnx) into the ml-models
+        // asset dir before the APK asset merge reads it.
+        dependsOn(":ml-models:assembleModels")
+    }
+    // Guard: fail the build if an unmanaged asset exceeds GitHub's 100 MB limit.
+    if (name.startsWith("assemble") || name.startsWith("bundle")) {
+        dependsOn(":ml-models:checkModelSizes")
     }
 }
 
@@ -75,7 +82,7 @@ android {
         applicationId = "com.dot.gallery"
         minSdk = 29
         targetSdk = 37
-        versionCode = 51003
+        versionCode = 51004
         versionName = "5.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

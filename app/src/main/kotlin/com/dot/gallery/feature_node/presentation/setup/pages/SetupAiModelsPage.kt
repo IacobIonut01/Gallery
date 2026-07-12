@@ -22,6 +22,8 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.ContentCut
+import androidx.compose.material.icons.outlined.Face
+import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.TravelExplore
 import androidx.compose.material3.Icon
@@ -61,6 +63,10 @@ fun SetupAiModelsPage(
     val downloadProgress by viewModel.downloadProgress(ModelGroup.SEARCH).collectAsStateWithLifecycle()
     val cutoutStatus by viewModel.modelStatus(ModelGroup.CUTOUT).collectAsStateWithLifecycle()
     val cutoutProgress by viewModel.downloadProgress(ModelGroup.CUTOUT).collectAsStateWithLifecycle()
+    val faceDetectStatus by viewModel.modelStatus(ModelGroup.FACE_DETECT).collectAsStateWithLifecycle()
+    val faceDetectProgress by viewModel.downloadProgress(ModelGroup.FACE_DETECT).collectAsStateWithLifecycle()
+    val faceRecogStatus by viewModel.modelStatus(ModelGroup.FACE_RECOGNITION).collectAsStateWithLifecycle()
+    val faceRecogProgress by viewModel.downloadProgress(ModelGroup.FACE_RECOGNITION).collectAsStateWithLifecycle()
     val isBundled = BuildConfig.ML_MODELS_BUNDLED
     val hasInternet = viewModel.hasInternetPermission
     val ready = modelStatus == ModelStatus.READY
@@ -162,6 +168,132 @@ fun SetupAiModelsPage(
                 isBundled = isBundled,
                 hasInternet = hasInternet,
                 onDownload = { viewModel.downloadModels(ModelGroup.CUTOUT) }
+            )
+
+            // Faces & People is another optional extra: a small detector powers editor face-blur
+            // and a larger recognizer enables on-device People grouping.
+            FacesExtraCard(
+                detectStatus = faceDetectStatus,
+                detectProgress = faceDetectProgress,
+                recogStatus = faceRecogStatus,
+                recogProgress = faceRecogProgress,
+                isBundled = isBundled,
+                hasInternet = hasInternet,
+                onDownloadDetect = { viewModel.downloadModels(ModelGroup.FACE_DETECT) },
+                onDownloadRecog = { viewModel.downloadModels(ModelGroup.FACE_RECOGNITION) }
+            )
+        }
+    }
+}
+
+@Composable
+private fun FacesExtraCard(
+    detectStatus: ModelStatus,
+    detectProgress: Float,
+    recogStatus: ModelStatus,
+    recogProgress: Float,
+    isBundled: Boolean,
+    hasInternet: Boolean,
+    onDownloadDetect: () -> Unit,
+    onDownloadRecog: () -> Unit
+) {
+    SetupSectionCard(title = stringResource(R.string.setup_ai_faces_title)) {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            FeatureRow(
+                icon = Icons.Outlined.Face,
+                title = stringResource(R.string.setup_ai_faces_blur_title),
+                description = stringResource(R.string.setup_ai_faces_blur_desc)
+            )
+            ModelStatusView(
+                status = detectStatus,
+                progress = detectProgress,
+                isBundled = isBundled,
+                hasInternet = hasInternet,
+                readyText = stringResource(R.string.setup_ai_faces_blur_ready),
+                downloadTitle = stringResource(R.string.setup_ai_faces_blur_download),
+                downloadSubtitle = stringResource(R.string.setup_ai_faces_blur_size),
+                downloadIcon = Icons.Outlined.Face,
+                onDownload = onDownloadDetect
+            )
+            FeatureRow(
+                icon = Icons.Outlined.Groups,
+                title = stringResource(R.string.setup_ai_faces_people_title),
+                description = stringResource(R.string.setup_ai_faces_people_desc)
+            )
+            ModelStatusView(
+                status = recogStatus,
+                progress = recogProgress,
+                isBundled = isBundled,
+                hasInternet = hasInternet,
+                readyText = stringResource(R.string.setup_ai_faces_people_ready),
+                downloadTitle = stringResource(R.string.setup_ai_faces_people_download),
+                downloadSubtitle = stringResource(R.string.setup_ai_faces_people_size),
+                downloadIcon = Icons.Outlined.Groups,
+                onDownload = onDownloadRecog
+            )
+        }
+    }
+}
+
+/** Renders the ready / downloading / no-internet / download states for a single model group. */
+@Composable
+private fun ModelStatusView(
+    status: ModelStatus,
+    progress: Float,
+    isBundled: Boolean,
+    hasInternet: Boolean,
+    readyText: String,
+    downloadTitle: String,
+    downloadSubtitle: String,
+    downloadIcon: ImageVector,
+    onDownload: () -> Unit
+) {
+    val ready = status == ModelStatus.READY || isBundled
+    val downloading = status == ModelStatus.DOWNLOADING || status == ModelStatus.COPYING
+    when {
+        ready -> {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Filled.CheckCircle,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(22.dp)
+                )
+                Text(
+                    modifier = Modifier.padding(start = 8.dp),
+                    text = readyText,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        }
+        downloading -> {
+            Text(
+                text = stringResource(R.string.ai_models_downloading),
+                style = MaterialTheme.typography.bodyMedium
+            )
+            LinearProgressIndicator(
+                progress = { progress / 100f },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp)
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp)),
+                trackColor = MaterialTheme.colorScheme.surfaceContainerHighest
+            )
+        }
+        !hasInternet -> {
+            Text(
+                text = stringResource(R.string.setup_ai_no_internet),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        else -> {
+            DownloadRow(
+                onClick = onDownload,
+                title = downloadTitle,
+                subtitle = downloadSubtitle,
+                icon = downloadIcon
             )
         }
     }

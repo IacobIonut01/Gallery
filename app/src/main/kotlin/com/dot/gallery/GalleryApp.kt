@@ -73,6 +73,9 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
 
+/** Reserved [com.dot.gallery.cloud.core.ProviderRegistry] config id for the local People provider. */
+private const val LOCAL_PEOPLE_CONFIG_ID = -1000L
+
 @HiltAndroidApp
 class GalleryApp : Application(), SingletonSketch.Factory, Configuration.Provider {
 
@@ -152,6 +155,9 @@ class GalleryApp : Application(), SingletonSketch.Factory, Configuration.Provide
     lateinit var cloudProviderInitializer: CloudProviderInitializer
 
     @Inject
+    lateinit var localPeopleProvider: com.dot.gallery.cloud.local.LocalPeopleProvider
+
+    @Inject
     lateinit var cloudMediaCache: CloudMediaCache
 
     @Inject
@@ -170,6 +176,10 @@ class GalleryApp : Application(), SingletonSketch.Factory, Configuration.Provide
         }
 
         CloudFetcherRegistryHolder.registry = providerRegistry
+        // Register on-device local capability providers (People). Keyed by a reserved negative
+        // config id so it never collides with real cloud account ids. isAvailable() gates on the
+        // face model being installed, so it stays hidden until models are present.
+        providerRegistry.register(LOCAL_PEOPLE_CONFIG_ID, localPeopleProvider)
         // ONE shared OkHttp client for all cloud image/video loading (Glide, Sketch, ZoomImage,
         // ExoPlayer). A single pooled client keeps connections warm — a big win for a flinging
         // grid hitting the same host repeatedly — and a disk cache avoids re-downloading

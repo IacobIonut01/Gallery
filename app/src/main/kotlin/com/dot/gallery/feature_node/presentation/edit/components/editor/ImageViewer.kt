@@ -96,6 +96,8 @@ fun ImageViewer(
     onTextAnnotationsChange: (List<TextAnnotation>) -> Unit = {},
     selectedTextIndex: Int = -1,
     onSelectedTextIndexChange: (Int) -> Unit = {},
+    pendingFaceRegions: List<android.graphics.RectF> = emptyList(),
+    onFaceRegionsConsumed: () -> Unit = {},
     vignetteIntensity: Float = 0f,
     blurRadius: Float = 0f,
     sharpnessValue: Float = 0f,
@@ -245,7 +247,9 @@ fun ImageViewer(
                         textAnnotations = textAnnotations,
                         onTextAnnotationsChange = onTextAnnotationsChange,
                         selectedTextIndex = selectedTextIndex,
-                        onSelectedTextIndexChange = onSelectedTextIndexChange
+                        onSelectedTextIndexChange = onSelectedTextIndexChange,
+                        pendingFaceRegions = pendingFaceRegions,
+                        onFaceRegionsConsumed = onFaceRegionsConsumed
                     )
                 }
             }

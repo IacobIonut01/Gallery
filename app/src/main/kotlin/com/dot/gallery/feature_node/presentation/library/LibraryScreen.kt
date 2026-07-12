@@ -406,8 +406,9 @@ fun LibraryScreen(
                     }
                 }
 
-                // People section — circle heads row (below locations)
-                if (cloudState.hasCloud && cloudState.hasPeople && cloudState.people.isNotEmpty()) {
+                // People section — circle heads row (below locations). Shown whenever there are
+                // people to display (cloud accounts and/or on-device Person grouping).
+                if (cloudState.hasPeople && cloudState.people.isNotEmpty()) {
                     item(
                         span = { GridItemSpan(maxLineSpan) },
                         key = "PeopleHeader"
