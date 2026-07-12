@@ -284,6 +284,14 @@ fun <T : Media> MosaicMediaGrid(
         if (!canAnimate) delay(500)
         canAnimate = !scrolling
     }
+    // #1029: pinch-zoom changes the mosaic column (slot) count at runtime. The
+    // persisted LazyGridState's item-placement animator keeps per-lane arrays
+    // sized for the previous column count, so animating an item across the
+    // slot-count change indexes a stale lane and throws an
+    // ArrayIndexOutOfBoundsException in the draw pass. canScroll is false exactly
+    // while zooming, so suppress item animations then and let the animator
+    // rebuild cleanly once the new column count is stable.
+    val animateItems = canScroll
     val selector = LocalMediaSelector.current
     val isSelectionActive by selector.isSelectionActive.collectAsStateWithLifecycle()
     val selectedMedia = selector.selectedMedia.collectAsStateWithLifecycle()
@@ -437,7 +445,7 @@ fun <T : Media> MosaicMediaGrid(
                             }
                         }
                         MediaItemHeader(
-                            modifier = Modifier.animateItem(fadeInSpec = null),
+                            modifier = if (animateItems) Modifier.animateItem(fadeInSpec = null) else Modifier,
                             date = remember(header) {
                                 header.text
                                     .replace("Today", stringToday)
@@ -469,7 +477,7 @@ fun <T : Media> MosaicMediaGrid(
                                         media = mi.media,
                                         animatedVisibilityScope = animatedContentScope
                                     )
-                                    .animateItem(fadeInSpec = null, fadeOutSpec = if (scrolling) null else spring()),
+                                    .then(if (animateItems) Modifier.animateItem(fadeInSpec = null, fadeOutSpec = if (scrolling) null else spring()) else Modifier),
                                 media = mi.media,
                                 stackCount = mi.stackCount,
                                 isCloudGroup = mi.isCloudGroup,
@@ -617,7 +625,7 @@ fun <T : Media> MosaicMediaGrid(
                                         media = mi.media,
                                         animatedVisibilityScope = animatedContentScope
                                     )
-                                    .animateItem(fadeInSpec = null, fadeOutSpec = if (scrolling) null else spring()),
+                                    .then(if (animateItems) Modifier.animateItem(fadeInSpec = null, fadeOutSpec = if (scrolling) null else spring()) else Modifier),
                                 media = mi.media,
                                 stackCount = mi.stackCount,
                                 isCloudGroup = mi.isCloudGroup,
