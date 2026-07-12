@@ -16,9 +16,12 @@ import com.dot.gallery.core.util.ext.saveVideoStream
 import com.dot.gallery.feature_node.presentation.util.printDebug
 import com.dot.gallery.feature_node.presentation.util.printWarning
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
@@ -31,6 +34,18 @@ import kotlinx.coroutines.withContext
  * media library and are only accessible through the persisted tree URI.
  */
 class PrivateFolderRepository(private val context: Context) {
+
+    /**
+     * Monotonic counter bumped whenever the private folder's contents change
+     * (add / delete / move-out). [listMediaProgressive] re-scans on every
+     * change so observers (e.g. the private-folder grid) refresh immediately
+     * after an item is removed, instead of showing a stale snapshot.
+     */
+    private val invalidations = MutableStateFlow(0)
+
+    private fun invalidate() {
+        invalidations.value += 1
+    }
 
     /**
      * A lightweight representation of a file in the private folder.
@@ -66,7 +81,11 @@ class PrivateFolderRepository(private val context: Context) {
      * huge — tree has been scanned. The terminal emission carries
      * [ScanState.isLoading] = false.
      */
-    fun listMediaProgressive(): Flow<ScanState> = flow {
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun listMediaProgressive(): Flow<ScanState> =
+        invalidations.flatMapLatest { scanMediaProgressive() }
+
+    private fun scanMediaProgressive(): Flow<ScanState> = flow {
         val uriString = PrivateFolderManager.getUri(context).firstOrNull()
         if (uriString.isNullOrEmpty()) {
             emit(ScanState(emptyList(), isLoading = false))
@@ -213,6 +232,7 @@ class PrivateFolderRepository(private val context: Context) {
             if (!copied) {
                 runCatching { DocumentsContract.deleteDocument(context.contentResolver, newDocUri) }
             }
+            if (copied) invalidate()
             copied
         } catch (e: Exception) {
             printWarning("PrivateFolderRepository: addMedia failed for $sourceUri: ${e.message}")
@@ -237,7 +257,9 @@ class PrivateFolderRepository(private val context: Context) {
      */
     fun deleteByUri(uri: Uri): Boolean {
         return try {
-            DocumentsContract.deleteDocument(context.contentResolver, uri)
+            DocumentsContract.deleteDocument(context.contentResolver, uri).also { deleted ->
+                if (deleted) invalidate()
+            }
         } catch (e: Exception) {
             printWarning("PrivateFolderRepository: delete failed for $uri: ${e.message}")
             false
