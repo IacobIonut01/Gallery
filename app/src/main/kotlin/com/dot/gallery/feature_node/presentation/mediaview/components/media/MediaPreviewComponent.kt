@@ -50,6 +50,7 @@ fun <T : Media> MediaPreviewComponent(
     onZoomChange: (Boolean) -> Unit = {},
     onSubsamplingLoadingChange: (Boolean) -> Unit = {},
     onCutoutStateChanged: (Boolean) -> Unit = {},
+    onCutoutController: (CutoutController?) -> Unit = {},
     isSelected: Boolean = true,
     videoController: @Composable (ExoPlayer, MutableState<Boolean>, MutableLongState, Long, Int, Float, VideoControllerState) -> Unit,
 ) {
@@ -107,6 +108,7 @@ fun <T : Media> MediaPreviewComponent(
                         onSwipeDown = onSwipeDown,
                         onSubsamplingLoadingChange = onSubsamplingLoadingChange,
                         onCutoutStateChanged = onCutoutStateChanged,
+                        onCutoutController = onCutoutController,
                         isSelected = isSelected,
                         uiVisible = uiEnabled
                     )

@@ -99,5 +99,23 @@ class CutoutState {
     }
 }
 
+/**
+ * Presentation-facing bundle the media viewer publishes upward so the cutout controls can live in
+ * the [MediaViewScreen] bottom bar (replacing the quick actions) instead of floating over the image.
+ * All session/coroutine work stays in [ZoomablePagerImage]; the screen only invokes these lambdas.
+ */
+@Stable
+class CutoutController(
+    val state: CutoutState,
+    val onToolChange: (ZoomablePagerImagePointTool) -> Unit,
+    val onReset: () -> Unit,
+    val onUndo: () -> Unit,
+    val onRedo: () -> Unit,
+    val onCopy: () -> Unit,
+    val onShare: () -> Unit,
+    val onSave: () -> Unit,
+    val onClose: () -> Unit,
+)
+
 @Composable
 fun rememberCutoutState(): CutoutState = remember { CutoutState() }

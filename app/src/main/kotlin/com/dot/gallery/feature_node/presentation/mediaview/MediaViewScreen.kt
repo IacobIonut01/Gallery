@@ -120,6 +120,8 @@ import com.dot.gallery.feature_node.presentation.mediaview.components.GroupMembe
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewAppBar
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewQuickBottomBar
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewSheetDetails
+import com.dot.gallery.feature_node.presentation.mediaview.components.media.CutoutControlsBar
+import com.dot.gallery.feature_node.presentation.mediaview.components.media.CutoutController
 import com.dot.gallery.feature_node.presentation.mediaview.components.media.MediaPreviewComponent
 import com.dot.gallery.feature_node.presentation.mediaview.components.media.MotionPhotoFilmstrip
 import com.dot.gallery.feature_node.presentation.mediaview.components.media.MotionPhotoState
@@ -406,6 +408,9 @@ fun <T : Media> MediaViewScreen(
     // subsampling; drives the subtle horizontal loading indicator under the top-center date.
     var subsamplingLoading by remember { mutableStateOf(false) }
     var isCutoutActive by rememberSaveable { mutableStateOf(false) }
+    // Controller published by the current page while a cutout session is active; drives the bottom
+    // cutout controls bar that replaces the quick-actions bar.
+    var cutoutController by remember { mutableStateOf<CutoutController?>(null) }
     var isTopDark by remember { mutableStateOf(false) }
     var isBottomDark by remember { mutableStateOf(false) }
     val autoContrast by rememberAutoContrast()
@@ -792,6 +797,11 @@ fun <T : Media> MediaViewScreen(
                                         showUI = true
                                         windowInsetsController.toggleSystemBars(show = true)
                                     }
+                                },
+                                onCutoutController = if (index == currentPage) {
+                                    { controller -> cutoutController = controller }
+                                } else {
+                                    {}
                                 }
                             ) { player, isPlaying, currentTime, totalTime, buffer, frameRate, subtitleState ->
                                 val subtitleTracks = subtitleState.subtitleTracks
@@ -1387,6 +1397,22 @@ fun <T : Media> MediaViewScreen(
                     )
                 }
             }
+            }
+
+            // Cutout controls: replaces the quick-actions bar in the same bottom slot while a
+            // subject-cutout session is active on the current page.
+            AnimatedVisibility(
+                visible = isCutoutActive && cutoutController != null,
+                enter = enterAnimation(DEFAULT_TOP_BAR_ANIMATION_DURATION),
+                exit = exitAnimation(DEFAULT_TOP_BAR_ANIMATION_DURATION),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = bottomPadding + extraPaddingWithNavButtons + 16.dp)
+                    .padding(horizontal = 16.dp)
+            ) {
+                cutoutController?.let { controller ->
+                    CutoutControlsBar(controller = controller)
+                }
             }
         }
     }

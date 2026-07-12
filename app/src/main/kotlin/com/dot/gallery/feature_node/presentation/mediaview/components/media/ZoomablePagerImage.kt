@@ -237,6 +237,7 @@ fun <T : Media> ZoomablePagerImage(
     onSwipeDown: () -> Unit,
     onSubsamplingLoadingChange: (Boolean) -> Unit = {},
     onCutoutStateChanged: (Boolean) -> Unit = {},
+    onCutoutController: (CutoutController?) -> Unit = {},
     isSelected: Boolean = true,
     uiVisible: Boolean = true
 ) {
@@ -593,6 +594,58 @@ fun <T : Media> ZoomablePagerImage(
         if (longPressStartsCutout) startCutoutAt(offset) else rotateImage()
     }
 
+    // Undo/redo: re-run the decoder for the target point set unless the result was cached.
+    val navigateHistory: (Int) -> Unit = { delta ->
+        val pts = cutoutState.navigateHistory(delta)
+        if (pts != null) {
+            scope.launch {
+                cutoutState.isProcessing = true
+                try {
+                    val res = cutoutState.session?.runDecoder(pts.second)
+                    val newCache = cutoutState.result?.let { Pair(pts.first, it) }
+                    cutoutState.updateResult(res, newCache)
+                } finally {
+                    cutoutState.isProcessing = false
+                }
+            }
+        }
+    }
+
+    // Run an export action (copy/share/save) on the current mask, then end the session.
+    val runRefinedAction: (suspend (android.graphics.Bitmap) -> Unit) -> Unit = { action ->
+        val bmp = cutoutState.result?.bitmap
+        if (bmp != null) {
+            scope.launch {
+                action(bmp)
+                cutoutState.dismiss()
+            }
+        }
+    }
+
+    // Controls surfaced in the MediaViewScreen bottom bar (replacing the quick actions) while active.
+    val cutoutController = remember(cutoutState) {
+        CutoutController(
+            state = cutoutState,
+            onToolChange = { cutoutState.activeTool = it },
+            onReset = { cutoutState.clearPoints() },
+            onUndo = { navigateHistory(-1) },
+            onRedo = { navigateHistory(1) },
+            onCopy = { runRefinedAction { CutoutHelper.copyToClipboard(context, it) } },
+            onShare = { runRefinedAction { CutoutHelper.shareCutout(context, it) } },
+            onSave = { runRefinedAction { CutoutHelper.saveToGallery(context, it) } },
+            onClose = { cutoutState.dismiss() },
+        )
+    }
+
+    // Publish the controller upward only for the selected page and only while active; clear on
+    // deselect/dispose so the screen bottom bar swaps back to the quick actions.
+    LaunchedEffect(cutoutState.isActive, isSelected) {
+        onCutoutController(if (isSelected && cutoutState.isActive) cutoutController else null)
+    }
+    DisposableEffect(Unit) {
+        onDispose { if (isSelected) onCutoutController(null) }
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         if (usePixelPerfect) {
             // Pixel-art path: nearest-neighbor rendering with subsampling.
@@ -618,14 +671,11 @@ fun <T : Media> ZoomablePagerImage(
             )
         }
 
-        // Cutout mask, contour, controls (renders on top of either image path).
+        // Cutout mask + animated contour + prompt markers (controls live in the screen bottom bar).
         CutoutOverlay(
             state = cutoutState,
             zoomState = zoomState,
-            glowRadius = glowRadius,
-            onCopy = { CutoutHelper.copyToClipboard(context, it) },
-            onShare = { CutoutHelper.shareCutout(context, it) },
-            onSave = { CutoutHelper.saveToGallery(context, it) }
+            glowRadius = glowRadius
         )
 
         // Processing / refinement indicator

@@ -5,7 +5,7 @@
 
 package com.dot.gallery.feature_node.presentation.mediaview.components.media
 
-import android.graphics.Bitmap
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -26,7 +26,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -59,7 +58,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -73,7 +71,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.R
-import kotlinx.coroutines.launch
 
 /**
  * Which prompt-point tool is currently armed while refining a subject cutout.
@@ -87,20 +84,16 @@ private val CutoutExcludeColor = Color(0xFFFF3B30)
 
 /**
  * Full-screen overlay drawn on top of the media viewer while a subject-cutout session is active.
- * Handles the dim scrim, the cutout subject + animated contour + prompt markers (on a Canvas), the
- * top close affordance and the bottom controls pill. Chrome is themed with [MaterialTheme] so it
- * matches the rest of the viewer in both light and dark themes.
+ * Handles the dim scrim and the cutout subject + animated contour + prompt markers (on a Canvas).
+ * The interactive controls live in the [MediaViewScreen] bottom bar ([CutoutControlsBar]); this
+ * overlay is purely visual so image zoom/pan gestures keep working.
  */
 @Composable
 internal fun CutoutOverlay(
     state: CutoutState,
     zoomState: com.github.panpf.zoomimage.SketchZoomState,
     glowRadius: Float,
-    onCopy: suspend (Bitmap) -> Unit,
-    onShare: suspend (Bitmap) -> Unit,
-    onSave: suspend (Bitmap) -> Unit,
 ) {
-    val scope = rememberCoroutineScope()
     val session = state.session ?: return
     val result = state.result
     val displayRect = zoomState.zoomable.contentDisplayRect
@@ -203,109 +196,72 @@ internal fun CutoutOverlay(
                 }
             }
 
-            val runRefinedAction = { action: suspend (Bitmap) -> Unit ->
-                if (result != null) {
-                    scope.launch {
-                        action(result.bitmap)
-                        state.dismiss()
-                    }
-                }
-            }
-
-            CutoutCloseButton(
-                onClose = { state.dismiss() },
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .statusBarsPadding()
-                    .padding(top = 8.dp, end = 12.dp)
-            )
-
-            val navigateHistory = { delta: Int ->
-                val pts = state.navigateHistory(delta)
-                if (pts != null) {
-                    scope.launch {
-                        state.isProcessing = true
-                        try {
-                            val res = state.session!!.runDecoder(pts.second)
-                            val newCache = state.result?.let { Pair(pts.first, it) }
-                            state.updateResult(res, newCache)
-                        } finally {
-                            state.isProcessing = false
-                        }
-                    }
-                }
-            }
-
-            CutoutControlsPill(
-                activeTool = state.activeTool,
-                onToolChange = { state.activeTool = it },
-                onReset = { state.clearPoints() },
-                canUndo = state.canUndo,
-                canRedo = state.canRedo,
-                onUndo = { navigateHistory(-1) },
-                onRedo = { navigateHistory(1) },
-                hasResult = state.hasResult,
-                onCopy = { runRefinedAction { onCopy(it) } },
-                onShare = { runRefinedAction { onShare(it) } },
-                onSave = { runRefinedAction { onSave(it) } },
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .navigationBarsPadding()
-                    .padding(bottom = 24.dp)
-            )
         }
     }
 }
 
 /**
- * Bottom controls: include/exclude tools, undo/redo, reset and (once a mask exists) copy/share/save.
- * Themed with [MaterialTheme]; expands from a circle to a rounded card when actions appear.
+ * Redesigned cutout controls, rendered in the [MediaViewScreen] bottom bar (replacing the quick
+ * actions) while a session is active. Two tiers: a tools row (close, include/exclude, undo/redo/
+ * reset) and — once a mask exists — an export row (copy/share/save) that animates in below it.
  */
 @Composable
-private fun CutoutControlsPill(
-    activeTool: ZoomablePagerImagePointTool,
-    onToolChange: (ZoomablePagerImagePointTool) -> Unit,
-    onReset: () -> Unit,
-    canUndo: Boolean,
-    canRedo: Boolean,
-    onUndo: () -> Unit,
-    onRedo: () -> Unit,
-    hasResult: Boolean,
-    onCopy: () -> Unit,
-    onShare: () -> Unit,
-    onSave: () -> Unit,
+internal fun CutoutControlsBar(
+    controller: CutoutController,
     modifier: Modifier = Modifier
 ) {
-    val shape = if (hasResult) RoundedCornerShape(28.dp) else CircleShape
+    val state = controller.state
     Surface(
-        shape = shape,
-        color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.95f),
+        shape = RoundedCornerShape(28.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.96f),
         contentColor = MaterialTheme.colorScheme.onSurface,
         tonalElevation = 3.dp,
-        shadowElevation = 6.dp,
+        shadowElevation = 8.dp,
         modifier = modifier.animateContentSize()
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
+            // Tier 1 — editing tools.
             Row(
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 CutoutToolButton(
-                    onClick = { onToolChange(if (activeTool == ZoomablePagerImagePointTool.ADD) ZoomablePagerImagePointTool.NONE else ZoomablePagerImagePointTool.ADD) },
+                    onClick = controller.onClose,
+                    icon = Icons.Outlined.Close,
+                    label = stringResource(R.string.cutout_close)
+                )
+
+                VerticalDivider(
+                    modifier = Modifier.height(24.dp),
+                    color = MaterialTheme.colorScheme.outlineVariant
+                )
+
+                CutoutToolButton(
+                    onClick = {
+                        controller.onToolChange(
+                            if (state.activeTool == ZoomablePagerImagePointTool.ADD) ZoomablePagerImagePointTool.NONE
+                            else ZoomablePagerImagePointTool.ADD
+                        )
+                    },
                     icon = Icons.Outlined.Add,
                     label = stringResource(R.string.cutout_include),
-                    selected = activeTool == ZoomablePagerImagePointTool.ADD,
+                    selected = state.activeTool == ZoomablePagerImagePointTool.ADD,
                     selectedColor = CutoutIncludeColor
                 )
                 CutoutToolButton(
-                    onClick = { onToolChange(if (activeTool == ZoomablePagerImagePointTool.REMOVE) ZoomablePagerImagePointTool.NONE else ZoomablePagerImagePointTool.REMOVE) },
+                    onClick = {
+                        controller.onToolChange(
+                            if (state.activeTool == ZoomablePagerImagePointTool.REMOVE) ZoomablePagerImagePointTool.NONE
+                            else ZoomablePagerImagePointTool.REMOVE
+                        )
+                    },
                     icon = Icons.Outlined.Remove,
                     label = stringResource(R.string.cutout_exclude),
-                    selected = activeTool == ZoomablePagerImagePointTool.REMOVE,
+                    selected = state.activeTool == ZoomablePagerImagePointTool.REMOVE,
                     selectedColor = CutoutExcludeColor
                 )
 
@@ -315,84 +271,56 @@ private fun CutoutControlsPill(
                 )
 
                 CutoutToolButton(
-                    onClick = onUndo,
+                    onClick = controller.onUndo,
                     icon = Icons.AutoMirrored.Outlined.Undo,
                     label = stringResource(R.string.cutout_undo),
-                    enabled = canUndo
+                    enabled = state.canUndo
                 )
                 CutoutToolButton(
-                    onClick = onRedo,
+                    onClick = controller.onRedo,
                     icon = Icons.AutoMirrored.Outlined.Redo,
                     label = stringResource(R.string.cutout_redo),
-                    enabled = canRedo
+                    enabled = state.canRedo
                 )
-
-                VerticalDivider(
-                    modifier = Modifier.height(24.dp),
-                    color = MaterialTheme.colorScheme.outlineVariant
-                )
-
                 CutoutToolButton(
-                    onClick = onReset,
+                    onClick = controller.onReset,
                     icon = Icons.Outlined.Refresh,
                     label = stringResource(R.string.cutout_reset)
                 )
             }
 
-            if (hasResult) {
-                HorizontalDivider(
-                    color = MaterialTheme.colorScheme.outlineVariant,
-                    thickness = 1.dp,
-                    modifier = Modifier.width(200.dp)
-                )
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    CutoutToolButton(
-                        onClick = onCopy,
-                        icon = Icons.Outlined.ContentCopy,
-                        label = stringResource(R.string.cutout_copy)
+            // Tier 2 — export actions, available once a mask exists.
+            AnimatedVisibility(visible = state.hasResult) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    HorizontalDivider(
+                        color = MaterialTheme.colorScheme.outlineVariant,
+                        thickness = 1.dp,
+                        modifier = Modifier
+                            .padding(bottom = 6.dp)
+                            .width(220.dp)
                     )
-                    CutoutToolButton(
-                        onClick = onShare,
-                        icon = Icons.Outlined.Share,
-                        label = stringResource(R.string.cutout_share)
-                    )
-                    CutoutToolButton(
-                        onClick = onSave,
-                        icon = Icons.Outlined.Save,
-                        label = stringResource(R.string.cutout_save)
-                    )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(20.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        CutoutToolButton(
+                            onClick = controller.onCopy,
+                            icon = Icons.Outlined.ContentCopy,
+                            label = stringResource(R.string.cutout_copy)
+                        )
+                        CutoutToolButton(
+                            onClick = controller.onShare,
+                            icon = Icons.Outlined.Share,
+                            label = stringResource(R.string.cutout_share)
+                        )
+                        CutoutToolButton(
+                            onClick = controller.onSave,
+                            icon = Icons.Outlined.Save,
+                            label = stringResource(R.string.cutout_save)
+                        )
+                    }
                 }
             }
-        }
-    }
-}
-
-/** Circular close affordance styled like the viewer's app-bar buttons. */
-@Composable
-private fun CutoutCloseButton(
-    onClose: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        shape = CircleShape,
-        color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.95f),
-        contentColor = MaterialTheme.colorScheme.onSurface,
-        tonalElevation = 3.dp,
-        shadowElevation = 6.dp,
-        modifier = modifier
-    ) {
-        IconButton(
-            onClick = onClose,
-            modifier = Modifier.size(44.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Close,
-                contentDescription = stringResource(R.string.cutout_close),
-                modifier = Modifier.size(22.dp)
-            )
         }
     }
 }
@@ -575,7 +503,7 @@ internal fun hitsSubject(
     return runCatching { android.graphics.Color.alpha(bitmap.getPixel(u, v)) > 32 }.getOrDefault(true)
 }
 
-/** A single toolbar button with a tooltip, used inside [CutoutControlsPill]. */
+/** A single toolbar button with a tooltip, used inside [CutoutControlsBar]. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CutoutToolButton(
