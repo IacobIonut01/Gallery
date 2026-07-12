@@ -789,13 +789,19 @@ fun <T : Media> MediaViewScreen(
                                     {}
                                 },
                                 onCutoutStateChanged = { active ->
-                                    isCutoutActive = active
-                                    if (active) {
-                                        showUI = false
-                                        windowInsetsController.toggleSystemBars(show = false)
-                                    } else {
-                                        showUI = true
-                                        windowInsetsController.toggleSystemBars(show = true)
+                                    // Only react to a genuine cutout transition. The selected page
+                                    // re-emits `false` on every swipe (its cutout is inactive), so
+                                    // without this guard each page change would force `showUI = true`
+                                    // and bring the controls back after the user hid them (#1033).
+                                    if (active != isCutoutActive) {
+                                        isCutoutActive = active
+                                        if (active) {
+                                            showUI = false
+                                            windowInsetsController.toggleSystemBars(show = false)
+                                        } else {
+                                            showUI = true
+                                            windowInsetsController.toggleSystemBars(show = true)
+                                        }
                                     }
                                 },
                                 onCutoutController = if (index == currentPage) {
