@@ -29,6 +29,7 @@ import com.dot.gallery.feature_node.domain.model.LocationMedia
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
 import com.dot.gallery.feature_node.domain.model.MediaState
+import com.dot.gallery.feature_node.domain.model.MediaTypeAlbum
 import com.dot.gallery.feature_node.domain.model.LockedAlbum
 import com.dot.gallery.feature_node.domain.model.MergedSubfolderAlbum
 import com.dot.gallery.feature_node.domain.model.PinnedAlbum
@@ -744,7 +745,9 @@ class MediaDistributorImpl @Inject constructor(
     @Suppress("UNCHECKED_CAST")
     override fun albumTimelineMediaFlow(albumId: Long): StateFlow<MediaState<Media.UriMedia>> =
         albumTimelineCache.getOrPut(albumId) {
-            if (isUnsortedCloudAlbumId(albumId)) {
+            if (MediaTypeAlbum.isMediaTypeAlbumId(albumId)) {
+                mediaTypeAlbumTimelineMediaFlow(albumId)
+            } else if (isUnsortedCloudAlbumId(albumId)) {
                 unsortedCloudAlbumTimelineMediaFlow(albumId)
             } else if (isCloudAlbumId(albumId)) {
                 cloudAlbumTimelineMediaFlow(albumId)
@@ -752,6 +755,31 @@ class MediaDistributorImpl @Inject constructor(
                 localAlbumTimelineMediaFlow(albumId)
             }
         }
+
+    /**
+     * Virtual media-type "album" (Videos/Photos/GIFs/Raw). Derived from the unified timeline
+     * media so the card count in the Albums tab and the opened album stay consistent, filtered
+     * by the type predicate. Grouping is disabled so every matching item is shown (e.g. RAW
+     * files are not folded into a RAW/JPG group).
+     */
+    private fun mediaTypeAlbumTimelineMediaFlow(albumId: Long): StateFlow<MediaState<Media.UriMedia>> {
+        val type = MediaTypeAlbum.fromAlbumId(albumId)
+        return timelineMediaFlow
+            .map { timelineState ->
+                if (type == null) return@map MediaState<Media.UriMedia>()
+                val filtered = timelineState.media.filter { type.matches(it) }
+                mapMediaToItem(
+                    data = filtered,
+                    error = timelineState.error,
+                    albumId = albumId,
+                    groupSimilarMedia = false,
+                    enabledGroupTypes = emptySet(),
+                    defaultDateFormat = dateFormatsFlow.value.first,
+                    extendedDateFormat = dateFormatsFlow.value.second,
+                    weeklyDateFormat = dateFormatsFlow.value.third
+                )
+            }.stateIn(appScope, prioritySharingMethod, MediaState())
+    }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun cloudAlbumTimelineMediaFlow(albumId: Long): StateFlow<MediaState<Media.UriMedia>> =

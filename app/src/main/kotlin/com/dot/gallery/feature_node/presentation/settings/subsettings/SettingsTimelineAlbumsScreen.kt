@@ -177,6 +177,7 @@ fun SettingsTimelineAlbumsScreen() {
     var mergeAlbumsByName by Settings.Album.rememberMergeAlbumsByName()
     var albumSectionsEnabled by Settings.Album.rememberAlbumSectionsEnabled()
     var pinnedAlbumsAsGrid by Settings.Album.rememberPinnedAlbumsAsGrid()
+    var showMediaTypeAlbums by Settings.Album.rememberShowMediaTypeAlbums()
     var favIconPosition by rememberFavoriteIconPosition()
     var dateHeaderTimeline by rememberTimelineGroupByDate()
     var dateHeaderFavorites by rememberFavoritesGroupByDate()
@@ -454,6 +455,8 @@ fun SettingsTimelineAlbumsScreen() {
                 onAlbumSectionsChange = { albumSectionsEnabled = it },
                 pinnedAlbumsAsGrid = pinnedAlbumsAsGrid,
                 onPinnedAlbumsAsGridChange = { pinnedAlbumsAsGrid = it },
+                showMediaTypeAlbums = showMediaTypeAlbums,
+                onShowMediaTypeAlbumsChange = { showMediaTypeAlbums = it },
                 favIconPosition = favIconPosition,
                 onDetailClick = { detailKey = it },
                 onDateFormatClick = { eventHandler.navigate(Screen.DateFormatScreen()) },
@@ -483,6 +486,8 @@ private fun TimelineAlbumsListScreen(
     onAlbumSectionsChange: (Boolean) -> Unit = {},
     pinnedAlbumsAsGrid: Boolean = false,
     onPinnedAlbumsAsGridChange: (Boolean) -> Unit = {},
+    showMediaTypeAlbums: Boolean = true,
+    onShowMediaTypeAlbumsChange: (Boolean) -> Unit = {},
     favIconPosition: String,
     onDetailClick: (String) -> Unit,
     onDateFormatClick: () -> Unit,
@@ -606,6 +611,15 @@ private fun TimelineAlbumsListScreen(
             isChecked = pinnedAlbumsAsGrid,
             onCheck = onPinnedAlbumsAsGridChange,
             onClick = { onDetailClick(DETAIL_PINNED_GRID) },
+            screenPosition = Position.Middle
+        )
+
+        val showMediaTypeAlbumsPref = rememberSwitchPreference(
+            showMediaTypeAlbums,
+            title = stringResource(R.string.media_type_albums_setting_title),
+            summary = stringResource(R.string.media_type_albums_setting_summary),
+            isChecked = showMediaTypeAlbums,
+            onCheck = onShowMediaTypeAlbumsChange,
             screenPosition = Position.Bottom
         )
 
@@ -649,7 +663,7 @@ private fun TimelineAlbumsListScreen(
             timelineLayoutPref, groupSimilarMediaPref,
             allowGifAnimationPref, dateHeaderPref, showFilterButtonPref,
             showSearchBarFavButtonPref, storyCardsPref,
-            hideTimelineOnAlbumPref, mergeAlbumsByNamePref, albumSectionsPref, pinnedAlbumsAsGridPref, favIconPositionPref,
+            hideTimelineOnAlbumPref, mergeAlbumsByNamePref, albumSectionsPref, pinnedAlbumsAsGridPref, showMediaTypeAlbumsPref, favIconPositionPref,
             dateHeadersPref, groupMethodPref
         ) {
             mutableStateListOf<SettingsEntity>().apply {
@@ -669,6 +683,7 @@ private fun TimelineAlbumsListScreen(
                 add(mergeAlbumsByNamePref)
                 add(albumSectionsPref)
                 add(pinnedAlbumsAsGridPref)
+                add(showMediaTypeAlbumsPref)
 
                 add(displayHeader)
                 add(dateHeadersPref)

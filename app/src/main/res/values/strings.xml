@@ -821,6 +821,13 @@
     <string name="pinned_albums_as_grid_summary">Show pinned albums as regular tiles above the other albums, instead of a scrolling banner</string>
     <string name="pinned_albums_as_grid_description">When enabled, pinned albums appear as the same grid tiles as the rest of your albums (wrapping to multiple rows), placed before the other albums. When disabled, they show as a wide, horizontally scrollable banner carousel.</string>
 
+    <!-- Media type albums -->
+    <string name="media_type_albums_section">Media types</string>
+    <string name="media_type_gifs">GIFs</string>
+    <string name="media_type_raw">Raw</string>
+    <string name="media_type_albums_setting_title">Show media type albums</string>
+    <string name="media_type_albums_setting_summary">Add quick albums for Videos, Photos, GIFs and Raw files at the top of the Albums tab</string>
+
     <!-- Album Sections -->
     <string name="album_sections_title">Organize albums by sections</string>
     <string name="album_sections_summary">Automatically categorize albums into Common, Apps and other sections with headers</string>

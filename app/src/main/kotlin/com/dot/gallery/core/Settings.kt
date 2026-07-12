@@ -213,6 +213,12 @@ object Settings {
         @Composable
         fun rememberPinnedAlbumsAsGrid() =
             rememberPreference(key = PINNED_ALBUMS_AS_GRID, defaultValue = false)
+
+        val SHOW_MEDIA_TYPE_ALBUMS = booleanPreferencesKey("show_media_type_albums")
+
+        @Composable
+        fun rememberShowMediaTypeAlbums() =
+            rememberPreference(key = SHOW_MEDIA_TYPE_ALBUMS, defaultValue = true)
     }
 
     object Slideshow {

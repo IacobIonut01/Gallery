@@ -130,6 +130,8 @@ val Media.isVideo: Boolean get() = mimeType.startsWith("video/") && duration != 
 
 val Media.isImage: Boolean get() = mimeType.startsWith("image/")
 
+val Media.isGif: Boolean get() = mimeType == "image/gif"
+
 /**
  * Returns true if this media is a raw file format that should not be converted
  * through bitmap encoding/decoding (e.g., GIF, animated WebP).

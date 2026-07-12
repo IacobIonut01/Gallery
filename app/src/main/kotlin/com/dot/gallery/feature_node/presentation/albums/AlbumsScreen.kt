@@ -40,6 +40,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -59,6 +60,7 @@ import com.dot.gallery.core.Settings.Album.rememberAlbumGridSize
 import com.dot.gallery.core.Settings.Album.rememberLastSort
 import com.dot.gallery.core.Settings.Album.rememberLastViewType
 import com.dot.gallery.core.Settings.Album.rememberPinnedAlbumsAsGrid
+import com.dot.gallery.core.Settings.Album.rememberShowMediaTypeAlbums
 import com.dot.gallery.core.presentation.components.EmptyAlbum
 import com.dot.gallery.core.presentation.components.Error
 import com.dot.gallery.core.presentation.components.FilterButton
@@ -71,7 +73,9 @@ import com.dot.gallery.feature_node.domain.model.AlbumSectionWithAlbums
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumSectionHeader
 import com.dot.gallery.feature_node.domain.model.CollectionWithCount
 import com.dot.gallery.feature_node.domain.model.MediaState
+import com.dot.gallery.feature_node.domain.model.MediaTypeAlbum
 import com.dot.gallery.feature_node.domain.util.MediaOrder
+import com.dot.gallery.feature_node.domain.util.getUri
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumComponent
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumGroupComponent
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumGroupRowComponent
@@ -134,6 +138,27 @@ fun AlbumsScreen(
         albumsState.value.albumsCloud
             .groupBy { it.relativePath.removePrefix("cloud/").substringBefore("/") }
             .toList()
+    }
+
+    // Virtual "albums" grouping the whole library by media type (Videos/Photos/GIFs/Raw).
+    // Derived from the already-collected timeline media; empty types are dropped.
+    val context = LocalContext.current
+    val showMediaTypeAlbums by rememberShowMediaTypeAlbums()
+    val mediaTypeAlbums = remember(mediaState.value.media, showMediaTypeAlbums) {
+        if (!showMediaTypeAlbums) emptyList()
+        else MediaTypeAlbum.entries.mapNotNull { type ->
+            val matches = mediaState.value.media.filter { type.matches(it) }
+            if (matches.isEmpty()) return@mapNotNull null
+            Album(
+                id = type.albumId,
+                label = context.getString(type.labelRes),
+                uri = matches.first().getUri(),
+                pathToThumbnail = "",
+                relativePath = "",
+                timestamp = 0,
+                count = matches.size.toLong()
+            )
+        }
     }
 
     var lastCellIndex by rememberAlbumGridSize()
@@ -441,6 +466,41 @@ fun AlbumsScreen(
                                     }
                                 }
                             }
+                            // Media type albums (Videos/Photos/GIFs/Raw) sit at the very
+                            // bottom, below every real and cloud album.
+                            item(
+                                span = { GridItemSpan(maxLineSpan) },
+                                key = "mediaTypesHeader"
+                            ) {
+                                AnimatedVisibility(
+                                    visible = mediaTypeAlbums.isNotEmpty(),
+                                    enter = enterAnimation,
+                                    exit = exitAnimation
+                                ) {
+                                    Text(
+                                        modifier = Modifier
+                                            .pinchItem(key = "mediaTypesHeader")
+                                            .padding(horizontal = 8.dp)
+                                            .padding(vertical = 24.dp),
+                                        text = stringResource(R.string.media_type_albums_section),
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                            items(
+                                items = mediaTypeAlbums,
+                                key = { item -> "mediatype_${item.id}" }
+                            ) { item ->
+                                AlbumComponent(
+                                    modifier = Modifier
+                                        .pinchItem(key = "mediatype_${item.id}")
+                                        .animateItem(),
+                                    album = item,
+                                    onItemClick = onAlbumClick,
+                                    isMergedSubfolder = false
+                                )
+                            }
 
                             item(
                                 span = { GridItemSpan(maxLineSpan) },
@@ -737,6 +797,35 @@ fun AlbumsScreen(
                                     )
                                 }
                             }
+                        }
+                        // Media type albums (Videos/Photos/GIFs/Raw) sit at the very
+                        // bottom, below every real and cloud album.
+                        item("mediaTypesHeader") {
+                            AnimatedVisibility(
+                                visible = mediaTypeAlbums.isNotEmpty(),
+                                enter = enterAnimation,
+                                exit = exitAnimation
+                            ) {
+                                Text(
+                                    modifier = Modifier
+                                        .padding(horizontal = 8.dp)
+                                        .padding(vertical = 24.dp),
+                                    text = stringResource(R.string.media_type_albums_section),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+                        items(
+                            items = mediaTypeAlbums,
+                            key = { item -> "mediatype_list_${item.id}" }
+                        ) { item ->
+                            AlbumRowComponent(
+                                modifier = Modifier.animateItem(),
+                                album = item,
+                                onItemClick = onAlbumClick,
+                                isMergedSubfolder = false
+                            )
                         }
 
                         item(key = "albumDetails") {
