@@ -410,9 +410,14 @@ fun <T : Media> ZoomablePagerImage(
         }
         .then(modifier)
 
+    // Owns background subject detection; declared early so [rotateImage] can clear a stale hint.
+    val suggestionState = rememberSubjectSuggestionState()
+
     // Rotate the image 90° (visual step; MediaViewScreen persists it via the rotate chip).
     val rotateImage: () -> Unit = {
         if (!rotationDisabled) {
+            // A suggestion outline is computed in unrotated coordinates, so drop it on rotate.
+            suggestionState.reset()
             scope.launch {
                 isRotating = true
                 feedbackManager.vibrate()
@@ -456,6 +461,29 @@ fun <T : Media> ZoomablePagerImage(
     LaunchedEffect(cutoutState.isActive, isSelected) {
         if (isSelected) {
             onCutoutStateChanged(cutoutState.isActive)
+        }
+    }
+
+    // Background subject suggestion: only when cut-out is NOT the long-press action (long-press then
+    // rotates). Replaces the old always-on "Cut out" pill with an auto-detected, tappable hint.
+    // Detection is debounced, off-main and cancelled/cleaned up on deselect, media change or when a
+    // cutout is already active; rememberSubjectSuggestionState() disposes it when this leaves screen.
+    val suggestionsEnabled = !longPressStartsCutout
+    LaunchedEffect(media, isSelected, suggestionsEnabled, cutoutState.isActive) {
+        if (isSelected && suggestionsEnabled && !cutoutState.isActive) {
+            suggestionState.detect(context, media, modelManager)
+        } else {
+            suggestionState.reset()
+        }
+    }
+
+    // Promote an accepted suggestion into the refine session, reusing the already-encoded session.
+    val acceptSuggestion: () -> Unit = {
+        val accepted = suggestionState.consume()
+        if (accepted != null) {
+            cutoutState.initSession(accepted.session, listOf(accepted.seed))
+            cutoutState.updateResult(accepted.result, null)
+            feedbackManager.vibrate()
         }
     }
 
@@ -616,39 +644,39 @@ fun <T : Media> ZoomablePagerImage(
             }
         }
 
-        // The action NOT bound to long-press is offered as an on-screen pill, shown only while the
-        // UI chrome is visible on the current page and no cutout session is in progress.
-        val showActionPill = isSelected && uiVisible && !cutoutState.isActive && !cutoutState.isProcessing
-        AnimatedVisibility(
-            visible = showActionPill && (longPressStartsCutout || !rotationDisabled),
-            enter = fadeIn(),
-            exit = fadeOut(),
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .navigationBarsPadding()
-                .padding(bottom = 96.dp)
-        ) {
-            if (longPressStartsCutout) {
-                // Long-press does cutout → offer Rotate as a pill.
+        val chromeVisible = isSelected && uiVisible && !cutoutState.isActive && !cutoutState.isProcessing
+
+        if (longPressStartsCutout) {
+            // Long-press does cutout → offer Rotate as a pill (unchanged behaviour).
+            AnimatedVisibility(
+                visible = chromeVisible && !rotationDisabled,
+                enter = fadeIn(),
+                exit = fadeOut(),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
+                    .padding(bottom = 96.dp)
+            ) {
                 MediaViewActionPill(
                     icon = Icons.Outlined.ScreenRotationAlt,
                     label = stringResource(R.string.rotate),
                     onClick = rotateImage
                 )
-            } else {
-                // Long-press rotates → offer Cut out as a pill.
-                MediaViewActionPill(
-                    icon = Icons.Outlined.AutoAwesome,
-                    label = stringResource(R.string.cutout_action),
-                    onClick = {
-                        val rect = zoomState.zoomable.contentDisplayRect
-                        startCutoutAt(
-                            Offset(
-                                rect.left + rect.width / 2f,
-                                rect.top + rect.height / 2f
-                            )
-                        )
-                    }
+            }
+        } else {
+            // Long-press rotates → instead of an always-on pill, surface the auto-detected subject
+            // (if any) as a pulsing highlight with a one-tap "cut out" chip. currentRotation == 0
+            // guards against showing an outline computed in the image's unrotated coordinate space.
+            AnimatedVisibility(
+                visible = chromeVisible && currentRotation == 0 && suggestionState.suggestion != null,
+                enter = fadeIn(),
+                exit = fadeOut(),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                SubjectSuggestionOverlay(
+                    state = suggestionState,
+                    zoomState = zoomState,
+                    onAccept = acceptSuggestion
                 )
             }
         }

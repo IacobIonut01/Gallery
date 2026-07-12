@@ -7,8 +7,15 @@ package com.dot.gallery.feature_node.presentation.mediaview.components.media
 
 import android.graphics.Bitmap
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,6 +33,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Redo
 import androidx.compose.material.icons.automirrored.outlined.Undo
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Refresh
@@ -47,12 +55,17 @@ import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -379,6 +392,94 @@ private fun CutoutCloseButton(
                 imageVector = Icons.Outlined.Close,
                 contentDescription = stringResource(R.string.cutout_close),
                 modifier = Modifier.size(22.dp)
+            )
+        }
+    }
+}
+
+/**
+ * Non-intrusive hint drawn when background detection ([SubjectSuggestionState]) has found a likely
+ * subject: a pulsing outline around the detected bounds plus a single "cut out" chip. Tapping the
+ * chip ([onAccept]) promotes the already-computed mask into a full refine session — no re-encoding.
+ * Draws no scrim and intercepts no image gestures except the chip itself.
+ */
+@Composable
+internal fun SubjectSuggestionOverlay(
+    state: SubjectSuggestionState,
+    zoomState: com.github.panpf.zoomimage.SketchZoomState,
+    onAccept: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val suggestion = state.suggestion ?: return
+    val bounds = suggestion.result.originalBounds
+    val wOrig = suggestion.session.widthOrig
+    val hOrig = suggestion.session.heightOrig
+    if (wOrig <= 0 || hOrig <= 0) return
+
+    val transition = rememberInfiniteTransition(label = "subjectSuggestion")
+    val pulse by transition.animateFloat(
+        initialValue = 0.35f,
+        targetValue = 0.9f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1100, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "subjectSuggestionPulse"
+    )
+    val accent = MaterialTheme.colorScheme.primary
+
+    Box(modifier = modifier.fillMaxSize()) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val rect = zoomState.zoomable.contentDisplayRect
+            if (rect.width <= 0f || rect.height <= 0f) return@Canvas
+            val left = rect.left + (bounds.left.toFloat() / wOrig) * rect.width
+            val top = rect.top + (bounds.top.toFloat() / hOrig) * rect.height
+            val right = rect.left + (bounds.right.toFloat() / wOrig) * rect.width
+            val bottom = rect.top + (bounds.bottom.toFloat() / hOrig) * rect.height
+
+            val pad = 6.dp.toPx()
+            val topLeft = Offset(left - pad, top - pad)
+            val boxSize = Size((right - left) + pad * 2, (bottom - top) + pad * 2)
+            val corner = CornerRadius(16.dp.toPx())
+
+            drawRoundRect(
+                color = accent.copy(alpha = pulse * 0.25f),
+                topLeft = topLeft,
+                size = boxSize,
+                cornerRadius = corner,
+                style = Stroke(width = 10.dp.toPx())
+            )
+            drawRoundRect(
+                color = accent.copy(alpha = pulse),
+                topLeft = topLeft,
+                size = boxSize,
+                cornerRadius = corner,
+                style = Stroke(width = 2.5.dp.toPx())
+            )
+        }
+
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
+                .padding(bottom = 96.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.95f), CircleShape)
+                .clickable(onClick = onAccept)
+                .padding(horizontal = 16.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.AutoAwesome,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier.size(20.dp)
+            )
+            Text(
+                text = stringResource(R.string.cutout_action),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onPrimary
             )
         }
     }
