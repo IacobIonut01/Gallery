@@ -5,6 +5,7 @@ import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
@@ -19,6 +20,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.feature_node.presentation.edit.adjustments.Crop
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
+import com.dot.gallery.R
 import com.dot.gallery.feature_node.presentation.util.printError
 import com.dot.gallery.feature_node.presentation.util.launchWriteRequest
 import com.dot.gallery.feature_node.presentation.util.rememberActivityResult
@@ -109,10 +111,24 @@ class EditActivity : ComponentActivity() {
                             },
                             onFail = {
                                 printError("Failed to save override")
+                                runOnUiThread {
+                                    Toast.makeText(
+                                        this@EditActivity,
+                                        R.string.edit_override_failed,
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
                             }
                         )
                     }
                     val overrideRequest = rememberActivityResult(
+                        onResultCanceled = {
+                            Toast.makeText(
+                                this@EditActivity,
+                                R.string.edit_override_permission_denied,
+                                Toast.LENGTH_LONG
+                            ).show()
+                        },
                         onResultOk = doOverride
                     )
 
@@ -123,10 +139,24 @@ class EditActivity : ComponentActivity() {
                             },
                             onFail = {
                                 printError("Failed to revert to original")
+                                runOnUiThread {
+                                    Toast.makeText(
+                                        this@EditActivity,
+                                        R.string.edit_revert_failed,
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
                             }
                         )
                     }
                     val revertRequest = rememberActivityResult(
+                        onResultCanceled = {
+                            Toast.makeText(
+                                this@EditActivity,
+                                R.string.edit_override_permission_denied,
+                                Toast.LENGTH_LONG
+                            ).show()
+                        },
                         onResultOk = doRevert
                     )
 
@@ -171,7 +201,14 @@ class EditActivity : ComponentActivity() {
                                     finish()
                                 },
                                 onFail = {
-
+                                    printError("Failed to save copy")
+                                    runOnUiThread {
+                                        Toast.makeText(
+                                            this@EditActivity,
+                                            R.string.edit_save_copy_failed,
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                    }
                                 }
                             )
                         },

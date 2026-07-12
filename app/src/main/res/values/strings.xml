@@ -170,6 +170,10 @@
     <string name="add_to_ignored">Add to ignored albums</string>
     <string name="override">Overwrite</string>
     <string name="save_copy">Save Copy</string>
+    <string name="edit_override_permission_denied">Permission denied. Grant full media access to overwrite the original, or save a copy instead.</string>
+    <string name="edit_override_failed">Couldn\'t overwrite the original. Try saving a copy instead.</string>
+    <string name="edit_save_copy_failed">Failed to save the edited copy.</string>
+    <string name="edit_revert_failed">Failed to revert to the original.</string>
     <string name="revert_to_original">Revert to Original</string>
     <string name="revert_to_original_confirmation">This will discard all edits and restore the original image. This action cannot be undone.</string>
     <string name="action_revert">Revert</string>
