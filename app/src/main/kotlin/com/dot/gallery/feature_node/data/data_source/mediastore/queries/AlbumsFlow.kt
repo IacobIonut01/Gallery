@@ -1,7 +1,6 @@
 package com.dot.gallery.feature_node.data.data_source.mediastore.queries
 
 import android.content.ContentResolver
-import android.content.ContentUris
 import android.content.Context
 import android.database.Cursor
 import android.os.Build
@@ -154,15 +153,11 @@ class AlbumsFlow(
                         val thumbnailDate = it.getLong(thumbnailDateIndex)
                         val size = it.getLong(sizeIndex)
                         val mimeType = it.tryGetString(mimeTypeIndex).orEmpty()
-                        val contentUri = if (mimeType.contains("image"))
-                            MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-                        else
-                            MediaStore.Video.Media.EXTERNAL_CONTENT_URI
 
                         this[bucketId] = Album(
                             id = albumId,
                             label = label ?: Build.MODEL,
-                            uri = ContentUris.withAppendedId(contentUri, id),
+                            uri = MediaQuery.mediaStoreItemUri(id, mimeType, thumbnailPath),
                             pathToThumbnail = thumbnailPath,
                             relativePath = thumbnailRelativePath,
                             timestamp = thumbnailDateTaken?.div(1000) ?: thumbnailDate

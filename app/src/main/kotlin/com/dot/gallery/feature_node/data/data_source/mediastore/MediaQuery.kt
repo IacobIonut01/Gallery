@@ -1,5 +1,6 @@
 package com.dot.gallery.feature_node.data.data_source.mediastore
 
+import android.content.ContentUris
 import android.net.Uri
 import android.provider.MediaStore
 import com.dot.gallery.BuildConfig
@@ -133,6 +134,27 @@ object MediaQuery {
         if (rawMimeType.startsWith("image/") || rawMimeType.startsWith("video/")) return rawMimeType
         val ext = pathOrDisplayName.substringAfterLast('.', "").lowercase()
         return if (ext in ExtraImageExtensions) "image/$ext" else rawMimeType
+    }
+
+    /**
+     * Builds the correct MediaStore content URI for a media row.
+     *
+     * Files in [ExtraImageExtensions] (e.g. JPEG-XL) are filed by the media scanner under
+     * `MEDIA_TYPE_NONE`, so they exist ONLY in the `MediaStore.Files` collection — they are NOT
+     * in `Images`/`Video`. Appending their id to `Images.Media.EXTERNAL_CONTENT_URI` yields a URI
+     * that resolves to "No item at …" and `openInputStream` throws [java.io.FileNotFoundException]
+     * (blank grid tile / viewer). Routing them to the `Files` collection URI resolves correctly and
+     * is safe for regular images/videos too (Files is a superset), so it's used whenever the file's
+     * extension is one of the unclassified formats regardless of how MediaStore classified the row.
+     */
+    fun mediaStoreItemUri(id: Long, mimeType: String, pathOrDisplayName: String): Uri {
+        val ext = pathOrDisplayName.substringAfterLast('.', "").lowercase()
+        val base = when {
+            ext in ExtraImageExtensions -> MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL)
+            mimeType.contains("image") -> MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+            else -> MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+        }
+        return ContentUris.withAppendedId(base, id)
     }
 
     object Selection {

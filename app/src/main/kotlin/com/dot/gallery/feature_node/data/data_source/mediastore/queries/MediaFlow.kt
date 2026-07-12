@@ -6,7 +6,6 @@
 package com.dot.gallery.feature_node.data.data_source.mediastore.queries
 
 import android.content.ContentResolver
-import android.content.ContentUris
 import android.database.Cursor
 import android.os.Build
 import android.os.Bundle
@@ -182,11 +181,7 @@ class MediaFlow(
         val isTrashAlbum = buckedId == MediaStoreBuckets.MEDIA_STORE_BUCKET_TRASH.id
         val isTrashed = if (SdkCompat.supportsTrash) it.getInt(indexCache[if (isTrashAlbum) i++ else i]) else 0
         val expiryTimestamp = if (isTrashAlbum && SdkCompat.supportsTrash) it.tryGetLong(indexCache[i]) else null
-        val contentUri = if (mimeType.contains("image"))
-            MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-        else
-            MediaStore.Video.Media.EXTERNAL_CONTENT_URI
-        val uri = ContentUris.withAppendedId(contentUri, id)
+        val uri = MediaQuery.mediaStoreItemUri(id, mimeType, path)
         val formattedDate = (takenTimestamp?.div(1000) ?: modifiedTimestamp).getDate(Constants.FULL_DATE_FORMAT)
         Media.UriMedia(
             id = id,

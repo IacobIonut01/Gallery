@@ -153,11 +153,7 @@ class MediaUriFlow(
             // IS_FAVORITE and IS_TRASHED are only available on API 30+
             val isFavorite = if (SdkCompat.supportsFavorites) it.getInt(indexCache[i++]) else 0
             val isTrashed = if (SdkCompat.supportsTrash) it.getInt(indexCache[i]) else 0
-            val contentUri = if (mimeType.contains("image"))
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-            else
-                MediaStore.Video.Media.EXTERNAL_CONTENT_URI
-            val uri = ContentUris.withAppendedId(contentUri, id)
+            val uri = MediaQuery.mediaStoreItemUri(id, mimeType, path)
             val formattedDate = (takenTimestamp?.div(1000) ?: modifiedTimestamp).getDate(Constants.FULL_DATE_FORMAT)
             Media.UriMedia(
                 id = id,
