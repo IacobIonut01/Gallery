@@ -43,7 +43,9 @@ import com.dot.gallery.core.workers.EditBackupWorker
 import com.dot.gallery.core.workers.revertEditBackup
 import com.dot.gallery.feature_node.presentation.util.printDebug
 import com.dot.gallery.feature_node.presentation.util.printError
+import com.github.panpf.sketch.sketch
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import kotlinx.coroutines.Dispatchers
@@ -61,6 +63,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class EditViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val repository: MediaRepository,
     private val mediaHandler: MediaHandler,
     private val editBackupManager: EditBackupManager,
@@ -860,6 +863,11 @@ class EditViewModel @Inject constructor(
                         )
                     ) {
                         _hasOriginalBackup.value = true
+                        // The overwritten file keeps the same URI, so any decoded bitmap already
+                        // held in Sketch's memory cache (base painter + zoom tiles) would keep
+                        // being served as the stale original in the media viewer. Evict every
+                        // cache entry for this URI so the next load re-decodes the new pixels (#1004).
+                        evictImageCaches(media.uri)
                         onSuccess().also { _isSaving.value = false }
                     } else {
                         onFail().also { _isSaving.value = false }
@@ -869,6 +877,22 @@ class EditViewModel @Inject constructor(
                 }
             } ?: onFail().also { _isSaving.value = false }
         }
+    }
+
+    /**
+     * Remove all Sketch memory-cache entries for [uri]. Cache keys are built from the request URI
+     * (plus size/extras), so filtering by the URI string catches the viewer's preview + full-res
+     * painters as well as the zoomimage subsampling tiles regardless of the (possibly stale)
+     * mediaVersion extra derived from the not-yet-refreshed Media object.
+     */
+    private fun evictImageCaches(uri: Uri) {
+        runCatching {
+            val uriString = uri.toString()
+            val memoryCache = context.sketch.memoryCache
+            memoryCache.keys()
+                .filter { it.contains(uriString) }
+                .forEach { memoryCache.remove(it) }
+        }.onFailure { printError("Failed to evict image caches: ${it.message}") }
     }
 
     fun revertToOriginal(
@@ -895,6 +919,9 @@ class EditViewModel @Inject constructor(
                             if (success) {
                                 _hasOriginalBackup.value = false
                                 _isReverting.value = false
+                                // Revert restores the original bytes onto the same URI, so drop the
+                                // now-stale edited bitmap from the memory cache too (#1004).
+                                evictImageCaches(media.uri)
                                 onSuccess()
                             } else {
                                 _isReverting.value = false
