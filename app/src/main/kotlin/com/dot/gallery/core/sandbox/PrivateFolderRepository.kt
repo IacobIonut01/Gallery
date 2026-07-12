@@ -8,8 +8,11 @@ package com.dot.gallery.core.sandbox
 import android.content.Context
 import android.database.Cursor
 import android.net.Uri
+import android.os.Environment
 import android.provider.DocumentsContract
 import androidx.core.net.toUri
+import com.dot.gallery.core.util.ext.saveRawStream
+import com.dot.gallery.core.util.ext.saveVideoStream
 import com.dot.gallery.feature_node.presentation.util.printDebug
 import com.dot.gallery.feature_node.presentation.util.printWarning
 import kotlinx.coroutines.Dispatchers
@@ -222,13 +225,66 @@ class PrivateFolderRepository(private val context: Context) {
      * Delete a file from the private folder.
      * Returns true if deletion succeeded.
      */
-    fun deleteMedia(media: PrivateMedia): Boolean {
+    fun deleteMedia(media: PrivateMedia): Boolean = deleteByUri(media.uri)
+
+    /**
+     * Delete a private-folder file by its SAF document [uri].
+     *
+     * Private-folder items are SAF documents, not MediaStore entries, so they
+     * must be removed via [DocumentsContract.deleteDocument] rather than a
+     * MediaStore delete request (which crashes on tree document URIs — #1015).
+     * Returns true if deletion succeeded.
+     */
+    fun deleteByUri(uri: Uri): Boolean {
         return try {
-            DocumentsContract.deleteDocument(context.contentResolver, media.uri)
+            DocumentsContract.deleteDocument(context.contentResolver, uri)
         } catch (e: Exception) {
-            printWarning("PrivateFolderRepository: delete failed for ${media.uri}: ${e.message}")
+            printWarning("PrivateFolderRepository: delete failed for $uri: ${e.message}")
             false
         }
+    }
+
+    /**
+     * Copy a private-folder [sourceUri] back into the public MediaStore
+     * (Pictures/Movies "Restored"), then delete the private-folder original so
+     * the operation behaves as a true "move out". Returns true only if the
+     * public copy was written AND the SAF original was removed.
+     */
+    suspend fun moveOut(
+        sourceUri: Uri,
+        displayName: String,
+        mimeType: String
+    ): Boolean = withContext(Dispatchers.IO) {
+        val isVideo = mimeType.startsWith("video/")
+        val safeName = displayName.ifBlank { "file_${System.currentTimeMillis()}" }
+        val restored = try {
+            if (isVideo) {
+                context.contentResolver.saveVideoStream(
+                    writeBlock = { out ->
+                        context.contentResolver.openInputStream(sourceUri)?.use { it.copyTo(out) }
+                            ?: throw java.io.IOException("Cannot open $sourceUri")
+                    },
+                    displayName = safeName,
+                    mimeType = mimeType.ifBlank { "video/mp4" },
+                    relativePath = Environment.DIRECTORY_MOVIES + "/Restored"
+                )
+            } else {
+                context.contentResolver.saveRawStream(
+                    writeBlock = { out ->
+                        context.contentResolver.openInputStream(sourceUri)?.use { it.copyTo(out) }
+                            ?: throw java.io.IOException("Cannot open $sourceUri")
+                    },
+                    displayName = safeName,
+                    mimeType = mimeType.ifBlank { "image/*" },
+                    relativePath = Environment.DIRECTORY_PICTURES + "/Restored"
+                )
+            }
+        } catch (e: Exception) {
+            printWarning("PrivateFolderRepository: moveOut copy failed for $sourceUri: ${e.message}")
+            null
+        }
+        if (restored == null) return@withContext false
+        deleteByUri(sourceUri)
     }
 
     private companion object {

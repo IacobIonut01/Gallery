@@ -1021,6 +1021,14 @@
     <string name="private_folder_move_confirm_summary">The selected items will be copied into your private folder and the originals will be removed from your device. Files in the private folder are hidden from other apps and the media library.</string>
     <string name="private_folder_moving">Moving to private folder…</string>
     <string name="private_folder_move_failed">Could not move items to the private folder</string>
+    <string name="private_folder_move_out">Move out</string>
+    <string name="private_folder_move_out_confirm_title">Move out of private folder?</string>
+    <string name="private_folder_move_out_confirm_summary">The selected items will be restored to your gallery and removed from the private folder.</string>
+    <string name="private_folder_moving_out">Moving out of private folder…</string>
+    <string name="private_folder_move_out_failed">Could not move items out of the private folder</string>
+    <string name="private_folder_delete_confirm_title">Delete permanently?</string>
+    <string name="private_folder_delete_confirm_summary">The selected items will be permanently deleted from the private folder. This cannot be undone.</string>
+    <string name="private_folder_delete_failed">Could not delete items from the private folder</string>
     <string name="private_folder_security_title">Private folder security</string>
     <string name="private_folder_security_subtitle">How would you like to protect the private folder?</string>
     <string name="private_folder_security_none">None</string>

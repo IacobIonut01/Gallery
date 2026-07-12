@@ -40,4 +40,30 @@ class PrivateFolderMoveViewModel @Inject constructor(
                 )
             }
         }
+
+    /**
+     * Move every item in [media] out of the private folder: each is copied back
+     * into the public MediaStore and the private-folder original is deleted via
+     * SAF (never a MediaStore delete request, which crashes on tree document
+     * URIs — #1015). Returns the count moved successfully.
+     */
+    suspend fun <T : Media> moveOutOfPrivateFolder(media: List<T>): Int =
+        withContext(Dispatchers.IO) {
+            media.count { item ->
+                repository.moveOut(
+                    sourceUri = item.getUri(),
+                    displayName = item.label,
+                    mimeType = item.mimeType
+                )
+            }
+        }
+
+    /**
+     * Permanently delete every item in [media] from the private folder using
+     * SAF document deletion. Returns the count deleted successfully.
+     */
+    suspend fun <T : Media> deleteFromPrivateFolder(media: List<T>): Int =
+        withContext(Dispatchers.IO) {
+            media.count { item -> repository.deleteByUri(item.getUri()) }
+        }
 }

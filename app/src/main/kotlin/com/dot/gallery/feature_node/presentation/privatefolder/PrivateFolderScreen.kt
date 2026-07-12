@@ -292,7 +292,8 @@ fun PrivateFolderScreen(
         SelectionSheet(
             modifier = Modifier.align(Alignment.BottomEnd),
             allMedia = mediaState.value,
-            selectedMedia = selectedMediaList
+            selectedMedia = selectedMediaList,
+            isInPrivateFolder = true
         )
     }
 }

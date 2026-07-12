@@ -138,6 +138,7 @@ fun <T : Media> BoxScope.SelectionSheet(
     selectedMedia: SnapshotStateList<T>,
     collectionId: Long? = null,
     isInVault: Boolean = false,
+    isInPrivateFolder: Boolean = false,
     currentVault: Vault? = null,
 ) {
     val albumsState = LocalMediaDistributor.current.albumsFlow.collectAsStateWithLifecycle()
@@ -210,11 +211,36 @@ fun <T : Media> BoxScope.SelectionSheet(
     }
     val privateFolderMoveViewModel = hiltViewModel<PrivateFolderMoveViewModel>()
     val privateFolderMoveConfirmState = rememberAppBottomSheetState()
+    // Move-out and permanent-delete confirmations used only inside the private
+    // folder, where items are SAF documents (see #1015).
+    val privateFolderMoveOutConfirmState = rememberAppBottomSheetState()
+    val privateFolderDeleteConfirmState = rememberAppBottomSheetState()
     val privateFolderUri by Settings.Security.rememberPrivateFolderUri()
     val privateFolderConfigured = privateFolderUri.isNotEmpty()
     val config by rememberSelectionSheetConfig()
-    val sanitizedConfig = remember(config, isInVault, privateFolderConfigured) {
+    val sanitizedConfig = remember(config, isInVault, isInPrivateFolder, privateFolderConfigured) {
         var base = config.sanitized()
+        // Inside the private folder the items are SAF documents, not MediaStore
+        // entries, so MediaStore-based actions (copy/move/favorite/trash) crash
+        // (#1015). Force a safe, SAF-only action set: share, move-out (reusing
+        // MOVE) and permanent delete (reusing TRASH). Never offer
+        // MOVE_TO_PRIVATE_FOLDER here (would copy back in + MediaStore-delete
+        // crash).
+        if (isInPrivateFolder) {
+            return@remember base.copy(
+                topActions = listOf(
+                    SelectionAction.CLOSE,
+                    SelectionAction.SELECT_ALL,
+                    SelectionAction.INFO,
+                ),
+                middleActions = emptyList(),
+                bottomActions = listOf(
+                    SelectionAction.SHARE,
+                    SelectionAction.MOVE,
+                    SelectionAction.TRASH,
+                ),
+            )
+        }
         if (isInVault && SelectionAction.ADD_TO_VAULT !in base.bottomActions) {
             base = base.copy(bottomActions = base.bottomActions + SelectionAction.ADD_TO_VAULT)
         }
@@ -553,9 +579,14 @@ fun <T : Media> BoxScope.SelectionSheet(
                                 SelectionBarColumn(
                                     imageVector = action.icon,
                                     tabletMode = tabletMode,
-                                    title = stringResource(action.labelRes)
+                                    title = stringResource(
+                                        if (isInPrivateFolder) R.string.private_folder_move_out
+                                        else action.labelRes
+                                    )
                                 ) {
-                                    if (isInVault) {
+                                    if (isInPrivateFolder) {
+                                        scope.launch { privateFolderMoveOutConfirmState.show() }
+                                    } else if (isInVault) {
                                         vaultSheetAction = "move"
                                         scope.launch { vaultSheetState.show() }
                                     } else {
@@ -565,7 +596,15 @@ fun <T : Media> BoxScope.SelectionSheet(
                             }
                             
                             SelectionAction.TRASH -> {
-                                if (isInVault) {
+                                if (isInPrivateFolder) {
+                                    SelectionBarColumn(
+                                        imageVector = action.icon,
+                                        tabletMode = tabletMode,
+                                        title = stringResource(R.string.trash_delete)
+                                    ) {
+                                        scope.launch { privateFolderDeleteConfirmState.show() }
+                                    }
+                                } else if (isInVault) {
                                     SelectionBarColumn(
                                         imageVector = action.icon,
                                         tabletMode = tabletMode,
@@ -868,6 +907,51 @@ fun <T : Media> BoxScope.SelectionSheet(
                     } else {
                         Toast.makeText(context, privateFolderMoveFailedText, Toast.LENGTH_SHORT).show()
                     }
+                }
+            }
+        }
+    )
+
+    // Move selected private-folder items back out to the public gallery. These
+    // are SAF documents, so the copy-out + SAF delete happen entirely in the
+    // repository — no MediaStore delete request (which crashes here — #1015).
+    val privateFolderMovingOutText = stringResource(R.string.private_folder_moving_out)
+    val privateFolderMoveOutFailedText = stringResource(R.string.private_folder_move_out_failed)
+    ConfirmationSheet(
+        state = privateFolderMoveOutConfirmState,
+        title = stringResource(R.string.private_folder_move_out_confirm_title),
+        summary = stringResource(R.string.private_folder_move_out_confirm_summary),
+        onConfirm = {
+            val toMove = selectedMedia.toList()
+            if (toMove.isNotEmpty()) {
+                scope.launch {
+                    Toast.makeText(context, privateFolderMovingOutText, Toast.LENGTH_SHORT).show()
+                    val moved = privateFolderMoveViewModel.moveOutOfPrivateFolder(toMove)
+                    if (moved == 0) {
+                        Toast.makeText(context, privateFolderMoveOutFailedText, Toast.LENGTH_SHORT).show()
+                    }
+                    selector.clearSelection()
+                }
+            }
+        }
+    )
+
+    // Permanently delete selected private-folder items via SAF document
+    // deletion (never a MediaStore delete request — #1015).
+    val privateFolderDeleteFailedText = stringResource(R.string.private_folder_delete_failed)
+    ConfirmationSheet(
+        state = privateFolderDeleteConfirmState,
+        title = stringResource(R.string.private_folder_delete_confirm_title),
+        summary = stringResource(R.string.private_folder_delete_confirm_summary),
+        onConfirm = {
+            val toDelete = selectedMedia.toList()
+            if (toDelete.isNotEmpty()) {
+                scope.launch {
+                    val deleted = privateFolderMoveViewModel.deleteFromPrivateFolder(toDelete)
+                    if (deleted == 0) {
+                        Toast.makeText(context, privateFolderDeleteFailedText, Toast.LENGTH_SHORT).show()
+                    }
+                    selector.clearSelection()
                 }
             }
         }

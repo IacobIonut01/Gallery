@@ -36,10 +36,12 @@ import com.dot.gallery.feature_node.presentation.mediaview.components.actionbutt
 import com.dot.gallery.feature_node.presentation.mediaview.components.actionbuttons.FavoriteButton
 import com.dot.gallery.feature_node.presentation.mediaview.components.actionbuttons.MediaViewButton
 import com.dot.gallery.feature_node.presentation.mediaview.components.actionbuttons.OpenAsButton
+import com.dot.gallery.feature_node.presentation.mediaview.components.actionbuttons.PrivateFolderDeleteButton
 import com.dot.gallery.feature_node.presentation.mediaview.components.actionbuttons.RestoreButton
 import com.dot.gallery.feature_node.presentation.mediaview.components.actionbuttons.ShareButton
 import com.dot.gallery.feature_node.presentation.mediaview.components.actionbuttons.TrashButton
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
+import com.dot.gallery.feature_node.presentation.privatefolder.PrivateFolderViewModel
 import com.dot.gallery.feature_node.presentation.util.rememberActivityResult
 import kotlinx.coroutines.launch
 
@@ -168,14 +170,26 @@ fun <T : Media> MediaViewQuickBottomBar(
             }
             // Trash Component
             if (showDeleteButton && !readOnly) {
-                TrashButton(
-                    media = currentMedia,
-                    enabled = enabled,
-                    deleteMedia = deleteMedia,
-                    currentVault = currentVault,
-                    followTheme = followTheme,
-                    onTrashConfirmed = onTrashConfirmed
-                )
+                // Private-folder items are SAF documents; deleting them via a
+                // MediaStore request crashes (#1015). Route them through a
+                // SAF-only delete instead of the regular TrashButton.
+                if (currentMedia.albumID == PrivateFolderViewModel.PRIVATE_FOLDER_ALBUM_ID) {
+                    PrivateFolderDeleteButton(
+                        media = currentMedia,
+                        enabled = enabled,
+                        followTheme = followTheme,
+                        onDeleted = onTrashConfirmed
+                    )
+                } else {
+                    TrashButton(
+                        media = currentMedia,
+                        enabled = enabled,
+                        deleteMedia = deleteMedia,
+                        currentVault = currentVault,
+                        followTheme = followTheme,
+                        onTrashConfirmed = onTrashConfirmed
+                    )
+                }
             }
         }
     }
