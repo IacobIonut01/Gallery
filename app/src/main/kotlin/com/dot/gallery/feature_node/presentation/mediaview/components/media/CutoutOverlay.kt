@@ -7,6 +7,7 @@ package com.dot.gallery.feature_node.presentation.mediaview.components.media
 
 import android.graphics.Bitmap
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -55,6 +56,7 @@ import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -424,6 +426,11 @@ internal fun SubjectSuggestionOverlay(
         ),
         label = "subjectSuggestionPulse"
     )
+    // One-shot "bloom": when a new subject is found, animate the border/glow into existence.
+    val reveal = remember(suggestion) { Animatable(0f) }
+    LaunchedEffect(suggestion) {
+        reveal.animateTo(1f, animationSpec = tween(650, easing = FastOutSlowInEasing))
+    }
     val accent = MaterialTheme.colorScheme.primary
     val accentArgb = accent.toArgb()
     val bitmap = suggestion.result.bitmap
@@ -461,14 +468,28 @@ internal fun SubjectSuggestionOverlay(
             val right = rect.left + (bounds.right.toFloat() / wOrig) * rect.width
             val bottom = rect.top + (bounds.bottom.toFloat() / hOrig) * rect.height
 
-            val strokePx = 3.dp.toPx()
-            val diag = (strokePx / 1.4142f)
-            val offsets = listOf(
-                Offset(strokePx, 0f), Offset(-strokePx, 0f),
-                Offset(0f, strokePx), Offset(0f, -strokePx),
-                Offset(diag, diag), Offset(-diag, diag),
-                Offset(diag, -diag), Offset(-diag, -diag)
-            )
+            val revealV = reveal.value
+            val strokePx = 2.5.dp.toPx()
+            // Glow grows outward as the bloom plays in, then gently breathes with the pulse.
+            val glowMax = 14.dp.toPx() * revealV
+
+            // Stamp the mask silhouette shifted in 8 directions at [radius]; this dilates the actual
+            // subject shape (never a rectangle) so both glow and border follow its contour.
+            fun android.graphics.Canvas.stampRing(
+                bmp: android.graphics.Bitmap,
+                srcRect: android.graphics.Rect,
+                dstOf: (Float, Float) -> android.graphics.RectF,
+                radius: Float,
+                paint: android.graphics.Paint
+            ) {
+                if (radius < 0.5f) return
+                val d = radius / 1.4142f
+                val dirs = arrayOf(
+                    radius to 0f, -radius to 0f, 0f to radius, 0f to -radius,
+                    d to d, -d to d, d to -d, -d to -d
+                )
+                dirs.forEach { (dx, dy) -> drawBitmap(bmp, srcRect, dstOf(dx, dy), paint) }
+            }
 
             drawIntoCanvas { canvas ->
                 val native = canvas.nativeCanvas
@@ -477,15 +498,24 @@ internal fun SubjectSuggestionOverlay(
                     left + dx, top + dy, right + dx, bottom + dy
                 )
 
-                // Isolate the outline on its own layer so DST_OUT only erases within the silhouette.
-                val layer = native.saveLayer(
-                    left - strokePx, top - strokePx, right + strokePx, bottom + strokePx, null
-                )
-                outlinePaint.alpha = (pulse * 255f).toInt().coerceIn(0, 255)
-                offsets.forEach { o ->
-                    native.drawBitmap(bitmap, src, dst(o.x, o.y), outlinePaint)
+                // Isolate on its own layer so DST_OUT carves only within the drawn silhouette.
+                val pad = glowMax + strokePx + 2f
+                val layer = native.saveLayer(left - pad, top - pad, right + pad, bottom + pad, null)
+
+                // Soft silhouette-shaped glow: concentric dilations fading outward.
+                val rings = 3
+                for (i in rings downTo 1) {
+                    val rad = glowMax * i / rings
+                    val ringAlpha = (pulse * 0.22f * (1f - (i - 1f) / rings)).coerceIn(0f, 1f)
+                    outlinePaint.alpha = (ringAlpha * 255f).toInt()
+                    native.stampRing(bitmap, src, ::dst, rad, outlinePaint)
                 }
-                // Carve out the centre using the un-shifted mask, leaving a border of width strokePx.
+
+                // Crisp accent border tracing the subject edge.
+                outlinePaint.alpha = ((0.55f + 0.45f * pulse) * revealV * 255f).toInt().coerceIn(0, 255)
+                native.stampRing(bitmap, src, ::dst, strokePx, outlinePaint)
+
+                // Carve out the interior so only the border + outer glow remain over the subject.
                 native.drawBitmap(bitmap, src, dst(0f, 0f), erasePaint)
                 native.restoreToCount(layer)
             }
