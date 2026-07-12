@@ -575,7 +575,16 @@ fun <T : Media> ZoomablePagerImage(
                 }
             }
         } else {
-            onItemClick()
+            // No active session: if an auto-detected subject is showing and the tap lands on its
+            // silhouette, promote it to a cutout; otherwise fall through to the normal tap (toggle UI).
+            val hint = suggestionState.suggestion
+            if (suggestionsEnabled && currentRotation == 0 && hint != null &&
+                hitsSubject(offset, zoomState, hint.result.originalBounds, hint.session.widthOrig, hint.session.heightOrig, hint.result.bitmap)
+            ) {
+                acceptSuggestion()
+            } else {
+                onItemClick()
+            }
         }
     }
 

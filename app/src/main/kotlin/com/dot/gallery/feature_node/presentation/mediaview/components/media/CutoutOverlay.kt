@@ -16,8 +16,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -69,8 +67,6 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.pointer.changedToUp
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -455,33 +451,9 @@ internal fun SubjectSuggestionOverlay(
     }
 
     Box(modifier = modifier.fillMaxSize()) {
-        Canvas(
-            modifier = Modifier
-                .fillMaxSize()
-                // Tapping the subject itself opens the cutout UI. Only consume the tap when it lands
-                // on an opaque mask pixel, so taps that miss the subject still fall through to the
-                // image's own single-tap (toggle chrome) gesture.
-                .pointerInput(suggestion) {
-                    val touchSlop = viewConfiguration.touchSlop
-                    awaitEachGesture {
-                        val down = awaitFirstDown(requireUnconsumed = false)
-                        var moved = false
-                        while (true) {
-                            val event = awaitPointerEvent()
-                            val change = event.changes.firstOrNull { it.id == down.id } ?: break
-                            if ((change.position - down.position).getDistance() > touchSlop) moved = true
-                            if (change.changedToUp()) {
-                                if (!moved && hitsSubject(change.position, zoomState, bounds, wOrig, hOrig, bitmap)) {
-                                    change.consume()
-                                    onAccept()
-                                }
-                                break
-                            }
-                            if (!change.pressed) break
-                        }
-                    }
-                }
-        ) {
+        // No gesture handling here: tapping the subject is routed through the image's own onTap
+        // (see ZoomablePagerImage) so zoom/pan gestures keep working. Only the chip below is clickable.
+        Canvas(modifier = Modifier.fillMaxSize()) {
             val rect = zoomState.zoomable.contentDisplayRect
             if (rect.width <= 0f || rect.height <= 0f) return@Canvas
             val left = rect.left + (bounds.left.toFloat() / wOrig) * rect.width
@@ -552,7 +524,7 @@ internal fun SubjectSuggestionOverlay(
  * so only hits on the actual silhouette (not the surrounding bounding box) count. Falls back to a
  * bounding-box test if the bitmap can't be sampled (e.g. a hardware-backed config).
  */
-private fun hitsSubject(
+internal fun hitsSubject(
     position: Offset,
     zoomState: com.github.panpf.zoomimage.SketchZoomState,
     bounds: android.graphics.Rect,
