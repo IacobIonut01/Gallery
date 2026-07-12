@@ -61,13 +61,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -427,6 +425,30 @@ internal fun SubjectSuggestionOverlay(
         label = "subjectSuggestionPulse"
     )
     val accent = MaterialTheme.colorScheme.primary
+    val accentArgb = accent.toArgb()
+    val bitmap = suggestion.result.bitmap
+
+    // Tint the (transparent-background) mask bitmap with the accent colour so its opaque silhouette
+    // can be stamped as an outline. Rebuilt only if the theme accent changes.
+    val outlinePaint = remember(accentArgb) {
+        android.graphics.Paint().apply {
+            isAntiAlias = true
+            isFilterBitmap = true
+            colorFilter = android.graphics.PorterDuffColorFilter(
+                accentArgb,
+                android.graphics.PorterDuff.Mode.SRC_IN
+            )
+        }
+    }
+    // Punches the subject's interior back out of the dilated silhouette, leaving only a fine border
+    // that traces the actual subject edges.
+    val erasePaint = remember {
+        android.graphics.Paint().apply {
+            isAntiAlias = true
+            isFilterBitmap = true
+            xfermode = android.graphics.PorterDuffXfermode(android.graphics.PorterDuff.Mode.DST_OUT)
+        }
+    }
 
     Box(modifier = modifier.fillMaxSize()) {
         Canvas(modifier = Modifier.fillMaxSize()) {
@@ -437,25 +459,34 @@ internal fun SubjectSuggestionOverlay(
             val right = rect.left + (bounds.right.toFloat() / wOrig) * rect.width
             val bottom = rect.top + (bounds.bottom.toFloat() / hOrig) * rect.height
 
-            val pad = 6.dp.toPx()
-            val topLeft = Offset(left - pad, top - pad)
-            val boxSize = Size((right - left) + pad * 2, (bottom - top) + pad * 2)
-            val corner = CornerRadius(16.dp.toPx())
+            val strokePx = 3.dp.toPx()
+            val diag = (strokePx / 1.4142f)
+            val offsets = listOf(
+                Offset(strokePx, 0f), Offset(-strokePx, 0f),
+                Offset(0f, strokePx), Offset(0f, -strokePx),
+                Offset(diag, diag), Offset(-diag, diag),
+                Offset(diag, -diag), Offset(-diag, -diag)
+            )
 
-            drawRoundRect(
-                color = accent.copy(alpha = pulse * 0.25f),
-                topLeft = topLeft,
-                size = boxSize,
-                cornerRadius = corner,
-                style = Stroke(width = 10.dp.toPx())
-            )
-            drawRoundRect(
-                color = accent.copy(alpha = pulse),
-                topLeft = topLeft,
-                size = boxSize,
-                cornerRadius = corner,
-                style = Stroke(width = 2.5.dp.toPx())
-            )
+            drawIntoCanvas { canvas ->
+                val native = canvas.nativeCanvas
+                val src = android.graphics.Rect(0, 0, bitmap.width, bitmap.height)
+                fun dst(dx: Float, dy: Float) = android.graphics.RectF(
+                    left + dx, top + dy, right + dx, bottom + dy
+                )
+
+                // Isolate the outline on its own layer so DST_OUT only erases within the silhouette.
+                val layer = native.saveLayer(
+                    left - strokePx, top - strokePx, right + strokePx, bottom + strokePx, null
+                )
+                outlinePaint.alpha = (pulse * 255f).toInt().coerceIn(0, 255)
+                offsets.forEach { o ->
+                    native.drawBitmap(bitmap, src, dst(o.x, o.y), outlinePaint)
+                }
+                // Carve out the centre using the un-shifted mask, leaving a border of width strokePx.
+                native.drawBitmap(bitmap, src, dst(0f, 0f), erasePaint)
+                native.restoreToCount(layer)
+            }
         }
 
         Row(
