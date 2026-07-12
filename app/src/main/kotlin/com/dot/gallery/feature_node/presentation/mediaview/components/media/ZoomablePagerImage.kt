@@ -135,6 +135,10 @@ import androidx.compose.animation.core.LinearEasing
 // toggles between the fit scale and the default dynamic mediumScale (see ExtendedZoomScalesCalculator).
 private const val EXTENDED_MAX_NATIVE_SCALE = 50f
 
+// How long an image must stay continuously visible (selected) before background subject detection
+// starts. Fast swiping deselects the page well before this elapses, so no encoder work is kicked off.
+private const val SUGGESTION_VISIBLE_DELAY_MS = 2000L
+
 /**
  * Keeps zoomimage's default dynamic minScale/mediumScale (so double-tap behaves normally) but raises
  * the pinch ceiling (maxScale) to [maxNativeMultiple] times the image's native 1:1 resolution.
@@ -441,16 +445,27 @@ fun <T : Media> ZoomablePagerImage(
     // When false (default), long-press rotates and Cut out is offered as an on-screen pill.
     val longPressStartsCutout by Settings.Misc.rememberLongPressCutout()
 
-    val infiniteTransition = rememberInfiniteTransition(label = "glowTransition")
-    val glowRadius by infiniteTransition.animateFloat(
-        initialValue = 2f,
-        targetValue = 6f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1200, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "glowRadius"
-    )
+    // Pulsing glow for the cutout contour / subject-suggestion outline. The infinite animation is
+    // only created while it's actually needed (a cutout is active or a suggestion is shown). An
+    // unconditional rememberInfiniteTransition would run a continuous per-frame animation and
+    // recomposition on every composed pager page — including neighbours that briefly compose during
+    // a fling — adding avoidable swipe jank.
+    val needsGlow = cutoutState.isActive || suggestionState.suggestion != null
+    val glowRadius = if (needsGlow) {
+        val infiniteTransition = rememberInfiniteTransition(label = "glowTransition")
+        val animatedGlow by infiniteTransition.animateFloat(
+            initialValue = 2f,
+            targetValue = 6f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(1200, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse
+            ),
+            label = "glowRadius"
+        )
+        animatedGlow
+    } else {
+        2f
+    }
 
     DisposableEffect(media) {
         onDispose {
@@ -475,7 +490,9 @@ fun <T : Media> ZoomablePagerImage(
     val suggestionsEnabled = !longPressStartsCutout
     LaunchedEffect(media, isSelected, suggestionsEnabled, cutoutState.isActive) {
         if (isSelected && suggestionsEnabled && !cutoutState.isActive) {
-            suggestionState.detect(context, media, modelManager)
+            // Only start scanning after the image has been continuously visible for 2s, so fast
+            // swiping doesn't kick off (and immediately cancel) expensive encoder work per page.
+            suggestionState.detect(context, media, modelManager, debounceMs = SUGGESTION_VISIBLE_DELAY_MS)
         } else {
             suggestionState.reset()
         }

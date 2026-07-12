@@ -280,12 +280,14 @@ fun <T : Media> MediaViewScreen(
         }
     }
 
-    // Use pagerMedia for paging (only representatives when grouped, otherwise all media)
+    // Use pagerMedia for paging (only representatives when grouped, otherwise all media).
+    // pagerMedia is already de-duplicated by id when built in mapMediaToItem (on Dispatchers.IO),
+    // so only the raw `media` fallback needs distinctBy. Skipping it on the common path avoids an
+    // O(n) list + HashSet allocation on the composition thread when opening large libraries.
     val pagerItems by rememberedDerivedState(mediaState.value, pendingTrashIds) {
         val pager = mediaState.value.pagerMedia
-        val items = pager.ifEmpty { mediaState.value.media }
-        val filtered = if (pendingTrashIds.isEmpty()) items else items.filter { it.id !in pendingTrashIds }
-        filtered.distinctBy { it.id }
+        val items = if (pager.isNotEmpty()) pager else mediaState.value.media.distinctBy { it.id }
+        if (pendingTrashIds.isEmpty()) items else items.filter { it.id !in pendingTrashIds }
     }
 
     // Use only primitive ids/sizes as saveable keys (avoid passing full media list object)
@@ -736,6 +738,11 @@ fun <T : Media> MediaViewScreen(
                     with(sharedTransitionScope) {
                             MediaPreviewComponent(
                                 isSelected = index == currentPage,
+                                // Skip the fullscreen `.blur(100.dp)` backdrop while the
+                                // shared-element open/close transition is animating — it's
+                                // invisible during the animation but a heavy per-frame render pass
+                                // that stutters the transition. It fades in once the page settles.
+                                renderBackground = !animatedContentScope.transition.isRunning,
                                 modifier = Modifier
                                     .mediaSharedElement(
                                         allowAnimation = canAnimateContent && index == currentPage,

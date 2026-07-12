@@ -52,6 +52,10 @@ fun <T : Media> MediaPreviewComponent(
     onCutoutStateChanged: (Boolean) -> Unit = {},
     onCutoutController: (CutoutController?) -> Unit = {},
     isSelected: Boolean = true,
+    // When false the (expensive, fullscreen `.blur(100.dp)`) blurred backdrop is skipped. Used to
+    // keep it off the shared-element open/close transition's critical frames — it's imperceptible
+    // during the animation but a heavy per-frame RenderEffect pass.
+    renderBackground: Boolean = true,
     videoController: @Composable (ExoPlayer, MutableState<Boolean>, MutableLongState, Long, Int, Float, VideoControllerState) -> Unit,
 ) {
     AnimatedVisibility(
@@ -62,7 +66,7 @@ fun <T : Media> MediaPreviewComponent(
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             // Non-translating blurred background
-            if (!media!!.isVideo && !isPanorama && !isPhotosphere) {
+            if (!media!!.isVideo && !isPanorama && !isPhotosphere && renderBackground) {
                 BlurredMediaBackground(
                     media = media,
                     uiEnabled = uiEnabled
