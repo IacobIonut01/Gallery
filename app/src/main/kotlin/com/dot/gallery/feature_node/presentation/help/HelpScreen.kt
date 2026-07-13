@@ -6,30 +6,48 @@
 package com.dot.gallery.feature_node.presentation.help
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.R
 import com.dot.gallery.core.LocalEventHandler
@@ -40,8 +58,12 @@ import com.dot.gallery.core.presentation.components.NavigationBackButton
 import com.dot.gallery.feature_node.presentation.help.components.WhatsNewHeroCard
 import com.dot.gallery.feature_node.presentation.help.data.HelpCategory
 import com.dot.gallery.feature_node.presentation.help.data.HelpRepository
+import com.dot.gallery.feature_node.presentation.help.data.HelpSearchIndex
+import com.dot.gallery.feature_node.presentation.help.data.HelpSearchItem
+import com.dot.gallery.feature_node.presentation.help.data.HelpSearchKind
 import com.dot.gallery.feature_node.presentation.help.data.displayTitle
 import com.dot.gallery.feature_node.presentation.help.data.icon
+import com.dot.gallery.feature_node.presentation.help.search.HelpFuzzyMatcher
 import com.dot.gallery.feature_node.presentation.settings.components.SettingsItem
 import com.dot.gallery.feature_node.presentation.util.PreviewHost
 import com.dot.gallery.feature_node.presentation.util.Screen
@@ -52,10 +74,16 @@ fun HelpScreen() {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     val eventHandler = LocalEventHandler.current
 
-    val currentRelease = remember { HelpRepository.getCurrentRelease() }
+    val context = LocalContext.current
+    val currentRelease = remember { HelpRepository.getCurrentRelease(context) }
     val getStartedCategories = remember { HelpRepository.getGetStartedCategories() }
     val makeMostCategories = remember { HelpRepository.getMakeMostCategories() }
     val exploreMoreCategories = remember { HelpRepository.getExploreMoreCategories() }
+
+    val searchIndex = remember { HelpSearchIndex.build(context) }
+    var query by remember { mutableStateOf("") }
+    val results = remember(query) { HelpFuzzyMatcher.search(searchIndex, query) }
+    val isSearching = query.isNotBlank()
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -79,52 +107,161 @@ fun HelpScreen() {
                 bottom = padding.calculateBottomPadding() + 16.dp
             ),
         ) {
-            // What's New Hero Card
+            // Unified fuzzy search bar
             item {
-                WhatsNewHeroCard(
-                    versionName = currentRelease.versionName,
-                    onClick = { eventHandler.navigate(Screen.WhatsNewScreen()) },
+                HelpSearchField(
+                    query = query,
+                    onQueryChange = { query = it },
+                    onClear = { query = "" },
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(8.dp))
             }
 
-            // Get Started Section
-            item {
-                val headerTitle = stringResource(R.string.help_get_started)
-                val resolved = getStartedCategories.map { Triple(it, it.displayTitle(), it.icon()) }
-                SettingsCategoryGroup(
-                    headerTitle = headerTitle,
-                    categories = resolved,
-                    onCategoryClick = { category ->
-                        eventHandler.navigate(Screen.TutorialCategoryScreen.category(category.name))
+            if (isSearching) {
+                helpSearchResults(
+                    results = results,
+                    query = query,
+                    onClick = { item -> item.route?.let { eventHandler.navigate(it) } }
+                )
+            } else {
+                // What's New Hero Card
+                if (currentRelease != null) {
+                    item {
+                        WhatsNewHeroCard(
+                            versionName = currentRelease.versionName,
+                            onClick = { eventHandler.navigate(Screen.WhatsNewScreen()) },
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+                        Spacer(Modifier.height(16.dp))
                     }
+                }
+
+                // Get Started Section
+                item {
+                    val headerTitle = stringResource(R.string.help_get_started)
+                    val resolved = getStartedCategories.map { Triple(it, it.displayTitle(), it.icon()) }
+                    SettingsCategoryGroup(
+                        headerTitle = headerTitle,
+                        categories = resolved,
+                        onCategoryClick = { category ->
+                            eventHandler.navigate(Screen.TutorialCategoryScreen.category(category.name))
+                        }
+                    )
+                }
+
+                // Make the Most Section
+                item {
+                    val headerTitle = stringResource(R.string.help_make_most)
+                    val resolved = makeMostCategories.map { Triple(it, it.displayTitle(), it.icon()) }
+                    SettingsCategoryGroup(
+                        headerTitle = headerTitle,
+                        categories = resolved,
+                        onCategoryClick = { category ->
+                            eventHandler.navigate(Screen.TutorialCategoryScreen.category(category.name))
+                        }
+                    )
+                }
+
+                // Explore More Section
+                item {
+                    val headerTitle = stringResource(R.string.help_explore_tips)
+                    val resolved = exploreMoreCategories.map { Triple(it, it.displayTitle(), it.icon()) }
+                    SettingsCategoryGroup(
+                        headerTitle = headerTitle,
+                        categories = resolved,
+                        onCategoryClick = { category ->
+                            eventHandler.navigate(Screen.TutorialCategoryScreen.category(category.name))
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun HelpSearchField(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    onClear: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    OutlinedTextField(
+        value = query,
+        onValueChange = onQueryChange,
+        modifier = modifier.fillMaxWidth(),
+        shape = CircleShape,
+        singleLine = true,
+        placeholder = { Text(stringResource(R.string.help_search_hint)) },
+        leadingIcon = {
+            Icon(imageVector = Icons.Rounded.Search, contentDescription = null)
+        },
+        trailingIcon = {
+            if (query.isNotEmpty()) {
+                IconButton(onClick = onClear) {
+                    Icon(
+                        imageVector = Icons.Rounded.Close,
+                        contentDescription = stringResource(R.string.help_search_clear)
+                    )
+                }
+            }
+        },
+        colors = OutlinedTextFieldDefaults.colors(
+            unfocusedBorderColor = Color.Transparent,
+            focusedBorderColor = Color.Transparent,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+        )
+    )
+}
+
+/** Grouped, ranked search results rendered as LazyColumn items. */
+private fun androidx.compose.foundation.lazy.LazyListScope.helpSearchResults(
+    results: List<HelpSearchItem>,
+    query: String,
+    onClick: (HelpSearchItem) -> Unit
+) {
+    if (results.isEmpty()) {
+        item {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(32.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = stringResource(R.string.help_search_no_results, query),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+        }
+        return
+    }
 
-            // Make the Most Section
-            item {
-                val headerTitle = stringResource(R.string.help_make_most)
-                val resolved = makeMostCategories.map { Triple(it, it.displayTitle(), it.icon()) }
-                SettingsCategoryGroup(
-                    headerTitle = headerTitle,
-                    categories = resolved,
-                    onCategoryClick = { category ->
-                        eventHandler.navigate(Screen.TutorialCategoryScreen.category(category.name))
-                    }
-                )
+    val order = listOf(
+        HelpSearchKind.TIP to R.string.help_search_section_tips,
+        HelpSearchKind.SETTING to R.string.help_search_section_settings,
+        HelpSearchKind.QUICK_ACTION to R.string.help_search_section_actions,
+        HelpSearchKind.CHANGELOG to R.string.help_search_section_changelog,
+    )
+    order.forEach { (kind, headerRes) ->
+        val group = results.filter { it.kind == kind }
+        if (group.isNotEmpty()) {
+            item(key = "header_${kind.name}") {
+                SettingsItem(item = SettingsEntity.Header(title = stringResource(headerRes)))
             }
-
-            // Explore More Section
-            item {
-                val headerTitle = stringResource(R.string.help_explore_tips)
-                val resolved = exploreMoreCategories.map { Triple(it, it.displayTitle(), it.icon()) }
-                SettingsCategoryGroup(
-                    headerTitle = headerTitle,
-                    categories = resolved,
-                    onCategoryClick = { category ->
-                        eventHandler.navigate(Screen.TutorialCategoryScreen.category(category.name))
-                    }
+            items(group, key = { "${it.kind}_${it.id}" }) { item ->
+                SettingsItem(
+                    item = SettingsEntity.Preference(
+                        title = item.title,
+                        summary = item.subtitle.ifBlank { null },
+                        icon = item.icon,
+                        onClick = { onClick(item) },
+                        screenPosition = Position.Alone
+                    )
                 )
             }
         }

@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -23,6 +24,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.core.SettingsEntity
 import com.dot.gallery.core.presentation.components.NavigationBackButton
+import com.dot.gallery.feature_node.presentation.help.data.SettingsSearchRegistry
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,8 +36,22 @@ fun BaseSettingsScreen(
     },
     topContent: @Composable (() -> Unit)? = null,
     bottomContent: @Composable (() -> Unit)? = null,
-    listState: LazyListState = rememberLazyListState()
+    listState: LazyListState = rememberLazyListState(),
+    /**
+     * When set, the non-header toggle titles rendered here are registered into
+     * [SettingsSearchRegistry] under this screen route so Help & Tips search can
+     * find individual settings without a hand-maintained catalog.
+     */
+    searchRoute: String? = null
 ) {
+    if (searchRoute != null) {
+        val toggleTitles = settingsList
+            .filter { !it.isHeader && it.title.isNotBlank() }
+            .map { it.title }
+        LaunchedEffect(searchRoute, toggleTitles) {
+            SettingsSearchRegistry.register(searchRoute, toggleTitles)
+        }
+    }
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     Scaffold(

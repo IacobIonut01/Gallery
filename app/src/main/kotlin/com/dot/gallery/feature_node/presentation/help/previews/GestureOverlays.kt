@@ -119,4 +119,52 @@ fun TapGestureOverlay(
     }
 }
 
+/**
+ * Animated double-tap indicator: two quick concentric ripples at [tapX]/[tapY]
+ * (normalized 0..1). Used for double-tap-to-zoom previews.
+ */
+@Composable
+fun DoubleTapGestureOverlay(
+    modifier: Modifier,
+    progress: Float,
+    tapX: Float = 0.5f,
+    tapY: Float = 0.5f
+) {
+    Canvas(modifier = modifier) {
+        val alpha = gestureAlpha(progress)
+        if (alpha == 0f) return@Canvas
+        val x = size.width * tapX
+        val y = size.height * tapY
+        val base = 16.dp.toPx()
+        // two taps: first ripple during 0..0.5, second during 0.5..1
+        val local = if (progress < 0.5f) progress / 0.5f else (progress - 0.5f) / 0.5f
+        val radius = base * (0.6f + local * 0.8f)
+        drawCircle(Color.White.copy(alpha = 0.7f * alpha * (1f - local)), radius, Offset(x, y))
+        drawCircle(Color.White.copy(alpha = 0.7f * alpha), base * 0.5f, Offset(x, y))
+    }
+}
+
+/**
+ * Animated long-press-and-drag selection indicator: a finger circle travels
+ * horizontally while a highlight trail follows, mimicking drag-to-select.
+ */
+@Composable
+fun DragSelectGestureOverlay(
+    modifier: Modifier,
+    progress: Float
+) {
+    Canvas(modifier = modifier) {
+        val alpha = gestureAlpha(progress)
+        if (alpha == 0f) return@Canvas
+        val startX = size.width * 0.25f
+        val endX = size.width * 0.75f
+        val y = size.height * 0.4f
+        val currentX = lerp(startX, endX, progress)
+        val fingerRadius = 14.dp.toPx()
+        // selection trail
+        drawCircle(Color.White.copy(alpha = 0.18f * alpha), fingerRadius * 1.6f, Offset(startX, y))
+        drawCircle(Color.White.copy(alpha = 0.7f * alpha), fingerRadius, Offset(currentX, y))
+    }
+}
+
 enum class SwipeDirection { LEFT, RIGHT, UP, DOWN }

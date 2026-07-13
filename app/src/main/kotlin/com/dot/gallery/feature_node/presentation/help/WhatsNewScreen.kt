@@ -7,8 +7,9 @@ package com.dot.gallery.feature_node.presentation.help
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,17 +19,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.Article
+import androidx.compose.material.icons.automirrored.outlined.OpenInNew
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
@@ -43,17 +43,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.R
 import com.dot.gallery.core.LocalEventHandler
 import com.dot.gallery.core.navigate
 import com.dot.gallery.core.presentation.components.NavigationBackButton
+import com.dot.gallery.feature_node.presentation.help.changelog.MarkdownText
 import com.dot.gallery.feature_node.presentation.help.data.HelpRepository
-import com.dot.gallery.feature_node.presentation.help.data.ReleaseHighlight
 import com.dot.gallery.feature_node.presentation.help.data.ReleaseNotes
 import com.dot.gallery.feature_node.presentation.util.PreviewHost
 import com.dot.gallery.feature_node.presentation.util.Screen
@@ -63,8 +63,9 @@ import com.dot.gallery.feature_node.presentation.util.Screen
 fun WhatsNewScreen() {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     val eventHandler = LocalEventHandler.current
+    val context = LocalContext.current
 
-    val allReleases = remember { HelpRepository.getAllReleases() }
+    val allReleases = remember { HelpRepository.getAllReleases(context) }
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -94,11 +95,9 @@ fun WhatsNewScreen() {
             items(allReleases, key = { it.versionCode }) { release ->
                 ReleaseCard(
                     release = release,
-                    isLatest = release == allReleases.first(),
-                    onHighlightClick = { highlight ->
-                        highlight.tipId?.let { id ->
-                            eventHandler.navigate(Screen.TutorialDetailScreen.tipId(id))
-                        }
+                    isLatest = release == allReleases.firstOrNull(),
+                    onTipClick = { tipId ->
+                        eventHandler.navigate(Screen.TutorialDetailScreen.tipId(tipId))
                     }
                 )
             }
@@ -106,11 +105,12 @@ fun WhatsNewScreen() {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ReleaseCard(
     release: ReleaseNotes,
     isLatest: Boolean,
-    onHighlightClick: (ReleaseHighlight) -> Unit,
+    onTipClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -146,78 +146,39 @@ private fun ReleaseCard(
                     )
                 }
             }
-            Text(
-                text = release.releaseDate,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            if (release.releaseDate.isNotBlank()) {
+                Text(
+                    text = release.releaseDate,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
 
-            if (release.highlights.isNotEmpty()) {
-                Spacer(Modifier.height(16.dp))
-                release.highlights.forEachIndexed { index, highlight ->
-                    if (index > 0) {
-                        HorizontalDivider(
-                            modifier = Modifier.padding(vertical = 8.dp),
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+            Spacer(Modifier.height(12.dp))
+            MarkdownText(markdown = release.markdown)
+
+            // Deep-link chips to related tips
+            val tips = remember(release.versionCode) {
+                release.tipIds.mapNotNull { id -> HelpRepository.getTip(id)?.let { id to it } }
+            }
+            if (tips.isNotEmpty()) {
+                Spacer(Modifier.height(12.dp))
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    tips.forEach { (id, tip) ->
+                        AssistChip(
+                            onClick = { onTipClick(id) },
+                            label = { Text(stringResource(tip.title)) },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Outlined.OpenInNew,
+                                    contentDescription = null,
+                                    modifier = Modifier.height(18.dp)
+                                )
+                            },
+                            colors = AssistChipDefaults.assistChipColors()
                         )
                     }
-                    HighlightItem(
-                        highlight = highlight,
-                        onClick = { onHighlightClick(highlight) }
-                    )
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun HighlightItem(
-    highlight: ReleaseHighlight,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        onClick = onClick,
-        modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Row(
-            modifier = Modifier.padding(vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.secondaryContainer),
-                contentAlignment = Alignment.Center
-            ) {
-                val icon = highlight.icon.vector ?: Icons.AutoMirrored.Outlined.Article
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(highlight.title),
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = stringResource(highlight.description),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
             }
         }
     }

@@ -699,6 +699,7 @@ private fun TimelineAlbumsListScreen(
         title = stringResource(R.string.settings_timeline_albums),
         settingsList = settings(),
         listState = listState,
+        searchRoute = Screen.SettingsTimelineAlbumsScreen(),
     )
 }
 

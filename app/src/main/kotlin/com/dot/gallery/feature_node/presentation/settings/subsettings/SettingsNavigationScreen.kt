@@ -493,5 +493,6 @@ private fun NavigationListScreen(
         title = stringResource(R.string.settings_navigation),
         settingsList = settings(),
         listState = listState,
+        searchRoute = Screen.SettingsNavigationScreen(),
     )
 }

@@ -55,6 +55,7 @@ import com.dot.gallery.core.Settings.Misc.rememberTrashConfirmationEnabled
 import com.dot.gallery.core.SettingsEntity
 import com.dot.gallery.core.util.SdkCompat
 import com.dot.gallery.feature_node.presentation.settings.components.BaseSettingsScreen
+import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.feature_node.presentation.settings.components.ChooserPreferenceDetailScreen
 import com.dot.gallery.feature_node.presentation.settings.components.PreferenceOption
 import com.dot.gallery.feature_node.presentation.settings.components.SwitchPreferenceDetailScreen
@@ -327,6 +328,7 @@ private fun GeneralListScreen(
         title = stringResource(R.string.settings_general),
         settingsList = settings(),
         listState = listState,
+        searchRoute = Screen.SettingsGeneralScreen(),
     )
 }
 

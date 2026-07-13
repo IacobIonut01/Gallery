@@ -49,7 +49,23 @@ data class HelpTip(
     val category: HelpCategory,
     val pages: List<TutorialPage>,
     val deepLink: String? = null,
-    val sinceVersion: String? = null
+    val sinceVersion: String? = null,
+    /** Extra synonym/keyword string resources that feed the fuzzy search index. */
+    val keywords: List<Int> = emptyList(),
+    /** Live-navigation quick actions rendered at the bottom of the tip detail. */
+    val quickActions: List<QuickAction> = emptyList()
+)
+
+/**
+ * A live-navigation shortcut shown on a [HelpTip] detail screen and in the
+ * unified search results. Always navigates to a real [com.dot.gallery.feature_node.presentation.util.Screen]
+ * route; it never mutates state from the help context.
+ */
+@Immutable
+data class QuickAction(
+    @param:StringRes val label: Int,
+    val icon: ImageVector,
+    val route: String
 )
 
 @Immutable
@@ -59,7 +75,15 @@ data class TutorialPage(
     val steps: List<Int> = emptyList(),
     @param:StringRes val actionLabel: Int = 0,
     val actionRoute: String? = null,
-    val previewType: PreviewType = PreviewType.NONE
+    val previewType: PreviewType = PreviewType.NONE,
+    /**
+     * Ordered preview frames for multi-step flows. When non-empty the detail
+     * screen renders a stepper that walks through each frame; otherwise the
+     * single [previewType] is used.
+     */
+    val previewSteps: List<PreviewType> = emptyList(),
+    /** Optional per-step captions, index-aligned with [previewSteps]. */
+    val stepCaptions: List<Int> = emptyList()
 )
 
 @Immutable
@@ -94,6 +118,12 @@ enum class PreviewType {
     COLLECTION_VIEW,
     NAV_BAR_PREVIEW,
     SETTINGS_GENERAL,
+    SLIDESHOW,
+    MOTION_PHOTO,
+    VIDEO_CONTROLS,
+    SUBJECT_CUTOUT,
+    CASTING,
+    PANORAMA,
     NONE
 }
 

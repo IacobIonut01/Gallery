@@ -441,6 +441,7 @@ private fun MediaViewerListScreen(
         title = stringResource(R.string.settings_media_viewer),
         settingsList = settings(),
         listState = listState,
+        searchRoute = Screen.SettingsMediaViewerScreen(),
     )
 }
 

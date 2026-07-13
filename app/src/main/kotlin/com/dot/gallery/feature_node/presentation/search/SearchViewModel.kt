@@ -23,6 +23,9 @@ import com.dot.gallery.feature_node.domain.util.MediaGroupType
 import com.dot.gallery.feature_node.domain.util.classifyGroupType
 import com.dot.gallery.feature_node.domain.util.getUri
 import com.dot.gallery.feature_node.domain.util.groupKey
+import com.dot.gallery.feature_node.presentation.help.data.HelpSearchIndex
+import com.dot.gallery.feature_node.presentation.help.data.HelpSearchItem
+import com.dot.gallery.feature_node.presentation.help.search.HelpFuzzyMatcher
 import com.dot.gallery.feature_node.presentation.library.CategoryMedia
 import com.dot.gallery.feature_node.presentation.search.util.centerCrop
 import com.dot.gallery.feature_node.presentation.util.mapMediaToItem
@@ -86,6 +89,23 @@ class SearchViewModel @Inject constructor(
 
     private var _query = MutableStateFlow("")
     val query = _query.asStateFlow()
+
+    /** In-memory help/tips index backing the inline "Help & Tips" search section. */
+    private val helpSearchItems: List<HelpSearchItem> by lazy { HelpSearchIndex.buildTips(context) }
+
+    /**
+     * Tips matching the current query, resolved instantly and independently of
+     * the media search pipeline ([searchJob]). Cancelling the media search never
+     * clears these, so both result kinds coexist over one query string.
+     */
+    val tipResults: StateFlow<List<HelpSearchItem>> = _query
+        .map { q -> if (q.isBlank()) emptyList() else HelpFuzzyMatcher.search(helpSearchItems, q, limit = 8) }
+        .flowOn(Dispatchers.Default)
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
     private val _selectedImageMedia = MutableStateFlow<Media.UriMedia?>(null)
     val selectedImageMedia = _selectedImageMedia.asStateFlow()

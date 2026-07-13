@@ -12,6 +12,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -50,6 +51,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -66,6 +68,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.feature_node.presentation.common.components.GridPinchZoomLayout
@@ -82,6 +85,7 @@ import com.dot.gallery.core.Settings.Misc.rememberGridSize
 import com.dot.gallery.core.Settings.Misc.rememberMosaicGridSize
 import com.dot.gallery.core.Settings.Misc.rememberTimelineLayoutType
 import com.dot.gallery.core.Settings.Search.rememberSearchHistory
+import com.dot.gallery.core.Position
 import com.dot.gallery.core.SettingsEntity
 import com.dot.gallery.core.navigate
 import com.dot.gallery.core.navigateUp
@@ -91,6 +95,7 @@ import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaItem
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
 import com.dot.gallery.feature_node.domain.model.MediaState
+import com.dot.gallery.feature_node.presentation.help.data.HelpSearchItem
 import com.dot.gallery.feature_node.presentation.classifier.components.CategoryCarousel
 import com.dot.gallery.feature_node.presentation.classifier.components.LocationCarousel
 import com.dot.gallery.feature_node.presentation.classifier.components.SearchCarousel
@@ -98,6 +103,7 @@ import com.dot.gallery.feature_node.presentation.common.components.MediaGridView
 import com.dot.gallery.feature_node.presentation.common.components.MosaicMediaGrid
 import com.dot.gallery.feature_node.presentation.common.components.MosaicPinchZoomLayout
 import com.dot.gallery.feature_node.presentation.common.components.SettingsOptionLayout
+import com.dot.gallery.feature_node.presentation.settings.components.SettingsItem
 import com.dot.gallery.feature_node.presentation.common.components.TimelineScroller
 import com.dot.gallery.feature_node.presentation.common.components.rememberMosaicMonthSegments
 import com.dot.gallery.feature_node.presentation.common.components.rememberMosaicPinchZoomState
@@ -125,6 +131,7 @@ fun SearchScreen(
     val distributor = LocalMediaDistributor.current
     val searchResults by viewModel.searchResultsState.collectAsStateWithLifecycle()
     val query by viewModel.query.collectAsStateWithLifecycle()
+    val tipResults by viewModel.tipResults.collectAsStateWithLifecycle()
     val selectedImageMedia by viewModel.selectedImageMedia.collectAsStateWithLifecycle()
     val isModelAvailable by viewModel.isModelAvailable.collectAsStateWithLifecycle()
     var searchHistory by rememberSearchHistory()
@@ -179,6 +186,18 @@ fun SearchScreen(
         suggestionProviders.toSettingsEntities(viewModel)
     }
     val searchIndexerState by viewModel.searchIndexerState.collectAsStateWithLifecycle()
+    // Shared "Help & Tips" search results, rendered inline in whichever scroll
+    // container is active (history list, media grid, or empty state) so tips and
+    // results scroll together as one surface.
+    val helpTipsContent: @Composable () -> Unit = {
+        if (tipResults.isNotEmpty()) {
+            HelpTipsSearchSection(
+                tips = tipResults,
+                onTipClick = { tip -> tip.route?.let { eventHandler.navigate(it) } },
+                onSeeAll = { eventHandler.navigate(Screen.HelpScreen()) }
+            )
+        }
+    }
     Scaffold(
         modifier = Modifier.sharedBounds(
             sharedContentState = rememberSharedContentState(key = "search_screen_bounds"),
@@ -339,6 +358,8 @@ fun SearchScreen(
                 modifier = Modifier
                     .fillMaxSize(),
             ) {
+                // "Help & Tips" results scroll inline with each state (history list,
+                // media grid, empty state) so everything is one seamless scroll.
                 AnimatedVisibility(
                     modifier = Modifier.padding(top = 16.dp),
                     visible = !searchResults.isSearching && !searchResults.hasSearched,
@@ -348,6 +369,9 @@ fun SearchScreen(
                     LazyColumn(
                         verticalArrangement = Arrangement.spacedBy(1.dp)
                     ) {
+                        if (tipResults.isNotEmpty()) {
+                            item(key = "help_tips") { helpTipsContent() }
+                        }
                         if (searchIndexerState.isIndexing)
                             item {
                                 ListItem(
@@ -654,6 +678,18 @@ fun SearchScreen(
                         }
                     } else null
 
+                    // Help & Tips ride above the grid as a single full-width leading
+                    // item so they scroll seamlessly with the media results.
+                    val aboveGridContent: (@Composable () -> Unit)? =
+                        if (tipResults.isNotEmpty() || sortChipsContent != null) {
+                            {
+                                Column(modifier = Modifier.fillMaxWidth()) {
+                                    helpTipsContent()
+                                    sortChipsContent?.invoke()
+                                }
+                            }
+                        } else null
+
                     if (isMosaicLayout) {
                         var lastMosaicCellIndex by rememberMosaicGridSize()
                         val mosaicPinchState = rememberMosaicPinchZoomState(
@@ -692,7 +728,7 @@ fun SearchScreen(
                                 mappedData = mappedData,
                                 columns = currentColumns,
                                 allowHeaders = true,
-                                leadingItemCount = if (sortChipsContent != null) 1 else 0,
+                                leadingItemCount = if (aboveGridContent != null) 1 else 0,
                             ),
                             headers = headers,
                             state = mosaicGridState,
@@ -708,7 +744,7 @@ fun SearchScreen(
                                 allowSelection = true,
                                 canScroll = !mosaicPinchState.isZooming,
                                 allowHeaders = true,
-                                aboveGridContent = sortChipsContent,
+                                aboveGridContent = aboveGridContent,
                                 isScrolling = isScrolling,
                                 emptyContent = { EmptyMedia() },
                                 sharedTransitionScope = sharedTransitionScope,
@@ -740,7 +776,7 @@ fun SearchScreen(
                                 canScroll = canScroll,
                                 allowHeaders = !useRelevanceOrder,
                                 
-                                aboveGridContent = sortChipsContent,
+                                aboveGridContent = aboveGridContent,
                                 isScrolling = isScrolling,
                                 emptyContent = { EmptyMedia() },
                                 sharedTransitionScope = sharedTransitionScope,
@@ -759,9 +795,12 @@ fun SearchScreen(
                     enter = enterAnimation,
                     exit = exitAnimation
                 ) {
-                    EmptyMedia(
-                        title = "No results found",
-                    )
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        helpTipsContent()
+                        EmptyMedia(
+                            title = "No results found",
+                        )
+                    }
                 }
             }
             val selector = LocalMediaSelector.current
@@ -801,6 +840,76 @@ fun SearchScreen(
                     showPreviewDialog = false
                     showPickerSheet = true
                 }
+            )
+        }
+    }
+}
+
+/**
+ * Compact "Help & Tips" section shown above the media results in the timeline
+ * search. Renders the top matching tips; a "See all" row opens the full Help
+ * screen. Tapping a tip navigates to its detail (never mutates search state).
+ */
+@Composable
+private fun HelpTipsSearchSection(
+    tips: List<HelpSearchItem>,
+    onTipClick: (HelpSearchItem) -> Unit,
+    onSeeAll: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    // Build the same settings-DSL structure the search history uses: a section
+    // Header followed by slim Preference rows, rendered through SettingsItem so the
+    // grouping, corners and typography match history exactly.
+    val entities = buildList {
+        add(SettingsEntity.Header(stringResource(R.string.help_tips_section_title)))
+        tips.take(3).forEach { tip ->
+            add(
+                SettingsEntity.Preference(
+                    icon = tip.icon,
+                    title = tip.title,
+                    summary = tip.subtitle.ifBlank { null },
+                    onClick = { onTipClick(tip) }
+                )
+            )
+        }
+        if (tips.size > 3) {
+            add(
+                SettingsEntity.Preference(
+                    title = stringResource(R.string.help_search_see_all, tips.size),
+                    onClick = onSeeAll
+                )
+            )
+        }
+    }
+    Column(
+        modifier = modifier.fillMaxWidth()
+    ) {
+        entities.forEachIndexed { index, item ->
+            val position = when (index) {
+                0 -> if (entities.size == 1) Position.Alone else Position.Top
+                entities.lastIndex ->
+                    if (entities[index - 1] is SettingsEntity.Header) Position.Alone
+                    else Position.Bottom
+
+                else -> {
+                    val previous = entities[index - 1]
+                    val next = entities[index + 1]
+                    when {
+                        previous is SettingsEntity.Header && next is SettingsEntity.Header -> Position.Alone
+                        previous is SettingsEntity.Header -> Position.Top
+                        next is SettingsEntity.Header -> Position.Bottom
+                        else -> Position.Middle
+                    }
+                }
+            }
+            val newItem = when (item) {
+                is SettingsEntity.Preference -> item.copy(screenPosition = position)
+                else -> item
+            }
+            SettingsItem(
+                item = newItem,
+                slimLayout = true,
+                tintIcon = newItem.iconUri == null
             )
         }
     }

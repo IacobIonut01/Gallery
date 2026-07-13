@@ -5,6 +5,7 @@
 
 package com.dot.gallery.feature_node.presentation.help
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,6 +26,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
@@ -42,13 +44,17 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.R
 import com.dot.gallery.core.LocalEventHandler
 import com.dot.gallery.core.navigate
-import com.dot.gallery.core.presentation.components.NavigationBackButton
 import com.dot.gallery.feature_node.presentation.help.data.HelpRepository
+import com.dot.gallery.feature_node.presentation.help.data.PreviewType
 import com.dot.gallery.feature_node.presentation.help.data.TutorialPage
+import com.dot.gallery.core.presentation.components.NavigationBackButton
+import com.dot.gallery.feature_node.presentation.help.previews.HelpPreview
+import com.dot.gallery.feature_node.presentation.help.previews.rememberPreviewAnimation
 import com.dot.gallery.feature_node.presentation.util.PreviewHost
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -110,8 +116,29 @@ fun TutorialDetailScreen(tipId: String) {
                 TutorialPageContent(page = page)
             }
 
-            if (tip.deepLink != null) {
-                val eventHandler = LocalEventHandler.current
+            val eventHandler = LocalEventHandler.current
+            if (tip.quickActions.isNotEmpty()) {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.help_quick_actions),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                tip.quickActions.forEach { action ->
+                    FilledTonalButton(
+                        onClick = { eventHandler.navigate(action.route) },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            imageVector = action.icon,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(Modifier.size(8.dp))
+                        Text(stringResource(action.label))
+                    }
+                }
+            } else if (tip.deepLink != null) {
                 Spacer(Modifier.height(8.dp))
                 Button(
                     onClick = { eventHandler.navigate(tip.deepLink) },
@@ -164,6 +191,52 @@ private fun TutorialPageContent(
                     text = stringResource(step)
                 )
             }
+        }
+
+        // Accurate live-component preview (single frame or animated multi-step)
+        when {
+            page.previewSteps.isNotEmpty() -> {
+                Spacer(Modifier.height(8.dp))
+                MultiStepPreview(
+                    steps = page.previewSteps,
+                    captions = page.stepCaptions
+                )
+            }
+            page.previewType != PreviewType.NONE -> {
+                Spacer(Modifier.height(8.dp))
+                HelpPreview(type = page.previewType)
+            }
+        }
+    }
+}
+
+/**
+ * Walks through [steps] frames automatically, cross-fading between the real
+ * component previews. Shows the index-aligned [captions] entry when present.
+ */
+@Composable
+private fun MultiStepPreview(
+    steps: List<PreviewType>,
+    captions: List<Int>,
+    modifier: Modifier = Modifier
+) {
+    val animation = rememberPreviewAnimation(stepCount = steps.size)
+    val index = animation.currentStep.coerceIn(0, steps.lastIndex)
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Crossfade(targetState = index, label = "help_multi_step") { frame ->
+            HelpPreview(type = steps[frame])
+        }
+        captions.getOrNull(index)?.let { caption ->
+            Text(
+                text = stringResource(caption),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }

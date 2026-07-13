@@ -31,6 +31,7 @@ import com.dot.gallery.core.SettingsEntity
 import com.dot.gallery.core.sandbox.PrivateFolderManager
 import com.dot.gallery.core.security.AdvancedProtectionMonitor
 import com.dot.gallery.feature_node.presentation.settings.components.BaseSettingsScreen
+import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.feature_node.presentation.settings.components.ChooserPreferenceDetailScreen
 import com.dot.gallery.feature_node.presentation.settings.components.PreferenceOption
 import com.dot.gallery.feature_node.presentation.settings.components.SwitchPreferenceDetailScreen
@@ -253,5 +254,6 @@ private fun SecurityListScreen(
         title = stringResource(R.string.settings_security),
         settingsList = settings(),
         listState = listState,
+        searchRoute = Screen.SettingsSecurityScreen(),
     )
 }

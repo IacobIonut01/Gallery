@@ -33,6 +33,7 @@ import com.dot.gallery.core.Settings
 import com.dot.gallery.core.SettingsEntity
 import com.dot.gallery.feature_node.domain.model.SlideshowTransition
 import com.dot.gallery.feature_node.presentation.settings.components.BaseSettingsScreen
+import com.dot.gallery.feature_node.presentation.util.Screen
 import kotlin.math.roundToInt
 
 @Composable
@@ -151,6 +152,7 @@ fun SlideshowSettingsScreen() {
         title = stringResource(R.string.slideshow),
         settingsList = settings(),
         listState = listState,
+        searchRoute = Screen.SlideshowSettingsScreen(),
     )
 
     if (showTransitionDialog) {

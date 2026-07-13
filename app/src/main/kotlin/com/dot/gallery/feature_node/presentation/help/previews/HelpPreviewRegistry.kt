@@ -24,10 +24,17 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AutoFixHigh
+import androidx.compose.material.icons.outlined.Cast
+import androidx.compose.material.icons.outlined.Movie
+import androidx.compose.material.icons.outlined.Panorama
 import androidx.compose.material.icons.outlined.Photo
 import androidx.compose.material.icons.outlined.PhotoLibrary
+import androidx.compose.material.icons.outlined.PlayCircleOutline
+import androidx.compose.material.icons.outlined.Slideshow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -47,6 +54,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -115,6 +123,12 @@ fun HelpPreview(
         PreviewType.NAV_BAR_PREVIEW -> NavBarPreviewMini(modifier)
         PreviewType.SETTINGS_GENERAL -> SettingsPreviewMini(modifier)
         PreviewType.COLLECTION_VIEW -> AlbumGridPreviewMini(modifier)
+        PreviewType.SLIDESHOW -> SlideshowPreviewMini(modifier)
+        PreviewType.MOTION_PHOTO -> MotionPhotoPreviewMini(modifier)
+        PreviewType.VIDEO_CONTROLS -> VideoControlsPreviewMini(modifier)
+        PreviewType.SUBJECT_CUTOUT -> SubjectCutoutPreviewMini(modifier)
+        PreviewType.CASTING -> CastingPreviewMini(modifier)
+        PreviewType.PANORAMA -> PanoramaPreviewMini(modifier)
         PreviewType.NONE -> {}
     }
 }
@@ -322,6 +336,24 @@ private fun CategoriesPreviewMini(modifier: Modifier = Modifier) {
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
+private fun ViewerScreenMock() {
+    PreviewScreenProvider { sharedScope, animScope ->
+        MediaViewScreen(
+            toggleRotate = {},
+            paddingValues = PaddingValues(0.dp),
+            isStandalone = true,
+            mediaId = remember { HelpMockData.MOCK_PHOTOS.first().id },
+            mediaState = remember { mutableStateOf(HelpMockData.MOCK_MEDIA_STATE) },
+            metadataState = remember { mutableStateOf(HelpMockData.MOCK_METADATA_STATE) },
+            albumsState = remember { mutableStateOf(HelpMockData.MOCK_ALBUM_STATE) },
+            vaultState = remember { mutableStateOf(VaultState()) },
+            sharedTransitionScope = sharedScope,
+            animatedContentScope = animScope,
+        )
+    }
+}
+
+@Composable
 private fun ViewerPreviewMini(modifier: Modifier = Modifier) {
     val animation = rememberPreviewAnimation(stepCount = 2)
     PreviewFrame(modifier, applyPadding = false) {
@@ -330,26 +362,136 @@ private fun ViewerPreviewMini(modifier: Modifier = Modifier) {
             horizontal = true,
             modifier = Modifier.matchParentSize()
         ) {
-            PreviewScreenProvider { sharedScope, animScope ->
-                MediaViewScreen(
-                    toggleRotate = {},
-                    paddingValues = PaddingValues(0.dp),
-                    isStandalone = true,
-                    mediaId = remember { HelpMockData.MOCK_PHOTOS.first().id },
-                    mediaState = remember { mutableStateOf(HelpMockData.MOCK_MEDIA_STATE) },
-                    metadataState = remember { mutableStateOf(HelpMockData.MOCK_METADATA_STATE) },
-                    albumsState = remember { mutableStateOf(HelpMockData.MOCK_ALBUM_STATE) },
-                    vaultState = remember { mutableStateOf(VaultState()) },
-                    sharedTransitionScope = sharedScope,
-                    animatedContentScope = animScope,
-                )
-            }
+            ViewerScreenMock()
         }
         SwipeGestureOverlay(
             modifier = Modifier.matchParentSize(),
             progress = animation.stepProgress,
             direction = SwipeDirection.LEFT
         )
+    }
+}
+
+/** A small circular icon chip drawn over a preview to signal a specific feature. */
+@Composable
+private fun BoxScope.PreviewBadge(icon: ImageVector, alignment: Alignment = Alignment.TopEnd) {
+    Box(
+        modifier = Modifier
+            .align(alignment)
+            .padding(10.dp)
+            .size(30.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.92f)),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onPrimary,
+            modifier = Modifier.size(18.dp)
+        )
+    }
+}
+
+@Composable
+private fun SlideshowPreviewMini(modifier: Modifier = Modifier) {
+    val animation = rememberPreviewAnimation(stepCount = 3)
+    PreviewFrame(modifier, applyPadding = false) {
+        AutoScrollBox(
+            scrollProgress = animation.stepProgress,
+            horizontal = true,
+            modifier = Modifier.matchParentSize()
+        ) {
+            ViewerScreenMock()
+        }
+        PreviewBadge(Icons.Outlined.Slideshow)
+    }
+}
+
+@Composable
+private fun PanoramaPreviewMini(modifier: Modifier = Modifier) {
+    val animation = rememberPreviewAnimation(stepCount = 3)
+    PreviewFrame(modifier, applyPadding = false) {
+        AutoScrollBox(
+            scrollProgress = animation.stepProgress,
+            horizontal = true,
+            modifier = Modifier.matchParentSize()
+        ) {
+            ViewerScreenMock()
+        }
+        PreviewBadge(Icons.Outlined.Panorama)
+    }
+}
+
+@Composable
+private fun MotionPhotoPreviewMini(modifier: Modifier = Modifier) {
+    val animation = rememberPreviewAnimation(stepCount = 2)
+    PreviewFrame(modifier, applyPadding = false) {
+        ViewerScreenMock()
+        DoubleTapGestureOverlay(
+            modifier = Modifier.matchParentSize(),
+            progress = animation.stepProgress
+        )
+        PreviewBadge(Icons.Outlined.PlayCircleOutline)
+    }
+}
+
+@Composable
+private fun CastingPreviewMini(modifier: Modifier = Modifier) {
+    PreviewFrame(modifier, applyPadding = false) {
+        ViewerScreenMock()
+        PreviewBadge(Icons.Outlined.Cast)
+    }
+}
+
+@Composable
+private fun VideoControlsPreviewMini(modifier: Modifier = Modifier) {
+    val animation = rememberPreviewAnimation(stepCount = 4)
+    PreviewFrame(modifier, applyPadding = false) {
+        ViewerScreenMock()
+        PreviewBadge(Icons.Outlined.Movie)
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 20.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(4.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(Color.White.copy(alpha = 0.3f))
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(animation.stepProgress.coerceIn(0.06f, 1f))
+                    .height(4.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(MaterialTheme.colorScheme.primary)
+            )
+        }
+    }
+}
+
+@Composable
+private fun SubjectCutoutPreviewMini(modifier: Modifier = Modifier) {
+    val animation = rememberPreviewAnimation(stepCount = 2)
+    PreviewFrame(modifier, applyPadding = false) {
+        ViewerScreenMock()
+        Box(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .fillMaxWidth(0.5f)
+                .aspectRatio(0.7f)
+                .clip(RoundedCornerShape(16.dp))
+                .border(
+                    width = 2.dp,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.35f + 0.5f * animation.stepProgress),
+                    shape = RoundedCornerShape(16.dp)
+                )
+        )
+        PreviewBadge(Icons.Outlined.AutoFixHigh)
     }
 }
 

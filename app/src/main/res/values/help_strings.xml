@@ -997,147 +997,10 @@
     <string name="help_tip_video_options_popup_p1_title">Cleaner video controls</string>
     <string name="help_tip_video_options_popup_p1_desc">Video control buttons (subtitle, speed, volume, rotate) have been consolidated into a single \'more options\' button that expands into a blurred animated popup. The popup uses a row layout in landscape and column in portrait, keeping the video view uncluttered while still providing quick access to all controls.</string>
 
-    <!-- RELEASE NOTES: 4.3.0 -->
-    <string name="help_release_430_story_cards_title">Story cards</string>
-    <string name="help_release_430_story_cards_desc">Swipeable photo stories above the timeline with auto-advancing viewer and configurable card types</string>
-    <string name="help_release_430_video_controls_title">Redesigned video controls</string>
-    <string name="help_release_430_video_controls_desc">Animated more-options popup replaces the tall stack of video control buttons</string>
-    <string name="help_release_430_video_auto_contrast_title">Video auto-contrast</string>
-    <string name="help_release_430_video_auto_contrast_desc">Auto-contrast and adaptive colors now extend to the video options popup</string>
-    <string name="help_release_430_startup_title">Faster cold startup</string>
-    <string name="help_release_430_startup_desc">Cold startup optimized from ~900 ms to ~350 ms with lazy keystore caching and deferred initialization</string>
-    <string name="help_release_430_shared_elements_title">Improved shared element transitions</string>
-    <string name="help_release_430_shared_elements_desc">More accurate photo-to-viewer transitions with single stable registration and Long-based keys</string>
-    <string name="help_release_430_bugfixes_title">Bug fixes</string>
-    <string name="help_release_430_bugfixes_desc">Fixed move/copy album access with MANAGE_MEDIA, screen rotation reset on video exit, status bar sync, ClassCastException after unlock, grid realignment on back navigation, loading shimmer during startup, and empty-media padding</string>
 
-    <!-- RELEASE NOTES: 4.2.3 -->
-    <string name="help_release_423_timeline_filter_title">Timeline filter</string>
-    <string name="help_release_423_timeline_filter_desc">Filter the timeline by media type, favorites, year, or album</string>
-    <string name="help_release_423_animated_formats_title">Animated format support</string>
-    <string name="help_release_423_animated_formats_desc">Play animated AVIF, JXL, and APNG images alongside GIF</string>
-    <string name="help_release_423_video_subtitles_title">Video subtitles</string>
-    <string name="help_release_423_video_subtitles_desc">Embedded and external subtitle track selection with bottom-sheet management</string>
-    <string name="help_release_423_video_zoom_title">Video pinch-to-zoom</string>
-    <string name="help_release_423_video_zoom_desc">Pinch-to-zoom and double-tap-to-zoom during video playback</string>
-    <string name="help_release_423_search_enhancements_title">Enhanced search</string>
-    <string name="help_release_423_search_enhancements_desc">Search through image descriptions, metadata text fields, and inline timeline filter</string>
-    <string name="help_release_423_trash_fav_redesign_title">Redesigned Trash &amp; Favorites</string>
-    <string name="help_release_423_trash_fav_redesign_desc">Refreshed layout, improved visual hierarchy, and smoother animations</string>
-    <string name="help_release_423_album_picker_search_title">Album picker search</string>
-    <string name="help_release_423_album_picker_search_desc">Search bar in the copy/move album picker for quick album lookup</string>
-    <string name="help_release_423_ux_improvements_title">UX improvements</string>
-    <string name="help_release_423_ux_improvements_desc">Dismissible settings banners, bottom-sheet confirmations, and optimistic trash feedback</string>
-    <string name="help_release_423_bugfixes_title">Bug fixes</string>
-    <string name="help_release_423_bugfixes_desc">Fixed drag-selection tracking, metadata edit keyboard overlap, and preserved original dates when overriding edited photos</string>
 
-    <!-- RELEASE NOTES: 4.2.2 -->
-    <string name="help_release_422_security_hardening_title">Security hardening</string>
-    <string name="help_release_422_security_hardening_desc">App sandbox (targetSandboxVersion 2), encrypted storage, and isolated file processing</string>
-    <string name="help_release_422_sandboxed_decoding_title">Sandboxed image decoding</string>
-    <string name="help_release_422_sandboxed_decoding_desc">HEIF, AVIF, and JXL images are decoded in isolated processes for exploit protection</string>
-    <string name="help_release_422_isolated_metadata_title">Isolated metadata parsing</string>
-    <string name="help_release_422_isolated_metadata_desc">EXIF and metadata extraction runs in per-file sandbox processes</string>
-    <string name="help_release_422_private_folder_title">Private folder</string>
-    <string name="help_release_422_private_folder_desc">Store sensitive files outside MediaStore via SAF, hidden behind a security gate</string>
-    <string name="help_release_422_encrypted_storage_title">Encrypted storage</string>
-    <string name="help_release_422_encrypted_storage_desc">Encrypt app preferences (AES-256-GCM) and Room database (SQLCipher) at rest</string>
-    <string name="help_release_422_rescan_tracking_title">Persistent rescan tracking</string>
-    <string name="help_release_422_rescan_tracking_desc">MediaStore rescan state is now persisted in the database across app restarts</string>
-    <string name="help_release_422_performance_title">Various performance improvements</string>
-    <string name="help_release_422_performance_desc">Lazy per-album timeline flows, reduced recompositions in media viewer, optimized collection types and state management</string>
-    <string name="help_release_422_bugfixes_title">Bug fixes &amp; improvements</string>
-    <string name="help_release_422_bugfixes_desc">Fixed slow AI classification, dark status bar icons, map intent crash, motion player leak, large batch copy crash, filename date fallback, and updated dependencies</string>
 
-    <!-- RELEASE NOTES: 4.2.1 -->
-    <string name="help_release_421_fcast_casting_title">FCast video casting</string>
-    <string name="help_release_421_fcast_casting_desc">Cast videos and images to devices on your local network</string>
-    <string name="help_release_421_auto_contrast_title">Auto-contrast (Beta)</string>
-    <string name="help_release_421_auto_contrast_desc">Real-time luminance-based contrast enhancement in the viewer</string>
-    <string name="help_release_421_right_align_actions_title">Right-align selection actions</string>
-    <string name="help_release_421_right_align_actions_desc">Move top action buttons to the right for easier one-handed use</string>
-    <string name="help_release_421_vault_overhaul_title">Vault overhaul</string>
-    <string name="help_release_421_vault_overhaul_desc">Gate authentication, custom passwords, per-vault security, and streamlined flow</string>
-    <string name="help_release_421_nomaps_withml_title">Offline WithML variant</string>
-    <string name="help_release_421_nomaps_withml_desc">New build variant with AI models but without online features (maps, cloud, network)</string>
-    <string name="help_release_421_bugfixes_title">Bug fixes &amp; improvements</string>
-    <string name="help_release_421_bugfixes_desc">Fixed phantom selections, corrected setup permissions, and improved image loading</string>
 
-    <!-- RELEASE NOTES -->
-    <string name="help_release_420_album_groups_title">Album groups</string>
-    <string name="help_release_420_album_groups_desc">Organize albums into collapsible groups</string>
-    <string name="help_release_420_merge_albums_title">Merge albums by name</string>
-    <string name="help_release_420_merge_albums_desc">Automatically combine albums that share the same name</string>
-    <string name="help_release_420_merge_subfolders_title">Merge sub-folder albums</string>
-    <string name="help_release_420_merge_subfolders_desc">Consolidate nested sub-folder albums into their parent</string>
-    <string name="help_release_420_video_seeking_title">Frame-accurate video seeking</string>
-    <string name="help_release_420_video_seeking_desc">Precise video scrubbing with adjustable sensitivity</string>
-    <string name="help_release_420_image_search_title">Image-to-image search</string>
-    <string name="help_release_420_image_search_desc">Find visually similar photos using any image as a query</string>
-    <string name="help_release_420_mosaic_layout_title">Mosaic grid view</string>
-    <string name="help_release_420_mosaic_layout_desc">Dynamic mosaic tile layout for the timeline</string>
-    <string name="help_release_420_collections_title">Collections</string>
-    <string name="help_release_420_collections_desc">Create custom albums by grouping photos from anywhere</string>
-    <string name="help_release_420_settings_revamp_title">Settings redesign</string>
-    <string name="help_release_420_settings_revamp_desc">Complete UI and UX overhaul for all settings screens</string>
-    <string name="help_release_420_base_button_title">Refreshed button style</string>
-    <string name="help_release_420_base_button_desc">New unified button design used throughout the app</string>
-    <string name="help_release_420_categories_refresh_title">Categories UI refresh</string>
-    <string name="help_release_420_categories_refresh_desc">Redesigned categories screen with improved navigation</string>
-    <string name="help_release_420_selection_sheet_title">Configurable selection sheet</string>
-    <string name="help_release_420_selection_sheet_desc">Customize which actions appear and their order</string>
-    <string name="help_release_420_group_similar_settings_title">Granular grouping settings</string>
-    <string name="help_release_420_group_similar_settings_desc">Fine-tune which similar photos are grouped together</string>
-    <string name="help_release_420_optional_ml_title">Optional AI models</string>
-    <string name="help_release_420_optional_ml_desc">AI models can now be downloaded on demand instead of bundled</string>
-    <string name="help_release_420_bugfixes_title">Bug fixes</string>
-    <string name="help_release_420_bugfixes_desc">Fixed video codec exhaustion, favorite button in timeline, and grouped media selection</string>
-    <string name="help_release_413_metadata_viewer_title">Full metadata viewer</string>
-    <string name="help_release_413_metadata_viewer_desc">View all EXIF and metadata for images and videos</string>
-    <string name="help_release_413_remade_editor_title">Remade editor</string>
-    <string name="help_release_413_remade_editor_desc">Enhanced photo editor with text overlay support</string>
-    <string name="help_release_413_maplibre_title">MapLibre maps</string>
-    <string name="help_release_413_maplibre_desc">Migrated from Mapbox to open-source MapLibre</string>
-    <string name="help_release_412_group_similar_title">Group similar media</string>
-    <string name="help_release_412_group_similar_desc">Stack RAW+JPG, edited copies, and burst shots</string>
-    <string name="help_release_412_default_editor_title">Default editor</string>
-    <string name="help_release_412_default_editor_desc">Choose built-in or external image editor</string>
-    <string name="help_release_412_gif_animations_title">GIF animations</string>
-    <string name="help_release_412_gif_animations_desc">Option to disable GIF animation in grid view</string>
-    <string name="help_release_411_edit_backups_title">Edit backups viewer</string>
-    <string name="help_release_411_edit_backups_desc">View and manage edit history backups</string>
-    <string name="help_release_411_copy_clipboard_title">Copy to clipboard</string>
-    <string name="help_release_411_copy_clipboard_desc">Copy photos to clipboard for pasting</string>
-    <string name="help_release_411_enhanced_markup_title">Enhanced markup</string>
-    <string name="help_release_411_enhanced_markup_desc">Zoom, pan, and floating drawing tools</string>
-    <string name="help_release_411_fav_icon_title">Favorite icon position</string>
-    <string name="help_release_411_fav_icon_desc">Customize favorite icon placement on thumbnails</string>
-    <string name="help_release_410_ai_search_title">AI-powered search</string>
-    <string name="help_release_410_ai_search_desc">Search photos using natural language descriptions</string>
-    <string name="help_release_410_smart_categories_title">Smart categories</string>
-    <string name="help_release_410_smart_categories_desc">AI automatically organizes your photos</string>
-    <string name="help_release_410_color_palette_title">Color palette</string>
-    <string name="help_release_410_color_palette_desc">Personalize app colors with wallpaper themes or curated presets</string>
-    <string name="help_release_410_panorama_title">Panorama viewer</string>
-    <string name="help_release_410_panorama_desc">360° panorama and photosphere viewing</string>
-    <string name="help_release_410_motion_photos_title">Motion photos</string>
-    <string name="help_release_410_motion_photos_desc">Detect and play motion photo clips</string>
-    <string name="help_release_400_location_browsing_title">Location browsing</string>
-    <string name="help_release_400_location_browsing_desc">Browse your photos on an interactive map by location</string>
-    <string name="help_release_400_custom_thumbnails_title">Custom album thumbnails</string>
-    <string name="help_release_400_custom_thumbnails_desc">Set any photo as the cover for your albums</string>
-    <string name="help_release_400_selection_sheet_title">Redesigned selection sheet</string>
-    <string name="help_release_400_selection_sheet_desc">Revamped selection actions with addons and select-all</string>
-    <string name="help_release_400_search_title">Redesigned search</string>
-    <string name="help_release_400_search_desc">Rebuilt search experience with improved results and history</string>
-    <string name="help_release_400_list_albums_title">List-based albums</string>
-    <string name="help_release_400_list_albums_desc">View your albums in a compact list layout</string>
-    <string name="help_release_400_lock_images_title">Lock images</string>
-    <string name="help_release_400_lock_images_desc">Lock the current photo to prevent accidental swipes</string>
-    <string name="help_release_400_vault_playback_title">Improved vault playback</string>
-    <string name="help_release_400_vault_playback_desc">Fixed encrypted video streaming for reliable playback</string>
-    <string name="help_release_400_ui_refresh_title">UI refresh</string>
-    <string name="help_release_400_ui_refresh_desc">Polished interface with refined animations and layouts</string>
 
     <!-- TIMELINE: PER-SCREEN GROUPING (5.0.0) -->
     <string name="help_tip_timeline_group_period_title">Group by day, month, or year</string>
@@ -1247,57 +1110,8 @@
     <string name="help_tip_cloud_explore_p2_title">Smart search &amp; shared links</string>
     <string name="help_tip_cloud_explore_p2_desc">Use CLIP-based smart search to find photos by describing them in natural language. You can also create shareable links for assets and albums, then list, edit, or delete them — all from within Gallery.</string>
 
-    <!-- RELEASE NOTES: 5.0.0 -->
-    <string name="help_release_500_cloud_title">Cloud sync &amp; Immich</string>
-    <string name="help_release_500_cloud_desc">Connect your self-hosted Immich server and browse remote photos in a unified timeline with people, map, and smart search</string>
-    <string name="help_release_500_cloud_backup_title">Cloud photo backup</string>
-    <string name="help_release_500_cloud_backup_desc">Back up selected albums to your server with deduplication and Wi-Fi/cellular controls</string>
-    <string name="help_release_500_backup_restore_title">Backup &amp; restore wizard</string>
-    <string name="help_release_500_backup_restore_desc">Export and import settings, favorites, cloud configs, and vaults, with optional password encryption</string>
-    <string name="help_release_500_editor_filters_title">New editor effects &amp; filters</string>
-    <string name="help_release_500_editor_filters_desc">Posterize, Edges, Borders, Hue, black &amp; white, and a one-tap Negative preset</string>
-    <string name="help_release_500_grouping_title">Flexible date grouping</string>
-    <string name="help_release_500_grouping_desc">Group media by day, month, or year — configurable per screen</string>
-    <string name="help_release_500_album_sections_title">Album sections</string>
-    <string name="help_release_500_album_sections_desc">Organize albums into collapsible Common, Apps, and Other sections</string>
-    <string name="help_release_500_motion_video_title">Save motion photo as video</string>
-    <string name="help_release_500_motion_video_desc">Export the embedded clip from a motion photo as a standalone MP4</string>
-    <string name="help_release_500_aapm_title">Advanced Protection support</string>
-    <string name="help_release_500_aapm_desc">Automatically hardens decoding and metadata isolation when Android Advanced Protection is on</string>
-    <string name="help_release_500_formats_title">Better APNG &amp; JXL</string>
-    <string name="help_release_500_formats_desc">Improved animated APNG playback and JPEG XL image support</string>
-    <string name="help_release_500_performance_title">Performance &amp; smoother scrolling</string>
-    <string name="help_release_500_performance_desc">Faster grid rendering, image loading paused while fast-scrolling, prefetching for flicker-free transitions, and a new Sketch-based viewer pipeline</string>
-    <string name="help_release_500_location_sheet_title">Location detail sheet</string>
-    <string name="help_release_500_location_sheet_desc">Tap a photo\'s location to see a map preview with quick actions to open it in app or externally</string>
-    <string name="help_release_500_bugfixes_title">Bug fixes &amp; improvements</string>
-    <string name="help_release_500_bugfixes_desc">Fixed panorama mirroring, background audio on focus loss, picker album thumbnails, file descriptor leaks, vault UX issues, duplicate-key crashes, and SD card copy/move destinations</string>
 
-    <!-- RELEASE NOTES: 5.0.1 -->
-    <string name="help_release_501_formats_title">More image formats</string>
-    <string name="help_release_501_formats_desc">View PSD, JPEG 2000, TIFF, and SVG files in the timeline and viewer, each with crisp pinch-to-zoom</string>
-    <string name="help_release_501_heif_title">Faster HEIC &amp; AVIF</string>
-    <string name="help_release_501_heif_desc">Hardware-accelerated HEIC/AVIF decoding with fixed AVIF color artifacts</string>
-    <string name="help_release_501_system_font_title">Use system font</string>
-    <string name="help_release_501_system_font_desc">New display option to switch the app over to your device\'s system font instead of the bundled typeface</string>
-    <string name="help_release_501_jxl_zoom_title">High-quality JXL zoom</string>
-    <string name="help_release_501_jxl_zoom_desc">JPEG XL images now zoom sharply in the viewer through a dedicated region decoder</string>
-    <string name="help_release_501_video_fixes_title">Smoother video playback</string>
-    <string name="help_release_501_video_fixes_desc">Video follows the media volume stream, zoom and pinch behave naturally on rotation, and the info section stays open when auto-hide fires</string>
-    <string name="help_release_501_scroll_fixes_title">Stable scrolling &amp; navigation</string>
-    <string name="help_release_501_scroll_fixes_desc">Timeline and settings scroll positions are preserved, and viewer exit transitions no longer break</string>
-    <string name="help_release_501_bugfixes_title">Bug fixes</string>
-    <string name="help_release_501_bugfixes_desc">Improved editor markup gestures and crop box interactions, fixed launch crash on null MediaStore columns, black screen after deleting in the standalone viewer, panorama compass and gyro on rotation, album cover mismatch, date-field text, scrubber near zero, widget self-healing, and updated Simplified Chinese translations</string>
 
-    <!-- RELEASE NOTES: 5.0.2 -->
-    <string name="help_release_502_editor_title">Editor fixes</string>
-    <string name="help_release_502_editor_desc">Markup text stays within the canvas, the crop box resizes from its handles without auto-zooming, and the adjustment scrubber keeps the value you set</string>
-    <string name="help_release_502_viewer_title">Smoother media viewer</string>
-    <string name="help_release_502_viewer_desc">Swipe-to-dismiss triggers naturally, a second swipe no longer closes the app, the rotate button works after multiple turns, and the top bar and quick actions respond correctly while the info sheet is open</string>
-    <string name="help_release_502_backup_title">Reliable manual backup</string>
-    <string name="help_release_502_backup_desc">Start backup and Upload now work even when Auto-sync is turned off</string>
-    <string name="help_release_502_bugfixes_title">Bug fixes</string>
-    <string name="help_release_502_bugfixes_desc">Fixed grouped video overlapping the controls and stretching when switching members, and View all metadata for photos opened from other apps</string>
 
     <!-- Fix black video on hide (5.0.3) -->
     <string name="help_tip_video_fix_black_title">Fix black video on hide</string>
@@ -1305,17 +1119,115 @@
     <string name="help_tip_video_fix_black_p1_title">Keep video visible</string>
     <string name="help_tip_video_fix_black_p1_desc">On some devices (notably Samsung) a playing video can black out when the system bars are shown or hidden, even though it keeps playing. Enable Media Viewer › Video Playback › \'Fix black video on hide\' to re-bind the player surface on every bar change. It is on by default for Samsung devices and off elsewhere — turn it off if you don\'t need it.</string>
 
-    <!-- RELEASE NOTES: 5.0.3 -->
-    <string name="help_release_503_video_meta_title">Richer video metadata</string>
-    <string name="help_release_503_video_meta_desc">iPhone HEVC .MOV files now show full QuickTime and EXIF details — camera make and model, lens, focal length and dates — instead of an empty sheet</string>
-    <string name="help_release_503_private_folder_title">Faster private folders</string>
-    <string name="help_release_503_private_folder_desc">Private folder media now fills in progressively as it is discovered instead of staying blank until the whole folder is scanned</string>
-    <string name="help_release_503_black_video_title">Fix black video on hide</string>
-    <string name="help_release_503_black_video_desc">A new Video Playback toggle re-binds the player surface so videos no longer black out when the system bars are shown or hidden (on by default for Samsung)</string>
-    <string name="help_release_503_viewer_title">Smoother viewer</string>
-    <string name="help_release_503_viewer_desc">Paddings, the info sheet and video controls adapt correctly on rotation, the timeline keeps its scroll position when you return, and the info panel no longer auto-hides mid-drag or gets stuck invisible</string>
-    <string name="help_release_503_editor_title">Editor fixes</string>
-    <string name="help_release_503_editor_desc">Crop no longer zooms when dragged out of bounds, and markup hangs, undo of no-op adjustments, the rotate button and off-canvas text have all been fixed</string>
-    <string name="help_release_503_bugfixes_title">Bug fixes</string>
-    <string name="help_release_503_bugfixes_desc">Fixed hiding items to a vault from the selection sheet, View all metadata for images opened from other apps, a stuck pull-to-refresh spinner, the material navigation toggle flashing the screen, and secure camera reviews over the lockscreen</string>
+
+    <!-- HELP SEARCH -->
+    <string name="help_search_hint">Search help &amp; tips</string>
+    <string name="help_search_clear">Clear search</string>
+    <string name="help_search_no_results">No help found for \"%1$s\"</string>
+    <string name="help_search_section_tips">Tips &amp; how-to</string>
+    <string name="help_search_section_settings">Settings</string>
+    <string name="help_search_section_actions">Quick actions</string>
+    <string name="help_search_section_changelog">What\'s new</string>
+    <string name="help_search_see_all">See all %1$d results</string>
+    <string name="help_tips_section_title">Help &amp; Tips</string>
+    <string name="help_quick_actions">Quick actions</string>
+
+    <!-- HELP QUICK-ACTION LABELS -->
+    <string name="help_qa_open_timeline">Open Timeline</string>
+    <string name="help_qa_open_albums">Open Albums</string>
+    <string name="help_qa_open_search">Open Search</string>
+    <string name="help_qa_open_categories">Open Categories</string>
+    <string name="help_qa_open_vault">Open Vault</string>
+    <string name="help_qa_open_trash">Open Trash</string>
+    <string name="help_qa_open_favorites">Open Favorites</string>
+    <string name="help_qa_open_locations">Open Locations</string>
+    <string name="help_qa_open_library">Open Library</string>
+    <string name="help_qa_open_color_palette">Open Color palette</string>
+    <string name="help_qa_open_appearance">Open Appearance settings</string>
+
+    <!-- COVERAGE COMPLETION TIPS (100% audit) -->
+    <string name="help_tip_view_cutout_title">Cut out a subject</string>
+    <string name="help_tip_view_cutout_subtitle">Lift a person or object from the background</string>
+    <string name="help_tip_view_cutout_p1_title">Long-press a subject</string>
+    <string name="help_tip_view_cutout_p1_desc">In the viewer, long-press the main subject of a photo. ReFra detects it on-device and lets you copy or share it as a cutout with a transparent background.</string>
+    <string name="help_tip_view_cutout_p1_s1">Open a photo with a clear subject</string>
+    <string name="help_tip_view_cutout_p1_s2">Long-press directly on the subject</string>
+    <string name="help_tip_view_cutout_p1_s3">Wait for the highlighted outline</string>
+    <string name="help_tip_view_cutout_p1_s4">Copy or share the cutout</string>
+
+    <string name="help_tip_slideshow_play_title">Play a slideshow</string>
+    <string name="help_tip_slideshow_play_subtitle">Auto-advance through an album full-screen</string>
+    <string name="help_tip_slideshow_play_p1_title">Start from the viewer</string>
+    <string name="help_tip_slideshow_play_p1_desc">Open any photo, then choose Slideshow from the options menu to auto-advance through the album full-screen.</string>
+    <string name="help_tip_slideshow_play_p1_s1">Open a photo in an album</string>
+    <string name="help_tip_slideshow_play_p1_s2">Open the options menu</string>
+    <string name="help_tip_slideshow_play_p1_s3">Tap Slideshow to begin</string>
+
+    <string name="help_tip_settings_slideshow_title">Slideshow settings</string>
+    <string name="help_tip_settings_slideshow_subtitle">Set interval, order and looping</string>
+    <string name="help_tip_settings_slideshow_p1_title">Tune playback</string>
+    <string name="help_tip_settings_slideshow_p1_desc">Adjust how long each item is shown, whether playback loops, and the order items appear in.</string>
+    <string name="help_tip_settings_slideshow_p1_s1">Open Slideshow settings</string>
+    <string name="help_tip_settings_slideshow_p1_s2">Set the per-item interval</string>
+    <string name="help_tip_settings_slideshow_p1_s3">Choose order and looping</string>
+
+    <string name="help_tip_settings_date_format_title">Date format</string>
+    <string name="help_tip_settings_date_format_subtitle">Choose how dates appear</string>
+    <string name="help_tip_settings_date_format_p1_title">Pick your format</string>
+    <string name="help_tip_settings_date_format_p1_desc">Customise how dates are displayed across the timeline headers and media details.</string>
+    <string name="help_tip_settings_date_format_p1_s1">Open Date format</string>
+    <string name="help_tip_settings_date_format_p1_s2">Select a preset or build your own</string>
+    <string name="help_tip_settings_date_format_p1_s3">Preview updates instantly</string>
+
+    <string name="help_tip_basics_setup_title">First-run setup</string>
+    <string name="help_tip_basics_setup_subtitle">Grant access and pick your defaults</string>
+    <string name="help_tip_basics_setup_p1_title">Getting started</string>
+    <string name="help_tip_basics_setup_p1_desc">On first launch ReFra asks for media access and lets you pick a few defaults. You can revisit the setup any time.</string>
+
+    <string name="help_tip_albums_ignored_manage_title">Manage ignored albums</string>
+    <string name="help_tip_albums_ignored_manage_subtitle">Review and restore hidden folders</string>
+    <string name="help_tip_albums_ignored_manage_p1_title">Ignored albums list</string>
+    <string name="help_tip_albums_ignored_manage_p1_desc">See every album you\'ve hidden from the timeline and restore any of them in one place.</string>
+    <string name="help_tip_albums_ignored_manage_p1_s1">Open Ignored albums</string>
+    <string name="help_tip_albums_ignored_manage_p1_s2">Review the hidden folders</string>
+    <string name="help_tip_albums_ignored_manage_p1_s3">Restore any you want back</string>
+
+    <string name="help_tip_cloud_add_server_title">Add a server</string>
+    <string name="help_tip_cloud_add_server_subtitle">Connect Immich, WebDAV, SMB and more</string>
+    <string name="help_tip_cloud_add_server_p1_title">Setup wizard</string>
+    <string name="help_tip_cloud_add_server_p1_desc">A step-by-step wizard walks you through the server address, credentials, networking and sync options.</string>
+    <string name="help_tip_cloud_add_server_p1_s1">Pick a provider type</string>
+    <string name="help_tip_cloud_add_server_p1_s2">Enter the server and credentials</string>
+    <string name="help_tip_cloud_add_server_p1_s3">Set networking and sync</string>
+    <string name="help_tip_cloud_add_server_p1_s4">Review and save</string>
+
+    <string name="help_tip_cloud_destinations_title">Backup destinations</string>
+    <string name="help_tip_cloud_destinations_subtitle">Map each album to one or more clouds</string>
+    <string name="help_tip_cloud_destinations_p1_title">Destinations matrix</string>
+    <string name="help_tip_cloud_destinations_p1_desc">Choose exactly which albums back up to which connected accounts using a simple matrix.</string>
+
+    <string name="help_tip_cloud_provider_settings_title">Account settings</string>
+    <string name="help_tip_cloud_provider_settings_subtitle">Manage a connected account</string>
+    <string name="help_tip_cloud_provider_settings_p1_title">Per-account options</string>
+    <string name="help_tip_cloud_provider_settings_p1_desc">Edit networking, backup albums and sync behaviour independently for each connected account.</string>
+
+    <string name="help_tip_cloud_shared_links_title">Shared links</string>
+    <string name="help_tip_cloud_shared_links_subtitle">Manage links you\'ve shared</string>
+    <string name="help_tip_cloud_shared_links_p1_title">Review shared links</string>
+    <string name="help_tip_cloud_shared_links_p1_desc">See and revoke the public links created on your connected servers.</string>
+
+    <string name="help_tip_cloud_sync_status_title">Sync status</string>
+    <string name="help_tip_cloud_sync_status_subtitle">Track uploads and downloads</string>
+    <string name="help_tip_cloud_sync_status_p1_title">Live progress</string>
+    <string name="help_tip_cloud_sync_status_p1_desc">Watch backup progress and see what is queued, running or failed.</string>
+
+    <string name="help_tip_cloud_people_title">People</string>
+    <string name="help_tip_cloud_people_subtitle">Browse faces from your server</string>
+    <string name="help_tip_cloud_people_p1_title">Face grouping</string>
+    <string name="help_tip_cloud_people_p1_desc">Explore people detected by your cloud server and open each person\'s photos.</string>
+
+    <string name="help_tip_cloud_free_up_space_title">Free up space</string>
+    <string name="help_tip_cloud_free_up_space_subtitle">Remove local copies safely backed up</string>
+    <string name="help_tip_cloud_free_up_space_p1_title">Reclaim storage</string>
+    <string name="help_tip_cloud_free_up_space_p1_desc">Delete on-device copies of media that is already safely backed up to the cloud.</string>
 </resources>
