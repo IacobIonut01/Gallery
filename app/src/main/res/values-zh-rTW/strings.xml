@@ -581,7 +581,7 @@
     <string name="favorite_icon_description">選擇在網格中的縮圖上顯示「收藏」心形圖示的位置，或完全隱藏該圖示。</string>
     <string name="default_editor_description">請選擇點擊「編輯」按鈕時預設開啟的應用程式。您可以使用內建編輯器，或裝置上已安裝的任何相容的外部編輯器。</string>
     <string name="launch_screen_description">Choose which screen appears when you open the app. You can pick a specific screen or let the app remember the last one you used.</string>
-    <string name="app_name_description">Change the name and icon displayed on your home screen launcher. The app will restart to apply the change.</string>
+    <string name="app_name_description">變更主畫面啟動器上顯示的名稱與圖示。應用程式將重新啟動以套用變更。</string>
     <!-- Settings Overhaul: Metadata worker feedback -->
     <string name="metadata_collecting">Collecting metadata…</string>
     <string name="metadata_collecting_progress">Collecting metadata… %1$d%%</string>
