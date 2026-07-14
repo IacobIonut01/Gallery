@@ -55,6 +55,8 @@ import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.Constants.albumCellsList
 import com.dot.gallery.core.LocalMediaDistributor
+import com.dot.gallery.core.ScrollToTopHandler
+import com.dot.gallery.core.animateOrJumpToTop
 import com.dot.gallery.core.Settings
 import com.dot.gallery.core.Settings.Album.rememberAlbumGridSize
 import com.dot.gallery.core.Settings.Album.rememberLastSort
@@ -88,6 +90,7 @@ import com.dot.gallery.feature_node.presentation.collection.components.CreateCol
 import com.dot.gallery.feature_node.presentation.search.MainSearchBar
 import com.dot.gallery.feature_node.presentation.timeline.components.TimelineNavActions
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
+import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.feature_node.presentation.util.mediaSharedElement
 import com.dot.gallery.feature_node.presentation.util.rememberActivityResult
 import com.dot.gallery.feature_node.presentation.util.rememberBottomBarInset
@@ -184,6 +187,14 @@ fun AlbumsScreen(
                 FilterKind.NAME -> MediaOrder.Label(lastSort.orderType)
             }
         )
+    }
+
+    // Re-tapping the Albums tab scrolls the active view back to the top (#1039).
+    ScrollToTopHandler(Screen.AlbumsScreen.route) {
+        when (viewType) {
+            Settings.Album.ViewType.GRID -> pinchState.gridState.animateOrJumpToTop()
+            Settings.Album.ViewType.LIST -> listState.animateOrJumpToTop()
+        }
     }
 
     Scaffold(

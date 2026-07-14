@@ -71,6 +71,8 @@ import com.dot.gallery.core.Constants.cellsList
 import com.dot.gallery.core.LocalEventHandler
 import com.dot.gallery.core.LocalMediaDistributor
 import com.dot.gallery.core.LocalMediaSelector
+import com.dot.gallery.core.ScrollToTopHandler
+import com.dot.gallery.core.animateOrJumpToTop
 import com.dot.gallery.BuildConfig
 import com.dot.gallery.R
 import com.dot.gallery.core.Settings
@@ -279,6 +281,14 @@ fun TimelineScreen(
         eventHandler.toggleNavigationBar(!selectionState.value)
     }
 
+    // Re-tapping the Timeline tab scrolls back to the top (#1039). The non-mosaic
+    // grid uses pinchState.gridState; the mosaic layout has its own handler below.
+    if (!isMosaicLayout) {
+        ScrollToTopHandler(Screen.TimelineScreen.route) {
+            pinchState.gridState.animateOrJumpToTop()
+        }
+    }
+
     Box(
         modifier = Modifier
             .padding(
@@ -340,6 +350,11 @@ fun TimelineScreen(
 
                 LaunchedEffect(mosaicPinchState.isZooming) {
                     lastMosaicCellIndex = mosaicPinchState.currentColumnsIndex
+                }
+
+                // Re-tapping the Timeline tab scrolls the mosaic grid to top (#1039).
+                ScrollToTopHandler(Screen.TimelineScreen.route) {
+                    mosaicGridState.animateOrJumpToTop()
                 }
 
                 val mappedData by rememberedDerivedState(filteredMediaState.value, timelineGroupMethod) {

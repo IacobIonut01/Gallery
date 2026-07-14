@@ -31,6 +31,8 @@ import com.dot.gallery.core.Constants
 import com.dot.gallery.core.MediaDistributor
 import com.dot.gallery.core.MediaHandler
 import com.dot.gallery.core.MediaSelector
+import com.dot.gallery.core.LocalScrollToTop
+import com.dot.gallery.core.ScrollToTopController
 import com.dot.gallery.core.Settings.Misc.getSecureMode
 import com.dot.gallery.core.presentation.components.util.permissionGranted
 import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
@@ -160,8 +162,10 @@ class MainActivity : AppCompatActivity() {
                         ) { darkTheme || !systemBarFollowThemeState.value }
                     )
                 }
+                val scrollToTopController = remember { ScrollToTopController() }
                 CompositionLocalProvider(
                     LocalHazeState provides hazeState,
+                    LocalScrollToTop provides scrollToTopController,
                     LocalHazeStyle provides HazeMaterials.regular(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
                     )

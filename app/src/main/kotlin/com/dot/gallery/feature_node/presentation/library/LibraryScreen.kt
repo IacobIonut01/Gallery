@@ -84,6 +84,8 @@ import com.dot.gallery.BuildConfig
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.albumCellsList
 import com.dot.gallery.core.LocalEventHandler
+import com.dot.gallery.core.ScrollToTopHandler
+import com.dot.gallery.core.animateOrJumpToTop
 import com.dot.gallery.core.Settings
 import com.dot.gallery.core.Settings.Album.rememberAlbumGridSize
 import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
@@ -143,6 +145,11 @@ fun LibraryScreen(
         withContext(Dispatchers.IO) {
             lastCellIndex = albumCellsList.indexOf(pinchState.currentCells)
         }
+    }
+
+    // Re-tapping the Library tab scrolls back to the top (#1039).
+    ScrollToTopHandler(Screen.LibraryScreen.route) {
+        pinchState.gridState.animateOrJumpToTop()
     }
 
     val locations by viewModel.locations.collectAsStateWithLifecycle()

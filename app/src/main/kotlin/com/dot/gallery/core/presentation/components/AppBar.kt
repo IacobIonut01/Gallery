@@ -64,6 +64,8 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.dot.gallery.R
+import com.dot.gallery.core.LocalScrollToTop
+import com.dot.gallery.core.ScrollToTopController
 import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
 import com.dot.gallery.core.Settings.Misc.rememberAutoHideNavBar
 import com.dot.gallery.core.Settings.Misc.rememberOldNavbar
@@ -114,6 +116,7 @@ fun AppBarContainer(
     val context = LocalContext.current
     val windowSizeClass = calculateWindowSizeClass(context as Activity)
     val backStackEntry by navController.currentBackStackEntryAsState()
+    val scrollToTop = LocalScrollToTop.current
     val bottomNavItems = rememberNavigationItems()
     val useNavRail by remember(windowSizeClass) {
         mutableStateOf(windowSizeClass.widthSizeClass > WindowWidthSizeClass.Compact)
@@ -160,7 +163,7 @@ fun AppBarContainer(
             ClassicNavigationRail(
                 backStackEntry = backStackEntry,
                 navigationItems = bottomNavItems,
-                onClick = { navigate(navController, it) }
+                onClick = { onNavItemClick(navController, it, scrollToTop) }
             )
         }
         AnimatedVisibility(
@@ -172,7 +175,7 @@ fun AppBarContainer(
                 ClassicNavBar(
                     backStackEntry = backStackEntry,
                     navigationItems = bottomNavItems,
-                    onClick = { navigate(navController, it) },
+                    onClick = { onNavItemClick(navController, it, scrollToTop) },
                 )
             }
         )
@@ -193,10 +196,24 @@ fun AppBarContainer(
                     modifier = modifier,
                     backStackEntry = backStackEntry,
                     navigationItems = bottomNavItems,
-                    onClick = { navigate(navController, it) }
+                    onClick = { onNavItemClick(navController, it, scrollToTop) }
                 )
             }
         )
+    }
+}
+
+private fun onNavItemClick(
+    navController: NavController,
+    route: String,
+    scrollToTop: ScrollToTopController,
+) {
+    // Re-tapping the already-selected tab scrolls that screen back to the top
+    // instead of doing nothing (#1039). Otherwise navigate to the tab.
+    if (route == navController.currentDestination?.route) {
+        scrollToTop.requestScrollToTop(route)
+    } else {
+        navigate(navController, route)
     }
 }
 
@@ -296,11 +313,7 @@ fun ClassicNavBar(
                     unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 ),
-                onClick = {
-                    if (!selected) {
-                        onClick(item.route)
-                    }
-                },
+                onClick = { onClick(item.route) },
                 label = { Label(item) },
                 icon = { Icon(item) }
             )
@@ -326,11 +339,7 @@ private fun ClassicNavigationRail(
                     indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
                     selectedIconColor = MaterialTheme.colorScheme.onSecondaryContainer,
                 ),
-                onClick = {
-                    if (!selected) {
-                        onClick(item.route)
-                    }
-                },
+                onClick = { onClick(item.route) },
                 label = { Label(item) },
                 icon = { Icon(item) }
             )
@@ -376,7 +385,7 @@ fun RowScope.GalleryNavBarItem(
                     shape = RoundedCornerShape(percent = 100)
                 )
                 .clip(RoundedCornerShape(100))
-                .clickable { if (!isSelected) onClick(navItem.route) },
+                .clickable { onClick(navItem.route) },
         )
         Icon(
             modifier = Modifier
