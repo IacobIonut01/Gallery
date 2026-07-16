@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import com.dot.gallery.cloud.core.SyncState
 import com.dot.gallery.core.MediaDistributor
+import com.dot.gallery.core.decoder.format.ImageReencoder
 import com.dot.gallery.core.presentation.components.MediaImageRenderer
 import com.dot.gallery.core.MediaHandler
 import com.dot.gallery.core.MediaSelector
@@ -142,7 +143,8 @@ class MockedMediaHandler: MediaHandler {
 
     override suspend fun saveImage(
         bitmap: Bitmap,
-        format: Bitmap.CompressFormat,
+        writeFormat: ImageReencoder.ImageWriteFormat,
+        config: ImageReencoder.ReencodeConfig,
         mimeType: String,
         relativePath: String,
         displayName: String
@@ -151,7 +153,8 @@ class MockedMediaHandler: MediaHandler {
     override suspend fun overrideImage(
         uri: Uri,
         bitmap: Bitmap,
-        format: Bitmap.CompressFormat,
+        writeFormat: ImageReencoder.ImageWriteFormat,
+        config: ImageReencoder.ReencodeConfig,
         mimeType: String,
         relativePath: String,
         displayName: String
@@ -167,7 +170,8 @@ class MockedMediaHandler: MediaHandler {
     override suspend fun <T : Media> addMedia(vault: Vault, media: T) = Unit
     override fun <T : Media> rotateImage(
         media: T,
-        degrees: Int
+        degrees: Int,
+        forceCopy: Boolean
     ): UUID = UUID.randomUUID()
     override suspend fun <T : Media> downloadCloudMedia(mediaList: List<T>): Result<Int> = Result.success(0)
 }

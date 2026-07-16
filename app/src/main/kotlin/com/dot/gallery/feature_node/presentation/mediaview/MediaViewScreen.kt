@@ -99,7 +99,9 @@ import com.dot.gallery.core.Settings.Misc.rememberDateHeaderFormat
 import com.dot.gallery.core.Settings.Misc.rememberExtendedDateHeaderFormat
 import com.dot.gallery.core.Settings.Misc.rememberShowMediaViewDateHeader
 import com.dot.gallery.core.Settings.Misc.rememberVideoAutoplay
+import com.dot.gallery.core.decoder.format.ImageReencoder
 import com.dot.gallery.core.navigateUp
+import com.dot.gallery.core.presentation.components.OverwriteFallbackSheet
 import com.dot.gallery.core.presentation.components.util.swipe
 import com.dot.gallery.core.setFollowTheme
 import com.dot.gallery.core.util.HdrCapabilities
@@ -261,7 +263,7 @@ fun <T : Media> MediaViewScreen(
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
     ensureMetadataAvailable: (Media?, MediaMetadataState) -> Unit = { _, _ -> },
-    rotateImage: (Media, Int) -> Unit = { _, _ -> },
+    rotateImage: (Media, Int, Boolean) -> Unit = { _, _, _ -> },
     uiEvents: SharedFlow<MediaViewEvent> = MutableSharedFlow(),
     motionPhotoStateFactory: @Composable (Media?) -> MotionPhotoState = { remember { MotionPhotoState() } },
 ) = ProvideInsets {
@@ -271,6 +273,19 @@ fun <T : Media> MediaViewScreen(
     val windowInsetsController = rememberWindowInsetsController()
 
     var initialPageSetup by rememberSaveable(mediaId) { mutableStateOf(false) }
+
+    // Rotate on a format with no encoder (RAW/TIFF/PSD/…) can't overwrite in place; hold the
+    // pending request so the fallback sheet can offer a copy instead.
+    var rotateFallback by remember { mutableStateOf<Pair<Media, Int>?>(null) }
+    rotateFallback?.let { (media, degrees) ->
+        OverwriteFallbackSheet(
+            onCreateCopy = {
+                rotateFallback = null
+                rotateImage(media, degrees, true)
+            },
+            onDismiss = { rotateFallback = null }
+        )
+    }
 
     // ── Slideshow mode ──
     val slideshowConfig = remember(slideshow) {
@@ -1198,7 +1213,12 @@ fun <T : Media> MediaViewScreen(
                 isMotionPlaying = motionPhotoState.isPlaying,
                 onToggleMotionPhoto = { motionPhotoState.togglePlayback() },
                 rotateImage = {
-                    rotateImage(currentMedia!!, newRotationValue.intValue)
+                    val media = currentMedia!!
+                    if (ImageReencoder.isReencodable(media.mimeType, media.label)) {
+                        rotateImage(media, newRotationValue.intValue, false)
+                    } else {
+                        rotateFallback = media to newRotationValue.intValue
+                    }
                 },
                 onShowInfo = {
                     scope.launch {

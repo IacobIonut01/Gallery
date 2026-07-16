@@ -200,16 +200,29 @@ fun <T : Media> List<T>.writeRequest(
     contentResolver: ContentResolver,
 ): IntentSenderRequest? {
     if (!SdkCompat.supportsMediaStoreRequests) return null
-    return IntentSenderRequest.Builder(MediaStore.createWriteRequest(contentResolver, map { it.getUri() }))
-        .build()
+    // createWriteRequest rejects URIs that aren't in a media collection (e.g. formats the OS didn't
+    // index as images such as JXL/AVIF land in the generic Files collection). Fall back to a direct
+    // write attempt instead of crashing.
+    return try {
+        IntentSenderRequest.Builder(MediaStore.createWriteRequest(contentResolver, map { it.getUri() }))
+            .build()
+    } catch (e: IllegalArgumentException) {
+        printWarning("writeRequest: not a media item, skipping permission request: ${e.message}")
+        null
+    }
 }
 
 fun Uri.writeRequest(
     contentResolver: ContentResolver,
 ): IntentSenderRequest? {
     if (!SdkCompat.supportsMediaStoreRequests) return null
-    return IntentSenderRequest.Builder(MediaStore.createWriteRequest(contentResolver, arrayListOf(this)))
-        .build()
+    return try {
+        IntentSenderRequest.Builder(MediaStore.createWriteRequest(contentResolver, arrayListOf(this)))
+            .build()
+    } catch (e: IllegalArgumentException) {
+        printWarning("writeRequest: not a media item, skipping permission request: ${e.message}")
+        null
+    }
 }
 
 /**

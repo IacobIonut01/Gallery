@@ -11,6 +11,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import androidx.datastore.preferences.core.Preferences
 import com.dot.gallery.core.Resource
+import com.dot.gallery.core.decoder.format.ImageReencoder
 import com.dot.gallery.feature_node.data.data_source.CategoryWithMediaCount
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.AlbumGroup
@@ -138,7 +139,8 @@ interface MediaRepository {
 
     suspend fun saveImage(
         bitmap: Bitmap,
-        format: Bitmap.CompressFormat,
+        writeFormat: ImageReencoder.ImageWriteFormat,
+        config: ImageReencoder.ReencodeConfig,
         mimeType: String,
         relativePath: String,
         displayName: String
@@ -147,7 +149,8 @@ interface MediaRepository {
     suspend fun overrideImage(
         uri: Uri,
         bitmap: Bitmap,
-        format: Bitmap.CompressFormat,
+        writeFormat: ImageReencoder.ImageWriteFormat,
+        config: ImageReencoder.ReencodeConfig,
         mimeType: String,
         relativePath: String,
         displayName: String

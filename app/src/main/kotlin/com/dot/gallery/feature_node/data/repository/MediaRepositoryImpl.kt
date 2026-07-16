@@ -25,13 +25,15 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.work.WorkManager
 import com.dot.gallery.core.Resource
 import com.dot.gallery.core.activeDataStore
+import com.dot.gallery.core.decoder.format.ImageReencoder
 import com.dot.gallery.core.util.MediaStoreBuckets
 import com.dot.gallery.core.util.ext.deleteGpsMetadata
 import com.dot.gallery.core.util.ext.deleteMetadata
 import com.dot.gallery.core.util.ext.mapAsResource
-import com.dot.gallery.core.util.ext.overrideImage
+import com.dot.gallery.core.util.ext.overrideImageEncoded
 import com.dot.gallery.core.util.ext.renameMedia
 import com.dot.gallery.core.util.ext.saveImage
+import com.dot.gallery.core.util.ext.saveImageEncoded
 import com.dot.gallery.core.util.ext.saveRawImage
 import com.dot.gallery.core.util.ext.saveVideo
 import com.dot.gallery.core.util.ext.saveVideoStream
@@ -518,20 +520,22 @@ class MediaRepositoryImpl(
 
     override suspend fun saveImage(
         bitmap: Bitmap,
-        format: Bitmap.CompressFormat,
+        writeFormat: ImageReencoder.ImageWriteFormat,
+        config: ImageReencoder.ReencodeConfig,
         mimeType: String,
         relativePath: String,
         displayName: String
-    ) = contentResolver.saveImage(bitmap, format, mimeType, relativePath, displayName)
+    ) = contentResolver.saveImageEncoded(bitmap, writeFormat, config, mimeType, relativePath, displayName)
 
     override suspend fun overrideImage(
         uri: Uri,
         bitmap: Bitmap,
-        format: Bitmap.CompressFormat,
+        writeFormat: ImageReencoder.ImageWriteFormat,
+        config: ImageReencoder.ReencodeConfig,
         mimeType: String,
         relativePath: String,
         displayName: String
-    ) = contentResolver.overrideImage(uri, bitmap, format)
+    ) = contentResolver.overrideImageEncoded(uri, bitmap, writeFormat, config)
 
     override fun getVaults(): Flow<Resource<List<Vault>>> = database
         .getVaultDao()
@@ -681,7 +685,7 @@ class MediaRepositoryImpl(
                                 relativePath = Environment.DIRECTORY_PICTURES + "/Restored"
                             ) != null
                         } else if (media.isImage) {
-                            saveImage(
+                            contentResolver.saveImage(
                                 bitmap = BitmapFactory.decodeByteArray(
                                     encryptedMedia.bytes,
                                     0,

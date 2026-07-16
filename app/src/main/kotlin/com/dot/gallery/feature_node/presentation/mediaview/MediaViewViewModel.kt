@@ -272,8 +272,8 @@ class MediaViewViewModel @Inject constructor(
 
     // ======================== Image Rotation ========================
 
-    fun rotateImage(media: Media, degrees: Int) {
-        val id = workManager.rotateImage(media, degrees)
+    fun rotateImage(media: Media, degrees: Int, forceCopy: Boolean = false) {
+        val id = workManager.rotateImage(media, degrees, forceCopy)
         rotateWorkId = id
         observeRotateWork(id)
     }

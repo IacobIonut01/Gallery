@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.net.Uri
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
+import com.dot.gallery.core.decoder.format.ImageReencoder
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.Vault
 import kotlinx.coroutines.flow.Flow
@@ -49,7 +50,8 @@ interface MediaHandler {
 
     suspend fun saveImage(
         bitmap: Bitmap,
-        format: Bitmap.CompressFormat,
+        writeFormat: ImageReencoder.ImageWriteFormat,
+        config: ImageReencoder.ReencodeConfig,
         mimeType: String,
         relativePath: String,
         displayName: String
@@ -58,7 +60,8 @@ interface MediaHandler {
     suspend fun overrideImage(
         uri: Uri,
         bitmap: Bitmap,
-        format: Bitmap.CompressFormat,
+        writeFormat: ImageReencoder.ImageWriteFormat,
+        config: ImageReencoder.ReencodeConfig,
         mimeType: String,
         relativePath: String,
         displayName: String
@@ -76,7 +79,7 @@ interface MediaHandler {
     suspend fun collectMetadataFor(media: Media)
     suspend fun <T : Media> addMedia(vault: Vault, media: T)
 
-    fun <T: Media> rotateImage(media: T, degrees: Int): UUID
+    fun <T: Media> rotateImage(media: T, degrees: Int, forceCopy: Boolean = false): UUID
 
     suspend fun <T: Media> downloadCloudMedia(mediaList: List<T>): Result<Int>
 }

@@ -22,6 +22,7 @@ import android.os.Looper
 import android.provider.MediaStore
 import androidx.annotation.RequiresApi
 import androidx.exifinterface.media.ExifInterface
+import com.dot.gallery.core.decoder.format.ImageReencoder
 import com.dot.gallery.core.metrics.StartupTracer
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.util.getUri
@@ -177,6 +178,120 @@ suspend fun ContentResolver.overrideImage(
         ) > 0
     }.getOrElse {
         throw it
+    }
+}
+
+/**
+ * Format-aware save of an edited/rotated [bitmap] as a NEW file, re-encoded in [writeFormat] so the
+ * source image format is preserved (JXL→JXL, AVIF→AVIF, HEIC→HEIC, …). Returns the new [Uri] or
+ * `null` on failure. [mimeType] should match [writeFormat] (it drives the MediaStore MIME column).
+ */
+suspend fun ContentResolver.saveImageEncoded(
+    bitmap: Bitmap,
+    writeFormat: ImageReencoder.ImageWriteFormat,
+    config: ImageReencoder.ReencodeConfig,
+    mimeType: String,
+    relativePath: String,
+    displayName: String
+): Uri? = performInsertWrite(
+    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+    ContentValues().apply {
+        put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
+        put(MediaStore.MediaColumns.MIME_TYPE, mimeType.ifBlank { writeFormat.mimeType })
+        put(
+            MediaStore.MediaColumns.RELATIVE_PATH,
+            if (relativePath.contains("DCIM") || relativePath.contains("Pictures"))
+                relativePath
+            else Environment.DIRECTORY_PICTURES + "/Edited"
+        )
+    }
+) { out ->
+    ImageReencoder.writeToStream(bitmap, writeFormat, config, out)
+}
+
+/**
+ * Format-aware in-place overwrite of an existing media row with [bitmap], re-encoded in
+ * [writeFormat]. Preserves the original date columns so the item keeps its gallery position, and
+ * for JPEG re-encodes carries over EXIF. Returns true on success.
+ */
+suspend fun ContentResolver.overrideImageEncoded(
+    uri: Uri,
+    bitmap: Bitmap,
+    writeFormat: ImageReencoder.ImageWriteFormat,
+    config: ImageReencoder.ReencodeConfig,
+    keepExif: Boolean = true
+): Boolean = withContext(Dispatchers.IO) {
+    runCatching {
+        val originalDates = queryDateColumns(uri)
+
+        // Capture EXIF only for JPEG (the only format ExifInterface can rewrite here).
+        val exifData: MutableMap<String, String>? =
+            if (keepExif && writeFormat == ImageReencoder.ImageWriteFormat.JPEG) {
+                try {
+                    openInputStream(uri)?.use { input -> copyExifTags(ExifInterface(input)) }
+                } catch (_: Exception) {
+                    null
+                }
+            } else null
+
+        runCatching {
+            update(uri, ContentValues().apply {
+                put(MediaStore.MediaColumns.IS_PENDING, 1)
+            }, null, null)
+        }
+
+        // Encode fully into memory first so we fail before truncating the original file.
+        val encoded = ImageReencoder.encodeToBytes(bitmap, writeFormat, config)
+
+        (openOutputStream(uri, "rwt") ?: openOutputStream(uri)
+            ?: error("Failed to open output stream"))
+            .use { out ->
+                out.write(encoded)
+                out.flush()
+                if (out is FileOutputStream) {
+                    try {
+                        out.fd.sync()
+                    } catch (_: Exception) {
+                    }
+                }
+            }
+
+        if (exifData != null) {
+            try {
+                val tmp = File.createTempFile("exif_tmp", ".jpg")
+                tmp.outputStream().use { it.write(encoded) }
+                val exif = ExifInterface(tmp.absolutePath)
+                exifData.forEach { (k, v) -> exif.setAttribute(k, v) }
+                exif.setAttribute(
+                    ExifInterface.TAG_ORIENTATION,
+                    ExifInterface.ORIENTATION_NORMAL.toString()
+                )
+                exif.saveAttributes()
+                FileInputStream(tmp).use { updated ->
+                    openOutputStream(uri, "rwt")?.use { finalOut ->
+                        updated.copyTo(finalOut)
+                        finalOut.flush()
+                    }
+                }
+                tmp.delete()
+            } catch (_: Exception) {
+                // Keep the pixels even if EXIF rewrite fails.
+            }
+        }
+
+        runCatching {
+            update(uri, ContentValues().apply {
+                put(MediaStore.MediaColumns.IS_PENDING, 0)
+                originalDates?.let { (dateTaken, dateAdded) ->
+                    dateTaken?.let { put(MediaStore.Images.Media.DATE_TAKEN, it) }
+                    dateAdded?.let { put(MediaStore.MediaColumns.DATE_ADDED, it) }
+                }
+            }, null, null)
+        }
+        true
+    }.getOrElse {
+        clearPendingQuiet(uri)
+        false
     }
 }
 

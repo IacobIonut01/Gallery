@@ -16,6 +16,7 @@ import com.dot.gallery.cloud.core.ProviderType
 import com.dot.gallery.cloud.core.capabilities.RemoteMediaProvider
 import com.dot.gallery.cloud.core.capabilities.SyncCapableProvider
 import com.dot.gallery.cloud.data.dao.CloudMediaDao
+import com.dot.gallery.core.decoder.format.ImageReencoder
 import com.dot.gallery.core.Settings.Misc.getTrashEnabled
 import com.dot.gallery.core.workers.VaultOperationWorker
 import com.dot.gallery.core.workers.enqueueVaultOperation
@@ -149,8 +150,9 @@ class MediaHandlerImpl @Inject constructor(
 
     override fun <T : Media> rotateImage(
         media: T,
-        degrees: Int
-    ) = workManager.rotateImage(media, degrees)
+        degrees: Int,
+        forceCopy: Boolean
+    ) = workManager.rotateImage(media, degrees, forceCopy)
 
     override suspend fun <T : Media> copyMedia(
         from: T,
@@ -206,20 +208,22 @@ class MediaHandlerImpl @Inject constructor(
 
     override suspend fun saveImage(
         bitmap: Bitmap,
-        format: Bitmap.CompressFormat,
+        writeFormat: ImageReencoder.ImageWriteFormat,
+        config: ImageReencoder.ReencodeConfig,
         mimeType: String,
         relativePath: String,
         displayName: String
-    ): Uri? = repository.saveImage(bitmap, format, mimeType, relativePath, displayName)
+    ): Uri? = repository.saveImage(bitmap, writeFormat, config, mimeType, relativePath, displayName)
 
     override suspend fun overrideImage(
         uri: Uri,
         bitmap: Bitmap,
-        format: Bitmap.CompressFormat,
+        writeFormat: ImageReencoder.ImageWriteFormat,
+        config: ImageReencoder.ReencodeConfig,
         mimeType: String,
         relativePath: String,
         displayName: String
-    ): Boolean = repository.overrideImage(uri, bitmap, format, mimeType, relativePath, displayName)
+    ): Boolean = repository.overrideImage(uri, bitmap, writeFormat, config, mimeType, relativePath, displayName)
 
     override suspend fun getCategoryForMediaId(mediaId: Long): String? =
         repository.getCategoryForMediaId(mediaId)

@@ -42,6 +42,7 @@ import com.dot.gallery.core.Constants.mosaicColumnsList
 import com.dot.gallery.core.Settings.Misc.CURRENT_SETUP_VERSION
 import com.dot.gallery.core.Settings.Misc.rememberSetupCompletedVersion
 import com.dot.gallery.core.Settings.PREFERENCE_NAME
+import com.dot.gallery.core.decoder.format.ImageReencoder
 import com.dot.gallery.core.encryption.EncryptedDataStoreProvider
 import com.dot.gallery.core.metrics.StartupTracer
 import com.dot.gallery.core.presentation.components.FilterKind
@@ -630,6 +631,53 @@ object Settings {
         @Composable
         fun rememberLongPressCutout() =
             rememberPreference(key = LONG_PRESS_CUTOUT, defaultValue = false)
+
+        // ==== Re-encode / save quality (format-preserving overwrite) ====
+        // Mode: "auto" (JXL lossless where supported, else high quality) or "manual" (use sliders).
+        private val REENCODE_QUALITY_MODE = stringPreferencesKey("reencode_quality_mode")
+        const val REENCODE_MODE_AUTO = "auto"
+        const val REENCODE_MODE_MANUAL = "manual"
+
+        @Composable
+        fun rememberReencodeQualityMode() =
+            rememberPreference(key = REENCODE_QUALITY_MODE, defaultValue = REENCODE_MODE_AUTO)
+
+        // Shared lossy quality (1..100) for JPEG/WebP/AVIF/HEIC when re-encoding.
+        private val REENCODE_LOSSY_QUALITY = intPreferencesKey("reencode_lossy_quality")
+
+        @Composable
+        fun rememberReencodeLossyQuality() =
+            rememberPreference(key = REENCODE_LOSSY_QUALITY, defaultValue = 90)
+
+        // JXL encoder effort (1 = fastest .. 9 = slowest/best).
+        private val REENCODE_JXL_EFFORT = intPreferencesKey("reencode_jxl_effort")
+
+        @Composable
+        fun rememberReencodeJxlEffort() =
+            rememberPreference(key = REENCODE_JXL_EFFORT, defaultValue = 7)
+
+        /**
+         * Reads the persisted re-encode configuration synchronously (used by editor/rotate on IO
+         * threads). [detectedQuality] is an optional per-file best-effort source-quality estimate
+         * that overrides the configured lossy quality in AUTO mode.
+         */
+        fun getReencodeConfig(
+            context: Context,
+            detectedQuality: Int? = null
+        ): ImageReencoder.ReencodeConfig = runBlocking {
+            val prefs = context.activeDataStore.data.first()
+            val mode = when (prefs[REENCODE_QUALITY_MODE]) {
+                REENCODE_MODE_MANUAL -> ImageReencoder.QualityMode.MANUAL
+                else -> ImageReencoder.QualityMode.AUTO
+            }
+            ImageReencoder.ReencodeConfig(
+                mode = mode,
+                lossyQuality = prefs[REENCODE_LOSSY_QUALITY] ?: 90,
+                jxlEffort = prefs[REENCODE_JXL_EFFORT] ?: 7,
+                jxlLossless = true,
+                detectedQuality = detectedQuality
+            )
+        }
 
         private val OLD_NAVBAR = booleanPreferencesKey("old_navbar")
 

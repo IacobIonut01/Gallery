@@ -173,6 +173,16 @@
     <string name="edit_override_permission_denied">Permission denied. Grant full media access to overwrite the original, or save a copy instead.</string>
     <string name="edit_override_failed">Couldn\'t overwrite the original. Try saving a copy instead.</string>
     <string name="edit_save_copy_failed">Failed to save the edited copy.</string>
+    <string name="overwrite_unavailable_title">Can\'t overwrite this format</string>
+    <string name="overwrite_unavailable_summary">This image format can\'t be re-encoded on your device, so the original can\'t be overwritten. A new PNG copy will be created instead.</string>
+    <string name="overwrite_unavailable_create_copy">Create copy</string>
+    <string name="reencode_quality_title">Save quality</string>
+    <string name="reencode_quality_summary">How edited and rotated images are re-encoded when saved</string>
+    <string name="reencode_quality_mode_auto">Automatic</string>
+    <string name="reencode_quality_mode_auto_summary">Lossless where supported (JXL), otherwise high quality</string>
+    <string name="reencode_quality_mode_manual">Manual</string>
+    <string name="reencode_quality_lossy">Lossy quality</string>
+    <string name="reencode_quality_jxl_effort">JXL effort</string>
     <string name="edit_revert_failed">Failed to revert to the original.</string>
     <string name="revert_to_original">Revert to Original</string>
     <string name="revert_to_original_confirmation">This will discard all edits and restore the original image. This action cannot be undone.</string>

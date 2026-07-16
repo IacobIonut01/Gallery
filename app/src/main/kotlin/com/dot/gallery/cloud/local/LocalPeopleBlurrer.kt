@@ -13,6 +13,7 @@ import android.graphics.Rect
 import android.os.Environment
 import com.dot.gallery.cloud.data.dao.DetectedFaceDao
 import com.dot.gallery.core.MediaHandler
+import com.dot.gallery.core.decoder.format.ImageReencoder
 import com.dot.gallery.feature_node.domain.model.editor.MarkupBrush
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.domain.util.getUri
@@ -75,7 +76,8 @@ class LocalPeopleBlurrer @Inject constructor(
                 }
                 val saved = mediaHandler.saveImage(
                     bitmap = src,
-                    format = Bitmap.CompressFormat.JPEG,
+                    writeFormat = ImageReencoder.ImageWriteFormat.JPEG,
+                    config = ImageReencoder.ReencodeConfig(),
                     mimeType = "image/jpeg",
                     relativePath = Environment.DIRECTORY_PICTURES + "/Edited",
                     displayName = "${media.label.substringBeforeLast('.')}_blurred.jpg"

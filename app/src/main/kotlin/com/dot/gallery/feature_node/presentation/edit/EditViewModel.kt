@@ -17,6 +17,9 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.dot.gallery.core.EditBackupManager
 import com.dot.gallery.core.MediaHandler
+import com.dot.gallery.core.Settings
+import com.dot.gallery.core.decoder.format.ImageReencoder
+import com.dot.gallery.core.decoder.format.SourceQualityProbe
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.Media.UriMedia
 import com.dot.gallery.feature_node.domain.model.editor.Adjustment
@@ -25,7 +28,6 @@ import com.dot.gallery.feature_node.domain.model.editor.DrawType
 import com.dot.gallery.feature_node.domain.model.editor.ImageFilter
 import com.dot.gallery.feature_node.domain.model.editor.MarkupBrush
 import com.dot.gallery.feature_node.domain.model.editor.PathProperties
-import com.dot.gallery.feature_node.domain.model.editor.SaveFormat
 import com.dot.gallery.feature_node.domain.model.editor.SuggestionPreset
 import com.dot.gallery.feature_node.domain.model.editor.VariableFilter
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
@@ -271,16 +273,32 @@ class EditViewModel @Inject constructor(
     }
 
     /**
-     * Pick the best save format based on the source image's MIME type.
-     * JPEG is ~5-10x faster to compress than PNG with negligible quality loss for photos.
+     * The write format matching the source image's format (JXL→JXL, AVIF→AVIF, HEIC→HEIC, …), or
+     * `null` when the source format has no Android encoder (RAW/TIFF/PSD/JP2/SVG/animated) and
+     * therefore cannot be overwritten in place.
      */
-    private fun bestSaveFormat(): SaveFormat {
-        val mime = activeMedia.value?.mimeType?.lowercase()
-        return when {
-            mime?.contains("png") == true -> SaveFormat.PNG
-            mime?.contains("webp") == true -> SaveFormat.WEBP_LOSSY
-            else -> SaveFormat.JPEG // JPEG is the fast default for photos
+    private fun sourceWriteFormat(): ImageReencoder.ImageWriteFormat? {
+        val media = activeMedia.value ?: return null
+        return ImageReencoder.formatForMime(media.mimeType, media.label)
+    }
+
+    /**
+     * Builds the re-encode config from settings, folding in a best-effort estimate of the source's
+     * original quality (JPEG only) so overwrites in AUTO mode match the original fidelity.
+     */
+    private fun reencodeConfigForSource(): ImageReencoder.ReencodeConfig {
+        val media = activeMedia.value
+        val detected = media?.let { m ->
+            runCatching {
+                val prefix = context.contentResolver.openInputStream(m.uri)?.use { input ->
+                    val buf = ByteArray(256 * 1024)
+                    val read = input.read(buf)
+                    if (read <= 0) null else buf.copyOf(read)
+                }
+                prefix?.let { SourceQualityProbe.detect(it, m.mimeType) }
+            }.getOrNull()
         }
+        return Settings.Misc.getReencodeConfig(context, detected)
     }
 
     private fun clearRedoStack() {
@@ -867,13 +885,15 @@ class EditViewModel @Inject constructor(
     }
 
     fun saveCopy(
-        saveFormat: SaveFormat? = null,
         onSuccess: () -> Unit = {},
         onFail: () -> Unit = {}
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             _isSaving.value = true
-            val format = saveFormat ?: bestSaveFormat()
+            // Match the source format; non-encodable sources (RAW/TIFF/PSD/…) fall back to PNG so
+            // the new copy is lossless.
+            val writeFormat = sourceWriteFormat() ?: ImageReencoder.ImageWriteFormat.PNG
+            val config = reencodeConfigForSource()
             // Flatten any pending matrix adjustments into the bitmap before saving
             flattenComposedMatrix()
             val media = activeMedia.value!!
@@ -881,10 +901,11 @@ class EditViewModel @Inject constructor(
                 try {
                     if (mediaHandler.saveImage(
                             bitmap = bitmap,
-                            format = format.format,
+                            writeFormat = writeFormat,
+                            config = config,
                             relativePath = Environment.DIRECTORY_PICTURES + "/Edited",
                             displayName = media.label,
-                            mimeType = format.mimeType
+                            mimeType = writeFormat.mimeType
                         ) != null
                     ) {
                         onSuccess().also { _isSaving.value = false }
@@ -899,14 +920,25 @@ class EditViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Overwrite the source file in place, re-encoded in its own format. When the source format has
+     * no Android encoder (RAW/TIFF/PSD/JP2/SVG/animated), the original is left untouched and
+     * [onNeedsCopyFallback] is invoked so the UI can offer to create a copy instead.
+     */
     fun saveOverride(
-        saveFormat: SaveFormat? = null,
+        onNeedsCopyFallback: () -> Unit = {},
         onSuccess: () -> Unit = {},
         onFail: () -> Unit = {}
     ) {
+        val writeFormat = sourceWriteFormat()
+        if (writeFormat == null) {
+            // Source format can't be re-encoded in place — defer to the copy fallback flow.
+            onNeedsCopyFallback()
+            return
+        }
         viewModelScope.launch(Dispatchers.IO) {
             _isSaving.value = true
-            val format = saveFormat ?: bestSaveFormat()
+            val config = reencodeConfigForSource()
             // Flatten any pending matrix adjustments into the bitmap before saving
             flattenComposedMatrix()
             val media = activeMedia.value!!
@@ -922,10 +954,11 @@ class EditViewModel @Inject constructor(
                     if (mediaHandler.overrideImage(
                             uri = media.uri,
                             bitmap = bitmap,
-                            format = format.format,
+                            writeFormat = writeFormat,
+                            config = config,
                             relativePath = Environment.DIRECTORY_PICTURES + "/Edited",
                             displayName = media.label,
-                            mimeType = format.mimeType
+                            mimeType = writeFormat.mimeType
                         )
                     ) {
                         _hasOriginalBackup.value = true

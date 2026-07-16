@@ -91,6 +91,9 @@ import com.dot.gallery.core.Settings.Misc.rememberAutoHideOnVideoPlay
 import com.dot.gallery.core.Settings.Misc.rememberDefaultImageEditor
 import com.dot.gallery.core.Settings.Misc.rememberDisableSmoothing
 import com.dot.gallery.core.Settings.Misc.rememberLongPressCutout
+import com.dot.gallery.core.Settings.Misc.rememberReencodeJxlEffort
+import com.dot.gallery.core.Settings.Misc.rememberReencodeLossyQuality
+import com.dot.gallery.core.Settings.Misc.rememberReencodeQualityMode
 import com.dot.gallery.core.Settings.Misc.rememberFullBrightnessView
 import com.dot.gallery.core.Settings.Misc.rememberShowFavoriteButton
 import com.dot.gallery.core.Settings.Misc.rememberShowMediaViewDateHeader
@@ -111,6 +114,7 @@ import com.dot.gallery.feature_node.presentation.settings.components.rememberPre
 import com.dot.gallery.feature_node.presentation.settings.components.rememberSwitchPreference
 import com.dot.gallery.feature_node.presentation.util.getDate
 import com.dot.gallery.feature_node.presentation.util.getEditImageCapableApps
+import kotlin.math.roundToInt
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import androidx.core.graphics.drawable.toBitmap
 
@@ -139,6 +143,9 @@ fun SettingsMediaViewerScreen() {
     var videoSurfaceRebind by rememberVideoSurfaceRebind()
     var disableSmoothing by rememberDisableSmoothing()
     var longPressCutout by rememberLongPressCutout()
+    var reencodeMode by rememberReencodeQualityMode()
+    var reencodeLossyQuality by rememberReencodeLossyQuality()
+    var reencodeJxlEffort by rememberReencodeJxlEffort()
 
     val editApps = remember(context, context::getEditImageCapableApps)
 
@@ -263,6 +270,12 @@ fun SettingsMediaViewerScreen() {
                 onAutoPlayChange = { autoPlayVideo = it },
                 videoSurfaceRebind = videoSurfaceRebind,
                 onSurfaceRebindChange = { videoSurfaceRebind = it },
+                reencodeMode = reencodeMode,
+                onReencodeModeChange = { reencodeMode = it },
+                reencodeLossyQuality = reencodeLossyQuality,
+                onReencodeLossyChange = { reencodeLossyQuality = it },
+                reencodeJxlEffort = reencodeJxlEffort,
+                onReencodeJxlEffortChange = { reencodeJxlEffort = it },
                 onDetailClick = { detailKey = it },
                 listState = listState,
             )
@@ -290,6 +303,12 @@ private fun MediaViewerListScreen(
     onAutoPlayChange: (Boolean) -> Unit,
     videoSurfaceRebind: Boolean,
     onSurfaceRebindChange: (Boolean) -> Unit,
+    reencodeMode: String,
+    onReencodeModeChange: (String) -> Unit,
+    reencodeLossyQuality: Int,
+    onReencodeLossyChange: (Int) -> Unit,
+    reencodeJxlEffort: Int,
+    onReencodeJxlEffortChange: (Int) -> Unit,
     onDetailClick: (String) -> Unit,
     listState: LazyListState,
 ) {
@@ -378,6 +397,48 @@ private fun MediaViewerListScreen(
             )
         }
 
+        // ── Save quality (format-preserving overwrite) ──
+        val saveQualityHeader = remember(context) {
+            SettingsEntity.Header(title = context.getString(R.string.reencode_quality_title))
+        }
+        val isManualQuality = reencodeMode == Settings.Misc.REENCODE_MODE_MANUAL
+        val manualQualityPref = rememberSwitchPreference(
+            reencodeMode,
+            title = stringResource(R.string.reencode_quality_mode_manual),
+            summary = stringResource(
+                if (isManualQuality) R.string.reencode_quality_summary
+                else R.string.reencode_quality_mode_auto_summary
+            ),
+            isChecked = isManualQuality,
+            onCheck = { manual ->
+                onReencodeModeChange(
+                    if (manual) Settings.Misc.REENCODE_MODE_MANUAL
+                    else Settings.Misc.REENCODE_MODE_AUTO
+                )
+            },
+            screenPosition = if (isManualQuality) Position.Top else Position.Alone
+        )
+        val lossyQualityPref = SettingsEntity.SeekPreference(
+            title = stringResource(R.string.reencode_quality_lossy),
+            currentValue = reencodeLossyQuality.toFloat(),
+            minValue = 1f,
+            maxValue = 100f,
+            step = 0,
+            valueMultiplier = 1,
+            onSeek = { onReencodeLossyChange(it.roundToInt().coerceIn(1, 100)) },
+            screenPosition = Position.Middle
+        )
+        val jxlEffortPref = SettingsEntity.SeekPreference(
+            title = stringResource(R.string.reencode_quality_jxl_effort),
+            currentValue = reencodeJxlEffort.toFloat(),
+            minValue = 1f,
+            maxValue = 9f,
+            step = 0,
+            valueMultiplier = 1,
+            onSeek = { onReencodeJxlEffortChange(it.roundToInt().coerceIn(1, 9)) },
+            screenPosition = Position.Bottom
+        )
+
         val videoPlaybackHeader = remember(context) {
             SettingsEntity.Header(title = context.getString(R.string.video_playback))
         }
@@ -415,6 +476,7 @@ private fun MediaViewerListScreen(
         return remember(
             fullBrightnessViewPref, showMediaDateHeaderPref, showFavoriteButtonPref,
             defaultEditorPref, disableSmoothingPref, longPressCutoutPref, slideshowPref,
+            saveQualityHeader, manualQualityPref, lossyQualityPref, jxlEffortPref, isManualQuality,
             autoHideOnVideoPlayPref, autoPlayVideoPref, videoSurfaceRebindPref
         ) {
             mutableStateListOf<SettingsEntity>().apply {
@@ -428,6 +490,13 @@ private fun MediaViewerListScreen(
                 add(disableSmoothingPref)
                 add(longPressCutoutPref)
                 add(slideshowPref)
+
+                add(saveQualityHeader)
+                add(manualQualityPref)
+                if (isManualQuality) {
+                    add(lossyQualityPref)
+                    add(jxlEffortPref)
+                }
 
                 add(videoPlaybackHeader)
                 add(autoHideOnVideoPlayPref)

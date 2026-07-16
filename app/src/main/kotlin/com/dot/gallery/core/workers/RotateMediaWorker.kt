@@ -22,6 +22,9 @@ import com.dot.gallery.cloud.core.ProviderRegistry
 import com.dot.gallery.cloud.core.ProviderType
 import com.dot.gallery.cloud.core.capabilities.SyncCapableProvider
 import com.dot.gallery.cloud.util.CloudMediaDownloader
+import com.dot.gallery.core.Settings
+import com.dot.gallery.core.decoder.format.ImageReencoder
+import com.dot.gallery.core.decoder.format.SourceQualityProbe
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.util.getUri
 import com.github.panpf.sketch.util.rotate
@@ -31,11 +34,18 @@ import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.InputStream
+import java.io.OutputStream
 import java.util.UUID
 
+/**
+ * Enqueues a rotation. When the source format has no Android encoder (RAW/TIFF/PSD/…), the caller
+ * must set [forceCopy] = true (after user confirmation) so the worker writes a new PNG copy instead
+ * of failing to overwrite in place.
+ */
 fun WorkManager.rotateImage(
     media: Media,
-    degrees: Int
+    degrees: Int,
+    forceCopy: Boolean = false
 ): UUID {
     val work = OneTimeWorkRequestBuilder<RotateMediaWorker>()
         .setInputData(
@@ -44,6 +54,7 @@ fun WorkManager.rotateImage(
                 RotateMediaWorker.KEY_ROTATION_DEGREES to degrees,
                 RotateMediaWorker.KEY_MIME_TYPE to media.mimeType,
                 RotateMediaWorker.KEY_LABEL to media.label,
+                RotateMediaWorker.KEY_FORCE_COPY to forceCopy,
             )
         )
         .build()
@@ -86,10 +97,18 @@ class RotateMediaWorker @AssistedInject constructor(
             if (rotated !== original) original.recycle()
 
             update(Status.SAVING, "Saving")
-            val format = chooseCompressFormat(mime)
+            val label = inputData.getString(KEY_LABEL) ?: "rotated"
+            val forceCopy = inputData.getBoolean(KEY_FORCE_COPY, false)
+            // Preserve the source format (JXL→JXL, AVIF→AVIF, …). Non-encodable sources
+            // (RAW/TIFF/PSD/…) get PNG, which only happens on the forced-copy path.
+            val writeFormat = ImageReencoder.formatForMime(mime, label)
+                ?: ImageReencoder.ImageWriteFormat.PNG
+            val detectedQuality = if (writeFormat == ImageReencoder.ImageWriteFormat.JPEG && !isCloud) {
+                runCatching { detectSourceQuality(sourceUri, mime) }.getOrNull()
+            } else null
+            val config = Settings.Misc.getReencodeConfig(appContext, detectedQuality)
             if (isCloud) {
-                val label = inputData.getString(KEY_LABEL) ?: "rotated"
-                val localUri = saveRotatedAsNewLocalUri(rotated, format, 95, mime, label)
+                val localUri = saveRotatedAsNewLocalUri(rotated, writeFormat, config, label)
                 rotated.recycle()
                 if (localUri == null) return@withContext failure("Save failed")
 
@@ -103,7 +122,7 @@ class RotateMediaWorker @AssistedInject constructor(
                 if (syncProvider != null) {
                     val tempMedia = Media.UriMedia(
                         id = 0,
-                        label = "rotated_$label",
+                        label = copyDisplayName(label, writeFormat),
                         uri = localUri,
                         path = localUri.toString(),
                         relativePath = "Pictures",
@@ -113,7 +132,7 @@ class RotateMediaWorker @AssistedInject constructor(
                         expiryTimestamp = null,
                         takenTimestamp = null,
                         fullDate = "",
-                        mimeType = mime,
+                        mimeType = writeFormat.mimeType,
                         favorite = 0,
                         trashed = 0,
                         size = 0,
@@ -128,12 +147,17 @@ class RotateMediaWorker @AssistedInject constructor(
                 } else {
                     // No sync provider available, keep local copy
                 }
+            } else if (forceCopy) {
+                // Source can't be overwritten in place — write a new (PNG) copy instead.
+                val newUri = saveRotatedAsNewLocalUri(rotated, writeFormat, config, label)
+                rotated.recycle()
+                if (newUri == null) return@withContext failure("Save failed")
             } else {
                 val saved = saveRotatedInPlace(
                     sourceUri = sourceUri,
                     rotated = rotated,
-                    format = format,
-                    quality = 95
+                    writeFormat = writeFormat,
+                    config = config
                 )
                 rotated.recycle()
                 if (!saved) return@withContext failure("Save failed")
@@ -152,15 +176,15 @@ class RotateMediaWorker @AssistedInject constructor(
     private suspend fun saveRotatedInPlace(
         sourceUri: Uri,
         rotated: Bitmap,
-        format: Bitmap.CompressFormat,
-        quality: Int
+        writeFormat: ImageReencoder.ImageWriteFormat,
+        config: ImageReencoder.ReencodeConfig
     ): Boolean = withContext(Dispatchers.IO) {
         try {
-            // Overwrite the original file via its Uri
-            cr.openOutputStream(sourceUri, "wt")?.use { out ->
-                if (!rotated.compress(format, quality, out)) {
-                    throw RuntimeException("Compression failed")
-                }
+            // Encode fully into memory first so we fail before truncating the original file.
+            val encoded = ImageReencoder.encodeToBytes(rotated, writeFormat, config)
+            cr.openOutputStream(sourceUri, "wt")?.use { out: OutputStream ->
+                out.write(encoded)
+                out.flush()
             } ?: throw RuntimeException("Stream failed")
 
             // Touch date_modified so MediaStore picks up the change
@@ -178,6 +202,22 @@ class RotateMediaWorker @AssistedInject constructor(
         }
     }
 
+    /** Reads a header prefix and estimates the JPEG source quality (or null). */
+    private fun detectSourceQuality(uri: Uri, mime: String): Int? {
+        val prefix = cr.openInputStream(uri)?.use { input ->
+            val buf = ByteArray(256 * 1024)
+            val read = input.read(buf)
+            if (read <= 0) null else buf.copyOf(read)
+        } ?: return null
+        return SourceQualityProbe.detect(prefix, mime)
+    }
+
+    /** Builds a display name for a rotated copy carrying the write format's extension. */
+    private fun copyDisplayName(label: String, writeFormat: ImageReencoder.ImageWriteFormat): String {
+        val base = label.substringBeforeLast('.', label)
+        return "rotated_$base.${writeFormat.fileExtension}"
+    }
+
     private fun decodeCloudFullResolution(cloudUri: Uri, mime: String): Bitmap? {
         val inputStream = openCloudInputStream(cloudUri) ?: return null
         return inputStream.use { input -> decodeFromStream(input, mime) }
@@ -189,26 +229,23 @@ class RotateMediaWorker @AssistedInject constructor(
 
     private fun saveRotatedAsNewLocalUri(
         rotated: Bitmap,
-        format: Bitmap.CompressFormat,
-        quality: Int,
-        mime: String,
+        writeFormat: ImageReencoder.ImageWriteFormat,
+        config: ImageReencoder.ReencodeConfig,
         label: String
     ): Uri? {
         try {
-            val isVideo = mime.startsWith("video")
             val targetUri = cr.insert(
-                if (isVideo) MediaStore.Video.Media.getContentUri("external")
-                else MediaStore.Images.Media.getContentUri("external"),
+                MediaStore.Images.Media.getContentUri("external"),
                 ContentValues().apply {
-                    put(MediaStore.MediaColumns.DISPLAY_NAME, "rotated_$label")
-                    put(MediaStore.MediaColumns.MIME_TYPE, mime)
+                    put(MediaStore.MediaColumns.DISPLAY_NAME, copyDisplayName(label, writeFormat))
+                    put(MediaStore.MediaColumns.MIME_TYPE, writeFormat.mimeType)
                     put(MediaStore.MediaColumns.RELATIVE_PATH, "Pictures")
                     put(MediaStore.MediaColumns.IS_PENDING, 1)
                 }
             ) ?: return null
 
             cr.openOutputStream(targetUri)?.use { out ->
-                if (!rotated.compress(format, quality, out)) return null
+                ImageReencoder.writeToStream(rotated, writeFormat, config, out)
             } ?: return null
 
             val updateValues = ContentValues().apply {
@@ -256,20 +293,6 @@ class RotateMediaWorker @AssistedInject constructor(
         }
     }
 
-    private fun chooseCompressFormat(mime: String): Bitmap.CompressFormat {
-        val m = mime.lowercase()
-        return when {
-            m.contains("jpeg") || m.contains("jpg") -> Bitmap.CompressFormat.JPEG
-            m.contains("png") -> Bitmap.CompressFormat.PNG
-            m.contains("webp") -> {
-                @Suppress("DEPRECATION")
-                Bitmap.CompressFormat.WEBP
-            }
-
-            else -> Bitmap.CompressFormat.PNG
-        }
-    }
-
     private suspend fun update(@Status status: Int, msg: String) {
         setProgress(workDataOf(KEY_STATUS to status, KEY_MESSAGE to msg))
     }
@@ -295,6 +318,7 @@ class RotateMediaWorker @AssistedInject constructor(
         const val KEY_ROTATION_DEGREES = "rotation_degrees"
         const val KEY_MIME_TYPE = "mime_type"
         const val KEY_LABEL = "label"
+        const val KEY_FORCE_COPY = "force_copy"
 
         const val KEY_STATUS = "status"
         const val KEY_MESSAGE = "message"

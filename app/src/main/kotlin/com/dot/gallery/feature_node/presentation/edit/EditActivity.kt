@@ -14,8 +14,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.core.view.WindowCompat
+import com.dot.gallery.core.presentation.components.OverwriteFallbackSheet
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.feature_node.presentation.edit.adjustments.Crop
@@ -106,8 +110,32 @@ class EditActivity : ComponentActivity() {
 
                     val scope = rememberCoroutineScope { Dispatchers.IO }
 
+                    var showOverwriteFallback by remember { mutableStateOf(false) }
+
+                    val doSaveCopy: () -> Unit = {
+                        viewModel.saveCopy(
+                            onSuccess = {
+                                finish()
+                            },
+                            onFail = {
+                                printError("Failed to save copy")
+                                runOnUiThread {
+                                    Toast.makeText(
+                                        this@EditActivity,
+                                        R.string.edit_save_copy_failed,
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
+                            }
+                        )
+                    }
+
                     val doOverride: () -> Unit = {
                         viewModel.saveOverride(
+                            onNeedsCopyFallback = {
+                                // Source format has no encoder — offer a copy instead.
+                                runOnUiThread { showOverwriteFallback = true }
+                            },
                             onSuccess = {
                                 finish()
                             },
@@ -121,6 +149,16 @@ class EditActivity : ComponentActivity() {
                                     ).show()
                                 }
                             }
+                        )
+                    }
+
+                    if (showOverwriteFallback) {
+                        OverwriteFallbackSheet(
+                            onCreateCopy = {
+                                showOverwriteFallback = false
+                                doSaveCopy()
+                            },
+                            onDismiss = { showOverwriteFallback = false }
                         )
                     }
                     val overrideRequest = rememberActivityResult(

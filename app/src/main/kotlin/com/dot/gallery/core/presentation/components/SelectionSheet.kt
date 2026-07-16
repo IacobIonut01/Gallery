@@ -94,6 +94,7 @@ import com.dot.gallery.core.Settings.Misc.rememberShowFavoriteButton
 import com.dot.gallery.core.Settings.Misc.rememberShowSelectionTitles
 import com.dot.gallery.core.Settings.Misc.rememberTrashEnabled
 import com.dot.gallery.core.util.SdkCompat
+import com.dot.gallery.core.decoder.format.ImageReencoder
 import com.dot.gallery.cloud.ui.CloudSelectionViewModel
 import com.dot.gallery.feature_node.domain.model.ActionCondition
 import com.dot.gallery.feature_node.domain.model.Media
@@ -148,6 +149,22 @@ fun <T : Media> BoxScope.SelectionSheet(
     val handler = LocalMediaHandler.current
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    // Non-encodable selected items pending a rotate → offered as PNG copies via the fallback sheet.
+    var rotateFallbackList by remember { mutableStateOf<List<T>>(emptyList()) }
+    if (rotateFallbackList.isNotEmpty()) {
+        OverwriteFallbackSheet(
+            onCreateCopy = {
+                val pending = rotateFallbackList
+                rotateFallbackList = emptyList()
+                pending.forEach { media -> handler.rotateImage(media, 90, true) }
+                selector.clearSelection()
+            },
+            onDismiss = {
+                rotateFallbackList = emptyList()
+                selector.clearSelection()
+            }
+        )
+    }
     var shouldMoveToTrash by rememberSaveable { mutableStateOf(true) }
     val trashSheetState = rememberAppBottomSheetState()
     val moveSheetState = rememberAppBottomSheetState()
@@ -679,10 +696,18 @@ fun <T : Media> BoxScope.SelectionSheet(
                                     tabletMode = tabletMode,
                                     title = stringResource(action.labelRes)
                                 ) {
-                                    selectedMedia.forEach { media ->
-                                        handler.rotateImage(media, 90)
+                                    val (encodable, nonEncodable) = selectedMedia.partition {
+                                        ImageReencoder.isReencodable(it.mimeType, it.label)
                                     }
-                                    selector.clearSelection()
+                                    encodable.forEach { media ->
+                                        handler.rotateImage(media, 90, false)
+                                    }
+                                    if (nonEncodable.isNotEmpty()) {
+                                        // Ask before rotating formats that can't overwrite in place.
+                                        rotateFallbackList = nonEncodable
+                                    } else {
+                                        selector.clearSelection()
+                                    }
                                 }
                             }
                             SelectionAction.DOWNLOAD -> {
