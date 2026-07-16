@@ -1278,11 +1278,11 @@
     <string name="cloud_viewer_videos">Videos</string>
     <string name="cloud_viewer_autoplay">Auto play videos</string>
     <string name="cloud_viewer_autoplay_summary">Start playing videos automatically when opened</string>
-    <string name="cloud_viewer_loop">Loop videos</string>
-    <string name="cloud_viewer_loop_summary">Restart videos when they reach the end</string>
+    <string name="cloud_viewer_loop">Videók ismétlése</string>
+    <string name="cloud_viewer_loop_summary">A videók újraindítása, amikor elérik a végét</string>
     <string name="cloud_viewer_force_original">Force original video</string>
-    <string name="cloud_viewer_force_original_summary">Always stream the original quality video</string>
-    <string name="cloud_accounts">Cloud Accounts</string>
+    <string name="cloud_viewer_force_original_summary">Mindig eredeti minőségben játssza le a videót</string>
+    <string name="cloud_accounts">Felhőalapú fiókok</string>
     <!-- Cloud Accounts Screen (redesigned) -->
     <string name="cloud_synced_items">Connected | Synced %1$d items</string>
     <string name="cloud_add_provider">Add %1$s</string>
