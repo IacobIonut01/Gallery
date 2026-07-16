@@ -7,6 +7,7 @@ package com.dot.gallery.feature_node.presentation.mediaview.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -28,6 +29,7 @@ import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.MotionPhotosOn
 import androidx.compose.material.icons.outlined.MotionPhotosPaused
 import androidx.compose.material.icons.outlined.ScreenRotationAlt
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -86,6 +88,10 @@ fun MediaViewAppBar(
     isMotionPhoto: Boolean = false,
     isMotionPlaying: Boolean = false,
     onToggleMotionPhoto: () -> Unit = {},
+    // While a rotation write is in flight the confirm chip morphs into a busy state (spinner +
+    // stage label) and is not tappable.
+    rotationInProgress: Boolean = false,
+    rotationStageLabel: String? = null,
     rotateImage: () -> Unit,
     onGoBack: () -> Unit,
     onShowInfo: () -> Unit,
@@ -312,19 +318,29 @@ fun MediaViewAppBar(
                             color = MaterialTheme.colorScheme.tertiaryContainer.copy(0.7f),
                             shape = CircleShape
                         )
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
                         .clip(CircleShape)
-                        .clickable(onClick = rotateImage),
+                        .clickable(enabled = !rotationInProgress, onClick = rotateImage)
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .animateContentSize(),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Outlined.ScreenRotationAlt,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onTertiaryContainer,
-                    )
+                    if (rotationInProgress) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer,
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Outlined.ScreenRotationAlt,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onTertiaryContainer,
+                        )
+                    }
                     Text(
-                        text = stringResource(R.string.rotate),
+                        text = if (rotationInProgress) rotationStageLabel.orEmpty()
+                            else stringResource(R.string.rotate),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onTertiaryContainer,
                     )

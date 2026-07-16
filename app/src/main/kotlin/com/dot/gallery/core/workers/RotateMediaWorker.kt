@@ -113,7 +113,7 @@ class RotateMediaWorker @AssistedInject constructor(
                 if (localUri == null) return@withContext failure("Save failed")
 
                 // Upload back to cloud
-                update(Status.SAVING, "Uploading to cloud")
+                update(Status.UPLOADING, "Uploading to cloud")
                 val providerName = sourceUri.authority
                 val providerType = providerName?.let {
                     try { ProviderType.valueOf(it) } catch (_: Exception) { null }
@@ -152,6 +152,8 @@ class RotateMediaWorker @AssistedInject constructor(
                 val newUri = saveRotatedAsNewLocalUri(rotated, writeFormat, config, label)
                 rotated.recycle()
                 if (newUri == null) return@withContext failure("Save failed")
+                update(Status.COMPLETED, "Done")
+                return@withContext success("Rotation applied", resultUri = newUri.toString())
             } else {
                 val saved = saveRotatedInPlace(
                     sourceUri = sourceUri,
@@ -297,11 +299,12 @@ class RotateMediaWorker @AssistedInject constructor(
         setProgress(workDataOf(KEY_STATUS to status, KEY_MESSAGE to msg))
     }
 
-    private fun success(msg: String): Result =
+    private fun success(msg: String, resultUri: String? = null): Result =
         Result.success(
             Data.Builder()
                 .putInt(KEY_STATUS, Status.COMPLETED)
                 .putString(KEY_MESSAGE, msg)
+                .apply { if (resultUri != null) putString(KEY_RESULT_URI, resultUri) }
                 .build()
         )
 
@@ -322,6 +325,7 @@ class RotateMediaWorker @AssistedInject constructor(
 
         const val KEY_STATUS = "status"
         const val KEY_MESSAGE = "message"
+        const val KEY_RESULT_URI = "result_uri"
     }
 
     @IntDef(
@@ -329,6 +333,7 @@ class RotateMediaWorker @AssistedInject constructor(
         Status.DECODING,
         Status.ROTATING,
         Status.SAVING,
+        Status.UPLOADING,
         Status.COMPLETED,
         Status.FAILED
     )
@@ -339,6 +344,7 @@ class RotateMediaWorker @AssistedInject constructor(
             const val DECODING = 1
             const val ROTATING = 2
             const val SAVING = 3
+            const val UPLOADING = 6
             const val COMPLETED = 4
             const val FAILED = 5
         }

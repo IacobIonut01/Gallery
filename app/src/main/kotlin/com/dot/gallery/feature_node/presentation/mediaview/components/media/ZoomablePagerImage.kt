@@ -22,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -96,7 +97,9 @@ import com.github.panpf.zoomimage.util.isNotEmpty
 import com.github.panpf.zoomimage.zoom.ContentScaleCompat
 import com.github.panpf.zoomimage.zoom.ScalesCalculator
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.math.roundToInt
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
@@ -253,8 +256,11 @@ fun <T : Media> ZoomablePagerImage(
     cutoutEnabled: Boolean = true
 ) {
     val feedbackManager = rememberFeedbackManager()
-    var isRotating by rememberSaveable(media) { mutableStateOf(false) }
-    var currentRotation by rememberSaveable(media) { mutableIntStateOf(0) }
+    // Keyed by id (not the whole media object) so a same-id reload after an in-place overwrite
+    // does NOT wipe an applied visual rotation: the persisted rotation must be held on-screen
+    // until the freshly-encoded (baked-in) bytes are loaded (see the seamless-swap effect below).
+    var isRotating by rememberSaveable(media.id) { mutableStateOf(false) }
+    var currentRotation by rememberSaveable(media.id) { mutableIntStateOf(0) }
     val rotationAnimation by animateFloatAsState(
         targetValue = if (isRotating) 90f else 0f,
         label = "rotationAnimation"
@@ -342,8 +348,37 @@ fun <T : Media> ZoomablePagerImage(
     val isFullImageLoaded by rememberedDerivedState(media) {
         fullImageState.painterState is PainterState.Success
     }
-    val activePainter = remember(isFullImageLoaded) {
-        if (isFullImageLoaded) fullPainter else previewPainter
+
+    // ── Seamless swap after an in-place rotation overwrite ──
+    // When the underlying bytes change (the overwrite persisted a rotated re-encode), the file
+    // content version changes while a visual rotation is still applied. Hold that rotation until
+    // the new (baked-in) full image finishes loading, then snap the transform back to 0 in one
+    // step so the page shows the correct orientation without an un-rotated flash or a double
+    // rotation. While waiting we keep the full painter on-screen (it retains the previous bytes,
+    // shown correctly rotated) instead of switching to the reloading preview.
+    var pendingRotatedReload by remember(media.id) { mutableStateOf(false) }
+    var lastContentVersion by remember(media.id) { mutableStateOf(mediaVersion) }
+    LaunchedEffect(mediaVersion) {
+        if (mediaVersion != lastContentVersion) {
+            lastContentVersion = mediaVersion
+            if (currentRotation % 360 != 0) pendingRotatedReload = true
+        }
+    }
+    LaunchedEffect(pendingRotatedReload) {
+        if (!pendingRotatedReload) return@LaunchedEffect
+        // Let the request key change propagate (Loading) before watching for the new Success.
+        delay(50)
+        withTimeoutOrNull(8000) {
+            snapshotFlow { fullImageState.painterState }.first { it is PainterState.Success }
+        }
+        zoomState.zoomable.rotate(0)
+        currentRotation = 0
+        onImageRotated(0)
+        pendingRotatedReload = false
+    }
+
+    val activePainter = remember(isFullImageLoaded, pendingRotatedReload) {
+        if (isFullImageLoaded || pendingRotatedReload) fullPainter else previewPainter
     }
 
     val isCloudMedia = remember(media) { media.isCloud }

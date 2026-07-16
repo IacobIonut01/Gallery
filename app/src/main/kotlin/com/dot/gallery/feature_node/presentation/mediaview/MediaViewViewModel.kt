@@ -14,6 +14,7 @@ import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
+import com.dot.gallery.core.workers.RotateMediaWorker
 import com.dot.gallery.core.workers.rotateImage
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
@@ -53,7 +54,13 @@ class MediaViewViewModel @Inject constructor(
     private val _uiEvents = MutableSharedFlow<MediaViewEvent>(extraBufferCapacity = 1)
     val uiEvents: SharedFlow<MediaViewEvent> = _uiEvents
 
+    // Non-null while a rotation write is in flight; drives the busy state of the top-bar Rotate chip.
+    private val _rotationState = MutableStateFlow<RotationUiState?>(null)
+    val rotationState: StateFlow<RotationUiState?> = _rotationState.asStateFlow()
+
     private var rotateWorkId: UUID? = null
+    // Id of the media being rotated (so the viewer can hold the visual rotation for that page only).
+    private var pendingRotationMediaId: Long? = null
 
     // ======================== On-demand Metadata Fetching ========================
 
@@ -272,22 +279,70 @@ class MediaViewViewModel @Inject constructor(
 
     // ======================== Image Rotation ========================
 
+    enum class RotationStage { DECODING, ROTATING, SAVING, UPLOADING }
+    enum class RotationMode { OVERWRITE, COPY, CLOUD }
+
+    data class RotationUiState(
+        val stage: RotationStage,
+        val mode: RotationMode,
+    )
+
     fun rotateImage(media: Media, degrees: Int, forceCopy: Boolean = false) {
+        val isCloud = media.getUri().scheme == "cloud"
+        val mode = when {
+            isCloud -> RotationMode.CLOUD
+            forceCopy -> RotationMode.COPY
+            else -> RotationMode.OVERWRITE
+        }
+        pendingRotationMediaId = media.id
+        _rotationState.value = RotationUiState(RotationStage.DECODING, mode)
         val id = workManager.rotateImage(media, degrees, forceCopy)
         rotateWorkId = id
-        observeRotateWork(id)
+        observeRotateWork(id, mode, media.id)
     }
 
-    private fun observeRotateWork(id: UUID) {
+    private fun stageForStatus(status: Int): RotationStage = when (status) {
+        RotateMediaWorker.Status.ROTATING -> RotationStage.ROTATING
+        RotateMediaWorker.Status.SAVING -> RotationStage.SAVING
+        RotateMediaWorker.Status.UPLOADING -> RotationStage.UPLOADING
+        else -> RotationStage.DECODING
+    }
+
+    private fun observeRotateWork(id: UUID, mode: RotationMode, mediaId: Long) {
         viewModelScope.launch {
             workManager.getWorkInfoByIdFlow(id).filterNotNull().collect { info ->
-                if (info.state.isFinished) {
-                    if (info.state == WorkInfo.State.SUCCEEDED) {
-                        delay(300) // wait for media store to be updated
-                        _uiEvents.emit(MediaViewEvent.ScrollToFirstPage)
+                if (!info.state.isFinished) {
+                    val status = info.progress.getInt(RotateMediaWorker.KEY_STATUS, -1)
+                    if (status >= 0) {
+                        _rotationState.update { it?.copy(stage = stageForStatus(status)) }
                     }
-                    rotateWorkId = null
+                    return@collect
                 }
+                if (info.state == WorkInfo.State.SUCCEEDED) {
+                    delay(300) // wait for media store to be updated
+                    when (mode) {
+                        RotationMode.COPY -> {
+                            val uri = info.outputData.getString(RotateMediaWorker.KEY_RESULT_URI)
+                            if (uri != null) {
+                                _uiEvents.emit(MediaViewEvent.NavigateToRotatedCopy(uri))
+                            } else {
+                                _uiEvents.emit(MediaViewEvent.ScrollToFirstPage)
+                            }
+                        }
+
+                        RotationMode.OVERWRITE ->
+                            _uiEvents.emit(MediaViewEvent.OverwriteApplied(mediaId))
+
+                        RotationMode.CLOUD ->
+                            _uiEvents.emit(MediaViewEvent.ScrollToFirstPage)
+                    }
+                } else {
+                    val message = info.outputData.getString(RotateMediaWorker.KEY_MESSAGE)
+                    _uiEvents.emit(MediaViewEvent.RotationFailed(message))
+                }
+                _rotationState.value = null
+                pendingRotationMediaId = null
+                rotateWorkId = null
             }
         }
     }
@@ -300,5 +355,8 @@ class MediaViewViewModel @Inject constructor(
 
     sealed interface MediaViewEvent {
         data object ScrollToFirstPage : MediaViewEvent
+        data class NavigateToRotatedCopy(val uri: String) : MediaViewEvent
+        data class OverwriteApplied(val mediaId: Long) : MediaViewEvent
+        data class RotationFailed(val message: String?) : MediaViewEvent
     }
 }

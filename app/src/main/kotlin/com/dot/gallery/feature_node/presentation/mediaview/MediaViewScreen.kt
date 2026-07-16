@@ -12,6 +12,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
 import android.view.PixelCopy
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
@@ -71,6 +72,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
@@ -86,6 +88,7 @@ import com.composables.core.BottomSheet
 import com.composables.core.SheetDetent.Companion.FullyExpanded
 import com.composables.core.rememberBottomSheetState
 import com.composeunstyled.LocalTextStyle
+import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION
@@ -163,7 +166,9 @@ import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -234,6 +239,7 @@ fun <T : Media> MediaViewScreenRoute(
         ensureMetadataAvailable = viewModel::ensureMetadataAvailable,
         rotateImage = viewModel::rotateImage,
         uiEvents = viewModel.uiEvents,
+        rotationState = viewModel.rotationState,
         motionPhotoStateFactory = { media ->
             com.dot.gallery.feature_node.presentation.mediaview.components.media.rememberMotionPhotoState(
                 media = media,
@@ -265,6 +271,7 @@ fun <T : Media> MediaViewScreen(
     ensureMetadataAvailable: (Media?, MediaMetadataState) -> Unit = { _, _ -> },
     rotateImage: (Media, Int, Boolean) -> Unit = { _, _, _ -> },
     uiEvents: SharedFlow<MediaViewEvent> = MutableSharedFlow(),
+    rotationState: StateFlow<MediaViewViewModel.RotationUiState?> = MutableStateFlow(null),
     motionPhotoStateFactory: @Composable (Media?) -> MotionPhotoState = { remember { MotionPhotoState() } },
 ) = ProvideInsets {
     val eventHandler = LocalEventHandler.current
@@ -474,6 +481,17 @@ fun <T : Media> MediaViewScreen(
     }
     val newRotationValue = rememberSaveable(settledRotationKey) { mutableIntStateOf(0) }
     val showRotationHelper = rememberSaveable(settledRotationKey) { mutableStateOf(false) }
+
+    // Drives the top-bar Rotate chip busy state and the seamless hold-until-reload behavior.
+    val rotation by rotationState.collectAsStateWithLifecycle()
+    val rotationInProgress = rotation != null
+    val rotationStageLabel = when (rotation?.stage) {
+        MediaViewViewModel.RotationStage.DECODING -> stringResource(R.string.rotate_stage_decoding)
+        MediaViewViewModel.RotationStage.ROTATING -> stringResource(R.string.rotate_stage_rotating)
+        MediaViewViewModel.RotationStage.SAVING -> stringResource(R.string.rotate_stage_saving)
+        MediaViewViewModel.RotationStage.UPLOADING -> stringResource(R.string.rotate_stage_uploading)
+        null -> null
+    }
 
     BackHandler(!showUI && !slideshowActive) {
         windowInsetsController.toggleSystemBars(show = true)
@@ -745,6 +763,36 @@ fun <T : Media> MediaViewScreen(
         uiEvents.collect { event ->
             when (event) {
                 MediaViewEvent.ScrollToFirstPage -> pagerState.animateScrollToPage(0)
+
+                is MediaViewEvent.NavigateToRotatedCopy -> {
+                    // Wait (briefly) for the new copy to be indexed into the pager, then jump to it.
+                    val targetIndex = withTimeoutOrNull(5.seconds) {
+                        snapshotFlow {
+                            pagerItems.indexOfFirst {
+                                it.getUri().toString() == event.uri
+                            }
+                        }.first { it >= 0 }
+                    }
+                    pagerState.animateScrollToPage(targetIndex ?: 0)
+                }
+
+                is MediaViewEvent.OverwriteApplied -> {
+                    // The rotation is now persisted into the file; drop the pending-confirm chip.
+                    // The page holds its visual rotation and drops it once the baked-in image
+                    // reloads (handled in ZoomablePagerImage), so we stay on the same item.
+                    if (currentMedia?.id == event.mediaId) {
+                        showRotationHelper.value = false
+                        newRotationValue.intValue = 0
+                    }
+                }
+
+                is MediaViewEvent.RotationFailed -> {
+                    Toast.makeText(
+                        context,
+                        event.message ?: context.getString(R.string.rotate_failed),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
             }
         }
     }
@@ -1212,6 +1260,8 @@ fun <T : Media> MediaViewScreen(
                 isMotionPhoto = motionPhotoState.isDetected,
                 isMotionPlaying = motionPhotoState.isPlaying,
                 onToggleMotionPhoto = { motionPhotoState.togglePlayback() },
+                rotationInProgress = rotationInProgress,
+                rotationStageLabel = rotationStageLabel,
                 rotateImage = {
                     val media = currentMedia!!
                     if (ImageReencoder.isReencodable(media.mimeType, media.label)) {
