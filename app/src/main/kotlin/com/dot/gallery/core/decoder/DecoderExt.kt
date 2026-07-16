@@ -183,6 +183,23 @@ fun decodeStaticFromBytes(
 }
 
 /**
+ * Decodes an animated HEIF/AVIF image sequence from pre-read bytes via Android's [ImageDecoder]
+ * (API 31+). Returns null when the platform does not produce an [AnimatedImageDrawable] (i.e. the
+ * image is not animated, or the OS lacks animated-sequence support for this container), so the
+ * caller falls back to a static decode. Same implementation as [decodeAnimatedAvif]; the AVIF and
+ * HEIC sequence containers share the ISO-BMFF path.
+ */
+@Suppress("OPT_IN_USAGE")
+@RequiresApi(Build.VERSION_CODES.S)
+fun decodeAnimatedHeif(
+    bytes: ByteArray,
+    requestContext: RequestContext,
+    dataFrom: com.github.panpf.sketch.source.DataFrom,
+    mimeType: String,
+    getSize: (ByteArray) -> AndroidSize?
+): ImageData? = decodeAnimatedAvif(bytes, requestContext, dataFrom, mimeType, getSize)
+
+/**
  * Decodes animated AVIF from pre-read bytes using Android's [ImageDecoder] (API 31+).
  * Returns null if the image is not actually animated or decoding fails.
  */
@@ -239,7 +256,21 @@ fun decodeAnimatedAvif(
  * Checks if the given bytes represent an animated AVIF (AVIF sequence) by scanning
  * the ISO BMFF ftyp box for the 'avis' brand (major or compatible).
  */
-fun isAnimatedAvif(bytes: ByteArray): Boolean {
+fun isAnimatedAvif(bytes: ByteArray): Boolean = hasFtypBrand(bytes, setOf("avis"))
+
+/**
+ * Checks if the given bytes represent an animated HEIC/HEIF image sequence by scanning the ISO
+ * BMFF ftyp box for a sequence brand: 'msf1' (HEIF image sequence), 'hevc'/'hevx' (HEVC sequence),
+ * or 'avis' (AVIF sequence, shares the container).
+ */
+fun isAnimatedHeif(bytes: ByteArray): Boolean =
+    hasFtypBrand(bytes, setOf("msf1", "hevc", "hevx", "avis"))
+
+/**
+ * Scans the ISO-BMFF `ftyp` box (major + compatible brands) for any of [brands]
+ * (case-insensitive). Bounded to the first 256 bytes to stay cheap.
+ */
+private fun hasFtypBrand(bytes: ByteArray, brands: Set<String>): Boolean {
     if (bytes.size < 12) return false
     val max = minOf(bytes.size - 8, 256)
     var i = 0
@@ -260,7 +291,7 @@ fun isAnimatedAvif(bytes: ByteArray): Boolean {
             // Major brand: 4 bytes immediately after 'ftyp'
             if (i + 8 <= bytes.size) {
                 val major = String(bytes, i + 4, 4)
-                if (major.equals("avis", ignoreCase = true)) return true
+                if (brands.any { it.equals(major, ignoreCase = true) }) return true
             }
 
             // Compatible brands start 12 bytes after 'ftyp' (skip major 4 + version 4)
@@ -269,7 +300,7 @@ fun isAnimatedAvif(bytes: ByteArray): Boolean {
             var j = brandStart
             while (j + 4 <= boxEnd) {
                 val brand = String(bytes, j, 4)
-                if (brand.equals("avis", ignoreCase = true)) return true
+                if (brands.any { it.equals(brand, ignoreCase = true) }) return true
                 j += 4
             }
             return false

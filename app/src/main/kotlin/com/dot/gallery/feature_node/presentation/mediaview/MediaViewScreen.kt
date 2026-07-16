@@ -102,6 +102,7 @@ import com.dot.gallery.core.Settings.Misc.rememberVideoAutoplay
 import com.dot.gallery.core.navigateUp
 import com.dot.gallery.core.presentation.components.util.swipe
 import com.dot.gallery.core.setFollowTheme
+import com.dot.gallery.core.util.HdrCapabilities
 import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
@@ -573,8 +574,11 @@ fun <T : Media> MediaViewScreen(
         }
     }
 
-    // set HDR Gain map
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+    // set HDR Gain map (only on displays that can actually render HDR — skips the probe decode on
+    // SDR-only devices, where the window would never enter COLOR_MODE_HDR anyway)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
+        HdrCapabilities.isHdrDisplay(context)
+    ) {
         val hdrCache = remember { HashMap<Long, Boolean>() }
         LaunchedEffect(mediaState.value) {
             withContext(Dispatchers.IO) {

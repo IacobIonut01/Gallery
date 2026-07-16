@@ -18,6 +18,7 @@ import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
 import android.net.Uri
 import android.os.Build
+import com.dot.gallery.core.util.HdrCapabilities
 import android.provider.MediaStore
 import android.provider.Settings
 import android.view.HapticFeedbackConstants
@@ -221,12 +222,19 @@ fun FullBrightnessWindow(content: @Composable () -> Unit) {
 }
 
 fun Context.setHdrMode(enabled: Boolean) {
-    if (this is Activity) {
-        if (window.colorMode == COLOR_MODE_HDR && !enabled) {
-            window.colorMode = COLOR_MODE_DEFAULT
-        } else if (window.colorMode == COLOR_MODE_DEFAULT && enabled) {
-            window.colorMode = COLOR_MODE_HDR
-        }
+    if (this !is Activity) return
+    // Only ever opt the window into HDR on a display that can actually render it, so SDR-only
+    // devices never pay the cost or risk washed-out UI.
+    val allow = enabled && HdrCapabilities.isHdrDisplay(this)
+    if (window.colorMode == COLOR_MODE_HDR && !allow) {
+        window.colorMode = COLOR_MODE_DEFAULT
+    } else if (window.colorMode == COLOR_MODE_DEFAULT && allow) {
+        window.colorMode = COLOR_MODE_HDR
+    }
+    // Cap the HDR headroom (API 35+) so highlights don't over-brighten and wash out the SDR UI;
+    // 0f restores the system default when HDR is off.
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+        window.desiredHdrHeadroom = if (allow) HdrCapabilities.DESIRED_HDR_HEADROOM else 0f
     }
 }
 

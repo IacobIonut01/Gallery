@@ -27,12 +27,30 @@ import kotlin.math.roundToInt
 object HardwareHeifDecoder {
 
     @RequiresApi(Build.VERSION_CODES.P)
-    fun decode(bytes: ByteArray, reqW: Int, reqH: Int): Bitmap? {
+    fun decode(bytes: ByteArray, reqW: Int, reqH: Int): Bitmap? = decode(bytes, reqW, reqH, false)
+
+    /**
+     * @param allowHdr when true, the platform [ImageDecoder] keeps its default (possibly HDR /
+     *   wide-gamut) output. When false, the color space is pinned to sRGB so downstream transforms
+     *   (Glide centerCrop) never receive an F16/wide-gamut bitmap that would corrupt colors.
+     */
+    @RequiresApi(Build.VERSION_CODES.P)
+    fun decode(bytes: ByteArray, reqW: Int, reqH: Int, allowHdr: Boolean): Bitmap? {
         return try {
             val source = ImageDecoder.createSource(ByteBuffer.wrap(bytes))
             ImageDecoder.decodeBitmap(source) { decoder, info, _ ->
                 decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
                 decoder.isMutableRequired = false
+                if (!allowHdr) {
+                    // SDR path (grid thumbnails): pin sRGB so downstream Glide centerCrop never
+                    // receives an F16/wide-gamut bitmap. The embedded gain map is left intact — it
+                    // is only rendered as HDR when the host window opts into COLOR_MODE_HDR, which
+                    // the grid never does, so it is harmless here.
+                    decoder.setTargetColorSpace(android.graphics.ColorSpace.get(android.graphics.ColorSpace.Named.SRGB))
+                }
+                // When allowHdr is true, the platform keeps the image's native output — an Ultra HDR
+                // gain map or a 10-bit HLG/PQ color space — so the viewer base renders true HDR on a
+                // capable display (the media viewer toggles COLOR_MODE_HDR per page via hasGainmap()).
                 if (reqW > 0 && reqH > 0) {
                     val sw = info.size.width
                     val sh = info.size.height

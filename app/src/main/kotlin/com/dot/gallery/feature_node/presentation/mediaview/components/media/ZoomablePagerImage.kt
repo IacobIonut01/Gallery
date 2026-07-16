@@ -54,7 +54,10 @@ import com.dot.gallery.core.Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION
 import com.dot.gallery.core.Settings
 import com.dot.gallery.core.decoder.EncryptedRegionDecoder
 import com.dot.gallery.core.decoder.FullImageRegionDecoder
+import com.dot.gallery.core.decoder.HeifDebug
+import com.dot.gallery.core.decoder.HeifRegionDecoder
 import com.dot.gallery.core.decoder.JxlRegionDecoder
+import com.dot.gallery.core.util.HdrCapabilities
 import com.dot.gallery.core.presentation.components.util.LocalBatteryStatus
 import com.dot.gallery.core.presentation.components.util.ProvideBatteryStatus
 import com.dot.gallery.core.presentation.components.util.swipe
@@ -66,6 +69,7 @@ import com.dot.gallery.feature_node.domain.util.isApng
 import com.dot.gallery.feature_node.domain.util.isAvif
 import com.dot.gallery.feature_node.domain.util.isCloud
 import com.dot.gallery.feature_node.domain.util.isEncrypted
+import com.dot.gallery.feature_node.domain.util.isHeif
 import com.dot.gallery.feature_node.domain.util.isJp2
 import com.dot.gallery.feature_node.domain.util.isJxl
 import com.dot.gallery.feature_node.domain.util.isPsd
@@ -278,7 +282,9 @@ fun <T : Media> ZoomablePagerImage(
     }
     val isJxl = remember(media) { media.isJxl }
     val isAnimated = remember(media) {
-        media.isApng || media.isJxl || (media.isAvif && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+        media.isApng || media.isJxl || (media.isAvif && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) ||
+                (media.isHeif && media.mimeType.endsWith("-sequence") &&
+                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
     }
     // Pixel-perfect (nearest-neighbor) rendering for pixel art: when enabled we draw the image
     // with FilterQuality.None so zooming shows crisp square pixels instead of a bilinear-smoothed
@@ -346,6 +352,14 @@ fun <T : Media> ZoomablePagerImage(
     // high-resolution images retain native detail when zoomed. The difference is only in how the
     // tiles are drawn: PixelPerfectZoomImage draws them via a canvas transform with
     // FilterQuality.None (nearest-neighbor) instead of the smoothed default.
+    LaunchedEffect(media) {
+        HeifDebug.d(
+            "viewer media='${media.label}' mime='${media.mimeType}' isHeif=${media.isHeif} " +
+                "isJxl=$isJxl isAnimated=$isAnimated customRegion=${customRegionFactory != null} " +
+                "encrypted=$isEncrypted cloud=$isCloudMedia usePixelPerfect=$usePixelPerfect " +
+                "isFullImageLoaded=$isFullImageLoaded"
+        )
+    }
     if (isEncrypted) {
         val keychainHolder = remember { KeychainHolder(context) }
         LaunchedEffect(media, isFullImageLoaded, zoomState.subsampling) {
@@ -403,6 +417,21 @@ fun <T : Media> ZoomablePagerImage(
         }
         LaunchedEffect(zoomState.subsampling, media) {
             zoomState.subsampling.setRegionDecoders(listOf(customRegionFactory))
+        }
+    } else if (media.isHeif && !isAnimated) {
+        // HEIC/HEIF: dedicated hardware-first (platform BitmapRegionDecoder) / software-fallback
+        // (libheif full-decode-then-crop) region decoder so zoom stays sharp. The generic branch
+        // below relies on the platform decoder alone with no fallback, which fails on HDR/10-bit/
+        // grid HEICs and devices without HEIF region support.
+        LaunchedEffect(media, isFullImageLoaded, zoomState.subsampling) {
+            HeifDebug.d("HEIF branch: setSubsamplingImage for '${media.label}' (isFullImageLoaded=$isFullImageLoaded)")
+            zoomState.setSubsamplingImage(media.asSubsamplingImage(context))
+        }
+        LaunchedEffect(zoomState.subsampling, media) {
+            HeifDebug.d("HEIF branch: setRegionDecoders(HeifRegionDecoder) for '${media.label}'")
+            zoomState.subsampling.setRegionDecoders(
+                listOf(HeifRegionDecoder.Factory(hdrDisplay = HdrCapabilities.isHdrDisplay(context)))
+            )
         }
     } else if (!isAnimated) {
         LaunchedEffect(media, isFullImageLoaded, zoomState.subsampling) {

@@ -78,6 +78,11 @@ android {
     namespace = "com.dot.gallery"
     compileSdk = 37
 
+    // Native HEIC tiled decoder (libheif + libde265, built via CMake/NDK). Pinned to the latest
+    // stable NDK r29 line and CMake 3.31.x. CMake 4.x is intentionally avoided because it drops
+    // support for `cmake_minimum_required(VERSION < 3.5)`, which breaks libde265/libheif scripts.
+    ndkVersion = "29.0.14033849"
+
     defaultConfig {
         applicationId = "com.dot.gallery"
         minSdk = 29
@@ -91,6 +96,21 @@ android {
         }
         val offlinePrefix = if (isOffline) "-offline" else ""
         base.archivesName.set("ReFra-${versionName}-$versionCode$offlinePrefix")
+
+        externalNativeBuild {
+            cmake {
+                // Only the tiny JNI is compiled here; libheif/libde265 are linked as prebuilt
+                // static libs, so this stays fast.
+                cppFlags += "-std=c++17"
+            }
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+            version = "3.31.6"
+        }
     }
 
     lint.baseline = file("lint-baseline.xml")

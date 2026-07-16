@@ -1,0 +1,31 @@
+name: Build native libheif
+description: >
+  Cross-compiles libde265 + libheif (decode-only, static) for the given ABI(s) into
+  app/src/main/cpp/heif/<abi>/ so the app's externalNativeBuild can link the native HEIC tiled
+  decoder. Results are cached across runs keyed on the build script contents.
+
+inputs:
+  arch:
+    description: ABI or CI flavor name (e.g. Arm64-v8a, Armeabi-v7a, X86_64, X86, Universal, all).
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Cache prebuilt libheif
+      id: heif-cache
+      uses: actions/cache@v4
+      with:
+        path: app/src/main/cpp/heif
+        key: heif-${{ runner.os }}-${{ inputs.arch }}-${{ hashFiles('scripts/native/build-heif.sh') }}
+
+    - name: Install NDK & CMake for native HEIC decoder
+      shell: bash
+      run: |
+        SDKMGR="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+        yes | "$SDKMGR" "ndk;29.0.14033849" "cmake;3.31.6"
+
+    - name: Build native libheif (${{ inputs.arch }})
+      if: steps.heif-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: bash scripts/native/build-heif.sh "${{ inputs.arch }}"

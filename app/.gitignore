@@ -1,3 +1,7 @@
 /build
 /release
 *.jks
+
+# Prebuilt native libheif/libde265 static libs + headers (large, regenerable).
+# Produced by scripts/native/build-heif.sh; not committed to avoid repo bloat.
+/src/main/cpp/heif/

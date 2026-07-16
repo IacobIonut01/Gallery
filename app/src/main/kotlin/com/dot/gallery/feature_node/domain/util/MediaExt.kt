@@ -157,6 +157,12 @@ val Media.isAvif: Boolean
 val Media.isJxl: Boolean
     get() = mimeType == "image/jxl" || label.endsWith(".jxl", ignoreCase = true)
 
+val Media.isHeif: Boolean
+    get() = mimeType == "image/heif" || mimeType == "image/heic" ||
+            mimeType == "image/heif-sequence" || mimeType == "image/heic-sequence" ||
+            label.endsWith(".heic", ignoreCase = true) || label.endsWith(".heif", ignoreCase = true) ||
+            label.endsWith(".hif", ignoreCase = true)
+
 val Media.isPsd: Boolean
     get() = mimeType == "image/vnd.adobe.photoshop" || mimeType == "image/x-photoshop" ||
             label.endsWith(".psd", ignoreCase = true) || label.endsWith(".psb", ignoreCase = true)

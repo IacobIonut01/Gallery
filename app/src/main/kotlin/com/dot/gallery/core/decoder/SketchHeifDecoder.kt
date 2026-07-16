@@ -9,8 +9,7 @@ import com.github.panpf.sketch.fetch.FetchResult
 import com.github.panpf.sketch.request.RequestContext
 import com.github.panpf.sketch.request.get
 import com.github.panpf.sketch.source.DataSource
-import com.dot.gallery.core.decoder.format.HardwareHeifDecoder
-import com.radzivon.bartoshyk.avif.coder.HeifCoder
+import com.dot.gallery.core.decoder.format.HeifDecodeEngine
 import okio.buffer
 
 fun ComponentRegistry.Builder.supportHeifDecoder(): ComponentRegistry.Builder = apply {
@@ -23,8 +22,6 @@ class SketchHeifDecoder(
     private val dataSource: DataSource,
     private val mimeType: String
 ) : Decoder {
-
-    private val coder = HeifCoder()
 
     class Factory : Decoder.Factory {
 
@@ -70,34 +67,45 @@ class SketchHeifDecoder(
             src.buffer().readByteArray()
         }
 
-        // Animated AVIF: requires API 31+ for ImageDecoder AVIF support
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && isAnimatedAvif(sourceData)) {
-            val animated = decodeAnimatedAvif(
+        // Animated HEIC/AVIF sequence: requires API 31+ for ImageDecoder sequence support. Returns
+        // null (falls through to a static decode) when the platform can't animate this container.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && isAnimatedHeif(sourceData)) {
+            val animated = decodeAnimatedHeif(
                 bytes = sourceData,
                 requestContext = requestContext,
                 dataFrom = dataSource.dataFrom,
                 mimeType = mimeType,
-                getSize = coder::getSize
+                getSize = HeifDecodeEngine::getSize
             )
             if (animated != null) return animated
         }
 
-        // Hardware-first: ImageDecoder routes HEIC/AVIF to the device HEVC/AV1 hardware codec.
+        // Hardware-first, software fallback (unified engine). This is the media viewer's base
+        // painter (and the gain-map probe that drives per-page COLOR_MODE_HDR), so decode with HDR
+        // ENABLED: keep any Ultra HDR gain map / 10-bit HLG/PQ color space so the fit-view image
+        // renders true HDR on a capable display. Zoomed subsampling tiles remain SDR (region
+        // decoders can't reproduce the gain map), so a slight brightness shift can appear when
+        // zooming into HDR highlights — an accepted tradeoff, since the HDR pop matters most at fit
+        // view. The grid (Glide) path stays allowHdr=false. On SDR displays / SDR images the gain
+        // map is simply not applied, so this is a no-op there.
         val target = requestContext.size
         val reqW = if (target == com.github.panpf.sketch.util.Size.Origin) 0 else target.width
         val reqH = if (target == com.github.panpf.sketch.util.Size.Origin) 0 else target.height
-        HardwareHeifDecoder.decode(sourceData, reqW, reqH)?.let {
+        HeifDecodeEngine.decode(sourceData, reqW, reqH, allowHdr = true)?.let {
             return imageDataFromBitmap(it, requestContext, dataSource.dataFrom, mimeType)
         }
 
-        // Static fallback: software HeifCoder (works on all API levels / unsupported devices)
+        // Last resort: software-only path via the engine (also drives the request's scaled resize).
         return decodeStaticFromBytes(
             sourceData = sourceData,
             requestContext = requestContext,
             dataFrom = dataSource.dataFrom,
             mimeType = mimeType,
-            getSize = coder::getSize,
-            decodeSampled = coder::decodeSampled
+            getSize = HeifDecodeEngine::getSize,
+            decodeSampled = { bytes, w, h ->
+                HeifDecodeEngine.decodeSoftware(bytes, w, h)
+                    ?: throw IllegalStateException("Unable to decode HEIF image")
+            }
         )
     }
 
@@ -105,7 +113,7 @@ class SketchHeifDecoder(
         return dataSource.getImageInfo(
             requestContext = requestContext,
             mimeType = mimeType,
-            getSize = coder::getSize
+            getSize = HeifDecodeEngine::getSize
         )
     }
 
