@@ -129,7 +129,7 @@
     <string name="restoring_items">Restoring %1$s items..</string>
     <string name="trash_incompatible_title">Some items cannot be trashed!</string>
     <string name="trash_incompatible_summary">Such items will be deleted permanently instead.</string>
-    <string name="error_toast">An error occurred!</string>
+    <string name="error_toast">Hiba történt</string>
     <string name="description">Description</string>
     <string name="video_description_local_only">Video descriptions are stored locally and won\'t be written to the file</string>
     <string name="move_to_another_album">Move to another album</string>
@@ -159,7 +159,7 @@
     <string name="hide_timeline_for_albums">Hide timeline for albums</string>
     <string name="hide_timeline_for_album_summary">Hides date headers when opening an album</string>
     <string name="allow_vibrations">Allow vibrations</string>
-    <string name="allow_vibrations_summary">Allow sending feedback as vibrations while performing some actions or gestures</string>
+    <string name="allow_vibrations_summary">Lehetővé teszi rezgéses visszajelzés használatát egyes műveletek és gesztusok végrehajtásakor</string>
     <string name="album_name">Album neve</string>
     <string name="create_new_album">Album létrehozása</string>
     <string name="copy">Másolás</string>
@@ -183,7 +183,7 @@
     <string name="edit_backups_auto_cleanup_summary">Automatically delete backups older than 90 days</string>
     <string name="edit_backups_delete_all">Delete All Backups</string>
     <string name="edit_backups_delete_all_summary">Permanently delete all original image backups</string>
-    <string name="edit_backups_delete_all_confirmation">This will permanently delete all original image backups. You will no longer be able to revert any edited photos to their originals.</string>
+    <string name="edit_backups_delete_all_confirmation">Ezzel véglegesen törli az eredeti képek összes biztonsági mentését. Ezután többé nem lesz lehetősége a szerkesztett fényképek visszaállítására az eredeti állapotukba.</string>
     <string name="edit_backups_delete_selected">Delete Selected</string>
     <string name="edit_backups_free_space">Free Space</string>
     <string name="edit_backups_section_actions">Actions</string>
@@ -213,7 +213,7 @@
     <string name="remove_subtitle_track">Remove subtitle track</string>
     <string name="location_new_album">Location: Internal-Storage/%1$s</string>
     <string name="permission_manage_files_title">Manage All Files</string>
-    <string name="permission_manage_files_summary">"Allows the app to create, modify, and delete files and albums that were previously restricted by the system. (Includes albums outside Pictures and DCIM folders and the ones from the SD Card)"</string>
+    <string name="permission_manage_files_summary">"Lehetővé teszi, hogy az alkalmazás olyan fájlokat és albumokat hozzon létre, módosítson és töröljön, amelyekhez korábban a rendszer korlátozta a hozzáférést. (Ide tartoznak a Pictures és a DCIM mappán kívüli albumok, valamint az SD-kártyán lévő albumok is.)"</string>
     <string name="vault">Vault</string>
     <string name="library">Könyvtár</string>
     <string name="biometric_authentication">Biometric Authentication</string>
@@ -252,7 +252,7 @@
     <string name="setup_type_multiple_title">Multiple Selection</string>
     <string name="setup_type_multiple_subtitle">Select albums to ignore</string>
     <string name="setup_type_regex_label">Regex Pattern</string>
-    <string name="setup_type_regex_summary">Ignore your albums automatically using a regular expression pattern matching.\n\nBefore continuing your pattern must be valid.</string>
+    <string name="setup_type_regex_summary">Albumok automatikus figyelmen kívül hagyása reguláris kifejezés alapján.\n\nA folytatás előtt a megadott mintának érvényesnek kell lennie.</string>
     <string name="setup_type_regex_title">Regex Pattern</string>
     <string name="setup_type_regex_subtitle">Create a selection pattern</string>
     <string name="setup_type_regex_example_title">Examples</string>
@@ -335,11 +335,11 @@
     <string name="ai_models_ready_summary">AI-powered search and classification are available</string>
     <string name="ai_models_error">AI Model Error</string>
     <string name="ai_models_delete">Delete AI Models</string>
-    <string name="ai_models_delete_confirm">Are you sure you want to delete the AI models? You will need to download them again to use AI features.</string>
+    <string name="ai_models_delete_confirm">Biztosan törölni szeretné az AI-modelleket? Az AI-funkciók használatához újra le kell töltenie őket.</string>
     <string name="ai_models_size">Model size: %s</string>
     <string name="ai_models_unavailable">Unavailable — Requires AI Models Feature</string>
-    <string name="ai_models_description">AI models enable intelligent image search and automatic media classification. The app uses CLIP (Contrastive Language-Image Pretraining) models in ONNX format to understand the content of your photos.</string>
-    <string name="ai_models_privacy_description">All AI processing is performed entirely on your device. No images, search queries, or classification data ever leave your phone. The models run locally using ONNX Runtime and do not require an internet connection once downloaded. Your media remains fully private.</string>
+    <string name="ai_models_description">Az MI-modellek intelligens képkeresést és automatikus médiabesorolást tesznek lehetővé. Az alkalmazás ONNX formátumú CLIP (Contrastive Language-Image Pretraining) modelleket használ a fényképek tartalmának értelmezéséhez.</string>
+    <string name="ai_models_privacy_description">Minden MI-feldolgozás az eszközén történik. A képek, keresések és besorolási adatok soha nem hagyják el a telefonját. A modellek helyben, ONNX Runtime segítségével futnak, és letöltés után nem igényelnek internetkapcsolatot. A médiatartalmai teljesen privátak maradnak.</string>
     <string name="ai_models_source">Source</string>
     <string name="ai_models_source_url">github.com/IacobIonut01/ReFra</string>
     <string name="ai_models_files">Model Files</string>
@@ -1279,8 +1279,8 @@
     <string name="cloud_viewer_autoplay">Auto play videos</string>
     <string name="cloud_viewer_autoplay_summary">Start playing videos automatically when opened</string>
     <string name="cloud_viewer_loop">Videók ismétlése</string>
-    <string name="cloud_viewer_loop_summary">A videók újraindítása, amikor elérik a végét</string>
-    <string name="cloud_viewer_force_original">Force original video</string>
+    <string name="cloud_viewer_loop_summary">A videók újraindítása, amikor a végükre érnek</string>
+    <string name="cloud_viewer_force_original">Eredeti videó használata</string>
     <string name="cloud_viewer_force_original_summary">Mindig eredeti minőségben játssza le a videót</string>
     <string name="cloud_accounts">Felhőalapú fiókok</string>
     <!-- Cloud Accounts Screen (redesigned) -->
