@@ -377,7 +377,7 @@
     <string name="help_tip_edit_filters_title">Apply photo filters</string>
     <string name="help_tip_edit_filters_subtitle">Előre beállított szűrők, köztük az egyérintéses Negatív, a fotók átalakításához</string>
     <string name="help_tip_edit_filters_p1_title">Photo filters</string>
-    <string name="help_tip_edit_filters_p1_desc">Válassz az előre beállított, gondosan összeállított szűrők közül, amelyek új hangulatot kölcsönöznek a fotóidnak. A meleg tónusú szűrők (Honey, Desert, Palma) aranyló árnyalatokat adnak, míg a hideg tónusú szűrők (Isla, Clay) kékes vagy visszafogott színeket eredményeznek. Az új Negatív szűrő egyetlen érintéssel invertálja a színeket. Minden szűrő előnézete azonnal megjelenik, így alkalmazás előtt összehasonlíthatod a hatásukat.</string>
+    <string name="help_tip_edit_filters_p1_desc">Válassz az előre beállított, gondosan összeállított szűrők közül, amelyek új hangulatot kölcsönöznek a fotóidnak. A meleg tónusú szűrők (Méz, Sivatag, Pálma) aranyló árnyalatokat adnak, míg a hideg tónusú szűrők (Sziget, Agyag) kékes vagy visszafogott színeket eredményeznek. Az új Negatív szűrő egyetlen érintéssel invertálja a színeket. Minden szűrő előnézete azonnal megjelenik, így alkalmazás előtt összehasonlíthatod a hatásukat.</string>
     <string name="help_tip_edit_filters_p2_title">Apply a filter</string>
     <string name="help_tip_edit_filters_p2_desc">Scroll horizontally through the filter strip at the bottom to browse options. Tap any filter to see a live preview on your photo. If you don\'t like the result, simply tap another filter or tap the original to remove it. Filters can be combined with fine-tune adjustments for even more control.</string>
     <string name="help_tip_edit_filters_p2_s1">Open a photo and tap edit</string>
@@ -1016,7 +1016,7 @@
     <string name="help_release_421_right_align_actions_desc">Move top action buttons to the right for easier one-handed use</string>
     <string name="help_release_421_vault_overhaul_title">Vault overhaul</string>
     <string name="help_release_421_vault_overhaul_desc">Gate authentication, custom passwords, per-vault security, and streamlined flow</string>
-    <string name="help_release_421_nomaps_withml_title">NoMaps WithML variant</string>
+    <string name="help_release_421_nomaps_withml_title">Offline ML változat</string>
     <string name="help_release_421_nomaps_withml_desc">Új építési változat AI alapú modellekkel, de online funkciók (térképek, felhő, hálózat) nélkül</string>
     <string name="help_release_421_bugfixes_title">Bug fixes &amp; improvements</string>
     <string name="help_release_421_bugfixes_desc">Fixed phantom selections, corrected setup permissions, and improved image loading</string>
