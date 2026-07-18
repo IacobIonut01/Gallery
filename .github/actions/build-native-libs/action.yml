@@ -20,7 +20,14 @@ runs:
       shell: bash
       run: |
         SDKMGR="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+        # `yes` receives SIGPIPE once sdkmanager stops reading stdin and exits
+        # non-zero ("Broken pipe"); with pipefail that aborts the step. Disable
+        # pipefail for just this pipe so only sdkmanager's exit code matters.
+        set +o pipefail
         yes | "$SDKMGR" "ndk;29.0.14033849" "cmake;3.31.6"
+        status=$?
+        set -o pipefail
+        exit $status
 
     - name: Cache prebuilt libheif (decode)
       id: heif-cache

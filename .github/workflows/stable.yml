@@ -57,8 +57,8 @@ jobs:
           fileName: 'release_key.jks'
           fileDir: 'app/'
           encodedString: ${{ secrets.SIGNING_KEY }}
-      - name: Build native libheif
-        uses: ./.github/actions/build-native-heif
+      - name: Build native libs
+        uses: ./.github/actions/build-native-libs
         with:
           arch: ${{ matrix.arch }}
       - name: Build Release APK
@@ -103,8 +103,8 @@ jobs:
           fileName: 'release_key.jks'
           fileDir: 'app/'
           encodedString: ${{ secrets.SIGNING_KEY }}
-      - name: Build native libheif
-        uses: ./.github/actions/build-native-heif
+      - name: Build native libs
+        uses: ./.github/actions/build-native-libs
         with:
           arch: ${{ matrix.arch }}
       - name: Build Release APK
@@ -147,8 +147,8 @@ jobs:
           fileName: 'release_key.jks'
           fileDir: 'app/'
           encodedString: ${{ secrets.SIGNING_KEY }}
-      - name: Build native libheif
-        uses: ./.github/actions/build-native-heif
+      - name: Build native libs
+        uses: ./.github/actions/build-native-libs
         with:
           arch: ${{ matrix.arch }}
       - name: Build Release APK
@@ -188,8 +188,8 @@ jobs:
           fileName: 'release_key.jks'
           fileDir: 'app/'
           encodedString: ${{ secrets.SIGNING_KEY }}
-      - name: Build native libheif
-        uses: ./.github/actions/build-native-heif
+      - name: Build native libs
+        uses: ./.github/actions/build-native-libs
         with:
           arch: all
       - name: Build Google Play Bundle
