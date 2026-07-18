@@ -115,10 +115,20 @@ build_abi() {
     # x265 installs libx265.a; ensure the unversioned name exists.
     [ -f "$STAGE/lib/libx265.a" ] || { echo "ERROR: libx265.a not built" >&2; exit 1; }
 
-    # 3) aom (AV1 encoder + decoder)
+    # 3) aom (AV1 encoder + decoder). AOM_TARGET_CPU must match the ABI, otherwise
+    # aom compiles CPU-specific SIMD (e.g. AArch64-only NEON intrinsics like
+    # vtrn1q_u64) with the wrong target and fails (breaks armeabi-v7a/x86/x86_64).
+    local AOM_CPU
+    case "$ABI" in
+        arm64-v8a)   AOM_CPU="arm64" ;;
+        armeabi-v7a) AOM_CPU="armv7" ;;
+        x86_64)      AOM_CPU="x86_64" ;;
+        x86)         AOM_CPU="x86" ;;
+        *)           AOM_CPU="generic" ;;
+    esac
     "$CMAKE_BIN" -S "$AOM_SRC" -B "$WORK/aom-$ABI" "${COMMON[@]}" \
         -DENABLE_TESTS=OFF -DENABLE_EXAMPLES=OFF -DENABLE_DOCS=OFF -DENABLE_TOOLS=OFF \
-        -DCONFIG_AV1_ENCODER=1 -DCONFIG_AV1_DECODER=1 -DAOM_TARGET_CPU=arm64
+        -DCONFIG_AV1_ENCODER=1 -DCONFIG_AV1_DECODER=1 -DAOM_TARGET_CPU="$AOM_CPU"
     "$CMAKE_BIN" --build "$WORK/aom-$ABI" --target install
 
     # 4) libheif WITH encoders, pointed at staged x265 + aom + libde265.
