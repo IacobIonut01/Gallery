@@ -465,6 +465,13 @@
     <string name="media_grid">Media Grid</string>
     <string name="classic_date">Classic Date</string>
     <string name="extended_date">Extended Date</string>
+    <string name="date_format_following_system">Following system format</string>
+    <string name="date_format_info_action">Format help</string>
+    <string name="date_format_info_title">Format strings</string>
+    <string name="date_format_info_summary">Leave a field empty to follow your device\'s date and time format. To customize, combine the pattern letters below (based on Unicode date patterns).</string>
+    <string name="date_format_info_time_section">Time</string>
+    <string name="date_format_info_date_section">Date components</string>
+    <string name="date_format_info_standard_section">Common formats</string>
     <string name="auto_play_video">Video Auto-Play</string>
     <string name="auto_play_video_summary">Play the video automatically while viewing media</string>
     <string name="video_surface_rebind">Fix black video on hide</string>

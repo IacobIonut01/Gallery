@@ -21,9 +21,11 @@ import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -43,6 +45,8 @@ import com.dot.gallery.core.Settings.Misc.CURRENT_SETUP_VERSION
 import com.dot.gallery.core.Settings.Misc.rememberSetupCompletedVersion
 import com.dot.gallery.core.Settings.PREFERENCE_NAME
 import com.dot.gallery.core.decoder.format.ImageReencoder
+import com.dot.gallery.feature_node.presentation.util.SystemDateFormatField
+import com.dot.gallery.feature_node.presentation.util.systemDateTimePattern
 import com.dot.gallery.core.encryption.EncryptedDataStoreProvider
 import com.dot.gallery.core.metrics.StartupTracer
 import com.dot.gallery.core.presentation.components.FilterKind
@@ -723,56 +727,89 @@ object Settings {
         fun rememberNoClassification() =
             rememberPreference(key = NO_CLASSIFICATION, defaultValue = false)
 
+        /**
+         * Date/time format preferences store an empty string when the user has
+         * not customized them. In that case the effective pattern is derived from
+         * the system locale + 12/24-hour setting at read time (see #953).
+         * Use rememberRaw*Format() in the editor (to distinguish system-follow
+         * from a custom value); use remember*Format() everywhere else to obtain
+         * the resolved, display-ready pattern.
+         */
+        @Composable
+        private fun rememberResolvedDateFormat(
+            key: Preferences.Key<String>,
+            field: SystemDateFormatField
+        ): State<String> {
+            val raw by rememberPreference(key = key, defaultValue = "")
+            val context = LocalContext.current
+            // Subscribe to configuration so locale / 24h changes trigger recomposition.
+            LocalConfiguration.current
+            val resolved = if (raw.isBlank()) systemDateTimePattern(context, field) else raw
+            return rememberUpdatedState(resolved)
+        }
+
         val DATE_HEADER_FORMAT = stringPreferencesKey("date_header_format")
 
         @Composable
+        fun rememberRawDateHeaderFormat() =
+            rememberPreference(key = DATE_HEADER_FORMAT, defaultValue = "")
+
+        @Composable
         fun rememberDateHeaderFormat() =
-            rememberPreference(
-                key = DATE_HEADER_FORMAT,
-                defaultValue = Constants.HEADER_DATE_FORMAT
-            )
+            rememberResolvedDateFormat(DATE_HEADER_FORMAT, SystemDateFormatField.HEADER)
 
         val EXTENDED_DATE_HEADER_FORMAT = stringPreferencesKey("extended_date_header_format")
 
         @Composable
+        fun rememberRawExtendedDateHeaderFormat() =
+            rememberPreference(key = EXTENDED_DATE_HEADER_FORMAT, defaultValue = "")
+
+        @Composable
         fun rememberExtendedDateHeaderFormat() =
-            rememberPreference(
-                key = EXTENDED_DATE_HEADER_FORMAT,
-                defaultValue = Constants.EXTENDED_HEADER_DATE_FORMAT
+            rememberResolvedDateFormat(
+                EXTENDED_DATE_HEADER_FORMAT,
+                SystemDateFormatField.EXTENDED_HEADER
             )
 
         val EXIF_DATE_FORMAT = stringPreferencesKey("exif_date_format")
 
         @Composable
+        fun rememberRawExifDateFormat() =
+            rememberPreference(key = EXIF_DATE_FORMAT, defaultValue = "")
+
+        @Composable
         fun rememberExifDateFormat() =
-            rememberPreference(key = EXIF_DATE_FORMAT, defaultValue = Constants.EXIF_DATE_FORMAT)
+            rememberResolvedDateFormat(EXIF_DATE_FORMAT, SystemDateFormatField.EXIF)
 
         val EXTENDED_DATE_FORMAT = stringPreferencesKey("extended_date_format")
 
         @Composable
+        fun rememberRawExtendedDateFormat() =
+            rememberPreference(key = EXTENDED_DATE_FORMAT, defaultValue = "")
+
+        @Composable
         fun rememberExtendedDateFormat() =
-            rememberPreference(
-                key = EXTENDED_DATE_FORMAT,
-                defaultValue = Constants.EXTENDED_DATE_FORMAT
-            )
+            rememberResolvedDateFormat(EXTENDED_DATE_FORMAT, SystemDateFormatField.EXTENDED)
 
         val DEFAULT_DATE_FORMAT = stringPreferencesKey("default_date_format")
 
         @Composable
+        fun rememberRawDefaultDateFormat() =
+            rememberPreference(key = DEFAULT_DATE_FORMAT, defaultValue = "")
+
+        @Composable
         fun rememberDefaultDateFormat() =
-            rememberPreference(
-                key = DEFAULT_DATE_FORMAT,
-                defaultValue = Constants.DEFAULT_DATE_FORMAT
-            )
+            rememberResolvedDateFormat(DEFAULT_DATE_FORMAT, SystemDateFormatField.DEFAULT)
 
         val WEEKLY_DATE_FORMAT = stringPreferencesKey("weekly_date_format")
 
         @Composable
+        fun rememberRawWeeklyDateFormat() =
+            rememberPreference(key = WEEKLY_DATE_FORMAT, defaultValue = "")
+
+        @Composable
         fun rememberWeeklyDateFormat() =
-            rememberPreference(
-                key = WEEKLY_DATE_FORMAT,
-                defaultValue = Constants.WEEKLY_DATE_FORMAT
-            )
+            rememberResolvedDateFormat(WEEKLY_DATE_FORMAT, SystemDateFormatField.WEEKLY)
 
         fun <T> getSetting(context: Context, key: Preferences.Key<T>, defaultValue: T) =
             context.activeDataStore.data.map { it[key] ?: defaultValue }

@@ -57,6 +57,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.buildAnnotatedString
@@ -70,22 +71,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.composeunstyled.LocalTextStyle
 import com.dot.gallery.R
-import com.dot.gallery.core.Constants
 import com.dot.gallery.core.DefaultEventHandler
 import com.dot.gallery.core.LocalEventHandler
 import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
-import com.dot.gallery.core.Settings.Misc.rememberDateHeaderFormat
-import com.dot.gallery.core.Settings.Misc.rememberDefaultDateFormat
-import com.dot.gallery.core.Settings.Misc.rememberExifDateFormat
-import com.dot.gallery.core.Settings.Misc.rememberExtendedDateFormat
-import com.dot.gallery.core.Settings.Misc.rememberExtendedDateHeaderFormat
 import com.dot.gallery.core.Settings.Misc.rememberGridSize
-import com.dot.gallery.core.Settings.Misc.rememberWeeklyDateFormat
+import com.dot.gallery.core.Settings.Misc.rememberRawDateHeaderFormat
+import com.dot.gallery.core.Settings.Misc.rememberRawDefaultDateFormat
+import com.dot.gallery.core.Settings.Misc.rememberRawExifDateFormat
+import com.dot.gallery.core.Settings.Misc.rememberRawExtendedDateFormat
+import com.dot.gallery.core.Settings.Misc.rememberRawExtendedDateHeaderFormat
+import com.dot.gallery.core.Settings.Misc.rememberRawWeeklyDateFormat
 import com.dot.gallery.core.presentation.components.DragHandle
 import com.dot.gallery.core.presentation.components.NavigationBackButton
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
+import com.dot.gallery.feature_node.presentation.util.SystemDateFormatField
 import com.dot.gallery.feature_node.presentation.util.getDate
+import com.dot.gallery.feature_node.presentation.util.systemDateTimePattern
 import com.dot.gallery.ui.theme.GalleryTheme
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
@@ -99,12 +101,40 @@ import java.util.Locale
 )
 @Composable
 fun DateFormatScreen() {
-    var dateHeaderFormat by rememberDateHeaderFormat()
-    var extendedDateHeaderFormat by rememberExtendedDateHeaderFormat()
-    var exifDateFormat by rememberExifDateFormat()
-    var defaultDateFormat by rememberDefaultDateFormat()
-    var extendedDateFormat by rememberExtendedDateFormat()
-    var weeklyDateFormat by rememberWeeklyDateFormat()
+    val context = LocalContext.current
+    // Raw stored patterns: blank means "follow the system" (see #953).
+    var rawDateHeaderFormat by rememberRawDateHeaderFormat()
+    var rawExtendedDateHeaderFormat by rememberRawExtendedDateHeaderFormat()
+    var rawExifDateFormat by rememberRawExifDateFormat()
+    var rawDefaultDateFormat by rememberRawDefaultDateFormat()
+    var rawExtendedDateFormat by rememberRawExtendedDateFormat()
+    var rawWeeklyDateFormat by rememberRawWeeklyDateFormat()
+
+    // Effective patterns actually rendered (raw override, else system-derived).
+    LocalConfiguration.current // recompose on locale / 24h change
+    val dateHeaderFormat = rawDateHeaderFormat.ifBlank {
+        systemDateTimePattern(context, SystemDateFormatField.HEADER)
+    }
+    val extendedDateHeaderFormat = rawExtendedDateHeaderFormat.ifBlank {
+        systemDateTimePattern(context, SystemDateFormatField.EXTENDED_HEADER)
+    }
+    val exifDateFormat = rawExifDateFormat.ifBlank {
+        systemDateTimePattern(context, SystemDateFormatField.EXIF)
+    }
+    val defaultDateFormat = rawDefaultDateFormat.ifBlank {
+        systemDateTimePattern(context, SystemDateFormatField.DEFAULT)
+    }
+    val extendedDateFormat = rawExtendedDateFormat.ifBlank {
+        systemDateTimePattern(context, SystemDateFormatField.EXTENDED)
+    }
+    val weeklyDateFormat = rawWeeklyDateFormat.ifBlank {
+        systemDateTimePattern(context, SystemDateFormatField.WEEKLY)
+    }
+
+    var showInfo by remember { mutableStateOf(false) }
+    if (showInfo) {
+        DateFormatInfoSheet(onDismiss = { showInfo = false })
+    }
 
     val currentMillis = remember { System.currentTimeMillis() / 1000 }
     val textStyle = LocalTextStyle.current
@@ -137,8 +167,9 @@ fun DateFormatScreen() {
                 title = stringResource(R.string.date_header_title),
                 location = stringResource(R.string.media_view),
                 dateFormat = dateHeaderFormat,
-                onDateFormatChange = { dateHeaderFormat = it },
-                defaultDateFormat = Constants.HEADER_DATE_FORMAT,
+                rawFormat = rawDateHeaderFormat,
+                onDateFormatChange = { rawDateHeaderFormat = it },
+                onInfoClick = { showInfo = true },
             ) { dateFormat ->
                 Image(
                     painter = painterResource(R.drawable.image_sample_2),
@@ -243,7 +274,7 @@ fun DateFormatScreen() {
                                     containerColor = surfaceContainer
                                 )
                             ),
-                        onClick = {  }
+                        onClick = { showInfo = true }
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.Info,
@@ -260,8 +291,9 @@ fun DateFormatScreen() {
                 title = stringResource(R.string.extended_date_header_title),
                 location = stringResource(R.string.media_view),
                 dateFormat = extendedDateHeaderFormat,
-                onDateFormatChange = { extendedDateHeaderFormat = it },
-                defaultDateFormat = Constants.EXTENDED_HEADER_DATE_FORMAT,
+                rawFormat = rawExtendedDateHeaderFormat,
+                onDateFormatChange = { rawExtendedDateHeaderFormat = it },
+                onInfoClick = { showInfo = true },
             ) { dateFormat ->
                 Image(
                     painter = painterResource(R.drawable.image_sample_2),
@@ -366,7 +398,7 @@ fun DateFormatScreen() {
                                     containerColor = surfaceContainer
                                 )
                             ),
-                        onClick = {  }
+                        onClick = { showInfo = true }
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.Info,
@@ -382,8 +414,9 @@ fun DateFormatScreen() {
                 title = stringResource(R.string.exif_date),
                 location = stringResource(R.string.media_info),
                 dateFormat = exifDateFormat,
-                onDateFormatChange = { exifDateFormat = it },
-                defaultDateFormat = Constants.EXIF_DATE_FORMAT,
+                rawFormat = rawExifDateFormat,
+                onDateFormatChange = { rawExifDateFormat = it },
+                onInfoClick = { showInfo = true },
             ) { dateFormat ->
                 Image(
                     painter = painterResource(R.drawable.image_sample_2),
@@ -434,8 +467,9 @@ fun DateFormatScreen() {
                 title = stringResource(R.string.weekly_date),
                 location = stringResource(R.string.media_grid),
                 dateFormat = weeklyDateFormat,
-                onDateFormatChange = { weeklyDateFormat = it },
-                defaultDateFormat = Constants.WEEKLY_DATE_FORMAT,
+                rawFormat = rawWeeklyDateFormat,
+                onDateFormatChange = { rawWeeklyDateFormat = it },
+                onInfoClick = { showInfo = true },
             ) {
                 Column {
                     Text(
@@ -479,8 +513,9 @@ fun DateFormatScreen() {
                 title = stringResource(R.string.classic_date),
                 location = stringResource(R.string.media_grid),
                 dateFormat = defaultDateFormat,
-                onDateFormatChange = { defaultDateFormat = it },
-                defaultDateFormat = Constants.DEFAULT_DATE_FORMAT,
+                rawFormat = rawDefaultDateFormat,
+                onDateFormatChange = { rawDefaultDateFormat = it },
+                onInfoClick = { showInfo = true },
             ) {
                 Column {
                     Text(
@@ -524,8 +559,9 @@ fun DateFormatScreen() {
                 title = stringResource(R.string.extended_date),
                 location = stringResource(R.string.media_grid),
                 dateFormat = extendedDateFormat,
-                onDateFormatChange = { extendedDateFormat = it },
-                defaultDateFormat = Constants.EXTENDED_DATE_FORMAT,
+                rawFormat = rawExtendedDateFormat,
+                onDateFormatChange = { rawExtendedDateFormat = it },
+                onInfoClick = { showInfo = true },
             ) {
                 Column {
                     Text(
@@ -577,8 +613,9 @@ fun DateFormatPreview(
     title: String,
     location: String,
     dateFormat: String,
+    rawFormat: String,
     onDateFormatChange: (String) -> Unit,
-    defaultDateFormat: String,
+    onInfoClick: () -> Unit,
     dateFormatPreview: @Composable() (BoxScope.(String) -> Unit),
 ) {
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -597,12 +634,25 @@ fun DateFormatPreview(
             overlineContent = {
                 Text(location)
             },
+            supportingContent = {
+                if (rawFormat.isBlank()) {
+                    Text(stringResource(R.string.date_format_following_system))
+                }
+            },
             trailingContent = {
-                TextButton(
-                    onClick = { onDateFormatChange(defaultDateFormat) },
-                    enabled = dateFormat != defaultDateFormat
-                ) {
-                    Text(stringResource(R.string.reset))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onInfoClick) {
+                        Icon(
+                            imageVector = Icons.Outlined.Info,
+                            contentDescription = stringResource(R.string.date_format_info_action)
+                        )
+                    }
+                    TextButton(
+                        onClick = { onDateFormatChange("") },
+                        enabled = rawFormat.isNotBlank()
+                    ) {
+                        Text(stringResource(R.string.reset))
+                    }
                 }
             }
         )

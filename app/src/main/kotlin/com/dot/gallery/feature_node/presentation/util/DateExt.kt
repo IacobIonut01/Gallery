@@ -5,6 +5,7 @@
 
 package com.dot.gallery.feature_node.presentation.util
 
+import android.content.Context
 import android.content.res.Resources
 import android.os.Parcelable
 import android.text.format.DateFormat
@@ -61,6 +62,63 @@ fun getMonth(extendedFormat: String, defaultFormat: String, date: String): Strin
 
 fun ComposeLocale.Companion.getCurrentAndroid(): Locale {
     return ConfigurationCompat.getLocales(Resources.getSystem().configuration)[0] ?: Locale.getDefault()
+}
+
+/**
+ * Identifies each user-configurable date/time format field. Used to derive a
+ * locale- and clock-aware default pattern from the system when the user has not
+ * set a custom value (see [systemDateTimePattern]).
+ */
+enum class SystemDateFormatField {
+    /** Weekday name only (media grid weekly groups). */
+    WEEKLY,
+    /** Weekday + month + day (media grid classic groups). */
+    DEFAULT,
+    /** Weekday + month + day + year (media grid, previous years). */
+    EXTENDED,
+    /** Two lines: "month day" + time (media view header, current year). */
+    HEADER,
+    /** Two lines: "month day year" + time (media view header, previous years). */
+    EXTENDED_HEADER,
+    /** "month day, year • time" (EXIF / media info). */
+    EXIF,
+}
+
+/**
+ * Returns the locale-correct time pattern for the current system, honoring the
+ * device's 12/24-hour preference. e.g. "h:mm a" or "H:mm".
+ */
+fun systemTimePattern(context: Context): String {
+    val locale = ComposeLocale.getCurrentAndroid()
+    val skeleton = if (DateFormat.is24HourFormat(context)) "Hm" else "hm"
+    return DateFormat.getBestDateTimePattern(locale, skeleton)
+}
+
+/**
+ * Returns the locale-correct date pattern for the given [skeleton]
+ * (see [android.text.format.DateFormat.getBestDateTimePattern]).
+ */
+fun systemDatePattern(skeleton: String): String {
+    val locale = ComposeLocale.getCurrentAndroid()
+    return DateFormat.getBestDateTimePattern(locale, skeleton)
+}
+
+/**
+ * Derives a system-following pattern for the given [field], combining a
+ * locale-correct date portion with the device 12/24-hour time where relevant.
+ */
+fun systemDateTimePattern(context: Context, field: SystemDateFormatField): String {
+    return when (field) {
+        SystemDateFormatField.WEEKLY -> systemDatePattern("EEEE")
+        SystemDateFormatField.DEFAULT -> systemDatePattern("MMMMEEEEd")
+        SystemDateFormatField.EXTENDED -> systemDatePattern("yMMMEEEd")
+        SystemDateFormatField.HEADER ->
+            systemDatePattern("MMMMd") + "\n" + systemTimePattern(context)
+        SystemDateFormatField.EXTENDED_HEADER ->
+            systemDatePattern("yMMMMd") + "\n" + systemTimePattern(context)
+        SystemDateFormatField.EXIF ->
+            systemDatePattern("yMMMMd") + " • " + systemTimePattern(context)
+    }
 }
 
 fun Long.getDate(

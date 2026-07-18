@@ -23,7 +23,10 @@ object Constants {
     const val TAG = "DotGallery"
 
     /**
-     * Date format used in media groups
+     * Legacy date formats used in media groups. As of #953 these are only
+     * fallbacks: when a user has not set a custom pattern, the effective
+     * pattern is derived from the system locale + 12/24-hour setting at read
+     * time (see SystemDateFormatField / systemDateTimePattern).
      */
     const val WEEKLY_DATE_FORMAT = "EEEE"
     const val DEFAULT_DATE_FORMAT = "EEE, MMMM d"
