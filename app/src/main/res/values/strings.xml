@@ -173,6 +173,10 @@
     <string name="edit_override_permission_denied">Permission denied. Grant full media access to overwrite the original, or save a copy instead.</string>
     <string name="edit_override_failed">Couldn\'t overwrite the original. Try saving a copy instead.</string>
     <string name="edit_save_copy_failed">Failed to save the edited copy.</string>
+    <string name="edit_load_failed">Couldn\'t open this image in the editor.</string>
+    <string name="edit_load_failed_restore_title">Couldn\'t open image</string>
+    <string name="edit_load_failed_restore_summary">This file may be damaged. A backed-up original is available — restore it?</string>
+    <string name="edit_restore_failed">Failed to restore the original.</string>
     <string name="overwrite_unavailable_title">Can\'t overwrite this format</string>
     <string name="overwrite_unavailable_summary">This image format can\'t be re-encoded on your device, so the original can\'t be overwritten. A new PNG copy will be created instead.</string>
     <string name="overwrite_unavailable_create_copy">Create copy</string>

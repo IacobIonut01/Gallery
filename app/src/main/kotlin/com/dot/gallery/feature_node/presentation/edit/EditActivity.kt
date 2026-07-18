@@ -10,7 +10,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -18,6 +21,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.stringResource
 import androidx.core.view.WindowCompat
 import com.dot.gallery.core.presentation.components.OverwriteFallbackSheet
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -75,6 +79,23 @@ class EditActivity : ComponentActivity() {
                             viewModel.setSourceData(this@EditActivity, it)
                         }
                     }
+                    var showRestorePrompt by remember { mutableStateOf(false) }
+                    LaunchedEffect(Unit) {
+                        viewModel.loadFailed.collect { hasBackup ->
+                            if (hasBackup) {
+                                // The current file can't be opened but a backed-up original exists —
+                                // offer to restore it instead of just closing.
+                                showRestorePrompt = true
+                            } else {
+                                Toast.makeText(
+                                    this@EditActivity,
+                                    R.string.edit_load_failed,
+                                    Toast.LENGTH_LONG
+                                ).show()
+                                finish()
+                            }
+                        }
+                    }
                     val currentImage by viewModel.currentBitmap.collectAsStateWithLifecycle()
                     val targetImage by viewModel.targetBitmap.collectAsStateWithLifecycle()
                     val uri by viewModel.uri.collectAsStateWithLifecycle()
@@ -83,6 +104,7 @@ class EditActivity : ComponentActivity() {
                     val isReverting by viewModel.isReverting.collectAsStateWithLifecycle()
                     val appliedAdjustments by viewModel.appliedAdjustments.collectAsStateWithLifecycle()
                     val isSaving by viewModel.isSaving.collectAsStateWithLifecycle()
+                    val saveProgress by viewModel.saveProgress.collectAsStateWithLifecycle()
                     val previewMatrix by viewModel.previewMatrix.collectAsStateWithLifecycle()
                     val previewRotation by viewModel.previewRotation.collectAsStateWithLifecycle()
 
@@ -200,6 +222,74 @@ class EditActivity : ComponentActivity() {
                         onResultOk = doRevert
                     )
 
+                    // Restore-on-load-failure: write the backed-up original back over the (corrupted)
+                    // file, then reload the editor with the restored image instead of finishing.
+                    val doRestoreAndReload: () -> Unit = {
+                        viewModel.revertToOriginal(
+                            onSuccess = {
+                                intent.data?.let { data ->
+                                    viewModel.setSourceData(this@EditActivity, data)
+                                }
+                            },
+                            onFail = {
+                                printError("Failed to restore original after load failure")
+                                runOnUiThread {
+                                    Toast.makeText(
+                                        this@EditActivity,
+                                        R.string.edit_restore_failed,
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                    finish()
+                                }
+                            }
+                        )
+                    }
+                    val restoreRequest = rememberActivityResult(
+                        onResultCanceled = {
+                            Toast.makeText(
+                                this@EditActivity,
+                                R.string.edit_override_permission_denied,
+                                Toast.LENGTH_LONG
+                            ).show()
+                            finish()
+                        },
+                        onResultOk = doRestoreAndReload
+                    )
+
+                    if (showRestorePrompt) {
+                        AlertDialog(
+                            onDismissRequest = {
+                                showRestorePrompt = false
+                                finish()
+                            },
+                            title = { Text(stringResource(R.string.edit_load_failed_restore_title)) },
+                            text = { Text(stringResource(R.string.edit_load_failed_restore_summary)) },
+                            confirmButton = {
+                                TextButton(onClick = {
+                                    showRestorePrompt = false
+                                    scope.launch {
+                                        uri?.let { u ->
+                                            restoreRequest.launchWriteRequest(
+                                                u.writeRequest(contentResolver),
+                                                doRestoreAndReload
+                                            )
+                                        }
+                                    }
+                                }) {
+                                    Text(stringResource(R.string.action_revert))
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = {
+                                    showRestorePrompt = false
+                                    finish()
+                                }) {
+                                    Text(stringResource(R.string.action_cancel))
+                                }
+                            }
+                        )
+                    }
+
 
                     EditScreen2(
                         hasOriginalBackup = hasOriginalBackup,
@@ -207,6 +297,7 @@ class EditActivity : ComponentActivity() {
                         canOverride = canOverride,
                         isChanged = appliedAdjustments.isNotEmpty(),
                         isSaving = isSaving,
+                        saveProgress = saveProgress,
                         isProcessing = isProcessing,
                         currentImage = currentImage,
                         targetImage = targetImage ?: currentImage,

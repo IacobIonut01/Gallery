@@ -3,6 +3,7 @@ package com.dot.gallery.feature_node.presentation.edit.adjustments
 import android.graphics.Bitmap
 import android.graphics.RectF
 import com.dot.gallery.feature_node.domain.model.editor.Adjustment
+import com.dot.gallery.feature_node.domain.model.editor.TileBehavior
 
 /**
  * Crop adjustment that stores a normalized crop rect (0-1 range).
@@ -20,5 +21,7 @@ data class Crop(val normalizedRect: RectF): Adjustment {
             .coerceIn(1, bitmap.height - y)
         return Bitmap.createBitmap(bitmap, x, y, w, h)
     }
+
+    override val tileBehavior: TileBehavior get() = TileBehavior.Geometry
 
 }

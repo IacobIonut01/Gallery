@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import androidx.annotation.FloatRange
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.core.graphics.createBitmap
+import com.dot.gallery.feature_node.domain.model.editor.TileBehavior
 import com.dot.gallery.feature_node.domain.model.editor.VariableFilter
 import kotlin.math.sqrt
 
@@ -21,6 +22,9 @@ data class Edges(
     override val defaultValue = 0f
 
     override fun colorMatrix(): ColorMatrix? = null
+
+    // Sobel 3x3 operator reads one pixel of neighbourhood on each side.
+    override val tileBehavior: TileBehavior get() = TileBehavior.Kernel(radius = 1)
 
     override fun revert(bitmap: Bitmap): Bitmap = bitmap
 

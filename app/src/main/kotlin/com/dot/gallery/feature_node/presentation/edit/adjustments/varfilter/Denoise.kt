@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import androidx.annotation.FloatRange
 import androidx.compose.ui.graphics.ColorMatrix
 import com.awxkee.aire.Aire
+import com.dot.gallery.feature_node.domain.model.editor.TileBehavior
 import com.dot.gallery.feature_node.domain.model.editor.VariableFilter
 
 data class Denoise(
@@ -23,4 +24,8 @@ data class Denoise(
     override fun revert(bitmap: Bitmap): Bitmap = bitmap
 
     override fun colorMatrix(): ColorMatrix? = null
+
+    // Aire stackBlur radius up to 10px (proxy space; the bake engine scales the halo by the
+    // full-res/proxy ratio).
+    override val tileBehavior: TileBehavior get() = TileBehavior.Kernel(radius = 10)
 }

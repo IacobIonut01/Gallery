@@ -63,7 +63,16 @@ inline fun DataSource.withCustomDecoder(
     val sourceData = src.buffer().readByteArray()
 
     var transformeds: List<String>? = null
-    val originalSizeDecoded = getSize(sourceData) ?: AndroidSize(0, 0)
+    val originalSizeDecoded = getSize(sourceData)
+    if (originalSizeDecoded == null ||
+        originalSizeDecoded.width <= 0 ||
+        originalSizeDecoded.height <= 0
+    ) {
+        // getSize failed (e.g. corrupt/unsupported HEIF the native decoder can't read). Fail with a
+        // proper decode exception so Sketch surfaces an error state, instead of proceeding into
+        // NaN scale math (0-size source) which crashes on roundToInt().
+        throw IllegalStateException("Unable to read image dimensions for $mimeType")
+    }
     val originalSize = Size(originalSizeDecoded.width, originalSizeDecoded.height)
     val targetSize = requestContext.size
     val scale = calculateScaleMultiplierWithOneSide(
@@ -144,7 +153,16 @@ fun decodeStaticFromBytes(
     decodeSampled: (ByteArray, Int, Int) -> Bitmap
 ): ImageData {
     var transformeds: List<String>? = null
-    val originalSizeDecoded = getSize(sourceData) ?: AndroidSize(0, 0)
+    val originalSizeDecoded = getSize(sourceData)
+    if (originalSizeDecoded == null ||
+        originalSizeDecoded.width <= 0 ||
+        originalSizeDecoded.height <= 0
+    ) {
+        // getSize failed (e.g. corrupt/unsupported HEIF the native decoder can't read). Fail with a
+        // proper decode exception so Sketch surfaces an error state, instead of proceeding into
+        // NaN scale math (0-size source) which crashes on roundToInt().
+        throw IllegalStateException("Unable to read image dimensions for $mimeType")
+    }
     val originalSize = Size(originalSizeDecoded.width, originalSizeDecoded.height)
     val targetSize = requestContext.size
     val scale = calculateScaleMultiplierWithOneSide(

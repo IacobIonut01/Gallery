@@ -6,6 +6,7 @@ import android.graphics.Color
 import androidx.annotation.FloatRange
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.core.graphics.createBitmap
+import com.dot.gallery.feature_node.domain.model.editor.TileBehavior
 import com.dot.gallery.feature_node.domain.model.editor.VariableFilter
 
 /**
@@ -39,4 +40,6 @@ data class Borders(
         canvas.drawBitmap(bitmap, thickness.toFloat(), thickness.toFloat(), null)
         return result
     }
+
+    override val tileBehavior: TileBehavior get() = TileBehavior.Geometry
 }

@@ -5,6 +5,7 @@ import android.graphics.ColorMatrix as NativeColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.graphics.RectF
 import android.graphics.RenderEffect
+import android.net.Uri
 import android.os.Build
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -66,6 +67,8 @@ import com.smarttoolfactory.cropper.settings.CropOutlineProperty
 fun ImageViewer(
     modifier: Modifier = Modifier,
     currentImage: Bitmap?,
+    sourceUri: Uri? = null,
+    showSourceSubsampling: Boolean = false,
     previewMatrix: ColorMatrix?,
     previewRotation: Float,
     cropState: CropState,
@@ -179,6 +182,16 @@ fun ImageViewer(
                 contentAlignment = Alignment.Center
             ) {
                 if (!showMarkup) {
+                    // When the image is pristine (no baked-in edits) we feed the ORIGINAL source to
+                    // zoomimage so the user can zoom to true 100% pixels via tile subsampling,
+                    // instead of the 2048 proxy. Live colour edits still preview via colorFilter.
+                    // Once edits are committed they are baked into the proxy, so we fall back to the
+                    // proxy bitmap to keep the displayed result correct.
+                    val baseModel: Any = if (showSourceSubsampling && sourceUri != null) {
+                        sourceUri
+                    } else {
+                        resizedBitmap!!
+                    }
                     GlideZoomAsyncImage(
                         modifier = Modifier
                             .fillMaxSize()
@@ -190,7 +203,7 @@ fun ImageViewer(
                                     Modifier.blur(radiusX = r, radiusY = r)
                                 } else Modifier
                             ),
-                        model = resizedBitmap!!,
+                        model = baseModel,
                         contentDescription = null,
                         scrollBar = null,
                         colorFilter = effectiveMatrix?.let { ColorFilter.colorMatrix(it) },

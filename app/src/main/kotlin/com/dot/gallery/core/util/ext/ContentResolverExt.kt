@@ -210,6 +210,76 @@ suspend fun ContentResolver.saveImageEncoded(
 }
 
 /**
+ * Creates a new MediaStore image and lets [write] stream the encoded bytes straight into its file
+ * descriptor (used by the editor's tiled bake + native scanline encoder so the full-resolution
+ * output is never held in RAM). [write] must return true on success; on false/throw the pending
+ * entry is deleted. Returns the new [Uri] or `null` on failure.
+ */
+suspend fun ContentResolver.saveImageStreaming(
+    mimeType: String,
+    relativePath: String,
+    displayName: String,
+    write: (fd: Int) -> Boolean,
+): Uri? = withContext(Dispatchers.IO) {
+    var tmp: Uri? = null
+    runCatching {
+        val values = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
+            put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
+            put(
+                MediaStore.MediaColumns.RELATIVE_PATH,
+                if (relativePath.contains("DCIM") || relativePath.contains("Pictures")) relativePath
+                else Environment.DIRECTORY_PICTURES + "/Edited"
+            )
+            put(MediaStore.MediaColumns.IS_PENDING, 1)
+        }
+        val uri = insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+            ?: throw IOException("Insert returned null")
+        tmp = uri
+        val ok = openFileDescriptor(uri, "w")?.use { pfd -> write(pfd.fd) } ?: false
+        if (!ok) throw IOException("Streaming encode failed")
+        update(uri, ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 0) }, null, null)
+        uri
+    }.getOrElse {
+        tmp?.let { runCatching { delete(it, null, null) } }
+        null
+    }
+}
+
+/**
+ * In-place overwrite of an existing image [uri] where [write] streams the encoded bytes into its
+ * file descriptor. Preserves the original date columns. Returns true on success. The caller is
+ * expected to have backed up the original first (this truncates via "rwt").
+ */
+suspend fun ContentResolver.overrideImageStreaming(
+    uri: Uri,
+    write: (fd: Int) -> Boolean,
+): Boolean = withContext(Dispatchers.IO) {
+    runCatching {
+        val originalDates = queryDateColumns(uri)
+        runCatching {
+            update(uri, ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 1) }, null, null)
+        }
+        val ok = (openFileDescriptor(uri, "rwt") ?: openFileDescriptor(uri, "w"))
+            ?.use { pfd -> write(pfd.fd) } ?: false
+        if (!ok) error("Streaming encode failed")
+        runCatching {
+            update(uri, ContentValues().apply {
+                put(MediaStore.MediaColumns.IS_PENDING, 0)
+                originalDates?.let { (dateTaken, dateAdded) ->
+                    dateTaken?.let { put(MediaStore.Images.Media.DATE_TAKEN, it) }
+                    dateAdded?.let { put(MediaStore.MediaColumns.DATE_ADDED, it) }
+                }
+            }, null, null)
+        }
+        true
+    }.getOrElse {
+        clearPendingQuiet(uri)
+        false
+    }
+}
+
+/**
  * Format-aware in-place overwrite of an existing media row with [bitmap], re-encoded in
  * [writeFormat]. Preserves the original date columns so the item keeps its gallery position, and
  * for JPEG re-encodes carries over EXIF. Returns true on success.

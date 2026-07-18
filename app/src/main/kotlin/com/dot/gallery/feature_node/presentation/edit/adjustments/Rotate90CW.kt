@@ -2,6 +2,7 @@ package com.dot.gallery.feature_node.presentation.edit.adjustments
 
 import android.graphics.Bitmap
 import com.dot.gallery.feature_node.domain.model.editor.Adjustment
+import com.dot.gallery.feature_node.domain.model.editor.TileBehavior
 import com.dot.gallery.feature_node.presentation.util.rotate
 
 data class Rotate90CW(
@@ -11,5 +12,7 @@ data class Rotate90CW(
     override fun apply(bitmap: Bitmap): Bitmap {
         return bitmap.rotate(angle)
     }
+
+    override val tileBehavior: TileBehavior get() = TileBehavior.Geometry
 
 }

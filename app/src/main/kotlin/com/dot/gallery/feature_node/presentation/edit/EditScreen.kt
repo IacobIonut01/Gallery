@@ -8,6 +8,7 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -101,6 +102,7 @@ import com.dot.gallery.feature_node.presentation.util.stableBlur
 import com.dot.gallery.ui.theme.GalleryTheme
 import com.smarttoolfactory.cropper.model.AspectRatio
 import dev.chrisbanes.haze.hazeSource
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
@@ -111,6 +113,7 @@ fun EditScreen2(
     canSave: Boolean = true,
     isChanged: Boolean = false,
     isSaving: Boolean = false,
+    saveProgress: Float? = null,
     isProcessing: Boolean = false,
     currentImage: Bitmap?,
     targetImage: Bitmap?,
@@ -644,6 +647,11 @@ fun EditScreen2(
                         ImageViewer(
                             modifier = Modifier.fillMaxSize(),
                             currentImage = currentImage,
+                            sourceUri = targetUri,
+                            // Show the original via tile subsampling (true 100% zoom) only while the
+                            // image is pristine; once edits are baked into the proxy we display the
+                            // proxy so the on-screen result stays correct.
+                            showSourceSubsampling = appliedAdjustments.isEmpty(),
                             previewMatrix = previewMatrix,
                             previewRotation = previewRotation,
                             cropState = cropState,
@@ -962,10 +970,30 @@ fun EditScreen2(
                     .fillMaxSize(),
                 contentAlignment = Alignment.Center,
             ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(48.dp),
-                    color = MaterialTheme.colorScheme.primary
-                )
+                val progress = saveProgress
+                if (isSaving && progress != null) {
+                    val animatedProgress by animateFloatAsState(
+                        targetValue = progress.coerceIn(0f, 1f),
+                        label = "saveProgress"
+                    )
+                    Box(contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(
+                            progress = { animatedProgress },
+                            modifier = Modifier.size(56.dp),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "${(animatedProgress * 100).roundToInt()}%",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = Color.White
+                        )
+                    }
+                } else {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(48.dp),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
         }
 

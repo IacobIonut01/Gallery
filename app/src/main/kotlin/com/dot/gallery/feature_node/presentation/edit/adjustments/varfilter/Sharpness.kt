@@ -3,6 +3,7 @@ package com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter
 import android.graphics.Bitmap
 import androidx.compose.ui.graphics.ColorMatrix
 import com.awxkee.aire.Aire
+import com.dot.gallery.feature_node.domain.model.editor.TileBehavior
 import com.dot.gallery.feature_node.domain.model.editor.VariableFilter
 import kotlin.math.roundToInt
 
@@ -22,6 +23,10 @@ data class Sharpness(
     }
 
     override fun colorMatrix(): ColorMatrix? = null
+
+    // Aire sharpness convolves with an odd kernel up to 9x9 → 4px halo (proxy space; the bake
+    // engine scales this by the full-res/proxy ratio).
+    override val tileBehavior: TileBehavior get() = TileBehavior.Kernel(radius = 4)
 
     fun floatToOddKernelSize(value: Float, min: Int = 3, max: Int = 9): Int {
         var intValue = value.roundToInt()
