@@ -331,9 +331,13 @@ fun WorkManager.downloadModels(group: ModelGroup) {
         }
         .build()
 
+    // REPLACE (not KEEP): a finished unique-work record with the same name lingers after a
+    // completed download or a cancel. With KEEP that stale record blocks re-enqueue, so tapping
+    // Download again after deleting the models did nothing (issue #1044). REPLACE cancels any
+    // existing (finished or in-flight) work and always starts a fresh download.
     enqueueUniqueWork(
         ModelDownloadWorker.workName(group),
-        ExistingWorkPolicy.KEEP,
+        ExistingWorkPolicy.REPLACE,
         request
     )
 }
