@@ -46,19 +46,25 @@ class MediaHandlerImpl @Inject constructor(
     private val cloudMediaDao: CloudMediaDao
 ) : MediaHandler {
 
-    private fun <T : Media> extractCloudInfo(media: T): Pair<String, String>? {
+    private fun <T : Media> extractCloudInfo(media: T): Triple<String, String, Long>? {
         if (!media.isCloud) return null
         val uri = media.getUri()
         val providerName = uri.authority ?: return null
         // remoteId may contain slashes (SMB/NFS/WebDAV paths like "Photos/IMG.jpg"); pathSegments
         // .first() would truncate it to the first folder.
         val remoteId = uri.path?.trimStart('/')?.takeIf { it.isNotEmpty() } ?: return null
-        return providerName to remoteId
+        // Account identity: cloud URIs carry the owning account's config id (cfg). Without it,
+        // provider resolution falls back to the first account of the type, which addresses the
+        // wrong server when several accounts of the same provider type are configured.
+        val configId = uri.getQueryParameter("cfg")?.toLongOrNull() ?: -1L
+        return Triple(providerName, remoteId, configId)
     }
 
-    private fun getCloudProvider(providerName: String): RemoteMediaProvider? {
+    private fun getCloudProvider(providerName: String, configId: Long = -1L): RemoteMediaProvider? {
         val providerType = try { ProviderType.valueOf(providerName) } catch (_: Exception) { return null }
-        return providerRegistry.get(providerType) as? RemoteMediaProvider
+        val provider = (if (configId > 0L) providerRegistry.getByConfigId(configId) else null)
+            ?: providerRegistry.get(providerType)
+        return provider as? RemoteMediaProvider
     }
 
     override suspend fun <T : Media> toggleFavorite(
@@ -73,9 +79,9 @@ class MediaHandlerImpl @Inject constructor(
         if (cloudMedia.isNotEmpty()) {
             withContext(Dispatchers.IO) {
                 cloudMedia.forEach { media ->
-                    val (providerName, remoteId) = extractCloudInfo(media) ?: return@forEach
+                    val (providerName, remoteId, configId) = extractCloudInfo(media) ?: return@forEach
                     val providerType = try { ProviderType.valueOf(providerName) } catch (_: Exception) { return@forEach }
-                    val provider = getCloudProvider(providerName) ?: return@forEach
+                    val provider = getCloudProvider(providerName, configId) ?: return@forEach
                     provider.toggleFavorite(remoteId, favorite)
                     cloudMediaDao.updateFavorite(remoteId, providerType, favorite)
                 }
@@ -107,8 +113,8 @@ class MediaHandlerImpl @Inject constructor(
         if (cloudMedia.isNotEmpty()) {
             withContext(Dispatchers.IO) {
                 cloudMedia.forEach { media ->
-                    val (providerName, remoteId) = extractCloudInfo(media) ?: return@forEach
-                    val provider = getCloudProvider(providerName) ?: return@forEach
+                    val (providerName, remoteId, configId) = extractCloudInfo(media) ?: return@forEach
+                    val provider = getCloudProvider(providerName, configId) ?: return@forEach
                     if (trash) {
                         provider.trashAsset(remoteId)
                     } else {
@@ -170,9 +176,9 @@ class MediaHandlerImpl @Inject constructor(
         if (cloudMedia.isNotEmpty()) {
             withContext(Dispatchers.IO) {
                 cloudMedia.forEach { media ->
-                    val (providerName, remoteId) = extractCloudInfo(media) ?: return@forEach
+                    val (providerName, remoteId, configId) = extractCloudInfo(media) ?: return@forEach
                     val providerType = try { ProviderType.valueOf(providerName) } catch (_: Exception) { return@forEach }
-                    val provider = getCloudProvider(providerName) ?: return@forEach
+                    val provider = getCloudProvider(providerName, configId) ?: return@forEach
                     provider.deleteAsset(remoteId)
                     cloudMediaDao.delete(remoteId, providerType)
                 }
@@ -252,13 +258,14 @@ class MediaHandlerImpl @Inject constructor(
 
             var successCount = 0
             for (media in cloudMedia) {
-                val (providerName, remoteId) = extractCloudInfo(media) ?: continue
+                val (providerName, remoteId, configId) = extractCloudInfo(media) ?: continue
                 val providerType = try {
                     ProviderType.valueOf(providerName)
                 } catch (_: Exception) {
                     continue
                 }
-                val provider = providerRegistry.get(providerType)
+                val provider = (if (configId > 0L) providerRegistry.getByConfigId(configId) else null)
+                    ?: providerRegistry.get(providerType)
                 val syncProvider = provider as? SyncCapableProvider ?: continue
 
                 val downloadResult = syncProvider.downloadAsset(remoteId)
