@@ -18,6 +18,7 @@ import android.os.Message
 import android.os.Messenger
 import android.os.ParcelFileDescriptor
 import java.util.concurrent.Executors
+import com.dot.gallery.core.decoder.format.SpecialFormatProbe
 import com.dot.gallery.core.sandbox.IsolatedMetadataService.Companion.KEY_ERROR
 import com.dot.gallery.core.sandbox.IsolatedMetadataService.Companion.KEY_IS_VIDEO
 import com.dot.gallery.core.sandbox.IsolatedMetadataService.Companion.KEY_LABEL
@@ -263,9 +264,9 @@ class IsolatedMetadataParser(private val context: Context) {
                 val bundle = sendAndReceive(conn.messenger, MSG_PARSE_RAW_METADATA, Bundle().apply {
                     putParcelable(KEY_PFD, it)
                     putBoolean(KEY_IS_VIDEO, isVideo)
-                }) ?: return@use emptyList()
+                }) ?: return@use augmentWithProbeSize(uri, isVideo, emptyList())
 
-                val result = unbundleRawMetadata(bundle)
+                val result = augmentWithProbeSize(uri, isVideo, unbundleRawMetadata(bundle))
                 val elapsedMs = (System.nanoTime() - startNs) / 1_000_000
                 printDebug("IsolatedMetadataParser: raw metadata parse took ${elapsedMs}ms (per-file: ${conn.instanceName})")
                 result
@@ -341,9 +342,9 @@ class IsolatedMetadataParser(private val context: Context) {
                 val bundle = sendAndReceive(MSG_PARSE_RAW_METADATA, Bundle().apply {
                     putParcelable(KEY_PFD, it)
                     putBoolean(KEY_IS_VIDEO, isVideo)
-                }) ?: return@use emptyList()
+                }) ?: return@use augmentWithProbeSize(uri, isVideo, emptyList())
 
-                val result = unbundleRawMetadata(bundle)
+                val result = augmentWithProbeSize(uri, isVideo, unbundleRawMetadata(bundle))
                 val elapsedMs = (System.nanoTime() - startNs) / 1_000_000
                 printDebug("IsolatedMetadataParser: raw metadata parse took ${elapsedMs}ms (isolated)")
                 result
@@ -393,6 +394,33 @@ class IsolatedMetadataParser(private val context: Context) {
                 }
             }
         }
+    }
+
+    /**
+     * Ensures the "View all metadata" list shows resolution for special image formats (JXL, JP2,
+     * PSD, SVG, HEIF/AVIF/TIFF). metadata-extractor omits or can't read their dimensions, so probe
+     * the intrinsic size in-process (the same native decoders used for rendering) and prepend a
+     * synthetic directory when no width/height tag is already present.
+     */
+    private fun augmentWithProbeSize(
+        uri: Uri,
+        isVideo: Boolean,
+        directories: List<MetadataDirectory>
+    ): List<MetadataDirectory> {
+        if (isVideo) return directories
+        val hasDimensions = directories.any { dir ->
+            dir.tags.any { it.name.contains("width", ignoreCase = true) }
+        }
+        if (hasDimensions) return directories
+        val size = SpecialFormatProbe.getSize(context, uri) ?: return directories
+        val synthetic = MetadataDirectory(
+            name = "Image",
+            tags = listOf(
+                MetadataTag("Image Width", "${size.width} pixels"),
+                MetadataTag("Image Height", "${size.height} pixels"),
+            )
+        )
+        return listOf(synthetic) + directories
     }
 
     private fun unbundleRawMetadata(bundle: Bundle): List<MetadataDirectory> {

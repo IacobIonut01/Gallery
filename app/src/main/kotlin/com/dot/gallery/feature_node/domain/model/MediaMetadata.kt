@@ -20,6 +20,7 @@ import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.Relation
+import com.dot.gallery.core.decoder.format.SpecialFormatProbe
 import com.dot.gallery.core.sandbox.IsolatedMetadataParser
 import com.dot.gallery.core.sandbox.IsolatedMetadataService.Companion as Keys
 import com.dot.gallery.feature_node.domain.util.getUri
@@ -293,11 +294,11 @@ private suspend fun mediaMetadataFromImageBundle(
     if (imgW == 0 || imgH == 0) {
         // We need the URI again for the fallback — reconstruct from mediaId
         // This is a rare path so we tolerate the extra cost
+        val uri = ContentUris.withAppendedId(
+            MediaStore.Files.getContentUri("external"),
+            mediaId
+        )
         runCatching {
-            val uri = ContentUris.withAppendedId(
-                MediaStore.Files.getContentUri("external"),
-                mediaId
-            )
             context.contentResolver.openInputStream(uri)?.use { fallbackStream ->
                 val options = BitmapFactory.Options().apply {
                     inJustDecodeBounds = true
@@ -307,6 +308,14 @@ private suspend fun mediaMetadataFromImageBundle(
                     imgW = options.outWidth
                     imgH = options.outHeight
                 }
+            }
+        }
+        // BitmapFactory can't decode JXL/JP2/PSD/SVG — recover dimensions via native probes so
+        // even EXIF-carrying special formats report their resolution.
+        if (imgW == 0 || imgH == 0) {
+            SpecialFormatProbe.getSize(context, uri)?.let {
+                imgW = it.width
+                imgH = it.height
             }
         }
     }
@@ -406,6 +415,16 @@ private suspend fun buildFallbackImageMetadata(
                 imgW = options.outWidth
                 imgH = options.outHeight
             }
+        }
+    }
+
+    // BitmapFactory can't decode JXL/JP2/PSD/SVG (and some HEIF/AVIF/TIFF), so recover the
+    // intrinsic dimensions from the same native decoders used for rendering. This guarantees the
+    // properties sheet shows resolution + size instead of nothing for those formats (#1002).
+    if (imgW == 0 || imgH == 0) {
+        SpecialFormatProbe.getSize(context, uri)?.let {
+            imgW = it.width
+            imgH = it.height
         }
     }
 
