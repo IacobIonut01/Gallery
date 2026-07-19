@@ -611,9 +611,9 @@
     <string name="help_tip_location_browse_p1_title">Location browsing</string>
     <string name="help_tip_location_browse_p1_desc">View your photos organized by the places where they were taken. Gallery reads GPS coordinates from your photo metadata and groups them by city, neighborhood, or landmark. This is a wonderful way to revisit trips, explore where you\'ve been, and discover photo clusters you might have forgotten about.</string>
     <string name="help_tip_location_browse_p2_title">Location timeline</string>
-    <string name="help_tip_location_browse_p2_desc">Tap any location to see all the photos taken there, displayed in a timeline view. If you have Mapbox maps enabled, you can also see an interactive map with pins showing exactly where each photo was captured. Note: location data depends on your camera saving GPS info — most phone cameras do this by default.</string>
+    <string name="help_tip_location_browse_p2_desc">Tippen Sie auf einen beliebigen Ort, um alle dort aufgenommenen Fotos in einer Zeitleistenansicht anzuzeigen. Wenn Sie Mapbox-Karten aktiviert haben, können Sie außerdem eine interaktive Karte mit Markierungen sehen, die genau anzeigen, wo jedes Foto aufgenommen wurde. Hinweis: Die Standortdaten hängen davon ab, ob Ihre Kamera GPS-Daten speichert – die meisten Handykameras tun dies standardmäßig.</string>
     <string name="help_tip_location_viewer_title">View location from photo</string>
-    <string name="help_tip_location_viewer_subtitle">See where a photo was taken from the info sheet</string>
+    <string name="help_tip_location_viewer_subtitle">Auf dem Infofenster erfahren Sie, wo ein Foto aufgenommen wurde</string>
     <string name="help_tip_location_viewer_p1_title">Photo location</string>
     <string name="help_tip_location_viewer_p1_desc">Swipe up on any photo in the viewer to reveal the info sheet. If the photo contains GPS metadata, you\'ll see the location displayed with an address. Tap it to open a map showing exactly where the photo was taken. You can also edit or delete the location data for privacy (see the Metadata section for details).</string>
     <!-- METADATA -->
@@ -627,7 +627,7 @@
     <string name="help_tip_exif_edit_subtitle">Change date, location, and other metadata</string>
     <string name="help_tip_exif_edit_p1_title">Edit metadata</string>
     <string name="help_tip_exif_edit_p1_desc">Gallery lets you modify certain photo metadata fields directly. You can change the capture date (useful for scanned photos or when the camera date was wrong) and GPS location (to correct or add location info). Changes are written directly to the file\'s EXIF data.</string>
-    <string name="help_tip_exif_edit_p2_title">How to edit</string>
+    <string name="help_tip_exif_edit_p2_title">So bearbeiten Sie</string>
     <string name="help_tip_exif_edit_p2_desc">Open a photo, swipe up to see the info sheet, and tap the edit icon next to the field you want to change. A dialog lets you enter the new value. Be careful when editing — changes are permanent and overwrite the original metadata. Tip: use this to fix incorrect dates on old scanned photos.</string>
     <string name="help_tip_exif_edit_p2_s1">Open a photo and swipe up</string>
     <string name="help_tip_exif_edit_p2_s2">Tap the edit icon next to date or location</string>
@@ -680,7 +680,7 @@
     <string name="help_tip_settings_trash_toggle_p1_title">Trash toggle</string>
     <string name="help_tip_settings_trash_toggle_p1_desc">Controls the safety net for deletions. When enabled (recommended), deleted items go to trash for 30 days before permanent deletion, giving you time to recover mistakes. When disabled, all deletions are instant and permanent — use with caution.</string>
     <string name="help_tip_settings_trash_toggle_p1_s1">Go to Settings &gt; General</string>
-    <string name="help_tip_settings_trash_toggle_p1_s2">Toggle \'Enable trash\'</string>
+    <string name="help_tip_settings_trash_toggle_p1_s2">„Papierkorb aktivieren“ umschalten</string>
     <string name="help_tip_settings_trash_toggle_p1_s3">Recommended: keep enabled for safety</string>
     <string name="help_tip_settings_trash_confirm_title">Trash confirmation</string>
     <string name="help_tip_settings_trash_confirm_subtitle">Ask for confirmation before trashing items</string>
@@ -732,7 +732,7 @@
     <string name="help_tip_settings_selection_actions_p1_title">Selection actions</string>
     <string name="help_tip_settings_selection_actions_p1_desc">The selection action sheet appears whenever you select photos. By default it shows Share, Delete, Copy, Move, Hide in vault, and more. You can customize which actions appear and their order to match your most common workflows.</string>
     <string name="help_tip_settings_selection_actions_p2_title">Customize</string>
-    <string name="help_tip_settings_selection_actions_p2_desc">Drag actions up or down to reorder them — put your most-used actions at the top for quick access. Toggle actions on or off to show or hide them. For example, if you never use \'Copy to album\', hide it to reduce clutter. Your customization is saved automatically.</string>
+    <string name="help_tip_settings_selection_actions_p2_desc">Ziehen Sie Aktionen nach oben oder unten, um sie neu anzuordnen – platzieren Sie die am häufigsten verwendeten Aktionen ganz oben, um schnell darauf zugreifen zu können. Schalten Sie Aktionen ein oder aus, um sie ein- oder auszublenden. Wenn Sie beispielsweise die Aktion „In Album kopieren“ nie verwenden, blenden Sie sie aus, um Unordnung zu vermeiden. Ihre Anpassungen werden automatisch gespeichert.</string>
     <string name="help_tip_settings_selection_actions_p2_s1">Go to Settings &gt; Navigation</string>
     <string name="help_tip_settings_selection_actions_p2_s2">Tap \'Customize selection actions\'</string>
     <string name="help_tip_settings_selection_actions_p2_s3">Drag actions to reorder by priority</string>
@@ -787,7 +787,7 @@
     <string name="help_tip_selection_sheet_p2_s3">Drag to reorder, toggle to show/hide</string>
     <string name="help_tip_selection_sheet_p2_s4">Most-used actions should be at the top</string>
     <string name="help_tip_selection_batch_share_title">Batch share</string>
-    <string name="help_tip_selection_batch_share_subtitle">Share multiple photos at once</string>
+    <string name="help_tip_selection_batch_share_subtitle">Mehrere Fotos gleichzeitig teilen</string>
     <string name="help_tip_selection_batch_share_p1_title">Batch share</string>
     <string name="help_tip_selection_batch_share_p1_desc">Select multiple photos in the grid, then tap the Share action to send them all at once to any app. This is perfect for sharing a group of vacation photos, sending multiple documents, or uploading a batch to cloud storage. All selected items are shared as a single bundle.</string>
     <string name="help_tip_selection_batch_share_p1_s1">Long press to start selection</string>
@@ -1258,7 +1258,7 @@
     <string name="help_release_503_black_video_title">Fix black video on hide</string>
     <string name="help_release_503_black_video_desc">A new Video Playback toggle re-binds the player surface so videos no longer black out when the system bars are shown or hidden (on by default for Samsung)</string>
     <string name="help_release_503_viewer_title">Smoother viewer</string>
-    <string name="help_release_503_viewer_desc">Paddings, the info sheet and video controls adapt correctly on rotation, the timeline keeps its scroll position when you return, and the info panel no longer auto-hides mid-drag or gets stuck invisible</string>
+    <string name="help_release_503_viewer_desc">Die Abstände, das Infoblatt und die Videosteuerung passen sich bei der Drehung korrekt an, die Zeitleiste behält ihre Scrollposition bei, wenn man zurückkehrt, und das Infofenster wird während des Ziehens nicht mehr automatisch ausgeblendet oder bleibt unsichtbar hängen</string>
     <string name="help_release_503_editor_title">Editor fixes</string>
     <string name="help_release_503_editor_desc">Crop no longer zooms when dragged out of bounds, and markup hangs, undo of no-op adjustments, the rotate button and off-canvas text have all been fixed</string>
     <string name="help_release_503_bugfixes_title">Bug fixes</string>
