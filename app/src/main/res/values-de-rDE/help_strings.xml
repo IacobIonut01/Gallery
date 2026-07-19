@@ -141,7 +141,7 @@
     <string name="help_tip_personalize_shared_elements_title">Shared element transitions</string>
     <string name="help_tip_personalize_shared_elements_subtitle">Smooth animations when opening photos</string>
     <string name="help_tip_personalize_shared_elements_p1_title">Smooth transitions</string>
-    <string name="help_tip_personalize_shared_elements_p1_desc">When enabled, tapping a photo in the grid creates a seamless animation where the thumbnail expands into the full-screen viewer, and shrinks back when you close it. This makes navigation feel fluid and natural. If you prefer instant transitions or experience any animation glitches, you can disable this.</string>
+    <string name="help_tip_personalize_shared_elements_p1_desc">Wenn diese Funktion aktiviert ist, wird beim Antippen eines Fotos im Raster eine nahtlose Animation ausgelöst, bei der sich die Miniaturansicht zum Vollbild-Viewer vergrößert und beim Schließen wieder verkleinert. Dadurch fühlt sich die Navigation flüssig und natürlich an. Wenn Sie sofortige Übergänge bevorzugen oder Probleme mit der Animation feststellen, können Sie diese Funktion deaktivieren.</string>
     <string name="help_tip_personalize_shared_elements_p1_s1">Go to Settings &gt; Appearance</string>
     <string name="help_tip_personalize_shared_elements_p1_s2">Toggle \'Shared element transitions\'</string>
     <string name="help_tip_personalize_shared_elements_p1_s3">Tap any photo to see the effect</string>
