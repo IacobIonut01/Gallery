@@ -233,6 +233,10 @@
     <string name="permission_manage_files_title">Manage All Files</string>
     <string name="permission_manage_files_summary">"Allows the app to create, modify, and delete files and albums that were previously restricted by the system (includes albums outside Pictures and DCIM folders and the ones from the SD Card), and to show extra photo formats the system doesn\'t recognize (such as JPEG XL, JPEG 2000 and Photoshop files)."</string>
     <string name="vault">Vault</string>
+    <string name="cloud">Cloud</string>
+    <string name="picker_preparing">Preparing %1$d of %2$d…</string>
+    <string name="picker_preparing_generic">Preparing…</string>
+    <string name="picker_prepare_failed">Some items could not be prepared</string>
     <string name="library">Library</string>
     <string name="biometric_authentication">Biometric Authentication</string>
     <string name="add_media_to_vault_cd">Add Media to Vault</string>
