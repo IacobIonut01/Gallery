@@ -19,6 +19,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.core.view.WindowCompat
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants
+import com.dot.gallery.core.DefaultEventHandler
 import com.dot.gallery.core.MediaDistributor
 import com.dot.gallery.core.MediaHandler
 import com.dot.gallery.core.MediaSelector
@@ -69,8 +70,10 @@ class PickerActivityContract(
 @AndroidEntryPoint
 class PickerActivity : FragmentActivity() {
 
-    @Inject
-    lateinit var eventHandler: EventHandler
+    // Use a picker-local EventHandler instead of the process-wide @Singleton so the picker never
+    // clobbers MainActivity's navigateUpAction (which would break back navigation after the picker
+    // closes while the gallery is open). Mirrors the private mediaSelector below.
+    private val eventHandler: EventHandler = DefaultEventHandler()
 
     @Inject
     lateinit var mediaDistributor: MediaDistributor
