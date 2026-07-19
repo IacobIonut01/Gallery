@@ -142,7 +142,7 @@
     <string name="help_tip_personalize_shared_elements_subtitle">Smooth animations when opening photos</string>
     <string name="help_tip_personalize_shared_elements_p1_title">Smooth transitions</string>
     <string name="help_tip_personalize_shared_elements_p1_desc">Wenn diese Funktion aktiviert ist, wird beim Antippen eines Fotos im Raster eine nahtlose Animation ausgelöst, bei der sich die Miniaturansicht zum Vollbild-Viewer vergrößert und beim Schließen wieder verkleinert. Dadurch fühlt sich die Navigation flüssig und natürlich an. Wenn Sie sofortige Übergänge bevorzugen oder Probleme mit der Animation feststellen, können Sie diese Funktion deaktivieren.</string>
-    <string name="help_tip_personalize_shared_elements_p1_s1">Go to Settings &gt; Appearance</string>
+    <string name="help_tip_personalize_shared_elements_p1_s1">Gehe zu „Einstellungen“ &gt; „Darstellung“</string>
     <string name="help_tip_personalize_shared_elements_p1_s2">Toggle \'Shared element transitions\'</string>
     <string name="help_tip_personalize_shared_elements_p1_s3">Tap any photo to see the effect</string>
     <string name="help_tip_personalize_app_name_title">Change the app name</string>
@@ -194,7 +194,7 @@
     <string name="help_tip_albums_hide_timeline_p1_s3">Open any album to see the difference</string>
     <string name="help_tip_albums_merge_by_name_title">Merge albums by name</string>
     <string name="help_tip_albums_merge_by_name_subtitle">Combine albums from different storage locations</string>
-    <string name="help_tip_albums_merge_by_name_p1_title">Merge albums</string>
+    <string name="help_tip_albums_merge_by_name_p1_title">Alben zusammenführen</string>
     <string name="help_tip_albums_merge_by_name_p1_desc">If you have albums with the same name on different storage locations (like internal storage and SD card), Gallery can merge them into a single album. For example, if both your internal Camera folder and SD card Camera folder contain photos, they\'ll appear as one unified Camera album. This is especially useful if your phone saves photos to different locations.</string>
     <string name="help_tip_albums_merge_by_name_p1_s1">Go to Settings &gt; Timeline &amp; Albums</string>
     <string name="help_tip_albums_merge_by_name_p1_s2">Toggle \'Merge albums with same name\'</string>
@@ -246,8 +246,8 @@
     <string name="help_tip_view_panorama_p1_desc">Panoramic and photosphere images are automatically detected and open in a dedicated 360° viewer. Tilt your device to look around naturally using gyroscope controls, or drag with your finger to pan manually. This works with standard panoramas, photo spheres, and 360° images.</string>
     <string name="help_tip_view_motion_photo_title">View motion photos</string>
     <string name="help_tip_view_motion_photo_subtitle">Play the short video clip embedded in motion photos</string>
-    <string name="help_tip_view_motion_photo_p1_title">Motion photos</string>
-    <string name="help_tip_view_motion_photo_p1_desc">Motion photos (captured by many modern phones) contain a still image plus a short video clip of the moment before and after the shot. Gallery automatically detects these and shows a special icon in the viewer — tap it to play the embedded clip. This brings your memories to life with the movement and sound from that moment.</string>
+    <string name="help_tip_view_motion_photo_p1_title">Bewegungs-Fotos</string>
+    <string name="help_tip_view_motion_photo_p1_desc">Bewegtbilder (die von vielen modernen Smartphones aufgenommen werden) bestehen aus einem Standbild sowie einem kurzen Videoclip, der den Moment vor und nach der Aufnahme zeigt. Die Galerie erkennt diese automatisch und zeigt im Bildbetrachter ein spezielles Symbol an – tippe darauf, um den eingebetteten Clip abzuspielen. So werden deine Erinnerungen durch die Bewegung und den Ton dieses Moments zum Leben erweckt.</string>
     <string name="help_tip_view_full_brightness_title">Full brightness viewing</string>
     <string name="help_tip_view_full_brightness_subtitle">Automatically increase brightness when viewing photos</string>
     <string name="help_tip_view_full_brightness_p1_title">Full brightness</string>
@@ -262,7 +262,7 @@
     <string name="help_tip_view_group_members_p2_title">Navigate the group</string>
     <string name="help_tip_view_group_members_p2_desc">Tap any thumbnail in the strip to instantly jump to that version. This is especially useful for photographers comparing a RAW file against its JPG, or for picking the best shot from a burst sequence.</string>
     <string name="help_tip_view_lock_image_title">Lock image in viewer</string>
-    <string name="help_tip_view_lock_image_subtitle">Prevent accidental swipes while viewing a photo</string>
+    <string name="help_tip_view_lock_image_subtitle">Verhindern Sie versehentliche Wischgesten beim Betrachten eines Fotos</string>
     <string name="help_tip_view_lock_image_p1_title">Lock the current photo</string>
     <string name="help_tip_view_lock_image_p1_desc">Long press the date header at the top of the viewer to lock the current image in place. A lock icon appears to confirm. While locked, swiping between photos is completely disabled, so you can freely zoom, pan, and explore every detail without the risk of accidentally switching to another photo.</string>
     <string name="help_tip_view_lock_image_p2_title">Unlock</string>
@@ -299,9 +299,9 @@
     <string name="help_tip_action_hide_vault_p2_s4">Choose a vault if you have more than one</string>
     <string name="help_tip_action_copy_to_album_title">Copy to album</string>
     <string name="help_tip_action_copy_to_album_subtitle">Copy media to another album</string>
-    <string name="help_tip_action_copy_to_album_p1_title">Copy to album</string>
+    <string name="help_tip_action_copy_to_album_p1_title">In Album kopieren</string>
     <string name="help_tip_action_copy_to_album_p1_desc">Create a duplicate of the photo or video in another album folder. The original stays where it is, and a new copy is created in the destination folder. This is useful when you want the same photo to appear in multiple albums without moving the original. Note: this creates an actual file copy, which uses additional storage.</string>
-    <string name="help_tip_action_copy_to_album_p1_s1">Open a photo</string>
+    <string name="help_tip_action_copy_to_album_p1_s1">Öffne ein Foto</string>
     <string name="help_tip_action_copy_to_album_p1_s2">Tap the three-dot menu</string>
     <string name="help_tip_action_copy_to_album_p1_s3">Select \'Copy to album\'</string>
     <string name="help_tip_action_copy_to_album_p1_s4">Choose or create the destination album</string>
@@ -334,7 +334,7 @@
     <string name="help_tip_viewer_auto_hide_video_p1_title">Auto-hide UI</string>
     <string name="help_tip_viewer_auto_hide_video_p1_desc">When a video starts playing, the toolbar and controls automatically fade away for a distraction-free viewing experience. Tap anywhere on the screen to bring the controls back. This creates a cinema-like feel, especially for longer videos. Disable this if you prefer controls to always stay visible.</string>
     <string name="help_tip_viewer_auto_hide_video_p1_s1">Go to Settings &gt; Media viewer</string>
-    <string name="help_tip_viewer_auto_hide_video_p1_s2">Toggle \'Auto-hide UI on video play\'</string>
+    <string name="help_tip_viewer_auto_hide_video_p1_s2">Option „Benutzeroberfläche bei Videowiedergabe automatisch ausblenden“ aktivieren/deaktivieren</string>
     <string name="help_tip_viewer_auto_hide_video_p1_s3">Tap the screen anytime to show controls again</string>
     <string name="help_tip_viewer_date_header_title">Show date header in viewer</string>
     <string name="help_tip_viewer_date_header_subtitle">Display the date when swiping between photos</string>
