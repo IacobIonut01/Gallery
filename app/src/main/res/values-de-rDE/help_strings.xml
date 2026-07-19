@@ -354,9 +354,9 @@
     <string name="help_tip_edit_crop_title">Crop and resize</string>
     <string name="help_tip_edit_crop_subtitle">Crop, rotate, and adjust aspect ratio</string>
     <string name="help_tip_edit_crop_p1_title">Crop your photos</string>
-    <string name="help_tip_edit_crop_p1_desc">Use the built-in crop tool to remove unwanted edges, reframe a shot, or focus on a specific subject. Drag the corner handles to adjust the crop area freely, or select a preset aspect ratio for consistent sizing.</string>
+    <string name="help_tip_edit_crop_p1_desc">Verwenden Sie das integrierte Zuschneidewerkzeug, um unerwünschte Ränder zu entfernen, eine Aufnahme neu zu rahmen oder den Fokus auf ein bestimmtes Motiv zu legen. Ziehen Sie die Eckgriffe, um den Zuschneidebereich frei anzupassen, oder wählen Sie ein voreingestelltes Seitenverhältnis für eine einheitliche Bildgröße.</string>
     <string name="help_tip_edit_crop_p2_title">Aspect ratios</string>
-    <string name="help_tip_edit_crop_p2_desc">Choose from free-form (any size), 1:1 (square, perfect for profile pictures), 4:3 (standard photo), 16:9 (widescreen), and other common ratios. The crop preview updates in real-time so you can see exactly what the result will look like.</string>
+    <string name="help_tip_edit_crop_p2_desc">Wählen Sie zwischen Freiform (beliebige Größe), 1:1 (quadratisch, ideal für Profilbilder), 4:3 (Standardfoto), 16:9 (Breitbild) und anderen gängigen Seitenverhältnissen. Die Vorschau des Bildausschnitts wird in Echtzeit aktualisiert, sodass Sie genau sehen können, wie das Ergebnis aussehen wird.</string>
     <string name="help_tip_edit_crop_p3_title">How to crop</string>
     <string name="help_tip_edit_crop_p3_desc">The crop tool is the most commonly used editing feature. Tip: use the 1:1 square ratio for social media profile pictures, 16:9 for wallpapers and presentations, and free-form when you just need to trim a specific area.</string>
     <string name="help_tip_edit_crop_p3_s1">Open a photo and tap the edit button</string>
@@ -409,8 +409,8 @@
     <string name="help_tip_edit_save_subtitle">Choose save format and view edit history</string>
     <string name="help_tip_edit_save_p1_title">Save formats</string>
     <string name="help_tip_edit_save_p1_desc">When saving an edited photo, choose your preferred format. JPEG is the most compatible and produces smaller files. PNG is lossless (no quality loss) but creates larger files — great when quality is critical. WebP offers a good balance of quality and file size. You can also adjust the quality slider to control the file size vs. quality tradeoff.</string>
-    <string name="help_tip_edit_save_p2_title">Edit history</string>
-    <string name="help_tip_edit_save_p2_desc">Gallery automatically backs up the original photo before any edit, so you can always restore it later. You can view all your edit backups in a dedicated screen showing the original and edited versions side by side. This safety net means you can experiment freely with edits.</string>
+    <string name="help_tip_edit_save_p2_title">Änderungsverlauf</string>
+    <string name="help_tip_edit_save_p2_desc">Die Galerie erstellt vor jeder Bearbeitung automatisch eine Sicherungskopie des Originalfotos, sodass Sie dieses später jederzeit wiederherstellen können. Sie können alle Ihre Bearbeitungs-Sicherungskopien auf einem eigenen Bildschirm anzeigen, auf dem die Original- und die bearbeitete Version nebeneinander dargestellt werden. Dank dieser Absicherung können Sie ungehindert mit Bearbeitungen experimentieren.</string>
     <string name="help_tip_edit_save_p2_s1">Go to Settings &gt; Smart features</string>
     <string name="help_tip_edit_save_p2_s2">Tap \'Edit backups viewer\'</string>
     <string name="help_tip_edit_save_p2_s3">View originals alongside edited versions</string>
@@ -463,10 +463,10 @@
     <string name="help_tip_ai_categories_p2_s2">Tap Categories</string>
     <string name="help_tip_ai_categories_p2_s3">Browse your auto-organized photos</string>
     <string name="help_tip_ai_categories_p2_s4">Tap a category to see its contents</string>
-    <string name="help_tip_ai_categories_p3_title">Customize</string>
-    <string name="help_tip_ai_categories_p3_desc">Make categories work for you: create custom categories with your own labels and criteria, adjust the confidence threshold to control how strictly photos are matched, and pin your most-used categories to the top. You can also hide categories you don\'t care about from the categories settings screen.</string>
+    <string name="help_tip_ai_categories_p3_title">Anpassen</string>
+    <string name="help_tip_ai_categories_p3_desc">Machen Sie Kategorien zu Ihrem Vorteil: Erstellen Sie benutzerdefinierte Kategorien mit eigenen Bezeichnungen und Kriterien, passen Sie den Schwellenwert an, um zu steuern, wie streng Fotos zugeordnet werden, und heften Sie Ihre am häufigsten verwendeten Kategorien oben an. Sie können Kategorien, die Sie nicht benötigen, außerdem in den Kategorieneinstellungen ausblenden.</string>
     <string name="help_tip_ai_create_category_title">Create custom categories</string>
-    <string name="help_tip_ai_create_category_subtitle">Define your own photo categories</string>
+    <string name="help_tip_ai_create_category_subtitle">Legen Sie Ihre eigenen Fotokategorien fest</string>
     <string name="help_tip_ai_create_category_p1_title">Custom categories</string>
     <string name="help_tip_ai_create_category_p1_desc">Beyond the built-in categories, you can create your own with custom names and classification criteria. For example, create a \'Pets\' category, a \'Work documents\' category, or anything specific to your photo collection. The AI will automatically sort matching photos into your custom categories.</string>
     <string name="help_tip_ai_create_category_p2_title">How to create</string>
@@ -517,7 +517,7 @@
     <string name="help_tip_albums_ignore_p2_title">Restore hidden albums</string>
     <string name="help_tip_albums_ignore_p2_desc">Changed your mind? Go back to Settings &gt; Ignored albums at any time to see all your hidden albums and restore any of them. Restored albums immediately reappear in the Albums tab and their photos return to the Timeline. No data is lost when ignoring or restoring.</string>
     <string name="help_tip_albums_groups_title">Organize albums into groups</string>
-    <string name="help_tip_albums_groups_subtitle">Create album groups for better organization</string>
+    <string name="help_tip_albums_groups_subtitle">Erstellen Sie Albumgruppen, um Ihre Alben besser zu organisieren</string>
     <string name="help_tip_albums_groups_p1_title">Album groups</string>
     <string name="help_tip_albums_groups_p1_desc">If you have many albums, groups help you organize them visually. For example, group all social media folders together, or keep work-related albums separate from personal ones. Groups appear as collapsible sections in your album list, making it much easier to find what you need.</string>
     <string name="help_tip_albums_groups_p2_title">Create a group</string>
@@ -569,14 +569,14 @@
     <string name="help_tip_vault_add_p2_s1">Open a photo, or select multiple in the grid</string>
     <string name="help_tip_vault_add_p2_s2">Tap the menu or selection action</string>
     <string name="help_tip_vault_add_p2_s3">Select \'Hide in vault\'</string>
-    <string name="help_tip_vault_add_p2_s4">Choose a vault if you have more than one</string>
+    <string name="help_tip_vault_add_p2_s4">Wählen Sie einen Tresor, wenn Sie mehr als einen haben</string>
     <string name="help_tip_vault_restore_title">Restore from vault</string>
     <string name="help_tip_vault_restore_subtitle">Move photos back to your regular gallery</string>
     <string name="help_tip_vault_restore_p1_title">Restore media</string>
     <string name="help_tip_vault_restore_p1_desc">To bring photos back from the vault to your regular gallery, open the vault, select the photos you want to restore, and tap the restore action. The files are decrypted and placed back in their original location (or a default folder if the original no longer exists). Once restored, the photos reappear in your timeline and albums as if they were never hidden.</string>
-    <string name="help_tip_vault_video_streaming_title">Streaming vault videos</string>
+    <string name="help_tip_vault_video_streaming_title">Verschlüsselte Videos aus dem Tresor abspielen</string>
     <string name="help_tip_vault_video_streaming_subtitle">Watch encrypted videos without full decryption</string>
-    <string name="help_tip_vault_video_streaming_p1_title">Streaming decryption</string>
+    <string name="help_tip_vault_video_streaming_p1_title">Entschlüsselung von Video-Inhalten</string>
     <string name="help_tip_vault_video_streaming_p1_desc">Videos stored in the vault play using streaming decryption, meaning they start playing almost immediately without needing to decrypt the entire file first. This is especially important for long or large video files that would otherwise take a long time to prepare. The decryption happens on-the-fly as the video plays, with no temporary unencrypted files created on disk.</string>
     <!-- FAVORITES &amp; TRASH -->
     <string name="help_tip_fav_add_title">Add to favorites</string>
