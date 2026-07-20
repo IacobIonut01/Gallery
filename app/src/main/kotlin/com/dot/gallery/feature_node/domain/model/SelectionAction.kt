@@ -20,6 +20,7 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.automirrored.outlined.RotateRight
 import androidx.compose.material.icons.outlined.SelectAll
 import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.outlined.Wallpaper
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.dot.gallery.R
 import kotlinx.serialization.Serializable
@@ -125,6 +126,12 @@ enum class SelectionAction(
         labelRes = R.string.download,
         descriptionRes = R.string.action_desc_download,
         zone = ActionZone.BOTTOM,
+    ),
+    SET_AS_ALBUM_COVER(
+        labelRes = R.string.use_as_album_cover,
+        descriptionRes = R.string.action_desc_set_as_album_cover,
+        zone = ActionZone.BOTTOM,
+        maxSelection = 1,
     );
 
     val icon: ImageVector
@@ -143,6 +150,7 @@ enum class SelectionAction(
             EDIT -> Icons.Outlined.Edit
             ROTATE -> Icons.AutoMirrored.Outlined.RotateRight
             DOWNLOAD -> Icons.Outlined.Download
+            SET_AS_ALBUM_COVER -> Icons.Outlined.Wallpaper
         }
 }
 

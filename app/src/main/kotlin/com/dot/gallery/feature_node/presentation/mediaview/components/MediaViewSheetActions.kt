@@ -26,6 +26,7 @@ import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.MovieCreation
 import androidx.compose.material.icons.outlined.Restore
 import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.outlined.Wallpaper
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -38,6 +39,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -68,6 +70,9 @@ import com.dot.gallery.feature_node.domain.util.isVideo
 import com.dot.gallery.feature_node.domain.util.MotionPhotoHelper
 import com.dot.gallery.feature_node.presentation.collection.CollectionViewModel
 import com.dot.gallery.feature_node.presentation.collection.components.AddToCollectionSheet
+import com.dot.gallery.feature_node.presentation.common.components.OptionItem
+import com.dot.gallery.feature_node.presentation.common.components.OptionLayoutStyle
+import com.dot.gallery.feature_node.presentation.common.components.OptionSheet
 import com.dot.gallery.feature_node.presentation.exif.CopyMediaSheet
 import com.dot.gallery.feature_node.presentation.exif.MoveMediaSheet
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
@@ -108,6 +113,7 @@ fun <T : Media> MediaViewSheetActions(
     val restoreConfirmState = rememberAppBottomSheetState()
     val copySheetState = rememberAppBottomSheetState()
     val moveSheetState = rememberAppBottomSheetState()
+    val useAsSheetState = rememberAppBottomSheetState()
     var showCollectionSheet by rememberSaveable { mutableStateOf(false) }
 
     val defaultEditor by Settings.Misc.rememberDefaultImageEditor()
@@ -119,6 +125,9 @@ fun <T : Media> MediaViewSheetActions(
     val restoreText = stringResource(R.string.restore)
     val openWithText = stringResource(R.string.open_with)
     val useAsText = stringResource(R.string.use_as)
+    val useAsAlbumCoverText = stringResource(R.string.use_as_album_cover)
+    val albumCoverUpdatedText = stringResource(R.string.album_cover_updated)
+    val moreOptionsText = stringResource(R.string.more_options)
     val copyText = stringResource(R.string.copy)
     val moveText = stringResource(R.string.move)
     val editText = stringResource(R.string.edit)
@@ -147,8 +156,40 @@ fun <T : Media> MediaViewSheetActions(
         } else false
     }
 
+    // "Use as album cover" is offered for local, non-encrypted media that live in a real album.
+    val canSetAlbumCover = remember(media) {
+        media.isLocalContent && media.canMakeActions && media.albumID > 0 && !media.isEncrypted
+    }
+    // Options shown when tapping "Use as" for an album-cover-capable item.
+    val useAsOptions = remember(media, useAsAlbumCoverText, moreOptionsText) {
+        listOf(
+            OptionItem(
+                icon = Icons.Outlined.Wallpaper,
+                text = useAsAlbumCoverText,
+                onClick = {
+                    scope.launch {
+                        handler.updateAlbumThumbnail(media.albumID, media.getUri())
+                        Toast.makeText(context, albumCoverUpdatedText, Toast.LENGTH_SHORT).show()
+                        useAsSheetState.hide()
+                    }
+                }
+            ),
+            OptionItem(
+                icon = Icons.AutoMirrored.Outlined.OpenInNew,
+                text = moreOptionsText,
+                onClick = {
+                    scope.launch {
+                        useAsSheetState.hide()
+                        if (media.isVideo) context.launchOpenWithIntent(media)
+                        else context.launchUseAsIntent(media)
+                    }
+                }
+            )
+        ).toMutableStateList()
+    }
+
     // Build action list
-    val actions = remember(media, albumsState.value, vaults.value, currentVault, isMotionPhoto) {
+    val actions = remember(media, albumsState.value, vaults.value, currentVault, isMotionPhoto, canSetAlbumCover) {
         buildList<ActionGridItem> {
             // Share
             add(ActionGridItem(
@@ -202,14 +243,20 @@ fun <T : Media> MediaViewSheetActions(
                     onClick = { scope.launch { restoreConfirmState.show() } }
                 ))
             }
-            // Open As / Use As
+            // Open As / Use As — when the item is a local, non-encrypted media in a real album,
+            // tapping opens a sub-sheet offering "Use as album cover" plus "More options" (the
+            // system chooser). Otherwise it falls back to launching the system chooser directly.
             add(ActionGridItem(
                 icon = Icons.AutoMirrored.Outlined.OpenInNew,
                 text = if (media.isVideo) openWithText else useAsText,
                 onClick = {
-                    scope.launch {
-                        if (media.isVideo) context.launchOpenWithIntent(media)
-                        else context.launchUseAsIntent(media)
+                    if (canSetAlbumCover) {
+                        scope.launch { useAsSheetState.show() }
+                    } else {
+                        scope.launch {
+                            if (media.isVideo) context.launchOpenWithIntent(media)
+                            else context.launchUseAsIntent(media)
+                        }
                     }
                 }
             ))
@@ -323,6 +370,15 @@ fun <T : Media> MediaViewSheetActions(
     }
 
     // --- Complex action sheets ---
+
+    // "Use as" sub-sheet: album cover + system chooser
+    if (canSetAlbumCover) {
+        OptionSheet(
+            state = useAsSheetState,
+            optionList = arrayOf(useAsOptions),
+            style = OptionLayoutStyle.Column,
+        )
+    }
 
     // Restore confirmation
     if (media.isEncrypted && restoreMedia != null && currentVault != null) {

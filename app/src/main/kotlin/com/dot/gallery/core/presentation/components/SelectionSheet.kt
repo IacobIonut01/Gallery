@@ -735,6 +735,27 @@ fun <T : Media> BoxScope.SelectionSheet(
                                     }
                                 }
                             }
+                            SelectionAction.SET_AS_ALBUM_COVER -> {
+                                val single = selectedMedia.singleOrNull()
+                                // Local, real-album items only; the cloud branch above already
+                                // handles full-cloud selections.
+                                if (single != null && !single.isCloud && single.albumID > 0 &&
+                                    !isInVault && !isInPrivateFolder
+                                ) {
+                                    val coverSetText = stringResource(R.string.album_cover_updated)
+                                    SelectionBarColumn(
+                                        imageVector = action.icon,
+                                        tabletMode = tabletMode,
+                                        title = stringResource(action.labelRes)
+                                    ) {
+                                        scope.launch {
+                                            handler.updateAlbumThumbnail(single.albumID, single.getUri())
+                                            Toast.makeText(context, coverSetText, Toast.LENGTH_SHORT).show()
+                                            selector.clearSelection()
+                                        }
+                                    }
+                                }
+                            }
                             else -> {} // Top-zone actions don't appear in bottom bar
                         }
                     }

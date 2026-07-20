@@ -592,6 +592,9 @@
     <string name="refresh_metadata">Refresh Metadata</string>
     <string name="change_thumbnail">Change album cover</string>
     <string name="delete_thumbnail">Remove custom album cover</string>
+    <string name="use_as_album_cover">Use as album cover</string>
+    <string name="action_desc_set_as_album_cover">Set the selected photo as the cover of its album</string>
+    <string name="album_cover_updated">Album cover updated</string>
     <string name="settings_general_summary">Various general settings</string>
     <string name="ai_category_summary">Control what Smart Features you want to use</string>
 
