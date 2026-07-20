@@ -110,7 +110,7 @@
     <string name="allow_gif_animation_title">Animate GIFs in grid</string>
     <string name="allow_gif_animation_summary">Lejátssza a GIF-animációkat az idővonalon és az albumrácsban. A sok GIF-et tartalmazó mappákban a jobb teljesítmény érdekében kapcsolja ki</string>
     <string name="amoled_mode_title">Use Amoled Mode</string>
-    <string name="amoled_mode_summary">Higher contrast, best suited for Amoled Screens</string>
+    <string name="amoled_mode_summary">Nagyobb kontraszt, leginkább Amoled kijelzőkhöz alkalmas</string>
     <string name="use_system_font_title">Rendszerbetűtípus használata</string>
     <string name="use_system_font_summary">Use your device\'s default font instead of the built-in one</string>
     <string name="use_system_font_description">Ha engedélyezve van, az alkalmazás a beépített Google Sans helyett az eszköz rendszerbetűtípusát használja. Ez javíthatja az olvashatóságot, ha egyéni rendszerbetűtípust használ.</string>
