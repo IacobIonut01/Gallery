@@ -45,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
@@ -202,7 +203,19 @@ fun <T : Media> MediaImage(
                 .fillMaxSize()
                 .align(Alignment.Center)
                 .aspectRatio(aspectRatio)
-                .padding(selectedSize)
+                // Shrink the thumbnail visually (GPU scale) instead of padding its layout.
+                // Padding changes the measured size, forcing the image loader to re-request a
+                // smaller bitmap on selection (visible flash). Scaling keeps the layout size
+                // constant so the already-decoded painter is simply resized on screen.
+                .graphicsLayer {
+                    val insetPx = selectedSize.toPx()
+                    val min = size.minDimension
+                    if (min > 0f && insetPx > 0f) {
+                        val s = ((min - insetPx * 2f) / min).coerceIn(0f, 1f)
+                        scaleX = s
+                        scaleY = s
+                    }
+                }
                 .clip(roundedShape)
                 .background(
                     color = MaterialTheme.colorScheme.surfaceContainerHigh,
