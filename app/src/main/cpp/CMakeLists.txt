@@ -107,3 +107,36 @@ else()
             "Run scripts/native/build-heif-encode.sh all to enable tiled HEIC/AVIF encode for every ABI.")
     target_link_libraries(heifenc ${log-lib})
 endif()
+
+# ---------------------------------------------------------------------------------------------
+# rawcodec: native RAW decode (LibRaw) + 8/16-bit TIFF export (libtiff). Links prebuilt static
+# libraw + libtiff + libjpeg + zlib (produced by scripts/native/build-libraw.sh into
+# rawcodec/<ABI>/). Gives true demosaiced RAW rendering for all LibRaw-supported camera formats.
+# Missing prebuilt => stub, and Kotlin falls back to the embedded-JPEG-preview path.
+set(RAWCODEC_PREBUILT "${CMAKE_CURRENT_SOURCE_DIR}/rawcodec/${ANDROID_ABI}")
+
+add_library(rawcodec SHARED raw_codec_jni.cpp)
+
+if(EXISTS "${RAWCODEC_PREBUILT}/lib/libraw.a" AND EXISTS "${RAWCODEC_PREBUILT}/lib/libtiff.a" AND EXISTS "${RAWCODEC_PREBUILT}/lib/libjpeg.a" AND EXISTS "${RAWCODEC_PREBUILT}/lib/libz.a")
+    message(STATUS "rawcodec: using prebuilt LibRaw + libtiff for ${ANDROID_ABI}")
+
+    add_library(raw STATIC IMPORTED)
+    set_target_properties(raw PROPERTIES IMPORTED_LOCATION "${RAWCODEC_PREBUILT}/lib/libraw.a")
+    add_library(tiff STATIC IMPORTED)
+    set_target_properties(tiff PROPERTIES IMPORTED_LOCATION "${RAWCODEC_PREBUILT}/lib/libtiff.a")
+    add_library(raw_jpeg STATIC IMPORTED)
+    set_target_properties(raw_jpeg PROPERTIES IMPORTED_LOCATION "${RAWCODEC_PREBUILT}/lib/libjpeg.a")
+    add_library(raw_z STATIC IMPORTED)
+    set_target_properties(raw_z PROPERTIES IMPORTED_LOCATION "${RAWCODEC_PREBUILT}/lib/libz.a")
+
+    target_include_directories(rawcodec PRIVATE "${RAWCODEC_PREBUILT}/include")
+    target_compile_definitions(rawcodec PRIVATE HAVE_LIBRAW=1)
+
+    # Link order (static): LibRaw + libtiff reference libjpeg/zlib symbols, so they come first.
+    # LibRaw is C++ and pulls in the STL.
+    target_link_libraries(rawcodec raw tiff raw_jpeg raw_z ${log-lib})
+else()
+    message(WARNING "rawcodec: no prebuilt LibRaw/libtiff for ${ANDROID_ABI}; building stub. "
+            "Run scripts/native/build-libraw.sh all to enable native RAW decode/export for every ABI.")
+    target_link_libraries(rawcodec ${log-lib})
+endif()

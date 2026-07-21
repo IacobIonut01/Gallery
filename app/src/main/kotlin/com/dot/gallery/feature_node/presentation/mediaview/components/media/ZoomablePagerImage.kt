@@ -58,6 +58,10 @@ import com.dot.gallery.core.decoder.FullImageRegionDecoder
 import com.dot.gallery.core.decoder.HeifDebug
 import com.dot.gallery.core.decoder.HeifRegionDecoder
 import com.dot.gallery.core.decoder.JxlRegionDecoder
+import com.dot.gallery.core.decoder.format.TiffImageDecoder
+import com.dot.gallery.core.decoder.NativeRawDecoder
+import com.dot.gallery.core.decoder.RawDevelopStore
+import com.dot.gallery.core.decoder.RawRegionDecoder
 import com.dot.gallery.core.util.HdrCapabilities
 import com.dot.gallery.core.presentation.components.util.LocalBatteryStatus
 import com.dot.gallery.core.presentation.components.util.ProvideBatteryStatus
@@ -74,6 +78,7 @@ import com.dot.gallery.feature_node.domain.util.isHeif
 import com.dot.gallery.feature_node.domain.util.isJp2
 import com.dot.gallery.feature_node.domain.util.isJxl
 import com.dot.gallery.feature_node.domain.util.isPsd
+import com.dot.gallery.feature_node.domain.util.isRaw
 import com.dot.gallery.feature_node.domain.util.isSvg
 import com.dot.gallery.feature_node.domain.util.isTiff
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
@@ -287,6 +292,10 @@ fun <T : Media> ZoomablePagerImage(
         media.isEncrypted
     }
     val isJxl = remember(media) { media.isJxl }
+    // Cutout/subject-suggestion decode via BitmapFactory, which cannot decode TIFF/PSD/JP2 at all —
+    // so the feature can never work for them and running it just wastes work (and, for large 16-bit
+    // TIFFs, greedily reads metadata → OOM). Disable it for those formats.
+    val cutoutSupported = remember(media) { !(media.isTiff || media.isPsd || media.isJp2) }
     val isAnimated = remember(media) {
         media.isApng || media.isJxl || (media.isAvif && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) ||
                 (media.isHeif && media.mimeType.endsWith("-sequence") &&
@@ -302,12 +311,24 @@ fun <T : Media> ZoomablePagerImage(
     val filterQuality = if (disableSmoothing) FilterQuality.None else DrawScope.DefaultFilterQuality
     // Region decoder for formats Android's BitmapRegionDecoder can't subsample (PSD/JP2/TIFF/SVG).
     // Without this they only show the screen-resolution base painter and look blurry when zoomed.
-    val customRegionFactory = remember(media) {
+    // RAW develop recipe (per-image, session-scoped). Reading it here makes the region decoder
+    // rebuild whenever the Develop sheet tunes the recipe, live re-rendering the zoomed image.
+    val rawParams = if (media.isRaw) RawDevelopStore.paramsFor(media.id) else null
+    val customRegionFactory = remember(media, rawParams) {
         when {
             media.isPsd -> FullImageRegionDecoder.forPsd()
             media.isJp2 -> FullImageRegionDecoder.forJp2()
-            media.isTiff -> FullImageRegionDecoder.forTiff()
+            // The TIFF region decoder full-decodes the file into one bitmap for cropping; on a large
+            // 16-bit TIFF (the file IS the raster) that reads 150+ MB and OOMs. Only attach it for
+            // files that fit the heap; oversized TIFFs keep the downsampled base painter (no zoom
+            // subsampling) instead of crashing.
+            media.isTiff && media.size <= TiffImageDecoder.MAX_BYTES.toLong() ->
+                FullImageRegionDecoder.forTiff()
             media.isSvg -> FullImageRegionDecoder.forSvg()
+            // RAW: demosaic via LibRaw for crisp zoom; falls back to embedded preview when the
+            // native lib is unavailable (ABI without prebuilt libs).
+            media.isRaw && NativeRawDecoder.isAvailable && rawParams != null ->
+                RawRegionDecoder.forRaw(rawParams)
             else -> null
         }
     }
@@ -554,7 +575,7 @@ fun <T : Media> ZoomablePagerImage(
     // rotates). Replaces the old always-on "Cut out" pill with an auto-detected, tappable hint.
     // Detection is debounced, off-main and cancelled/cleaned up on deselect, media change or when a
     // cutout is already active; rememberSubjectSuggestionState() disposes it when this leaves screen.
-    val suggestionsEnabled = !longPressStartsCutout && cutoutEnabled
+    val suggestionsEnabled = !longPressStartsCutout && cutoutEnabled && cutoutSupported
     LaunchedEffect(media, isSelected, suggestionsEnabled, cutoutState.isActive) {
         if (isSelected && suggestionsEnabled && !cutoutState.isActive) {
             // Only start scanning after the image has been continuously visible for 2s, so fast
@@ -680,7 +701,8 @@ fun <T : Media> ZoomablePagerImage(
     // (e.g. during a slideshow).
     val onImageLongPress: (Offset) -> Unit = { offset ->
         if (cutoutEnabled) {
-            if (longPressStartsCutout) startCutoutAt(offset) else rotateImage()
+            // Cut-out can't run on TIFF/PSD/JP2 (BitmapFactory can't decode them); rotate instead.
+            if (longPressStartsCutout && cutoutSupported) startCutoutAt(offset) else rotateImage()
         }
     }
 

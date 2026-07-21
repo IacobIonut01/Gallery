@@ -76,18 +76,22 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hasRoute
+import androidx.navigation.toRoute
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.activity.compose.BackHandler
 import androidx.navigation.compose.rememberNavController
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
+import com.dot.gallery.core.decoder.RawDevelopParams
 import com.dot.gallery.feature_node.domain.model.editor.Adjustment
 import com.dot.gallery.feature_node.domain.model.editor.CropState
 import com.dot.gallery.feature_node.domain.model.editor.DrawMode
 import com.dot.gallery.feature_node.domain.model.editor.DrawType
+import com.dot.gallery.feature_node.domain.model.editor.DevelopCategory
 import com.dot.gallery.feature_node.domain.model.editor.EditorDestination
 import com.dot.gallery.feature_node.domain.model.editor.EditorItems
+import com.dot.gallery.feature_node.domain.model.editor.toEditorDestination
 import com.dot.gallery.feature_node.domain.model.editor.ImageFilter
 import com.dot.gallery.feature_node.domain.model.editor.PathProperties
 import com.dot.gallery.feature_node.domain.model.editor.TextAnnotation
@@ -170,6 +174,10 @@ fun EditScreen2(
     onDetectFaces: () -> Unit = {},
     faceDetectAvailable: Boolean = false,
     isDetectingFaces: Boolean = false,
+    isRawEdit: Boolean = false,
+    rawDevelopParams: RawDevelopParams? = null,
+    onRawDevelopChange: (RawDevelopParams) -> Unit = {},
+    rawThumbnailProvider: (suspend (RawDevelopParams) -> android.graphics.Bitmap?)? = null,
 ) = GalleryTheme(darkTheme = true, ignoreUserPreference = true) {
     val context = LocalContext.current
     val navigator = rememberSupportingPaneScaffoldNavigator(
@@ -204,15 +212,35 @@ fun EditScreen2(
 
     var showRevertDialog by remember { mutableStateOf(false) }
 
+    // Visible tabs depend on the media: RAW hides Lighting/Colour/Effects behind the Develop tab.
+    val visibleTabs = remember(isRawEdit) { EditorItems.visibleItems(isRawEdit) }
+
     // Track which tab is currently selected for the tab bar highlight
-    var selectedTab by remember { mutableStateOf<EditorItems?>(EditorItems.Lighting) }
+    var selectedTab by remember(isRawEdit) {
+        mutableStateOf<EditorItems?>(if (isRawEdit) EditorItems.WhiteBalance else EditorItems.Lighting)
+    }
     val showingEditorScreen by rememberedDerivedState {
         navBackStackEntry?.destination?.hasRoute<EditorDestination.Editor>() == true
+    }
+
+    // RAW loads asynchronously: the NavHost may have already started on Lighting before isRawEdit
+    // flipped true. Once it does, jump to the first develop tab so content matches the selected tab.
+    LaunchedEffect(isRawEdit) {
+        if (isRawEdit && navBackStackEntry?.destination?.hasRoute<EditorDestination.Develop>() != true) {
+            selectedTab = EditorItems.WhiteBalance
+            runCatching {
+                navController.navigate(EditorDestination.Develop(DevelopCategory.WhiteBalance)) {
+                    popUpTo(EditorDestination.Editor) { inclusive = false }
+                    launchSingleTop = true
+                }
+            }
+        }
     }
 
     // Determine if we're on a top-level tab (not in a detail view)
     val isOnTopLevelTab by rememberedDerivedState {
         showingEditorScreen ||
+        navBackStackEntry?.destination?.hasRoute<EditorDestination.Develop>() == true ||
         navBackStackEntry?.destination?.hasRoute<EditorDestination.Markup>() == true ||
         navBackStackEntry?.destination?.hasRoute<EditorDestination.Lighting>() == true ||
         navBackStackEntry?.destination?.hasRoute<EditorDestination.Colour>() == true ||
@@ -720,7 +748,11 @@ fun EditScreen2(
                                 selectedTextIndex = selectedTextIndex,
                                 onDetectFaces = onDetectFaces,
                                 faceDetectAvailable = faceDetectAvailable,
-                                isDetectingFaces = isDetectingFaces
+                                isDetectingFaces = isDetectingFaces,
+                                startDestination = if (isRawEdit) EditorDestination.Develop(DevelopCategory.WhiteBalance) else EditorDestination.Lighting,
+                                rawDevelopParams = if (isRawEdit) rawDevelopParams else null,
+                                onRawDevelopChange = onRawDevelopChange,
+                                rawThumbnailProvider = rawThumbnailProvider
                             )
                         }
                     }
@@ -779,7 +811,11 @@ fun EditScreen2(
                         selectedTextIndex = selectedTextIndex,
                         onDetectFaces = onDetectFaces,
                         faceDetectAvailable = faceDetectAvailable,
-                        isDetectingFaces = isDetectingFaces
+                        isDetectingFaces = isDetectingFaces,
+                        startDestination = if (isRawEdit) EditorDestination.Develop(DevelopCategory.WhiteBalance) else EditorDestination.Lighting,
+                        rawDevelopParams = if (isRawEdit) rawDevelopParams else null,
+                        onRawDevelopChange = onRawDevelopChange,
+                        rawThumbnailProvider = rawThumbnailProvider
                     )
                 }
 
@@ -919,6 +955,12 @@ fun EditScreen2(
                         LaunchedEffect(navBackStackEntry) {
                             val dest = navBackStackEntry?.destination
                             val tab = when {
+                                dest?.hasRoute<EditorDestination.Develop>() == true -> {
+                                    val category = runCatching {
+                                        navBackStackEntry?.toRoute<EditorDestination.Develop>()?.category
+                                    }.getOrNull()
+                                    EditorItems.entries.firstOrNull { it.developCategory == category }
+                                }
                                 dest?.hasRoute<EditorDestination.Lighting>() == true -> EditorItems.Lighting
                                 dest?.hasRoute<EditorDestination.Filters>() == true -> EditorItems.Filters
                                 dest?.hasRoute<EditorDestination.Markup>() == true -> EditorItems.Markup
@@ -932,6 +974,7 @@ fun EditScreen2(
                         EditorSelector(
                             modifier = Modifier.fillMaxWidth(),
                             selectedItem = selectedTab,
+                            items = visibleTabs,
                             isSupportingPanel = false,
                             onItemClick = { editorItem ->
                                 // Commit filter when leaving the Filters section
@@ -939,15 +982,7 @@ fun EditScreen2(
                                     commitFilter()
                                 }
                                 selectedTab = editorItem
-                                val dest = when (editorItem) {
-                                    EditorItems.Lighting -> EditorDestination.Lighting
-                                    EditorItems.Filters -> EditorDestination.Filters
-                                    EditorItems.Markup -> EditorDestination.Markup
-                                    EditorItems.Colour -> EditorDestination.Colour
-                                    EditorItems.Effects -> EditorDestination.Effects
-                                    EditorItems.More -> EditorDestination.More
-                                }
-                                navController.navigate(dest) {
+                                navController.navigate(editorItem.toEditorDestination()) {
                                     popUpTo(EditorDestination.Editor) { inclusive = false }
                                     launchSingleTop = true
                                 }

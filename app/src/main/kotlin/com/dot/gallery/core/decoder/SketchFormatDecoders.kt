@@ -19,7 +19,9 @@ import com.github.panpf.sketch.fetch.FetchResult
 import com.github.panpf.sketch.request.ImageData
 import com.github.panpf.sketch.request.RequestContext
 import com.github.panpf.sketch.request.get
+import com.github.panpf.sketch.source.ContentDataSource
 import com.github.panpf.sketch.source.DataSource
+import com.github.panpf.sketch.source.getFileOrNull
 import com.github.panpf.sketch.util.Size
 import okio.buffer
 
@@ -189,16 +191,36 @@ class SketchTiffDecoder(
     }
 
     override suspend fun decode(): ImageData {
-        val bytes = dataSource.openSource().buffer().use { it.readByteArray() }
         val (w, h) = requestContext.targetDims()
-        val bitmap = TiffImageDecoder.decode(bytes, w, h)
+        // Never read the whole file onto the heap: a large 16-bit TIFF (the file IS the raster) can
+        // be 150+ MB and readByteArray() OOMs. Prefer a File / content URI so TiffImageDecoder can
+        // memory-map + downsample oversized files; only tiny non-file sources fall back to bytes.
+        val bitmap = decodeViaFileOrUri(w, h)
             ?: throw IllegalStateException("Unable to decode TIFF image")
         return dataSource.toImageData(bitmap, TIFF_MIMETYPE, requestContext)
     }
 
-    override suspend fun getImageInfo(): ImageInfo {
+    private fun decodeViaFileOrUri(w: Int, h: Int): Bitmap? {
+        val context = requestContext.request.context
+        (dataSource as? ContentDataSource)?.let {
+            return TiffImageDecoder.decode(context, it.contentUri, w, h)
+        }
+        dataSource.getFileOrNull(requestContext.sketch)?.let {
+            return TiffImageDecoder.decode(it.toFile(), w, h)
+        }
         val bytes = dataSource.openSource().buffer().use { it.readByteArray() }
-        val size = TiffImageDecoder.getSize(bytes)
+        return TiffImageDecoder.decode(bytes, w, h)
+    }
+
+    override suspend fun getImageInfo(): ImageInfo {
+        val context = requestContext.request.context
+        val size = when {
+            dataSource is ContentDataSource ->
+                TiffImageDecoder.getSize(context, (dataSource as ContentDataSource).contentUri)
+            else -> dataSource.getFileOrNull(requestContext.sketch)?.let {
+                TiffImageDecoder.getSize(it.toFile())
+            } ?: dataSource.openSource().buffer().use { TiffImageDecoder.getSize(it.readByteArray()) }
+        }
         return ImageInfo(size?.width ?: 0, size?.height ?: 0, TIFF_MIMETYPE)
     }
 }
@@ -235,7 +257,10 @@ class SketchRawDecoder(
     override suspend fun decode(): ImageData {
         val bytes = dataSource.openSource().buffer().use { it.readByteArray() }
         val (w, h) = requestContext.targetDims()
+        // Prefer the embedded JPEG preview (fastest); fall back to LibRaw's decoded thumbnail for
+        // non-TIFF RAW (RAF/CRW/X3F) that has no extractable embedded JPEG.
         val bitmap = TiffImageDecoder.decodePreview(bytes, w, h)
+            ?: NativeRawDecoder.getThumbnail(bytes)
             ?: throw IllegalStateException("Unable to decode RAW preview")
         return dataSource.toImageData(bitmap, RAW_MIMETYPE, requestContext)
     }
@@ -243,6 +268,7 @@ class SketchRawDecoder(
     override suspend fun getImageInfo(): ImageInfo {
         val bytes = dataSource.openSource().buffer().use { it.readByteArray() }
         val size = TiffImageDecoder.getSize(bytes)
+            ?: NativeRawDecoder.getSize(bytes)?.let { android.util.Size(it.width, it.height) }
         return ImageInfo(size?.width ?: 0, size?.height ?: 0, RAW_MIMETYPE)
     }
 }

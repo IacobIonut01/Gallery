@@ -64,6 +64,7 @@ import com.dot.gallery.feature_node.domain.util.canMakeActions
 import com.dot.gallery.feature_node.domain.util.getUri
 import com.dot.gallery.feature_node.domain.util.isCloud
 import com.dot.gallery.feature_node.domain.util.isEncrypted
+import com.dot.gallery.feature_node.domain.util.isHeif
 import com.dot.gallery.feature_node.domain.util.isImage
 import com.dot.gallery.feature_node.domain.util.isLocalContent
 import com.dot.gallery.feature_node.domain.util.isVideo
@@ -149,7 +150,12 @@ fun <T : Media> MediaViewSheetActions(
     // Detect Motion Photo (embedded video) to offer a "Save as video" export
     var isMotionPhoto by remember(media) { mutableStateOf(false) }
     LaunchedEffect(media) {
-        isMotionPhoto = if (!media.isEncrypted && !media.isCloud && media.isImage) {
+        // Motion Photos only ever live in JPEG/HEIC containers. Restricting detection to those
+        // avoids running metadata-extractor (which loads the whole file) on huge non-photo formats
+        // like 16-bit TIFF, where it OOMs.
+        val motionPhotoCandidate = !media.isEncrypted && !media.isCloud && media.isImage &&
+                (media.mimeType == "image/jpeg" || media.mimeType == "image/jpg" || media.isHeif)
+        isMotionPhoto = if (motionPhotoCandidate) {
             withContext(Dispatchers.IO) {
                 MotionPhotoHelper.parseInfo(context, media.getUri()) != null
             }

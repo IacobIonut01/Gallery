@@ -28,8 +28,17 @@ class TiffMimeInputStreamDecoder(
         height: Int,
         options: Options
     ): Resource<Bitmap>? {
-        val data = source.inputStream.readBytes()
-        val bmp = TiffImageDecoder.decode(data, width, height) ?: return null
+        // Prefer the seekable/mmap path: it memory-maps the file and decodes strip-by-strip,
+        // skipping strides for the grid thumbnail — so a 150 MB 16-bit TIFF never lands on the heap
+        // and only a fraction of its rows are inflated. Falls back to the byte[] path only when the
+        // Uri isn't available (non-content sources).
+        val uri = source.uri
+        val context = source.context
+        val bmp = if (uri != null && context != null) {
+            TiffImageDecoder.decode(context, uri, width, height)
+        } else {
+            TiffImageDecoder.decode(source.inputStream.readBytes(), width, height)
+        } ?: return null
         return BitmapResource.obtain(bmp, bitmapPool)
     }
 }

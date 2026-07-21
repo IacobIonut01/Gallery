@@ -21,6 +21,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.Relation
 import com.dot.gallery.core.decoder.format.SpecialFormatProbe
+import com.dot.gallery.core.util.SafeExif
 import com.dot.gallery.core.sandbox.IsolatedMetadataParser
 import com.dot.gallery.core.sandbox.IsolatedMetadataService.Companion as Keys
 import com.dot.gallery.feature_node.domain.util.getUri
@@ -443,8 +444,9 @@ private suspend fun buildFallbackImageMetadata(
     var gpsLongitude: Double? = null
 
     runCatching {
-        resolver.openInputStream(uri)?.use { stream ->
-            val exif = ExifInterface(stream)
+        // Seekable-FD ExifInterface (via SafeExif) instead of an InputStream: the latter buffers up
+        // to the strip offset and OOMs on large 16-bit TIFFs (the file IS the TIFF/EXIF structure).
+        SafeExif.open(context, uri)?.let { exif ->
             description = exif.getAttribute(ExifInterface.TAG_IMAGE_DESCRIPTION)
             dateTimeOriginal = exif.getAttribute(ExifInterface.TAG_DATETIME_ORIGINAL)
                 ?: exif.getAttribute(ExifInterface.TAG_DATETIME)

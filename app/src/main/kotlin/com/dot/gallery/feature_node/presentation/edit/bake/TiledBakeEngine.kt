@@ -15,6 +15,7 @@ import android.net.Uri
 import android.os.Build
 import androidx.exifinterface.media.ExifInterface
 import androidx.core.graphics.createBitmap
+import com.dot.gallery.core.util.SafeExif
 import com.dot.gallery.feature_node.domain.model.editor.Adjustment
 import com.dot.gallery.feature_node.domain.model.editor.TileBehavior
 import com.dot.gallery.feature_node.domain.model.editor.TileableAdjustment
@@ -310,14 +311,11 @@ object TiledBakeEngine {
 
     /** True when the source has no (or a normal/undefined) EXIF orientation. */
     private fun hasNormalOrientation(context: Context, uri: Uri): Boolean {
-        return runCatching {
-            context.contentResolver.openInputStream(uri)?.use { input ->
-                val orientation = ExifInterface(input)
-                    .getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
-                orientation == ExifInterface.ORIENTATION_NORMAL ||
-                    orientation == ExifInterface.ORIENTATION_UNDEFINED
-            } ?: false
-        }.getOrDefault(false)
+        // Seekable-FD ExifInterface (via SafeExif): an InputStream-backed one buffers up to the strip
+        // offset and OOMs on large 16-bit TIFFs. Unreadable orientation is treated as normal.
+        val orientation = SafeExif.orientation(context, uri)
+        return orientation == ExifInterface.ORIENTATION_NORMAL ||
+                orientation == ExifInterface.ORIENTATION_UNDEFINED
     }
 
     private const val KERNEL_HALO_MARGIN = 2

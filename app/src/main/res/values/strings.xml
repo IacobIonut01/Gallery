@@ -187,6 +187,65 @@
     <string name="reencode_quality_mode_manual">Manual</string>
     <string name="reencode_quality_lossy">Lossy quality</string>
     <string name="reencode_quality_jxl_effort">JXL effort</string>
+    <!-- RAW develop -->
+    <string name="raw_develop">Develop RAW</string>
+    <string name="raw_develop_title">Develop RAW</string>
+    <string name="raw_develop_wb">White balance</string>
+    <string name="raw_wb_camera">Camera</string>
+    <string name="raw_wb_auto">Auto</string>
+    <string name="raw_wb_daylight">Daylight</string>
+    <string name="raw_develop_exposure">Exposure</string>
+    <string name="raw_develop_highlight">Highlight recovery</string>
+    <string name="raw_highlight_clip">Clip</string>
+    <string name="raw_highlight_blend">Blend</string>
+    <string name="raw_highlight_rebuild">Rebuild</string>
+    <string name="raw_develop_color">Colour space</string>
+    <string name="raw_color_srgb">sRGB</string>
+    <string name="raw_color_adobe">Adobe RGB</string>
+    <string name="raw_color_wide">Wide</string>
+    <string name="raw_color_prophoto">ProPhoto</string>
+    <string name="raw_develop_demosaic">Demosaic</string>
+    <string name="raw_demosaic_linear">Linear</string>
+    <string name="raw_demosaic_vng">VNG</string>
+    <string name="raw_demosaic_ppg">PPG</string>
+    <string name="raw_demosaic_ahd">AHD</string>
+    <string name="raw_demosaic_dcb">DCB</string>
+    <string name="raw_develop_halfsize">Half resolution (faster)</string>
+    <string name="raw_develop_reset">Reset</string>
+    <string name="raw_develop_export">Export</string>
+    <string name="raw_export_jpeg">JPEG</string>
+    <string name="raw_export_png">PNG</string>
+    <string name="raw_export_tiff8">TIFF (8-bit)</string>
+    <string name="raw_export_tiff16">TIFF (16-bit)</string>
+    <string name="raw_export_choose_format">Save developed copy</string>
+    <string name="raw_export_choose_format_subtitle">Choose a format for your developed RAW</string>
+    <string name="raw_export_tiff_unavailable">TIFF keeps full bit depth but can\'t include crop, filters or markup — remove them to export TIFF.</string>
+    <string name="raw_export_in_progress">Exporting…</string>
+    <string name="raw_export_success">Saved developed copy</string>
+    <string name="raw_export_failed">Export failed</string>
+    <!-- RAW developer tabs -->
+    <string name="raw_tab_white_balance">White balance</string>
+    <string name="raw_tab_tone">Tone</string>
+    <string name="raw_tab_detail">Detail</string>
+    <string name="raw_tab_colour">Colour</string>
+    <string name="raw_tab_output">Output</string>
+    <!-- RAW developer controls -->
+    <string name="raw_wb_custom">Custom</string>
+    <string name="raw_wb_temp">Temperature</string>
+    <string name="raw_wb_tint">Tint</string>
+    <string name="raw_tone_brightness">Brightness</string>
+    <string name="raw_tone_contrast">Contrast</string>
+    <string name="raw_tone_shadows">Shadows</string>
+    <string name="raw_tone_highlights">Highlights</string>
+    <string name="raw_detail_sharpen">Sharpen</string>
+    <string name="raw_detail_noise_reduction">Noise reduction</string>
+    <string name="raw_nr_off">Off</string>
+    <string name="raw_nr_low">Low</string>
+    <string name="raw_nr_medium">Medium</string>
+    <string name="raw_nr_high">High</string>
+    <string name="raw_colour_saturation">Saturation</string>
+    <string name="raw_colour_vibrance">Vibrance</string>
+    <string name="raw_output_default_format">Default export format</string>
     <string name="edit_revert_failed">Failed to revert to the original.</string>
     <string name="revert_to_original">Revert to Original</string>
     <string name="revert_to_original_confirmation">This will discard all edits and restore the original image. This action cannot be undone.</string>
@@ -773,6 +832,7 @@
     <string name="widget_select_photos">Select Photos</string>
 
     <!-- Editor tabs -->
+    <string name="editor_develop">Develop</string>
     <string name="editor_lighting">Lighting</string>
     <string name="editor_colour">Colour</string>
     <string name="editor_effects">Effects</string>

@@ -13,3 +13,7 @@
 # Prebuilt native libheif(encoders)/x265/aom/libde265 static libs + headers (large, regenerable).
 # Produced by scripts/native/build-heif-encode.sh; not committed to avoid repo bloat.
 /src/main/cpp/heifenc/
+
+# Prebuilt native LibRaw/libtiff/libjpeg/zlib static libs + headers (large, regenerable).
+# Produced by scripts/native/build-libraw.sh; not committed to avoid repo bloat.
+/src/main/cpp/rawcodec/

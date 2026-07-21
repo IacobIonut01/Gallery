@@ -19,6 +19,7 @@ import java.io.InputStream
  * to make format decisions from MIME, avoiding fragile header sniffing.
  */
 class MimeInputStreamModelLoader(
+    private val context: Context,
     private val resolver: ContentResolver
 ) : ModelLoader<Uri, MimeInputStream> {
 
@@ -30,10 +31,11 @@ class MimeInputStreamModelLoader(
         height: Int,
         options: Options
     ): LoadData<MimeInputStream>? {
-        return LoadData(ObjectKey(model), MimeInputStreamFetcher(resolver, model))
+        return LoadData(ObjectKey(model), MimeInputStreamFetcher(context, resolver, model))
     }
 
     private class MimeInputStreamFetcher(
+        private val context: Context,
         private val resolver: ContentResolver,
         private val uri: Uri
     ) : DataFetcher<MimeInputStream> {
@@ -53,7 +55,7 @@ class MimeInputStreamModelLoader(
                 if (s == null) {
                     callback.onLoadFailed(IOException("Null InputStream for $uri"))
                 } else {
-                    callback.onDataReady(MimeInputStream(s, mime))
+                    callback.onDataReady(MimeInputStream(s, mime, uri, context))
                 }
             } catch (e: Exception) {
                 callback.onLoadFailed(e)
@@ -72,7 +74,7 @@ class MimeInputStreamModelLoader(
 
     class Factory(private val context: Context): ModelLoaderFactory<Uri, MimeInputStream> {
         override fun build(multiFactory: com.bumptech.glide.load.model.MultiModelLoaderFactory): ModelLoader<Uri, MimeInputStream> =
-            MimeInputStreamModelLoader(context.contentResolver)
+            MimeInputStreamModelLoader(context.applicationContext, context.contentResolver)
         override fun teardown() {}
     }
 }

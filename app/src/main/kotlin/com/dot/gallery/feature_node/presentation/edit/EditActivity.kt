@@ -24,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import androidx.core.view.WindowCompat
 import com.dot.gallery.core.presentation.components.OverwriteFallbackSheet
+import com.dot.gallery.feature_node.presentation.edit.components.develop.RawExportSheet
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.feature_node.presentation.edit.adjustments.Crop
@@ -129,26 +130,44 @@ class EditActivity : ComponentActivity() {
                     val previewFlipH by viewModel.previewFlipH.collectAsStateWithLifecycle()
                     val pendingFaceRegions by viewModel.pendingFaceRegions.collectAsStateWithLifecycle()
                     val isDetectingFaces by viewModel.isDetectingFaces.collectAsStateWithLifecycle()
+                    val isRawEdit by viewModel.isRawEdit.collectAsStateWithLifecycle()
+                    val rawDevelopParams by viewModel.rawDevelopParams.collectAsStateWithLifecycle()
 
                     val scope = rememberCoroutineScope { Dispatchers.IO }
 
                     var showOverwriteFallback by remember { mutableStateOf(false) }
+                    var showRawExportSheet by remember { mutableStateOf(false) }
+
+                    val onSaveCopyFailed: () -> Unit = {
+                        printError("Failed to save copy")
+                        runOnUiThread {
+                            Toast.makeText(
+                                this@EditActivity,
+                                R.string.edit_save_copy_failed,
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    }
 
                     val doSaveCopy: () -> Unit = {
                         viewModel.saveCopy(
-                            onSuccess = {
-                                finish()
+                            onSuccess = { finish() },
+                            onFail = onSaveCopyFailed
+                        )
+                    }
+
+                    if (showRawExportSheet) {
+                        RawExportSheet(
+                            allowTiff = appliedAdjustments.isEmpty(),
+                            onFormatSelected = { format ->
+                                showRawExportSheet = false
+                                viewModel.saveRawCopy(
+                                    format = format,
+                                    onSuccess = { finish() },
+                                    onFail = onSaveCopyFailed
+                                )
                             },
-                            onFail = {
-                                printError("Failed to save copy")
-                                runOnUiThread {
-                                    Toast.makeText(
-                                        this@EditActivity,
-                                        R.string.edit_save_copy_failed,
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                }
-                            }
+                            onDismiss = { showRawExportSheet = false }
                         )
                     }
 
@@ -295,7 +314,8 @@ class EditActivity : ComponentActivity() {
                         hasOriginalBackup = hasOriginalBackup,
                         isReverting = isReverting,
                         canOverride = canOverride,
-                        isChanged = appliedAdjustments.isNotEmpty(),
+                        // RAW is always saveable (developing to a copy is valid even at defaults).
+                        isChanged = appliedAdjustments.isNotEmpty() || isRawEdit,
                         isSaving = isSaving,
                         saveProgress = saveProgress,
                         isProcessing = isProcessing,
@@ -327,21 +347,8 @@ class EditActivity : ComponentActivity() {
                             }
                         },
                         onSaveCopy = {
-                            viewModel.saveCopy(
-                                onSuccess = {
-                                    finish()
-                                },
-                                onFail = {
-                                    printError("Failed to save copy")
-                                    runOnUiThread {
-                                        Toast.makeText(
-                                            this@EditActivity,
-                                            R.string.edit_save_copy_failed,
-                                            Toast.LENGTH_LONG
-                                        ).show()
-                                    }
-                                }
-                            )
+                            // RAW opens a format chooser (JPEG/PNG/TIFF); other media save directly.
+                            if (isRawEdit) showRawExportSheet = true else doSaveCopy()
                         },
                         onAdjustItemLongClick = viewModel::removeKind,
                         onAdjustmentChange = viewModel::applyAdjustment,
@@ -391,7 +398,11 @@ class EditActivity : ComponentActivity() {
                         onFaceRegionsConsumed = viewModel::consumeFaceRegions,
                         onDetectFaces = viewModel::detectFacesForMarkup,
                         faceDetectAvailable = viewModel.faceDetectAvailable,
-                        isDetectingFaces = isDetectingFaces
+                        isDetectingFaces = isDetectingFaces,
+                        isRawEdit = isRawEdit,
+                        rawDevelopParams = rawDevelopParams,
+                        onRawDevelopChange = viewModel::updateRawDevelop,
+                        rawThumbnailProvider = viewModel::rawOptionThumbnail
                     )
                 }
             }

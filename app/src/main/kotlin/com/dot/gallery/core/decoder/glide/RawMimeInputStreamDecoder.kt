@@ -6,6 +6,7 @@ import com.bumptech.glide.load.ResourceDecoder
 import com.bumptech.glide.load.engine.Resource
 import com.bumptech.glide.load.engine.bitmap_recycle.BitmapPool
 import com.bumptech.glide.load.resource.bitmap.BitmapResource
+import com.dot.gallery.core.decoder.NativeRawDecoder
 import com.dot.gallery.core.decoder.format.TiffImageDecoder
 
 /**
@@ -29,7 +30,11 @@ class RawMimeInputStreamDecoder(
         options: Options
     ): Resource<Bitmap>? {
         val data = source.inputStream.readBytes()
-        val bmp = TiffImageDecoder.decodePreview(data, width, height) ?: return null
+        // Prefer the embedded JPEG preview (fastest); fall back to LibRaw's decoded thumbnail for
+        // non-TIFF RAW (RAF/CRW/X3F) that has no extractable embedded JPEG.
+        val bmp = TiffImageDecoder.decodePreview(data, width, height)
+            ?: NativeRawDecoder.getThumbnail(data)
+            ?: return null
         return BitmapResource.obtain(bmp, bitmapPool)
     }
 }

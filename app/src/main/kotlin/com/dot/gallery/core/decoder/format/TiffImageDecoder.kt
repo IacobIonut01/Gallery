@@ -5,17 +5,23 @@
 
 package com.dot.gallery.core.decoder.format
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.ImageDecoder
+import android.net.Uri
 import android.os.Build
 import android.util.Log
 import android.util.Size
 import androidx.annotation.RequiresApi
 import androidx.exifinterface.media.ExifInterface
+import com.dot.gallery.core.decoder.RawOrientation
 import mil.nga.tiff.TiffReader
 import java.io.ByteArrayInputStream
+import java.io.File
+import java.io.FileInputStream
 import java.nio.ByteBuffer
+import java.nio.channels.FileChannel
 import kotlin.math.max
 
 /**
@@ -30,19 +36,139 @@ import kotlin.math.max
 object TiffImageDecoder {
 
     private const val TAG = "TiffImageDecoder"
-    private const val MAX_BYTES = 64 * 1024 * 1024
+
+    /**
+     * Above this size a TIFF is never loaded fully onto the Java heap: the file IS the (often
+     * uncompressed 16-bit) raster, so a `readByteArray()` of a 150 MB TIFF throws OOM. Larger files
+     * are memory-mapped and downsampled by the platform decoder instead. Exposed so callers (e.g.
+     * the subsampling region decoder) can avoid the full-decode path for oversized TIFFs.
+     */
+    const val MAX_BYTES = 64 * 1024 * 1024
 
     /** Guard against OOM when software-decoding very large rasters into a Bitmap. */
     private const val MAX_PIXELS = 40_000_000
 
-    fun getSize(bytes: ByteArray): Size? {
-        return try {
-            val exif = ExifInterface(ByteArrayInputStream(bytes))
-            val w = exif.getAttributeInt(ExifInterface.TAG_IMAGE_WIDTH, 0)
-            val h = exif.getAttributeInt(ExifInterface.TAG_IMAGE_LENGTH, 0)
-            if (w > 0 && h > 0) Size(w, h) else null
-        } catch (_: Throwable) {
+    private fun getSize(exif: ExifInterface): Size? {
+        val w = exif.getAttributeInt(ExifInterface.TAG_IMAGE_WIDTH, 0)
+        val h = exif.getAttributeInt(ExifInterface.TAG_IMAGE_LENGTH, 0)
+        if (w <= 0 || h <= 0) return null
+        // Report orientation-swapped dimensions so the size matches the oriented preview/tiles.
+        val orientation = exif.getAttributeInt(
+            ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL,
+        )
+        return if (RawOrientation.swapsDimensions(orientation)) Size(h, w) else Size(w, h)
+    }
+
+    fun getSize(bytes: ByteArray): Size? = try {
+        getSize(ExifInterface(ByteArrayInputStream(bytes)))
+    } catch (_: Throwable) {
+        null
+    }
+
+    /** Memory-safe size probe from a content [uri]: reads the header via a seekable descriptor. */
+    fun getSize(context: Context, uri: Uri): Size? = try {
+        context.contentResolver.openFileDescriptor(uri, "r")?.use { pfd ->
+            getSize(ExifInterface(pfd.fileDescriptor))
+        }
+    } catch (_: Throwable) {
+        null
+    }
+
+    /** Memory-safe size probe from a [file]: reads the header via a seekable descriptor. */
+    fun getSize(file: File): Size? = try {
+        getSize(ExifInterface(file))
+    } catch (_: Throwable) {
+        null
+    }
+
+    /**
+     * Memory-safe decode from a content [uri]. For files small enough to fit on the heap this reads
+     * the bytes and reuses the full [decode] path (software decode, BigTIFF, embedded JPEG). Larger
+     * files are memory-mapped and downsampled by the platform decoder so the whole raster never
+     * lands on the Java heap; if that fails (e.g. 16-bit samples the platform rejects) it falls back
+     * to the embedded EXIF thumbnail. Returns null when nothing can be decoded.
+     */
+    @RequiresApi(Build.VERSION_CODES.P)
+    fun decode(context: Context, uri: Uri, reqW: Int, reqH: Int): Bitmap? = try {
+        context.contentResolver.openFileDescriptor(uri, "r")?.use { pfd ->
+            decodeChannel(FileInputStream(pfd.fileDescriptor), reqW, reqH) {
+                ExifInterface(pfd.fileDescriptor)
+            }
+        }
+    } catch (e: Throwable) {
+        Log.w(TAG, "decode(uri) failed: ${e.message}")
+        null
+    }
+
+    /** Memory-safe decode from a [file]; see [decode] (Context, Uri, …) for the strategy. */
+    @RequiresApi(Build.VERSION_CODES.P)
+    fun decode(file: File, reqW: Int, reqH: Int): Bitmap? = try {
+        decodeChannel(FileInputStream(file), reqW, reqH) { ExifInterface(file) }
+    } catch (e: Throwable) {
+        Log.w(TAG, "decode(file) failed: ${e.message}")
+        null
+    }
+
+    @RequiresApi(Build.VERSION_CODES.P)
+    private inline fun decodeChannel(
+        stream: FileInputStream,
+        reqW: Int,
+        reqH: Int,
+        exifProvider: () -> ExifInterface,
+    ): Bitmap? = stream.use { fis ->
+        val channel = fis.channel
+        val size = channel.size()
+        if (size <= 0) return null
+
+        // Memory-map the file so no strip and no whole-file copy ever lands on the Java heap.
+        val buffer = try {
+            channel.map(FileChannel.MapMode.READ_ONLY, 0, size)
+        } catch (e: Throwable) {
+            Log.w(TAG, "mmap failed: ${e.message}")
             null
+        }
+        if (buffer != null) {
+            // 1. Strip decoder first: handles the common strip layout (RGB/gray, NONE/Deflate,
+            //    8/16-bit) the app itself exports, decoding one strip at a time and skipping strides
+            //    for thumbnails — fast and low-memory, and covers 16-bit which the platform rejects.
+            StripedTiffDecoder.decode(buffer, reqW, reqH)?.let { return it }
+            // 2. Platform ImageDecoder for everything else it can handle (tiled / LZW / other 8-bit).
+            buffer.rewind()
+            try {
+                decodeMapped(buffer, reqW, reqH)?.let { return it }
+            } catch (e: Throwable) {
+                Log.w(TAG, "mapped ImageDecoder failed: ${e.message}")
+            }
+        }
+        // 3. Small files only: pure-Java mil.nga fallback for exotic variants (predictor, CMYK,
+        //    JPEG-in-TIFF, BigTIFF, …). Bounded by MAX_BYTES so we never blow the heap.
+        if (size in 1..MAX_BYTES.toLong()) {
+            decode(fis.readBytes(), reqW, reqH)?.let { return it }
+        }
+        // 4. Last resort: embedded EXIF thumbnail (seekable, tiny).
+        runCatching {
+            val exif = exifProvider()
+            if (exif.hasThumbnail()) exif.thumbnailBitmap else null
+        }.getOrNull()
+    }
+
+    /**
+     * Decode a memory-mapped TIFF via the platform [ImageDecoder], downsampled to the requested
+     * size. The source raster stays in the (native) mmap region — never the Java heap — and the
+     * output bitmap is bounded by the target sample size.
+     */
+    @RequiresApi(Build.VERSION_CODES.P)
+    private fun decodeMapped(buffer: ByteBuffer, reqW: Int, reqH: Int): Bitmap? {
+        val src = ImageDecoder.createSource(buffer)
+        return ImageDecoder.decodeBitmap(src) { decoder, info, _ ->
+            decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
+            val sw = info.size.width
+            val sh = info.size.height
+            if (reqW > 0 && reqH > 0 && sw > 0 && sh > 0) {
+                var sample = 1
+                while (sw / (sample * 2) >= reqW && sh / (sample * 2) >= reqH) sample *= 2
+                decoder.setTargetSampleSize(sample)
+            }
         }
     }
 
@@ -114,8 +240,12 @@ object TiffImageDecoder {
      * returns the largest decodable embedded JPEG preview, falling back to the EXIF thumbnail.
      * Used by the RAW Sketch decoder, which never reaches [decode]'s TIFF-MIME gate.
      */
-    fun decodePreview(bytes: ByteArray, reqW: Int, reqH: Int): Bitmap? =
-        embeddedJpeg(bytes, reqW, reqH) ?: exifThumbnail(bytes)
+    fun decodePreview(bytes: ByteArray, reqW: Int, reqH: Int): Bitmap? {
+        val bmp = embeddedJpeg(bytes, reqW, reqH) ?: exifThumbnail(bytes) ?: return null
+        // The container's Orientation tag is the source of truth; embedded JPEGs/thumbnails are
+        // stored un-rotated, so apply it here to agree with the demosaic + export paths.
+        return RawOrientation.applyToBitmap(bmp, RawOrientation.exifOrientation(bytes))
+    }
 
     /**
      * Extracts an embedded JPEG preview from a TIFF/DNG/RAW container and decodes it with

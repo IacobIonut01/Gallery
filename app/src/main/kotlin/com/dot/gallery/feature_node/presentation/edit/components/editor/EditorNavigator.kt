@@ -17,11 +17,14 @@ import com.dot.gallery.feature_node.domain.model.editor.DrawMode
 import com.dot.gallery.feature_node.domain.model.editor.DrawType
 import com.dot.gallery.feature_node.domain.model.editor.EditorDestination
 import com.dot.gallery.feature_node.domain.model.editor.EditorItems
+import com.dot.gallery.feature_node.domain.model.editor.toEditorDestination
 import com.dot.gallery.feature_node.domain.model.editor.ImageFilter
 import com.dot.gallery.feature_node.domain.model.editor.MarkupItems
 import com.dot.gallery.feature_node.domain.model.editor.PathProperties
+import com.dot.gallery.core.decoder.RawDevelopParams
 import com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.VariableFilterTypes
 import com.dot.gallery.feature_node.presentation.edit.components.adjustment.AdjustScrubber
+import com.dot.gallery.feature_node.presentation.edit.components.develop.DevelopCategorySection
 import com.dot.gallery.feature_node.presentation.edit.components.colour.ColourSection
 import com.dot.gallery.feature_node.presentation.edit.components.colour.toVariableFilterType
 import com.dot.gallery.feature_node.presentation.edit.components.effects.EffectsSection
@@ -62,12 +65,16 @@ fun EditorNavigator(
     onDetectFaces: () -> Unit = {},
     faceDetectAvailable: Boolean = false,
     isDetectingFaces: Boolean = false,
+    startDestination: EditorDestination = EditorDestination.Lighting,
+    rawDevelopParams: RawDevelopParams? = null,
+    onRawDevelopChange: (RawDevelopParams) -> Unit = {},
+    rawThumbnailProvider: (suspend (RawDevelopParams) -> Bitmap?)? = null,
 ) {
 
     NavHost(
         modifier = modifier,
         navController = navController,
-        startDestination = EditorDestination.Lighting,
+        startDestination = startDestination,
         enterTransition = { navigateInAnimation },
         exitTransition = { navigateUpAnimation },
         popEnterTransition = { navigateInAnimation },
@@ -77,20 +84,26 @@ fun EditorNavigator(
             if (isSupportingPanel) {
                 EditorSelector(
                     isSupportingPanel = true,
+                    items = EditorItems.visibleItems(isRaw = rawDevelopParams != null),
                     onItemClick = { editorItem ->
-                        val dest = when (editorItem) {
-                            EditorItems.Lighting -> EditorDestination.Lighting
-                            EditorItems.Filters -> EditorDestination.Filters
-                            EditorItems.Markup -> EditorDestination.Markup
-                            EditorItems.Colour -> EditorDestination.Colour
-                            EditorItems.Effects -> EditorDestination.Effects
-                            EditorItems.More -> EditorDestination.More
-                        }
-                        navController.navigate(dest)
+                        navController.navigate(editorItem.toEditorDestination())
                     }
                 )
             }
             // Phone layout: tab bar is outside NavHost, so Editor destination is empty
+        }
+
+        // Develop tabs (RAW only) — one per category, self-contained controls with live thumbnails.
+        composable<EditorDestination.Develop> { entry ->
+            val category = entry.toRoute<EditorDestination.Develop>().category
+            rawDevelopParams?.let { params ->
+                DevelopCategorySection(
+                    category = category,
+                    params = params,
+                    onChange = onRawDevelopChange,
+                    thumbnailProvider = rawThumbnailProvider,
+                )
+            }
         }
 
         // Lighting tab

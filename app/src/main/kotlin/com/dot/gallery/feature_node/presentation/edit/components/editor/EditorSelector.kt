@@ -34,6 +34,7 @@ import com.dot.gallery.feature_node.presentation.util.safeSystemGesturesPadding
 fun EditorSelector(
     modifier: Modifier = Modifier,
     selectedItem: EditorItems? = null,
+    items: List<EditorItems> = EditorItems.entries,
     isSupportingPanel: Boolean,
     onItemClick: (EditorItems) -> Unit = {}
 ) {
@@ -48,7 +49,7 @@ fun EditorSelector(
             contentPadding = padding
         ) {
             itemsIndexed(
-                items = EditorItems.entries,
+                items = items,
                 key = { _, it -> it.name }
             ) { index, editorItem ->
                 EditorItem(
@@ -57,7 +58,7 @@ fun EditorSelector(
                     horizontal = true,
                     onItemClick = { onItemClick(editorItem) }
                 )
-                if (index < EditorItems.entries.size - 1) {
+                if (index < items.size - 1) {
                     Spacer(modifier = Modifier.size(16.dp))
                 }
             }
@@ -65,9 +66,9 @@ fun EditorSelector(
     } else {
         val scrollState = rememberScrollState()
         // Auto-scroll to selected item when it changes
-        LaunchedEffect(selectedItem) {
+        LaunchedEffect(selectedItem, items) {
             if (selectedItem != null) {
-                val index = EditorItems.entries.indexOf(selectedItem)
+                val index = items.indexOf(selectedItem)
                 if (index >= 0) {
                     // Approximate scroll position: each item ~80dp + 4dp spacing
                     val targetPx = (index * 84 * 2.5f).toInt() // rough px approximation
@@ -82,7 +83,7 @@ fun EditorSelector(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            EditorItems.entries.forEach { editorItem ->
+            items.forEach { editorItem ->
                 val isSelected = editorItem == selectedItem
                 val bgColor by animateColorAsState(
                     targetValue = if (isSelected) MaterialTheme.colorScheme.surfaceContainerHighest

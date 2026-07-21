@@ -32,6 +32,7 @@ import androidx.core.app.ShareCompat
 import androidx.exifinterface.media.ExifInterface
 import com.dot.gallery.BuildConfig
 import com.dot.gallery.R
+import com.dot.gallery.core.util.SafeExif
 import com.dot.gallery.core.util.SdkCompat
 import com.dot.gallery.core.util.ext.saveImage
 import com.dot.gallery.feature_node.data.data_source.KeychainHolder
@@ -125,15 +126,9 @@ object CutoutHelper {
                     context.resolveShareableUri(media)
                 }
 
-                var orientation = ExifInterface.ORIENTATION_NORMAL
-                try {
-                    context.contentResolver.openInputStream(uri)?.use { stream ->
-                        val exifInterface = ExifInterface(stream)
-                        orientation = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
+                // Read orientation via a seekable file descriptor: an InputStream-backed
+                // ExifInterface buffers up to the strip offset and OOMs on large TIFFs.
+                val orientation = SafeExif.orientation(context, uri)
 
                 val options = BitmapFactory.Options().apply {
                     inJustDecodeBounds = true

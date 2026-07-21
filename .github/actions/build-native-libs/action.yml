@@ -4,6 +4,7 @@ description: >
     - libde265 + libheif (decode-only)      -> app/src/main/cpp/heif/<abi>/     (tiled HEIC decode)
     - zlib + libpng + libjpeg-turbo          -> app/src/main/cpp/imgcodec/<abi>/ (streaming JPEG/PNG encode)
     - x265 + aom + libheif (with encoders)   -> app/src/main/cpp/heifenc/<abi>/  (tiled HEIC/AVIF encode)
+    - LibRaw + libtiff + libjpeg + zlib      -> app/src/main/cpp/rawcodec/<abi>/ (native RAW decode + TIFF export)
   so the app's externalNativeBuild can link them. Each stack is cached independently keyed on its
   build script. Missing prebuilt libs degrade to stubs (Kotlin falls back), so a build failure here
   never blocks the app build.
@@ -64,3 +65,15 @@ runs:
       if: steps.heifenc-cache.outputs.cache-hit != 'true'
       shell: bash
       run: bash scripts/native/build-heif-encode.sh "${{ inputs.arch }}"
+
+    - name: Cache prebuilt rawcodec (RAW decode + TIFF export)
+      id: rawcodec-cache
+      uses: actions/cache@v4
+      with:
+        path: app/src/main/cpp/rawcodec
+        key: rawcodec-${{ runner.os }}-${{ inputs.arch }}-${{ hashFiles('scripts/native/build-libraw.sh') }}
+
+    - name: Build native LibRaw + libtiff (${{ inputs.arch }})
+      if: steps.rawcodec-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: bash scripts/native/build-libraw.sh "${{ inputs.arch }}"

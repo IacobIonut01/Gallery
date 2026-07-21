@@ -66,6 +66,13 @@ object MotionPhotoHelper {
      */
     fun parseInfo(context: Context, uri: Uri): MotionPhotoInfo? {
         return try {
+            // Defense-in-depth: metadata-extractor's TiffReader loads the whole file into memory, so
+            // running it on a huge non-photo container (e.g. a 16-bit TIFF) OOMs. Motion Photos are
+            // only ever JPEG/HEIC, so bail out unless the header actually looks like one.
+            if (!looksLikeJpegOrHeic(context, uri)) {
+                printDebug("MotionPhoto: header is not JPEG/HEIC, skipping metadata read for $uri")
+                return null
+            }
             // First try XMP-based detection
             val xmpResult = context.contentResolver.openInputStream(uri)?.use { stream ->
                 val metadata = ImageMetadataReader.readMetadata(stream)
@@ -138,10 +145,42 @@ object MotionPhotoHelper {
                 printDebug("MotionPhoto: Samsung marker found at offset $offset for $uri")
                 MotionPhotoInfo(offset)
             }
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
+            // Throwable (not just Exception): metadata-extractor can OOM on malformed/huge files, and
+            // OutOfMemoryError is an Error that would otherwise crash the app.
             printWarning("MotionPhotoHelper.parseInfo failed: ${e.message}")
             null
         }
+    }
+
+    /**
+     * Cheaply sniff the leading bytes to confirm the file is a JPEG or an ISO-BMFF (HEIC/HEIF)
+     * container before handing it to the greedy metadata reader. Reads only a few bytes.
+     */
+    private fun looksLikeJpegOrHeic(context: Context, uri: Uri): Boolean {
+        val header = try {
+            context.contentResolver.openInputStream(uri)?.use { stream ->
+                val buf = ByteArray(12)
+                var read = 0
+                while (read < buf.size) {
+                    val n = stream.read(buf, read, buf.size - read)
+                    if (n < 0) break
+                    read += n
+                }
+                if (read < 12) return false
+                buf
+            } ?: return false
+        } catch (_: Throwable) {
+            return false
+        }
+        // JPEG: FF D8 FF
+        if ((header[0].toInt() and 0xFF) == 0xFF &&
+            (header[1].toInt() and 0xFF) == 0xD8 &&
+            (header[2].toInt() and 0xFF) == 0xFF
+        ) return true
+        // ISO-BMFF (HEIC/HEIF): bytes 4..7 == "ftyp"
+        return header[4] == 'f'.code.toByte() && header[5] == 't'.code.toByte() &&
+                header[6] == 'y'.code.toByte() && header[7] == 'p'.code.toByte()
     }
 
     /**
