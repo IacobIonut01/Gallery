@@ -59,6 +59,7 @@ import com.dot.gallery.core.decoder.HeifDebug
 import com.dot.gallery.core.decoder.HeifRegionDecoder
 import com.dot.gallery.core.decoder.JxlRegionDecoder
 import com.dot.gallery.core.decoder.isAnimatedWebp
+import com.dot.gallery.core.decoder.format.ImageFormatSniffer
 import com.dot.gallery.core.decoder.format.TiffImageDecoder
 import com.dot.gallery.core.decoder.NativeRawDecoder
 import com.dot.gallery.core.decoder.RawDevelopStore
@@ -340,13 +341,38 @@ fun <T : Media> ZoomablePagerImage(
     val disableSmoothing by Settings.Misc.rememberDisableSmoothing()
     val usePixelPerfect = disableSmoothing && !isAnimated && !isAnimatedRaster
     val filterQuality = if (disableSmoothing) FilterQuality.None else DrawScope.DefaultFilterQuality
+    // #1054: MediaStore sometimes mislabels a standard JPEG/PNG/WebP/GIF/BMP as RAW/TIFF/PSD/JP2,
+    // so media.isRaw/isTiff/… are true and a custom region decoder would be attached that can't
+    // decode the real bytes — leaving zoom stuck on the low-res base ("magnified thumbnail"). Only
+    // for those already-special formats, sniff the header once (cached per media) on IO; if the
+    // bytes are a natively-decodable image, force the generic platform BitmapRegionDecoder path.
+    // Plain images never reach this probe (zero extra I/O per viewer page).
+    val mightBeSpecial = remember(media) {
+        media.isTiff || media.isRaw || media.isPsd || media.isJp2 || media.isSvg
+    }
+    var forceStandard by remember(media) { mutableStateOf(false) }
+    LaunchedEffect(media, mightBeSpecial) {
+        if (mightBeSpecial && !media.isEncrypted && !media.isCloud) {
+            forceStandard = withContext(Dispatchers.IO) {
+                runCatching {
+                    context.contentResolver.openInputStream(media.getUri())?.use { ins ->
+                        val head = ByteArray(32)
+                        val n = ins.read(head)
+                        n > 0 && ImageFormatSniffer.isNativelyDecodable(head.copyOf(n))
+                    } ?: false
+                }.getOrDefault(false)
+            }
+        }
+    }
     // Region decoder for formats Android's BitmapRegionDecoder can't subsample (PSD/JP2/TIFF/SVG).
     // Without this they only show the screen-resolution base painter and look blurry when zoomed.
     // RAW develop recipe (per-image, session-scoped). Reading it here makes the region decoder
     // rebuild whenever the Develop sheet tunes the recipe, live re-rendering the zoomed image.
     val rawParams = if (media.isRaw) RawDevelopStore.paramsFor(media.id) else null
-    val customRegionFactory = remember(media, rawParams) {
+    val customRegionFactory = remember(media, rawParams, forceStandard) {
         when {
+            // Mislabeled standard image: keep the platform BitmapRegionDecoder (generic branch).
+            forceStandard -> null
             media.isPsd -> FullImageRegionDecoder.forPsd()
             media.isJp2 -> FullImageRegionDecoder.forJp2()
             // The TIFF region decoder full-decodes the file into one bitmap for cropping; on a large

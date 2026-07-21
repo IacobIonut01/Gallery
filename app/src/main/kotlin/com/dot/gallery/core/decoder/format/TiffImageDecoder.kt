@@ -241,6 +241,13 @@ object TiffImageDecoder {
      * Used by the RAW Sketch decoder, which never reaches [decode]'s TIFF-MIME gate.
      */
     fun decodePreview(bytes: ByteArray, reqW: Int, reqH: Int): Bitmap? {
+        // #1054 safety net: if the "RAW/TIFF" container is actually a standard natively-decodable
+        // image (mislabeled by MediaStore), decode it directly at full resolution instead of pulling
+        // a tiny embedded preview / EXIF thumbnail. Guards against any routing that slips past the
+        // MIME/header checks upstream.
+        if (ImageFormatSniffer.isNativelyDecodable(bytes)) {
+            decodeStandard(bytes, reqW, reqH)?.let { return it }
+        }
         val bmp = embeddedJpeg(bytes, reqW, reqH) ?: exifThumbnail(bytes) ?: return null
         // The container's Orientation tag is the source of truth; embedded JPEGs/thumbnails are
         // stored un-rotated, so apply it here to agree with the demosaic + export paths.
@@ -273,6 +280,22 @@ object TiffImageDecoder {
             Log.w(TAG, "embedded JPEG extraction failed: ${e.message}")
             null
         }
+    }
+
+    /**
+     * Full decode (downsampled to the requested size) of a standard natively-decodable image
+     * (JPEG/PNG/WebP/GIF/BMP) via [BitmapFactory]. Used by [decodePreview]'s #1054 safety net when a
+     * file mislabeled as RAW/TIFF is actually a standard image.
+     */
+    private fun decodeStandard(bytes: ByteArray, reqW: Int, reqH: Int): Bitmap? {
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
+        val opts = BitmapFactory.Options().apply {
+            inSampleSize = computeSampleSize(bounds.outWidth, bounds.outHeight, reqW, reqH)
+            inPreferredConfig = Bitmap.Config.ARGB_8888
+        }
+        return BitmapFactory.decodeByteArray(bytes, 0, bytes.size, opts)
     }
 
     private fun decodeJpegRegion(bytes: ByteArray, off: Int, len: Int, reqW: Int, reqH: Int): Bitmap? {

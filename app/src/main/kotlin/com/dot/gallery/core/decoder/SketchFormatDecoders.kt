@@ -180,9 +180,13 @@ class SketchTiffDecoder(
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) return null
             val realMime = requestContext.request.extras?.get("realMimeType") as String?
             val mime = realMime ?: fetchResult.mimeType
-            return if (mime != null && (mime.contains("image/tiff") || mime.contains("image/tif"))) {
-                SketchTiffDecoder(requestContext, fetchResult.dataSource)
-            } else null
+            if (mime == null || !(mime.contains("image/tiff") || mime.contains("image/tif"))) return null
+            // #1054: a file mislabeled image/tiff that is actually a standard JPEG/PNG/WebP/GIF/BMP
+            // must not be full-decoded as TIFF (fails / yields only a thumbnail). Peek the header and
+            // defer to Sketch's native decoder when the bytes are a natively-decodable image.
+            val (head, read) = fetchResult.dataSource.peekHeader(32)
+            if (read > 0 && ImageFormatSniffer.isNativelyDecodable(head, read)) return null
+            return SketchTiffDecoder(requestContext, fetchResult.dataSource)
         }
 
         override fun equals(other: Any?): Boolean = this === other || other is Factory
@@ -244,9 +248,14 @@ class SketchRawDecoder(
         override fun create(requestContext: RequestContext, fetchResult: FetchResult): Decoder? {
             val realMime = requestContext.request.extras?.get("realMimeType") as String?
             val mime = realMime ?: fetchResult.mimeType ?: return null
-            return if (isCameraRawMime(mime)) {
-                SketchRawDecoder(requestContext, fetchResult.dataSource)
-            } else null
+            if (!isCameraRawMime(mime)) return null
+            // #1054: MediaStore sometimes reports a RAW MIME (image/x-* / image/vnd.*) for a file
+            // that is really a standard JPEG/PNG/WebP/GIF/BMP. Routing it here extracts only the
+            // small embedded/EXIF thumbnail. Peek the header and defer to Sketch's native decoder
+            // when the bytes are a natively-decodable image.
+            val (head, read) = fetchResult.dataSource.peekHeader(32)
+            if (read > 0 && ImageFormatSniffer.isNativelyDecodable(head, read)) return null
+            return SketchRawDecoder(requestContext, fetchResult.dataSource)
         }
 
         override fun equals(other: Any?): Boolean = this === other || other is Factory
