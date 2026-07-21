@@ -144,11 +144,11 @@
     <string name="read_media_images">Read Media Images</string>
     <string name="read_media_images_summary">Lehetővé teszi, hogy az alkalmazás megjelenítse a képeit</string>
     <string name="read_media_videos">Read Media Videos</string>
-    <string name="read_media_videos_summary">Allows the app to show your videos</string>
+    <string name="read_media_videos_summary">Lehetővé teszi, hogy az alkalmazás megjelenítse a videóit</string>
     <string name="access_media_location">Access Media Location</string>
-    <string name="access_media_location_summary"><![CDATA[Allows the app to read location data of your images & videos]]></string>
+    <string name="access_media_location_summary"><![CDATA[Lehetővé teszi, hogy az alkalmazás hozzáférjen a képei és videói helyadataihoz]]></string>
     <string name="internet">Internet</string>
-    <string name="internet_summary"><![CDATA[Required to display Location Previews of your images & videos]]></string>
+    <string name="internet_summary"><![CDATA[A képei és videói helyelőnézetének megjelenítéséhez szükséges]]></string>
     <string name="fancy_blur">Fancy Blur</string>
     <string name="fancy_blur_summary">Blur background in Media View</string>
     <string name="auto_contrast">Auto Contrast (Beta)</string>
