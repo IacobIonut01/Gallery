@@ -285,6 +285,37 @@ fun isAnimatedHeif(bytes: ByteArray): Boolean =
     hasFtypBrand(bytes, setOf("msf1", "hevc", "hevx", "avis"))
 
 /**
+ * Checks if the given RIFF/WEBP bytes represent an animated WebP: an extended (VP8X) header with
+ * the animation flag set, or (fallback) the presence of an `ANIM` chunk. Bounded to a cheap header
+ * scan. Static WebP returns false.
+ */
+fun isAnimatedWebp(bytes: ByteArray): Boolean {
+    if (bytes.size < 21) return false
+    // RIFF....WEBP
+    if (bytes[0] != 'R'.code.toByte() || bytes[1] != 'I'.code.toByte() ||
+        bytes[2] != 'F'.code.toByte() || bytes[3] != 'F'.code.toByte() ||
+        bytes[8] != 'W'.code.toByte() || bytes[9] != 'E'.code.toByte() ||
+        bytes[10] != 'B'.code.toByte() || bytes[11] != 'P'.code.toByte()
+    ) return false
+    // Extended format (VP8X): animation flag is bit 1 (0x02) of the flags byte at offset 20.
+    if (bytes[12] == 'V'.code.toByte() && bytes[13] == 'P'.code.toByte() &&
+        bytes[14] == '8'.code.toByte() && bytes[15] == 'X'.code.toByte()
+    ) {
+        if ((bytes[20].toInt() and 0x02) != 0) return true
+    }
+    // Fallback: scan the first bytes for an "ANIM" chunk.
+    val max = minOf(bytes.size - 4, 256)
+    var i = 12
+    while (i < max) {
+        if (bytes[i] == 'A'.code.toByte() && bytes[i + 1] == 'N'.code.toByte() &&
+            bytes[i + 2] == 'I'.code.toByte() && bytes[i + 3] == 'M'.code.toByte()
+        ) return true
+        i++
+    }
+    return false
+}
+
+/**
  * Scans the ISO-BMFF `ftyp` box (major + compatible brands) for any of [brands]
  * (case-insensitive). Bounded to the first 256 bytes to stay cheap.
  */
