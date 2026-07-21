@@ -87,8 +87,8 @@
     <string name="help_tip_nav_launch_screen_p1_s2">Tippe auf „Standard-Startbildschirm“</string>
     <string name="help_tip_nav_launch_screen_p1_s3">Wähle Automatisch, Zeitleiste, Alben oder Bibliothek</string>
     <string name="help_tip_nav_auto_hide_bars_title">Menüleisten beim Scrollen automatisch ausblenden</string>
-    <string name="help_tip_nav_auto_hide_bars_subtitle">Hide the search and navigation bars when scrolling</string>
-    <string name="help_tip_nav_auto_hide_bars_p1_title">Auto-hide bars</string>
+    <string name="help_tip_nav_auto_hide_bars_subtitle">Such- und Navigationsleisten beim Scrollen ausblenden</string>
+    <string name="help_tip_nav_auto_hide_bars_p1_title">Leisten automatisch ausblenden</string>
     <string name="help_tip_nav_auto_hide_bars_p1_desc">For a more immersive browsing experience, enable auto-hide for the search bar and/or navigation bar. They\'ll slide away as you scroll down through your photos and reappear when you scroll back up. This is especially useful on smaller screens where every pixel counts. You can control each bar independently.</string>
     <string name="help_tip_nav_auto_hide_bars_p1_s1">Go to Settings &gt; Navigation</string>
     <string name="help_tip_nav_auto_hide_bars_p1_s2">Toggle \'Auto-hide search bar\' and/or \'Auto-hide navigation bar\'</string>
@@ -146,7 +146,7 @@
     <string name="help_tip_personalize_shared_elements_p1_s2">Toggle \'Shared element transitions\'</string>
     <string name="help_tip_personalize_shared_elements_p1_s3">Tap any photo to see the effect</string>
     <string name="help_tip_personalize_app_name_title">Change the app name</string>
-    <string name="help_tip_personalize_app_name_subtitle">Display as \'Gallery\' or \'Refra\' on your home screen</string>
+    <string name="help_tip_personalize_app_name_subtitle">Auf dem Startbildschirm als \"Galerie\" oder \"Refra\" anzeigen</string>
     <string name="help_tip_personalize_app_name_p1_title">App name</string>
     <string name="help_tip_personalize_app_name_p1_desc">Choose whether the app shows as \'Gallery\' or \'Refra\' on your home screen and in the app drawer. \'Refra\' is the app\'s alternative name. This changes the icon label only — the app itself stays the same. You may need to restart your launcher or wait a moment for the change to appear on your home screen.</string>
     <string name="help_tip_personalize_app_name_p1_s1">Go to Settings &gt; General</string>
@@ -252,7 +252,7 @@
     <string name="help_tip_view_full_brightness_subtitle">Automatically increase brightness when viewing photos</string>
     <string name="help_tip_view_full_brightness_p1_title">Full brightness</string>
     <string name="help_tip_view_full_brightness_p1_desc">When enabled, Gallery automatically boosts your screen to maximum brightness while viewing photos in the full-screen viewer. This ensures you see accurate colors and details, especially helpful when viewing photos outdoors or in bright environments. Brightness returns to your normal level when you leave the viewer.</string>
-    <string name="help_tip_view_full_brightness_p1_s1">Go to Settings &gt; Media viewer</string>
+    <string name="help_tip_view_full_brightness_p1_s1">Gehe zu „Einstellungen“ &gt; „Medien-Betrachter“</string>
     <string name="help_tip_view_full_brightness_p1_s2">Toggle \'Full brightness viewing\'</string>
     <string name="help_tip_view_full_brightness_p1_s3">Brightness is boosted only while viewing, not in the grid</string>
     <string name="help_tip_view_group_members_title">Browse grouped media</string>
@@ -307,7 +307,7 @@
     <string name="help_tip_action_copy_to_album_p1_s4">Choose or create the destination album</string>
     <string name="help_tip_action_add_collection_title">Add to collection</string>
     <string name="help_tip_action_add_collection_subtitle">Organize media into curated collections</string>
-    <string name="help_tip_action_add_collection_p1_title">Add to collection</string>
+    <string name="help_tip_action_add_collection_p1_title">Zur Sammlung hinzufügen</string>
     <string name="help_tip_action_add_collection_p1_desc">Collections let you group related photos from different albums together without moving any files. Unlike albums (which are folders), collections are virtual groupings — perfect for organizing photos by project, trip, event, or any theme you like. A photo can belong to multiple collections.</string>
     <string name="help_tip_action_view_all_metadata_title">View full metadata</string>
     <string name="help_tip_action_view_all_metadata_subtitle">See complete EXIF data for any photo</string>
@@ -363,7 +363,7 @@
     <string name="help_tip_edit_crop_p3_s2">Select the Crop adjustment</string>
     <string name="help_tip_edit_crop_p3_s3">Choose an aspect ratio or use free-form</string>
     <string name="help_tip_edit_crop_p3_s4">Drag the handles to adjust</string>
-    <string name="help_tip_edit_crop_p3_s5">Tap the checkmark to apply</string>
+    <string name="help_tip_edit_crop_p3_s5">Tippe auf das Häkchen, um die Änderung zu übernehmen</string>
     <string name="help_tip_edit_rotate_title">Rotate and flip</string>
     <string name="help_tip_edit_rotate_subtitle">Rotate 90° or flip photos horizontally</string>
     <string name="help_tip_edit_rotate_p1_title">Rotate photos</string>
@@ -418,7 +418,7 @@
     <string name="help_tip_edit_backups_title">Manage edit backups</string>
     <string name="help_tip_edit_backups_subtitle">View and restore previous versions of edited photos</string>
     <string name="help_tip_edit_backups_p1_title">Edit backups</string>
-    <string name="help_tip_edit_backups_p1_desc">Every time you edit a photo, Gallery saves the original version automatically. This means you can always go back to the untouched photo, even after multiple rounds of editing. Backups are stored in the app\'s internal storage and don\'t clutter your gallery.</string>
+    <string name="help_tip_edit_backups_p1_desc">Jedes Mal, wenn du ein Foto bearbeitest, speichert „Galerie“ automatisch die Originalversion. So kannst du jederzeit zum unbearbeiteten Foto zurückkehren, selbst nach mehreren Bearbeitungsschritten. Die Sicherungskopien werden im internen Speicher der App gespeichert und belasten deine Galerie nicht.</string>
     <string name="help_tip_edit_backups_p2_title">Manage backups</string>
     <string name="help_tip_edit_backups_p2_desc">The Edit Backups Viewer shows all your backed-up originals. You can compare the original with the edited version, restore an original to replace the edited photo, or delete old backups to free up storage space. If storage is a concern, periodically review and clean up backups you no longer need.</string>
     <string name="help_tip_edit_backups_p2_s1">Go to Settings &gt; Smart features</string>
@@ -526,7 +526,7 @@
     <string name="help_tip_albums_groups_p2_s2">Long press an album</string>
     <string name="help_tip_albums_groups_p2_s3">Tap \'Add to group\'</string>
     <string name="help_tip_albums_groups_p2_s4">Name your group or pick an existing one</string>
-    <string name="help_tip_albums_groups_p2_s5">Add more albums to the same group</string>
+    <string name="help_tip_albums_groups_p2_s5">Weitere Alben zur gleichen Gruppe hinzufügen</string>
     <string name="help_tip_albums_collections_title">Create collections</string>
     <string name="help_tip_albums_collections_subtitle">Group related albums into curated collections</string>
     <string name="help_tip_albums_collections_p1_title">Collections</string>
@@ -582,7 +582,7 @@
     <string name="help_tip_fav_add_title">Add to favorites</string>
     <string name="help_tip_fav_add_subtitle">Mark your best photos for quick access</string>
     <string name="help_tip_fav_add_p1_title">Favorite photos</string>
-    <string name="help_tip_fav_add_p1_desc">Tap the heart icon in the viewer toolbar to mark a photo as a favorite. Favorites are synced through Android\'s MediaStore, so they persist even if you switch gallery apps. Access all your favorited photos and videos from Library &gt; Favorites. Tip: you can also favorite multiple photos at once by selecting them and using the selection action sheet.</string>
+    <string name="help_tip_fav_add_p1_desc">Tippen Sie auf das Herz-Symbol in der Symbolleiste des Bildbetrachters, um ein Foto als Favorit zu markieren. Favoriten werden über den \"Medien-Speicher\" von Android synchronisiert, sodass sie auch dann erhalten bleiben, wenn Sie die Galerie-App wechseln. Sie können auf alle Ihre als Favoriten markierten Fotos und Videos über „Bibliothek“ &gt; „Favoriten“ zugreifen. Tipp: Sie können auch mehrere Fotos gleichzeitig als Favoriten markieren, indem Sie sie auswählen und das Aktionsmenü für die Auswahl verwenden.</string>
     <string name="help_tip_fav_browse_title">Browse favorites</string>
     <string name="help_tip_fav_browse_subtitle">See all your favorite photos in one place</string>
     <string name="help_tip_fav_browse_p1_title">Favorites</string>
@@ -638,7 +638,7 @@
     <string name="help_tip_exif_delete_location_p1_title">Delete location</string>
     <string name="help_tip_exif_delete_location_p1_desc">For privacy, you can strip GPS coordinates from any photo. This is recommended before sharing photos publicly or on social media if you don\'t want to reveal where they were taken. The deletion is permanent — the GPS data is removed from the file\'s EXIF metadata and cannot be recovered.</string>
     <string name="help_tip_exif_delete_location_p1_s1">Open a photo and swipe up</string>
-    <string name="help_tip_exif_delete_location_p1_s2">Tap the location section</string>
+    <string name="help_tip_exif_delete_location_p1_s2">Tippen Sie auf den Abschnitt „Standort“</string>
     <string name="help_tip_exif_delete_location_p1_s3">Tap \'Delete location\'</string>
     <string name="help_tip_exif_delete_location_p1_s4">GPS data is permanently removed from the file</string>
     <string name="help_tip_exif_refresh_title">Refresh metadata</string>
@@ -692,8 +692,8 @@
     <string name="help_tip_settings_secure_mode_title">Secure mode</string>
     <string name="help_tip_settings_secure_mode_subtitle">Hide from recents and block screenshots</string>
     <string name="help_tip_settings_secure_mode_p1_title">Secure mode</string>
-    <string name="help_tip_settings_secure_mode_p1_desc">When activated, Gallery is hidden from the recent apps screen (the task switcher shows a blank preview) and screenshots within the app are blocked. This is an extra privacy measure if you don\'t want others to see what you were browsing when they glance at your recent apps. Ideal when combined with the vault for maximum privacy.</string>
-    <string name="help_tip_settings_secure_mode_p1_s1">Go to Settings &gt; General</string>
+    <string name="help_tip_settings_secure_mode_p1_desc">Wenn diese Funktion aktiviert ist, wird die Galerie auf dem Bildschirm „Zuletzt verwendete Apps“ ausgeblendet (zeigt eine leere Vorschau an) und Screenshots innerhalb der App werden blockiert. Dies ist eine zusätzliche Datenschutzmaßnahme, falls Sie nicht möchten, dass andere sehen, was Sie gerade angesehen haben, wenn sie einen Blick auf Ihre zuletzt verwendeten Apps werfen. Ideal in Kombination mit dem Tresor für maximalen Datenschutz.</string>
+    <string name="help_tip_settings_secure_mode_p1_s1">Gehe zu „Einstellungen“ &gt; „Darstellung“</string>
     <string name="help_tip_settings_secure_mode_p1_s2">Toggle \'Secure mode\'</string>
     <string name="help_tip_settings_secure_mode_p1_s3">Gallery disappears from recent apps</string>
     <string name="help_tip_settings_secure_mode_p1_s4">Screenshots are blocked within the app</string>
@@ -746,9 +746,9 @@
     <string name="help_tip_settings_ai_models_p2_desc">Download models to enable AI features, check their status, or remove them to free storage. After downloading, Gallery automatically begins indexing your photos in the background. If models are already bundled with your app version, they\'ll be copied from assets on first launch.</string>
     <string name="help_tip_settings_ai_models_p2_s1">Go to Settings &gt; Smart features</string>
     <string name="help_tip_settings_ai_models_p2_s2">Tap \'AI models manager\'</string>
-    <string name="help_tip_settings_ai_models_p2_s3">Download, verify, or remove models</string>
+    <string name="help_tip_settings_ai_models_p2_s3">Modelle herunterladen, überprüfen oder entfernen</string>
     <string name="help_tip_settings_edit_backups_title">Edit backups viewer</string>
-    <string name="help_tip_settings_edit_backups_subtitle">View and manage edit backup storage</string>
+    <string name="help_tip_settings_edit_backups_subtitle">Sicherungsspeicher anzeigen, verwalten und bearbeiten</string>
     <string name="help_tip_settings_edit_backups_p1_title">Edit backups</string>
     <string name="help_tip_settings_edit_backups_p1_desc">Every time you edit a photo, Gallery saves the original version. This screen shows all your backups with their size and date. You can compare originals with edited versions side by side to see exactly what changed.</string>
     <string name="help_tip_settings_edit_backups_p2_title">Manage storage</string>
@@ -804,7 +804,7 @@
     <string name="help_tip_selection_batch_delete_p1_s4">Items go to trash (recoverable for 30 days)</string>
     <!-- ACCESSIBILITY -->
     <string name="help_tip_accessibility_font_title">System font scaling</string>
-    <string name="help_tip_accessibility_font_subtitle">Gallery respects your system font size</string>
+    <string name="help_tip_accessibility_font_subtitle">Die Galerie passt sich Ihrer Systemschriftgröße an</string>
     <string name="help_tip_accessibility_font_p1_title">Font scaling</string>
     <string name="help_tip_accessibility_font_p1_desc">Gallery fully respects your system font size settings. If you\'ve increased the text size in Android\'s accessibility settings for easier reading, all text in Gallery — labels, headers, descriptions, buttons — will scale accordingly. No additional configuration needed within Gallery.</string>
     <string name="help_tip_advanced_media_picker_title">Gallery as media picker</string>
@@ -862,7 +862,7 @@
     <string name="help_tip_vault_overhaul_p1_s2">Tap the security settings button</string>
     <string name="help_tip_vault_overhaul_p1_s3">Choose None, Device Security, or Custom Password</string>
     <string name="help_tip_vault_overhaul_p2_title">Custom passwords &amp; per-vault security</string>
-    <string name="help_tip_vault_overhaul_p2_desc">Each vault now supports its own authentication — biometrics, PIN, or a custom password — so you can have different security levels for different vaults. The vault creation flow has been streamlined: create a vault, set its password, then configure the global gate. Vault deletion now returns you to the selector with re-authentication required, and the last vault deletion exits to the library.</string>
+    <string name="help_tip_vault_overhaul_p2_desc">Jeder Tresor unterstützt nun eine eigene Authentifizierungsmethode – biometrische Daten, PIN oder ein benutzerdefiniertes Passwort –, sodass Sie für verschiedene Tresore unterschiedliche Sicherheitsstufen festlegen können. Der Ablauf zur Erstellung eines Tresors wurde optimiert: Erstellen Sie einen Tresor, legen Sie dessen Passwort fest und konfigurieren Sie anschließend das globale Tor. Beim Löschen eines Tresors gelangen Sie nun zurück zur Auswahlansicht, wobei eine erneute Authentifizierung erforderlich ist; beim Löschen des letzten Tresors gelangen Sie zur Bibliothek.</string>
     <string name="help_tip_vault_overhaul_p2_s1">Create or open a vault</string>
     <string name="help_tip_vault_overhaul_p2_s2">Set a custom password or use device security</string>
     <string name="help_tip_vault_overhaul_p2_s3">Each vault can have its own independent security</string>
@@ -918,7 +918,7 @@
     <string name="help_tip_video_subtitles_p1_title">Subtitle support</string>
     <string name="help_tip_video_subtitles_p1_desc">Gallery supports both embedded subtitle tracks (built into the video file) and external subtitle files (.srt, .ass, .ssa, etc.). When a video has subtitle tracks available, a subtitle button appears in the video player controls.</string>
     <string name="help_tip_video_subtitles_p2_title">Managing subtitles</string>
-    <string name="help_tip_video_subtitles_p2_desc">Tap the subtitle button during video playback to open the subtitle selector. You can switch between available tracks, load an external subtitle file, or disable subtitles entirely. External subtitle files can also be deleted from the bottom sheet.</string>
+    <string name="help_tip_video_subtitles_p2_desc">Tippen Sie während der Videowiedergabe auf die Untertitel-Schaltfläche, um die Untertitelauswahl zu öffnen. Dort können Sie zwischen den verfügbaren Untertitelspuren wechseln, eine externe Untertiteldatei laden oder die Untertitel vollständig deaktivieren. Externe Untertiteldateien können auch über das untere Fenster gelöscht werden.</string>
     <string name="help_tip_video_subtitles_p2_s1">Tap the subtitle icon in the video player</string>
     <string name="help_tip_video_subtitles_p2_s2">Select an embedded track or load an external file</string>
     <string name="help_tip_video_subtitles_p2_s3">Tap \'None\' to disable subtitles</string>
@@ -978,7 +978,7 @@
     <string name="help_release_423_animated_formats_desc">Play animated AVIF, JXL, and APNG images alongside GIF</string>
     <string name="help_release_423_video_subtitles_title">Video subtitles</string>
     <string name="help_release_423_video_subtitles_desc">Embedded and external subtitle track selection with bottom-sheet management</string>
-    <string name="help_release_423_video_zoom_title">Video pinch-to-zoom</string>
+    <string name="help_release_423_video_zoom_title">Zoom per Zwei-Finger Geste im Video</string>
     <string name="help_release_423_video_zoom_desc">Pinch-to-zoom and double-tap-to-zoom during video playback</string>
     <string name="help_release_423_search_enhancements_title">Enhanced search</string>
     <string name="help_release_423_search_enhancements_desc">Search through image descriptions, metadata text fields, and inline timeline filter</string>
@@ -1086,7 +1086,7 @@
     <string name="help_release_400_selection_sheet_title">Redesigned selection sheet</string>
     <string name="help_release_400_selection_sheet_desc">Revamped selection actions with addons and select-all</string>
     <string name="help_release_400_search_title">Redesigned search</string>
-    <string name="help_release_400_search_desc">Rebuilt search experience with improved results and history</string>
+    <string name="help_release_400_search_desc">Überarbeitete Suchfunktion mit verbesserten Ergebnissen und Verlauf</string>
     <string name="help_release_400_list_albums_title">List-based albums</string>
     <string name="help_release_400_list_albums_desc">View your albums in a compact list layout</string>
     <string name="help_release_400_lock_images_title">Lock images</string>
@@ -1143,7 +1143,7 @@
     <string name="help_tip_settings_backup_restore_p1_title">Back up your setup</string>
     <string name="help_tip_settings_backup_restore_p1_desc">The backup &amp; restore wizard lets you export your settings, favorites, cloud server configs, and vaults into a single archive you can move to a new device or keep safe. You can optionally protect the whole archive with a password. Vault backup is off by default and requires your vault credential before any vault is included.</string>
     <string name="help_tip_settings_backup_restore_p2_title">Export a backup</string>
-    <string name="help_tip_settings_backup_restore_p2_desc">Choose exactly what to include. If you enable vaults, you select which ones, and each is authenticated with its own credential at export time so nothing leaves your device unlocked by accident.</string>
+    <string name="help_tip_settings_backup_restore_p2_desc">Wählen Sie genau aus, was enthalten sein soll. Wenn Sie Tresore aktivieren, legen Sie fest, welche davon verwendet werden sollen, und jeder einzelne wird beim Export mit seinen eigenen Anmeldedaten authentifiziert, sodass versehentlich keine Daten unverschlüsselt Ihr Gerät verlassen.</string>
     <string name="help_tip_settings_backup_restore_p2_s1">Go to Settings &gt; Backup &amp; restore</string>
     <string name="help_tip_settings_backup_restore_p2_s2">Choose Export and pick what to include</string>
     <string name="help_tip_settings_backup_restore_p2_s3">Optionally set an archive password</string>
