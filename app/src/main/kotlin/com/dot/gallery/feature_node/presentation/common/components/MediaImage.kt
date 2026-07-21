@@ -365,7 +365,7 @@ fun <T : Media> MediaImage(
                     .fillMaxWidth()
                     .padding(4.dp)
             ) {
-                val number by rememberedDerivedState {
+                val number by rememberedDerivedState(isSelected, selectedMedia) {
                     if (isSelected) {
                         selectedMedia.indexOf(media.id) + 1
                     } else null
