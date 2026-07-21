@@ -261,13 +261,14 @@ fun <T : Media> BoxScope.SelectionSheet(
         if (isInVault && SelectionAction.ADD_TO_VAULT !in base.bottomActions) {
             base = base.copy(bottomActions = base.bottomActions + SelectionAction.ADD_TO_VAULT)
         }
-        // Surface the private-folder move action whenever a private folder is
-        // configured, regardless of the saved config, so it's discoverable.
-        if (!isInVault && privateFolderConfigured &&
-            SelectionAction.MOVE_TO_PRIVATE_FOLDER !in base.bottomActions
+        // Drop the private-folder move action if a private folder isn't
+        // configured, but otherwise respect the user's saved config (don't
+        // force it in).
+        if (!privateFolderConfigured &&
+            SelectionAction.MOVE_TO_PRIVATE_FOLDER in base.bottomActions
         ) {
             base = base.copy(
-                bottomActions = base.bottomActions + SelectionAction.MOVE_TO_PRIVATE_FOLDER
+                bottomActions = base.bottomActions - SelectionAction.MOVE_TO_PRIVATE_FOLDER
             )
         }
         base
