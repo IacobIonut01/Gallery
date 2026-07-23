@@ -958,11 +958,6 @@
     <string name="help_tip_video_options_popup_subtitle">Kompaktan animirani skočni izbornik za kontrole videozapisa</string>
     <string name="help_tip_video_options_popup_p1_title">Preglednije kontrole videozapisa</string>
     <string name="help_tip_video_options_popup_p1_desc">Gumbi za kontrole videozapisa (titlovi, brzina, glasnoća, rotacija) objedinjeni su u jedan gumb \"više opcija\" koji se širi u zamućeni animirani skočni izbornik. Izbornik koristi vodoravni raspored u pejzažnom (landscape) i okomiti u portretnom (portrait) načinu rada, čime se održava preglednost videozapisa uz brz pristup svim kontrolama.</string>
-    <!-- RELEASE NOTES: 4.3.0 -->
-    <!-- RELEASE NOTES: 4.2.3 -->
-    <!-- RELEASE NOTES: 4.2.2 -->
-    <!-- RELEASE NOTES: 4.2.1 -->
-    <!-- RELEASE NOTES -->
     <!-- TIMELINE: PER-SCREEN GROUPING (5.0.0) -->
     <string name="help_tip_timeline_group_period_title">Grupiranje po danu, mjesecu ili godini</string>
     <string name="help_tip_timeline_group_period_subtitle">Odaberi kako se mediji grupiraju na svakom zaslonu — i postavi to za svaki zaslon posebno</string>
@@ -1064,13 +1059,143 @@
     <string name="help_tip_cloud_explore_p1_desc">Povezani poslužitelj otključava više načina pregledavanja: vidi prepoznate osobe i otvori sve njihove fotografije, istražuj medije s geografskim oznakama na karti i pregledaj albume koji su podijeljeni s tobom. Čak možeš urediti ime i datum rođenja osobe izravno iz Galerije.</string>
     <string name="help_tip_cloud_explore_p2_title">Pametno pretraživanje i dijeljene poveznice</string>
     <string name="help_tip_cloud_explore_p2_desc">Koristi CLIP pametno pretraživanje za pronalaženje fotografija opisujući ih prirodnim jezikom. Također možeš stvoriti poveznice za dijeljenje sadržaja i albuma, zatim ih popisivati, uređivati ili brisati — sve iz Galerije.</string>
-    <!-- RELEASE NOTES: 5.0.0 -->
-    <!-- RELEASE NOTES: 5.0.1 -->
-    <!-- RELEASE NOTES: 5.0.2 -->
     <!-- Fix black video on hide (5.0.3) -->
     <string name="help_tip_video_fix_black_title">Fix black video on hide</string>
     <string name="help_tip_video_fix_black_subtitle">Stop video blacking out when the bars hide</string>
     <string name="help_tip_video_fix_black_p1_title">Keep video visible</string>
     <string name="help_tip_video_fix_black_p1_desc">On some devices (notably Samsung) a playing video can black out when the system bars are shown or hidden, even though it keeps playing. Enable Media Viewer › Video Playback › \'Fix black video on hide\' to re-bind the player surface on every bar change. It is on by default for Samsung devices and off elsewhere — turn it off if you don\'t need it.</string>
-    <!-- RELEASE NOTES: 5.0.3 -->
+    <!-- HELP SEARCH -->
+    <string name="help_search_hint">Search help &amp; tips</string>
+    <string name="help_search_clear">Clear search</string>
+    <string name="help_search_no_results">No help found for \"%1$s\"</string>
+    <string name="help_search_section_tips">Tips &amp; how-to</string>
+    <string name="help_search_section_settings">Settings</string>
+    <string name="help_search_section_actions">Quick actions</string>
+    <string name="help_search_section_changelog">What\'s new</string>
+    <string name="help_search_see_all">See all %1$d results</string>
+    <string name="help_tips_section_title">Help &amp; Tips</string>
+    <string name="help_quick_actions">Quick actions</string>
+    <!-- HELP QUICK-ACTION LABELS -->
+    <string name="help_qa_open_timeline">Open Timeline</string>
+    <string name="help_qa_open_albums">Open Albums</string>
+    <string name="help_qa_open_search">Open Search</string>
+    <string name="help_qa_open_categories">Open Categories</string>
+    <string name="help_qa_open_vault">Open Vault</string>
+    <string name="help_qa_open_trash">Open Trash</string>
+    <string name="help_qa_open_favorites">Open Favorites</string>
+    <string name="help_qa_open_locations">Open Locations</string>
+    <string name="help_qa_open_library">Open Library</string>
+    <string name="help_qa_open_color_palette">Open Color palette</string>
+    <string name="help_qa_open_appearance">Open Appearance settings</string>
+    <!-- COVERAGE COMPLETION TIPS (100% audit) -->
+    <string name="help_tip_view_cutout_title">Cut out a subject</string>
+    <string name="help_tip_view_cutout_subtitle">Lift a person or object from the background</string>
+    <string name="help_tip_view_cutout_p1_title">Lift the detected subject</string>
+    <string name="help_tip_view_cutout_p1_desc">In the viewer, ReFra can detect the main subject on-device and show a highlighted suggestion. Open it to refine the mask, then copy, share or save a transparent cutout. You can also make long-press start cutout from Media Viewer settings.</string>
+    <string name="help_tip_view_cutout_p1_s1">Open a photo with a clear subject</string>
+    <string name="help_tip_view_cutout_p1_s2">Tap the Cut out subject suggestion</string>
+    <string name="help_tip_view_cutout_p1_s3">Refine the outline with include or exclude points</string>
+    <string name="help_tip_view_cutout_p1_s4">Copy, share or save the cutout</string>
+    <string name="help_tip_slideshow_play_title">Play a slideshow</string>
+    <string name="help_tip_slideshow_play_subtitle">Auto-advance through an album full-screen</string>
+    <string name="help_tip_slideshow_play_p1_title">Start from the viewer</string>
+    <string name="help_tip_slideshow_play_p1_desc">Open any photo, then choose Slideshow from the options menu to auto-advance through the album full-screen.</string>
+    <string name="help_tip_slideshow_play_p1_s1">Open a photo in an album</string>
+    <string name="help_tip_slideshow_play_p1_s2">Open the options menu</string>
+    <string name="help_tip_slideshow_play_p1_s3">Tap Slideshow to begin</string>
+    <string name="help_tip_settings_slideshow_title">Slideshow settings</string>
+    <string name="help_tip_settings_slideshow_subtitle">Set interval, order and looping</string>
+    <string name="help_tip_settings_slideshow_p1_title">Tune playback</string>
+    <string name="help_tip_settings_slideshow_p1_desc">Adjust how long each item is shown, whether playback loops, and the order items appear in.</string>
+    <string name="help_tip_settings_slideshow_p1_s1">Open Slideshow settings</string>
+    <string name="help_tip_settings_slideshow_p1_s2">Set the per-item interval</string>
+    <string name="help_tip_settings_slideshow_p1_s3">Choose order and looping</string>
+    <string name="help_tip_settings_date_format_title">Date format</string>
+    <string name="help_tip_settings_date_format_subtitle">Choose how dates appear</string>
+    <string name="help_tip_settings_date_format_p1_title">Pick your format</string>
+    <string name="help_tip_settings_date_format_p1_desc">ReFra follows your system date and 12/24-hour preferences by default. Set an override only when you want a custom pattern, and use the information button to review supported format symbols.</string>
+    <string name="help_tip_settings_date_format_p1_s1">Open Date format</string>
+    <string name="help_tip_settings_date_format_p1_s2">Keep Follow system or enter a custom pattern</string>
+    <string name="help_tip_settings_date_format_p1_s3">Preview the result and open format guidance if needed</string>
+    <string name="help_tip_basics_setup_title">First-run setup</string>
+    <string name="help_tip_basics_setup_subtitle">Grant access and pick your defaults</string>
+    <string name="help_tip_basics_setup_p1_title">Getting started</string>
+    <string name="help_tip_basics_setup_p1_desc">On first launch ReFra guides you through permissions, appearance, AI models, cloud accounts and useful tips. You can revisit the setup at any time.</string>
+    <string name="help_tip_albums_ignored_manage_title">Manage ignored albums</string>
+    <string name="help_tip_albums_ignored_manage_subtitle">Review and restore hidden folders</string>
+    <string name="help_tip_albums_ignored_manage_p1_title">Ignored albums list</string>
+    <string name="help_tip_albums_ignored_manage_p1_desc">See every album you\'ve hidden from the timeline and restore any of them in one place.</string>
+    <string name="help_tip_albums_ignored_manage_p1_s1">Open Ignored albums</string>
+    <string name="help_tip_albums_ignored_manage_p1_s2">Review the hidden folders</string>
+    <string name="help_tip_albums_ignored_manage_p1_s3">Restore any you want back</string>
+    <string name="help_tip_cloud_add_server_title">Add a server</string>
+    <string name="help_tip_cloud_add_server_subtitle">Connect Immich, WebDAV, SMB and more</string>
+    <string name="help_tip_cloud_add_server_p1_title">Setup wizard</string>
+    <string name="help_tip_cloud_add_server_p1_desc">A step-by-step wizard walks you through the server address, credentials, networking and sync options.</string>
+    <string name="help_tip_cloud_add_server_p1_s1">Pick a provider type</string>
+    <string name="help_tip_cloud_add_server_p1_s2">Enter the server and credentials</string>
+    <string name="help_tip_cloud_add_server_p1_s3">Set networking and sync</string>
+    <string name="help_tip_cloud_add_server_p1_s4">Review and save</string>
+    <string name="help_tip_cloud_destinations_title">Backup destinations</string>
+    <string name="help_tip_cloud_destinations_subtitle">Map each album to one or more clouds</string>
+    <string name="help_tip_cloud_destinations_p1_title">Destinations matrix</string>
+    <string name="help_tip_cloud_destinations_p1_desc">Choose exactly which albums back up to which connected accounts using a simple matrix.</string>
+    <string name="help_tip_cloud_provider_settings_title">Account settings</string>
+    <string name="help_tip_cloud_provider_settings_subtitle">Manage a connected account</string>
+    <string name="help_tip_cloud_provider_settings_p1_title">Per-account options</string>
+    <string name="help_tip_cloud_provider_settings_p1_desc">Edit networking, backup albums and sync behaviour independently for each connected account.</string>
+    <string name="help_tip_cloud_shared_links_title">Shared links</string>
+    <string name="help_tip_cloud_shared_links_subtitle">Manage links you\'ve shared</string>
+    <string name="help_tip_cloud_shared_links_p1_title">Review shared links</string>
+    <string name="help_tip_cloud_shared_links_p1_desc">See and revoke the public links created on your connected servers.</string>
+    <string name="help_tip_cloud_sync_status_title">Sync status</string>
+    <string name="help_tip_cloud_sync_status_subtitle">Track uploads and downloads</string>
+    <string name="help_tip_cloud_sync_status_p1_title">Live progress</string>
+    <string name="help_tip_cloud_sync_status_p1_desc">Watch backup progress and see what is queued, running or failed.</string>
+    <string name="help_tip_cloud_people_title">People</string>
+    <string name="help_tip_cloud_people_subtitle">Browse faces from your server</string>
+    <string name="help_tip_cloud_people_p1_title">Face grouping</string>
+    <string name="help_tip_cloud_people_p1_desc">Explore people detected by your cloud server and open each person\'s photos.</string>
+    <string name="help_tip_cloud_free_up_space_title">Free up space</string>
+    <string name="help_tip_cloud_free_up_space_subtitle">Remove local copies safely backed up</string>
+    <string name="help_tip_cloud_free_up_space_p1_title">Reclaim storage</string>
+    <string name="help_tip_cloud_free_up_space_p1_desc">Delete on-device copies of media that is already safely backed up to the cloud.</string>
+    <string name="help_tip_media_type_albums_title">Browse by media type</string>
+    <string name="help_tip_media_type_albums_subtitle">Automatic albums for photos, videos, GIFs and RAW files</string>
+    <string name="help_tip_media_type_albums_p1_title">Media-type albums</string>
+    <string name="help_tip_media_type_albums_p1_desc">ReFra creates virtual albums from your unified library so you can open all photos, videos, GIFs or RAW files together. Their visibility is controlled from Timeline &amp; Albums settings.</string>
+    <string name="help_tip_media_type_albums_p1_s1">Open Albums and scroll to Media types</string>
+    <string name="help_tip_media_type_albums_p1_s2">Open a type to browse matching media</string>
+    <string name="help_tip_media_type_albums_p1_s3">Use Timeline &amp; Albums settings to show or hide the section</string>
+    <string name="help_tip_raw_develop_title">Develop RAW photos</string>
+    <string name="help_tip_raw_develop_subtitle">Adjust sensor data before exporting</string>
+    <string name="help_tip_raw_develop_p1_title">Use the Develop controls</string>
+    <string name="help_tip_raw_develop_p1_desc">Open a supported RAW photo in the editor to adjust white balance, exposure, highlights, output colour and demosaicing. ReFra uses a memory-safe preview while preserving full-resolution output.</string>
+    <string name="help_tip_raw_develop_p1_s1">Open a RAW photo and tap Edit</string>
+    <string name="help_tip_raw_develop_p1_s2">Choose options in the Develop tab</string>
+    <string name="help_tip_raw_develop_p1_s3">Apply any additional crop, filter or markup</string>
+    <string name="help_tip_raw_develop_p1_s4">Save a copy or export JPEG, PNG or TIFF</string>
+    <string name="help_tip_people_grouping_title">Group people on-device</string>
+    <string name="help_tip_people_grouping_subtitle">Find faces without uploading your library</string>
+    <string name="help_tip_people_grouping_p1_title">Scan and organize people</string>
+    <string name="help_tip_people_grouping_p1_desc">With the face model installed, ReFra scans and groups people locally. You can start a fresh scan from People, hide a person, merge groups and create blurred copies when privacy matters.</string>
+    <string name="help_tip_people_grouping_p1_s1">Install the Face Detection model</string>
+    <string name="help_tip_people_grouping_p1_s2">Open Library, then People</string>
+    <string name="help_tip_people_grouping_p1_s3">Tap Scan for people and wait for indexing</string>
+    <string name="help_tip_people_grouping_p1_s4">Open a person to manage the group or blur faces</string>
+    <string name="help_tip_album_cover_title">Choose an album cover</string>
+    <string name="help_tip_album_cover_subtitle">Use any local photo as the thumbnail</string>
+    <string name="help_tip_album_cover_p1_title">Set a custom cover</string>
+    <string name="help_tip_album_cover_p1_desc">For a local, non-encrypted photo in a real album, open the viewer actions and choose Use as album cover. You can also expose the action in the configurable selection sheet.</string>
+    <string name="help_tip_album_cover_p1_s1">Open the photo you want from its album</string>
+    <string name="help_tip_album_cover_p1_s2">Open actions, then Use as</string>
+    <string name="help_tip_album_cover_p1_s3">Choose Use as album cover</string>
+    <string name="help_tip_metadata_sanitize_title">Remove sensitive metadata</string>
+    <string name="help_tip_metadata_sanitize_subtitle">Sanitize supported files without recompressing pixels</string>
+    <string name="help_tip_metadata_sanitize_p1_title">Choose what to remove</string>
+    <string name="help_tip_metadata_sanitize_p1_desc">From a photo\'s details, choose Remove metadata and select location only, descriptive fields or all supported metadata. ReFra writes and verifies a lossless sanitized copy before replacing the original.</string>
+    <string name="help_tip_metadata_sanitize_p1_s1">Open a supported local photo</string>
+    <string name="help_tip_metadata_sanitize_p1_s2">Expand its details and tap Remove metadata</string>
+    <string name="help_tip_metadata_sanitize_p1_s3">Choose the sanitization level</string>
+    <string name="help_tip_metadata_sanitize_p1_s4">Confirm only after reviewing the replacement warning</string>
 </resources>
