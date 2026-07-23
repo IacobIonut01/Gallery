@@ -17,6 +17,9 @@ import com.dot.gallery.cloud.core.capabilities.RemoteMediaProvider
 import com.dot.gallery.cloud.core.capabilities.SyncCapableProvider
 import com.dot.gallery.cloud.data.dao.CloudMediaDao
 import com.dot.gallery.core.decoder.format.ImageReencoder
+import com.dot.gallery.core.metadata.MetadataRemovalMode
+import com.dot.gallery.core.metadata.SanitizationCapability
+import com.dot.gallery.core.metadata.SanitizationResult
 import com.dot.gallery.core.Settings.Misc.getTrashEnabled
 import com.dot.gallery.core.workers.VaultOperationWorker
 import com.dot.gallery.core.workers.enqueueVaultOperation
@@ -199,13 +202,14 @@ class MediaHandlerImpl @Inject constructor(
         newPath: String
     ): Boolean = repository.moveMedia(media, newPath)
 
-    override suspend fun <T : Media> deleteMediaMetadata(
-        media: T
-    ): Boolean = repository.deleteMediaMetadata(media)
+    override suspend fun probeMetadataSanitization(
+        media: Media
+    ): SanitizationCapability = repository.probeMetadataSanitization(media)
 
-    override suspend fun <T : Media> deleteMediaGPSMetadata(
-        media: T
-    ): Boolean = repository.deleteMediaGPSMetadata(media)
+    override suspend fun sanitizeMediaMetadata(
+        media: Media,
+        mode: MetadataRemovalMode
+    ): SanitizationResult = repository.sanitizeMediaMetadata(media, mode)
 
     override suspend fun <T : Media> updateMediaDescription(
         media: T,

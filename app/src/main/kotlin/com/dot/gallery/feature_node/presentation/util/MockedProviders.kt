@@ -13,6 +13,10 @@ import androidx.compose.ui.layout.ContentScale
 import com.dot.gallery.cloud.core.SyncState
 import com.dot.gallery.core.MediaDistributor
 import com.dot.gallery.core.decoder.format.ImageReencoder
+import com.dot.gallery.core.metadata.MediaContainerFormat
+import com.dot.gallery.core.metadata.MetadataRemovalMode
+import com.dot.gallery.core.metadata.SanitizationCapability
+import com.dot.gallery.core.metadata.SanitizationResult
 import com.dot.gallery.core.presentation.components.MediaImageRenderer
 import com.dot.gallery.core.MediaHandler
 import com.dot.gallery.core.MediaSelector
@@ -128,13 +132,14 @@ class MockedMediaHandler: MediaHandler {
         newPath: String
     ): Boolean = false
 
-    override suspend fun <T : Media> deleteMediaMetadata(
-        media: T
-    ): Boolean = false
+    override suspend fun probeMetadataSanitization(
+        media: Media
+    ): SanitizationCapability = SanitizationCapability(MediaContainerFormat.UNKNOWN, emptySet())
 
-    override suspend fun <T : Media> deleteMediaGPSMetadata(
-        media: T
-    ): Boolean = false
+    override suspend fun sanitizeMediaMetadata(
+        media: Media,
+        mode: MetadataRemovalMode
+    ): SanitizationResult = SanitizationResult.Unsupported(MediaContainerFormat.UNKNOWN, "Unavailable in preview")
 
     override suspend fun <T : Media> updateMediaDescription(
         media: T,

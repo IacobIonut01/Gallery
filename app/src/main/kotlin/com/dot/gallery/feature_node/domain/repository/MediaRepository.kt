@@ -12,6 +12,9 @@ import androidx.activity.result.IntentSenderRequest
 import androidx.datastore.preferences.core.Preferences
 import com.dot.gallery.core.Resource
 import com.dot.gallery.core.decoder.format.ImageReencoder
+import com.dot.gallery.core.metadata.MetadataRemovalMode
+import com.dot.gallery.core.metadata.SanitizationCapability
+import com.dot.gallery.core.metadata.SanitizationResult
 import com.dot.gallery.feature_node.data.data_source.CategoryWithMediaCount
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.AlbumGroup
@@ -128,9 +131,11 @@ interface MediaRepository {
         newPath: String
     ): Boolean
 
-    suspend fun <T: Media> deleteMediaMetadata(media: T): Boolean
+    suspend fun probeMetadataSanitization(media: Media): SanitizationCapability
 
-    suspend fun <T: Media> deleteMediaGPSMetadata(media: T): Boolean
+    suspend fun sanitizeMediaMetadata(media: Media, mode: MetadataRemovalMode): SanitizationResult
+
+    suspend fun refreshMetadataFor(media: Media)
 
     suspend fun <T: Media> updateMediaDescription(
         media: T,

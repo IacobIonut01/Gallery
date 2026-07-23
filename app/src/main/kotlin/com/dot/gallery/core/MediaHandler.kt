@@ -5,6 +5,9 @@ import android.net.Uri
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import com.dot.gallery.core.decoder.format.ImageReencoder
+import com.dot.gallery.core.metadata.MetadataRemovalMode
+import com.dot.gallery.core.metadata.SanitizationCapability
+import com.dot.gallery.core.metadata.SanitizationResult
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.Vault
 import kotlinx.coroutines.flow.Flow
@@ -42,9 +45,9 @@ interface MediaHandler {
 
     suspend fun <T: Media> moveMedia(media: T, newPath: String): Boolean
 
-    suspend fun <T: Media> deleteMediaMetadata(media: T): Boolean
+    suspend fun probeMetadataSanitization(media: Media): SanitizationCapability
 
-    suspend fun <T: Media> deleteMediaGPSMetadata(media: T): Boolean
+    suspend fun sanitizeMediaMetadata(media: Media, mode: MetadataRemovalMode): SanitizationResult
 
     suspend fun <T: Media> updateMediaDescription(media: T, description: String): Boolean
 

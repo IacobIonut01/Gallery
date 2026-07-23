@@ -16,6 +16,8 @@ import com.dot.gallery.core.DefaultEventHandler
 import com.dot.gallery.core.EditBackupManager
 import com.dot.gallery.core.encryption.EncryptedDatabaseFactory
 import com.dot.gallery.core.metrics.StartupTracer
+import com.dot.gallery.core.metadata.AndroidMetadataSanitizer
+import com.dot.gallery.core.metadata.MetadataSanitizer
 import com.dot.gallery.core.sandbox.IsolatedImageDecoder
 import com.dot.gallery.core.sandbox.IsolatedMetadataParser
 import com.dot.gallery.core.sandbox.PrivateFolderRepository
@@ -134,6 +136,12 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun provideMetadataSanitizer(
+        sanitizer: AndroidMetadataSanitizer
+    ): MetadataSanitizer = sanitizer
+
+    @Provides
+    @Singleton
     fun provideMediaRepository(
         @ApplicationContext context: Context,
         workManager: WorkManager,
@@ -141,8 +149,17 @@ object AppModule {
         keychainHolder: KeychainHolder,
         geocoder: Geocoder?,
         isolatedParser: IsolatedMetadataParser,
+        metadataSanitizer: MetadataSanitizer,
     ): MediaRepository = StartupTracer.trace("AppModule.provideMediaRepository") {
-        MediaRepositoryImpl(context, workManager, database, keychainHolder, geocoder, isolatedParser)
+        MediaRepositoryImpl(
+            context,
+            workManager,
+            database,
+            keychainHolder,
+            geocoder,
+            isolatedParser,
+            metadataSanitizer
+        )
     }
 
     @Provides

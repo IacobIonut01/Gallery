@@ -26,9 +26,11 @@ import androidx.work.WorkManager
 import com.dot.gallery.core.Resource
 import com.dot.gallery.core.activeDataStore
 import com.dot.gallery.core.decoder.format.ImageReencoder
+import com.dot.gallery.core.metadata.MetadataRemovalMode
+import com.dot.gallery.core.metadata.MetadataSanitizer
+import com.dot.gallery.core.metadata.SanitizationCapability
+import com.dot.gallery.core.metadata.SanitizationResult
 import com.dot.gallery.core.util.MediaStoreBuckets
-import com.dot.gallery.core.util.ext.deleteGpsMetadata
-import com.dot.gallery.core.util.ext.deleteMetadata
 import com.dot.gallery.core.util.ext.mapAsResource
 import com.dot.gallery.core.util.ext.overrideImageEncoded
 import com.dot.gallery.core.util.ext.renameMedia
@@ -119,7 +121,8 @@ class MediaRepositoryImpl(
     private val database: InternalDatabase,
     private val keychainHolder: KeychainHolder,
     private val geocoder: Geocoder?,
-    private val isolatedParser: IsolatedMetadataParser
+    private val isolatedParser: IsolatedMetadataParser,
+    private val metadataSanitizer: MetadataSanitizer
 ) : MediaRepository {
 
     private val contentResolver = context.contentResolver
@@ -461,27 +464,27 @@ class MediaRepositoryImpl(
         }
     }
 
-    override suspend fun <T : Media> deleteMediaGPSMetadata(media: T): Boolean =
-        context.updateMediaExif(
-            media = media,
-            action = { deleteGpsMetadata() },
-            postAction = {
-                context.retrieveExtraMediaMetadata(isolatedParser, geocoder, it, shouldUsePerFileIsolation())?.let { metadata ->
-                    database.getMetadataDao().addMetadata(metadata)
-                }
-            }
-        )
+    override suspend fun probeMetadataSanitization(media: Media): SanitizationCapability =
+        metadataSanitizer.probe(media)
 
-    override suspend fun <T : Media> deleteMediaMetadata(media: T): Boolean =
-        context.updateMediaExif(
-            media = media,
-            action = { deleteMetadata() },
-            postAction = {
-                context.retrieveExtraMediaMetadata(isolatedParser, geocoder, it, shouldUsePerFileIsolation())?.let { metadata ->
-                    database.getMetadataDao().addMetadata(metadata)
-                }
-            }
-        )
+    override suspend fun sanitizeMediaMetadata(
+        media: Media,
+        mode: MetadataRemovalMode
+    ): SanitizationResult {
+        val result = metadataSanitizer.sanitize(media, mode)
+        if (result is SanitizationResult.Success) refreshMetadataFor(media)
+        return result
+    }
+
+    override suspend fun refreshMetadataFor(media: Media) {
+        database.getMetadataDao().deleteForMedia(media.id)
+        context.retrieveExtraMediaMetadata(
+            isolatedParser,
+            geocoder,
+            media,
+            shouldUsePerFileIsolation()
+        )?.let(database.getMetadataDao()::addMetadata)
+    }
 
     override suspend fun <T : Media> updateMediaDescription(
         media: T,

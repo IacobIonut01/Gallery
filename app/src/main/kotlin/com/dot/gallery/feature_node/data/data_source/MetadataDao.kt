@@ -52,6 +52,22 @@ interface MetadataDao {
     suspend fun deleteOrphansFlags(ids: List<Long>)
 
     @Transaction
+    suspend fun deleteForMedia(mediaId: Long) {
+        deleteCore(mediaId)
+        deleteVideo(mediaId)
+        deleteFlags(mediaId)
+    }
+
+    @Query("DELETE FROM media_metadata_core WHERE mediaId = :mediaId")
+    suspend fun deleteCore(mediaId: Long)
+
+    @Query("DELETE FROM media_metadata_video WHERE mediaId = :mediaId")
+    suspend fun deleteVideo(mediaId: Long)
+
+    @Query("DELETE FROM media_metadata_flags WHERE mediaId = :mediaId")
+    suspend fun deleteFlags(mediaId: Long)
+
+    @Transaction
     @Query("SELECT * FROM media_metadata_core")
     fun getFullMetadata(): Flow<List<FullMediaMetadata>>
 

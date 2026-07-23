@@ -186,15 +186,7 @@ fun rememberActivityResult(onResultCanceled: () -> Unit = {}, onResultOk: () -> 
 
 fun <T : Media> T.writeRequest(
     contentResolver: ContentResolver,
-): IntentSenderRequest? {
-    if (!SdkCompat.supportsMediaStoreRequests) return null
-    return IntentSenderRequest.Builder(
-        MediaStore.createWriteRequest(
-            contentResolver,
-            arrayListOf(getUri())
-        )
-    ).build()
-}
+): IntentSenderRequest? = getUri().writeRequest(contentResolver)
 
 fun <T : Media> List<T>.writeRequest(
     contentResolver: ContentResolver,

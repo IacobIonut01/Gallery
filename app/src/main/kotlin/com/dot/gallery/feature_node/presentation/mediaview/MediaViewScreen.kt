@@ -240,6 +240,10 @@ fun <T : Media> MediaViewScreenRoute(
         rotateImage = viewModel::rotateImage,
         uiEvents = viewModel.uiEvents,
         rotationState = viewModel.rotationState,
+        metadataSanitizationState = viewModel.metadataSanitizationState,
+        probeMetadataSanitization = viewModel::probeMetadataSanitization,
+        sanitizeMetadata = viewModel::sanitizeMetadata,
+        resetMetadataSanitization = viewModel::resetMetadataSanitization,
         motionPhotoStateFactory = { media ->
             com.dot.gallery.feature_node.presentation.mediaview.components.media.rememberMotionPhotoState(
                 media = media,
@@ -272,10 +276,17 @@ fun <T : Media> MediaViewScreen(
     rotateImage: (Media, Int, Boolean) -> Unit = { _, _, _ -> },
     uiEvents: SharedFlow<MediaViewEvent> = MutableSharedFlow(),
     rotationState: StateFlow<MediaViewViewModel.RotationUiState?> = MutableStateFlow(null),
+    metadataSanitizationState: StateFlow<MediaViewViewModel.MetadataSanitizationUiState> = MutableStateFlow(
+        MediaViewViewModel.MetadataSanitizationUiState.Idle
+    ),
+    probeMetadataSanitization: (Media) -> Unit = {},
+    sanitizeMetadata: (Media, com.dot.gallery.core.metadata.MetadataRemovalMode) -> Unit = { _, _ -> },
+    resetMetadataSanitization: () -> Unit = {},
     motionPhotoStateFactory: @Composable (Media?) -> MotionPhotoState = { remember { MotionPhotoState() } },
 ) = ProvideInsets {
     val eventHandler = LocalEventHandler.current
     val context = LocalContext.current
+    val metadataSanitizationUiState by metadataSanitizationState.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val windowInsetsController = rememberWindowInsetsController()
 
@@ -1610,6 +1621,10 @@ fun <T : Media> MediaViewScreen(
                         currentVault = currentVault,
                         motionPhotoState = motionPhotoState,
                         cloudBackups = currentCloudBackups,
+                        metadataSanitizationState = metadataSanitizationUiState,
+                        probeMetadataSanitization = probeMetadataSanitization,
+                        sanitizeMetadata = sanitizeMetadata,
+                        resetMetadataSanitization = resetMetadataSanitization,
                     )
                 }
             }

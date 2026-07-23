@@ -24,6 +24,7 @@ import com.dot.gallery.cloud.offline.CloudMediaCache
 import com.dot.gallery.cloud.offline.OfflineModeManager
 import com.dot.gallery.core.MediaDistributor
 import com.dot.gallery.core.ml.ModelManager
+import com.dot.gallery.core.metadata.MetadataSanitizer
 import com.dot.gallery.core.sandbox.IsolatedImageDecoder
 import com.dot.gallery.core.sandbox.SandboxedDecoderHolder
 import com.dot.gallery.core.security.AdvancedProtectionMonitor
@@ -140,6 +141,9 @@ class GalleryApp : Application(), SingletonSketch.Factory, Configuration.Provide
     lateinit var repository: MediaRepository
 
     @Inject
+    lateinit var metadataSanitizer: MetadataSanitizer
+
+    @Inject
     lateinit var mediaDistributor: MediaDistributor
 
     @Inject
@@ -173,6 +177,10 @@ class GalleryApp : Application(), SingletonSketch.Factory, Configuration.Provide
 
         StartupTracer.trace("App.super.onCreate (Hilt DI)") {
             super.onCreate()
+        }
+
+        appScope.launch {
+            metadataSanitizer.recoverPendingTransactions()
         }
 
         CloudFetcherRegistryHolder.registry = providerRegistry

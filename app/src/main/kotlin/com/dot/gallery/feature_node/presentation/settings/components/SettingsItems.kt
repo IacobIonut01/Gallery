@@ -36,6 +36,7 @@ import androidx.compose.material.icons.outlined.WavingHand
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
@@ -86,6 +87,39 @@ import com.dot.gallery.ui.core.icons.RegularExpression
 import com.github.panpf.sketch.AsyncImage
 import kotlin.math.roundToLong
 import com.dot.gallery.ui.core.Icons as GalleryIcons
+
+@Composable
+fun RadioSettingsItem(
+    title: String,
+    summary: String? = null,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    screenPosition: Position = Position.Alone,
+    applyPaddings: Boolean = true,
+    backgroundColor: Color = MaterialTheme.colorScheme.surfaceContainer,
+) {
+    SettingsItem(
+        item = SettingsEntity.Preference(
+            title = title,
+            summary = summary,
+            enabled = enabled,
+            screenPosition = screenPosition,
+            onClick = onClick,
+        ),
+        modifier = modifier,
+        applyPaddings = applyPaddings,
+        backgroundColor = backgroundColor,
+        customTrailingContent = {
+            RadioButton(
+                selected = selected,
+                onClick = onClick,
+                enabled = enabled,
+            )
+        },
+    )
+}
 
 /**
  * A single preference item, which can be of type default, switch or seek.

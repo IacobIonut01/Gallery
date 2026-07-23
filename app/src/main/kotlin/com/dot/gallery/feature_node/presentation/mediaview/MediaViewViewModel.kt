@@ -14,6 +14,9 @@ import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
+import com.dot.gallery.core.metadata.MetadataRemovalMode
+import com.dot.gallery.core.metadata.SanitizationCapability
+import com.dot.gallery.core.metadata.SanitizationResult
 import com.dot.gallery.core.workers.RotateMediaWorker
 import com.dot.gallery.core.workers.rotateImage
 import com.dot.gallery.feature_node.domain.model.Media
@@ -64,7 +67,46 @@ class MediaViewViewModel @Inject constructor(
 
     // ======================== On-demand Metadata Fetching ========================
 
+    sealed interface MetadataSanitizationUiState {
+        data object Idle : MetadataSanitizationUiState
+        data class Probing(val mediaId: Long) : MetadataSanitizationUiState
+        data class Ready(val mediaId: Long, val capability: SanitizationCapability) : MetadataSanitizationUiState
+        data class Running(val mediaId: Long, val mode: MetadataRemovalMode) : MetadataSanitizationUiState
+        data class Complete(val mediaId: Long, val result: SanitizationResult) : MetadataSanitizationUiState
+    }
+
+    private val _metadataSanitizationState = MutableStateFlow<MetadataSanitizationUiState>(
+        MetadataSanitizationUiState.Idle
+    )
+    val metadataSanitizationState: StateFlow<MetadataSanitizationUiState> =
+        _metadataSanitizationState.asStateFlow()
+
     private var lastMetadataFetchId: Long? = null
+
+    fun probeMetadataSanitization(media: Media) {
+        _metadataSanitizationState.value = MetadataSanitizationUiState.Probing(media.id)
+        viewModelScope.launch(Dispatchers.IO) {
+            val capability = repository.probeMetadataSanitization(media)
+            _metadataSanitizationState.value = MetadataSanitizationUiState.Ready(media.id, capability)
+        }
+    }
+
+    fun sanitizeMetadata(media: Media, mode: MetadataRemovalMode) {
+        _metadataSanitizationState.value = MetadataSanitizationUiState.Running(media.id, mode)
+        viewModelScope.launch(Dispatchers.IO) {
+            val result = repository.sanitizeMediaMetadata(media, mode)
+            if (result is SanitizationResult.Success) {
+                cleanupMotionPhoto()
+                currentMotionMediaId = null
+                prepareMotionPhoto(media)
+            }
+            _metadataSanitizationState.value = MetadataSanitizationUiState.Complete(media.id, result)
+        }
+    }
+
+    fun resetMetadataSanitization() {
+        _metadataSanitizationState.value = MetadataSanitizationUiState.Idle
+    }
 
     fun ensureMetadataAvailable(media: Media?, metadataState: MediaMetadataState) {
         if (media == null) return

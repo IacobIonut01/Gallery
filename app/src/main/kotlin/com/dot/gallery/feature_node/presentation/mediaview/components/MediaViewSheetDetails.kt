@@ -23,7 +23,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CloudDone
-import androidx.compose.material.icons.outlined.GpsOff
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.LocalFireDepartment
 import androidx.compose.material3.Icon
@@ -33,7 +32,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -62,6 +60,8 @@ import com.dot.gallery.core.LocalEventHandler
 import com.dot.gallery.core.LocalMediaHandler
 import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
 import com.dot.gallery.core.navigate
+import com.dot.gallery.core.metadata.MetadataRemovalMode
+import com.dot.gallery.core.metadata.SanitizationResult
 import com.dot.gallery.core.presentation.components.DragHandle
 import com.dot.gallery.core.presentation.components.NavigationBarSpacer
 import com.dot.gallery.feature_node.domain.model.AlbumState
@@ -84,6 +84,7 @@ import com.dot.gallery.feature_node.domain.util.readUriOnly
 import com.dot.gallery.feature_node.presentation.exif.MetadataEditSheet
 import com.dot.gallery.feature_node.presentation.mediaview.components.media.MotionPhotoShotsSection
 import com.dot.gallery.feature_node.presentation.mediaview.components.media.MotionPhotoState
+import com.dot.gallery.feature_node.presentation.mediaview.MediaViewViewModel
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
 import com.dot.gallery.feature_node.presentation.util.GlideInvalidation
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
@@ -110,6 +111,11 @@ fun <T : Media> MediaViewSheetDetails(
     currentVault: Vault?,
     motionPhotoState: MotionPhotoState? = null,
     cloudBackups: List<Media.UriMedia> = emptyList(),
+    metadataSanitizationState: MediaViewViewModel.MetadataSanitizationUiState =
+        MediaViewViewModel.MetadataSanitizationUiState.Idle,
+    probeMetadataSanitization: (Media) -> Unit = {},
+    sanitizeMetadata: (Media, MetadataRemovalMode) -> Unit = { _, _ -> },
+    resetMetadataSanitization: () -> Unit = {},
 ) {
     val metadata by rememberedDerivedState(metadataState.value, currentMedia) {
         currentMedia?.id?.let { metadataState.value.metadataMap[it] }
@@ -212,53 +218,55 @@ fun <T : Media> MediaViewSheetDetails(
                 val context = LocalContext.current
                 val scope = rememberCoroutineScope()
 
-                /**
-                 * -1 - none
-                 * 0 - delete all
-                 * 1 - delete location
-                 */
-                var exifDeleteMode by rememberSaveable {
-                    mutableIntStateOf(-1)
+                val metadataRemovalSheetState = rememberAppBottomSheetState()
+                var pendingRemovalMode by rememberSaveable(currentMedia.id) {
+                    mutableStateOf(MetadataRemovalMode.LOCATION)
                 }
-                val doExifEdit: () -> Unit = {
-                    scope.launch {
-                        handler.let {
-                            when (exifDeleteMode) {
-                                0 -> {
-                                    if (it.deleteMediaMetadata(currentMedia)) {
-                                        printDebug("Exif Attributes Updated")
-                                    } else {
-                                        Toast.makeText(
-                                            context,
-                                            "Exif Update failed",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                    }
-                                }
-
-                                1 -> {
-                                    if (it.deleteMediaGPSMetadata(currentMedia)) {
-                                        printDebug("Exif Attributes Updated")
-                                    } else {
-                                        Toast.makeText(
-                                            context,
-                                            "Exif Update failed",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                    }
-                                }
-
-                                else -> {
-                                    printDebug("No Exif Attributes Updated")
-                                }
+                val sanitizationCapability = when (metadataSanitizationState) {
+                    is MediaViewViewModel.MetadataSanitizationUiState.Ready ->
+                        metadataSanitizationState.takeIf { it.mediaId == currentMedia.id }?.capability
+                    else -> null
+                }
+                val metadataRemovalBusy = when (metadataSanitizationState) {
+                    is MediaViewViewModel.MetadataSanitizationUiState.Probing ->
+                        metadataSanitizationState.mediaId == currentMedia.id
+                    is MediaViewViewModel.MetadataSanitizationUiState.Running ->
+                        metadataSanitizationState.mediaId == currentMedia.id
+                    else -> false
+                }
+                val doMetadataRemoval: () -> Unit = {
+                    sanitizeMetadata(currentMedia, pendingRemovalMode)
+                }
+                val metadataRemovalPermissionResult = rememberActivityResult(
+                    onResultOk = doMetadataRemoval
+                )
+                LaunchedEffect(metadataSanitizationState, currentMedia.id) {
+                    when (metadataSanitizationState) {
+                        is MediaViewViewModel.MetadataSanitizationUiState.Ready -> {
+                            if (metadataSanitizationState.mediaId == currentMedia.id) {
+                                metadataRemovalSheetState.show()
                             }
-                            exifDeleteMode = -1
                         }
+                        is MediaViewViewModel.MetadataSanitizationUiState.Complete -> {
+                            if (metadataSanitizationState.mediaId == currentMedia.id) {
+                                val result = metadataSanitizationState.result
+                                val message = when (result) {
+                                    is SanitizationResult.Success -> R.string.remove_metadata_success
+                                    is SanitizationResult.CommitFailed -> if (result.rolledBack) {
+                                        R.string.remove_metadata_rolled_back
+                                    } else {
+                                        R.string.remove_metadata_failed
+                                    }
+                                    else -> R.string.remove_metadata_failed
+                                }
+                                Toast.makeText(context, context.getString(message), Toast.LENGTH_SHORT).show()
+                                if (result is SanitizationResult.Success) metadataRemovalSheetState.hide()
+                                resetMetadataSanitization()
+                            }
+                        }
+                        else -> Unit
                     }
                 }
-                val exifAttributesEditResult = rememberActivityResult(
-                    onResultOk = doExifEdit
-                )
 
                 val dateCaption = rememberMediaDateCaption(metadata, currentMedia)
                 val metadataSheetState = rememberAppBottomSheetState()
@@ -378,98 +386,36 @@ fun <T : Media> MediaViewSheetDetails(
                                     allMetadataEventHandler.navigate(Screen.LocationsScreen())
                                 }
                             )
-                            AnimatedVisibility(
-                                visible = currentMedia.canMakeActions
-                            ) {
+                            AnimatedVisibility(visible = currentMedia.canMakeActions) {
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(top = 4.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        .padding(top = 4.dp)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .then(buttonBackgroundModifier)
+                                        .hazeEffectScaled(
+                                            state = LocalHazeState.current,
+                                            style = sheetCardButtonHazeStyle
+                                        )
+                                        .clickable(enabled = !metadataRemovalBusy) {
+                                            probeMetadataSanitization(currentMedia)
+                                        }
+                                        .padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
                                 ) {
-                                    AnimatedVisibility(
-                                        modifier = Modifier.weight(1f),
-                                        visible = locationData != null
-                                    ) {
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .clip(RoundedCornerShape(12.dp))
-                                                .background(
-                                                    color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f),
-                                                    shape = RoundedCornerShape(12.dp)
-                                                )
-                                                .clickable {
-                                                    scope.launch {
-                                                        exifDeleteMode = 1
-                                                        exifAttributesEditResult.launchWriteRequest(
-                                                            currentMedia.writeRequest(
-                                                                context.contentResolver
-                                                            ),
-                                                            doExifEdit
-                                                        )
-                                                    }
-                                                }
-                                                .padding(12.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.Center
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Outlined.GpsOff,
-                                                contentDescription = stringResource(R.string.delete_location),
-                                                modifier = Modifier.size(16.dp),
-                                                tint = MaterialTheme.colorScheme.tertiary
-                                            )
-                                            Text(
-                                                text = stringResource(R.string.delete_location),
-                                                style = MaterialTheme.typography.labelMedium,
-                                                color = MaterialTheme.colorScheme.tertiary,
-                                                modifier = Modifier.padding(start = 8.dp)
-                                            )
-                                        }
-                                    }
-                                    AnimatedVisibility(
-                                        modifier = Modifier.weight(1f),
-                                        visible = metadata?.lensDescription != null
-                                    ) {
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .clip(RoundedCornerShape(12.dp))
-                                                .then(buttonBackgroundModifier)
-                                                .hazeEffectScaled(
-                                                    state = LocalHazeState.current,
-                                                    style = sheetCardButtonHazeStyle
-                                                )
-                                                .clickable {
-                                                    scope.launch {
-                                                        exifDeleteMode = 0
-                                                        exifAttributesEditResult.launchWriteRequest(
-                                                            currentMedia.writeRequest(
-                                                                context.contentResolver
-                                                            ),
-                                                            doExifEdit
-                                                        )
-                                                    }
-                                                }
-                                                .padding(12.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.Center
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Outlined.LocalFireDepartment,
-                                                contentDescription = stringResource(R.string.delete_metadata),
-                                                modifier = Modifier.size(16.dp),
-                                                tint = MaterialTheme.colorScheme.onSurface
-                                            )
-                                            Text(
-                                                text = stringResource(R.string.delete_metadata),
-                                                style = MaterialTheme.typography.labelMedium,
-                                                color = MaterialTheme.colorScheme.onSurface,
-                                                modifier = Modifier.padding(start = 8.dp)
-                                            )
-                                        }
-                                    }
+                                    Icon(
+                                        imageVector = Icons.Outlined.LocalFireDepartment,
+                                        contentDescription = stringResource(R.string.remove_metadata),
+                                        modifier = Modifier.size(16.dp),
+                                        tint = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.remove_metadata),
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        modifier = Modifier.padding(start = 8.dp)
+                                    )
                                 }
                             }
                         }
@@ -676,6 +622,23 @@ fun <T : Media> MediaViewSheetDetails(
                     item(key = "spacer") {
                         NavigationBarSpacer()
                     }
+                }
+
+                if (metadataRemovalSheetState.isVisible) {
+                    MetadataRemovalSheet(
+                        state = metadataRemovalSheetState,
+                        capability = sanitizationCapability,
+                        isBusy = metadataRemovalBusy,
+                        onConfirm = { mode ->
+                            pendingRemovalMode = mode
+                            scope.launch {
+                                metadataRemovalPermissionResult.launchWriteRequest(
+                                    currentMedia.writeRequest(context.contentResolver),
+                                    doMetadataRemoval
+                                )
+                            }
+                        }
+                    )
                 }
 
                 if (metadataSheetState.isVisible) {
