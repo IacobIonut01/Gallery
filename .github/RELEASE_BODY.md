@@ -1,27 +1,44 @@
-## What's new in 5.0.3
+## What's new in 5.1.0
 
-ReFra 5.0.3 is a stability release that sharpens the media viewer and photo editor. Rotation, insets and the info sheet now behave correctly, timeline scroll position is preserved when you return from the viewer, video metadata is far richer, and the editor's markup and crop tools have been ironed out.
+ReFra 5.1.0 is a major capability release: connect multiple cloud services, develop RAW photos, edit huge images at full resolution, lift subjects on-device, browse people and places, and enjoy sharper HDR and animated media throughout the viewer.
 
 ### New Features
 
-- **Cleaner metadata UI** — The "View all metadata" row is now hidden when an item has no readable metadata, so you never open an empty metadata screen
+- **Multi-account cloud library** — Connect Immich, ownCloud, Nextcloud, WebDAV, SMB and NFS accounts; merge remote media into the timeline; configure per-album destinations; monitor backup and sync; browse shared links; and keep selected media available offline
+- **Guided setup** — A redesigned first-run flow walks through permissions, appearance, AI models, cloud accounts and useful tips
+- **On-device subject cutout** — ReFra detects the main subject without uploading the photo, then lets you refine, copy, share or save it with a transparent background; the editor also includes background removal (#991)
+- **People and privacy tools** — Scan and group faces on-device, browse people, and blur detected faces manually or automatically
+- **RAW development** — Develop RAW photos in the editor with white balance, exposure, highlight, colour-space and demosaic controls, then export JPEG, PNG or 8/16-bit TIFF
+- **Full-resolution tiled editing** — Large photos are edited through a memory-bounded tiled pipeline that preserves their original resolution and source format
+- **HDR HEIC viewer** — Native tiled HEIC decoding, Ultra HDR gain-map rendering and HDR display support deliver sharp zoom without loading the whole image into memory
+- **Interactive photo map** — Photo thumbnail clusters, deterministic zooming, map appearance controls and a unified location timeline replace the old heatmap experience (#1037, #1038)
+- **Lossless metadata sanitization** — Remove sensitive metadata from supported images without recompressing their pixels
+- **Album slideshows** — Start configurable, full-screen playback from an album (#1032)
+- **Media-type albums** — Browse automatic albums grouped by media format and type (#1030)
+- **Album covers** — Choose any local photo as an album's cover
+- **Secure picker vaults** — Authenticate individual vaults, select across vaults and safely clean up temporary picker files
 
 ### Improvements
 
-- **Richer video metadata** — iPhone HEVC `.MOV` files now surface full QuickTime/EXIF details (Make, Model, lens, focal length, dates) instead of an empty sheet (#976)
-- **Faster private folder loading** — Media now fills in progressively as it is discovered instead of waiting on a long empty-state delay while the whole folder is scanned (#968)
-- **Fix black video on hide** — A new Media Viewer › Video Playback toggle re-binds the player surface when system bars are shown/hidden, fixing video blackouts on some devices (on by default for Samsung) (#967)
+- **Help & Tips** — Unified fuzzy search, real-component previews, quick actions and markdown-powered release notes make guidance easier to find
+- **System-aware dates** — Date and time formats now follow the device by default, while an information sheet explains custom format strings (#953)
+- **Sharper animation** — GIF, animated WebP and APNG render at full viewer resolution (#1056)
+- **Smoother media viewer** — Faster opening and swiping, stable hidden controls, visible rotation progress and seamless refresh after overwrite or copy
+- **Pinned albums** — Choose tile or banner layouts, with locked albums consistently using privacy-safe thumbnails
+- **Photo stacks** — Matching RAW/DNG files rank below JPEGs so the processed photo becomes the stack cover
+- **Selection experience** — Reused thumbnail painters reduce flashes, drag-selection hit testing is accurate, and mosaic counters stay correct
+- **Navigation** — Re-tapping the selected navigation tab scrolls its content back to the top
+- **AI model management** — Search and Subject Cutout models are managed independently and can be downloaded again after deletion
 
 ### Bug Fixes
 
-- **Rotation & insets** — Media view paddings, the info bottom sheet and video controls now adapt correctly on orientation change, and the floating nav bar reserves the right bottom inset when nav sits on the sides (#929)
-- **Timeline scroll position** — Preserved when returning from or closing the viewer after swiping between photos (#960, #965)
-- **Info panel** — No longer auto-hides mid-drag and now dismisses cleanly instead of getting stuck invisible but interactive (#964)
-- **Material navigation toggle** — Switching "Use material navigation" no longer blinks and recomposes the whole screen (#973)
-- **Vault hide** — Fixed a silent failure when hiding items from the selection sheet while the media list changed (#970)
-- **View all metadata from intent** — Now works for images opened from another app via the standalone viewer (#946, #959)
-- **Pull-to-refresh** — Clears a refresh spinner that could get stuck forever when navigating away mid-refresh (#958)
-- **Editor crop** — No longer zooms in when the crop box is dragged out of bounds (#956)
-- **Editor markup & adjustments** — Fixed a markup hang on the back gesture, tool icons un-highlighting at default values, no-op adjustments stacking on undo, the rotate button persisting through a cancelled swipe, and markup text drifting off-canvas when it contains blank lines (#955, #957, #961, #962, #963, #978)
-- **Secure camera** — Camera reviews launched from the lockscreen now open correctly over the keyguard (#878)
-- **Wording** — Uses "Overwrite" instead of "Override" when replacing files (#975)
+- **Format detection** — Standard images mislabeled by MediaStore as RAW or TIFF now decode normally (#1054), while JXL metadata and unclassified special-format images are recovered correctly
+- **Locked albums** — Pinned locked albums no longer reveal their cover thumbnail (#1057)
+- **Private folders** — Fixed SAF crashes during move-out and deletion, restored video playback and refresh, and respected the configured selection actions (#1015)
+- **Editor reliability** — Save failures and permission errors are reported, edited images refresh immediately, and streamed overwrites preserve the source until encoding succeeds
+- **Subject cutout** — Fixed gesture routing, swipe positioning, memory cleanup, pager conflicts and failed-session state
+- **Grid stability** — Fixed crashes while pinch-zooming mosaic timelines or scrolling smart-category preview results (#1019)
+- **SVG rendering** — Files without a `viewBox` no longer show a second shrunken image (#1020)
+- **Viewer playback** — Fixed white flashes between videos, controls reappearing during swipes, Ultra HDR detection after restart and screen timeout during playback (#998, #1005)
+- **Picker navigation** — Returning from Android's media picker no longer breaks gallery back navigation
+- **Cloud actions** — Multi-account selection actions now resolve the correct provider instance

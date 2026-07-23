@@ -1,0 +1,15 @@
+What's new in 5.1.0:
+
+• Back up to Immich, ownCloud, Nextcloud, WebDAV, SMB and NFS
+• Lift subjects and remove backgrounds on-device
+• Develop RAW photos and edit huge images at full resolution
+• Browse people, photo-map clusters, slideshows and media-type albums
+
+Improvements:
+
+• Sharper HDR HEIC and animated-image viewing
+• Lossless metadata sanitization and system-aware dates
+
+Bug fixes:
+
+• Fixed format detection, private folders, locked thumbnails, editor saves and grid crashes
