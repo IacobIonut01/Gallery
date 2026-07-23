@@ -836,6 +836,7 @@
     <string name="editor_lighting">Lighting</string>
     <string name="editor_colour">Colour</string>
     <string name="editor_effects">Effects</string>
+    <string name="editor_smart">Smart</string>
     <string name="editor_more">More</string>
     <string name="editor_done">Done</string>
     <string name="editor_save_subtitle">You can always undo these changes</string>
@@ -1809,9 +1810,16 @@
     <string name="cutout_share">Share</string>
     <string name="cutout_save">Save</string>
     <string name="cutout_close">Close cutout</string>
+    <string name="cutout_tool">Cutout</string>
+    <string name="cutout_background_removal">Background Removal</string>
+    <string name="cutout_remove_background">Remove background</string>
+    <string name="cutout_save_choice_title">Save cutout as</string>
+    <string name="cutout_save_transparent_png">Transparent PNG</string>
+    <string name="cutout_save_flatten_white">Flatten on white</string>
+    <string name="cutout_save_flatten_black">Flatten on black</string>
     <string name="long_press_cutout_title">Long-press to cut out</string>
     <string name="long_press_cutout_summary">Long-press isolates a subject; rotate becomes a button</string>
-    <string name="long_press_cutout_description">Choose what a long-press on an image does in the viewer. When enabled, long-pressing starts an on-device subject cut-out and the rotate action moves to an on-screen button. When disabled (default), long-pressing rotates the image and cut-out is offered as an on-screen button.</string>
+    <string name="long_press_cutout_description">Choose what a long-press on an image does in the viewer. When enabled, long-pressing starts an on-device subject cut-out and the rotate action moves to an on-screen button. When disabled (default), long-pressing rotates the image. You can always cut out a subject from the built-in editor\'s Cutout tool.</string>
     <!-- Slideshow -->
     <string name="slideshow">Slideshow</string>
     <string name="slideshow_start">Start slideshow</string>

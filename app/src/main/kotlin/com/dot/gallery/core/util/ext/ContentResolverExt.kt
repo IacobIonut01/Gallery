@@ -19,6 +19,7 @@ import android.os.CancellationSignal
 import android.os.Environment
 import android.os.Handler
 import android.os.Looper
+import android.os.ParcelFileDescriptor
 import android.provider.MediaStore
 import androidx.annotation.RequiresApi
 import androidx.exifinterface.media.ExifInterface
@@ -253,16 +254,36 @@ suspend fun ContentResolver.saveImageStreaming(
  */
 suspend fun ContentResolver.overrideImageStreaming(
     uri: Uri,
+    stagingFile: File,
     write: (fd: Int) -> Boolean,
 ): Boolean = withContext(Dispatchers.IO) {
-    runCatching {
+    try {
         val originalDates = queryDateColumns(uri)
+        val encoded = runCatching {
+            ParcelFileDescriptor.open(
+                stagingFile,
+                ParcelFileDescriptor.MODE_CREATE or
+                    ParcelFileDescriptor.MODE_TRUNCATE or
+                    ParcelFileDescriptor.MODE_READ_WRITE,
+            ).use { output -> write(output.fd) }
+        }.getOrDefault(false)
+        if (!encoded || stagingFile.length() == 0L) return@withContext false
+
         runCatching {
             update(uri, ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 1) }, null, null)
         }
-        val ok = (openFileDescriptor(uri, "rwt") ?: openFileDescriptor(uri, "w"))
-            ?.use { pfd -> write(pfd.fd) } ?: false
-        if (!ok) error("Streaming encode failed")
+        val replaced = runCatching {
+            FileInputStream(stagingFile).use { input ->
+                openOutputStream(uri, "rwt")?.use { output ->
+                    input.copyTo(output)
+                    output.flush()
+                } ?: error("Failed to open overwrite stream")
+            }
+        }.isSuccess
+        if (!replaced) {
+            clearPendingQuiet(uri)
+            return@withContext false
+        }
         runCatching {
             update(uri, ContentValues().apply {
                 put(MediaStore.MediaColumns.IS_PENDING, 0)
@@ -273,9 +294,8 @@ suspend fun ContentResolver.overrideImageStreaming(
             }, null, null)
         }
         true
-    }.getOrElse {
-        clearPendingQuiet(uri)
-        false
+    } finally {
+        stagingFile.delete()
     }
 }
 

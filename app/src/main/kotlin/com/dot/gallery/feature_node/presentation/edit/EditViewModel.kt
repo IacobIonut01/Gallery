@@ -2,8 +2,18 @@ package com.dot.gallery.feature_node.presentation.edit
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Rect
 import android.net.Uri
 import android.os.Environment
+import android.widget.Toast
+import com.dot.gallery.R
+import com.dot.gallery.core.ml.CutoutHelper
+import com.dot.gallery.core.ml.ModelGroup
+import com.dot.gallery.feature_node.presentation.edit.adjustments.Cutout
+import com.dot.gallery.feature_node.presentation.edit.adjustments.FlattenBackground
+import com.dot.gallery.feature_node.presentation.mediaview.components.media.CutoutState
+import com.dot.gallery.feature_node.presentation.mediaview.components.media.ZoomablePagerImagePointTool
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.ColorMatrix
@@ -125,6 +135,205 @@ class EditViewModel @Inject constructor(
 
     fun consumeFaceRegions() {
         _pendingFaceRegions.value = emptyList()
+    }
+
+    // ── Cutout tool (on-device MobileSAM) ─────────────────────────────────────
+    /** True when the MobileSAM models are installed (gates the Cutout editor tab). */
+    val cutoutAvailable: Boolean
+        get() = modelManager.isReady(ModelGroup.CUTOUT)
+
+    /** Interactive cut-out session state (session, prompt points, mask result, tool, history). */
+    val cutoutState = CutoutState()
+
+    /** True while a cut-out edit (background removal) is part of the recipe → transparency present. */
+    val hasTransparentEdit: Boolean
+        get() = _appliedAdjustments.value.any { it is Cutout }
+
+    fun setCutoutTool(tool: ZoomablePagerImagePointTool) {
+        cutoutState.activeTool = tool
+    }
+
+    /** Records which Smart tool opened the session (Cutout vs Background Removal). */
+    private var cutoutBackgroundRemoval = false
+
+    /**
+     * Enter the interactive cut-out: encode the current editor proxy and auto-select the most likely
+     * subject (a centred seed, kept only when it looks like a real subject). The user then refines
+     * with include/exclude taps. [backgroundRemoval] records which Smart tool launched the session;
+     * both share the same interactive workings.
+     */
+    fun startCutout(backgroundRemoval: Boolean) {
+        if (cutoutState.session != null || cutoutState.isProcessing) return
+        val base = _targetBitmap.value ?: return
+        val media = activeMedia.value ?: return
+        cutoutBackgroundRemoval = backgroundRemoval
+        cutoutState.activeTool = ZoomablePagerImagePointTool.ADD
+        viewModelScope.launch(Dispatchers.Default) {
+            cutoutState.isProcessing = true
+            try {
+                val session = CutoutHelper.CutoutSession(context, media, modelManager)
+                if (!session.initAndRunEncoder(base)) {
+                    session.close()
+                    toastCutout(R.string.cutout_init_failed)
+                    return@launch
+                }
+                // Auto pre-select: seed a single centre point (the usual subject location).
+                val seed = CutoutHelper.PromptPoint(
+                    x = session.widthOrig / 2f,
+                    y = session.heightOrig / 2f,
+                    isPositive = true
+                )
+                val result = session.runDecoder(listOf(seed))
+                if (result != null && isPlausibleSubject(result, session)) {
+                    cutoutState.initSession(session, listOf(seed))
+                    cutoutState.updateResult(result, null)
+                } else {
+                    // No confident subject — keep the encoded session ready for manual taps.
+                    result?.bitmap?.recycle()
+                    cutoutState.initSession(session, emptyList())
+                }
+            } finally {
+                cutoutState.isProcessing = false
+            }
+        }
+    }
+
+    /** Rejects specks and near-full-frame masks that usually mean "no clear subject". */
+    private fun isPlausibleSubject(
+        result: CutoutHelper.CutoutResult,
+        session: CutoutHelper.CutoutSession
+    ): Boolean {
+        val subjectArea = result.originalBounds.width().toLong() * result.originalBounds.height().toLong()
+        val total = session.widthOrig.toLong() * session.heightOrig.toLong()
+        if (total <= 0L || subjectArea <= 0L) return false
+        val fraction = subjectArea.toFloat() / total.toFloat()
+        return fraction in 0.03f..0.9f
+    }
+
+    /**
+     * Place a prompt point (in working-bitmap pixel coordinates). Normally the session already
+     * exists (auto pre-select encoded it on entry); the first point is only encoded here as a
+     * fallback when auto-encode failed. Mirrors the media viewer's refine loop.
+     */
+    fun addCutoutPoint(x: Float, y: Float, isPositive: Boolean) {
+        val session = cutoutState.session
+        if (session == null) {
+            if (cutoutState.isProcessing) return
+            val base = _targetBitmap.value ?: return
+            val media = activeMedia.value ?: return
+            viewModelScope.launch(Dispatchers.Default) {
+                cutoutState.isProcessing = true
+                try {
+                    val newSession = CutoutHelper.CutoutSession(context, media, modelManager)
+                    val ok = newSession.initAndRunEncoder(base)
+                    if (ok) {
+                        val point = CutoutHelper.PromptPoint(x = x, y = y, isPositive = true)
+                        val points = listOf(point)
+                        val result = newSession.runDecoder(points)
+                        if (result != null) {
+                            cutoutState.initSession(newSession, points)
+                            cutoutState.updateResult(result, null)
+                        } else {
+                            newSession.close()
+                            toastCutout(R.string.cutout_no_object)
+                        }
+                    } else {
+                        newSession.close()
+                        toastCutout(R.string.cutout_init_failed)
+                    }
+                } finally {
+                    cutoutState.isProcessing = false
+                }
+            }
+        } else {
+            val newPoint = CutoutHelper.PromptPoint(x = x, y = y, isPositive = isPositive)
+            val previousPoints = cutoutState.promptPoints
+            val updatedPoints = cutoutState.promptPoints + newPoint
+            cutoutState.pushPoints(updatedPoints)
+            viewModelScope.launch(Dispatchers.Default) {
+                cutoutState.isProcessing = true
+                try {
+                    val res = session.runDecoder(updatedPoints)
+                    val newCache = cutoutState.result?.let { Pair(previousPoints, it) }
+                    cutoutState.updateResult(res, newCache)
+                } finally {
+                    cutoutState.isProcessing = false
+                }
+            }
+        }
+    }
+
+    fun undoCutout() = navigateCutout(-1)
+    fun redoCutout() = navigateCutout(1)
+
+    private fun navigateCutout(delta: Int) {
+        val pts = cutoutState.navigateHistory(delta) ?: return
+        val session = cutoutState.session ?: return
+        viewModelScope.launch(Dispatchers.Default) {
+            cutoutState.isProcessing = true
+            try {
+                val res = session.runDecoder(pts.second)
+                val newCache = cutoutState.result?.let { Pair(pts.first, it) }
+                cutoutState.updateResult(res, newCache)
+            } finally {
+                cutoutState.isProcessing = false
+            }
+        }
+    }
+
+    fun resetCutout() {
+        cutoutState.clearPoints()
+    }
+
+    fun cancelCutout() {
+        cutoutState.dismiss()
+    }
+
+    /** Bake the current mask into the recipe as a background-removal [Cutout] adjustment. */
+    fun applyCutoutAsEdit() {
+        val result = cutoutState.result ?: return
+        val base = _targetBitmap.value ?: return
+        val mask = Bitmap.createBitmap(base.width, base.height, Bitmap.Config.ARGB_8888)
+        Canvas(mask).drawBitmap(
+            result.bitmap,
+            null,
+            Rect(
+                result.originalBounds.left,
+                result.originalBounds.top,
+                result.originalBounds.right,
+                result.originalBounds.bottom
+            ),
+            null
+        )
+        cutoutState.dismiss()
+        applyAdjustment(Cutout(mask))
+    }
+
+    fun cutoutCopy() = exportCutout { CutoutHelper.copyToClipboard(context, it) }
+    fun cutoutShare() = exportCutout { CutoutHelper.shareCutout(context, it) }
+    fun cutoutSaveNew() = exportCutout { CutoutHelper.saveToGallery(context, it) }
+
+    private fun exportCutout(action: suspend (Bitmap) -> Unit) {
+        val bmp = cutoutState.result?.bitmap ?: return
+        viewModelScope.launch(Dispatchers.IO) { action(bmp) }
+    }
+
+    private suspend fun toastCutout(resId: Int) = withContext(Dispatchers.Main) {
+        Toast.makeText(context, context.getString(resId), Toast.LENGTH_SHORT).show()
+    }
+
+    /**
+     * Composite the current (transparent) working image onto a solid [color] and push it as a
+     * [FlattenBackground] checkpoint so a cut-out edit can be saved in an alpha-less format.
+     */
+    private fun appendFlatten(color: Int) {
+        val base = lastRealBitmap() ?: return
+        val adj = FlattenBackground(color)
+        val flattened = adj.apply(base)
+        _appliedAdjustments.value = _appliedAdjustments.value + adj
+        bitmaps.add(flattened to adj)
+        _currentBitmap.value = flattened
+        _targetBitmap.value = flattened
     }
 
     private val _originalBitmap = MutableStateFlow<Bitmap?>(null)
@@ -736,6 +945,7 @@ class EditViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
+        cutoutState.dismiss()
         rawToneJob?.cancel()
         RawThumbnailCache.clear()
     }
@@ -1267,18 +1477,23 @@ class EditViewModel @Inject constructor(
     }
 
     fun saveCopy(
+        forcePng: Boolean = false,
+        flattenColor: Int? = null,
         onSuccess: () -> Unit = {},
         onFail: () -> Unit = {}
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             _isSaving.value = true
             _saveProgress.value = null
-            // Match the source format; non-encodable sources (RAW/TIFF/PSD/…) fall back to PNG so
-            // the new copy is lossless.
-            val writeFormat = sourceWriteFormat() ?: ImageReencoder.ImageWriteFormat.PNG
+            // A transparent cut-out edit either forces PNG (alpha preserved) or is flattened onto a
+            // solid colour (keeps the source format). Otherwise match the source format; non-encodable
+            // sources (RAW/TIFF/PSD/…) fall back to PNG so the new copy is lossless.
+            val writeFormat = if (forcePng) ImageReencoder.ImageWriteFormat.PNG
+            else sourceWriteFormat() ?: ImageReencoder.ImageWriteFormat.PNG
             val config = reencodeConfigForSource()
             // Flatten any pending matrix adjustments into the bitmap before saving
             flattenComposedMatrix()
+            if (flattenColor != null) appendFlatten(flattenColor)
             val media = activeMedia.value!!
             // Fast path: stream the full-res result straight into a native tiled/scanline encoder
             // (JPEG/PNG/HEIC/AVIF) so the whole output bitmap is never held in RAM. Falls through to
@@ -1403,6 +1618,7 @@ class EditViewModel @Inject constructor(
      * [onNeedsCopyFallback] is invoked so the UI can offer to create a copy instead.
      */
     fun saveOverride(
+        flattenColor: Int? = null,
         onNeedsCopyFallback: () -> Unit = {},
         onSuccess: () -> Unit = {},
         onFail: () -> Unit = {}
@@ -1419,6 +1635,9 @@ class EditViewModel @Inject constructor(
             val config = reencodeConfigForSource()
             // Flatten any pending matrix adjustments into the bitmap before saving
             flattenComposedMatrix()
+            // A cut-out overwrite keeps the source format, so flatten the transparency onto a solid
+            // colour (an alpha-less format like JPEG would otherwise turn transparent pixels black).
+            if (flattenColor != null) appendFlatten(flattenColor)
             val media = activeMedia.value!!
             // Fast path: stream the full-res result straight into a native tiled/scanline encoder
             // (JPEG/PNG/HEIC/AVIF) so the whole output bitmap is never held in RAM. Falls through to
@@ -1426,10 +1645,28 @@ class EditViewModel @Inject constructor(
             val streamWriter = streamingWriter(writeFormat, config)
             if (streamWriter != null) {
                 // Backup original before overwriting (preserves first original).
-                editBackupManager.backupOriginal(
+                val backedUp = editBackupManager.backupOriginal(
                     mediaId = media.id, uri = media.uri, mimeType = media.mimeType
                 )
-                val streamed = context.contentResolver.overrideImageStreaming(media.uri, streamWriter)
+                if (!backedUp) {
+                    onFail().also { _isSaving.value = false }
+                    return@launch
+                }
+                val stagingFile = runCatching {
+                    java.io.File.createTempFile(
+                        "edit_override_",
+                        ".tmp",
+                        context.cacheDir,
+                    )
+                }.getOrElse {
+                    onFail().also { _isSaving.value = false }
+                    return@launch
+                }
+                val streamed = context.contentResolver.overrideImageStreaming(
+                    media.uri,
+                    stagingFile,
+                    streamWriter,
+                )
                 if (streamed) {
                     _hasOriginalBackup.value = true
                     evictImageCaches(media.uri)
@@ -1445,11 +1682,15 @@ class EditViewModel @Inject constructor(
             bakeFullRes(context)?.let { bitmap ->
                 try {
                     // Backup original before overriding (preserves first original)
-                    editBackupManager.backupOriginal(
+                    val backedUp = editBackupManager.backupOriginal(
                         mediaId = media.id,
                         uri = media.uri,
                         mimeType = media.mimeType
                     )
+                    if (!backedUp) {
+                        onFail().also { _isSaving.value = false }
+                        return@launch
+                    }
 
                     if (mediaHandler.overrideImage(
                             uri = media.uri,

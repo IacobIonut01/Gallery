@@ -30,6 +30,17 @@ sealed class EditorDestination {
     @Serializable
     data object Effects : EditorDestination()
 
+    /** The Smart tool category tab (hosts the Cutout and Background Removal entry buttons). */
+    @Serializable
+    data object Smart : EditorDestination()
+
+    /**
+     * Interactive subject-cutout mode (full-screen selection surface). [backgroundRemoval] selects
+     * which Smart tool launched it; both share the same interactive workings.
+     */
+    @Serializable
+    data class CutoutEdit(val backgroundRemoval: Boolean = false) : EditorDestination()
+
     @Serializable
     data object More : EditorDestination()
 
@@ -50,6 +61,7 @@ fun EditorItems.toEditorDestination(): EditorDestination =
         EditorItems.Markup -> EditorDestination.Markup
         EditorItems.Colour -> EditorDestination.Colour
         EditorItems.Effects -> EditorDestination.Effects
+        EditorItems.Smart -> EditorDestination.Smart
         EditorItems.More -> EditorDestination.More
         else -> EditorDestination.Editor
     }

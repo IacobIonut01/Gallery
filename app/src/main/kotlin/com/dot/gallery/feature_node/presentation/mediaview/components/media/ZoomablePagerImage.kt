@@ -157,10 +157,6 @@ private const val EXTENDED_MAX_NATIVE_SCALE = 50f
 // per-frame bitmap memory on pathologically large files (#1056).
 private const val ANIMATED_MAX_DIM = 4096
 
-// How long an image must stay continuously visible (selected) before background subject detection
-// starts. Fast swiping deselects the page well before this elapses, so no encoder work is kicked off.
-private const val SUGGESTION_VISIBLE_DELAY_MS = 2000L
-
 /**
  * Keeps zoomimage's default dynamic minScale/mediumScale (so double-tap behaves normally) but raises
  * the pinch ceiling (maxScale) to [maxNativeMultiple] times the image's native 1:1 resolution.
@@ -574,14 +570,9 @@ fun <T : Media> ZoomablePagerImage(
         }
         .then(modifier)
 
-    // Owns background subject detection; declared early so [rotateImage] can clear a stale hint.
-    val suggestionState = rememberSubjectSuggestionState()
-
     // Rotate the image 90° (visual step; MediaViewScreen persists it via the rotate chip).
     val rotateImage: () -> Unit = {
         if (!rotationDisabled) {
-            // A suggestion outline is computed in unrotated coordinates, so drop it on rotate.
-            suggestionState.reset()
             scope.launch {
                 isRotating = true
                 feedbackManager.vibrate()
@@ -601,12 +592,11 @@ fun <T : Media> ZoomablePagerImage(
     // When false (default), long-press rotates and Cut out is offered as an on-screen pill.
     val longPressStartsCutout by Settings.Misc.rememberLongPressCutout()
 
-    // Pulsing glow for the cutout contour / subject-suggestion outline. The infinite animation is
-    // only created while it's actually needed (a cutout is active or a suggestion is shown). An
-    // unconditional rememberInfiniteTransition would run a continuous per-frame animation and
-    // recomposition on every composed pager page — including neighbours that briefly compose during
-    // a fling — adding avoidable swipe jank.
-    val needsGlow = cutoutState.isActive || suggestionState.suggestion != null
+    // Pulsing glow for the cutout contour. The infinite animation is only created while it's
+    // actually needed (a cutout is active). An unconditional rememberInfiniteTransition would run a
+    // continuous per-frame animation and recomposition on every composed pager page — including
+    // neighbours that briefly compose during a fling — adding avoidable swipe jank.
+    val needsGlow = cutoutState.isActive
     val glowRadius = if (needsGlow) {
         val infiniteTransition = rememberInfiniteTransition(label = "glowTransition")
         val animatedGlow by infiniteTransition.animateFloat(
@@ -639,30 +629,6 @@ fun <T : Media> ZoomablePagerImage(
         }
     }
 
-    // Background subject suggestion: only when cut-out is NOT the long-press action (long-press then
-    // rotates). Replaces the old always-on "Cut out" pill with an auto-detected, tappable hint.
-    // Detection is debounced, off-main and cancelled/cleaned up on deselect, media change or when a
-    // cutout is already active; rememberSubjectSuggestionState() disposes it when this leaves screen.
-    val suggestionsEnabled = !longPressStartsCutout && cutoutEnabled && cutoutSupported
-    LaunchedEffect(media, isSelected, suggestionsEnabled, cutoutState.isActive) {
-        if (isSelected && suggestionsEnabled && !cutoutState.isActive) {
-            // Only start scanning after the image has been continuously visible for 2s, so fast
-            // swiping doesn't kick off (and immediately cancel) expensive encoder work per page.
-            suggestionState.detect(context, media, modelManager, debounceMs = SUGGESTION_VISIBLE_DELAY_MS)
-        } else {
-            suggestionState.reset()
-        }
-    }
-
-    // Promote an accepted suggestion into the refine session, reusing the already-encoded session.
-    val acceptSuggestion: () -> Unit = {
-        val accepted = suggestionState.consume()
-        if (accepted != null) {
-            cutoutState.initSession(accepted.session, listOf(accepted.seed))
-            cutoutState.updateResult(accepted.result, null)
-            feedbackManager.vibrate()
-        }
-    }
 
     // Start a cutout session seeded at the given screen-space point.
     val startCutoutAt: (Offset) -> Unit = { offset ->
@@ -752,16 +718,8 @@ fun <T : Media> ZoomablePagerImage(
                 }
             }
         } else {
-            // No active session: if an auto-detected subject is showing and the tap lands on its
-            // silhouette, promote it to a cutout; otherwise fall through to the normal tap (toggle UI).
-            val hint = suggestionState.suggestion
-            if (suggestionsEnabled && currentRotation == 0 && hint != null &&
-                hitsSubject(offset, zoomState, hint.result.originalBounds, hint.session.widthOrig, hint.session.heightOrig, hint.result.bitmap)
-            ) {
-                acceptSuggestion()
-            } else {
-                onItemClick()
-            }
+            // No active session: normal tap toggles the UI chrome.
+            onItemClick()
         }
     }
 
@@ -887,7 +845,7 @@ fun <T : Media> ZoomablePagerImage(
         val chromeVisible = isSelected && uiVisible && !cutoutState.isActive && !cutoutState.isProcessing
 
         if (longPressStartsCutout) {
-            // Long-press does cutout → offer Rotate as a pill (unchanged behaviour).
+            // Long-press does cutout → offer Rotate as a pill.
             AnimatedVisibility(
                 visible = chromeVisible && !rotationDisabled,
                 enter = fadeIn(),
@@ -901,22 +859,6 @@ fun <T : Media> ZoomablePagerImage(
                     icon = Icons.Outlined.ScreenRotationAlt,
                     label = stringResource(R.string.rotate),
                     onClick = rotateImage
-                )
-            }
-        } else {
-            // Long-press rotates → instead of an always-on pill, surface the auto-detected subject
-            // (if any) as a pulsing highlight with a one-tap "cut out" chip. currentRotation == 0
-            // guards against showing an outline computed in the image's unrotated coordinate space.
-            AnimatedVisibility(
-                visible = chromeVisible && currentRotation == 0 && suggestionState.suggestion != null,
-                enter = fadeIn(),
-                exit = fadeOut(),
-                modifier = Modifier.fillMaxSize()
-            ) {
-                SubjectSuggestionOverlay(
-                    state = suggestionState,
-                    zoomState = zoomState,
-                    onAccept = acceptSuggestion
                 )
             }
         }

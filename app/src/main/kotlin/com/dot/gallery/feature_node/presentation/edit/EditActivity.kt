@@ -23,6 +23,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import androidx.core.view.WindowCompat
+import com.dot.gallery.core.presentation.components.CutoutSaveChoice
+import com.dot.gallery.core.presentation.components.CutoutSaveChoiceSheet
 import com.dot.gallery.core.presentation.components.OverwriteFallbackSheet
 import com.dot.gallery.feature_node.presentation.edit.components.develop.RawExportSheet
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -137,6 +139,11 @@ class EditActivity : ComponentActivity() {
 
                     var showOverwriteFallback by remember { mutableStateOf(false) }
                     var showRawExportSheet by remember { mutableStateOf(false) }
+                    // A cut-out (background-removal) edit produces transparency: before saving we ask
+                    // the user for PNG vs flatten. `cutoutSavePendingOverride` records whether the
+                    // triggering action was an overwrite (true) or a copy (false).
+                    var showCutoutSaveChoice by remember { mutableStateOf(false) }
+                    var cutoutSavePendingOverride by remember { mutableStateOf(false) }
 
                     val onSaveCopyFailed: () -> Unit = {
                         printError("Failed to save copy")
@@ -149,11 +156,22 @@ class EditActivity : ComponentActivity() {
                         }
                     }
 
-                    val doSaveCopy: () -> Unit = {
+                    val performSaveCopy: (Boolean, Int?) -> Unit = { forcePng, flattenColor ->
                         viewModel.saveCopy(
+                            forcePng = forcePng,
+                            flattenColor = flattenColor,
                             onSuccess = { finish() },
                             onFail = onSaveCopyFailed
                         )
+                    }
+
+                    val doSaveCopy: () -> Unit = {
+                        if (viewModel.hasTransparentEdit) {
+                            cutoutSavePendingOverride = false
+                            showCutoutSaveChoice = true
+                        } else {
+                            performSaveCopy(false, null)
+                        }
                     }
 
                     if (showRawExportSheet) {
@@ -171,8 +189,9 @@ class EditActivity : ComponentActivity() {
                         )
                     }
 
-                    val doOverride: () -> Unit = {
+                    val performOverride: (Int?) -> Unit = { flattenColor ->
                         viewModel.saveOverride(
+                            flattenColor = flattenColor,
                             onNeedsCopyFallback = {
                                 // Source format has no encoder — offer a copy instead.
                                 runOnUiThread { showOverwriteFallback = true }
@@ -193,13 +212,49 @@ class EditActivity : ComponentActivity() {
                         )
                     }
 
+                    val doOverride: () -> Unit = {
+                        if (viewModel.hasTransparentEdit) {
+                            cutoutSavePendingOverride = true
+                            showCutoutSaveChoice = true
+                        } else {
+                            performOverride(null)
+                        }
+                    }
+
                     if (showOverwriteFallback) {
                         OverwriteFallbackSheet(
                             onCreateCopy = {
                                 showOverwriteFallback = false
-                                doSaveCopy()
+                                // A transparent edit forces a PNG copy; other non-encodable sources
+                                // fall back to their default lossless PNG copy.
+                                performSaveCopy(viewModel.hasTransparentEdit, null)
                             },
                             onDismiss = { showOverwriteFallback = false }
+                        )
+                    }
+
+                    if (showCutoutSaveChoice) {
+                        CutoutSaveChoiceSheet(
+                            onChoice = { choice ->
+                                showCutoutSaveChoice = false
+                                when (choice) {
+                                    CutoutSaveChoice.TRANSPARENT_PNG -> {
+                                        // PNG holds alpha; overwrite-in-place of an alpha-less source
+                                        // isn't possible, so route override to a PNG copy.
+                                        if (cutoutSavePendingOverride) showOverwriteFallback = true
+                                        else performSaveCopy(true, null)
+                                    }
+                                    CutoutSaveChoice.FLATTEN_WHITE -> {
+                                        if (cutoutSavePendingOverride) performOverride(android.graphics.Color.WHITE)
+                                        else performSaveCopy(false, android.graphics.Color.WHITE)
+                                    }
+                                    CutoutSaveChoice.FLATTEN_BLACK -> {
+                                        if (cutoutSavePendingOverride) performOverride(android.graphics.Color.BLACK)
+                                        else performSaveCopy(false, android.graphics.Color.BLACK)
+                                    }
+                                }
+                            },
+                            onDismiss = { showCutoutSaveChoice = false }
                         )
                     }
                     val overrideRequest = rememberActivityResult(
@@ -402,7 +457,19 @@ class EditActivity : ComponentActivity() {
                         isRawEdit = isRawEdit,
                         rawDevelopParams = rawDevelopParams,
                         onRawDevelopChange = viewModel::updateRawDevelop,
-                        rawThumbnailProvider = viewModel::rawOptionThumbnail
+                        rawThumbnailProvider = viewModel::rawOptionThumbnail,
+                        cutoutAvailable = viewModel.cutoutAvailable,
+                        cutoutState = viewModel.cutoutState,
+                        onCutoutAddPoint = viewModel::addCutoutPoint,
+                        onCutoutToolChange = viewModel::setCutoutTool,
+                        onCutoutStart = viewModel::startCutout,
+                        onCutoutUndo = viewModel::undoCutout,
+                        onCutoutRedo = viewModel::redoCutout,
+                        onCutoutReset = viewModel::resetCutout,
+                        onCutoutApply = viewModel::applyCutoutAsEdit,
+                        onCutoutCancel = viewModel::cancelCutout,
+                        onCutoutCopy = viewModel::cutoutCopy,
+                        onCutoutShare = viewModel::cutoutShare,
                     )
                 }
             }

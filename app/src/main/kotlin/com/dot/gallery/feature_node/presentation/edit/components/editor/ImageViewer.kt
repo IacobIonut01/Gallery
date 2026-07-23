@@ -49,6 +49,7 @@ import com.dot.gallery.feature_node.domain.model.editor.DrawMode
 import com.dot.gallery.feature_node.domain.model.editor.PathProperties
 import com.dot.gallery.feature_node.domain.model.editor.TextAnnotation
 import com.dot.gallery.feature_node.presentation.edit.components.markup.MarkupPainter
+import com.dot.gallery.feature_node.presentation.mediaview.components.media.CutoutState
 import com.dot.gallery.feature_node.presentation.util.quantizeBlur
 import com.dot.gallery.feature_node.presentation.util.resizeBitmap
 import com.dot.gallery.feature_node.presentation.util.safeSystemGesturesPadding
@@ -75,6 +76,9 @@ fun ImageViewer(
     cropAspectRatio: AspectRatio = AspectRatio.Original,
     showGridOverlay: Boolean = false,
     showMarkup: Boolean,
+    showCutout: Boolean = false,
+    cutoutState: CutoutState? = null,
+    onCutoutAddPoint: (Float, Float, Boolean) -> Unit = { _, _, _ -> },
     paths: List<Pair<Path, PathProperties>>,
     currentPosition: Offset,
     previousPosition: Offset,
@@ -166,6 +170,14 @@ fun ImageViewer(
             .clipToBounds(),
         contentAlignment = Alignment.Center
     ) {
+      if (showCutout && currentImage != null && cutoutState != null) {
+        CutoutPainter(
+            bitmap = currentImage,
+            cutoutState = cutoutState,
+            onAddPoint = onCutoutAddPoint,
+            modifier = Modifier.fillMaxSize()
+        )
+      } else {
         AnimatedVisibility(
             modifier = Modifier.fillMaxSize(),
             visible = resizedBitmap != null && !cropState.showCropper,
@@ -328,5 +340,6 @@ fun ImageViewer(
                 )
             }
         }
+      }
     }
 }

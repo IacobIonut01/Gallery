@@ -179,75 +179,110 @@ object CutoutHelper {
                 heightOrig = orig.height
                 printInfo("CutoutSession: Loaded original image (sampleSize $inSampleSize): ${widthOrig}x${heightOrig}")
 
-                // 2. Preprocess SAM image (Aspect-ratio preserved scaling + top-left padding)
-                scaleSam = 1024f / maxOf(widthOrig, heightOrig)
-                newW = Math.round(widthOrig * scaleSam)
-                newH = Math.round(heightOrig * scaleSam)
-
-                val resizedSam = Bitmap.createScaledBitmap(orig, newW, newH, true)
-                val pixels = IntArray(newW * newH)
-                resizedSam.getPixels(pixels, 0, newW, 0, 0, newW, newH)
-                if (resizedSam != orig) {
-                    resizedSam.recycle()
-                }
-
-                // Fill interleaved float array of size [1024, 1024, 3] with padding initialized to 0.0f
-                val inputBuffer = FloatArray(1024 * 1024 * 3)
-                for (y in 0 until newH) {
-                    for (x in 0 until newW) {
-                        val color = pixels[y * newW + x]
-                        val r = ((color shr 16) and 0xFF).toFloat()
-                        val g = ((color shr 8) and 0xFF).toFloat()
-                        val b = (color and 0xFF).toFloat()
-
-                        val idx = (y * 1024 + x) * 3
-                        inputBuffer[idx] = r
-                        inputBuffer[idx + 1] = g
-                        inputBuffer[idx + 2] = b
-                    }
-                }
-
-                // 3. Initialize sessions
-                val cpuOptions = OrtSession.SessionOptions().apply {
-                    setOptimizationLevel(OrtSession.SessionOptions.OptLevel.ALL_OPT)
-                    setIntraOpNumThreads(Runtime.getRuntime().availableProcessors().coerceIn(2, 4))
-                }
-
-                printInfo("CutoutSession: Creating OrtSessions...")
-                try {
-                    val encoderFile = modelManager.getModelFile("mobile_sam_image_encoder.onnx")
-                    val decoderFile = modelManager.getModelFile("sam_mask_decoder_single.onnx")
-                    encoderSession = env.createSession(encoderFile.absolutePath, cpuOptions)
-                    decoderSession = env.createSession(decoderFile.absolutePath, cpuOptions)
-                } finally {
-                    cpuOptions.close()
-                }
-
-                // 4. Run SAM Encoder
-                val inputTensor = OnnxTensor.createTensor(env, FloatBuffer.wrap(inputBuffer), longArrayOf(1024, 1024, 3))
-                printInfo("CutoutSession: Running Encoder Session...")
-                val outputs = encoderSession!!.run(Collections.singletonMap("input_image", inputTensor))
-                outputs.use {
-                    val originalTensor = outputs.get(0) as OnnxTensor
-                    val floatBuffer = originalTensor.floatBuffer
-                    val copyArray = FloatArray(floatBuffer.capacity())
-                    floatBuffer.rewind()
-                    floatBuffer.get(copyArray)
-                    val shape = originalTensor.info.shape
-                    imageEmbeddings = OnnxTensor.createTensor(env, FloatBuffer.wrap(copyArray), shape)
-                }
-                inputTensor.close()
-                encoderSession?.close()
-                encoderSession = null
-
-                printInfo("CutoutSession: Encoder completed successfully.")
-                true
+                encodeLoaded()
             } catch (e: Exception) {
                 e.printStackTrace()
                 printError("CutoutSession: Error during initialization: ${e.message}")
                 close()
                 false
             }
+        }
+
+        /**
+         * Encoder path seeded with an already-decoded [bitmap] (e.g. the editor's working proxy)
+         * instead of decoding the media from disk, so the cut-out matches exactly what the user sees
+         * including any prior edits.
+         */
+        suspend fun initAndRunEncoder(bitmap: Bitmap): Boolean = withContext(Dispatchers.Default) {
+            try {
+                if (!modelManager.isReady(ModelGroup.CUTOUT)) {
+                    printError("CutoutSession: ModelManager is not ready.")
+                    return@withContext false
+                }
+                // Always take an independent copy: the session recycles originalBitmap on close(),
+                // and this bitmap is the editor's live working proxy — sharing it would recycle the
+                // image out from under the editor (crash on the next draw/apply).
+                val orig = bitmap.copy(Bitmap.Config.ARGB_8888, false)
+                originalBitmap = orig
+                widthOrig = orig.width
+                heightOrig = orig.height
+                encodeLoaded()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                printError("CutoutSession: Error during initialization: ${e.message}")
+                close()
+                false
+            }
+        }
+
+        /** Runs SAM preprocessing + the image encoder on the currently loaded [originalBitmap]. */
+        private fun encodeLoaded(): Boolean {
+            val orig = originalBitmap ?: return false
+            printInfo("CutoutSession: Loaded original image: ${widthOrig}x${heightOrig}")
+
+            // 2. Preprocess SAM image (Aspect-ratio preserved scaling + top-left padding)
+            scaleSam = 1024f / maxOf(widthOrig, heightOrig)
+            newW = Math.round(widthOrig * scaleSam)
+            newH = Math.round(heightOrig * scaleSam)
+
+            val resizedSam = Bitmap.createScaledBitmap(orig, newW, newH, true)
+            val pixels = IntArray(newW * newH)
+            resizedSam.getPixels(pixels, 0, newW, 0, 0, newW, newH)
+            if (resizedSam != orig) {
+                resizedSam.recycle()
+            }
+
+            // Fill interleaved float array of size [1024, 1024, 3] with padding initialized to 0.0f
+            val inputBuffer = FloatArray(1024 * 1024 * 3)
+            for (y in 0 until newH) {
+                for (x in 0 until newW) {
+                    val color = pixels[y * newW + x]
+                    val r = ((color shr 16) and 0xFF).toFloat()
+                    val g = ((color shr 8) and 0xFF).toFloat()
+                    val b = (color and 0xFF).toFloat()
+
+                    val idx = (y * 1024 + x) * 3
+                    inputBuffer[idx] = r
+                    inputBuffer[idx + 1] = g
+                    inputBuffer[idx + 2] = b
+                }
+            }
+
+            // 3. Initialize sessions
+            val cpuOptions = OrtSession.SessionOptions().apply {
+                setOptimizationLevel(OrtSession.SessionOptions.OptLevel.ALL_OPT)
+                setIntraOpNumThreads(Runtime.getRuntime().availableProcessors().coerceIn(2, 4))
+            }
+
+            printInfo("CutoutSession: Creating OrtSessions...")
+            try {
+                val encoderFile = modelManager.getModelFile("mobile_sam_image_encoder.onnx")
+                val decoderFile = modelManager.getModelFile("sam_mask_decoder_single.onnx")
+                encoderSession = env.createSession(encoderFile.absolutePath, cpuOptions)
+                decoderSession = env.createSession(decoderFile.absolutePath, cpuOptions)
+            } finally {
+                cpuOptions.close()
+            }
+
+            // 4. Run SAM Encoder
+            val inputTensor = OnnxTensor.createTensor(env, FloatBuffer.wrap(inputBuffer), longArrayOf(1024, 1024, 3))
+            printInfo("CutoutSession: Running Encoder Session...")
+            val outputs = encoderSession!!.run(Collections.singletonMap("input_image", inputTensor))
+            outputs.use {
+                val originalTensor = outputs.get(0) as OnnxTensor
+                val floatBuffer = originalTensor.floatBuffer
+                val copyArray = FloatArray(floatBuffer.capacity())
+                floatBuffer.rewind()
+                floatBuffer.get(copyArray)
+                val shape = originalTensor.info.shape
+                imageEmbeddings = OnnxTensor.createTensor(env, FloatBuffer.wrap(copyArray), shape)
+            }
+            inputTensor.close()
+            encoderSession?.close()
+            encoderSession = null
+
+            printInfo("CutoutSession: Encoder completed successfully.")
+            return true
         }
 
         /**

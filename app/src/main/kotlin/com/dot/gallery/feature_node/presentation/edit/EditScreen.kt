@@ -33,13 +33,16 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.AspectRatio
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Crop
 import androidx.compose.material.icons.outlined.Flip
 import androidx.compose.material.icons.outlined.GridOn
 import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -99,6 +102,8 @@ import com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.Vari
 import com.dot.gallery.feature_node.presentation.edit.components.editor.EditorNavigator
 import com.dot.gallery.feature_node.presentation.edit.components.editor.EditorSelector
 import com.dot.gallery.feature_node.presentation.edit.components.editor.ImageViewer
+import com.dot.gallery.feature_node.presentation.mediaview.components.media.CutoutState
+import com.dot.gallery.feature_node.presentation.mediaview.components.media.ZoomablePagerImagePointTool
 import com.dot.gallery.feature_node.presentation.edit.components.markup.TextMarkupOverlay
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
@@ -178,6 +183,18 @@ fun EditScreen2(
     rawDevelopParams: RawDevelopParams? = null,
     onRawDevelopChange: (RawDevelopParams) -> Unit = {},
     rawThumbnailProvider: (suspend (RawDevelopParams) -> android.graphics.Bitmap?)? = null,
+    cutoutAvailable: Boolean = false,
+    cutoutState: CutoutState? = null,
+    onCutoutAddPoint: (Float, Float, Boolean) -> Unit = { _, _, _ -> },
+    onCutoutToolChange: (ZoomablePagerImagePointTool) -> Unit = {},
+    onCutoutStart: (backgroundRemoval: Boolean) -> Unit = {},
+    onCutoutUndo: () -> Unit = {},
+    onCutoutRedo: () -> Unit = {},
+    onCutoutReset: () -> Unit = {},
+    onCutoutApply: () -> Unit = {},
+    onCutoutCancel: () -> Unit = {},
+    onCutoutCopy: () -> Unit = {},
+    onCutoutShare: () -> Unit = {},
 ) = GalleryTheme(darkTheme = true, ignoreUserPreference = true) {
     val context = LocalContext.current
     val navigator = rememberSupportingPaneScaffoldNavigator(
@@ -213,11 +230,17 @@ fun EditScreen2(
     var showRevertDialog by remember { mutableStateOf(false) }
 
     // Visible tabs depend on the media: RAW hides Lighting/Colour/Effects behind the Develop tab.
-    val visibleTabs = remember(isRawEdit) { EditorItems.visibleItems(isRawEdit) }
+    val visibleTabs = remember(isRawEdit, cutoutAvailable) { EditorItems.visibleItems(isRawEdit, cutoutAvailable) }
 
     // Track which tab is currently selected for the tab bar highlight
-    var selectedTab by remember(isRawEdit) {
-        mutableStateOf<EditorItems?>(if (isRawEdit) EditorItems.WhiteBalance else EditorItems.Lighting)
+    var selectedTab by remember(isRawEdit, cutoutAvailable) {
+        mutableStateOf<EditorItems?>(
+            when {
+                isRawEdit -> EditorItems.WhiteBalance
+                cutoutAvailable -> EditorItems.Smart
+                else -> EditorItems.Lighting
+            }
+        )
     }
     val showingEditorScreen by rememberedDerivedState {
         navBackStackEntry?.destination?.hasRoute<EditorDestination.Editor>() == true
@@ -237,6 +260,24 @@ fun EditScreen2(
         }
     }
 
+    // True while the interactive cut-out mode is active (takes over the image surface).
+    val isCutoutEditing by rememberedDerivedState {
+        navBackStackEntry?.destination?.hasRoute<EditorDestination.CutoutEdit>() == true
+    }
+    // Which Smart tool launched the session (Cutout vs Background Removal). Both share the workings.
+    val cutoutBackgroundRemoval by rememberedDerivedState {
+        runCatching { navBackStackEntry?.toRoute<EditorDestination.CutoutEdit>()?.backgroundRemoval }
+            .getOrNull() == true
+    }
+    // Entering encodes + auto-selects the subject; leaving bakes the mask into the editor pipeline
+    // (no explicit save/apply button — exit commits, mirroring the Markup tool).
+    var wasCutoutEditing by remember { mutableStateOf(false) }
+    LaunchedEffect(isCutoutEditing) {
+        if (isCutoutEditing && !wasCutoutEditing) onCutoutStart(cutoutBackgroundRemoval)
+        if (!isCutoutEditing && wasCutoutEditing) onCutoutApply()
+        wasCutoutEditing = isCutoutEditing
+    }
+
     // Determine if we're on a top-level tab (not in a detail view)
     val isOnTopLevelTab by rememberedDerivedState {
         showingEditorScreen ||
@@ -245,6 +286,7 @@ fun EditScreen2(
         navBackStackEntry?.destination?.hasRoute<EditorDestination.Lighting>() == true ||
         navBackStackEntry?.destination?.hasRoute<EditorDestination.Colour>() == true ||
         navBackStackEntry?.destination?.hasRoute<EditorDestination.Effects>() == true ||
+        navBackStackEntry?.destination?.hasRoute<EditorDestination.Smart>() == true ||
         navBackStackEntry?.destination?.hasRoute<EditorDestination.More>() == true ||
         navBackStackEntry?.destination?.hasRoute<EditorDestination.Filters>() == true
     }
@@ -254,9 +296,10 @@ fun EditScreen2(
     // Grid overlay state
     var showGridOverlay by remember { mutableStateOf(false) }
 
-    // Pre-enable cropper: visible on all top-level tabs, hidden during detail/adjust/markup-draw modes
+    // Pre-enable cropper: visible on all top-level tabs, hidden during detail/adjust/markup-draw
+    // modes and the cut-out mode (which takes over the image surface with its own painter).
     val shouldShowCropper by rememberedDerivedState {
-        isOnTopLevelTab
+        isOnTopLevelTab && !isCutoutEditing
     }
     LaunchedEffect(shouldShowCropper) {
         cropState = cropState.copy(showCropper = shouldShowCropper)
@@ -303,6 +346,18 @@ fun EditScreen2(
         }
     }
 
+    // Back while cutting out exits to the Smart selector; the exit effect bakes the mask.
+    BackHandler(enabled = isCutoutEditing) {
+        navController.popBackStack()
+    }
+
+    // Top-bar undo/redo drive the recipe and are hidden while cutting out (the cut-out selection has
+    // its own undo/redo in the markup-style bottom bar).
+    val effectiveCanUndo = canUndo && !isCutoutEditing
+    val effectiveCanRedo = canRedo && !isCutoutEditing
+    val effectiveUndo: () -> Unit = removeLast
+    val effectiveRedo: () -> Unit = onRedo
+
     Box {
         Column(
             modifier = Modifier
@@ -319,10 +374,11 @@ fun EditScreen2(
                 .systemBarsPadding()
         ) {
             // ═══════════════════════════════════════════════════
-            // TOP BAR — hidden during detail modes (markup draw, crop, adjust scrubber)
+            // TOP BAR — hidden during detail modes (markup draw, crop, adjust scrubber) and the
+            // cut-out mode (which uses its own header Copy/Share + markup-style bottom bar).
             // ═══════════════════════════════════════════════════
             AnimatedVisibility(
-                visible = !isInDetailMode,
+                visible = !isInDetailMode && !isCutoutEditing,
                 enter = enterAnimation,
                 exit = exitAnimation
             ) {
@@ -353,14 +409,14 @@ fun EditScreen2(
                         )
                     }
 
-                    // Undo/Redo (top bar is hidden during markup, so only normal mode here)
+                    // Undo/Redo — drive the recipe normally, or the cut-out selection while editing.
                     AnimatedVisibility(
-                        visible = canUndo,
+                        visible = effectiveCanUndo,
                         enter = enterAnimation,
                         exit = exitAnimation
                     ) {
                         IconButton(
-                            onClick = removeLast,
+                            onClick = effectiveUndo,
                             modifier = Modifier.size(40.dp)
                         ) {
                             Icon(
@@ -373,12 +429,12 @@ fun EditScreen2(
                     }
 
                     AnimatedVisibility(
-                        visible = canRedo,
+                        visible = effectiveCanRedo,
                         enter = enterAnimation,
                         exit = exitAnimation
                     ) {
                         IconButton(
-                            onClick = onRedo,
+                            onClick = effectiveRedo,
                             modifier = Modifier.size(40.dp)
                         ) {
                             Icon(
@@ -505,6 +561,52 @@ fun EditScreen2(
                 enter = enterAnimation,
                 exit = exitAnimation
             ) {
+              if (isCutoutEditing) {
+                // Cut-out mode: the crop toolbar is replaced with subject Copy / Share actions.
+                val cutoutHasResult = cutoutState?.hasResult == true
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    FilledTonalButton(
+                        onClick = onCutoutCopy,
+                        enabled = cutoutHasResult,
+                        shape = CircleShape,
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.ContentCopy,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(R.string.cutout_copy),
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                    }
+                    FilledTonalButton(
+                        onClick = onCutoutShare,
+                        enabled = cutoutHasResult,
+                        shape = CircleShape,
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Share,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(R.string.cutout_share),
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                    }
+                }
+              } else {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -655,6 +757,7 @@ fun EditScreen2(
                         }
                     }
                 }
+              }
             }
 
             // ═══════════════════════════════════════════════════
@@ -686,6 +789,9 @@ fun EditScreen2(
                             cropAspectRatio = selectedAspectRatio,
                             showGridOverlay = showGridOverlay,
                             showMarkup = isMarkupDrawing,
+                            showCutout = isCutoutEditing,
+                            cutoutState = cutoutState,
+                            onCutoutAddPoint = onCutoutAddPoint,
                             paths = paths,
                             currentPosition = currentPosition,
                             previousPosition = previousPosition,
@@ -749,10 +855,13 @@ fun EditScreen2(
                                 onDetectFaces = onDetectFaces,
                                 faceDetectAvailable = faceDetectAvailable,
                                 isDetectingFaces = isDetectingFaces,
-                                startDestination = if (isRawEdit) EditorDestination.Develop(DevelopCategory.WhiteBalance) else EditorDestination.Lighting,
+                                startDestination = if (isRawEdit) EditorDestination.Develop(DevelopCategory.WhiteBalance) else if (cutoutAvailable) EditorDestination.Smart else EditorDestination.Lighting,
                                 rawDevelopParams = if (isRawEdit) rawDevelopParams else null,
                                 onRawDevelopChange = onRawDevelopChange,
-                                rawThumbnailProvider = rawThumbnailProvider
+                                rawThumbnailProvider = rawThumbnailProvider,
+                                cutoutState = cutoutState,
+                                onCutoutToolChange = onCutoutToolChange,
+                                onCutoutReset = onCutoutReset,
                             )
                         }
                     }
@@ -812,10 +921,13 @@ fun EditScreen2(
                         onDetectFaces = onDetectFaces,
                         faceDetectAvailable = faceDetectAvailable,
                         isDetectingFaces = isDetectingFaces,
-                        startDestination = if (isRawEdit) EditorDestination.Develop(DevelopCategory.WhiteBalance) else EditorDestination.Lighting,
+                        startDestination = if (isRawEdit) EditorDestination.Develop(DevelopCategory.WhiteBalance) else if (cutoutAvailable) EditorDestination.Smart else EditorDestination.Lighting,
                         rawDevelopParams = if (isRawEdit) rawDevelopParams else null,
                         onRawDevelopChange = onRawDevelopChange,
-                        rawThumbnailProvider = rawThumbnailProvider
+                        rawThumbnailProvider = rawThumbnailProvider,
+                        cutoutState = cutoutState,
+                        onCutoutToolChange = onCutoutToolChange,
+                        onCutoutReset = onCutoutReset,
                     )
                 }
 
@@ -949,6 +1061,90 @@ fun EditScreen2(
                         }
                     }
 
+                    isCutoutEditing -> {
+                        // Markup-style bottom bar for cut-out: X (discard) | ↶ Reset ↷ | ✓ (apply).
+                        // Include/Exclude live in the NavHost controls above; Copy/Share in the header.
+                        val canUndoCutout = cutoutState?.canUndo == true
+                        val canRedoCutout = cutoutState?.canRedo == true
+                        val hasResult = cutoutState?.hasResult == true
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // X — discard the selection and leave.
+                            IconButton(
+                                onClick = {
+                                    onCutoutCancel()
+                                    navController.popBackStack()
+                                },
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .background(
+                                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                        shape = CircleShape
+                                    )
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Close,
+                                    contentDescription = stringResource(R.string.close),
+                                    tint = Color.White,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+
+                            // Center: ↶ Reset ↷
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                IconButton(onClick = onCutoutUndo, enabled = canUndoCutout) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Outlined.Undo,
+                                        contentDescription = stringResource(R.string.editor_undo),
+                                        tint = if (canUndoCutout) Color.White else Color.White.copy(alpha = 0.3f),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                                TextButton(onClick = onCutoutReset, enabled = hasResult) {
+                                    Text(
+                                        text = stringResource(R.string.cutout_reset),
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = if (hasResult) Color.White else Color.White.copy(alpha = 0.3f)
+                                    )
+                                }
+                                IconButton(onClick = onCutoutRedo, enabled = canRedoCutout) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Outlined.Redo,
+                                        contentDescription = stringResource(R.string.editor_redo),
+                                        tint = if (canRedoCutout) Color.White else Color.White.copy(alpha = 0.3f),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+
+                            // ✓ — commit (the exit effect bakes the mask into the pipeline).
+                            IconButton(
+                                onClick = { navController.popBackStack() },
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .background(
+                                        color = MaterialTheme.colorScheme.primaryContainer,
+                                        shape = CircleShape
+                                    )
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Check,
+                                    contentDescription = stringResource(R.string.editor_done),
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                        }
+                    }
+
                     else -> {
                         // Tab bar — visible on top-level tabs
                         // Sync selectedTab when returning from a tool
@@ -966,6 +1162,8 @@ fun EditScreen2(
                                 dest?.hasRoute<EditorDestination.Markup>() == true -> EditorItems.Markup
                                 dest?.hasRoute<EditorDestination.Colour>() == true -> EditorItems.Colour
                                 dest?.hasRoute<EditorDestination.Effects>() == true -> EditorItems.Effects
+                                dest?.hasRoute<EditorDestination.Smart>() == true -> EditorItems.Smart
+                                dest?.hasRoute<EditorDestination.CutoutEdit>() == true -> EditorItems.Smart
                                 dest?.hasRoute<EditorDestination.More>() == true -> EditorItems.More
                                 else -> null
                             }
