@@ -7,10 +7,9 @@ package com.dot.gallery.feature_node.presentation.location
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
@@ -38,8 +37,9 @@ fun GalleryMapView(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    // Track the current styleUri to detect changes
-    var currentStyleUri by remember { mutableStateOf(styleUri) }
+    val currentOnMapClick = rememberUpdatedState(onMapClick)
+    val currentOnCameraMoved = rememberUpdatedState(onCameraMoved)
+    val currentOnUserInteraction = rememberUpdatedState(onUserInteraction)
 
     // Remember the MapView — call onCreate immediately so the native
     // renderer initialises without waiting for a lifecycle event.
@@ -51,9 +51,11 @@ fun GalleryMapView(
         }
     }
 
-    // Setup map async once + react to style URI changes
-    DisposableEffect(mapView, styleUri) {
-        currentStyleUri = styleUri
+    LaunchedEffect(styleUri) {
+        mapState.loadStyle(styleUri)
+    }
+
+    DisposableEffect(mapView) {
         mapView.getMapAsync { mapLibreMap ->
             // Ornament settings
             mapLibreMap.uiSettings.apply {
@@ -65,10 +67,7 @@ fun GalleryMapView(
             // Set initial camera
             mapLibreMap.cameraPosition = mapState.cameraPosition.toNative()
 
-            // Load style
-            mapLibreMap.setStyle(styleUri) { loadedStyle ->
-                mapState.onStyleLoaded(loadedStyle, mapLibreMap)
-            }
+            mapState.attachMap(mapLibreMap)
 
             // Camera listener — sync back to Compose state
             mapLibreMap.addOnCameraMoveListener {
@@ -81,33 +80,22 @@ fun GalleryMapView(
                     bearing = pos.bearing,
                 )
                 mapState.cameraPosition = galleryPos
-                onCameraMoved?.invoke(galleryPos)
+                currentOnCameraMoved.value?.invoke(galleryPos)
             }
 
             // Detect user-initiated gestures (pan, zoom, rotate)
-            if (onUserInteraction != null) {
-                mapLibreMap.addOnCameraMoveStartedListener { reason ->
-                    if (reason == MapLibreMap.OnCameraMoveStartedListener.REASON_API_GESTURE) {
-                        onUserInteraction()
-                    }
+            mapLibreMap.addOnCameraMoveStartedListener { reason ->
+                if (reason == MapLibreMap.OnCameraMoveStartedListener.REASON_API_GESTURE) {
+                    currentOnUserInteraction.value?.invoke()
                 }
             }
 
-            // Click listener
-            if (onMapClick != null) {
-                mapLibreMap.addOnMapClickListener { latLng ->
-                    onMapClick(latLng)
-                }
+            mapLibreMap.addOnMapClickListener { latLng ->
+                currentOnMapClick.value?.invoke(latLng) ?: false
             }
-
-            mapState.map = mapLibreMap
         }
 
-        onDispose {
-            // Style changed or composable left — reset style state
-            mapState.isStyleLoaded = false
-            mapState.style = null
-        }
+        onDispose { }
     }
 
     // Lifecycle management — catch up with current state then observe future events.

@@ -14,6 +14,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.camera.CameraUpdateFactory
+import org.maplibre.android.geometry.LatLng
+import org.maplibre.android.geometry.LatLngBounds
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
@@ -40,6 +42,9 @@ class GalleryMapState(
         internal set
     @PublishedApi internal var map: MapLibreMap? = null
     @PublishedApi internal var style: Style? = null
+    private var requestedStyleUri: String? = null
+    private var loadedStyleUri: String? = null
+    private var styleGeneration: Long = 0L
 
     // ── Public API ──
 
@@ -90,6 +95,46 @@ class GalleryMapState(
             .padding(left, top, right, bottom)
             .build()
         m.moveCamera(CameraUpdateFactory.newCameraPosition(newPos))
+    }
+
+    fun visibleBounds(): MapGeoBounds? {
+        val bounds = map?.projection?.visibleRegion?.latLngBounds ?: return null
+        return MapGeoBounds(
+            south = bounds.latitudeSouth,
+            west = bounds.longitudeWest,
+            north = bounds.latitudeNorth,
+            east = bounds.longitudeEast,
+            crossesAntimeridian = bounds.longitudeWest > bounds.longitudeEast,
+        )
+    }
+
+    fun renderedMarkerId(latitude: Double, longitude: Double, layerId: String): String? {
+        val currentMap = map ?: return null
+        val point = currentMap.projection.toScreenLocation(LatLng(latitude, longitude))
+        return currentMap.queryRenderedFeatures(point, layerId)
+            .firstNotNullOfOrNull { feature ->
+                if (feature.hasProperty("renderId")) feature.getStringProperty("renderId") else null
+            }
+    }
+
+    fun fitCluster(cluster: MapPhotoCluster, paddingPx: Int, durationMs: Int = 450) {
+        val currentMap = map ?: return
+        if (cluster.bounds.crossesAntimeridian || cluster.bounds.west == cluster.bounds.east) {
+            animateCamera(
+                cameraPosition.copy(
+                    latitude = cluster.latitude,
+                    longitude = cluster.longitude,
+                    zoom = (cameraPosition.zoom + 2.0).coerceAtMost(20.0),
+                ),
+                durationMs,
+            )
+            return
+        }
+        val bounds = LatLngBounds.Builder()
+            .include(LatLng(cluster.bounds.south, cluster.bounds.west))
+            .include(LatLng(cluster.bounds.north, cluster.bounds.east))
+            .build()
+        currentMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, paddingPx), durationMs)
     }
 
     /**
@@ -206,6 +251,7 @@ class GalleryMapState(
         id: String,
         sourceId: String,
         iconImageName: String? = null,
+        iconImageExpression: Expression? = null,
         visible: Boolean = true,
         iconSize: Float = 1f,
         iconAllowOverlap: Boolean = true,
@@ -217,7 +263,11 @@ class GalleryMapState(
         if (existing != null) {
             val props = buildList {
                 add(PropertyFactory.visibility(if (visible) "visible" else "none"))
-                iconImageName?.let { add(PropertyFactory.iconImage(it)) }
+                iconImageExpression?.let { add(PropertyFactory.iconImage(it)) }
+                    ?: iconImageName?.let { add(PropertyFactory.iconImage(it)) }
+                add(PropertyFactory.iconSize(iconSize))
+                add(PropertyFactory.iconAllowOverlap(iconAllowOverlap))
+                add(PropertyFactory.iconIgnorePlacement(iconIgnorePlacement))
             }
             existing.setProperties(*props.toTypedArray())
             return
@@ -225,7 +275,8 @@ class GalleryMapState(
         val layer = SymbolLayer(id, sourceId)
         val props = buildList {
             add(PropertyFactory.visibility(if (visible) "visible" else "none"))
-            iconImageName?.let { add(PropertyFactory.iconImage(it)) }
+            iconImageExpression?.let { add(PropertyFactory.iconImage(it)) }
+                ?: iconImageName?.let { add(PropertyFactory.iconImage(it)) }
             add(PropertyFactory.iconSize(iconSize))
             add(PropertyFactory.iconAllowOverlap(iconAllowOverlap))
             add(PropertyFactory.iconIgnorePlacement(iconIgnorePlacement))
@@ -262,11 +313,25 @@ class GalleryMapState(
 
     // ── Internal ──
 
-    internal fun onStyleLoaded(loadedStyle: Style, mapLibreMap: MapLibreMap) {
-        style = loadedStyle
+    internal fun attachMap(mapLibreMap: MapLibreMap) {
         map = mapLibreMap
-        stripHeavyLayers(loadedStyle)
-        isStyleLoaded = true
+        requestedStyleUri?.let(::loadStyle)
+    }
+
+    internal fun loadStyle(styleUri: String) {
+        requestedStyleUri = styleUri
+        val currentMap = map ?: return
+        if (loadedStyleUri == styleUri && isStyleLoaded) return
+        val generation = ++styleGeneration
+        isStyleLoaded = false
+        style = null
+        currentMap.setStyle(styleUri) { loadedStyle ->
+            if (generation != styleGeneration || map !== currentMap) return@setStyle
+            style = loadedStyle
+            loadedStyleUri = styleUri
+            stripHeavyLayers(loadedStyle)
+            isStyleLoaded = true
+        }
     }
 
     /**
@@ -304,6 +369,8 @@ class GalleryMapState(
         style = null
         map = null
         mapView = null
+        loadedStyleUri = null
+        styleGeneration++
     }
 }
 

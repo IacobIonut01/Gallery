@@ -98,13 +98,11 @@ import com.dot.gallery.core.Settings.Misc.rememberAllowGifAnimation
 import com.dot.gallery.core.Settings.Misc.rememberCloudArchiveGroupByDate
 import com.dot.gallery.core.Settings.Misc.rememberFavoriteIconPosition
 import com.dot.gallery.core.Settings.Misc.rememberFavoritesGroupByDate
-import com.dot.gallery.core.Settings.Misc.rememberLocationGroupByDate
 import com.dot.gallery.core.Settings.Misc.rememberShowFilterButton
 import com.dot.gallery.core.Settings.Misc.rememberShowSearchBarFavoriteButton
 import com.dot.gallery.core.Settings.Misc.rememberAlbumsGroupMethod
 import com.dot.gallery.core.Settings.Misc.rememberCloudArchiveGroupMethod
 import com.dot.gallery.core.Settings.Misc.rememberFavoritesGroupMethod
-import com.dot.gallery.core.Settings.Misc.rememberLocationGroupMethod
 import com.dot.gallery.core.Settings.Misc.rememberTimelineGroupByDate
 import com.dot.gallery.core.Settings.Misc.rememberTimelineGroupMethod
 import com.dot.gallery.core.Settings.Misc.rememberVaultGroupByDate
@@ -183,13 +181,11 @@ fun SettingsTimelineAlbumsScreen() {
     var dateHeaderFavorites by rememberFavoritesGroupByDate()
     var dateHeaderVault by rememberVaultGroupByDate()
     var dateHeaderCloudArchive by rememberCloudArchiveGroupByDate()
-    var dateHeaderLocation by rememberLocationGroupByDate()
     var groupMethodTimeline by rememberTimelineGroupMethod()
     var groupMethodAlbums by rememberAlbumsGroupMethod()
     var groupMethodFavorites by rememberFavoritesGroupMethod()
     var groupMethodVault by rememberVaultGroupMethod()
     var groupMethodCloudArchive by rememberCloudArchiveGroupMethod()
-    var groupMethodLocation by rememberLocationGroupMethod()
 
     when (detailKey) {
         DETAIL_TIMELINE_LAYOUT -> {
@@ -355,7 +351,6 @@ fun SettingsTimelineAlbumsScreen() {
                             }
                             add(Triple(R.string.date_headers_vault, dateHeaderVault) { v: Boolean -> dateHeaderVault = v })
                             add(Triple(R.string.date_headers_cloud_archive, dateHeaderCloudArchive) { v: Boolean -> dateHeaderCloudArchive = v })
-                            add(Triple(R.string.date_headers_location, dateHeaderLocation) { v: Boolean -> dateHeaderLocation = v })
                         }
                         sections.forEachIndexed { index, (titleRes, isChecked, onCheck) ->
                             val position = when {
@@ -414,7 +409,6 @@ fun SettingsTimelineAlbumsScreen() {
                             }
                             add(Triple(R.string.group_method_vault, groupMethodVault) { v: String -> groupMethodVault = v })
                             add(Triple(R.string.group_method_cloud_archive, groupMethodCloudArchive) { v: String -> groupMethodCloudArchive = v })
-                            add(Triple(R.string.group_method_location, groupMethodLocation) { v: String -> groupMethodLocation = v })
                         }
                         sections.forEachIndexed { index, (titleRes, currentValue, onValueChange) ->
                             val position = when {

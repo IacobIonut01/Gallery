@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,12 +23,11 @@ import androidx.compose.ui.unit.dp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.dot.gallery.core.Settings
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.util.getUri
 import com.dot.gallery.feature_node.presentation.util.GlideInvalidation
-import kotlin.math.cos
-import kotlin.math.ln
-import kotlin.math.tan
+import com.dot.gallery.feature_node.presentation.util.StaticMapURL
 
 /**
  * A card showing a static map preview with a circular photo thumbnail,
@@ -40,19 +40,17 @@ fun MapPreviewCard(
     latestMedia: Media.UriMedia?,
     latitude: Double?,
     longitude: Double?,
-    isDark: Boolean,
+    effectiveAppIsDark: Boolean,
 ) {
-    val mapTileUrl = remember(latitude, longitude, isDark) {
-        val lat = latitude ?: 46.77
-        val lon = longitude ?: 23.59
-        val zoom = 8
-        val tileX = lonToTileX(lon, zoom)
-        val tileY = latToTileY(lat, zoom)
-        if (isDark) {
-            "https://a.basemaps.cartocdn.com/dark_all/$zoom/$tileX/$tileY@2x.png"
-        } else {
-            "https://a.basemaps.cartocdn.com/rastertiles/voyager/$zoom/$tileX/$tileY@2x.png"
-        }
+    val mapAppearance by Settings.Misc.rememberMapAppearance()
+    val mapTileUrl = remember(latitude, longitude, mapAppearance, effectiveAppIsDark) {
+        StaticMapURL(
+            latitude = latitude ?: 46.77,
+            longitude = longitude ?: 23.59,
+            appearance = mapAppearance,
+            effectiveAppIsDark = effectiveAppIsDark,
+            zoom = 8,
+        )
     }
 
     Box(
@@ -89,14 +87,4 @@ fun MapPreviewCard(
             )
         }
     }
-}
-
-// Slippy-map tile math
-private fun lonToTileX(lon: Double, zoom: Int): Int {
-    return ((lon + 180.0) / 360.0 * (1 shl zoom)).toInt()
-}
-
-private fun latToTileY(lat: Double, zoom: Int): Int {
-    val latRad = Math.toRadians(lat)
-    return ((1.0 - ln(tan(latRad) + 1.0 / cos(latRad)) / Math.PI) / 2.0 * (1 shl zoom)).toInt()
 }

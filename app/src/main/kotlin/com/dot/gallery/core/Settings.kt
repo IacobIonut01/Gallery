@@ -60,6 +60,7 @@ import com.dot.gallery.feature_node.domain.model.SlideshowTransition
 import com.dot.gallery.feature_node.presentation.mediaview.slideshow.SlideshowConfig
 import com.dot.gallery.feature_node.domain.util.OrderType
 import com.dot.gallery.feature_node.presentation.library.components.LibraryShortcutPref
+import com.dot.gallery.feature_node.presentation.location.MapAppearance
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.feature_node.presentation.util.printDebug
@@ -1000,6 +1001,28 @@ object Settings {
         @Composable
         fun rememberLocationGroupMethod() =
             rememberPreference(key = LOCATION_GROUP_METHOD, defaultValue = GROUP_NORMAL)
+
+        private val MAP_APPEARANCE = stringPreferencesKey("map_appearance")
+
+        @Composable
+        fun rememberMapAppearance(): MutableState<MapAppearance> {
+            val stored = rememberPreference(
+                key = MAP_APPEARANCE,
+                defaultValue = MapAppearance.SYSTEM.storedValue
+            )
+            return remember(stored) {
+                object : MutableState<MapAppearance> {
+                    override var value: MapAppearance
+                        get() = MapAppearance.fromStored(stored.value)
+                        set(value) {
+                            stored.value = value.storedValue
+                        }
+
+                    override fun component1(): MapAppearance = value
+                    override fun component2(): (MapAppearance) -> Unit = { value = it }
+                }
+            }
+        }
 
         private val ALLOW_GIF_ANIMATION = booleanPreferencesKey("allow_gif_animation")
 

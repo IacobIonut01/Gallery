@@ -62,6 +62,7 @@ import com.dot.gallery.feature_node.presentation.common.components.MediaGridView
 import com.dot.gallery.feature_node.presentation.common.components.TwoLinedDateToolbarTitle
 import com.dot.gallery.feature_node.presentation.common.components.rememberGridPinchZoomState
 import com.dot.gallery.feature_node.presentation.library.components.MapPreviewCard
+import com.dot.gallery.feature_node.presentation.timeline.TimelineMediaContent
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.feature_node.presentation.util.selectedMedia
@@ -87,35 +88,14 @@ fun LocationTimelineScreen(
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
 ) {
-    var canScroll by rememberSaveable { mutableStateOf(true) }
-    var lastCellIndex by rememberGridSize()
     val eventHandler = LocalEventHandler.current
     val selector = LocalMediaSelector.current
     val selectedMedia = selector.selectedMedia.collectAsStateWithLifecycle()
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
         state = rememberTopAppBarState(),
-        canScroll = { canScroll },
         flingAnimationSpec = null
     )
-
-    val dpCacheWindow = remember {
-        LazyLayoutCacheWindow(ahead = 200.dp, behind = 100.dp)
-    }
-    val pinchState = rememberGridPinchZoomState(
-        cellsList = cellsList,
-        initialCellsIndex = lastCellIndex,
-        gridState = rememberLazyGridState(
-            cacheWindow = dpCacheWindow
-        )
-    )
-
-    LaunchedEffect(pinchState.isZooming) {
-        withContext(Dispatchers.IO) {
-            canScroll = !pinchState.isZooming
-            lastCellIndex = cellsList.indexOf(pinchState.currentCells)
-        }
-    }
     Box(
         modifier = Modifier
             .padding(
@@ -154,53 +134,39 @@ fun LocationTimelineScreen(
                 )
             }
         ) { it ->
-            GridPinchZoomLayout(
-                state = pinchState,
-                modifier = Modifier.hazeSource(LocalHazeState.current),
-                indicatorTopPadding = it.calculateTopPadding() + 16.dp,
-            ) {
-                val locationGroupByDate by rememberLocationGroupByDate()
-                val locationGroupMethod by rememberLocationGroupMethod()
-                MediaGridView(
-                    mediaState = mediaState,
-                    metadataState = metadataState,
-                    allowSelection = true,
-                    showSearchBar = false,
-                    enableStickyHeaders = locationGroupByDate,
-                    groupMethod = if (locationGroupByDate) locationGroupMethod else Settings.Misc.GROUP_NORMAL,
-                    paddingValues = PaddingValues(
-                        top = it.calculateTopPadding(),
-                        bottom = paddingValues.calculateBottomPadding() + 128.dp
-                    ),
-                    canScroll = canScroll,
-                    allowHeaders = locationGroupByDate,
-                    
-                    aboveGridContent = if (BuildConfig.MAPS_ENABLED && latestGeoMedia != null) {
-                        {
-                            val isDark = isDarkTheme()
-                            MapPreviewCard(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp)
-                                    .clip(RoundedCornerShape(24.dp))
-                                    .clickable {
-                                        eventHandler.navigate(Screen.LocationsScreen.withMediaId(latestGeoMedia.mediaId))
-                                    },
-                                latestMedia = latestGeoMedia.media,
-                                latitude = latestGeoMedia.latitude,
-                                longitude = latestGeoMedia.longitude,
-                                isDark = isDark
-                            )
-                        }
-                    } else null,
-                    isScrolling = isScrolling,
-                    emptyContent = { EmptyMedia(modifier = Modifier.padding(paddingValues)) },
-                    sharedTransitionScope = sharedTransitionScope,
-                    animatedContentScope = animatedContentScope
-                ) {
+            TimelineMediaContent(
+                mediaState = mediaState,
+                metadataState = metadataState,
+                scaffoldPadding = it,
+                bottomPadding = paddingValues.calculateBottomPadding() + 128.dp,
+                screenTopPadding = paddingValues.calculateTopPadding(),
+                showSearchBar = false,
+                aboveGridContent = if (BuildConfig.MAPS_ENABLED && latestGeoMedia != null) {
+                    {
+                        val isDark = isDarkTheme()
+                        MapPreviewCard(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
+                                .clip(RoundedCornerShape(24.dp))
+                                .clickable {
+                                    eventHandler.navigate(Screen.LocationsScreen.withMediaId(latestGeoMedia.mediaId))
+                                },
+                            latestMedia = latestGeoMedia.media,
+                            latitude = latestGeoMedia.latitude,
+                            longitude = latestGeoMedia.longitude,
+                            effectiveAppIsDark = isDark,
+                        )
+                    }
+                } else null,
+                isScrolling = isScrolling,
+                emptyContent = { EmptyMedia(modifier = Modifier.padding(paddingValues)) },
+                sharedTransitionScope = sharedTransitionScope,
+                animatedContentScope = animatedContentScope,
+                onMediaClick = {
                     eventHandler.navigate(Screen.MediaViewScreen.idAndLocation(it.id, gpsLocationNameCity, gpsLocationNameCountry))
-                }
-            }
+                },
+            )
         }
         val selectedMediaList by selectedMedia(
             media = mediaState.value.media,

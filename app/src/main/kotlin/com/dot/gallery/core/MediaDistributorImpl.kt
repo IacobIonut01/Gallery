@@ -1135,13 +1135,15 @@ class MediaDistributorImpl @Inject constructor(
             .mapTo(HashSet()) { it.mediaId }
         val filteredMedia = timelineState.media.filter {
             it.id in matchingMediaIds
-        }.deduplicateCloudLocal()
+        }
+        val filteredIds = filteredMedia.mapTo(HashSet(filteredMedia.size)) { it.id }
         return@combine mapMediaToItem(
             data = filteredMedia,
             error = timelineState.error,
             albumId = -1L,
             groupSimilarMedia = shouldGroupSimilar,
             enabledGroupTypes = groupTypes,
+            cloudBackups = timelineState.cloudBackups.filterKeys { it in filteredIds },
             defaultDateFormat = dateFormatsFlow.value.first,
             extendedDateFormat = dateFormatsFlow.value.second,
             weeklyDateFormat = dateFormatsFlow.value.third
@@ -1152,9 +1154,8 @@ class MediaDistributorImpl @Inject constructor(
         repository.getMetadata(),
         timelineMediaFlow
     ) { metadata, timelineState ->
-        val dedupedMedia = timelineState.media.deduplicateCloudLocal()
-        val mediaById = HashMap<Long, Media.UriMedia>(dedupedMedia.size)
-        for (m in dedupedMedia) { mediaById[m.id] = m }
+        val mediaById = HashMap<Long, Media.UriMedia>(timelineState.media.size)
+        for (m in timelineState.media) { mediaById[m.id] = m }
 
         val locationGroupMap = LinkedHashMap<String, Media.UriMedia>()
         val geoList = ArrayList<GeoMedia>(metadata.size / 2)
@@ -1188,7 +1189,7 @@ class MediaDistributorImpl @Inject constructor(
             .map { (location, media) -> LocationMedia(media = media, location = location) }
             .sortedBy { it.location }
 
-        Pair(locations, geoList)
+        Pair(locations, geoList.sortedByDescending { it.media.definedTimestamp })
     }.shareIn(appScope, sharingMethod, replay = 1)
 
     override val locationsMediaFlow: Flow<List<LocationMedia>> =

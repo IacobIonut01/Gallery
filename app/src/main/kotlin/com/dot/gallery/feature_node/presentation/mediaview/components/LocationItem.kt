@@ -3,7 +3,6 @@ package com.dot.gallery.feature_node.presentation.mediaview.components
 import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,11 +34,13 @@ import com.dot.gallery.BuildConfig
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
+import com.dot.gallery.core.Settings
 import com.dot.gallery.feature_node.domain.model.LocationData
 import com.dot.gallery.feature_node.presentation.util.StaticMapURL
 import com.dot.gallery.feature_node.presentation.util.connectivityState
 import com.dot.gallery.feature_node.presentation.util.launchMap
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
+import com.dot.gallery.ui.theme.isDarkTheme
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 
@@ -58,6 +59,8 @@ fun LocationItem(
     val mapsEnabled = remember { BuildConfig.MAPS_ENABLED }
     val locationSheetState = rememberAppBottomSheetState()
     val scope = rememberCoroutineScope()
+    val mapAppearance by Settings.Misc.rememberMapAppearance()
+    val effectiveAppIsDark = isDarkTheme()
 
     AnimatedVisibility(
         visible = locationData != null,
@@ -126,7 +129,8 @@ fun LocationItem(
                         model = StaticMapURL(
                             latitude = locationData.latitude,
                             longitude = locationData.longitude,
-                            darkTheme = isSystemInDarkTheme()
+                            appearance = mapAppearance,
+                            effectiveAppIsDark = effectiveAppIsDark
                         ),
                         contentScale = ContentScale.Crop,
                         contentDescription = stringResource(R.string.location_map_cd),

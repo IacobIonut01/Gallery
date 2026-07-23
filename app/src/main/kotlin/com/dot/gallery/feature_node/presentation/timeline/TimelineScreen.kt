@@ -136,12 +136,6 @@ fun TimelineScreen(
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
 ) {
-    var canScroll by rememberSaveable { mutableStateOf(true) }
-    var lastCellIndex by rememberGridSize()
-    val timelineLayoutType by rememberTimelineLayoutType()
-    val timelineGroupByDate by rememberTimelineGroupByDate()
-    val timelineGroupMethod by rememberTimelineGroupMethod()
-    val isMosaicLayout = timelineLayoutType == Settings.Misc.LAYOUT_MOSAIC && timelineGroupByDate
     val eventHandler = LocalEventHandler.current
     val distributor = LocalMediaDistributor.current
     val isRefreshing by distributor.isRefreshing.collectAsStateWithLifecycle()
@@ -261,32 +255,8 @@ fun TimelineScreen(
     val selectionState = selector.isSelectionActive.collectAsStateWithLifecycle()
     val selectedMedia = selector.selectedMedia.collectAsStateWithLifecycle()
 
-    val dpCacheWindow = remember { LazyLayoutCacheWindow(aheadFraction = 2f, behindFraction = 2f) }
-    val pinchState = rememberGridPinchZoomState(
-        cellsList = cellsList,
-        initialCellsIndex = lastCellIndex,
-        gridState = rememberLazyGridState(
-            cacheWindow = dpCacheWindow
-        )
-    )
-
-    LaunchedEffect(pinchState.isZooming) {
-        withContext(Dispatchers.IO) {
-            canScroll = !pinchState.isZooming
-            lastCellIndex = cellsList.indexOf(pinchState.currentCells)
-        }
-    }
-
     LaunchedEffect(selectionState.value) {
         eventHandler.toggleNavigationBar(!selectionState.value)
-    }
-
-    // Re-tapping the Timeline tab scrolls back to the top (#1039). The non-mosaic
-    // grid uses pinchState.gridState; the mosaic layout has its own handler below.
-    if (!isMosaicLayout) {
-        ScrollToTopHandler(Screen.TimelineScreen.route) {
-            pinchState.gridState.animateOrJumpToTop()
-        }
     }
 
     Box(
@@ -338,196 +308,24 @@ fun TimelineScreen(
                 onRefresh = { refreshScope.launch { distributor.invalidate() } },
             ) {
                 val bottomBarInset = rememberBottomBarInset(paddingValues)
-                if (isMosaicLayout) {
-                var lastMosaicCellIndex by rememberMosaicGridSize()
-                val mosaicPinchState = rememberMosaicPinchZoomState(
-                    initialColumnsIndex = lastMosaicCellIndex,
-                    gridState = rememberLazyGridState(
-                        cacheWindow = dpCacheWindow
-                    )
-                )
-                val mosaicGridState = mosaicPinchState.gridState
-
-                LaunchedEffect(mosaicPinchState.isZooming) {
-                    lastMosaicCellIndex = mosaicPinchState.currentColumnsIndex
-                }
-
-                // Re-tapping the Timeline tab scrolls the mosaic grid to top (#1039).
-                ScrollToTopHandler(Screen.TimelineScreen.route) {
-                    mosaicGridState.animateOrJumpToTop()
-                }
-
-                val mappedData by rememberedDerivedState(filteredMediaState.value, timelineGroupMethod) {
-                    when (timelineGroupMethod) {
-                        Settings.Misc.GROUP_MONTHLY -> filteredMediaState.value.mappedMediaWithMonthly
-                        Settings.Misc.GROUP_YEARLY -> filteredMediaState.value.mappedMediaWithYearly
-                        else -> filteredMediaState.value.mappedMedia
-                    }
-                }
-                val headers by rememberedDerivedState(filteredMediaState.value) {
-                    filteredMediaState.value.headers
-                }
-                val mosaicPaddingValues = remember(bottomBarInset, it) {
-                    PaddingValues(
-                        top = it.calculateTopPadding(),
-                        bottom = bottomBarInset + 128.dp
-                    )
-                }
-                val stickyHeaderItem by rememberStickyHeaderItem(
-                    gridState = mosaicGridState,
-                    mediaState = filteredMediaState
-                )
-
-                val hideSearchBarSetting by rememberAutoHideSearchBar()
-                val searchBarPaddingTop = remember(paddingValues) {
-                    paddingValues.calculateTopPadding()
-                }
-                val searchBarPadding by animateDpAsState(
-                    targetValue = remember(
-                        isScrolling.value,
-                        searchBarPaddingTop,
-                        hideSearchBarSetting
-                    ) {
-                        if (!isScrolling.value || !hideSearchBarSetting) {
-                            SearchBarDefaults.InputFieldHeight + searchBarPaddingTop + 8.dp
-                        } else searchBarPaddingTop
+                TimelineMediaContent(
+                    mediaState = filteredMediaState,
+                    metadataState = metadataState,
+                    scaffoldPadding = it,
+                    bottomPadding = bottomBarInset + 128.dp,
+                    screenTopPadding = paddingValues.calculateTopPadding(),
+                    showSearchBar = true,
+                    aboveGridContent = aboveGridContent,
+                    isScrolling = isScrolling,
+                    sharedTransitionScope = sharedTransitionScope,
+                    animatedContentScope = animatedContentScope,
+                    onMediaClick = {
+                        eventHandler.navigate(Screen.MediaViewScreen.idAndAlbum(it.id, -1L))
                     },
-                    label = "mosaicSearchBarPadding"
+                    emptyContent = { EmptyMedia() },
+                    scrollToTopRoute = Screen.TimelineScreen.route,
                 )
-
-                val density = LocalDensity.current
-                val searchBarPaddingPx by remember(density, searchBarPadding) {
-                    derivedStateOf { with(density) { searchBarPadding.roundToPx() } }
-                }
-
-                StickyHeaderGrid(
-                    state = mosaicGridState,
-                    modifier = Modifier.fillMaxSize(),
-                    headerMatcher = { item -> item.key.isHeaderKey || item.key.isIgnoredKey },
-                    searchBarOffset = { 28.roundSpToPx(density) + searchBarPaddingPx },
-                    toolbarOffset = { 0 },
-                    stickyHeader = {
-                        val show by remember {
-                            derivedStateOf {
-                                filteredMediaState.value.media.isNotEmpty() && stickyHeaderItem != null
-                            }
-                        }
-                        AnimatedVisibility(
-                            visible = show,
-                            enter = enterAnimation,
-                            exit = exitAnimation
-                        ) {
-                            val text by rememberedDerivedState(stickyHeaderItem) { stickyHeaderItem ?: "" }
-                            val isDarkTheme = isSystemInDarkTheme()
-                            Text(
-                                text = text,
-                                style = MaterialTheme.typography.titleMedium.let { style ->
-                                    if (!isDarkTheme) style.copy(
-                                        shadow = Shadow(
-                                            color = Color.White,
-                                            offset = Offset.Zero,
-                                            blurRadius = 10f
-                                        )
-                                    ) else style
-                                },
-                                color = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier
-                                    .background(
-                                        Brush.verticalGradient(
-                                            listOf(
-                                                MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
-                                                Color.Transparent
-                                            )
-                                        )
-                                    )
-                                    .padding(horizontal = 16.dp)
-                                    .padding(top = 24.dp + searchBarPadding, bottom = 24.dp)
-                                    .fillMaxWidth()
-                            )
-                        }
-                    }
-                ) {
-                    MosaicPinchZoomLayout(
-                        state = mosaicPinchState,
-                        indicatorTopPadding = mosaicPaddingValues.calculateTopPadding() + 16.dp,
-                    ) { currentColumns ->
-                    TimelineScroller(
-                        modifier = Modifier
-                            .padding(mosaicPaddingValues)
-                            .padding(top = 32.dp)
-                            .padding(vertical = 32.dp),
-                        segments = rememberMosaicMonthSegments(
-                            mappedData = mappedData,
-                            columns = currentColumns,
-                            allowHeaders = timelineGroupByDate,
-                            leadingItemCount = if (aboveGridContent != null) 1 else 0,
-                        ),
-                        headers = headers,
-                        state = mosaicGridState,
-                        snapScrollOffset = remember(density, searchBarPaddingPx) {
-                            with(density) { 80.dp.roundToPx() } - (28.roundSpToPx(density) + searchBarPaddingPx)
-                        },
-                    ) {
-                        MosaicMediaGrid(
-                            modifier = Modifier.hazeSource(LocalHazeState.current),
-                            gridState = mosaicGridState,
-                            columns = currentColumns,
-                            mediaState = filteredMediaState,
-                            metadataState = metadataState,
-                            mappedData = mappedData,
-                            paddingValues = mosaicPaddingValues,
-                            allowSelection = true,
-                            canScroll = !mosaicPinchState.isZooming,
-                            allowHeaders = timelineGroupByDate,
-                            bigHeaders = timelineGroupMethod != Settings.Misc.GROUP_NORMAL,
-                            aboveGridContent = aboveGridContent,
-                            isScrolling = isScrolling,
-                            emptyContent = { EmptyMedia() },
-                            sharedTransitionScope = sharedTransitionScope,
-                            animatedContentScope = animatedContentScope,
-                            onMediaClick = {
-                                eventHandler.navigate(Screen.MediaViewScreen.idAndAlbum(it.id, -1L))
-                            },
-                        )
-                    }
-                    }
-                }
-            } else {
-                GridPinchZoomLayout(
-                    state = pinchState,
-                    modifier = Modifier.hazeSource(LocalHazeState.current),
-                    indicatorTopPadding = it.calculateTopPadding() + 16.dp,
-                ) {
-                    MediaGridView(
-                        mediaState = filteredMediaState,
-                        metadataState = metadataState,
-                        paddingValues = remember(bottomBarInset, it) {
-                            PaddingValues(
-                                top = it.calculateTopPadding(),
-                                bottom = bottomBarInset + 128.dp
-                            )
-                        },
-                        searchBarPaddingTop = remember(paddingValues) {
-                            paddingValues.calculateTopPadding()
-                        },
-                        showSearchBar = true,
-                        allowSelection = true,
-                        canScroll = canScroll,
-                        allowHeaders = timelineGroupByDate,
-                        enableStickyHeaders = timelineGroupByDate,
-                        groupMethod = if (timelineGroupByDate) timelineGroupMethod else Settings.Misc.GROUP_NORMAL,
-                        aboveGridContent = aboveGridContent,
-                        isScrolling = isScrolling,
-                        emptyContent = { EmptyMedia() },
-                        sharedTransitionScope = sharedTransitionScope,
-                        animatedContentScope = animatedContentScope,
-                        onMediaClick = {
-                            eventHandler.navigate(Screen.MediaViewScreen.idAndAlbum(it.id, -1L))
-                        },
-                    )
-                }
             }
-            } // PullToRefreshBox
         }
         val selectedMediaList by selectedMedia(
             media = filteredMediaState.value.media,

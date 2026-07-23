@@ -75,13 +75,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.dot.gallery.BuildConfig
 import com.dot.gallery.R
 import com.dot.gallery.core.Position
 import com.dot.gallery.core.Settings
 import com.dot.gallery.core.SettingsEntity
 import com.dot.gallery.core.presentation.components.NavigationBackButton
+import com.dot.gallery.feature_node.presentation.location.MapAppearance
+import com.dot.gallery.feature_node.presentation.settings.components.ChooserPreferenceDetailScreen
+import com.dot.gallery.feature_node.presentation.settings.components.PreferenceOption
 import com.dot.gallery.feature_node.presentation.settings.components.SettingsItem
 import com.dot.gallery.feature_node.presentation.settings.components.SwitchPreferenceDetailScreen
+import com.dot.gallery.feature_node.presentation.settings.components.rememberPreference
 import com.dot.gallery.feature_node.presentation.settings.components.rememberSwitchPreference
 import com.dot.gallery.ui.core.icons.Albums
 import com.dot.gallery.ui.theme.colorSchemeFromSeed
@@ -95,6 +100,7 @@ private const val DETAIL_BLUR = "blur"
 private const val DETAIL_AUTO_CONTRAST = "auto_contrast"
 private const val DETAIL_SHARED = "shared"
 private const val DETAIL_SYSTEM_FONT = "system_font"
+private const val DETAIL_MAP_APPEARANCE = "map_appearance"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -110,6 +116,7 @@ fun ColorPaletteScreen() {
     var autoContrast by Settings.Misc.rememberAutoContrast()
     var sharedElements by Settings.Misc.rememberSharedElements()
     var useSystemFont by Settings.Misc.rememberUseSystemFont()
+    var mapAppearance by Settings.Misc.rememberMapAppearance()
     val isDark = isDarkTheme()
 
     when (detailKey) {
@@ -185,6 +192,20 @@ fun ColorPaletteScreen() {
                 isChecked = useSystemFont,
                 onCheckedChange = { useSystemFont = it },
                 description = stringResource(R.string.use_system_font_description),
+            )
+            return
+        }
+        DETAIL_MAP_APPEARANCE -> {
+            BackHandler { detailKey = null }
+            ChooserPreferenceDetailScreen(
+                title = stringResource(R.string.map_appearance_title),
+                description = stringResource(R.string.map_appearance_description),
+                options = listOf(
+                    PreferenceOption(MapAppearance.SYSTEM, stringResource(R.string.map_appearance_system), mapAppearance == MapAppearance.SYSTEM),
+                    PreferenceOption(MapAppearance.LIGHT, stringResource(R.string.map_appearance_light), mapAppearance == MapAppearance.LIGHT),
+                    PreferenceOption(MapAppearance.DARK, stringResource(R.string.map_appearance_dark), mapAppearance == MapAppearance.DARK),
+                ),
+                onOptionSelected = { mapAppearance = it },
             )
             return
         }
@@ -329,6 +350,18 @@ fun ColorPaletteScreen() {
             isChecked = useSystemFont,
             onCheck = { useSystemFont = it },
             onClick = { detailKey = DETAIL_SYSTEM_FONT },
+            screenPosition = Position.Alone
+        )
+        val mapAppearanceLabel = when (mapAppearance) {
+            MapAppearance.SYSTEM -> stringResource(R.string.map_appearance_system)
+            MapAppearance.LIGHT -> stringResource(R.string.map_appearance_light)
+            MapAppearance.DARK -> stringResource(R.string.map_appearance_dark)
+        }
+        val mapAppearancePref = rememberPreference(
+            mapAppearance,
+            title = stringResource(R.string.map_appearance_title),
+            summary = mapAppearanceLabel,
+            onClick = { detailKey = DETAIL_MAP_APPEARANCE },
             screenPosition = Position.Alone
         )
 
@@ -496,6 +529,12 @@ fun ColorPaletteScreen() {
                     SettingsItem(item = fontHeader)
                     SettingsItem(item = useSystemFontPref)
 
+                    if (BuildConfig.MAPS_ENABLED) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        SettingsItem(item = SettingsEntity.Header(title = stringResource(R.string.map_appearance_header)))
+                        SettingsItem(item = mapAppearancePref)
+                    }
+
                     Spacer(modifier = Modifier.height(32.dp))
                 }
             }
@@ -549,6 +588,12 @@ fun ColorPaletteScreen() {
                 Spacer(modifier = Modifier.height(16.dp))
                 SettingsItem(item = fontHeader)
                 SettingsItem(item = useSystemFontPref)
+
+                if (BuildConfig.MAPS_ENABLED) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    SettingsItem(item = SettingsEntity.Header(title = stringResource(R.string.map_appearance_header)))
+                    SettingsItem(item = mapAppearancePref)
+                }
 
                 Spacer(modifier = Modifier.height(32.dp))
             }

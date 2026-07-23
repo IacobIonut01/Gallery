@@ -5,8 +5,12 @@
 
 package com.dot.gallery.feature_node.presentation.util
 
+import com.dot.gallery.feature_node.presentation.location.MapAppearance
+import kotlin.math.PI
+import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.ln
+import kotlin.math.sinh
 import kotlin.math.tan
 
 /**
@@ -21,23 +25,34 @@ object StaticMapURL {
     operator fun invoke(
         latitude: Double,
         longitude: Double,
-        darkTheme: Boolean = false,
+        appearance: MapAppearance = MapAppearance.SYSTEM,
+        effectiveAppIsDark: Boolean = false,
         zoom: Int = 12,
     ): String {
-        val x = lonToTileX(longitude, zoom)
-        val y = latToTileY(latitude, zoom)
-        val base = if (darkTheme) CARTO_DARK else CARTO_LIGHT
-        return "$base/$zoom/$x/$y@2x.png"
+        val safeZoom = zoom.coerceIn(0, 20)
+        val x = lonToTileX(longitude, safeZoom)
+        val y = latToTileY(latitude, safeZoom)
+        val base = if (appearance.resolvesDark(effectiveAppIsDark)) CARTO_DARK else CARTO_LIGHT
+        return "$base/$safeZoom/$x/$y@2x.png"
     }
 
-    private fun lonToTileX(lon: Double, zoom: Int): Int {
-        return floor((lon + 180.0) / 360.0 * (1 shl zoom)).toInt()
+    internal fun lonToTileX(longitude: Double, zoom: Int): Int {
+        val count = 1 shl zoom.coerceIn(0, 20)
+        val normalized = ((longitude + 180.0) % 360.0 + 360.0) % 360.0
+        return floor(normalized / 360.0 * count).toInt().coerceIn(0, count - 1)
     }
 
-    private fun latToTileY(lat: Double, zoom: Int): Int {
+    internal fun latToTileY(latitude: Double, zoom: Int): Int {
+        val count = 1 shl zoom.coerceIn(0, 20)
+        val lat = latitude.coerceIn(-85.05112878, 85.05112878)
         val latRad = Math.toRadians(lat)
         return floor(
-            (1.0 - ln(tan(latRad) + 1.0 / kotlin.math.cos(latRad)) / Math.PI) / 2.0 * (1 shl zoom)
-        ).toInt()
+            (1.0 - ln(tan(latRad) + 1.0 / cos(latRad)) / PI) / 2.0 * count
+        ).toInt().coerceIn(0, count - 1)
+    }
+
+    internal fun tileYToLatitude(y: Int, zoom: Int): Double {
+        val count = 1 shl zoom.coerceIn(0, 20)
+        return Math.toDegrees(kotlin.math.atan(sinh(PI * (1.0 - 2.0 * y / count))))
     }
 }

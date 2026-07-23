@@ -306,7 +306,7 @@ fun LibraryScreen(
                                 latestMedia = latest?.media,
                                 latitude = latest?.latitude,
                                 longitude = latest?.longitude,
-                                isDark = isDark
+                                effectiveAppIsDark = isDark
                             )
                         } else {
                             Column(

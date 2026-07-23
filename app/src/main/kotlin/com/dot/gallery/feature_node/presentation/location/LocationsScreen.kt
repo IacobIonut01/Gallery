@@ -5,6 +5,7 @@
 
 package com.dot.gallery.feature_node.presentation.location
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -193,6 +194,7 @@ internal fun MediaGridPanel(
     gridItems: List<MapGridItem>,
     stringToday: String,
     stringYesterday: String,
+    selectedMediaId: Long,
     onMediaClick: (GeoMedia) -> Unit,
 ) {
     LazyVerticalGrid(
@@ -251,6 +253,11 @@ internal fun MediaGridPanel(
                         modifier = Modifier
                             .aspectRatio(1f)
                             .clickable { onMediaClick(item.geoMedia) }
+                            .then(
+                                if (item.geoMedia.mediaId == selectedMediaId) {
+                                    Modifier.border(3.dp, MaterialTheme.colorScheme.primary)
+                                } else Modifier
+                            )
                     ) {
                         GlideImage(
                             model = item.geoMedia.media.getUri(),

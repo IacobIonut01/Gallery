@@ -56,6 +56,16 @@
     <string name="show_in_app">Show in app</string>
     <string name="open_externally">Open externally</string>
     <string name="no_map_app">No app available to show the location</string>
+    <string name="map_appearance_header">Map</string>
+    <string name="map_appearance_title">Map appearance</string>
+    <string name="map_appearance_description">Choose whether maps follow ReFra’s appearance or always use bright or dark map colors.</string>
+    <string name="map_appearance_system">Follow app appearance</string>
+    <string name="map_appearance_light">Light</string>
+    <string name="map_appearance_dark">Dark</string>
+    <string name="map_appearance_action">Change map appearance</string>
+    <string name="map_cluster_title">Photos in this location</string>
+    <string name="map_cluster_count">%1$d photos</string>
+    <string name="map_marker_photo">Photo on map</string>
     <string name="app_dev">by %s</string>
     <string name="app_dev_name">IacobIonut01</string>
     <string name="donate">Donate</string>

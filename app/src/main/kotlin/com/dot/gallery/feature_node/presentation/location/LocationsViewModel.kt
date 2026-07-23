@@ -37,7 +37,9 @@ class LocationsViewModel @AssistedInject constructor(
 
     val latestGeoMedia = mediaDistributor.geoMediaFlow
         .map { list ->
-            list.firstOrNull { it.locationCity == gpsLocationNameCity && it.locationCountry == gpsLocationNameCountry }
+            list.asSequence()
+                .filter { it.locationCity == gpsLocationNameCity && it.locationCountry == gpsLocationNameCountry }
+                .maxByOrNull { it.media.definedTimestamp }
         }
         .stateIn(viewModelScope, Eagerly, null)
 

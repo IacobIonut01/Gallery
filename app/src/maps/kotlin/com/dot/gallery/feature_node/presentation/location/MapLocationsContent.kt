@@ -36,7 +36,9 @@ import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
@@ -65,6 +67,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.dot.gallery.R
 import com.dot.gallery.core.LocalEventHandler
+import com.dot.gallery.core.Settings
 import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
 import com.dot.gallery.core.navigate
 import com.dot.gallery.core.presentation.components.NavigationBackButton
@@ -77,6 +80,7 @@ import com.dot.gallery.feature_node.presentation.util.LocalHazeState
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.feature_node.presentation.util.getDate
 import com.dot.gallery.feature_node.presentation.util.rememberSurfaceCapture
+import com.dot.gallery.feature_node.presentation.util.rememberWindowInsetsController
 import com.dot.gallery.ui.theme.isDarkTheme
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
@@ -85,6 +89,10 @@ import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -97,11 +105,11 @@ import kotlinx.serialization.json.putJsonObject
 import org.maplibre.android.style.expressions.Expression
 import androidx.compose.ui.graphics.Color as ComposeColor
 
-private const val OPEN_FREE_MAP_LIGHT = "https://tiles.openfreemap.org/styles/liberty"
-private const val OPEN_FREE_MAP_DARK = "https://tiles.openfreemap.org/styles/dark"
+private const val PHOTO_MARKER_SOURCE = "photo-marker-source"
+private const val PHOTO_MARKER_LAYER = "photo-marker-layer"
 
 @Suppress("ComposeRules", "UNUSED_PARAMETER")
-@OptIn(ExperimentalMaterial3Api::class, FlowPreview::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalHazeMaterialsApi::class, FlowPreview::class)
 @Composable
 internal fun MapLocationsContent(
     metadataState: State<MediaMetadataState>,
@@ -115,6 +123,18 @@ internal fun MapLocationsContent(
     val eventHandler = LocalEventHandler.current
     val scope = rememberCoroutineScope()
     val isDark = isDarkTheme()
+    var mapAppearance by Settings.Misc.rememberMapAppearance()
+    val effectiveMapIsDark = mapAppearance.resolvesDark(isDark)
+    val windowInsetsController = rememberWindowInsetsController()
+    DisposableEffect(windowInsetsController) {
+        val previousLightStatusBars = windowInsetsController.isAppearanceLightStatusBars
+        onDispose {
+            windowInsetsController.isAppearanceLightStatusBars = previousLightStatusBars
+        }
+    }
+    SideEffect {
+        windowInsetsController.isAppearanceLightStatusBars = !effectiveMapIsDark
+    }
 
     // Sort + build grid items off the main thread
     var sortedGeoMedia by remember { mutableStateOf(emptyList<GeoMedia>()) }
@@ -160,10 +180,6 @@ internal fun MapLocationsContent(
         else null
     }
 
-    // Whether to show the selected-media marker on the map.
-    // Hidden when the user manually zooms/pans; shown again when the timeline scrolls.
-    var showSelectedMarker by remember { mutableStateOf(true) }
-
     val gridState = rememberLazyGridState()
 
     // Adaptive layout detection
@@ -183,8 +199,36 @@ internal fun MapLocationsContent(
             zoom = savedZoom,
         )
     )
+    var visibleClusters by remember { mutableStateOf(emptyList<MapPhotoCluster>()) }
+    var clusterSheet by remember { mutableStateOf<MapPhotoCluster?>(null) }
+    val geoById = remember(sortedGeoMedia) { sortedGeoMedia.associateBy { it.mediaId } }
+    LaunchedEffect(sortedGeoMedia, mapState) {
+        snapshotFlow { mapState.cameraPosition }
+            .debounce(120)
+            .collectLatest { position ->
+                val points = sortedGeoMedia.map {
+                    MapPhotoPoint(
+                        mediaId = it.mediaId,
+                        latitude = it.latitude,
+                        longitude = it.longitude,
+                        timestamp = it.media.definedTimestamp,
+                    )
+                }
+                val clusters = withContext(Dispatchers.Default) {
+                    MapPhotoClusterer.cluster(points, position.zoom)
+                }
+                visibleClusters = MapPhotoClusterer.visible(
+                    clusters = clusters,
+                    bounds = mapState.visibleBounds(),
+                    limit = 160,
+                    centerLatitude = position.latitude,
+                    centerLongitude = position.longitude,
+                )
+            }
+    }
 
     val accentColor = MaterialTheme.colorScheme.primary
+    val onAccentColor = MaterialTheme.colorScheme.onPrimary
     val surfaceColor = MaterialTheme.colorScheme.surface
 
     val accentArgb = remember(accentColor) {
@@ -193,6 +237,14 @@ internal fun MapLocationsContent(
             (accentColor.red * 255).toInt(),
             (accentColor.green * 255).toInt(),
             (accentColor.blue * 255).toInt()
+        )
+    }
+    val onAccentArgb = remember(onAccentColor) {
+        Color.argb(
+            (onAccentColor.alpha * 255).toInt(),
+            (onAccentColor.red * 255).toInt(),
+            (onAccentColor.green * 255).toInt(),
+            (onAccentColor.blue * 255).toInt()
         )
     }
     val surfaceArgb = remember(surfaceColor) {
@@ -315,7 +367,6 @@ internal fun MapLocationsContent(
                     }
                 if (mediaItem != null && mediaItem.mediaId != selectedMediaId) {
                     selectedMediaId = mediaItem.mediaId
-                    showSelectedMarker = true
                 }
             }
     }
@@ -355,33 +406,30 @@ internal fun MapLocationsContent(
             }
     }
 
-    // ── Build GeoJSON sources off the main thread ──
-    var heatmapGeoJson by remember { mutableStateOf<String?>(null) }
-    LaunchedEffect(geoMedia) {
-        if (geoMedia.isEmpty()) {
-            heatmapGeoJson = null
-            return@LaunchedEffect
-        }
-        heatmapGeoJson = withContext(Dispatchers.Default) {
-            buildJsonObject {
-                put("type", "FeatureCollection")
-                putJsonArray("features") {
-                    geoMedia.forEach { item ->
-                        addJsonObject {
-                            put("type", "Feature")
-                            putJsonObject("geometry") {
-                                put("type", "Point")
-                                putJsonArray("coordinates") {
-                                    add(item.longitude)
-                                    add(item.latitude)
-                                }
+    val markerGeoJson = remember(visibleClusters) {
+        buildJsonObject {
+            put("type", "FeatureCollection")
+            putJsonArray("features") {
+                visibleClusters.forEach { cluster ->
+                    addJsonObject {
+                        put("type", "Feature")
+                        putJsonObject("geometry") {
+                            put("type", "Point")
+                            putJsonArray("coordinates") {
+                                add(cluster.longitude)
+                                add(cluster.latitude)
                             }
-                            putJsonObject("properties") {}
+                        }
+                        putJsonObject("properties") {
+                            put("renderId", cluster.renderId)
+                            put("iconId", cluster.renderId)
+                            put("mediaId", cluster.representativeMediaId)
+                            put("count", cluster.count)
                         }
                     }
                 }
-            }.toString()
-        }
+            }
+        }.toString()
     }
 
     val selectedGeoJson = remember(selectedGeoMedia) {
@@ -420,6 +468,8 @@ internal fun MapLocationsContent(
                     country
                 )
             )
+        } else {
+            eventHandler.navigate(Screen.MediaViewScreen.idAndAlbum(geoMedia.mediaId, -1L))
         }
     }
 
@@ -430,71 +480,69 @@ internal fun MapLocationsContent(
     val accentHex = remember(accentArgb) { String.format("#%08X", accentArgb) }
     val surfaceHex = remember(surfaceArgb) { String.format("#%08X", surfaceArgb) }
 
-    // Heatmap source + layer (Google Photos-style: purple → magenta → orange → yellow)
-    LaunchedEffect(mapState.isStyleLoaded, heatmapGeoJson) {
+    val markerSizePx = with(density) { 64.dp.roundToPx() }
+    val registeredMarkerIds = remember { mutableSetOf<String>() }
+    LaunchedEffect(mapState.isStyleLoaded, markerGeoJson, visibleClusters, markerSizePx, surfaceArgb, accentArgb, onAccentArgb) {
         if (!mapState.isStyleLoaded) return@LaunchedEffect
-        val json = heatmapGeoJson
-        if (json != null) {
-            mapState.setGeoJsonSource(
-                id = "heatmap-source",
-                geoJson = json,
+        val currentIds = visibleClusters.mapTo(HashSet()) { it.renderId }
+        registeredMarkerIds.filter { it !in currentIds }.forEach(mapState::removeImage)
+        registeredMarkerIds.retainAll(currentIds)
+        visibleClusters.forEach { cluster ->
+            mapState.setImage(
+                cluster.renderId,
+                MapMarkerIconFactory.placeholder(markerSizePx, surfaceArgb, accentArgb),
             )
-            mapState.addHeatmapLayer(
-                id = "media-heatmap",
-                sourceId = "heatmap-source",
-                belowLayerId = "media-selected-circle",
-                weight = Expression.literal(1.0f),
-                intensity = Expression.interpolate(
-                    Expression.linear(), Expression.zoom(),
-                    Expression.stop(0, 0.15f),
-                    Expression.stop(5, 0.3f),
-                    Expression.stop(10, 0.5f),
-                    Expression.stop(15, 0.7f),
-                    Expression.stop(20, 1.0f)
-                ),
-                color = Expression.interpolate(
-                    Expression.linear(), Expression.heatmapDensity(),
-                    Expression.stop(0.0, Expression.rgba(0, 0, 0, 0)),
-                    Expression.stop(0.1, Expression.rgba(75, 20, 150, 0.35f)),
-                    Expression.stop(0.25, Expression.rgba(110, 40, 190, 0.55f)),
-                    Expression.stop(0.4, Expression.rgba(170, 30, 170, 0.65f)),
-                    Expression.stop(0.55, Expression.rgba(210, 50, 110, 0.7f)),
-                    Expression.stop(0.7, Expression.rgba(235, 100, 50, 0.75f)),
-                    Expression.stop(0.85, Expression.rgba(245, 160, 30, 0.8f)),
-                    Expression.stop(1.0, Expression.rgba(255, 220, 60, 0.85f))
-                ),
-                radius = Expression.interpolate(
-                    Expression.linear(), Expression.zoom(),
-                    Expression.stop(0, 6f),
-                    Expression.stop(5, 15f),
-                    Expression.stop(10, 25f),
-                    Expression.stop(15, 35f),
-                    Expression.stop(20, 45f)
-                ),
-                opacity = Expression.interpolate(
-                    Expression.linear(), Expression.zoom(),
-                    Expression.stop(0, 0.8f),
-                    Expression.stop(10, 0.75f),
-                    Expression.stop(18, 0.6f)
-                )
-            )
+            registeredMarkerIds.add(cluster.renderId)
+        }
+        mapState.setGeoJsonSource(PHOTO_MARKER_SOURCE, markerGeoJson)
+        mapState.addOrUpdateSymbolLayer(
+            id = PHOTO_MARKER_LAYER,
+            sourceId = PHOTO_MARKER_SOURCE,
+            iconImageExpression = Expression.get("iconId"),
+            iconSize = 1f,
+            iconAllowOverlap = true,
+            iconIgnorePlacement = true,
+        )
+        val semaphore = Semaphore(4)
+        coroutineScope {
+            visibleClusters.forEach { cluster ->
+                launch {
+                    val media = geoById[cluster.representativeMediaId]?.media ?: return@launch
+                    val bitmap = withContext(Dispatchers.IO) {
+                        semaphore.withPermit {
+                            MapMarkerIconFactory.load(
+                                context = context,
+                                media = media,
+                                count = cluster.count,
+                                sizePx = markerSizePx,
+                                borderColor = surfaceArgb,
+                                badgeColor = accentArgb,
+                                badgeContentColor = onAccentArgb,
+                            )
+                        }
+                    } ?: return@launch
+                    if (mapState.isStyleLoaded && visibleClusters.any { it.renderId == cluster.renderId }) {
+                        mapState.setImage(cluster.renderId, bitmap)
+                    }
+                }
+            }
         }
     }
 
     // Selected point source + layers (circle fallback + thumbnail icon)
-    LaunchedEffect(mapState.isStyleLoaded, selectedGeoJson, selectedThumbBitmap, accentHex, surfaceHex, showSelectedMarker) {
+    LaunchedEffect(mapState.isStyleLoaded, selectedGeoJson, selectedThumbBitmap, accentHex, surfaceHex) {
         if (!mapState.isStyleLoaded) return@LaunchedEffect
         mapState.setGeoJsonSource(id = "selected-source", geoJson = selectedGeoJson)
         val hasThumb = selectedThumbBitmap != null
         mapState.addOrUpdateCircleLayer(
             id = "media-selected-circle",
             sourceId = "selected-source",
-            visible = showSelectedMarker && !hasThumb,
+            visible = !hasThumb,
             radius = 14f,
             color = accentHex,
             strokeWidth = 3f,
             strokeColor = surfaceHex,
-            aboveLayerId = "media-heatmap"
+            aboveLayerId = PHOTO_MARKER_LAYER
         )
         val thumbBmp = selectedThumbBitmap
         if (thumbBmp != null) {
@@ -508,15 +556,15 @@ internal fun MapLocationsContent(
             id = "media-selected-thumb",
             sourceId = "selected-source",
             iconImageName = if (hasThumb) "selected-thumb" else null,
-            visible = showSelectedMarker && hasThumb,
+            visible = hasThumb,
             iconSize = 1.5f,
             aboveLayerId = "media-selected-circle"
         )
     }
 
     // ── Shared composable: Map ──
-    val styleUri = remember(isDark) {
-        if (isDark) OPEN_FREE_MAP_DARK else OPEN_FREE_MAP_LIGHT
+    val styleUri = remember(mapAppearance, isDark) {
+        MapStyles.interactiveStyle(mapAppearance, isDark)
     }
 
     val mapContent: @Composable (Modifier) -> Unit = { modifier ->
@@ -527,27 +575,28 @@ internal fun MapLocationsContent(
                 modifier = Modifier.fillMaxSize(),
                 mapState = mapState,
                 styleUri = styleUri,
-                onUserInteraction = {
-                    // User is manually interacting with the map — hide the marker
-                    showSelectedMarker = false
-                },
                 onMapClick = { latLng ->
-                    val closest = sortedGeoMedia.minByOrNull { geo ->
-                        val dx = geo.longitude - latLng.longitude
-                        val dy = geo.latitude - latLng.latitude
-                        dx * dx + dy * dy
-                    }
-                    if (closest != null) {
-                        selectedMediaId = closest.mediaId
-                        showSelectedMarker = true
+                    val renderId = mapState.renderedMarkerId(latLng.latitude, latLng.longitude, PHOTO_MARKER_LAYER)
+                    val cluster = visibleClusters.firstOrNull { it.renderId == renderId }
+                    if (cluster == null) {
+                        false
+                    } else if (cluster.isCluster) {
+                        val cannotSplit = mapState.cameraPosition.zoom >= 18.0 ||
+                            (cluster.bounds.west == cluster.bounds.east && cluster.bounds.south == cluster.bounds.north)
+                        if (cannotSplit) {
+                            clusterSheet = cluster
+                        } else {
+                            mapState.fitCluster(cluster, with(density) { 72.dp.roundToPx() })
+                        }
+                        true
+                    } else {
+                        selectedMediaId = cluster.representativeMediaId
                         val index = gridItems.indexOfFirst {
-                            it is MapGridItem.MediaCell && it.geoMedia.mediaId == closest.mediaId
+                            it is MapGridItem.MediaCell && it.geoMedia.mediaId == selectedMediaId
                         }
-                        if (index >= 0) {
-                            scope.launch { gridState.animateScrollToItem(index) }
-                        }
+                        if (index >= 0) scope.launch { gridState.animateScrollToItem(index) }
+                        true
                     }
-                    true
                 }
             )
 
@@ -568,6 +617,25 @@ internal fun MapLocationsContent(
                         )
                     )
                 else Modifier
+            )
+
+            MapAppearanceButton(
+                appearance = mapAppearance,
+                onAppearanceChange = { mapAppearance = it },
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .statusBarsPadding()
+                    .padding(8.dp),
+                containerColor = if (allowBlur) ComposeColor.Transparent else MaterialTheme.colorScheme.surfaceContainer,
+                containerModifier = if (allowBlur) Modifier
+                    .clip(CircleShape)
+                    .hazeEffect(
+                        state = sheetHazeState,
+                        style = HazeMaterials.regular(
+                            containerColor = MaterialTheme.colorScheme.surface
+                        )
+                    )
+                else Modifier,
             )
 
             // Loading indicator
@@ -596,6 +664,7 @@ internal fun MapLocationsContent(
             gridItems = gridItems,
             stringToday = stringToday,
             stringYesterday = stringYesterday,
+            selectedMediaId = selectedMediaId,
             onMediaClick = { geoMedia -> openMediaViewer(geoMedia) }
         )
     }
@@ -620,7 +689,8 @@ internal fun MapLocationsContent(
     } else {
         val scaffoldState = rememberBottomSheetScaffoldState(
             bottomSheetState = rememberBottomSheetState(
-                initialValue = SheetValue.PartiallyExpanded
+                initialValue = SheetValue.PartiallyExpanded,
+                enabledValues = setOf(SheetValue.PartiallyExpanded, SheetValue.Expanded),
             )
         )
 
@@ -693,6 +763,21 @@ internal fun MapLocationsContent(
                 Modifier.fillMaxSize()
             )
         }
+    }
+
+    clusterSheet?.let { cluster ->
+        MapClusterSheet(
+            media = cluster.members.mapNotNull { geoById[it.mediaId] },
+            onDismiss = { clusterSheet = null },
+            onMediaClick = { item ->
+                clusterSheet = null
+                selectedMediaId = item.mediaId
+                val index = gridItems.indexOfFirst {
+                    it is MapGridItem.MediaCell && it.geoMedia.mediaId == item.mediaId
+                }
+                if (index >= 0) scope.launch { gridState.animateScrollToItem(index) }
+            },
+        )
     }
 }
 
