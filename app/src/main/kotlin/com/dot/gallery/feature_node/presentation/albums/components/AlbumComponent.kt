@@ -43,6 +43,7 @@ import androidx.compose.material.icons.outlined.Restore
 import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.SdCard
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import com.dot.gallery.core.presentation.components.util.advancedShadow
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material.icons.outlined.Wallpaper
@@ -576,32 +577,23 @@ fun AlbumOptionSheet(
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if (album.isLocked) {
-                    Box(
-                        modifier = Modifier
-                            .size(98.dp)
-                            .clip(Shapes.large)
-                            .background(MaterialTheme.colorScheme.surfaceVariant),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Lock,
-                            contentDescription = stringResource(R.string.locked),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(36.dp)
+                when (albumThumbnailPresentation(album.isLocked)) {
+                    AlbumThumbnailPresentation.LOCKED_PLACEHOLDER -> LockedAlbumThumbnail(
+                        modifier = Modifier.size(98.dp),
+                        iconModifier = Modifier.size(36.dp)
+                    )
+                    AlbumThumbnailPresentation.MEDIA -> {
+                        val renderer = LocalMediaImageRenderer.current
+                        renderer.RenderImage(
+                            modifier = Modifier
+                                .size(98.dp)
+                                .clip(Shapes.large),
+                            contentScale = ContentScale.Crop,
+                            model = album.uri,
+                            contentDescription = album.label,
+                            signature = album
                         )
                     }
-                } else {
-                    val renderer = LocalMediaImageRenderer.current
-                    renderer.RenderImage(
-                        modifier = Modifier
-                            .size(98.dp)
-                            .clip(Shapes.large),
-                        contentScale = ContentScale.Crop,
-                        model = album.uri,
-                        contentDescription = album.label,
-                        signature = album
-                    )
                 }
                 Text(
                     text = buildAnnotatedString {
@@ -657,36 +649,26 @@ fun AlbumImage(
         label = "cornerRadius"
     )
     val feedbackManager = rememberFeedbackManager()
-    if (album.isLocked) {
-        Icon(
-            imageVector = Icons.Outlined.Lock,
-            contentDescription = stringResource(R.string.locked),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = modifier
+    if (albumThumbnailPresentation(album.isLocked) == AlbumThumbnailPresentation.LOCKED_PLACEHOLDER) {
+        LockedAlbumThumbnail(
+            modifier = modifier.fillMaxSize(),
+            iconModifier = Modifier
                 .fillMaxSize()
-                .background(
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    shape = RoundedCornerShape(cornerRadius)
-                )
-                .border(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
-                    shape = RoundedCornerShape(cornerRadius)
-                )
-                .clip(RoundedCornerShape(cornerRadius))
-                .combinedClickable(
-                    enabled = isEnabled,
-                    interactionSource = interactionSource,
-                    indication = LocalIndication.current,
-                    onClick = { onItemClick(album) },
-                    onLongClick = {
-                        onItemLongClick?.let {
-                            feedbackManager.vibrate()
-                            it(album)
-                        }
+                .padding(48.dp),
+            shape = RoundedCornerShape(cornerRadius),
+            showBorder = true,
+            contentModifier = Modifier.combinedClickable(
+                enabled = isEnabled,
+                interactionSource = interactionSource,
+                indication = LocalIndication.current,
+                onClick = { onItemClick(album) },
+                onLongClick = {
+                    onItemLongClick?.let {
+                        feedbackManager.vibrate()
+                        it(album)
                     }
-                )
-                .padding(48.dp)
+                }
+            )
         )
     } else if (album.id == -200L && album.count == 0L) {
         Icon(
@@ -743,6 +725,41 @@ fun AlbumImage(
             contentDescription = album.label,
             contentScale = ContentScale.Crop,
             signature = album
+        )
+    }
+}
+
+@Composable
+internal fun LockedAlbumThumbnail(
+    modifier: Modifier = Modifier,
+    iconModifier: Modifier = Modifier.size(36.dp),
+    shape: Shape = Shapes.large,
+    showBorder: Boolean = false,
+    contentModifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .background(MaterialTheme.colorScheme.surfaceVariant, shape)
+            .then(
+                if (showBorder) {
+                    Modifier.border(
+                        width = 1.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+                        shape = shape
+                    )
+                } else {
+                    Modifier
+                }
+            )
+            .clip(shape)
+            .then(contentModifier),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Lock,
+            contentDescription = stringResource(R.string.locked),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = iconModifier
         )
     }
 }
