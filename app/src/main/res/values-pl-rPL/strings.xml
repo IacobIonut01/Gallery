@@ -53,7 +53,7 @@
     <string name="nav_timeline">Oś czasu</string>
     <string name="location_cd">Lokalizacja nośników</string>
     <string name="location_map_cd">Mapa lokalizacji</string>
-    <string name="show_in_app">Show in app</string>
+    <string name="show_in_app">Pokaż w aplikacji</string>
     <string name="open_externally">Open externally</string>
     <string name="no_map_app">Brak dostępnej aplikacji do pokazywania lokalizacji</string>
     <string name="app_dev">przez %s</string>
@@ -111,9 +111,9 @@
     <string name="allow_gif_animation_summary">Odtwarzaj animacje GIF na osi czasu i w siatce albumów. Wyłącz, aby zmniejszyć opóźnienie w folderach z wieloma GIFami</string>
     <string name="amoled_mode_title">Użyj trybu Amoled</string>
     <string name="amoled_mode_summary">Wyższy kontrast, najlepszy dla ekranów Amoled</string>
-    <string name="use_system_font_title">Use system font</string>
-    <string name="use_system_font_summary">Use your device\'s default font instead of the built-in one</string>
-    <string name="use_system_font_description">When enabled, the app uses your device\'s system font instead of the built-in Google Sans font. This can improve readability if you use a custom system font.</string>
+    <string name="use_system_font_title">Użyj czcionki systemowej</string>
+    <string name="use_system_font_summary">Użyj domyślnej czcionki urządzenia zamiast wbudowanej</string>
+    <string name="use_system_font_description">Kiedy aktywne, aplikacja używa systemowej czcionki urządzenia zamiast wbudowanej Google Sans. Może to poprawić czytelność, jeśli używasz niestandardowej czcionki systemowej.</string>
     <string name="color_palette_preview_description">Ikony, tekst i inne elementy pasują do kolorów tapety</string>
     <string name="color_palette_wallpaper_colors">Kolory tapery</string>
     <string name="color_palette_other_colors">Inne kolory</string>
@@ -178,7 +178,7 @@
     <string name="edit_backups_storage">Używane miejsce</string>
     <string name="edit_backups_storage_summary">%1$s używane przez %2$d kopii zapasowych</string>
     <string name="edit_backups_no_backups">Brak kopii zapasowych edycji</string>
-    <string name="edit_backups_no_backups_summary">Oryginalne zdjęcia zostaną archiwizowane po nadpisaniu edycji</string>
+    <string name="edit_backups_no_backups_summary">Original images will be backed up when you overwrite an edit</string>
     <string name="edit_backups_auto_cleanup">Automatyczne czyszczenie</string>
     <string name="edit_backups_auto_cleanup_summary">Automatycznie usuń kopie zapasowe starsze niż 90 dni</string>
     <string name="edit_backups_delete_all">Usuń wszystkie kopie zapasowe</string>
@@ -368,19 +368,19 @@
     <string name="reset_categories">Resetuj kategorie</string>
     <string name="reset_categories_summary">Usuń wszystkie kategorie i przywróć ustawienia domyślne</string>
     <string name="create">Utwórz</string>
-    <string name="save">Save</string>
-    <string name="browse_categories">Browse categories</string>
+    <string name="save">Zapisz</string>
+    <string name="browse_categories">Przeglądaj kategorie</string>
     <string name="category_media_count">%1$d items</string>
     <!-- Category Editor (unified create/edit) -->
-    <string name="new_category">New category</string>
+    <string name="new_category">Nowa kategoria</string>
     <string name="describe_content">Describe what to include</string>
     <string name="describe_content_hint">Describe what photos this category should contain</string>
     <string name="describe_content_example">e.g., photos of my dog at the beach</string>
-    <string name="quick_start">Quick start</string>
+    <string name="quick_start">Szybki start</string>
     <string name="quick_start_subtitle">Tap a suggestion to get started</string>
     <string name="matching_preview">Preview</string>
     <string name="see_all_matches">See all %1$d matches</string>
-    <string name="sensitivity">Sensitivity</string>
+    <string name="sensitivity">Czułość</string>
     <string name="sensitivity_broad">Broad</string>
     <string name="sensitivity_broad_desc">Include loosely related photos</string>
     <string name="sensitivity_balanced">Balanced</string>
@@ -394,9 +394,9 @@
     <string name="category_updated">Category updated — reclassifying…</string>
     <string name="category_deleted">Category deleted</string>
     <!-- Reference images (image-to-image search) -->
-    <string name="reference_images">Reference photos</string>
-    <string name="reference_images_hint">Add photos to find visually similar ones</string>
-    <string name="add_reference_photos">Add photos</string>
+    <string name="reference_images">Zdjęcia referencyjne</string>
+    <string name="reference_images_hint">Dodaj zdjęcia, żeby znaleźć inne podobne wizualnie</string>
+    <string name="add_reference_photos">Dodaj zdjęcia</string>
     <string name="reference_images_count">%1$d selected</string>
     <string name="restore">Przywróć</string>
     <string name="encrypted">Zaszyfrowane</string>
@@ -419,6 +419,8 @@
     <string name="extended_date">Data Rozszerzona</string>
     <string name="auto_play_video">Auto-Odtwarzanie Wideo</string>
     <string name="auto_play_video_summary">Automatycznie odtwarzaj wideo podczas przeglądania multimediów</string>
+    <string name="video_surface_rebind">Fix black video on hide</string>
+    <string name="video_surface_rebind_summary">Refresh the video surface when hiding or showing the controls</string>
     <string name="shared_elements">Animuj pozycje multimedialne</string>
     <string name="shared_elements_summary">Animate media items click/return using shared elements transitions</string>
     <string name="type_stylus">Stylus</string>
@@ -489,6 +491,7 @@
     <string name="verify_identity">Verify your identity</string>
     <string name="vault_encrypt_failed">Failed to encrypt %1$d item(s)</string>
     <string name="vault_hide_in_progress">Hiding media…</string>
+    <string name="vault_hide_no_local_items">Cloud items can\'t be added to a vault</string>
     <string name="vault_setup_password_prompt">Would you like to set a custom password for this vault?</string>
     <string name="vault_skip_password">Use device security</string>
     <string name="vault_set_password">Set custom password</string>
@@ -560,6 +563,7 @@
     <string name="show_favorite_button_description">Shows a heart button in the media viewer toolbar, allowing you to quickly add or remove the current photo from your favorites.</string>
     <string name="auto_hide_on_video_play_description">Automatically hides the top and bottom bars when a video starts playing, giving you a full-screen experience. Tap the screen to bring the controls back.</string>
     <string name="auto_play_video_description">Videos start playing automatically when you swipe to them in the media viewer. Disable this to require a manual tap to play.</string>
+    <string name="video_surface_rebind_description">On some devices the video can turn black when you hide or show the playback controls, even though the audio keeps playing. This re-binds the video surface on each change to keep it visible. Enabled by default on devices where the issue is known to occur.</string>
     <string name="fancy_blur_description">Applies a blur effect to the background behind photos in the media viewer. Requires Android 12 or higher.</string>
     <string name="shared_elements_description">Enables smooth shared element transitions between the grid thumbnails and the full-screen media viewer. This creates a visual connection as items zoom in and out.</string>
     <string name="old_navbar_description">Switches to the classic Material navigation bar with text labels. On larger screens, this shows a navigation rail on the side instead.</string>

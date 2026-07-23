@@ -168,7 +168,7 @@
     <string name="error_copying_to_clipboard">Falha ao copiar para a área de transferência </string>
     <string name="ignored_albums">Álbuns ignorados</string>
     <string name="add_to_ignored">Adicionar aos álbuns ignorados</string>
-    <string name="override">Sobrescrever</string>
+    <string name="override">Overwrite</string>
     <string name="save_copy">Salvar Cópia</string>
     <string name="revert_to_original">Reverter ao Original</string>
     <string name="revert_to_original_confirmation">Isso irá descartar todas as alterações e restaurar a imagem original.</string>
@@ -178,7 +178,7 @@
     <string name="edit_backups_storage">Armazenamento Utilizado</string>
     <string name="edit_backups_storage_summary">%1$s usado por %2$d backup(s)</string>
     <string name="edit_backups_no_backups">Sem backups de edição</string>
-    <string name="edit_backups_no_backups_summary">As imagens originais serão salvas quando forem substituídas por uma edição</string>
+    <string name="edit_backups_no_backups_summary">Original images will be backed up when you overwrite an edit</string>
     <string name="edit_backups_auto_cleanup">Limpeza automática</string>
     <string name="edit_backups_auto_cleanup_summary">Excluir automaticamente backups com mais de 90 dias</string>
     <string name="edit_backups_delete_all">Excluir Todos os Backups</string>
@@ -419,6 +419,8 @@
     <string name="extended_date">Data Estendida</string>
     <string name="auto_play_video">Reprodução automática de vídeo</string>
     <string name="auto_play_video_summary">Reproduzir o vídeo automaticamente durante a visualização de mídia</string>
+    <string name="video_surface_rebind">Fix black video on hide</string>
+    <string name="video_surface_rebind_summary">Refresh the video surface when hiding or showing the controls</string>
     <string name="shared_elements">Animar itens de mídia</string>
     <string name="shared_elements_summary">Animar o clique/retorno de itens de mídia usando transições de elementos compartilhados</string>
     <string name="type_stylus">Estilo</string>
@@ -489,6 +491,7 @@
     <string name="verify_identity">Verify your identity</string>
     <string name="vault_encrypt_failed">Failed to encrypt %1$d item(s)</string>
     <string name="vault_hide_in_progress">Hiding media…</string>
+    <string name="vault_hide_no_local_items">Cloud items can\'t be added to a vault</string>
     <string name="vault_setup_password_prompt">Would you like to set a custom password for this vault?</string>
     <string name="vault_skip_password">Use device security</string>
     <string name="vault_set_password">Set custom password</string>
@@ -560,6 +563,7 @@
     <string name="show_favorite_button_description">Shows a heart button in the media viewer toolbar, allowing you to quickly add or remove the current photo from your favorites.</string>
     <string name="auto_hide_on_video_play_description">Automatically hides the top and bottom bars when a video starts playing, giving you a full-screen experience. Tap the screen to bring the controls back.</string>
     <string name="auto_play_video_description">Videos start playing automatically when you swipe to them in the media viewer. Disable this to require a manual tap to play.</string>
+    <string name="video_surface_rebind_description">On some devices the video can turn black when you hide or show the playback controls, even though the audio keeps playing. This re-binds the video surface on each change to keep it visible. Enabled by default on devices where the issue is known to occur.</string>
     <string name="fancy_blur_description">Applies a blur effect to the background behind photos in the media viewer. Requires Android 12 or higher.</string>
     <string name="shared_elements_description">Enables smooth shared element transitions between the grid thumbnails and the full-screen media viewer. This creates a visual connection as items zoom in and out.</string>
     <string name="old_navbar_description">Switches to the classic Material navigation bar with text labels. On larger screens, this shows a navigation rail on the side instead.</string>

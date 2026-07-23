@@ -419,6 +419,8 @@
     <string name="extended_date">扩展日期</string>
     <string name="auto_play_video">视频自动播放</string>
     <string name="auto_play_video_summary">查看媒体时自动播放视频</string>
+    <string name="video_surface_rebind">修复隐藏时视频黑屏的问题</string>
+    <string name="video_surface_rebind_summary">在隐藏或显示控件时刷新视频区域</string>
     <string name="shared_elements">为媒体项目应用动画</string>
     <string name="shared_elements_summary">用共同元素过渡来作为媒体项目的点击/返回动画</string>
     <string name="type_stylus">触控笔</string>
@@ -489,6 +491,7 @@
     <string name="verify_identity">验证您的身份</string>
     <string name="vault_encrypt_failed">无法加密 %1$d 项</string>
     <string name="vault_hide_in_progress">隐藏媒体…</string>
+    <string name="vault_hide_no_local_items">无法将云端项目添加到保险箱中</string>
     <string name="vault_setup_password_prompt">您想为这个保险箱设置自定义密码吗？</string>
     <string name="vault_skip_password">使用设备安全设置</string>
     <string name="vault_set_password">Set custom password</string>
@@ -532,14 +535,14 @@
     <string name="ai_category_summary">控制您想使用的智能功能</string>
     <!-- Settings Overhaul: New Section Names & Summaries -->
     <string name="settings_appearance">外观</string>
-    <string name="settings_appearance_summary">主题，颜色，深色模式，视觉效果</string>
+    <string name="settings_appearance_summary">主题、颜色、深色模式、视觉效果</string>
     <string name="settings_timeline_albums">时间线 &amp; 相册</string>
     <string name="settings_timeline_albums_summary">布局、图片合并、日期格式、相册行为</string>
     <string name="settings_display_header">显示设置</string>
     <string name="settings_media_viewer">媒体查看器</string>
     <string name="settings_media_viewer_summary">媒体观看体验、编辑器、视频播放</string>
     <string name="settings_navigation">导航</string>
-    <string name="settings_navigation_summary">首屏，导航栏，界面行为</string>
+    <string name="settings_navigation_summary">首屏、导航栏、界面行为</string>
     <!-- Settings Overhaul: Extended Descriptions -->
     <string name="monthly_timeline_description">将您的所有照片和视频按月而非按具体日期进行分组。这样在浏览大型图库时能提供更简洁的概览，但您将无法查看按日分类的内容。\n\n更改此设置后，应用将重新启动。</string>
     <string name="group_similar_media_description">自动将相关照片合并 — 包括 RAW+JPG 成对文件、编辑后的副本以及连拍照片序列。启用此功能后，网格中仅显示主照片；合并项目将在媒体查看器中显示。</string>
@@ -560,6 +563,7 @@
     <string name="show_favorite_button_description">在媒体查看器工具栏中显示一个心形按钮，可让您快速将当前照片添加到收藏夹或从收藏夹中移除。</string>
     <string name="auto_hide_on_video_play_description">视频开始播放时自动隐藏顶栏和底栏以带来全屏体验。轻触屏幕即可恢复控制栏。</string>
     <string name="auto_play_video_description">在媒体查看器中滑动到视频时自动播放。禁用此功能后，需手动点击才能播放。</string>
+    <string name="video_surface_rebind_description">在某些设备上，当隐藏或显示播放控件时，视频画面可能会黑屏，尽管音频仍在播放。此功能会在每次操作变化时重新绑定视频区域，以确保其保持可见。在已知会出现此问题的设备上，该功能默认启用。</string>
     <string name="fancy_blur_description">在媒体查看器中为照片背景添加模糊效果。需要 Android 12 或更高版本。</string>
     <string name="shared_elements_description">启用网格缩略图与全屏媒体查看器之间共享元素的平滑过渡。这使得项目的缩放在视觉上更加连贯。</string>
     <string name="old_navbar_description">切换至带有文本标签的经典 Material 导航栏。在大屏幕上会显示为侧边导航栏。</string>

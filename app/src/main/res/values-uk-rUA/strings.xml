@@ -168,7 +168,7 @@
     <string name="error_copying_to_clipboard">Не вдалося скопіювати в буфер</string>
     <string name="ignored_albums">Ігноровані альбоми</string>
     <string name="add_to_ignored">Додати до ігнорованих альбомів</string>
-    <string name="override">Перезаписати</string>
+    <string name="override">Overwrite</string>
     <string name="save_copy">Зберегти копію</string>
     <string name="revert_to_original">Повернути до оригіналу</string>
     <string name="revert_to_original_confirmation">Це скасує всі редагування та відновить оригінальне зображення. Цю дію не можна скасувати.</string>
@@ -178,7 +178,7 @@
     <string name="edit_backups_storage">Використане сховище</string>
     <string name="edit_backups_storage_summary">%1$sвикористовується %2$d резервною копією (копіями)</string>
     <string name="edit_backups_no_backups">Немає резервних копій для редагування</string>
-    <string name="edit_backups_no_backups_summary">Оригінали зображень будуть збережені, якщо ви перезапишете редагування</string>
+    <string name="edit_backups_no_backups_summary">Original images will be backed up when you overwrite an edit</string>
     <string name="edit_backups_auto_cleanup">Авто очищення</string>
     <string name="edit_backups_auto_cleanup_summary">Автоматично видаляти резервні копії старше 90 днів</string>
     <string name="edit_backups_delete_all">Видалити всі резервні копії</string>
@@ -419,6 +419,8 @@
     <string name="extended_date">Повна дата</string>
     <string name="auto_play_video">Автовідтворення відео</string>
     <string name="auto_play_video_summary">Відтворювати відео автоматично під час перегляду медіа</string>
+    <string name="video_surface_rebind">Fix black video on hide</string>
+    <string name="video_surface_rebind_summary">Refresh the video surface when hiding or showing the controls</string>
     <string name="shared_elements">Анімовані медіа елементи</string>
     <string name="shared_elements_summary">Анімуйте натискання / повернення медіа елементів за допомогою спільних елементів переходу</string>
     <string name="type_stylus">Перо</string>
@@ -489,6 +491,7 @@
     <string name="verify_identity">Verify your identity</string>
     <string name="vault_encrypt_failed">Failed to encrypt %1$d item(s)</string>
     <string name="vault_hide_in_progress">Hiding media…</string>
+    <string name="vault_hide_no_local_items">Cloud items can\'t be added to a vault</string>
     <string name="vault_setup_password_prompt">Would you like to set a custom password for this vault?</string>
     <string name="vault_skip_password">Use device security</string>
     <string name="vault_set_password">Встановити окремий пароль</string>
@@ -560,6 +563,7 @@
     <string name="show_favorite_button_description">Shows a heart button in the media viewer toolbar, allowing you to quickly add or remove the current photo from your favorites.</string>
     <string name="auto_hide_on_video_play_description">Автоматично приховує верхню та нижню смуги, коли відео починає відтворюватися, надаючи вам повноекранний режим. Торкніться екрана, щоб повернути елементи керування.</string>
     <string name="auto_play_video_description">Videos start playing automatically when you swipe to them in the media viewer. Disable this to require a manual tap to play.</string>
+    <string name="video_surface_rebind_description">On some devices the video can turn black when you hide or show the playback controls, even though the audio keeps playing. This re-binds the video surface on each change to keep it visible. Enabled by default on devices where the issue is known to occur.</string>
     <string name="fancy_blur_description">Applies a blur effect to the background behind photos in the media viewer. Requires Android 12 or higher.</string>
     <string name="shared_elements_description">Enables smooth shared element transitions between the grid thumbnails and the full-screen media viewer. This creates a visual connection as items zoom in and out.</string>
     <string name="old_navbar_description">Switches to the classic Material navigation bar with text labels. On larger screens, this shows a navigation rail on the side instead.</string>
