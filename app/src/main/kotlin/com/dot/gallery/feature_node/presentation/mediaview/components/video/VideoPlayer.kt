@@ -72,7 +72,7 @@ import androidx.media3.ui.compose.state.rememberPresentationState
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
-import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
+import com.dot.gallery.feature_node.presentation.mediaview.LocalMediaViewerVisualPolicy
 import com.dot.gallery.core.Settings.Misc.rememberVideoAutoplay
 import com.dot.gallery.core.Settings.Misc.rememberVideoSurfaceRebind
 import com.dot.gallery.core.presentation.components.util.swipe
@@ -233,7 +233,7 @@ fun <T : Media> VideoPlayer(
     val rebindOnInsetChange by rememberVideoSurfaceRebind()
     val rebindEnabledState = rememberUpdatedState(rebindOnInsetChange)
     val playerForRebind = rememberUpdatedState(currentPlayer)
-    val allowBlur by rememberAllowBlur()
+    val allowBlur = LocalMediaViewerVisualPolicy.current.allowBlur
     val hazeState = LocalHazeState.current
     val videoCapture by rememberSurfaceCapture(
         view = surfaceViewRef,

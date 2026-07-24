@@ -48,6 +48,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisallowComposableCalls
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -95,7 +96,6 @@ import com.dot.gallery.core.Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION
 import com.dot.gallery.core.Constants.Target.TARGET_TRASH
 import com.dot.gallery.core.LocalEventHandler
 import com.dot.gallery.core.Settings
-import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
 import com.dot.gallery.core.Settings.Misc.rememberAutoContrast
 import com.dot.gallery.core.Settings.Misc.rememberAutoHideOnVideoPlay
 import com.dot.gallery.core.Settings.Misc.rememberDateHeaderFormat
@@ -216,6 +216,7 @@ fun <T : Media> MediaViewScreenRoute(
     deleteMedia: ((Vault, T, () -> Unit) -> Unit)? = null,
     currentVault: Vault? = null,
     slideshow: Boolean = false,
+    allowBlur: Boolean,
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
 ) {
@@ -234,6 +235,7 @@ fun <T : Media> MediaViewScreenRoute(
         deleteMedia = deleteMedia,
         currentVault = currentVault,
         slideshow = slideshow,
+        allowBlur = allowBlur,
         sharedTransitionScope = sharedTransitionScope,
         animatedContentScope = animatedContentScope,
         ensureMetadataAvailable = viewModel::ensureMetadataAvailable,
@@ -270,6 +272,7 @@ fun <T : Media> MediaViewScreen(
     deleteMedia: ((Vault, T, () -> Unit) -> Unit)? = null,
     currentVault: Vault? = null,
     slideshow: Boolean = false,
+    allowBlur: Boolean,
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
     ensureMetadataAvailable: (Media?, MediaMetadataState) -> Unit = { _, _ -> },
@@ -283,7 +286,10 @@ fun <T : Media> MediaViewScreen(
     sanitizeMetadata: (Media, com.dot.gallery.core.metadata.MetadataRemovalMode) -> Unit = { _, _ -> },
     resetMetadataSanitization: () -> Unit = {},
     motionPhotoStateFactory: @Composable (Media?) -> MotionPhotoState = { remember { MotionPhotoState() } },
-) = ProvideInsets {
+) = CompositionLocalProvider(
+    LocalMediaViewerVisualPolicy provides MediaViewerVisualPolicy(allowBlur = allowBlur)
+) {
+    ProvideInsets {
     val eventHandler = LocalEventHandler.current
     val context = LocalContext.current
     val metadataSanitizationUiState by metadataSanitizationState.collectAsStateWithLifecycle()
@@ -470,6 +476,8 @@ fun <T : Media> MediaViewScreen(
     val showInfo by rememberedDerivedState { currentMedia?.trashed == 0 && !isReadOnly }
 
     var showUI by rememberSaveable { mutableStateOf(true) }
+    val navigationChromeVisible = !animatedContentScope.transition.isRunning
+    val showViewerChrome = showUI && navigationChromeVisible
     // True while the current cloud/remote page is downloading its full-size original for
     // subsampling; drives the subtle horizontal loading indicator under the top-center date.
     var subsamplingLoading by remember { mutableStateOf(false) }
@@ -845,12 +853,8 @@ fun <T : Media> MediaViewScreen(
 
     FullBrightnessWindow {
         val isDarkTheme = isDarkTheme()
-        val allowBlur by rememberAllowBlur()
-        val backgroundColor by animateColorAsState(
-            if (allowBlur) Color.Black else {
-                if (isDarkTheme) Color.Black else Color.White
-            }
-        )
+        val visualPolicy = LocalMediaViewerVisualPolicy.current
+        val backgroundColor = if (visualPolicy.usesDarkBackground(isDarkTheme)) Color.Black else Color.White
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -1173,7 +1177,7 @@ fun <T : Media> MediaViewScreen(
                                     )
 
                                     AnimatedVisibility(
-                                        visible = showUI,
+                                        visible = showViewerChrome,
                                         enter = enterAnimation(DEFAULT_TOP_BAR_ANIMATION_DURATION),
                                         exit = exitAnimation(DEFAULT_TOP_BAR_ANIMATION_DURATION),
                                         modifier = Modifier.fillMaxSize()
@@ -1242,7 +1246,7 @@ fun <T : Media> MediaViewScreen(
             // pointer input, so taps/drags there still fall through to the sheet.
             Box(modifier = Modifier.zIndex(1f)) {
             MediaViewAppBar(
-                showUI = showUI,
+                showUI = showViewerChrome,
                 showInfo = showInfo,
                 showDate = remember(currentMedia, allowShowingDate) {
                     currentMedia?.timestamp != 0L && allowShowingDate
@@ -1377,7 +1381,7 @@ fun <T : Media> MediaViewScreen(
 
             // Floating filmstrip overlay (positioned like video seekbar)
             AnimatedVisibility(
-                visible = showUI && motionPhotoState.isDetected && motionPhotoState.compositeFilmstrip != null,
+                visible = showViewerChrome && motionPhotoState.isDetected && motionPhotoState.compositeFilmstrip != null,
                 enter = enterAnimation(DEFAULT_TOP_BAR_ANIMATION_DURATION),
                 exit = exitAnimation(DEFAULT_TOP_BAR_ANIMATION_DURATION),
                 modifier = Modifier
@@ -1402,7 +1406,7 @@ fun <T : Media> MediaViewScreen(
             val showMotionFilmstrip =
                 motionPhotoState.isDetected && motionPhotoState.compositeFilmstrip != null
             AnimatedVisibility(
-                visible = showUI && !showMotionFilmstrip && currentGroupMembers.size > 1,
+                visible = showViewerChrome && !showMotionFilmstrip && currentGroupMembers.size > 1,
                 enter = enterAnimation(DEFAULT_TOP_BAR_ANIMATION_DURATION),
                 exit = exitAnimation(DEFAULT_TOP_BAR_ANIMATION_DURATION),
                 modifier = Modifier
@@ -1503,14 +1507,14 @@ fun <T : Media> MediaViewScreen(
                 }
             }
             val bottomSheetAlpha by animateFloatAsState(
-                targetValue = if (showUI) 1f else 0f,
+                targetValue = if (showViewerChrome) 1f else 0f,
                 animationSpec = tween(DEFAULT_TOP_BAR_ANIMATION_DURATION),
                 label = "MediaViewActionsAlpha"
             )
             if (!isCutoutActive) {
                 BottomSheet(
                     state = sheetState,
-                    enabled = showUI && target != TARGET_TRASH && showInfo,
+                    enabled = showViewerChrome && target != TARGET_TRASH && showInfo,
                     modifier = Modifier
                         .graphicsLayer {
                             alpha = bottomSheetAlpha
@@ -1583,7 +1587,7 @@ fun <T : Media> MediaViewScreen(
                                     // (collapsed sheet). When the info panel is expanded the bar is
                                     // faded out (alpha = 0) but would otherwise still be tappable,
                                     // letting taps near the drag handle trigger hidden buttons.
-                                    enabled = showUI && sheetState.currentDetent == imageOnlyDetent,
+                                    enabled = showViewerChrome && sheetState.currentDetent == imageOnlyDetent,
                                     deleteMedia = deleteMedia,
                                     restoreMedia = restoreMedia,
                                     currentVault = currentVault,
@@ -1633,7 +1637,7 @@ fun <T : Media> MediaViewScreen(
             // Cutout controls: replaces the quick-actions bar in the same bottom slot while a
             // subject-cutout session is active on the current page.
             AnimatedVisibility(
-                visible = isCutoutActive && cutoutController != null,
+                visible = navigationChromeVisible && isCutoutActive && cutoutController != null,
                 enter = enterAnimation(DEFAULT_TOP_BAR_ANIMATION_DURATION),
                 exit = exitAnimation(DEFAULT_TOP_BAR_ANIMATION_DURATION),
                 modifier = Modifier
@@ -1650,7 +1654,7 @@ fun <T : Media> MediaViewScreen(
             // slideshow. Tapping the media toggles [slideshowControlsVisible] via onMediaClick,
             // keeping the normal viewer chrome hidden.
             AnimatedVisibility(
-                visible = slideshowActive && slideshowControlsVisible,
+                visible = navigationChromeVisible && slideshowActive && slideshowControlsVisible,
                 enter = enterAnimation(DEFAULT_TOP_BAR_ANIMATION_DURATION),
                 exit = exitAnimation(DEFAULT_TOP_BAR_ANIMATION_DURATION),
                 modifier = Modifier
@@ -1684,5 +1688,5 @@ fun <T : Media> MediaViewScreen(
             }
         }
     }
-
+    }
 }

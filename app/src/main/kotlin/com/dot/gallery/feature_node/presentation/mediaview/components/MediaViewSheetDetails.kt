@@ -58,7 +58,7 @@ import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.LocalEventHandler
 import com.dot.gallery.core.LocalMediaHandler
-import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
+import com.dot.gallery.feature_node.presentation.mediaview.LocalMediaViewerVisualPolicy
 import com.dot.gallery.core.navigate
 import com.dot.gallery.core.metadata.MetadataRemovalMode
 import com.dot.gallery.core.metadata.SanitizationResult
@@ -124,7 +124,7 @@ fun <T : Media> MediaViewSheetDetails(
         printDebug("Available metadata for ${currentMedia?.id}:\n${metadata.toString()}")
     }
     val handler = LocalMediaHandler.current
-    val isBlurEnabled by rememberAllowBlur()
+    val isBlurEnabled = LocalMediaViewerVisualPolicy.current.allowBlur
     val surfaceColor = MaterialTheme.colorScheme.surface
     val surfaceColorVariant = MaterialTheme.colorScheme.surfaceContainer
     val surfaceContainerHigh = MaterialTheme.colorScheme.surfaceContainerHigh

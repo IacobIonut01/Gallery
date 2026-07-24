@@ -61,7 +61,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.compose.modifiers.resizeWithContentScale
 import androidx.media3.ui.compose.state.rememberPresentationState
-import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
+import com.dot.gallery.feature_node.presentation.mediaview.LocalMediaViewerVisualPolicy
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.util.MotionPhotoInfo
 import com.dot.gallery.feature_node.presentation.mediaview.MediaViewViewModel
@@ -174,7 +174,7 @@ fun BoxScope.MotionPhotoSurface(state: MotionPhotoState) {
         label = "motionVideoAlpha"
     )
     val density = LocalDensity.current
-    val allowBlur by rememberAllowBlur()
+    val allowBlur = LocalMediaViewerVisualPolicy.current.allowBlur
     val hazeState = LocalHazeState.current
     var surfaceViewRef by remember { mutableStateOf<View?>(null) }
     var videoSize by remember { mutableStateOf(IntSize.Zero) }

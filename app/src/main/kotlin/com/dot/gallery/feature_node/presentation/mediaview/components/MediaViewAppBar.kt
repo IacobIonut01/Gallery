@@ -55,7 +55,7 @@ import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION
-import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
+import com.dot.gallery.feature_node.presentation.mediaview.LocalMediaViewerVisualPolicy
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.util.isVideo
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
@@ -101,7 +101,7 @@ fun MediaViewAppBar(
     castButton: @Composable ((followTheme: Boolean) -> Unit)? = null,
     castBanner: @Composable (() -> Unit)? = null
 ) {
-    val allowBlur by rememberAllowBlur()
+    val allowBlur = LocalMediaViewerVisualPolicy.current.allowBlur
     val isDarkTheme = isDarkTheme()
     val isVideo by rememberedDerivedState(currentMedia) {
         currentMedia?.isVideo ?: false

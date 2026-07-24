@@ -84,6 +84,7 @@ import com.dot.gallery.feature_node.domain.util.isPsd
 import com.dot.gallery.feature_node.domain.util.isRaw
 import com.dot.gallery.feature_node.domain.util.isSvg
 import com.dot.gallery.feature_node.domain.util.isTiff
+import com.dot.gallery.feature_node.presentation.mediaview.LocalMediaViewerVisualPolicy
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
 import com.dot.gallery.feature_node.presentation.util.rememberFeedbackManager
 import com.github.panpf.sketch.AsyncImage
@@ -215,15 +216,19 @@ fun <T : Media> BlurredMediaBackground(
     uiEnabled: Boolean,
 ) {
     ProvideBatteryStatus {
-        val allowBlur by Settings.Misc.rememberAllowBlur()
+        val allowBlur = LocalMediaViewerVisualPolicy.current.allowBlur
         val isPowerSavingMode = LocalBatteryStatus.current.isPowerSavingMode
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && allowBlur && !isPowerSavingMode) {
             val isEncrypted = remember(media) {
                 media.isEncrypted
             }
+            var backgroundVisible by remember(media.id) { mutableStateOf(false) }
+            LaunchedEffect(media.id) {
+                backgroundVisible = true
+            }
             val blurAlpha by animateFloatAsState(
                 animationSpec = tween(DEFAULT_TOP_BAR_ANIMATION_DURATION),
-                targetValue = if (uiEnabled) 0.7f else 0f,
+                targetValue = if (uiEnabled && backgroundVisible) 0.7f else 0f,
                 label = "blurAlpha"
             )
             AsyncImage(

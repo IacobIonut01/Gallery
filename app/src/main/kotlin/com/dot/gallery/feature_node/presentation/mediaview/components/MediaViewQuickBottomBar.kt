@@ -18,7 +18,7 @@ import com.dot.gallery.R
 import com.dot.gallery.cloud.core.CloudRuntimeSettings
 import com.dot.gallery.core.LocalEventHandler
 import com.dot.gallery.core.LocalMediaHandler
-import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
+import com.dot.gallery.feature_node.presentation.mediaview.LocalMediaViewerVisualPolicy
 import com.dot.gallery.core.Settings.Misc.rememberShowFavoriteButton
 import com.dot.gallery.core.util.SdkCompat
 import com.dot.gallery.core.setFollowTheme
@@ -59,7 +59,7 @@ fun <T : Media> MediaViewQuickBottomBar(
     onTrashConfirmed: () -> Unit = {}
 ) {
     val handler = LocalMediaHandler.current
-    val allowBlur by rememberAllowBlur()
+    val allowBlur = LocalMediaViewerVisualPolicy.current.allowBlur
     val isVideo by rememberedDerivedState(currentMedia) {
         currentMedia?.isVideo ?: false
     }

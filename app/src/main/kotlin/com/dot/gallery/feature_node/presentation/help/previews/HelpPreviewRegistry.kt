@@ -343,6 +343,7 @@ private fun ViewerScreenMock() {
             paddingValues = PaddingValues(0.dp),
             isStandalone = true,
             mediaId = remember { HelpMockData.MOCK_PHOTOS.first().id },
+            allowBlur = false,
             mediaState = remember { mutableStateOf(HelpMockData.MOCK_MEDIA_STATE) },
             metadataState = remember { mutableStateOf(HelpMockData.MOCK_METADATA_STATE) },
             albumsState = remember { mutableStateOf(HelpMockData.MOCK_ALBUM_STATE) },

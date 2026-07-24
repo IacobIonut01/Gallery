@@ -65,7 +65,8 @@ import kotlinx.coroutines.launch
 fun VaultScreen(
     paddingValues: PaddingValues,
     toggleRotate: () -> Unit,
-    shouldSkipAuth: MutableState<Boolean>
+    shouldSkipAuth: MutableState<Boolean>,
+    allowBlur: Boolean
 ) = SecureWindow {
     val globalEventHandler = LocalEventHandler.current
     val viewModel = hiltViewModel<VaultViewModel>()
@@ -445,6 +446,7 @@ fun VaultScreen(
                         currentVault = currentVaultValue,
                         restoreMedia = viewModel::restoreMedia,
                         deleteMedia = viewModel::deleteMedia,
+                        allowBlur = allowBlur,
                         sharedTransitionScope = this@SharedTransitionLayout,
                         animatedContentScope = this@composable
                     )

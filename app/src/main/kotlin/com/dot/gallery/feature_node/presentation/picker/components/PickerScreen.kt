@@ -93,6 +93,7 @@ import com.dot.gallery.core.LocalEventHandler
 import com.dot.gallery.core.LocalMediaSelector
 import com.dot.gallery.core.setFollowTheme
 import com.dot.gallery.core.Settings
+import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
 import com.dot.gallery.core.presentation.components.DragHandle
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.AlbumState
@@ -151,6 +152,7 @@ fun PickerScreen(
     val metadataState = mediaVM.metadataState.collectAsStateWithLifecycle()
     val selector = LocalMediaSelector.current
     val selectedMedia = selector.selectedMedia.collectAsStateWithLifecycle()
+    val allowBlur by rememberAllowBlur()
 
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     var selectedAlbum by remember { mutableStateOf<Album?>(null) }
@@ -774,6 +776,7 @@ fun PickerScreen(
                             paddingValues = paddingValues,
                             isStandalone = true,
                             mediaId = previewMediaList.first().id,
+                            allowBlur = allowBlur,
                             mediaState = previewMediaState,
                             metadataState = metadataState,
                             albumsState = emptyAlbumState,
