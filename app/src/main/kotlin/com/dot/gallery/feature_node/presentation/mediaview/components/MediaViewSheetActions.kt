@@ -53,7 +53,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.dot.gallery.R
 import com.dot.gallery.core.LocalMediaHandler
 import com.dot.gallery.core.Settings
-import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
+import com.dot.gallery.feature_node.presentation.mediaview.LocalMediaViewerVisualPolicy
 import com.dot.gallery.core.util.SdkCompat
 import com.dot.gallery.feature_node.data.data_source.KeychainHolder
 import com.dot.gallery.feature_node.domain.model.AlbumState
@@ -524,7 +524,7 @@ private fun ActionGridCell(
     enabled: Boolean = true,
     onClick: () -> Unit
 ) {
-    val isBlurEnabled by rememberAllowBlur()
+    val isBlurEnabled = LocalMediaViewerVisualPolicy.current.allowBlur
     val surfaceColor = MaterialTheme.colorScheme.surfaceContainerHigh
     val backgroundModifier = remember(isBlurEnabled) {
         if (!isBlurEnabled) {

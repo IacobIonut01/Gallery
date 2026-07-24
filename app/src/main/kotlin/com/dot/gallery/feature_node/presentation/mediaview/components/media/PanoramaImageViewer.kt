@@ -32,7 +32,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toFile
-import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
+import com.dot.gallery.feature_node.presentation.mediaview.LocalMediaViewerVisualPolicy
 import com.dot.gallery.core.decoder.EncryptedPanoramaImageLoader
 import com.dot.gallery.feature_node.data.data_source.KeychainHolder
 import com.dot.gallery.feature_node.domain.model.Media
@@ -75,7 +75,7 @@ fun <T : Media> PanoramaImageViewer(
 
     var cameraState by remember { mutableStateOf(CameraState()) }
     var glViewRef by remember { mutableStateOf<View?>(null) }
-    val allowBlur by rememberAllowBlur()
+    val allowBlur = LocalMediaViewerVisualPolicy.current.allowBlur
     val hazeState = LocalHazeState.current
     val panoramaCapture by rememberSurfaceCapture(
         view = glViewRef,

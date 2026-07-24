@@ -778,6 +778,7 @@ fun NavigationComp(
                     albumsState = albumsState,
                     vaultState = vaultState,
                     slideshow = slideshow,
+                    allowBlur = allowBlur,
                     sharedTransitionScope = this@SharedTransitionLayout,
                     animatedContentScope = this
                 )
@@ -821,6 +822,7 @@ fun NavigationComp(
                     metadataState = metadataState,
                     albumsState = albumsState,
                     vaultState = vaultState,
+                    allowBlur = allowBlur,
                     sharedTransitionScope = this@SharedTransitionLayout,
                     animatedContentScope = this
                 )
@@ -849,6 +851,7 @@ fun NavigationComp(
                     metadataState = metadataState,
                     albumsState = albumsState,
                     vaultState = vaultState,
+                    allowBlur = allowBlur,
                     sharedTransitionScope = this@SharedTransitionLayout,
                     animatedContentScope = this
                 )
@@ -872,7 +875,8 @@ fun NavigationComp(
                 VaultScreen(
                     paddingValues = paddingValues,
                     toggleRotate = toggleRotate,
-                    shouldSkipAuth = shouldSkipAuth
+                    shouldSkipAuth = shouldSkipAuth,
+                    allowBlur = allowBlur
                 )
             }
 
@@ -1108,6 +1112,7 @@ fun NavigationComp(
                     metadataState = metadataState,
                     albumsState = albumsState,
                     vaultState = vaultState,
+                    allowBlur = allowBlur,
                     sharedTransitionScope = this@SharedTransitionLayout,
                     animatedContentScope = this
                 )
@@ -1148,6 +1153,7 @@ fun NavigationComp(
                     metadataState = metadataState,
                     albumsState = albumsState,
                     vaultState = vaultState,
+                    allowBlur = allowBlur,
                     sharedTransitionScope = this@SharedTransitionLayout,
                     animatedContentScope = this
                 )
@@ -1222,6 +1228,7 @@ fun NavigationComp(
                     metadataState = metadataState,
                     albumsState = albumsState,
                     vaultState = vaultState,
+                    allowBlur = allowBlur,
                     sharedTransitionScope = this@SharedTransitionLayout,
                     animatedContentScope = this
                 )
@@ -1511,6 +1518,7 @@ fun NavigationComp(
                     metadataState = metadataState,
                     albumsState = albumsState,
                     vaultState = vaultState,
+                    allowBlur = allowBlur,
                     sharedTransitionScope = this@SharedTransitionLayout,
                     animatedContentScope = this
                 )
@@ -1684,6 +1692,7 @@ fun NavigationComp(
                     albumsState = albumsState,
                     vaultState = vaultState,
                     target = "location_${gpsLocationNameCity}_$gpsLocationNameCountry",
+                    allowBlur = allowBlur,
                     sharedTransitionScope = this@SharedTransitionLayout,
                     animatedContentScope = this
                 )

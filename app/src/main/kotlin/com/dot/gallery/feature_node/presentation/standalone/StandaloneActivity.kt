@@ -165,6 +165,7 @@ open class StandaloneActivity : AppCompatActivity() {
                                             paddingValues = paddingValues,
                                             isStandalone = true,
                                             mediaId = mediaId,
+                                            allowBlur = allowBlur,
                                             mediaState = mediaState,
                                             vaultState = vaults,
                                             albumsState = albumsState,
