@@ -5,6 +5,7 @@
 
 package com.dot.gallery.feature_node.domain.model.editor
 
+import androidx.annotation.Keep
 import kotlinx.serialization.Serializable
 
 /**
@@ -12,6 +13,7 @@ import kotlinx.serialization.Serializable
  * Detail, Colour, Output). Carried as the argument of [EditorDestination.Develop] so a single
  * destination renders the matching control group.
  */
+@Keep
 @Serializable
 enum class DevelopCategory {
     WhiteBalance,
