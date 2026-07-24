@@ -36,6 +36,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -58,6 +59,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
+import com.dot.gallery.core.Constants.mosaicColumnsList
 import com.dot.gallery.core.LocalMediaDistributor
 import com.dot.gallery.core.LocalMediaSelector
 import com.dot.gallery.core.Settings.Misc.rememberFavoriteIconPosition
@@ -85,11 +87,18 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.random.Random
 
+internal fun safeMosaicColumns(columns: Int): Int =
+    columns.coerceIn(mosaicColumnsList.min(), mosaicColumnsList.max())
+
+internal fun safeMosaicSpan(span: Int, columns: Int): Int =
+    span.coerceIn(1, safeMosaicColumns(columns))
+
 fun <T : Media> buildMosaicDisplayItems(
     mappedData: List<MediaItem<T>>,
     columns: Int = 4,
 ): List<MosaicDisplayItem<T>> {
-    val patterns = mosaicPatternsForColumns(columns)
+    val safeColumns = safeMosaicColumns(columns)
+    val patterns = mosaicPatternsForColumns(safeColumns)
     val result = ArrayList<MosaicDisplayItem<T>>(mappedData.size + mappedData.size / 4)
     val buffer = ArrayList<MediaItem.MediaViewItem<T>>(16)
     var blockIndex = 0
@@ -173,7 +182,7 @@ fun <T : Media> buildMosaicDisplayItems(
         buffer.subList(0, consumedCount).clear()
 
         // Emit complete rows of singles (multiples of columns)
-        val completeRowItems = (buffer.size / columns) * columns
+        val completeRowItems = (buffer.size / safeColumns) * safeColumns
         for (i in 0 until completeRowItems) {
             result.add(MosaicDisplayItem.SingleItem(buffer[i]))
         }
@@ -201,7 +210,7 @@ fun <T : Media> buildMosaicDisplayItems(
             }
             is MediaItem.MediaViewItem -> {
                 buffer.add(item)
-                if (buffer.size >= columns * 2 + 1) emitBlock()
+                if (buffer.size >= safeColumns * 2 + 1) emitBlock()
             }
         }
     }
@@ -236,10 +245,11 @@ fun <T : Media> MosaicMediaGrid(
         }
     }
 
-    val displayItems = remember(mappedData, allowHeaders, columns) {
+    val safeColumns = safeMosaicColumns(columns)
+    val displayItems = remember(mappedData, allowHeaders, safeColumns) {
         val items = if (allowHeaders) mappedData
             else mappedData.fastFilter { it is MediaItem.MediaViewItem<*> }
-        buildMosaicDisplayItems(items, columns)
+        buildMosaicDisplayItems(items, safeColumns)
     }
 
     val bottomContent: @Composable () -> Unit = {
@@ -377,6 +387,7 @@ fun <T : Media> MosaicMediaGrid(
         val cellState = remember(isSelectionActive, selectedMedia.value, favoriteIconPosition, cloudSyncStates) {
             MediaCellState(isSelectionActive, selectedMedia.value, favoriteIconPosition, cloudSyncStates)
         }
+        key(safeColumns) {
         CompositionLocalProvider(LocalMediaCellState provides cellState) {
         LazyVerticalGrid(
             state = gridState,
@@ -396,7 +407,7 @@ fun <T : Media> MosaicMediaGrid(
                     orderedGridKeys = orderedGridKeys,
                     gridKeyToMediaIds = gridKeyToMediaIds
                 ),
-            columns = GridCells.Fixed(columns),
+            columns = GridCells.Fixed(safeColumns),
             contentPadding = paddingValues,
             userScrollEnabled = canScroll,
             horizontalArrangement = Arrangement.spacedBy(1.dp),
@@ -423,8 +434,12 @@ fun <T : Media> MosaicMediaGrid(
                 span = { idx ->
                     when (val item = displayItems[idx]) {
                         is MosaicDisplayItem.HeaderItem -> GridItemSpan(maxLineSpan)
-                        is MosaicDisplayItem.BigTileItem -> GridItemSpan(item.dynamicSpan)
-                        is MosaicDisplayItem.QuadTileItem -> GridItemSpan(2)
+                        is MosaicDisplayItem.BigTileItem -> GridItemSpan(
+                            safeMosaicSpan(item.dynamicSpan, safeColumns)
+                        )
+                        is MosaicDisplayItem.QuadTileItem -> GridItemSpan(
+                            safeMosaicSpan(2, safeColumns)
+                        )
                         is MosaicDisplayItem.PairTileItem -> GridItemSpan(1)
                         is MosaicDisplayItem.SingleItem -> GridItemSpan(1)
                     }
@@ -646,6 +661,7 @@ fun <T : Media> MosaicMediaGrid(
                     }
                 }
             }
+        }
         }
         }
     }
