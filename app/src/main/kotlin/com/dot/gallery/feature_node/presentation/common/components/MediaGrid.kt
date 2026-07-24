@@ -25,6 +25,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -290,6 +291,7 @@ private fun <T : Media> GridPinchZoomScope.MediaGridContentWithHeaders(
         val cellState = remember(isSelectionActive, selectedMedia.value, favoriteIconPosition, cloudSyncStates, cloudBackedUpIds) {
             MediaCellState(isSelectionActive, selectedMedia.value, favoriteIconPosition, cloudSyncStates, cloudBackedUpIds)
         }
+        key(gridCells) {
         CompositionLocalProvider(LocalMediaCellState provides cellState) {
         LazyVerticalGrid(
             state = gridState,
@@ -341,8 +343,9 @@ private fun <T : Media> GridPinchZoomScope.MediaGridContentWithHeaders(
                     }
                     MediaItemHeader(
                         modifier = Modifier
-                            .animateItem(
-                                fadeInSpec = null
+                            .then(
+                                if (canScroll) Modifier.animateItem(fadeInSpec = null)
+                                else Modifier
                             )
                             .pinchItem(key = it.key),
                         date = remember(it) {
@@ -378,9 +381,11 @@ private fun <T : Media> GridPinchZoomScope.MediaGridContentWithHeaders(
                     } else Modifier
                     MediaImage(
                         modifier = sharedElementModifier
-                            .animateItem(
-                                fadeInSpec = null,
-                                fadeOutSpec = if (isScrolling) null else spring()
+                            .then(
+                                if (canScroll) Modifier.animateItem(
+                                    fadeInSpec = null,
+                                    fadeOutSpec = if (isScrolling) null else spring()
+                                ) else Modifier
                             )
                             .pinchItem(key = it.key),
                         media = it.media,
@@ -403,6 +408,7 @@ private fun <T : Media> GridPinchZoomScope.MediaGridContentWithHeaders(
             }
 
 
+        }
         }
         }
     }
@@ -459,6 +465,7 @@ private fun <T : Media> GridPinchZoomScope.MediaGridContent(
         MediaCellState(selectionActive, selectedMedia.value, favoriteIconPosition, cloudSyncStates)
     }
 
+    key(gridCells) {
     CompositionLocalProvider(LocalMediaCellState provides cellState) {
     LazyVerticalGrid(
         state = gridState,
@@ -500,9 +507,11 @@ private fun <T : Media> GridPinchZoomScope.MediaGridContent(
             } else Modifier
             MediaImage(
                 modifier = sharedElementModifier
-                    .animateItem(
-                        fadeInSpec = null,
-                        fadeOutSpec = if (isScrolling) null else spring()
+                    .then(
+                        if (canScroll) Modifier.animateItem(
+                            fadeInSpec = null,
+                            fadeOutSpec = if (isScrolling) null else spring()
+                        ) else Modifier
                     )
                     .pinchItem(key = media.key),
                 media = media,
@@ -520,6 +529,7 @@ private fun <T : Media> GridPinchZoomScope.MediaGridContent(
                 }
             )
         }
+    }
     }
     }
 }
