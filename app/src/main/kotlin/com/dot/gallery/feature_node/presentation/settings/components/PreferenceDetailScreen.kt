@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LargeTopAppBar
@@ -40,8 +41,11 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -101,6 +105,13 @@ fun <T> SwitchPreferenceDetailScreen(
 ) {
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+    val initialFocusRequester = remember { FocusRequester() }
+    val listState = rememberLazyListState()
+    RequestInitialSettingsFocus(
+        focusRequester = initialFocusRequester,
+        enabled = enabled,
+        prepareFocus = { listState.scrollToItem(if (preview != null) 1 else 0) },
+    )
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
@@ -115,7 +126,8 @@ fun <T> SwitchPreferenceDetailScreen(
         }
     ) { padding ->
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            state = listState,
+            modifier = Modifier.fillMaxSize().settingsFocusGroup(),
             contentPadding = PaddingValues(
                 start = padding.calculateStartPadding(LocalLayoutDirection.current),
                 end = padding.calculateEndPadding(LocalLayoutDirection.current),
@@ -195,6 +207,7 @@ fun <T> SwitchPreferenceDetailScreen(
             // Switch row
             item(key = "switch") {
                 SettingsItem(
+                    modifier = Modifier.focusRequester(initialFocusRequester),
                     item = SettingsEntity.SwitchPreference(
                         title = switchLabel,
                         isChecked = isChecked,
@@ -336,6 +349,13 @@ fun <T> ChooserPreferenceDetailScreen(
 ) {
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+    val initialFocusRequester = remember { FocusRequester() }
+    val listState = rememberLazyListState()
+    RequestInitialSettingsFocus(
+        focusRequester = initialFocusRequester,
+        enabled = options.isNotEmpty(),
+        prepareFocus = { listState.scrollToItem(if (preview != null) 2 else 1) },
+    )
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
@@ -350,7 +370,8 @@ fun <T> ChooserPreferenceDetailScreen(
         }
     ) { padding ->
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            state = listState,
+            modifier = Modifier.fillMaxSize().settingsFocusGroup(),
             contentPadding = PaddingValues(
                 start = padding.calculateStartPadding(LocalLayoutDirection.current),
                 end = padding.calculateEndPadding(LocalLayoutDirection.current),
@@ -405,6 +426,11 @@ fun <T> ChooserPreferenceDetailScreen(
                         else -> Position.Middle
                     }
                     SettingsItem(
+                        modifier = if (optionIndex == 0) {
+                            Modifier.focusRequester(initialFocusRequester)
+                        } else {
+                            Modifier
+                        },
                         item = SettingsEntity.Preference(
                             title = option.label,
                             summary = option.description,

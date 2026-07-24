@@ -1,6 +1,8 @@
 package com.dot.gallery.feature_node.presentation.ignored.setup.components
 
 import android.net.Uri
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -32,6 +34,8 @@ import androidx.compose.ui.unit.dp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.dot.gallery.feature_node.domain.model.Album
+import com.dot.gallery.feature_node.presentation.settings.components.rememberSettingsFocusState
+import com.dot.gallery.feature_node.presentation.settings.components.settingsFocusTarget
 import com.dot.gallery.feature_node.presentation.util.GlideInvalidation
 import com.dot.gallery.feature_node.presentation.util.PreviewHost
 
@@ -46,17 +50,30 @@ fun SelectableAlbumItem(
     isSelected: Boolean,
     isDisabled: Boolean,
     showCheckmark: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
+    val focusState = rememberSettingsFocusState()
     val alpha by animateFloatAsState(
         targetValue = if (isDisabled) 0.4f else 1f,
         label = "alpha"
     )
 
+    val focusBorderWidth by animateDpAsState(
+        targetValue = if (focusState.hasFocus) 3.dp else 0.dp,
+        label = "albumFocusBorderWidth"
+    )
+    val focusBorderColor by animateColorAsState(
+        targetValue = if (focusState.hasFocus) MaterialTheme.colorScheme.primary else androidx.compose.ui.graphics.Color.Transparent,
+        label = "albumFocusBorderColor"
+    )
+
     Box(
-        modifier = Modifier
+        modifier = modifier
+            .settingsFocusTarget(focusState)
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
+            .border(focusBorderWidth, focusBorderColor, RoundedCornerShape(12.dp))
             .clickable(enabled = !isDisabled, onClick = onClick)
     ) {
         Column(

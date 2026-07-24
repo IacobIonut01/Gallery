@@ -374,6 +374,8 @@
     <string name="setup_album_single_select">Select an album to ignore</string>
     <string name="action_edit">Edit</string>
     <string name="action_delete">Delete</string>
+    <string name="move_up">Move up</string>
+    <string name="move_down">Move down</string>
     <string name="action_save">Save</string>
     <string name="action_continue">Continue</string>
     <string name="edit_location">Edit Location</string>

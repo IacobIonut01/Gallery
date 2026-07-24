@@ -66,6 +66,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalConfiguration
@@ -84,7 +86,10 @@ import com.dot.gallery.core.presentation.components.NavigationBackButton
 import com.dot.gallery.feature_node.presentation.location.MapAppearance
 import com.dot.gallery.feature_node.presentation.settings.components.ChooserPreferenceDetailScreen
 import com.dot.gallery.feature_node.presentation.settings.components.PreferenceOption
+import com.dot.gallery.feature_node.presentation.settings.components.RequestInitialSettingsFocus
 import com.dot.gallery.feature_node.presentation.settings.components.SettingsItem
+import com.dot.gallery.feature_node.presentation.settings.components.rememberSettingsFocusState
+import com.dot.gallery.feature_node.presentation.settings.components.settingsFocusTarget
 import com.dot.gallery.feature_node.presentation.settings.components.SwitchPreferenceDetailScreen
 import com.dot.gallery.feature_node.presentation.settings.components.rememberPreference
 import com.dot.gallery.feature_node.presentation.settings.components.rememberSwitchPreference
@@ -107,6 +112,8 @@ private const val DETAIL_MAP_APPEARANCE = "map_appearance"
 fun ColorPaletteScreen() {
     var detailKey by rememberSaveable { mutableStateOf<String?>(null) }
     val contentScrollState = rememberScrollState()
+    val initialFocusRequester = remember { FocusRequester() }
+    RequestInitialSettingsFocus(initialFocusRequester, detailKey == null)
     var themeColorSeed by Settings.Misc.rememberThemeColorSeed()
     var forceTheme by Settings.Misc.rememberForceTheme()
     var darkModeValue by Settings.Misc.rememberIsDarkMode()
@@ -452,6 +459,7 @@ fun ColorPaletteScreen() {
                     PillTab(
                         selected = selectedTab == 0,
                         text = stringResource(R.string.color_palette_wallpaper_colors),
+                        modifier = Modifier.focusRequester(initialFocusRequester),
                         onClick = { selectedTab = 0 }
                     )
                     PillTab(
@@ -604,14 +612,17 @@ fun ColorPaletteScreen() {
 @Composable
 private fun SystemColorOption(
     isSelected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
+    val focusState = rememberSettingsFocusState()
     Box(
-        modifier = Modifier
+        modifier = modifier
+            .settingsFocusTarget(focusState)
             .size(56.dp)
             .clip(CircleShape)
             .then(
-                if (isSelected) Modifier.border(
+                if (isSelected || focusState.hasFocus) Modifier.border(
                     3.dp, MaterialTheme.colorScheme.primary, CircleShape
                 ) else Modifier
             )
@@ -643,17 +654,19 @@ private fun ColorCircleItem(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
+    val focusState = rememberSettingsFocusState()
     val borderWidth by animateDpAsState(
-        targetValue = if (isSelected) 3.dp else 0.dp,
+        targetValue = if (isSelected || focusState.hasFocus) 3.dp else 0.dp,
         label = "borderWidth"
     )
     val borderColor by animateColorAsState(
-        targetValue = if (isSelected) scheme.primary else Color.Transparent,
+        targetValue = if (focusState.hasFocus) MaterialTheme.colorScheme.primary else if (isSelected) scheme.primary else Color.Transparent,
         label = "borderColor"
     )
 
     Box(
         modifier = Modifier
+            .settingsFocusTarget(focusState)
             .size(56.dp)
             .clip(CircleShape)
             .border(borderWidth, borderColor, CircleShape)
@@ -925,8 +938,10 @@ private fun PortraitPreviewContent() {
 private fun PillTab(
     selected: Boolean,
     text: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
+    val focusState = rememberSettingsFocusState()
     val backgroundColor by animateColorAsState(
         targetValue = if (selected) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent,
         label = "pillTabBg"
@@ -937,7 +952,15 @@ private fun PillTab(
         label = "pillTabText"
     )
     Surface(
-        modifier = Modifier.clip(CircleShape).clickable(onClick = onClick),
+        modifier = modifier
+            .settingsFocusTarget(focusState)
+            .clip(CircleShape)
+            .border(
+                width = if (focusState.hasFocus) 2.dp else 0.dp,
+                color = if (focusState.hasFocus) MaterialTheme.colorScheme.primary else Color.Transparent,
+                shape = CircleShape,
+            )
+            .clickable(onClick = onClick),
         shape = CircleShape,
         color = backgroundColor
     ) {

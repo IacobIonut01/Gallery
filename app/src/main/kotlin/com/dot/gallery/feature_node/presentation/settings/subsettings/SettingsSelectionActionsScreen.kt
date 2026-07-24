@@ -9,6 +9,7 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Arrangement
@@ -38,12 +39,15 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.DragHandle
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.KeyboardArrowDown
+import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.RestartAlt
 import androidx.compose.material.icons.outlined.SelectAll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -71,6 +75,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -94,7 +100,11 @@ import com.dot.gallery.core.SettingsEntity
 import com.dot.gallery.core.Settings.Misc.rememberSelectionSheetConfig
 import com.dot.gallery.core.Settings.Misc.rememberShowSelectionTitles
 import com.dot.gallery.core.presentation.components.NavigationBackButton
+import com.dot.gallery.feature_node.presentation.settings.components.RequestInitialSettingsFocus
 import com.dot.gallery.feature_node.presentation.settings.components.SettingsItem
+import com.dot.gallery.feature_node.presentation.settings.components.rememberSettingsFocusState
+import com.dot.gallery.feature_node.presentation.settings.components.settingsFocusGroup
+import com.dot.gallery.feature_node.presentation.settings.components.settingsFocusTarget
 import com.dot.gallery.feature_node.domain.model.ActionZone
 import com.dot.gallery.feature_node.domain.model.SelectionAction
 import com.dot.gallery.feature_node.domain.model.SelectionSheetConfig
@@ -108,6 +118,12 @@ fun SettingsSelectionActionsScreen() {
 
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+    val initialFocusRequester = remember { FocusRequester() }
+    val listState = rememberLazyListState()
+    RequestInitialSettingsFocus(
+        focusRequester = initialFocusRequester,
+        prepareFocus = { listState.scrollToItem(3) },
+    )
 
     var showAddTopSheet by rememberSaveable { mutableStateOf(false) }
     var showAddMiddleSheet by rememberSaveable { mutableStateOf(false) }
@@ -135,10 +151,9 @@ fun SettingsSelectionActionsScreen() {
             )
         }
     ) { padding ->
-        val listState = rememberLazyListState()
         LazyColumn(
             state = listState,
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().settingsFocusGroup(),
             userScrollEnabled = draggingZone == null,
             contentPadding = PaddingValues(
                 start = padding.calculateStartPadding(LocalLayoutDirection.current),
@@ -227,6 +242,7 @@ fun SettingsSelectionActionsScreen() {
                         screenPosition = Position.Alone
                     ),
                     modifier = Modifier
+                        .focusRequester(initialFocusRequester)
                         .widthIn(max = 600.dp)
                         .fillMaxWidth()
                         .padding(bottom = 8.dp)
@@ -289,6 +305,22 @@ fun SettingsSelectionActionsScreen() {
                         draggingIndex = -1
                         dragOffsetY = 0f
                     },
+                    onMoveUp = if (!isLocked && index > 0 && sanitizedConfig.topActions[index - 1] != SelectionAction.CLOSE) {
+                        {
+                            val list = sanitizedConfig.topActions.toMutableList()
+                            val item = list.removeAt(index)
+                            list.add(index - 1, item)
+                            config = config.copy(topActions = list)
+                        }
+                    } else null,
+                    onMoveDown = if (!isLocked && index < sanitizedConfig.topActions.lastIndex) {
+                        {
+                            val list = sanitizedConfig.topActions.toMutableList()
+                            val item = list.removeAt(index)
+                            list.add(index + 1, item)
+                            config = config.copy(topActions = list)
+                        }
+                    } else null,
                     onRemove = {
                         val list = sanitizedConfig.topActions.toMutableList()
                         list.removeAt(index)
@@ -380,6 +412,22 @@ fun SettingsSelectionActionsScreen() {
                         draggingIndex = -1
                         dragOffsetY = 0f
                     },
+                    onMoveUp = if (index > 0) {
+                        {
+                            val list = sanitizedConfig.middleActions.toMutableList()
+                            val item = list.removeAt(index)
+                            list.add(index - 1, item)
+                            config = config.copy(middleActions = list)
+                        }
+                    } else null,
+                    onMoveDown = if (index < sanitizedConfig.middleActions.lastIndex) {
+                        {
+                            val list = sanitizedConfig.middleActions.toMutableList()
+                            val item = list.removeAt(index)
+                            list.add(index + 1, item)
+                            config = config.copy(middleActions = list)
+                        }
+                    } else null,
                     onRemove = {
                         val list = sanitizedConfig.middleActions.toMutableList()
                         list.removeAt(index)
@@ -471,6 +519,22 @@ fun SettingsSelectionActionsScreen() {
                         draggingIndex = -1
                         dragOffsetY = 0f
                     },
+                    onMoveUp = if (index > 0) {
+                        {
+                            val list = sanitizedConfig.bottomActions.toMutableList()
+                            val item = list.removeAt(index)
+                            list.add(index - 1, item)
+                            config = config.copy(bottomActions = list)
+                        }
+                    } else null,
+                    onMoveDown = if (index < sanitizedConfig.bottomActions.lastIndex) {
+                        {
+                            val list = sanitizedConfig.bottomActions.toMutableList()
+                            val item = list.removeAt(index)
+                            list.add(index + 1, item)
+                            config = config.copy(bottomActions = list)
+                        }
+                    } else null,
                     onRemove = {
                         if (sanitizedConfig.bottomActions.size > 1) {
                             val list = sanitizedConfig.bottomActions.toMutableList()
@@ -811,10 +875,13 @@ private fun ActionListItem(
     onDragStart: () -> Unit = {},
     onDrag: (Float) -> Unit = {},
     onDragEnd: () -> Unit = {},
+    onMoveUp: (() -> Unit)? = null,
+    onMoveDown: (() -> Unit)? = null,
     onRemove: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val backgroundColor = MaterialTheme.colorScheme.surfaceContainer
+    val focusState = rememberSettingsFocusState()
 
     val fullCornerRadius by animateDpAsState(
         targetValue = 24.dp,
@@ -881,9 +948,21 @@ private fun ActionListItem(
         ) {
             Row(
                 modifier = modifier
+                    .settingsFocusTarget(focusState)
                     .padding(horizontal = 16.dp)
                     .clip(shape)
-                    .background(color = backgroundColor)
+                    .background(
+                        color = if (focusState.hasFocus) {
+                            MaterialTheme.colorScheme.surfaceContainerHighest
+                        } else {
+                            backgroundColor
+                        }
+                    )
+                    .border(
+                        width = if (focusState.hasFocus) 2.dp else 0.dp,
+                        color = if (focusState.hasFocus) MaterialTheme.colorScheme.primary else Color.Transparent,
+                        shape = shape,
+                    )
                     .padding(horizontal = 8.dp, vertical = 4.dp)
                     .widthIn(max = 600.dp)
                     .fillMaxWidth(),
@@ -934,6 +1013,22 @@ private fun ActionListItem(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(top = 2.dp)
                         )
+                    }
+
+                    if (onMoveUp != null) {
+                        IconButton(onClick = onMoveUp) {
+                            Icon(Icons.Outlined.KeyboardArrowUp, stringResource(R.string.move_up))
+                        }
+                    }
+                    if (onMoveDown != null) {
+                        IconButton(onClick = onMoveDown) {
+                            Icon(Icons.Outlined.KeyboardArrowDown, stringResource(R.string.move_down))
+                        }
+                    }
+                    if (!isLocked && canRemove) {
+                        IconButton(onClick = onRemove) {
+                            Icon(Icons.Default.Delete, stringResource(R.string.action_delete))
+                        }
                     }
 
                     // Locked indicator
