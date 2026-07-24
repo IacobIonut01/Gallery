@@ -17,8 +17,11 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
@@ -31,8 +34,8 @@ import com.dot.gallery.feature_node.presentation.help.data.SettingsSearchRegistr
 fun BaseSettingsScreen(
     title: String,
     settingsList: SnapshotStateList<SettingsEntity>,
-    settingsBuilder: @Composable (SettingsEntity, Int) -> Unit = { it, index ->
-        SettingsItem(it)
+    settingsBuilder: @Composable (SettingsEntity, Int, Modifier) -> Unit = { item, _, modifier ->
+        SettingsItem(item = item, modifier = modifier)
     },
     topContent: @Composable (() -> Unit)? = null,
     bottomContent: @Composable (() -> Unit)? = null,
@@ -54,6 +57,23 @@ fun BaseSettingsScreen(
     }
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+    val initialFocusRequester = remember { FocusRequester() }
+    val firstActionableIndex = settingsList.indexOfFirst { item ->
+        item.enabled && !item.isHeader && when (item.type) {
+            com.dot.gallery.core.PreferenceType.Seek -> item.onSeek != null
+            com.dot.gallery.core.PreferenceType.Switch -> item.onCheck != null || item.onClick != null
+            else -> item.onClick != null || item.onLongClick != null
+        }
+    }
+    RequestInitialSettingsFocus(
+        focusRequester = initialFocusRequester,
+        enabled = firstActionableIndex >= 0,
+        prepareFocus = {
+            if (firstActionableIndex >= 0) {
+                listState.scrollToItem(firstActionableIndex + if (topContent != null) 1 else 0)
+            }
+        },
+    )
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
@@ -68,7 +88,8 @@ fun BaseSettingsScreen(
         LazyColumn(
             state = listState,
             modifier = Modifier
-                .fillMaxSize(),
+                .fillMaxSize()
+                .settingsFocusGroup(),
             contentPadding = PaddingValues(
                 start = padding.calculateStartPadding(LocalLayoutDirection.current),
                 end = padding.calculateEndPadding(LocalLayoutDirection.current),
@@ -84,8 +105,13 @@ fun BaseSettingsScreen(
             itemsIndexed(
                 items = settingsList,
                 key = { index, it -> "$index-${it.title}-${it.type}" }
-            ) { index, it ->
-                settingsBuilder(it, index)
+            ) { index, item ->
+                val itemModifier = if (index == firstActionableIndex) {
+                    Modifier.focusRequester(initialFocusRequester)
+                } else {
+                    Modifier
+                }
+                settingsBuilder(item, index, itemModifier)
             }
             if (bottomContent != null) {
                 item {

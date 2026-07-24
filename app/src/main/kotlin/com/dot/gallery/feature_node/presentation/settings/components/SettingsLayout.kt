@@ -14,11 +14,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.AnnotatedString
 import com.dot.gallery.core.Position
 import com.dot.gallery.core.SettingsEntity
-import kotlin.random.Random
-import kotlin.time.Clock
-import kotlin.time.ExperimentalTime
 
-@OptIn(ExperimentalTime::class)
 fun LazyGridScope.settings(
     preferenceItemBuilder: @Composable (item: SettingsEntity, modifier: Modifier) -> Unit = { item, modifier ->
         SettingsItem(
@@ -36,8 +32,8 @@ fun LazyGridScope.settings(
     itemsIndexed(
         items = options,
         span = { _, _ -> GridItemSpan(maxLineSpan) },
-        key = { _, item ->
-            item.toString() + Clock.System.now().toEpochMilliseconds() + Random.nextInt()
+        key = { index, item ->
+            "$index-${item.type}-${item.title}-${item.tag}"
         }
     ) { index, item ->
         val position: Position = remember(options, index, item) {
@@ -95,7 +91,6 @@ fun LazyGridScope.settings(
     }
 }
 
-@OptIn(ExperimentalTime::class)
 fun LazyListScope.settings(
     preferenceItemBuilder: @Composable (item: SettingsEntity, modifier: Modifier) -> Unit = { item, modifier ->
         SettingsItem(
@@ -111,8 +106,8 @@ fun LazyListScope.settings(
 
     itemsIndexed(
         items = options,
-        key = { _, item ->
-            item.toString() + Clock.System.now().toEpochMilliseconds() + Random.nextInt()
+        key = { index, item ->
+            "$index-${item.type}-${item.title}-${item.tag}"
         }
     ) { index, item ->
         val position: Position = remember(options, index, item) {

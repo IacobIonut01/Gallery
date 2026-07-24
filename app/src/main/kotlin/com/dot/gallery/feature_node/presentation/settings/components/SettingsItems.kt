@@ -1,11 +1,13 @@
 package com.dot.gallery.feature_node.presentation.settings.components
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -54,6 +56,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Shape
@@ -145,6 +148,7 @@ fun SettingsItem(
     val mutableInteractionSource = remember {
         MutableInteractionSource()
     }
+    val focusState = rememberSettingsFocusState()
     var checked by remember(item.isChecked) {
         mutableStateOf(item.isChecked == true)
     }
@@ -223,10 +227,14 @@ fun SettingsItem(
         require(!item.summary.isNullOrEmpty() || item.summaryAnnotated != null) { "Summary at this stage cannot be null or empty" }
         summaryContent()
     }
+    val isSplitSwitch = item.type == PreferenceType.Switch && item.onClick != null
     val switch: @Composable () -> Unit = {
         Switch(
-            modifier = Modifier.padding(start = 16.dp),
+            modifier = Modifier
+                .padding(start = 16.dp)
+                .focusProperties { canFocus = false },
             checked = checked,
+            enabled = item.enabled,
             onCheckedChange = { isChecked ->
                 item.onCheck?.let {
                     checked = isChecked
@@ -241,7 +249,7 @@ fun SettingsItem(
     val isDragged = mutableInteractionSource.collectIsDraggedAsState()
     val isHovered = mutableInteractionSource.collectIsHoveredAsState()
     val isInteracting by rememberedDerivedState {
-        isPressed.value || isFocused.value || isDragged.value || isHovered.value
+        isPressed.value || isFocused.value || isDragged.value || isHovered.value || focusState.hasFocus
     }
     val fullCornerRadius by animateDpAsState(
         targetValue = if (isInteracting) 48.dp else 24.dp,
@@ -313,6 +321,7 @@ fun SettingsItem(
             Slider(
                 value = currentSeekValue!!,
                 onValueChange = { currentSeekValue = it },
+                enabled = item.enabled,
                 valueRange = item.minValue!!..item.maxValue!!,
                 onValueChangeFinished = {
                     item.onSeek!!.invoke(currentSeekValue!! * item.valueMultiplier)
@@ -334,7 +343,6 @@ fun SettingsItem(
         }
     }
 
-    val isSplitSwitch = item.type == PreferenceType.Switch && item.onClick != null
     val splitSwitchTrailing: @Composable () -> Unit = {
         Row(
             verticalAlignment = Alignment.CenterVertically
@@ -344,7 +352,9 @@ fun SettingsItem(
                 color = MaterialTheme.colorScheme.outlineVariant
             )
             Switch(
+                modifier = Modifier.focusProperties { canFocus = item.enabled },
                 checked = checked,
+                enabled = item.enabled,
                 onCheckedChange = { isChecked ->
                     item.onCheck?.let {
                         checked = isChecked
@@ -355,7 +365,13 @@ fun SettingsItem(
         }
     }
     val trailingContent: (@Composable () -> Unit)? = when {
-        customTrailingContent != null -> customTrailingContent
+        customTrailingContent != null -> {
+            {
+                Box(modifier = Modifier.focusProperties { canFocus = false }) {
+                    customTrailingContent()
+                }
+            }
+        }
         isSplitSwitch -> splitSwitchTrailing
         item.type == PreferenceType.Switch -> switch
         item.type == PreferenceType.Seek -> seekTrailing
@@ -445,8 +461,29 @@ fun SettingsItem(
                         append(if (checked) "enabled" else "disabled")
                     }
                 }
+                val focusedBackgroundColor by animateColorAsState(
+                    targetValue = if (focusState.hasFocus) {
+                        MaterialTheme.colorScheme.surfaceContainerHighest
+                    } else {
+                        backgroundColor
+                    },
+                    label = "settingsFocusedBackground"
+                )
+                val focusBorderColor by animateColorAsState(
+                    targetValue = if (focusState.hasFocus) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        Color.Transparent
+                    },
+                    label = "settingsFocusBorder"
+                )
+                val focusElevation by animateDpAsState(
+                    targetValue = if (focusState.hasFocus) 6.dp else 0.dp,
+                    label = "settingsFocusElevation"
+                )
                 Column(
                     modifier = modifier
+                        .settingsFocusTarget(focusState)
                         .semantics(mergeDescendants = true) {
                             contentDescription = semanticDescription
                         }
@@ -455,11 +492,16 @@ fun SettingsItem(
                             condition = applyPaddings,
                             modifier = Modifier.padding(horizontal = 16.dp)
                         )
+                        .graphicsLayer {
+                            shadowElevation = focusElevation.toPx()
+                            this.shape = shape
+                        }
                         .clip(shape)
                         .background(
-                            color = backgroundColor
+                            color = focusedBackgroundColor
                         )
                         .then(borderModifier(shape))
+                        .border(2.dp, focusBorderColor, shape)
                         .then(clickableModifier)
                         .padding(horizontal = 8.dp)
                         .then(if (!slimLayout) Modifier.padding(vertical = 4.dp) else Modifier)
@@ -583,13 +625,14 @@ fun AlbumPreferenceItem(
     backgroundColor: Color = MaterialTheme.colorScheme.surfaceContainer,
 ) {
     val mutableInteractionSource = remember { MutableInteractionSource() }
+    val focusState = rememberSettingsFocusState()
 
     val isPressed = mutableInteractionSource.collectIsPressedAsState()
     val isFocused = mutableInteractionSource.collectIsFocusedAsState()
     val isDragged = mutableInteractionSource.collectIsDraggedAsState()
     val isHovered = mutableInteractionSource.collectIsHoveredAsState()
     val isInteracting by rememberedDerivedState {
-        isPressed.value || isFocused.value || isDragged.value || isHovered.value
+        isPressed.value || isFocused.value || isDragged.value || isHovered.value || focusState.hasFocus
     }
     val fullCornerRadius by animateDpAsState(
         targetValue = if (isInteracting) 48.dp else 24.dp,
@@ -644,13 +687,35 @@ fun AlbumPreferenceItem(
         targetValue = if (item.enabled) 1f else 0.4f,
         label = "alpha"
     )
+    val focusedBackgroundColor by animateColorAsState(
+        targetValue = if (focusState.hasFocus) {
+            MaterialTheme.colorScheme.surfaceContainerHighest
+        } else {
+            backgroundColor
+        },
+        label = "albumPreferenceFocusedBackground"
+    )
+    val focusBorderColor by animateColorAsState(
+        targetValue = if (focusState.hasFocus) MaterialTheme.colorScheme.primary else Color.Transparent,
+        label = "albumPreferenceFocusBorder"
+    )
+    val focusElevation by animateDpAsState(
+        targetValue = if (focusState.hasFocus) 6.dp else 0.dp,
+        label = "albumPreferenceFocusElevation"
+    )
 
     Row(
         modifier = modifier
+            .settingsFocusTarget(focusState)
             .then(paddingModifier)
             .padding(horizontal = 16.dp)
+            .graphicsLayer {
+                shadowElevation = focusElevation.toPx()
+                this.shape = shape
+            }
             .clip(shape)
-            .background(color = backgroundColor)
+            .background(color = focusedBackgroundColor)
+            .border(2.dp, focusBorderColor, shape)
             .then(clickableModifier)
             .padding(12.dp)
             .fillMaxWidth()

@@ -55,6 +55,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -66,6 +68,8 @@ import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Settings.Album.rememberAlbumGridSize
 import com.dot.gallery.core.presentation.components.SetupButton
 import com.dot.gallery.feature_node.presentation.ignored.setup.components.SelectableAlbumItem
+import com.dot.gallery.feature_node.presentation.settings.components.RequestInitialSettingsFocus
+import com.dot.gallery.feature_node.presentation.settings.components.settingsFocusGroup
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -93,6 +97,8 @@ fun CloudUploadSettingsScreen(
     }
     val gridState = rememberLazyGridState()
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+    val initialFocusRequester = remember { FocusRequester() }
+    RequestInitialSettingsFocus(initialFocusRequester, localAlbums.isNotEmpty())
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -165,7 +171,8 @@ fun CloudUploadSettingsScreen(
             state = gridState,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues),
+                .padding(paddingValues)
+                .settingsFocusGroup(),
             columns = gridCells,
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -191,6 +198,11 @@ fun CloudUploadSettingsScreen(
                         SelectableAlbumItem(
                             album = album,
                             isSelected = isSelected,
+                            modifier = if (album == localAlbums.firstOrNull()) {
+                                Modifier.focusRequester(initialFocusRequester)
+                            } else {
+                                Modifier
+                            },
                             isDisabled = false,
                             showCheckmark = true,
                             onClick = {

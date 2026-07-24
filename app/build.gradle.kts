@@ -527,6 +527,7 @@ dependencies {
     androidTestImplementation(libs.espresso.core)
     androidTestImplementation(libs.mockwebserver)
     androidTestImplementation(libs.kotlinx.coroutines.test)
+    androidTestImplementation(libs.compose.ui.test.junit4)
     debugImplementation(libs.compose.ui.tooling)
     debugRuntimeOnly(libs.compose.ui.test.manifest)
 }

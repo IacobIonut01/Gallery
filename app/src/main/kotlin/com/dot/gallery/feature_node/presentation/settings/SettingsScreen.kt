@@ -200,9 +200,10 @@ fun SettingsScreen() {
             { SettingsAppHeaderCompact(onRestore = { bannerDismissed = false }) }
         } else null,
         settingsList = rememberDashboardSettings(),
-        settingsBuilder = { setting, index ->
+        settingsBuilder = { setting, index, modifier ->
             SettingsItem(
                 item = setting,
+                modifier = modifier,
                 customIcon = { icon, iconUri, iconRes ->
                     CustomCircleIcon(
                         iconVector = icon,

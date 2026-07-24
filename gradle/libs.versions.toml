@@ -112,6 +112,7 @@ compose-animation = { group = "androidx.compose.animation", name = "animation", 
 compose-shimmer = { group = "com.valentinilk.shimmer", name = "compose-shimmer", version = "1.4.0"}
 
 # Compose Tests
+compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4", version.ref = "composealpha" }
 compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 
 # Dagger
