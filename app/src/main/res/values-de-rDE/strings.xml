@@ -58,7 +58,7 @@
     <string name="no_map_app">Keine App zum Anzeigen des Standorts verfügbar</string>
     <string name="map_appearance_header">Karte</string>
     <string name="map_appearance_title">Karten Aussehen</string>
-    <string name="map_appearance_description">Choose whether maps follow ReFra’s appearance or always use bright or dark map colors.</string>
+    <string name="map_appearance_description">Wähle, ob Karten dem Aussehen von ReFra, oder immer hellen oder dunklen Kartenfarben entsprechen.</string>
     <string name="map_appearance_system">Folge App Aussehen</string>
     <string name="map_appearance_light">Hell</string>
     <string name="map_appearance_dark">Dunkel</string>
