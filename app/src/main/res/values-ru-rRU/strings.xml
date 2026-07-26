@@ -427,7 +427,7 @@
     <string name="remove_metadata_running">Removing…</string>
     <string name="remove_metadata_success">Metadata removed</string>
     <string name="remove_metadata_failed">Metadata could not be removed</string>
-    <string name="remove_metadata_rolled_back">Metadata removal failed. The original was restored.</string>
+    <string name="remove_metadata_rolled_back">Сбой при удалении метаданных. Исходный файл восстановлен.</string>
     <string name="view_all_metadata">Посмотреть все метаданные</string>
     <string name="all_metadata">Все метаданные</string>
     <string name="no_metadata_found">Не найдено метаданных</string>
@@ -587,7 +587,7 @@
     <string name="create_new_vault_summary">Доступ к сейфу будет осуществляться с использованием мер безопасности вашего телефона (пароль или биометрические данные)\n\nКлюч шифрования доступен внутри хранилища и будет использоваться для восстановления любых сейфов.</string>
     <string name="select_a_vault">Выберите сейф</string>
     <string name="vault_select_subtitle">Choose which vault to open</string>
-    <string name="vault_items_encrypted">%1$d item(s) encrypted successfully</string>
+    <string name="vault_items_encrypted">%1$d элемент(ов) успешно зашифровано</string>
     <string name="vault_item_deleted">Item deleted from vault</string>
     <string name="vault_add_to_vault_title">Добавить в хранилище</string>
     <string name="vault_delete_originals">Удалить оригиналы после шифрования</string>
