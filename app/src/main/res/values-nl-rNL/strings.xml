@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">ReFra</string>
-    <string name="app_name_gallery">Gallery</string>
-    <string name="change_app_name">App name</string>
-    <string name="change_app_name_summary">Change the app name shown on your launcher</string>
-    <string name="favorite_icon_on_thumbnails">Favorite icon on thumbnails</string>
-    <string name="fav_position_disabled">Hidden</string>
-    <string name="fav_position_bottom_end">Bottom right</string>
-    <string name="fav_position_bottom_start">Bottom left</string>
-    <string name="fav_position_top_end">Top right</string>
-    <string name="fav_position_top_start">Top left</string>
-    <string name="show_favorite_button">Favorite button in viewer</string>
+    <string name="app_name_gallery">Gallerij</string>
+    <string name="change_app_name">Appnaam</string>
+    <string name="change_app_name_summary">Verander de app naam die op je startscherm wordt getoond</string>
+    <string name="favorite_icon_on_thumbnails">Favoriete pictogram op thumbnails</string>
+    <string name="fav_position_disabled">Verborgen</string>
+    <string name="fav_position_bottom_end">Rechtsonder</string>
+    <string name="fav_position_bottom_start">Linksonder</string>
+    <string name="fav_position_top_end">Rechtsboven</string>
+    <string name="fav_position_top_start">Linksboven</string>
+    <string name="show_favorite_button">Favoriete knop in viewer</string>
     <string name="show_favorite_button_summary">Show the favorite toggle button in the media viewer</string>
-    <string name="default_image_editor">Default image editor</string>
-    <string name="default_image_editor_builtin">Built-in editor</string>
+    <string name="default_image_editor">Standaardafbeeldingseditor</string>
+    <string name="default_image_editor_builtin">Ingebouwde bewerker</string>
     <string name="nav_albums">Albums</string>
     <string name="header_today">Vandaag</string>
     <string name="header_yesterday">Gisteren</string>
@@ -53,8 +53,8 @@
     <string name="nav_timeline">Tijdlijn</string>
     <string name="location_cd">Media locatie</string>
     <string name="location_map_cd">Kaartlocatie</string>
-    <string name="show_in_app">Show in app</string>
-    <string name="open_externally">Open externally</string>
+    <string name="show_in_app">Weergeven in de app</string>
+    <string name="open_externally">Extern openen</string>
     <string name="no_map_app">No app available to show the location</string>
     <string name="map_appearance_header">Map</string>
     <string name="map_appearance_title">Map appearance</string>
