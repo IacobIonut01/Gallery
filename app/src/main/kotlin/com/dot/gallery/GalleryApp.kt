@@ -56,9 +56,10 @@ import com.github.panpf.sketch.request.ImageOptions
 import com.github.panpf.sketch.request.saveCellularTraffic
 import com.github.panpf.sketch.request.supportPauseLoadWhenScrolling
 import com.github.panpf.sketch.resize.Precision
-import com.github.panpf.sketch.util.appCacheDirectory
 import dagger.hilt.android.HiltAndroidApp
 import okio.FileSystem
+import okio.Path
+import okio.Path.Companion.toPath
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -76,6 +77,9 @@ import javax.net.ssl.X509TrustManager
 
 /** Reserved [com.dot.gallery.cloud.core.ProviderRegistry] config id for the local People provider. */
 private const val LOCAL_PEOPLE_CONFIG_ID = -1000L
+
+internal fun sketchCacheDirectory(internalCacheDirectory: File): Path =
+    File(internalCacheDirectory, "sketch").absolutePath.toPath()
 
 @HiltAndroidApp
 class GalleryApp : Application(), SingletonSketch.Factory, Configuration.Provider {
@@ -103,7 +107,7 @@ class GalleryApp : Application(), SingletonSketch.Factory, Configuration.Provide
             supportCloudMedia()
         }
         val diskCache = DiskCache.Builder(context, FileSystem.SYSTEM)
-            .directory(context.appCacheDirectory())
+            .directory(sketchCacheDirectory(context.cacheDir))
             .maxSize(150 * 1024 * 1024).build()
 
         memoryCache {
