@@ -10,7 +10,6 @@ import android.graphics.Bitmap
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import androidx.core.net.toUri
-import com.dot.gallery.BuildConfig
 import com.dot.gallery.cloud.core.CloudAlbum
 import com.dot.gallery.cloud.core.CloudAuthToken
 import com.dot.gallery.cloud.core.CloudServerConfig
@@ -23,13 +22,17 @@ import com.dot.gallery.cloud.core.ProviderType
 import com.dot.gallery.cloud.core.SharedLinkInfo
 import com.dot.gallery.cloud.core.SyncState
 import com.dot.gallery.cloud.core.ThumbnailSize
+import com.dot.gallery.cloud.core.auth.CloudConnectionErrorKind
+import com.dot.gallery.cloud.core.auth.CloudConnectionException
 import com.dot.gallery.cloud.core.capabilities.RemoteMediaProvider
 import com.dot.gallery.cloud.core.capabilities.ShareLinkCapableProvider
 import com.dot.gallery.cloud.core.capabilities.SyncCapableProvider
 import com.dot.gallery.cloud.data.dao.CloudMediaDao
 import com.dot.gallery.cloud.data.entity.CloudMediaEntity
 import com.dot.gallery.cloud.webdav.data.api.WebDavClient
+import com.dot.gallery.cloud.webdav.data.api.WebDavException
 import com.dot.gallery.cloud.webdav.data.api.WebDavResource
+import com.dot.gallery.cloud.webdav.data.api.buildWebDavOkHttp
 import com.dot.gallery.core.Resource
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.util.getUri
@@ -43,15 +46,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
-import okhttp3.OkHttpClient
 import java.io.ByteArrayOutputStream
 import java.io.File
-import java.security.SecureRandom
-import java.security.cert.X509Certificate
-import java.util.concurrent.TimeUnit
-import javax.net.ssl.SSLContext
-import javax.net.ssl.TrustManager
-import javax.net.ssl.X509TrustManager
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
+import javax.net.ssl.SSLException
 
 /**
  * Generic WebDAV-backed [RemoteMediaProvider]. All server-agnostic behavior lives
@@ -101,7 +100,7 @@ open class WebDavMediaProvider(
         val baseUrl = config.serverUrl.trimEnd('/')
         val username = config.username ?: ""
         val password = config.password ?: ""
-        val okHttp = buildOkHttp(60)
+        val okHttp = buildWebDavOkHttp(60)
         val client = WebDavClient(okHttp, baseUrl, username, password, dialect.filesEndpoint(username))
         session = WebDavSession(context, okHttp, baseUrl, username, password, config, client)
         printDebug("${dialect.displayName}Provider: Configured with server $baseUrl")
@@ -112,7 +111,7 @@ open class WebDavMediaProvider(
     override suspend fun testConnection(config: CloudServerConfig): Result<CloudServerInfo> =
         withContext(Dispatchers.IO) {
             try {
-                val okHttp = buildOkHttp(15)
+                val okHttp = buildWebDavOkHttp(15)
                 val username = config.username ?: ""
                 val client = WebDavClient(
                     okHttp, config.serverUrl, username, config.password ?: "",
@@ -122,37 +121,31 @@ open class WebDavMediaProvider(
                     context, okHttp, config.serverUrl.trimEnd('/'), username,
                     config.password ?: "", config, client
                 )
-                if (client.testConnection()) {
-                    Result.success(dialect.serverInfo(tempSession))
-                } else {
-                    Result.failure(Exception("WebDAV connection failed"))
-                }
+                client.checkConnection()
+                Result.success(dialect.serverInfo(tempSession))
             } catch (e: Exception) {
-                Result.failure(e)
+                Result.failure(e.toConnectionException())
             }
         }
 
     override suspend fun authenticate(config: CloudServerConfig): Result<CloudAuthToken> =
         withContext(Dispatchers.IO) {
             try {
+                _connectionState.value = ConnectionState.AUTHENTICATING
                 configure(config)
                 val s = session ?: throw IllegalStateException("Not configured")
-                if (s.webDavClient.testConnection()) {
-                    _connectionState.value = ConnectionState.CONNECTED
-                    Result.success(
-                        CloudAuthToken(
-                            accessToken = "",
-                            userId = dialect.currentUserId(s) ?: config.username,
-                            userEmail = dialect.currentUserEmail(s)
-                        )
+                s.webDavClient.checkConnection()
+                _connectionState.value = ConnectionState.CONNECTED
+                Result.success(
+                    CloudAuthToken(
+                        accessToken = "",
+                        userId = dialect.currentUserId(s) ?: config.username,
+                        userEmail = dialect.currentUserEmail(s)
                     )
-                } else {
-                    _connectionState.value = ConnectionState.ERROR
-                    Result.failure(Exception("Authentication failed"))
-                }
+                )
             } catch (e: Exception) {
                 _connectionState.value = ConnectionState.ERROR
-                Result.failure(e)
+                Result.failure(e.toConnectionException())
             }
         }
 
@@ -526,23 +519,28 @@ open class WebDavMediaProvider(
 
     // === Helpers ===
 
-    private fun buildOkHttp(readTimeoutSeconds: Long): OkHttpClient {
-        val builder = OkHttpClient.Builder()
-            .connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(readTimeoutSeconds, TimeUnit.SECONDS)
-        if (BuildConfig.ALLOW_INSECURE_TLS) {
-            val trustAllCerts = arrayOf<TrustManager>(object : X509TrustManager {
-                override fun checkClientTrusted(chain: Array<out X509Certificate>?, authType: String?) {}
-                override fun checkServerTrusted(chain: Array<out X509Certificate>?, authType: String?) {}
-                override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
-            })
-            val sslContext = SSLContext.getInstance("TLS")
-            sslContext.init(null, trustAllCerts, SecureRandom())
-            builder
-                .sslSocketFactory(sslContext.socketFactory, trustAllCerts[0] as X509TrustManager)
-                .hostnameVerifier { _, _ -> true }
+    private fun Exception.toConnectionException(): CloudConnectionException {
+        if (this is CloudConnectionException) return this
+        val kind = when (this) {
+            is WebDavException -> when (statusCode) {
+                401, 403 -> CloudConnectionErrorKind.AUTHENTICATION
+                404 -> CloudConnectionErrorKind.NOT_FOUND
+                in 500..599 -> CloudConnectionErrorKind.SERVER
+                else -> CloudConnectionErrorKind.UNKNOWN
+            }
+            is SSLException -> CloudConnectionErrorKind.TLS
+            is UnknownHostException, is SocketTimeoutException -> CloudConnectionErrorKind.NETWORK
+            else -> CloudConnectionErrorKind.UNKNOWN
         }
-        return builder.build()
+        val message = when (kind) {
+            CloudConnectionErrorKind.AUTHENTICATION -> "Authentication failed. Use an app password when two-factor authentication is enabled."
+            CloudConnectionErrorKind.NOT_FOUND -> "Nextcloud WebDAV endpoint was not found. Check the server address."
+            CloudConnectionErrorKind.NETWORK -> "The server could not be reached."
+            CloudConnectionErrorKind.TLS -> "The secure connection could not be verified."
+            CloudConnectionErrorKind.SERVER -> "The server returned an error."
+            CloudConnectionErrorKind.UNKNOWN -> this.message ?: "Connection failed."
+        }
+        return CloudConnectionException(kind, message, this)
     }
 
     /**

@@ -79,6 +79,7 @@ fun CloudAccountsScreen(
     viewModel: CloudAccountsViewModel = hiltViewModel()
 ) {
     val configs by viewModel.accountState.collectAsStateWithLifecycle()
+    val connectionStates by viewModel.connectionStates.collectAsStateWithLifecycle()
     val storageInfoMap by viewModel.storageInfo.collectAsStateWithLifecycle()
     val syncProgressMap by viewModel.syncProgress.collectAsStateWithLifecycle()
     val assetCounts by viewModel.assetCounts.collectAsStateWithLifecycle()
@@ -114,7 +115,7 @@ fun CloudAccountsScreen(
             // Connected server cards
             configs.forEach { config ->
                 val storage = storageInfoMap[config.id]
-                val connState = viewModel.getConnectionState(config.id)
+                val connState = connectionStates[config.id] ?: ConnectionState.DISCONNECTED
                 val syncProgress = syncProgressMap[config.id]
                 val syncedCount = assetCounts[config.id] ?: 0
                 val version = serverVersions[config.id]

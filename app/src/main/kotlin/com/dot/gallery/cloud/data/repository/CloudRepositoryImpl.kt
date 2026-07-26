@@ -77,8 +77,10 @@ class CloudRepositoryImpl @Inject constructor(
         val provider = registry.get(type) as? RemoteMediaProvider
             ?: return Result.failure(Exception("Provider $type not available"))
         val resolved = urlResolver.resolve(config)
+        registry.updateConnectionState(config.id, ConnectionState.AUTHENTICATING)
         provider.configure(resolved)
         val authResult = provider.authenticate(resolved)
+        registry.updateConnectionState(config.id, provider.connectionState.value)
         return authResult.map {
             updateConnectionState(type, provider.connectionState.value)
         }

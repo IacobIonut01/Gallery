@@ -6,7 +6,9 @@
 package com.dot.gallery.cloud.ui
 
 import android.Manifest
+import android.content.ActivityNotFoundException
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
@@ -76,11 +78,13 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
 import com.dot.gallery.cloud.core.ProviderType
+import com.dot.gallery.cloud.core.auth.InteractiveAuthErrorKind
 import com.dot.gallery.cloud.ui.descriptor.CredentialField
 import com.dot.gallery.cloud.ui.descriptor.CredentialFieldKind
 import com.dot.gallery.cloud.ui.descriptor.CredentialValues
@@ -108,6 +112,7 @@ fun CloudAddServerScreen(
     viewModel: CloudAccountsViewModel = hiltViewModel()
 ) {
     val eventHandler = LocalEventHandler.current
+    val context = LocalContext.current
     val state by viewModel.addServerState.collectAsStateWithLifecycle()
     val localAlbums by viewModel.localAlbums.collectAsStateWithLifecycle()
     val isEditMode = configId != null && configId > 0
@@ -130,6 +135,16 @@ fun CloudAddServerScreen(
         if (syncCompleted) onSaved()
     }
 
+    LaunchedEffect(state.browserLaunchEvent?.id) {
+        val event = state.browserLaunchEvent ?: return@LaunchedEffect
+        try {
+            context.startActivity(Intent(Intent.ACTION_VIEW, event.url.toUri()))
+            viewModel.consumeBrowserLaunchEvent(event.id)
+        } catch (_: ActivityNotFoundException) {
+            viewModel.browserLaunchFailed()
+        }
+    }
+
     // Wizard steps (add mode only). Sync step is skipped in edit mode.
     val steps = remember(isEditMode) {
         buildList {
@@ -145,7 +160,7 @@ fun CloudAddServerScreen(
     val step = steps[safeIndex]
     val canAdvance = when (step) {
         WizardStep.SERVER -> state.serverUrl.isNotBlank() && isUrlValid
-        WizardStep.CREDENTIALS -> hasRequiredCredentials
+        WizardStep.CREDENTIALS -> hasRequiredCredentials && state.testSuccess
         WizardStep.NETWORKING -> !state.autoUrlSwitch || state.localServerUrl.isNotBlank()
         WizardStep.SYNC -> true
         WizardStep.REVIEW -> canSave
@@ -249,7 +264,13 @@ fun CloudAddServerScreen(
         ) {
             if (isEditMode) {
                 ServerStep(state, descriptor, isUrlValid, viewModel)
-                CredentialsStep(state, descriptor, credentialValues, viewModel)
+                CredentialsStep(
+                    state,
+                    descriptor,
+                    credentialValues,
+                    viewModel.supportsInteractiveAuth(state.providerType),
+                    viewModel
+                )
             } else {
                 AnimatedContent(
                     targetState = safeIndex,
@@ -266,8 +287,13 @@ fun CloudAddServerScreen(
                     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         when (steps[idx]) {
                             WizardStep.SERVER -> ServerStep(state, descriptor, isUrlValid, viewModel)
-                            WizardStep.CREDENTIALS ->
-                                CredentialsStep(state, descriptor, credentialValues, viewModel)
+                            WizardStep.CREDENTIALS -> CredentialsStep(
+                                state,
+                                descriptor,
+                                credentialValues,
+                                viewModel.supportsInteractiveAuth(state.providerType),
+                                viewModel
+                            )
                             WizardStep.NETWORKING -> NetworkingStep(state, viewModel)
                             WizardStep.SYNC -> SyncStep(state, localAlbums, viewModel)
                             WizardStep.REVIEW -> ReviewStep(state, descriptor)
@@ -369,6 +395,7 @@ private fun CredentialsStep(
     state: AddServerUiState,
     descriptor: com.dot.gallery.cloud.ui.descriptor.ProviderUiDescriptor,
     credentialValues: CredentialValues,
+    supportsInteractiveAuth: Boolean,
     viewModel: CloudAccountsViewModel
 ) {
     val context = LocalContext.current
@@ -439,53 +466,146 @@ private fun CredentialsStep(
         containerColor = Color.Transparent,
         singleLine = true
     )
-    descriptor.credentialFields.forEach { field ->
-        if (!field.visibleWhen(credentialValues)) return@forEach
-        val value = when (field.kind) {
-            CredentialFieldKind.API_KEY -> state.apiKey
-            CredentialFieldKind.USERNAME -> state.username
-            CredentialFieldKind.PASSWORD -> state.password
-        }
-        val onValueChange: (String) -> Unit = when (field.kind) {
-            CredentialFieldKind.API_KEY -> viewModel::updateApiKey
-            CredentialFieldKind.USERNAME -> viewModel::updateUsername
-            CredentialFieldKind.PASSWORD -> viewModel::updatePassword
-        }
-        Spacer(Modifier.height(16.dp))
-        CredentialTextField(field = field, value = value, onValueChange = onValueChange)
+
+    val authState = state.authenticationState
+    var showManual by rememberSaveable(state.providerType) { mutableStateOf(!supportsInteractiveAuth) }
+    LaunchedEffect(authState) {
+        if (authState is CloudAuthenticationState.Failed && authState.unsupported) showManual = true
     }
-    Spacer(Modifier.height(16.dp))
-    SetupButton(
-        text = if (state.isTesting) stringResource(R.string.cloud_testing)
-               else stringResource(R.string.cloud_test_connection),
-        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-        contentColor = MaterialTheme.colorScheme.onSurface,
-        enabled = !state.isTesting && state.serverUrl.isNotBlank(),
-        applyHorizontalPadding = false,
-        applyBottomPadding = false,
-        applyInsets = false,
-        onClick = testConnection
-    )
-    state.testResult?.let { result ->
-        Spacer(Modifier.height(8.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                if (state.testSuccess) Icons.Default.Check else Icons.Default.Error,
-                contentDescription = null,
-                tint = if (state.testSuccess) MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.error
+
+    if (supportsInteractiveAuth) {
+        Spacer(Modifier.height(16.dp))
+        val authBusy = authState is CloudAuthenticationState.Starting ||
+            authState is CloudAuthenticationState.WaitingForBrowser ||
+            authState is CloudAuthenticationState.Polling ||
+            authState is CloudAuthenticationState.Verifying
+        SetupButton(
+            text = when (authState) {
+                CloudAuthenticationState.Starting -> stringResource(R.string.cloud_nextcloud_starting)
+                CloudAuthenticationState.WaitingForBrowser,
+                CloudAuthenticationState.Polling -> stringResource(R.string.cloud_nextcloud_waiting)
+                CloudAuthenticationState.Verifying -> stringResource(R.string.cloud_nextcloud_verifying)
+                is CloudAuthenticationState.Verified -> stringResource(R.string.cloud_nextcloud_connected)
+                else -> stringResource(R.string.cloud_nextcloud_sign_in)
+            },
+            enabled = !authBusy && authState !is CloudAuthenticationState.Verified,
+            applyHorizontalPadding = false,
+            applyBottomPadding = false,
+            applyInsets = false,
+            onClick = viewModel::startInteractiveAuth
+        )
+        when (authState) {
+            CloudAuthenticationState.Starting,
+            CloudAuthenticationState.WaitingForBrowser,
+            CloudAuthenticationState.Polling,
+            CloudAuthenticationState.Verifying -> {
+                SyncLoadingRow(
+                    if (authState is CloudAuthenticationState.Polling ||
+                        authState is CloudAuthenticationState.WaitingForBrowser
+                    ) stringResource(R.string.cloud_nextcloud_grant_access)
+                    else stringResource(R.string.cloud_nextcloud_verifying)
+                )
+                TextButton(onClick = viewModel::cancelInteractiveAuth) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+            is CloudAuthenticationState.Verified -> AuthResultRow(
+                success = true,
+                text = stringResource(R.string.cloud_nextcloud_signed_in_as, authState.username)
             )
-            Text(
-                result,
-                style = MaterialTheme.typography.bodySmall,
-                color = if (state.testSuccess) MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.error
+            is CloudAuthenticationState.Failed -> AuthResultRow(
+                success = false,
+                text = if (authState.unsupported) {
+                    stringResource(R.string.cloud_nextcloud_flow_unsupported)
+                } else when (authState.kind) {
+                    InteractiveAuthErrorKind.INVALID_URL -> stringResource(R.string.cloud_nextcloud_invalid_url)
+                    InteractiveAuthErrorKind.UNTRUSTED_RESPONSE -> stringResource(R.string.cloud_nextcloud_untrusted)
+                    InteractiveAuthErrorKind.AUTHENTICATION -> stringResource(R.string.cloud_nextcloud_auth_failed)
+                    InteractiveAuthErrorKind.RATE_LIMITED -> stringResource(R.string.cloud_nextcloud_rate_limited)
+                    InteractiveAuthErrorKind.SERVER -> stringResource(R.string.cloud_nextcloud_server_error)
+                    InteractiveAuthErrorKind.NETWORK -> stringResource(R.string.cloud_nextcloud_network_error)
+                    InteractiveAuthErrorKind.TLS -> stringResource(R.string.cloud_nextcloud_tls_error)
+                    InteractiveAuthErrorKind.MALFORMED_RESPONSE -> stringResource(R.string.cloud_nextcloud_invalid_response)
+                    else -> authState.message
+                }
+            )
+            CloudAuthenticationState.Expired -> AuthResultRow(
+                success = false,
+                text = stringResource(R.string.cloud_nextcloud_expired)
+            )
+            CloudAuthenticationState.Cancelled -> AuthResultRow(
+                success = false,
+                text = stringResource(R.string.cloud_nextcloud_cancelled)
+            )
+            else -> Unit
+        }
+        TextButton(onClick = { showManual = !showManual }) {
+            Text(stringResource(R.string.cloud_nextcloud_manual))
+            Icon(
+                if (showManual) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                contentDescription = null
             )
         }
+    }
+
+    AnimatedVisibility(showManual) {
+        Column {
+            descriptor.credentialFields.forEach { field ->
+                if (!field.visibleWhen(credentialValues)) return@forEach
+                val value = when (field.kind) {
+                    CredentialFieldKind.API_KEY -> state.apiKey
+                    CredentialFieldKind.USERNAME -> state.username
+                    CredentialFieldKind.PASSWORD -> state.password
+                }
+                val onValueChange: (String) -> Unit = when (field.kind) {
+                    CredentialFieldKind.API_KEY -> viewModel::updateApiKey
+                    CredentialFieldKind.USERNAME -> viewModel::updateUsername
+                    CredentialFieldKind.PASSWORD -> viewModel::updatePassword
+                }
+                Spacer(Modifier.height(16.dp))
+                CredentialTextField(field = field, value = value, onValueChange = onValueChange)
+            }
+            Spacer(Modifier.height(16.dp))
+            SetupButton(
+                text = if (state.isTesting) stringResource(R.string.cloud_testing)
+                    else stringResource(R.string.cloud_test_connection),
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                enabled = !state.isTesting && state.serverUrl.isNotBlank() &&
+                    descriptor.credentialsSatisfied(credentialValues),
+                applyHorizontalPadding = false,
+                applyBottomPadding = false,
+                applyInsets = false,
+                onClick = testConnection
+            )
+        }
+    }
+
+    if (!supportsInteractiveAuth) {
+        state.testResult?.let {
+            AuthResultRow(success = state.testSuccess, text = it)
+        }
+    }
+}
+
+@Composable
+private fun AuthResultRow(success: Boolean, text: String) {
+    Spacer(Modifier.height(8.dp))
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            if (success) Icons.Default.Check else Icons.Default.Error,
+            contentDescription = null,
+            tint = if (success) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+        )
+        Text(
+            text,
+            style = MaterialTheme.typography.bodySmall,
+            color = if (success) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+        )
     }
 }
 

@@ -74,6 +74,7 @@ fun CloudProviderSettingsScreen(
     viewModel: CloudAccountsViewModel = hiltViewModel()
 ) {
     val configs by viewModel.accountState.collectAsStateWithLifecycle()
+    val connectionStates by viewModel.connectionStates.collectAsStateWithLifecycle()
     val storageInfoMap by viewModel.storageInfo.collectAsStateWithLifecycle()
     val serverVersions by viewModel.serverVersions.collectAsStateWithLifecycle()
     val syncProgressMap by viewModel.syncProgress.collectAsStateWithLifecycle()
@@ -91,7 +92,7 @@ fun CloudProviderSettingsScreen(
 
     if (config == null) return
 
-    val connState = viewModel.getConnectionState(config.id)
+    val connState = connectionStates[config.id] ?: ConnectionState.DISCONNECTED
     val storage = storageInfoMap[config.id]
     val version = serverVersions[config.id]
     val syncProgress = syncProgressMap[config.id]

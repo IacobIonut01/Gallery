@@ -7,6 +7,7 @@ package com.dot.gallery.cloud.di
 
 import com.dot.gallery.cloud.core.ProviderInstanceFactory
 import com.dot.gallery.cloud.core.ProviderRegistry
+import com.dot.gallery.cloud.core.auth.CloudInteractiveAuthHandler
 import com.dot.gallery.cloud.data.dao.CloudAlbumSyncDao
 import com.dot.gallery.cloud.data.dao.CloudDeleteLocalPrefDao
 import com.dot.gallery.cloud.data.dao.CloudMediaDao
@@ -33,6 +34,9 @@ abstract class CloudModule {
 
     @Multibinds
     abstract fun bindProviderFactorySet(): Set<ProviderInstanceFactory>
+
+    @Multibinds
+    abstract fun bindInteractiveAuthHandlerSet(): Set<CloudInteractiveAuthHandler>
 
     companion object {
         @Provides

@@ -9,8 +9,11 @@ import android.content.Context
 import com.dot.gallery.cloud.core.MediaCapabilityProvider
 import com.dot.gallery.cloud.core.ProviderInstanceFactory
 import com.dot.gallery.cloud.core.ProviderType
+import com.dot.gallery.cloud.core.auth.CloudInteractiveAuthHandler
 import com.dot.gallery.cloud.data.dao.CloudMediaDao
 import com.dot.gallery.cloud.nextcloud.NextcloudDialect
+import com.dot.gallery.cloud.nextcloud.auth.NextcloudInteractiveAuthHandler
+import com.dot.gallery.cloud.nextcloud.auth.NextcloudLoginFlowClient
 import com.dot.gallery.cloud.webdav.WebDavMediaProvider
 import dagger.Module
 import dagger.Provides
@@ -23,6 +26,17 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object NextcloudModule {
+
+    @Provides
+    @Singleton
+    fun provideNextcloudLoginFlowClient(): NextcloudLoginFlowClient = NextcloudLoginFlowClient()
+
+    @Provides
+    @Singleton
+    @IntoSet
+    fun provideNextcloudInteractiveAuthHandler(
+        client: NextcloudLoginFlowClient
+    ): CloudInteractiveAuthHandler = NextcloudInteractiveAuthHandler(client)
 
     @Provides
     @Singleton

@@ -16,6 +16,10 @@ import com.dot.gallery.cloud.core.Disconnectable
 import com.dot.gallery.cloud.core.ProviderCapability
 import com.dot.gallery.cloud.core.ProviderRegistry
 import com.dot.gallery.cloud.core.ProviderType
+import com.dot.gallery.cloud.core.auth.CloudInteractiveAuthHandler
+import com.dot.gallery.cloud.core.auth.InteractiveAuthErrorKind
+import com.dot.gallery.cloud.core.auth.InteractiveAuthException
+import com.dot.gallery.cloud.core.auth.InteractiveAuthPollResult
 import com.dot.gallery.cloud.core.capabilities.RemoteMediaProvider
 import com.dot.gallery.cloud.data.dao.CloudAlbumSyncDao
 import com.dot.gallery.cloud.data.dao.CloudMediaDao
@@ -33,6 +37,9 @@ import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.domain.util.MediaOrder
 import com.dot.gallery.feature_node.domain.util.OrderType
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -47,6 +54,24 @@ data class CloudAccountUiState(
     val connectionStates: Map<Long, ConnectionState> = emptyMap(),
     val assetCounts: Map<Long, Int> = emptyMap()
 )
+
+sealed interface CloudAuthenticationState {
+    data object Idle : CloudAuthenticationState
+    data object Starting : CloudAuthenticationState
+    data object WaitingForBrowser : CloudAuthenticationState
+    data object Polling : CloudAuthenticationState
+    data object Verifying : CloudAuthenticationState
+    data class Verified(val serverUrl: String, val username: String) : CloudAuthenticationState
+    data class Failed(
+        val message: String,
+        val kind: InteractiveAuthErrorKind? = null,
+        val unsupported: Boolean = false
+    ) : CloudAuthenticationState
+    data object Cancelled : CloudAuthenticationState
+    data object Expired : CloudAuthenticationState
+}
+
+data class BrowserLaunchEvent(val id: Long, val url: String)
 
 data class AddServerUiState(
     val providerType: ProviderType = ProviderType.IMMICH,
@@ -73,7 +98,9 @@ data class AddServerUiState(
     val selectedRemoteAlbumIds: Set<String> = emptySet(),
     val isLoadingRemoteAlbums: Boolean = false,
     val remoteAlbumsLoaded: Boolean = false,
-    val remoteAlbumsError: String? = null
+    val remoteAlbumsError: String? = null,
+    val authenticationState: CloudAuthenticationState = CloudAuthenticationState.Idle,
+    val browserLaunchEvent: BrowserLaunchEvent? = null
 )
 
 @HiltViewModel
@@ -87,7 +114,8 @@ class CloudAccountsViewModel @Inject constructor(
     private val uploadPrefDao: CloudUploadPrefDao,
     private val albumSyncDao: CloudAlbumSyncDao,
     private val mediaRepository: MediaRepository,
-    private val cloudRepository: CloudRepository
+    private val cloudRepository: CloudRepository,
+    interactiveAuthHandlers: Set<@JvmSuppressWildcards CloudInteractiveAuthHandler>
 ) : ViewModel() {
 
     val accountState: StateFlow<List<CloudServerConfigEntity>> = configDao.getAll()
@@ -107,14 +135,138 @@ class CloudAccountsViewModel @Inject constructor(
 
     private val _addServerState = MutableStateFlow(AddServerUiState())
     val addServerState: StateFlow<AddServerUiState> = _addServerState.asStateFlow()
+    val connectionStates: StateFlow<Map<Long, ConnectionState>> = registry.connectionStates
+
+    private val interactiveAuthByType = interactiveAuthHandlers.associateBy { it.providerType }
+    private var interactiveAuthJob: Job? = null
+    private var verifiedFingerprint: Int? = null
+    private var browserEventId = 0L
 
     /** Capabilities advertised by the registered provider for [providerType], if any. */
     fun capabilitiesOf(providerType: ProviderType): Set<ProviderCapability> =
         registry.get(providerType)?.capabilities ?: emptySet()
 
     fun initAddServer(providerType: ProviderType) {
+        interactiveAuthJob?.cancel()
+        verifiedFingerprint = null
+        _syncCompleted.value = false
         _addServerState.value = AddServerUiState(providerType = providerType)
         loadLocalAlbums()
+    }
+
+    fun supportsInteractiveAuth(providerType: ProviderType): Boolean =
+        interactiveAuthByType.containsKey(providerType)
+
+    fun startInteractiveAuth() {
+        val state = _addServerState.value
+        val handler = interactiveAuthByType[state.providerType] ?: return
+        if (state.serverUrl.isBlank()) return
+        interactiveAuthJob?.cancel()
+        verifiedFingerprint = null
+        _addServerState.value = state.copy(
+            authenticationState = CloudAuthenticationState.Starting,
+            browserLaunchEvent = null,
+            testResult = null,
+            testSuccess = false
+        )
+        interactiveAuthJob = viewModelScope.launch {
+            try {
+                val session = handler.begin(state.serverUrl)
+                val event = BrowserLaunchEvent(++browserEventId, session.browserUrl)
+                _addServerState.value = _addServerState.value.copy(
+                    authenticationState = CloudAuthenticationState.WaitingForBrowser,
+                    browserLaunchEvent = event
+                )
+                while (true) {
+                    when (val result = handler.poll(session)) {
+                        InteractiveAuthPollResult.Pending -> {
+                            _addServerState.value = _addServerState.value.copy(
+                                authenticationState = CloudAuthenticationState.Polling
+                            )
+                            delay(1_000)
+                        }
+                        is InteractiveAuthPollResult.Complete -> {
+                            val credentials = result.credentials
+                            val authenticatedState = _addServerState.value.copy(
+                                serverUrl = credentials.serverUrl,
+                                username = credentials.username,
+                                password = credentials.password,
+                                authenticationState = CloudAuthenticationState.Verifying,
+                                browserLaunchEvent = null
+                            )
+                            _addServerState.value = authenticatedState
+                            verifyCandidate(authenticatedState)
+                            return@launch
+                        }
+                    }
+                }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: InteractiveAuthException) {
+                verifiedFingerprint = null
+                _addServerState.value = _addServerState.value.copy(
+                    authenticationState = if (error.kind == InteractiveAuthErrorKind.EXPIRED) {
+                        CloudAuthenticationState.Expired
+                    } else {
+                        CloudAuthenticationState.Failed(
+                            message = error.message ?: "Nextcloud sign-in failed",
+                            kind = error.kind,
+                            unsupported = error.kind == InteractiveAuthErrorKind.UNSUPPORTED
+                        )
+                    },
+                    browserLaunchEvent = null,
+                    testSuccess = false
+                )
+            } catch (error: Exception) {
+                verifiedFingerprint = null
+                _addServerState.value = _addServerState.value.copy(
+                    authenticationState = CloudAuthenticationState.Failed(
+                        error.message ?: "Nextcloud sign-in failed"
+                    ),
+                    browserLaunchEvent = null,
+                    testSuccess = false
+                )
+            }
+        }
+    }
+
+    fun consumeBrowserLaunchEvent(eventId: Long) {
+        if (_addServerState.value.browserLaunchEvent?.id == eventId) {
+            _addServerState.value = _addServerState.value.copy(browserLaunchEvent = null)
+        }
+    }
+
+    fun browserLaunchFailed() {
+        interactiveAuthJob?.cancel()
+        interactiveAuthJob = null
+        verifiedFingerprint = null
+        _addServerState.value = _addServerState.value.copy(
+            browserLaunchEvent = null,
+            authenticationState = CloudAuthenticationState.Failed("No browser is available")
+        )
+    }
+
+    fun cancelInteractiveAuth() {
+        interactiveAuthJob?.cancel()
+        interactiveAuthJob = null
+        verifiedFingerprint = null
+        _addServerState.value = _addServerState.value.copy(
+            browserLaunchEvent = null,
+            authenticationState = CloudAuthenticationState.Cancelled,
+            testSuccess = false
+        )
+    }
+
+    private fun invalidateVerification() {
+        interactiveAuthJob?.cancel()
+        interactiveAuthJob = null
+        verifiedFingerprint = null
+        _addServerState.value = _addServerState.value.copy(
+            authenticationState = CloudAuthenticationState.Idle,
+            browserLaunchEvent = null,
+            testResult = null,
+            testSuccess = false
+        )
     }
 
     fun toggleLocalAlbum(albumId: Long) {
@@ -154,7 +306,7 @@ class CloudAccountsViewModel @Inject constructor(
                 }
                 val config = urlResolver.resolve(buildConfig(state))
                 provider.configure(config)
-                provider.authenticate(config)
+                provider.authenticate(config).getOrThrow()
                 var albums: List<CloudAlbum> = emptyList()
                 provider.getRemoteAlbums().collect { resource ->
                     if (resource is Resource.Success) albums = resource.data ?: emptyList()
@@ -203,19 +355,23 @@ class CloudAccountsViewModel @Inject constructor(
     }
 
     fun updateServerUrl(url: String) {
-        _addServerState.value = _addServerState.value.copy(serverUrl = url, testResult = null)
+        invalidateVerification()
+        _addServerState.value = _addServerState.value.copy(serverUrl = url)
     }
 
     fun updateApiKey(key: String) {
-        _addServerState.value = _addServerState.value.copy(apiKey = key, testResult = null)
+        invalidateVerification()
+        _addServerState.value = _addServerState.value.copy(apiKey = key)
     }
 
     fun updateUsername(username: String) {
-        _addServerState.value = _addServerState.value.copy(username = username, testResult = null)
+        invalidateVerification()
+        _addServerState.value = _addServerState.value.copy(username = username)
     }
 
     fun updatePassword(password: String) {
-        _addServerState.value = _addServerState.value.copy(password = password, testResult = null)
+        invalidateVerification()
+        _addServerState.value = _addServerState.value.copy(password = password)
     }
 
     fun updateDisplayName(name: String) {
@@ -231,14 +387,17 @@ class CloudAccountsViewModel @Inject constructor(
     }
 
     fun updateAutoUrlSwitch(enabled: Boolean) {
+        invalidateVerification()
         _addServerState.value = _addServerState.value.copy(autoUrlSwitch = enabled)
     }
 
     fun updateLocalWifiSsid(ssid: String) {
+        invalidateVerification()
         _addServerState.value = _addServerState.value.copy(localWifiSsid = ssid)
     }
 
     fun updateLocalServerUrl(url: String) {
+        invalidateVerification()
         _addServerState.value = _addServerState.value.copy(localServerUrl = url)
     }
 
@@ -248,47 +407,60 @@ class CloudAccountsViewModel @Inject constructor(
             _addServerState.value = state.copy(testResult = "Server URL is required", testSuccess = false)
             return
         }
-        _addServerState.value = state.copy(isTesting = true, testResult = null)
+        interactiveAuthJob?.cancel()
+        _addServerState.value = state.copy(
+            isTesting = true,
+            testResult = null,
+            authenticationState = CloudAuthenticationState.Verifying
+        )
         viewModelScope.launch {
             try {
-                val config = buildConfig(state)
-                val provider = providerInitializer.createTransientProvider(state.providerType) as? RemoteMediaProvider
-                if (provider != null) {
-                    // Ensure provider is configured with the test URL before testing
-                    provider.configure(config)
-                    val result = provider.testConnection(config)
-                    result.fold(
-                        onSuccess = { info ->
-                            _addServerState.value = _addServerState.value.copy(
-                                isTesting = false,
-                                testResult = info.serverName,
-                                testSuccess = true
-                            )
-                        },
-                        onFailure = { e ->
-                            _addServerState.value = _addServerState.value.copy(
-                                isTesting = false,
-                                testResult = e.message ?: "Connection failed",
-                                testSuccess = false
-                            )
-                        }
-                    )
-                } else {
-                    _addServerState.value = _addServerState.value.copy(
-                        isTesting = false,
-                        testResult = "Provider not available. Is it enabled in build?",
-                        testSuccess = false
-                    )
-                }
-            } catch (e: Exception) {
+                verifyCandidate(state)
+            } catch (error: Exception) {
+                verifiedFingerprint = null
                 _addServerState.value = _addServerState.value.copy(
                     isTesting = false,
-                    testResult = e.message ?: "Unknown error",
-                    testSuccess = false
+                    testResult = error.message ?: "Connection failed",
+                    testSuccess = false,
+                    authenticationState = CloudAuthenticationState.Failed(
+                        error.message ?: "Connection failed"
+                    )
                 )
             }
         }
     }
+
+    private suspend fun verifyCandidate(state: AddServerUiState) {
+        val config = urlResolver.resolve(buildConfig(state))
+        val provider = providerInitializer.createTransientProvider(state.providerType) as? RemoteMediaProvider
+            ?: throw IllegalStateException("Provider not available. Is it enabled in this build?")
+        provider.configure(config)
+        provider.authenticate(config).getOrThrow()
+        verifiedFingerprint = stateFingerprint(state)
+        _addServerState.value = _addServerState.value.copy(
+            isTesting = false,
+            testResult = provider.displayName,
+            testSuccess = true,
+            authenticationState = CloudAuthenticationState.Verified(
+                serverUrl = state.serverUrl,
+                username = state.username
+            )
+        )
+    }
+
+    private fun stateFingerprint(state: AddServerUiState): Int = listOf(
+        state.providerType.name,
+        state.serverUrl.trim().trimEnd('/'),
+        state.apiKey,
+        state.username,
+        state.password,
+        state.autoUrlSwitch.toString(),
+        state.localWifiSsid.trim(),
+        state.localServerUrl.trim().trimEnd('/')
+    ).hashCode()
+
+    private fun isCurrentCandidateVerified(state: AddServerUiState): Boolean =
+        verifiedFingerprint == stateFingerprint(state)
 
     private val _syncCompleted = MutableStateFlow(false)
     val syncCompleted: StateFlow<Boolean> = _syncCompleted.asStateFlow()
@@ -297,23 +469,18 @@ class CloudAccountsViewModel @Inject constructor(
         val state = _addServerState.value
         _addServerState.value = state.copy(isSaving = true, error = null)
         viewModelScope.launch {
+            val oldEntity = state.savedConfigId?.let { configDao.getById(it) }
+            var savedId: Long? = null
             try {
-                val encryptedApiKey = state.apiKey.ifBlank { null }?.let {
-                    credentialEncryptor.encrypt(it)
-                }
-                val encryptedPassword = state.password.ifBlank { null }?.let {
-                    credentialEncryptor.encrypt(it)
-                }
+                if (!isCurrentCandidateVerified(state)) verifyCandidate(state)
                 val entity = CloudServerConfigEntity(
                     id = state.savedConfigId ?: 0L,
                     providerType = state.providerType,
                     serverUrl = state.serverUrl.trimEnd('/'),
-                    apiKey = encryptedApiKey,
+                    apiKey = state.apiKey.ifBlank { null }?.let(credentialEncryptor::encrypt),
                     username = state.username.ifBlank { null },
-                    encryptedPassword = encryptedPassword,
-                    displayName = state.displayName.ifBlank {
-                        "${state.providerType.displayName} Server"
-                    },
+                    encryptedPassword = state.password.ifBlank { null }?.let(credentialEncryptor::encrypt),
+                    displayName = state.displayName.ifBlank { "${state.providerType.displayName} Server" },
                     isActive = true,
                     syncEnabled = state.syncEnabled ||
                         state.selectedLocalAlbumIds.isNotEmpty() ||
@@ -324,28 +491,38 @@ class CloudAccountsViewModel @Inject constructor(
                     localServerUrl = state.localServerUrl.trim().trimEnd('/')
                 )
                 val id = configDao.insert(entity)
-
-                // Persist the final sync-stage selections: local folders to back up and
-                // remote albums to pull. Both reuse existing per-album preference tables.
+                savedId = id
+                providerInitializer.registerAccount(id).getOrThrow()
                 persistSyncSelections(state, id)
-
-                // Mint, configure, authenticate and register the provider instance for this
-                // account so it is usable immediately (per-account, no app restart needed).
-                providerInitializer.registerAccount(id)
-
+                if (oldEntity != null && credentialsChanged(oldEntity, state)) {
+                    revokeBestEffort(oldEntity)
+                }
                 _addServerState.value = _addServerState.value.copy(
                     isSaving = false,
                     savedConfigId = id
                 )
-
-                // Trigger initial sync (media + albums) after successful save
                 triggerSync(id)
-
                 _syncCompleted.value = true
             } catch (e: Exception) {
+                savedId?.let { id ->
+                    (registry.getByConfigId(id) as? Disconnectable)?.disconnect()
+                    registry.unregister(id)
+                    if (oldEntity == null) {
+                        cloudMediaDao.deleteByServerConfig(id)
+                        uploadPrefDao.deleteByConfig(id)
+                        albumSyncDao.deleteByServer(id)
+                        configDao.deleteById(id)
+                    } else {
+                        configDao.insert(oldEntity)
+                        providerInitializer.registerAccount(oldEntity.id)
+                    }
+                }
+                verifiedFingerprint = null
                 _addServerState.value = _addServerState.value.copy(
                     isSaving = false,
-                    error = e.message ?: "Save failed"
+                    error = e.message ?: "Save failed",
+                    testSuccess = false,
+                    authenticationState = CloudAuthenticationState.Failed(e.message ?: "Save failed")
                 )
             }
         }
@@ -354,6 +531,7 @@ class CloudAccountsViewModel @Inject constructor(
     fun deleteServer(configId: Long) {
         viewModelScope.launch {
             val entity = configDao.getById(configId) ?: return@launch
+            revokeBestEffort(entity)
             cloudMediaDao.deleteByServerConfig(configId)
             uploadPrefDao.deleteByConfig(configId)
             albumSyncDao.deleteByServer(configId)
@@ -373,9 +551,22 @@ class CloudAccountsViewModel @Inject constructor(
         }
     }
 
-    fun getConnectionState(configId: Long): ConnectionState {
-        val provider = registry.getByConfigId(configId) as? RemoteMediaProvider
-        return provider?.connectionState?.value ?: ConnectionState.DISCONNECTED
+    fun getConnectionState(configId: Long): ConnectionState =
+        registry.connectionStates.value[configId] ?: ConnectionState.DISCONNECTED
+
+    private fun credentialsChanged(old: CloudServerConfigEntity, state: AddServerUiState): Boolean {
+        val oldPassword = old.encryptedPassword?.let(credentialEncryptor::decrypt).orEmpty()
+        return old.serverUrl.trimEnd('/') != state.serverUrl.trimEnd('/') ||
+            old.username.orEmpty() != state.username || oldPassword != state.password
+    }
+
+    private suspend fun revokeBestEffort(entity: CloudServerConfigEntity) {
+        val handler = interactiveAuthByType[entity.providerType] ?: return
+        val config = entity.toCloudServerConfig().copy(
+            apiKey = entity.apiKey?.let(credentialEncryptor::decrypt),
+            password = entity.encryptedPassword?.let(credentialEncryptor::decrypt)
+        )
+        handler.revoke(config)
     }
 
     fun updateConfigById(configId: Long, transform: CloudServerConfigEntity.() -> CloudServerConfigEntity) {

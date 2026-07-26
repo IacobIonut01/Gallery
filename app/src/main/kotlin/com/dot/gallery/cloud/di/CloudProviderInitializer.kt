@@ -122,12 +122,16 @@ class CloudProviderInitializer @Inject constructor(
      * single account [configId]. Call after a new account is saved so it becomes usable
      * immediately, without waiting for the next app start. Must run off the main thread.
      */
-    suspend fun registerAccount(configId: Long) {
-        val entity = configDao.getById(configId) ?: return
-        if (!entity.isActive) return
+    suspend fun registerAccount(configId: Long): Result<Unit> {
+        val entity = configDao.getById(configId)
+            ?: return Result.failure(IllegalArgumentException("Cloud account not found"))
+        if (!entity.isActive) return Result.failure(IllegalStateException("Cloud account is inactive"))
         val provider = (registry.getByConfigId(configId) as? RemoteMediaProvider)
-            ?: (factoriesByType[entity.providerType]?.create() as? RemoteMediaProvider ?: return)
-        try {
+            ?: (factoriesByType[entity.providerType]?.create() as? RemoteMediaProvider)
+            ?: return Result.failure(IllegalStateException("Cloud provider is unavailable"))
+        registry.register(entity.id, provider)
+        registry.updateConnectionState(entity.id, ConnectionState.AUTHENTICATING)
+        return try {
             val config = entity.toCloudServerConfig().let { cfg ->
                 cfg.copy(
                     apiKey = cfg.apiKey?.let { credentialEncryptor.decrypt(it) },
@@ -135,17 +139,19 @@ class CloudProviderInitializer @Inject constructor(
                 )
             }
             val resolved = urlResolver.resolve(config)
-            lastResolvedUrl[entity.id] = resolved.serverUrl
             provider.configure(resolved)
-            provider.authenticate(resolved)
-            registry.register(entity.id, provider)
+            provider.authenticate(resolved).getOrThrow()
+            lastResolvedUrl[entity.id] = resolved.serverUrl
+            registry.updateConnectionState(entity.id, ConnectionState.CONNECTED)
+            configDao.updateLastConnected(entity.id, System.currentTimeMillis())
             cloudRepository.notifyProviderConnected(entity.providerType, ConnectionState.CONNECTED)
-            // Populate the cache immediately so a freshly added account's media/albums appear
-            // in the timeline and album grid without waiting for the next app start or sync.
             prefetchProviderData(provider, entity.displayName.ifBlank { entity.providerType.displayName }, entity.id)
             printDebug("CloudProviderInitializer: Registered account ${entity.providerType} #${entity.id}")
+            Result.success(Unit)
         } catch (e: Exception) {
+            registry.updateConnectionState(entity.id, ConnectionState.ERROR)
             printDebug("CloudProviderInitializer: registerAccount failed for #${entity.id}: ${e.message}")
+            Result.failure(e)
         }
     }
 
@@ -163,6 +169,8 @@ class CloudProviderInitializer @Inject constructor(
         for (entity in activeConfigs) {
             val factory = factoriesByType[entity.providerType] ?: continue
             val provider = factory.create() as? RemoteMediaProvider ?: continue
+            registry.register(entity.id, provider)
+            registry.updateConnectionState(entity.id, ConnectionState.AUTHENTICATING)
             try {
                 val config = entity.toCloudServerConfig().let { cfg ->
                     cfg.copy(
@@ -171,16 +179,17 @@ class CloudProviderInitializer @Inject constructor(
                     )
                 }
                 val resolved = urlResolver.resolve(config)
-                lastResolvedUrl[entity.id] = resolved.serverUrl
                 provider.configure(resolved)
-                provider.authenticate(resolved)
-                registry.register(entity.id, provider)
-                // Notify CONNECTED immediately so cached data from Room is displayed right away
+                provider.authenticate(resolved).getOrThrow()
+                lastResolvedUrl[entity.id] = resolved.serverUrl
+                registry.updateConnectionState(entity.id, ConnectionState.CONNECTED)
+                configDao.updateLastConnected(entity.id, System.currentTimeMillis())
                 cloudRepository.notifyProviderConnected(entity.providerType, ConnectionState.CONNECTED)
                 printDebug("CloudProviderInitializer: Auto-authenticated ${entity.providerType} #${entity.id} with ${resolved.serverUrl}")
                 // Proactive cache: fetch fresh data from network in parallel (non-blocking).
                 prefetchProviderData(provider, entity.displayName.ifBlank { entity.providerType.displayName }, entity.id)
             } catch (e: Exception) {
+                registry.updateConnectionState(entity.id, ConnectionState.ERROR)
                 printDebug("CloudProviderInitializer: Auto-auth failed for ${entity.providerType} #${entity.id}: ${e.message}")
             }
         }
@@ -210,14 +219,18 @@ class CloudProviderInitializer @Inject constructor(
             }
             val resolved = urlResolver.resolve(config)
             if (lastResolvedUrl[entity.id] == resolved.serverUrl) return
-            lastResolvedUrl[entity.id] = resolved.serverUrl
+            registry.updateConnectionState(entity.id, ConnectionState.AUTHENTICATING)
             provider.configure(resolved)
-            provider.authenticate(resolved)
+            provider.authenticate(resolved).getOrThrow()
+            lastResolvedUrl[entity.id] = resolved.serverUrl
+            registry.updateConnectionState(entity.id, ConnectionState.CONNECTED)
+            configDao.updateLastConnected(entity.id, System.currentTimeMillis())
             cloudRepository.notifyProviderConnected(entity.providerType, ConnectionState.CONNECTED)
             printDebug("CloudProviderInitializer: Reconfigured account #${entity.id} -> ${resolved.serverUrl}")
             // Re-pull data from the new URL so the timeline/albums reflect the switched host.
             prefetchProviderData(provider, entity.displayName.ifBlank { entity.providerType.displayName }, entity.id)
         } catch (e: Exception) {
+            registry.updateConnectionState(entity.id, ConnectionState.ERROR)
             printDebug("CloudProviderInitializer: reconfigureAccount failed for #${entity.id}: ${e.message}")
         }
     }
@@ -241,12 +254,16 @@ class CloudProviderInitializer @Inject constructor(
                 }
                 val resolved = urlResolver.resolve(config)
                 if (lastResolvedUrl[entity.id] == resolved.serverUrl) continue
-                lastResolvedUrl[entity.id] = resolved.serverUrl
+                registry.updateConnectionState(entity.id, ConnectionState.AUTHENTICATING)
                 provider.configure(resolved)
-                provider.authenticate(resolved)
+                provider.authenticate(resolved).getOrThrow()
+                lastResolvedUrl[entity.id] = resolved.serverUrl
+                registry.updateConnectionState(entity.id, ConnectionState.CONNECTED)
+                configDao.updateLastConnected(entity.id, System.currentTimeMillis())
                 cloudRepository.notifyProviderConnected(entity.providerType, ConnectionState.CONNECTED)
                 printDebug("CloudProviderInitializer: Reconfigured ${entity.providerType} #${entity.id} -> ${resolved.serverUrl}")
             } catch (e: Exception) {
+                registry.updateConnectionState(entity.id, ConnectionState.ERROR)
                 printDebug("CloudProviderInitializer: Reconfigure failed for ${entity.providerType} #${entity.id}: ${e.message}")
             }
         }

@@ -151,6 +151,12 @@ object ProviderUiDescriptors {
             ProviderType.NEXTCLOUD to R.drawable.ic_provider_nextcloud
         )
         for (type in listOf(ProviderType.OWNCLOUD, ProviderType.NEXTCLOUD, ProviderType.WEBDAV)) {
+            val fields = if (type == ProviderType.NEXTCLOUD) {
+                listOf(
+                    usernameField,
+                    passwordField.copy(labelRes = R.string.cloud_nextcloud_app_password)
+                )
+            } else webDavFields
             put(
                 type,
                 ProviderUiDescriptor(
@@ -161,7 +167,7 @@ object ProviderUiDescriptors {
                     urlRegex = httpRegex,
                     urlHintRes = R.string.cloud_server_url_hint,
                     setupHintRes = webDavHints[type],
-                    credentialFields = webDavFields,
+                    credentialFields = fields,
                     credentialsSatisfied = webDavSatisfied
                 )
             )

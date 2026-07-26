@@ -103,7 +103,7 @@ class WebDavClient(
 
         val response = okHttpClient.newCall(request).execute()
         if (!response.isSuccessful) {
-            throw WebDavException("PROPFIND failed: ${response.code} ${response.message}")
+            throw WebDavException("PROPFIND", response.code, response.message)
         }
         return parsePropFindResponse(response.body?.string() ?: "")
     }
@@ -115,7 +115,7 @@ class WebDavClient(
             .header("Authorization", credentials)
             .build()
         val response = okHttpClient.newCall(request).execute()
-        if (!response.isSuccessful) throw WebDavException("Download failed: ${response.code}")
+        if (!response.isSuccessful) throw WebDavException("Download", response.code, response.message)
         return response.body?.bytes() ?: ByteArray(0)
     }
 
@@ -126,7 +126,7 @@ class WebDavClient(
             .header("Authorization", credentials)
             .build()
         val response = okHttpClient.newCall(request).execute()
-        if (!response.isSuccessful) throw WebDavException("Upload failed: ${response.code}")
+        if (!response.isSuccessful) throw WebDavException("Upload", response.code, response.message)
     }
 
     fun mkdir(remotePath: String) {
@@ -137,7 +137,7 @@ class WebDavClient(
             .build()
         val response = okHttpClient.newCall(request).execute()
         if (!response.isSuccessful && response.code != 405) { // 405 = already exists
-            throw WebDavException("MKCOL failed: ${response.code}")
+            throw WebDavException("MKCOL", response.code, response.message)
         }
     }
 
@@ -165,7 +165,7 @@ class WebDavClient(
             .header("Authorization", credentials)
             .build()
         val response = okHttpClient.newCall(request).execute()
-        if (!response.isSuccessful) throw WebDavException("DELETE failed: ${response.code}")
+        if (!response.isSuccessful) throw WebDavException("DELETE", response.code, response.message)
     }
 
     /** Toggle a favorite flag via PROPPATCH (`oc:favorite`). Supported by ownCloud/Nextcloud. */
@@ -184,14 +184,11 @@ class WebDavClient(
             .header("Authorization", credentials)
             .build()
         val response = okHttpClient.newCall(request).execute()
-        if (!response.isSuccessful) throw WebDavException("PROPPATCH favorite failed: ${response.code}")
+        if (!response.isSuccessful) throw WebDavException("PROPPATCH", response.code, response.message)
     }
 
-    fun testConnection(): Boolean = try {
+    fun checkConnection() {
         propFind("", depth = 0)
-        true
-    } catch (_: Exception) {
-        false
     }
 
     fun getDownloadUrl(remotePath: String): String = buildUrl(remotePath)
@@ -263,4 +260,8 @@ class WebDavClient(
     }
 }
 
-class WebDavException(message: String) : Exception(message)
+class WebDavException(
+    val operation: String,
+    val statusCode: Int,
+    statusMessage: String
+) : Exception("$operation failed: $statusCode $statusMessage")

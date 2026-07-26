@@ -15,7 +15,6 @@ import androidx.work.WorkManager
 import com.dot.gallery.cloud.core.ConnectionState
 import com.dot.gallery.cloud.core.ProviderRegistry
 import com.dot.gallery.cloud.core.ProviderType
-import com.dot.gallery.cloud.core.capabilities.RemoteMediaProvider
 import com.dot.gallery.cloud.core.capabilities.SyncCapableProvider
 import com.dot.gallery.cloud.data.dao.CloudMediaDao
 import com.dot.gallery.cloud.data.dao.CloudServerConfigDao
@@ -120,8 +119,7 @@ class CloudBackupViewModel @Inject constructor(
      * failed at init, so it is reported as [ConnectionState.ERROR] rather than silently omitted.
      */
     private fun connectionStateOf(configId: Long): ConnectionState =
-        (registry.getByConfigId(configId) as? RemoteMediaProvider)
-            ?.connectionState?.value ?: ConnectionState.ERROR
+        registry.connectionStates.value[configId] ?: ConnectionState.ERROR
 
     /** Live progress of caching ("indexing") each account's remote media into the local DB. */
     val indexState: StateFlow<CloudIndexProgressManager.IndexState> = indexProgressManager.state
@@ -145,6 +143,16 @@ class CloudBackupViewModel @Inject constructor(
     }
 
     init {
+        viewModelScope.launch {
+            registry.connectionStates.collect { states ->
+                _uiState.value = _uiState.value.copy(
+                    accounts = _uiState.value.accounts.map { account ->
+                        account.copy(connectionState = states[account.configId] ?: ConnectionState.ERROR)
+                    }
+                )
+            }
+        }
+
         // Show the full service list and last-known counts INSTANTLY from the
         // persisted snapshot — opening the dashboard must not trigger the
         // expensive scan every time. A scan only runs on first-ever open (no

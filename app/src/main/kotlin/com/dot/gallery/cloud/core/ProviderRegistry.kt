@@ -14,6 +14,9 @@ import com.dot.gallery.cloud.core.capabilities.ShareLinkCapableProvider
 import com.dot.gallery.cloud.core.capabilities.SmartSearchCapableProvider
 import com.dot.gallery.cloud.core.capabilities.SyncCapableProvider
 import com.dot.gallery.feature_node.presentation.util.printDebug
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -26,25 +29,42 @@ class ProviderRegistry @Inject constructor() {
     @PublishedApi
     internal val _providers = mutableMapOf<Long, MediaCapabilityProvider>()
 
+    private val _connectionStates = MutableStateFlow<Map<Long, ConnectionState>>(emptyMap())
+    val connectionStates: StateFlow<Map<Long, ConnectionState>> = _connectionStates.asStateFlow()
+
+    @Synchronized
     fun register(configId: Long, provider: MediaCapabilityProvider) {
         _providers[configId] = provider
+        val state = (provider as? RemoteMediaProvider)?.connectionState?.value
+        if (state != null) updateConnectionState(configId, state)
         printDebug("ProviderRegistry: Registered ${provider.providerType.displayName} " +
                 "(account #$configId) with capabilities: ${provider.capabilities}")
     }
 
-    fun unregister(configId: Long) {
-        _providers.remove(configId)
+    @Synchronized
+    fun updateConnectionState(configId: Long, state: ConnectionState) {
+        _connectionStates.value = _connectionStates.value + (configId to state)
     }
 
+    @Synchronized
+    fun unregister(configId: Long) {
+        _providers.remove(configId)
+        _connectionStates.value = _connectionStates.value - configId
+    }
+
+    @Synchronized
     fun getAll(): List<MediaCapabilityProvider> = _providers.values.toList()
 
+    @Synchronized
     fun getAvailable(): List<MediaCapabilityProvider> =
         _providers.values.filter { it.isAvailable }
 
     /** Instance for a specific account. Preferred lookup once a config id is known. */
+    @Synchronized
     fun getByConfigId(configId: Long): MediaCapabilityProvider? = _providers[configId]
 
     /** All registered instances of a given provider type (one per account). */
+    @Synchronized
     fun getAllForType(type: ProviderType): List<MediaCapabilityProvider> =
         _providers.values.filter { it.providerType == type }
 
@@ -52,18 +72,19 @@ class ProviderRegistry @Inject constructor() {
      * Backward-compatible lookup by type: returns the first registered instance of [type].
      * Call sites that must address a specific account should use [getByConfigId] instead.
      */
+    @Synchronized
     fun get(type: ProviderType): MediaCapabilityProvider? =
         _providers.values.firstOrNull { it.providerType == type }
 
     inline fun <reified T : MediaCapabilityProvider> getByCapability(): List<T> =
-        _providers.values.filterIsInstance<T>().filter { it.isAvailable }
+        getAll().filterIsInstance<T>().filter { it.isAvailable }
 
     fun hasCapability(cap: ProviderCapability): Boolean =
-        _providers.values.any { it.isAvailable && cap in it.capabilities }
+        getAll().any { it.isAvailable && cap in it.capabilities }
 
-    fun hasAnyProvider(): Boolean = _providers.isNotEmpty()
+    fun hasAnyProvider(): Boolean = getAll().isNotEmpty()
 
-    fun hasConfiguredProvider(): Boolean = _providers.values.any { it.isAvailable }
+    fun hasConfiguredProvider(): Boolean = getAll().any { it.isAvailable }
 
     fun getRemoteProviders(): List<RemoteMediaProvider> = getByCapability()
     fun getPeopleProviders(): List<PeopleCapableProvider> = getByCapability()
