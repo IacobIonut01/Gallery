@@ -295,7 +295,7 @@
         <activity
             android:name=".feature_node.presentation.edit.EditActivity"
             android:configChanges="orientation|keyboard|keyboardHidden|screenSize|screenLayout|smallestScreenSize|uiMode"
-            android:screenOrientation="fullSensor"
+            android:screenOrientation="fullUser"
             tools:ignore="DiscouragedApi"
             android:launchMode="singleTop"
             android:exported="true">
