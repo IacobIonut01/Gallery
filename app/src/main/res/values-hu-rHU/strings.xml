@@ -58,11 +58,11 @@
     <string name="no_map_app">Nincs telepített alkalmazás a helyszín megjelenítéséhez</string>
     <string name="map_appearance_header">Map</string>
     <string name="map_appearance_title">Map appearance</string>
-    <string name="map_appearance_description">Choose whether maps follow ReFra’s appearance or always use bright or dark map colors.</string>
-    <string name="map_appearance_system">Follow app appearance</string>
-    <string name="map_appearance_light">Light</string>
-    <string name="map_appearance_dark">Dark</string>
-    <string name="map_appearance_action">Change map appearance</string>
+    <string name="map_appearance_description">Válassza ki, hogy a térképek a ReFra megjelenését kövessék, vagy mindig világos, illetve sötét színeket használjanak.</string>
+    <string name="map_appearance_system">Alkalmazás megjelenésének követése</string>
+    <string name="map_appearance_light">Világos</string>
+    <string name="map_appearance_dark">Sötét</string>
+    <string name="map_appearance_action">Térkép megjelenésének módosítása</string>
     <string name="map_cluster_title">Photos in this location</string>
     <string name="map_cluster_count">%1$d photos</string>
     <string name="map_marker_photo">Photo on map</string>
