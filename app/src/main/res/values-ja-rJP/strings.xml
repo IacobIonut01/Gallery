@@ -1671,33 +1671,33 @@
     <string name="change_app_logo_summary">Switch between the ReFra and classic Gallery launcher icon</string>
     <string name="app_logo_description">Choose the launcher icon used on your home screen and app drawer. The app will restart to apply the change.</string>
     <!-- Common -->
-    <string name="setup_step_progress">Step %1$d of %2$d</string>
-    <string name="setup_continue">Continue</string>
+    <string name="setup_step_progress">%2$d ステップ中の %1$d</string>
+    <string name="setup_continue">続ける</string>
     <string name="setup_finish">Finish</string>
-    <string name="setup_grant_permissions">Grant Permissions</string>
+    <string name="setup_grant_permissions">権限を付与</string>
     <!-- Welcome page -->
-    <string name="setup_welcome_subtitle">Your private, on-device gallery</string>
+    <string name="setup_welcome_subtitle">あなたのプライベート、オンデバイスのギャラリー</string>
     <!-- Permissions page -->
-    <string name="setup_permissions_title">Permissions</string>
-    <string name="setup_permissions_subtitle">ReFra only uses what it needs to show and manage your media. Tap a permission to learn why.</string>
-    <string name="setup_permission_used_for">Used for:</string>
+    <string name="setup_permissions_title">権限</string>
+    <string name="setup_permissions_subtitle">ReFraは、ユーザーのメディアを表示・管理するために必要な権限のみを使用しています。各権限をタップすると、その理由を確認できます。</string>
+    <string name="setup_permission_used_for">用途：</string>
     <!-- Permission reasons (where/why) -->
-    <string name="setup_reason_read_images"><![CDATA[Displaying your photos in the timeline, albums and viewer. Without this, the gallery stays empty.]]></string>
-    <string name="setup_reason_read_videos"><![CDATA[Showing and playing your videos in the timeline, albums and viewer.]]></string>
-    <string name="setup_reason_media_location"><![CDATA[Reading GPS data embedded in your photos & videos to power the Map and location details.]]></string>
+    <string name="setup_reason_read_images"><![CDATA[タイムライン、アルバム、ビューアーに写真を表示します。これがなければ、ギャラリーは空のままになります。]]></string>
+    <string name="setup_reason_read_videos"><![CDATA[タイムライン、アルバム、ビューアーでビデオを表示および再生します。]]></string>
+    <string name="setup_reason_media_location"><![CDATA[写真や動画に埋め込まれたGPSデータを読み取り、地図や位置情報の詳細を表示します。]]></string>
     <string name="setup_reason_internet"><![CDATA[Downloading map tiles for location previews, casting media to nearby devices, downloading optional AI models and syncing with cloud servers. Media never leaves your device unless you set up cloud sync.]]></string>
-    <string name="setup_reason_notifications"><![CDATA[Showing progress for background tasks such as backups, encryption and downloads.]]></string>
-    <string name="setup_reason_manage_media"><![CDATA[Skipping the extra system confirmation dialog when you favorite, trash or edit several items at once.]]></string>
-    <string name="setup_reason_manage_files"><![CDATA[Creating albums outside the standard Pictures and DCIM folders, managing files anywhere on your storage, and showing extra photo formats the system doesn\'t recognize (such as JPEG XL, JPEG 2000 and Photoshop files).]]></string>
+    <string name="setup_reason_notifications"><![CDATA[バックアップ、暗号化、ダウンロードなどのバックグラウンドタスクの進行状況が表示されます。]]></string>
+    <string name="setup_reason_manage_media"><![CDATA[複数のアイテムを一度に編集したり、ゴミ箱に移動したりしたときのシステム確認ダイアログが表示されなくなります。]]></string>
+    <string name="setup_reason_manage_files"><![CDATA[標準の「Pictures」フォルダや「DCIM」フォルダ以外の場所にアルバムを作成したり、ストレージ上の任意の場所にあるファイルを管理したり、システムが認識しない追加の写真形式（JPEG XL、JPEG 2000、Photoshopファイルなど）を表示したりできます。]]></string>
     <!-- Looks & Feel page -->
-    <string name="setup_looks_title">Looks &amp; Feel</string>
-    <string name="setup_looks_subtitle">Make the app feel like yours.</string>
-    <string name="setup_section_app_name">App name</string>
-    <string name="setup_section_app_logo">App logo</string>
-    <string name="setup_looks_restart_note">The app will restart when you finish setup to apply the chosen name and icon.</string>
-    <string name="setup_section_appearance">Appearance</string>
-    <string name="setup_appearance_summary">Light or dark mode, accent colors and more.</string>
-    <string name="setup_open_appearance">Customize appearance</string>
+    <string name="setup_looks_title">見た目 &amp; 雰囲気</string>
+    <string name="setup_looks_subtitle">アプリを自分だけのもののように感じられるようにしましょう。</string>
+    <string name="setup_section_app_name">アプリ名</string>
+    <string name="setup_section_app_logo">アプリのロゴ</string>
+    <string name="setup_looks_restart_note">選択した名前とアイコンを適用するためにセットアップを完了するとアプリが再起動します。</string>
+    <string name="setup_section_appearance">外観</string>
+    <string name="setup_appearance_summary">ライトモードやダークモード、アクセントカラーなど。</string>
+    <string name="setup_open_appearance">外観をカスタマイズ</string>
     <!-- Cloud sync page -->
     <string name="setup_cloud_title">Cloud sync</string>
     <string name="setup_cloud_subtitle">Optionally connect a server to back up and sync your media. Everything stays optional and under your control.</string>
@@ -1717,17 +1717,17 @@
     <string name="setup_cap_archive">Archive</string>
     <string name="setup_cap_memories">Memories</string>
     <!-- AI models page -->
-    <string name="setup_ai_title">AI Models</string>
-    <string name="setup_ai_subtitle">Enable on-device smart search and automatic categories. Models run entirely on your device.</string>
-    <string name="setup_ai_ready">AI models are installed and ready.</string>
-    <string name="setup_ai_download">Download AI models</string>
-    <string name="setup_ai_download_size">One-time download · works offline afterwards</string>
-    <string name="setup_ai_no_internet">An internet connection is required to download the AI models.</string>
-    <string name="setup_ai_features_title">What you\'ll get</string>
-    <string name="setup_ai_feature_categories_title">Smart categories</string>
-    <string name="setup_ai_feature_categories_desc">Photos are automatically sorted into groups like nature, people and food.</string>
-    <string name="setup_ai_feature_search_title">Search by description</string>
-    <string name="setup_ai_feature_search_desc">Find shots using natural language — no manual tags or albums needed.</string>
+    <string name="setup_ai_title">AIモデル</string>
+    <string name="setup_ai_subtitle">端末上のスマート検索と自動カテゴリ分けを有効にします。モデルはすべて端末上で実行されます。</string>
+    <string name="setup_ai_ready">AIモデルがインストールされ準備ができています。</string>
+    <string name="setup_ai_download">AIモデルをダウンロード</string>
+    <string name="setup_ai_download_size">1回限りのダウンロード・その後はオフラインでも利用可能</string>
+    <string name="setup_ai_no_internet">AIモデルをダウンロードするには、インターネット接続が必要です。</string>
+    <string name="setup_ai_features_title">得られる特典</string>
+    <string name="setup_ai_feature_categories_title">スマートカテゴリ</string>
+    <string name="setup_ai_feature_categories_desc">写真は「自然」「人物」「食べ物」などのグループに自動的に分類されます。</string>
+    <string name="setup_ai_feature_search_title">説明で検索</string>
+    <string name="setup_ai_feature_search_desc">自然言語を使って写真を検索 — 手動でのタグ付けやアルバムの作成は不要です。</string>
     <string name="setup_ai_feature_private_title">Private &amp; on-device</string>
     <string name="setup_ai_feature_private_desc">Everything runs locally. Your photos never leave your device.</string>
     <string name="setup_ai_extra_title">Extras</string>
