@@ -229,7 +229,7 @@
     <string name="raw_export_tiff16">TIFF (16-Bit)</string>
     <string name="raw_export_choose_format">Bearbeitete Kopie speichern</string>
     <string name="raw_export_choose_format_subtitle">Wählen Sie ein Format für Ihre entwickelten RAW-Dateien aus</string>
-    <string name="raw_export_tiff_unavailable">TIFF keeps full bit depth but can\'t include crop, filters or markup — remove them to export TIFF.</string>
+    <string name="raw_export_tiff_unavailable">TIFF behält die volle Bittiefe bei, kann jedoch keine Ausschnitte, Filter oder Markierungen enthalten – entfernen Sie diese, um das Bild als TIFF zu exportieren.</string>
     <string name="raw_export_in_progress">Exportieren…</string>
     <string name="raw_export_success">Bearbeitete Kopie gespeichert</string>
     <string name="raw_export_failed">Export fehlgeschlagen</string>
@@ -238,22 +238,22 @@
     <string name="raw_tab_tone">Tonwert</string>
     <string name="raw_tab_detail">Detail</string>
     <string name="raw_tab_colour">Farbe</string>
-    <string name="raw_tab_output">Output</string>
+    <string name="raw_tab_output">Ausgabe</string>
     <!-- RAW developer controls -->
     <string name="raw_wb_custom">Benutzerdefiniert</string>
     <string name="raw_wb_temp">Temperatur</string>
     <string name="raw_wb_tint">Tönung</string>
     <string name="raw_tone_brightness">Helligkeit</string>
     <string name="raw_tone_contrast">Kontrast</string>
-    <string name="raw_tone_shadows">Shadows</string>
+    <string name="raw_tone_shadows">Schatten</string>
     <string name="raw_tone_highlights">Highlights</string>
-    <string name="raw_detail_sharpen">Sharpen</string>
-    <string name="raw_detail_noise_reduction">Noise reduction</string>
+    <string name="raw_detail_sharpen">Schärfen</string>
+    <string name="raw_detail_noise_reduction">Rauschunterdrückung</string>
     <string name="raw_nr_off">Aus</string>
     <string name="raw_nr_low">Niedrig</string>
     <string name="raw_nr_medium">Medium</string>
     <string name="raw_nr_high">Hoch</string>
-    <string name="raw_colour_saturation">Saturation</string>
+    <string name="raw_colour_saturation">Sättigung</string>
     <string name="raw_colour_vibrance">Vibrance</string>
     <string name="raw_output_default_format">Default export format</string>
     <string name="edit_revert_failed">Failed to revert to the original.</string>
@@ -766,7 +766,7 @@
     <string name="downloading">Herunterladen…</string>
     <string name="download_complete">Download abgeschlossen</string>
     <string name="download_failed">Download fehlgeschlagen</string>
-    <string name="cloud_delete">Delete</string>
+    <string name="cloud_delete">Löschen</string>
     <string name="cloud_action_desc_delete">Permanently delete the selected items from the server</string>
     <string name="cloud_media_trash_confirm_title">Zum Papierkorb verschieben?</string>
     <string name="cloud_media_trash_confirm_summary">The selected items will be moved to the server\'s trash. You can restore them later.</string>
