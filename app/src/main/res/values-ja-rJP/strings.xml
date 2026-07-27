@@ -190,13 +190,13 @@
     <string name="overwrite_unavailable_title">Can\'t overwrite this format</string>
     <string name="overwrite_unavailable_summary">This image format can\'t be re-encoded on your device, so the original can\'t be overwritten. A new PNG copy will be created instead.</string>
     <string name="overwrite_unavailable_create_copy">Create copy</string>
-    <string name="reencode_quality_title">Save quality</string>
-    <string name="reencode_quality_summary">How edited and rotated images are re-encoded when saved</string>
-    <string name="reencode_quality_mode_auto">Automatic</string>
-    <string name="reencode_quality_mode_auto_summary">Lossless where supported (JXL), otherwise high quality</string>
-    <string name="reencode_quality_mode_manual">Manual</string>
-    <string name="reencode_quality_lossy">Lossy quality</string>
-    <string name="reencode_quality_jxl_effort">JXL effort</string>
+    <string name="reencode_quality_title">保存品質</string>
+    <string name="reencode_quality_summary">編集や回転を行った画像が保存される際の再エンコード方法</string>
+    <string name="reencode_quality_mode_auto">自動</string>
+    <string name="reencode_quality_mode_auto_summary">対応している場合はロスレス（JXL）、それ以外は高音質</string>
+    <string name="reencode_quality_mode_manual">手動</string>
+    <string name="reencode_quality_lossy">画質の劣化</string>
+    <string name="reencode_quality_jxl_effort">JXLの組み込み</string>
     <!-- RAW develop -->
     <string name="raw_develop">Develop RAW</string>
     <string name="raw_develop_title">Develop RAW</string>
@@ -547,7 +547,7 @@
     <string name="media_grid">メディアグリッド</string>
     <string name="classic_date">基本表示</string>
     <string name="extended_date">拡張表示</string>
-    <string name="date_format_following_system">Following system format</string>
+    <string name="date_format_following_system">システムのフォーマットに従っています</string>
     <string name="date_format_info_action">Format help</string>
     <string name="date_format_info_title">文字列のフォーマット</string>
     <string name="date_format_info_summary">フィールドを空欄のままにすると、お使いのデバイスの日付と時刻の形式が適用されます。カスタマイズするには、以下のパターン文字（Unicodeの日付パターンに基づく）を組み合わせて使用してください。</string>
@@ -925,15 +925,15 @@
     <string name="unmerge_subfolders">サブフォルダの統合を解除</string>
     <string name="dismiss">Dismiss</string>
     <!-- Pinned albums layout -->
-    <string name="pinned_albums_as_grid_title">Pinned albums as tiles</string>
-    <string name="pinned_albums_as_grid_summary">Show pinned albums as regular tiles above the other albums, instead of a scrolling banner</string>
-    <string name="pinned_albums_as_grid_description">When enabled, pinned albums appear as the same grid tiles as the rest of your albums (wrapping to multiple rows), placed before the other albums. When disabled, they show as a wide, horizontally scrollable banner carousel.</string>
+    <string name="pinned_albums_as_grid_title">ピン留めされたアルバムをタイルとして表示</string>
+    <string name="pinned_albums_as_grid_summary">固定されたアルバムを、スクロールするバナーとしてではなく、他のアルバムの上部に通常のタイルとして表示する</string>
+    <string name="pinned_albums_as_grid_description">この機能を有効にすると、ピン留めされたアルバムは、他のアルバムと同じグリッドタイル（複数行にまたがる）として表示され、他のアルバムよりも手前に配置されます。無効にすると、幅広で水平方向にスクロール可能なバナーカルーセルとして表示されます。</string>
     <!-- Media type albums -->
     <string name="media_type_albums_section">Media types</string>
     <string name="media_type_gifs">GIFs</string>
     <string name="media_type_raw">Raw</string>
-    <string name="media_type_albums_setting_title">Show media type albums</string>
-    <string name="media_type_albums_setting_summary">Add quick albums for Videos, Photos, GIFs and Raw files at the top of the Albums tab</string>
+    <string name="media_type_albums_setting_title">メディアタイプのアルバムを表示</string>
+    <string name="media_type_albums_setting_summary">「アルバム」タブの上部に、動画、写真、GIF、RAWファイル用のクイックアルバムを追加する</string>
     <!-- Album Sections -->
     <string name="album_sections_title">セクション別にアルバムを整理する</string>
     <string name="album_sections_summary">アルバムを一般、アプリ、その他のセクションにヘッダー付きで自動的に分類します</string>
@@ -1772,7 +1772,7 @@
     <string name="cutout_copy_failed">Failed to copy cutout object</string>
     <string name="cutout_share_failed">Failed to share cutout object</string>
     <string name="cutout_save_failed">Failed to save cutout object</string>
-    <string name="cutout_saved">Saved cutout to Pictures/Cutouts</string>
+    <string name="cutout_saved">Pictures/Cutoutsに保存しました</string>
     <string name="cutout_refining">画像を切り抜き中…</string>
     <string name="cutout_action">Cut out subject</string>
     <string name="cutout_include">含める</string>
