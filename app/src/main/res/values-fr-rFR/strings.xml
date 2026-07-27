@@ -56,12 +56,12 @@
     <string name="show_in_app">Afficher dans l\'application</string>
     <string name="open_externally">Ouvrir extérieurement</string>
     <string name="no_map_app">Aucune application disponible pour afficher la localisation</string>
-    <string name="map_appearance_header">Map</string>
+    <string name="map_appearance_header">Carte</string>
     <string name="map_appearance_title">Map appearance</string>
     <string name="map_appearance_description">Choose whether maps follow ReFra’s appearance or always use bright or dark map colors.</string>
-    <string name="map_appearance_system">Follow app appearance</string>
-    <string name="map_appearance_light">Light</string>
-    <string name="map_appearance_dark">Dark</string>
+    <string name="map_appearance_system">Suivre l\'apparence de l\'application</string>
+    <string name="map_appearance_light">Clair</string>
+    <string name="map_appearance_dark">Sombre</string>
     <string name="map_appearance_action">Change map appearance</string>
     <string name="map_cluster_title">Photos in this location</string>
     <string name="map_cluster_count">%1$d photos</string>
