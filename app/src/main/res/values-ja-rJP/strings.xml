@@ -994,7 +994,7 @@
     <string name="help_get_started">始める</string>
     <string name="help_make_most">ギャラリーを最大限に活用する</string>
     <string name="help_explore_tips">さらにヒントを見る</string>
-    <string name="help_done">Done</string>
+    <string name="help_done">完了</string>
     <string name="help_open_settings">設定を開く</string>
     <string name="help_latest">最新</string>
     <string name="help_not_found">This tip could not be found.</string>
@@ -1010,7 +1010,7 @@
     <string name="help_cat_ai">AI機能</string>
     <string name="help_cat_albums">アルバム &amp; コレクション</string>
     <string name="help_cat_vault">保管庫</string>
-    <string name="help_cat_cloud_sync">Cloud &amp; sync</string>
+    <string name="help_cat_cloud_sync">クラウド &amp; 同期</string>
     <string name="help_cat_fav_trash">お気に入り &amp; ゴミ箱</string>
     <string name="help_cat_locations">位置情報の閲覧</string>
     <string name="help_cat_metadata">メタデータ &amp; EXIF</string>
