@@ -255,7 +255,7 @@
     <string name="raw_nr_high">Hoch</string>
     <string name="raw_colour_saturation">Sättigung</string>
     <string name="raw_colour_vibrance">Dynamik</string>
-    <string name="raw_output_default_format">Default export format</string>
+    <string name="raw_output_default_format">Standard-Exportformat</string>
     <string name="edit_revert_failed">Zurücksetzen auf das Original fehlgeschlagen.</string>
     <string name="revert_to_original">Auf Originalversion zurücksetzen</string>
     <string name="revert_to_original_confirmation">Dadurch werden alle Änderungen verworfen und das Originalbild wiederhergestellt. Dieser Vorgang kann nicht rückgängig gemacht werden.</string>
@@ -419,8 +419,8 @@
     <string name="metadata_mode_location_description">Removes coordinates, altitude, location names, directions, and GPS timestamps.</string>
     <string name="metadata_mode_privacy">Datenschutzbezogen</string>
     <string name="metadata_mode_privacy_description">Also removes embedded dates, people data, device identity, authorship, descriptions, edit history, and provenance.</string>
-    <string name="metadata_mode_everything">Everything removable</string>
-    <string name="metadata_mode_everything_description">Removes all optional metadata while retaining only data required to render or play the media.</string>
+    <string name="metadata_mode_everything">Alles Löschbare</string>
+    <string name="metadata_mode_everything_description">Entfernt optionale Metadaten; behält nur für Anzeige und Wiedergabe notwendige Daten.</string>
     <string name="metadata_preserved_title">What is preserved</string>
     <string name="metadata_preserved_description">Encoded pixels, video and audio remain untouched. Orientation, animation, color and HDR data, codec configuration, timing, and required container structure are retained.</string>
     <string name="remove_metadata_confirm">Entferne</string>
@@ -670,9 +670,9 @@
     <string name="refresh_metadata">Metadaten aktualisieren</string>
     <string name="change_thumbnail">Album-Cover ändern</string>
     <string name="delete_thumbnail">Benutzerdefiniertes Albumcover entfernen</string>
-    <string name="use_as_album_cover">Use as album cover</string>
-    <string name="action_desc_set_as_album_cover">Set the selected photo as the cover of its album</string>
-    <string name="album_cover_updated">Album cover updated</string>
+    <string name="use_as_album_cover">Als Albumcover verwenden</string>
+    <string name="action_desc_set_as_album_cover">Ausgewähltes Foto als Titelbild des Albums festlegen</string>
+    <string name="album_cover_updated">Albumcover aktualisiert</string>
     <string name="settings_general_summary">Verschiedene allgemeine Einstellungen</string>
     <string name="ai_category_summary">Lege fest, welche Smart Features du verwenden möchtest</string>
     <!-- Settings Overhaul: New Section Names & Summaries -->
@@ -757,7 +757,7 @@
     <string name="action_desc_move">Ausgewählte Elemente in ein anderes Album kopieren</string>
     <string name="action_desc_trash">Ausgewählte Elemente in den Papierkorb verschieben</string>
     <string name="action_desc_hide">Ausgewählte Elemente im Tresor verschlüsseln und verbergen</string>
-    <string name="action_desc_move_to_private_folder">Move selected items into the private folder</string>
+    <string name="action_desc_move_to_private_folder">Ausgewählte Elemente in den privaten Ordner verschieben</string>
     <string name="move_to_private_folder">Privater Ordner</string>
     <string name="action_desc_edit">Das ausgewählte Element im Bildbearbeitungsprogramm öffnen</string>
     <string name="action_desc_rotate">Ausgewählte Elemente um 90° im Uhrzeigersinn drehen</string>
@@ -767,7 +767,7 @@
     <string name="download_complete">Download abgeschlossen</string>
     <string name="download_failed">Download fehlgeschlagen</string>
     <string name="cloud_delete">Löschen</string>
-    <string name="cloud_action_desc_delete">Permanently delete the selected items from the server</string>
+    <string name="cloud_action_desc_delete">Ausgewählte Elemente dauerhaft vom Server löschen</string>
     <string name="cloud_media_trash_confirm_title">Zum Papierkorb verschieben?</string>
     <string name="cloud_media_trash_confirm_summary">The selected items will be moved to the server\'s trash. You can restore them later.</string>
     <string name="cloud_media_delete_confirm_title">Endgültig löschen?</string>
@@ -788,7 +788,7 @@
     <string name="rotate_stage_rotating">Drehen…</string>
     <string name="rotate_stage_saving">Speichern…</string>
     <string name="rotate_stage_uploading">Hochladen…</string>
-    <string name="rotate_failed">Couldn\'t rotate image</string>
+    <string name="rotate_failed">Bild konnte nicht gedreht werden</string>
     <string name="locked">Gesperrt</string>
     <string name="lock_album">Album sperren</string>
     <string name="unlock_album">Album entsperren</string>
@@ -841,7 +841,7 @@
     <string name="widget_select_photo">Foto auswählen</string>
     <string name="widget_select_photos">Fotos auswählen</string>
     <!-- Editor tabs -->
-    <string name="editor_develop">Develop</string>
+    <string name="editor_develop">Entwickeln</string>
     <string name="editor_lighting">Beleuchtung</string>
     <string name="editor_colour">Farbe</string>
     <string name="editor_effects">Effekte</string>
@@ -868,7 +868,7 @@
     <string name="editor_add_or_select_text">Fügen Sie einen Text hinzu oder wählen Sie einen aus, um die Farbe zu ändern</string>
     <string name="editor_brush_size">Größe</string>
     <string name="editor_brush_strength">Stärke</string>
-    <string name="editor_blur_faces">Blur faces</string>
+    <string name="editor_blur_faces">Gesichter weichzeichnen</string>
     <string name="editor_type_something">Hier eingeben…</string>
     <string name="editor_remove">Entfernen</string>
     <!-- Lighting tools -->
@@ -927,7 +927,7 @@
     <string name="unmerge_subfolders">Unterordner trennen</string>
     <string name="dismiss">Verwerfen</string>
     <!-- Pinned albums layout -->
-    <string name="pinned_albums_as_grid_title">Pinned albums as tiles</string>
+    <string name="pinned_albums_as_grid_title">Angepinnte Alben als Kacheln</string>
     <string name="pinned_albums_as_grid_summary">Show pinned albums as regular tiles above the other albums, instead of a scrolling banner</string>
     <string name="pinned_albums_as_grid_description">When enabled, pinned albums appear as the same grid tiles as the rest of your albums (wrapping to multiple rows), placed before the other albums. When disabled, they show as a wide, horizontally scrollable banner carousel.</string>
     <!-- Media type albums -->
