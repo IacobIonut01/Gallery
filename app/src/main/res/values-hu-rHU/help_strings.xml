@@ -1163,7 +1163,7 @@
     <string name="help_tip_media_type_albums_title">Browse by media type</string>
     <string name="help_tip_media_type_albums_subtitle">Automatic albums for photos, videos, GIFs and RAW files</string>
     <string name="help_tip_media_type_albums_p1_title">Media-type albums</string>
-    <string name="help_tip_media_type_albums_p1_desc">ReFra creates virtual albums from your unified library so you can open all photos, videos, GIFs or RAW files together. Their visibility is controlled from Timeline &amp; Albums settings.</string>
+    <string name="help_tip_media_type_albums_p1_desc">A ReFra virtuális albumokat hoz létre az egységes médiatárból, így egy helyen megnyithatja az összes fényképet, videót, GIF-et vagy RAW-fájlt. Ezek megjelenítése az „Idővonal &amp; albumok” beállításokban szabályozható.</string>
     <string name="help_tip_media_type_albums_p1_s1">Open Albums and scroll to Media types</string>
     <string name="help_tip_media_type_albums_p1_s2">Open a type to browse matching media</string>
     <string name="help_tip_media_type_albums_p1_s3">Use Timeline &amp; Albums settings to show or hide the section</string>
