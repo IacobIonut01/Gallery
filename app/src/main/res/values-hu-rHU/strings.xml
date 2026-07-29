@@ -146,7 +146,7 @@
     <string name="move">Move</string>
     <string name="some_permissions_are_not_granted">Néhány engedély nincs megadva!</string>
     <string name="get_started">Kezdés</string>
-    <string name="welcome">Welcome</string>
+    <string name="welcome">Üdvözöljük</string>
     <string name="required">Required</string>
     <string name="optional">Választható</string>
     <string name="permission_manage_media_title">Manage Media</string>
