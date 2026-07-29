@@ -1143,7 +1143,7 @@
     <string name="help_tip_cloud_provider_settings_title">Account settings</string>
     <string name="help_tip_cloud_provider_settings_subtitle">Manage a connected account</string>
     <string name="help_tip_cloud_provider_settings_p1_title">Per-account options</string>
-    <string name="help_tip_cloud_provider_settings_p1_desc">Edit networking, backup albums and sync behaviour independently for each connected account.</string>
+    <string name="help_tip_cloud_provider_settings_p1_desc">Minden csatlakoztatott fióknál külön állíthatja be a hálózati beállításokat, a biztonsági mentési albumokat és a szinkronizálási működést.</string>
     <string name="help_tip_cloud_shared_links_title">Shared links</string>
     <string name="help_tip_cloud_shared_links_subtitle">Manage links you\'ve shared</string>
     <string name="help_tip_cloud_shared_links_p1_title">Review shared links</string>
@@ -1151,15 +1151,15 @@
     <string name="help_tip_cloud_sync_status_title">Sync status</string>
     <string name="help_tip_cloud_sync_status_subtitle">Track uploads and downloads</string>
     <string name="help_tip_cloud_sync_status_p1_title">Live progress</string>
-    <string name="help_tip_cloud_sync_status_p1_desc">Watch backup progress and see what is queued, running or failed.</string>
+    <string name="help_tip_cloud_sync_status_p1_desc">Kövesse nyomon a biztonsági mentés folyamatát, és tekintse meg a várakozó, folyamatban lévő vagy sikertelen műveleteket.</string>
     <string name="help_tip_cloud_people_title">People</string>
     <string name="help_tip_cloud_people_subtitle">Browse faces from your server</string>
     <string name="help_tip_cloud_people_p1_title">Face grouping</string>
-    <string name="help_tip_cloud_people_p1_desc">Explore people detected by your cloud server and open each person\'s photos.</string>
+    <string name="help_tip_cloud_people_p1_desc">Tekintse meg a felhőkiszolgáló által felismert személyeket, és nyissa meg a hozzájuk tartozó fényképeket.</string>
     <string name="help_tip_cloud_free_up_space_title">Free up space</string>
     <string name="help_tip_cloud_free_up_space_subtitle">Remove local copies safely backed up</string>
     <string name="help_tip_cloud_free_up_space_p1_title">Reclaim storage</string>
-    <string name="help_tip_cloud_free_up_space_p1_desc">Delete on-device copies of media that is already safely backed up to the cloud.</string>
+    <string name="help_tip_cloud_free_up_space_p1_desc">Törölje az eszközön lévő másolatokat azokról a médiatartalmakról, amelyekről már biztonsági mentés készült a felhőbe.</string>
     <string name="help_tip_media_type_albums_title">Browse by media type</string>
     <string name="help_tip_media_type_albums_subtitle">Automatic albums for photos, videos, GIFs and RAW files</string>
     <string name="help_tip_media_type_albums_p1_title">Media-type albums</string>
