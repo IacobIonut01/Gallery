@@ -56,7 +56,7 @@
     <string name="show_in_app">Hiển thị trong ứng dụng</string>
     <string name="open_externally">Mở bằng ứng dụng ngoài</string>
     <string name="no_map_app">Không có ứng dụng nào để xem vị trí</string>
-    <string name="map_appearance_header">Map</string>
+    <string name="map_appearance_header">Bản đồ</string>
     <string name="map_appearance_title">Map appearance</string>
     <string name="map_appearance_description">Choose whether maps follow ReFra’s appearance or always use bright or dark map colors.</string>
     <string name="map_appearance_system">Follow app appearance</string>
