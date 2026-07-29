@@ -1193,9 +1193,9 @@
     <string name="help_tip_metadata_sanitize_title">Remove sensitive metadata</string>
     <string name="help_tip_metadata_sanitize_subtitle">Sanitize supported files without recompressing pixels</string>
     <string name="help_tip_metadata_sanitize_p1_title">Choose what to remove</string>
-    <string name="help_tip_metadata_sanitize_p1_desc">From a photo\'s details, choose Remove metadata and select location only, descriptive fields or all supported metadata. ReFra writes and verifies a lossless sanitized copy before replacing the original.</string>
+    <string name="help_tip_metadata_sanitize_p1_desc">Egy fénykép adatlapján válassza a „Metaadatok eltávolítása” lehetőséget, majd döntse el, hogy csak a helyadatokat, a leíró adatokat vagy az összes támogatott metaadatot szeretné eltávolítani. A ReFra veszteségmentes, megtisztított másolatot készít, ellenőrzi azt, majd az eredeti fájlt erre cseréli.</string>
     <string name="help_tip_metadata_sanitize_p1_s1">Open a supported local photo</string>
     <string name="help_tip_metadata_sanitize_p1_s2">Expand its details and tap Remove metadata</string>
     <string name="help_tip_metadata_sanitize_p1_s3">Choose the sanitization level</string>
-    <string name="help_tip_metadata_sanitize_p1_s4">Confirm only after reviewing the replacement warning</string>
+    <string name="help_tip_metadata_sanitize_p1_s4">Csak akkor erősítse meg, ha átolvasta az eredeti fájl lecserélésére vonatkozó figyelmeztetést</string>
 </resources>
