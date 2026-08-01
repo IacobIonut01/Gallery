@@ -165,9 +165,9 @@
     <string name="auto_contrast_summary">Adjust button contrast based on image brightness</string>
     <string name="auto_contrast_description">Folyamatosan elemzi a képernyőn megjelenő kép fényerejét, és ennek megfelelően igazítja a médiamegjelenítő felületének színeit. Sötét területek felett a gombok és ikonok fehéren, sötét háttérrel jelennek meg, világos területek felett pedig feketére váltanak világos háttérrel. Világos és sötét témában egyaránt működik. Az állapotsor ikonjai is alkalmazkodnak a mögöttük lévő kép fényerejéhez. Nagyítás, pásztázás és a médiák közötti lapozás közben valós időben frissül.</string>
     <string name="old_navbar">Use Material Navigation</string>
-    <string name="old_navbar_summary">Show the old navigation bar UI (with rails for bigger screens)</string>
+    <string name="old_navbar_summary">A régi navigációs felület használata (nagyobb képernyőkön oldalsó sávval)</string>
     <string name="hide_timeline_for_albums">Hide timeline for albums</string>
-    <string name="hide_timeline_for_album_summary">Hides date headers when opening an album</string>
+    <string name="hide_timeline_for_album_summary">Album megnyitásakor elrejti a dátumfejléceket</string>
     <string name="allow_vibrations">Allow vibrations</string>
     <string name="allow_vibrations_summary">Lehetővé teszi rezgéses visszajelzés használatát egyes műveletek és gesztusok végrehajtásakor</string>
     <string name="album_name">Album neve</string>
