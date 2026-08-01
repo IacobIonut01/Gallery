@@ -35,6 +35,9 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.runtime.CompositionLocalProvider
+import com.dot.gallery.core.image.thumbnail.LocalThumbnailMotion
+import com.dot.gallery.core.image.thumbnail.rememberThumbnailMotionState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -437,6 +440,9 @@ private fun <T : Media> ImagePickerMediaGrid(
             )
         }
     } else {
+        // Phase 3 (#1076): cheap MOTION tier while the search results grid is flinging.
+        val thumbnailMotion = rememberThumbnailMotionState({ gridState.isScrollInProgress })
+        CompositionLocalProvider(LocalThumbnailMotion provides thumbnailMotion) {
         LazyVerticalGrid(
             state = gridState,
             modifier = Modifier.fillMaxSize(),
@@ -477,6 +483,7 @@ private fun <T : Media> ImagePickerMediaGrid(
                 }
             }
         }
+        }
     }
 }
 
@@ -488,7 +495,12 @@ private fun ImagePickerAlbumsGrid(
     albums: List<Album>,
     onAlbumClick: (Album) -> Unit,
 ) {
+    // Phase 3 (#1076): album covers (RenderImage) load the cheap MOTION tier while scrolling.
+    val gridState = rememberLazyGridState()
+    val thumbnailMotion = rememberThumbnailMotionState({ gridState.isScrollInProgress })
+    CompositionLocalProvider(LocalThumbnailMotion provides thumbnailMotion) {
     LazyVerticalGrid(
+        state = gridState,
         columns = GridCells.Adaptive(Dimens.Album()),
         modifier = Modifier
             .fillMaxSize()
@@ -524,6 +536,7 @@ private fun ImagePickerAlbumsGrid(
                 )
             }
         }
+    }
     }
 }
 

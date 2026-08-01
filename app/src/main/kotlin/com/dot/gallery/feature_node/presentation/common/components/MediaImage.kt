@@ -198,6 +198,20 @@ fun <T : Media> MediaImage(
     ) {
 
         val renderer = LocalMediaImageRenderer.current
+        // Stable thumbnail cache signature: invalidates only when the underlying bytes change
+        // (definedTimestamp/size) and still carries filename/mime for animated-format detection.
+        // Excludes volatile presentation fields (favorite/trashed/selection) so toggling them no
+        // longer evicts the decoded thumbnail and forces a re-decode flash (#1076).
+        val thumbnailSignature = remember(
+            media.id,
+            media.definedTimestamp,
+            media.size,
+            media.mimeType,
+            media.label,
+            media.path
+        ) {
+            "${media.id}:${media.definedTimestamp}:${media.size}:${media.mimeType}:${media.label}:${media.path}"
+        }
         renderer.RenderImage(
             modifier = Modifier
                 .fillMaxSize()
@@ -229,7 +243,7 @@ fun <T : Media> MediaImage(
             model = media.getUri(),
             contentDescription = media.label,
             contentScale = ContentScale.Crop,
-            signature = media
+            signature = thumbnailSignature
         )
 
         if (media.isVideo) {

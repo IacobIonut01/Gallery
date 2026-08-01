@@ -93,6 +93,23 @@ interface CategoryDao {
     @Query("DELETE FROM media_category WHERE mediaId NOT IN (:validMediaIds)")
     suspend fun cleanupOrphanedMediaCategories(validMediaIds: List<Long>)
 
+    /**
+     * Removes category memberships whose media no longer exists in the authoritative
+     * internal `media` mirror (kept in sync with MediaStore by [DatabaseUpdaterWorker]).
+     *
+     * Uses a correlated subquery instead of a bound `IN (...)` list so it is safe for
+     * arbitrarily large libraries (no SQLite bind-variable limit). Callers MUST ensure the
+     * `media` table has been populated first, otherwise every membership would be removed.
+     *
+     * @return the number of orphaned rows deleted.
+     */
+    @Query("DELETE FROM media_category WHERE mediaId NOT IN (SELECT id FROM media)")
+    suspend fun cleanupCategoriesForDeletedMedia(): Int
+
+    /** Number of rows currently mirrored in the internal `media` table. */
+    @Query("SELECT COUNT(*) FROM media")
+    suspend fun getMirroredMediaCount(): Int
+
     // Get all media IDs in a category, ordered by similarity score
     @Query("""
         SELECT mediaId FROM media_category 
@@ -161,14 +178,19 @@ interface CategoryDao {
     @Query("SELECT DISTINCT mediaId FROM media_category")
     suspend fun getAllClassifiedMediaIds(): List<Long>
 
-    // Get categories with media count - for displaying in the grid
+    // Get categories with media count - for displaying in the grid.
+    // Only counts memberships whose media still exists in the internal `media` mirror, and
+    // picks the highest-scored *existing* media as the cover, so a deleted cover falls back to
+    // the next valid member and stale counts never show phantom items (#1076).
     @Query("""
         SELECT c.*, COUNT(mc.mediaId) as mediaCount, 
                (SELECT mc2.mediaId FROM media_category mc2 
+                INNER JOIN media m2 ON m2.id = mc2.mediaId
                 WHERE mc2.categoryId = c.id 
                 ORDER BY mc2.similarityScore DESC LIMIT 1) as thumbnailMediaId
         FROM categories c
-        LEFT JOIN media_category mc ON c.id = mc.categoryId
+        INNER JOIN media_category mc ON c.id = mc.categoryId
+        INNER JOIN media m ON m.id = mc.mediaId
         GROUP BY c.id
         HAVING mediaCount > 0
         ORDER BY c.isPinned DESC, c.name ASC
@@ -195,14 +217,18 @@ interface CategoryDao {
         deleteAllCategories()
     }
 
-    // Get the top N categories by media count for carousel display
+    // Get the top N categories by media count for carousel display.
+    // Same existence validation as getCategoriesWithMediaCount so carousels never surface a
+    // stale count or a deleted cover (#1076).
     @Query("""
         SELECT c.*, COUNT(mc.mediaId) as mediaCount,
                (SELECT mc2.mediaId FROM media_category mc2 
+                INNER JOIN media m2 ON m2.id = mc2.mediaId
                 WHERE mc2.categoryId = c.id 
                 ORDER BY mc2.similarityScore DESC LIMIT 1) as thumbnailMediaId
         FROM categories c
         INNER JOIN media_category mc ON c.id = mc.categoryId
+        INNER JOIN media m ON m.id = mc.mediaId
         GROUP BY c.id
         ORDER BY mediaCount DESC
         LIMIT :limit

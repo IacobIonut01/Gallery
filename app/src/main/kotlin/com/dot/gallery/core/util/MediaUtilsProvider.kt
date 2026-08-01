@@ -22,6 +22,8 @@ import com.dot.gallery.core.LocalMediaSelector
 import com.dot.gallery.core.MediaDistributor
 import com.dot.gallery.core.MediaHandler
 import com.dot.gallery.core.MediaSelector
+import com.dot.gallery.core.image.thumbnail.LocalThumbnailMotion
+import com.dot.gallery.core.image.thumbnail.ThumbnailTelemetry
 import com.dot.gallery.core.presentation.components.LocalMediaImageRenderer
 import com.dot.gallery.core.presentation.components.MediaImageRenderer
 import com.dot.gallery.feature_node.domain.util.EventHandler
@@ -33,6 +35,13 @@ import com.dot.gallery.feature_node.domain.util.EventHandler
 private val HEAVY_CODEC_EXTENSIONS = listOf(
     ".heic", ".heif", ".avif", ".avis", ".jxl", ".tiff", ".tif", ".psd", ".jp2", ".j2k"
 )
+
+/**
+ * Pixel bound for the cheap MOTION tier loaded during a fling (#1076 Phase 3). Small enough to
+ * decode quickly (and to be served by the platform MediaStore thumbnail fast path) yet crisp
+ * enough to avoid obvious blur on dense grids. Reused as the REFINED request's placeholder.
+ */
+private const val THUMBNAIL_MOTION_PX = 256
 
 /**
  * Default [MediaImageRenderer] that uses GlideImage with full caching,
@@ -53,15 +62,19 @@ val GlideMediaImageRenderer = object : MediaImageRenderer {
         signature: Any?
     ) {
         val allowGifAnimation by Settings.Misc.rememberAllowGifAnimation()
+        // Phase 3 (#1076): scroll-aware tier. Null (surfaces without motion state) => idle/refined.
+        val isMoving = LocalThumbnailMotion.current?.value == true
         val signatureStr = signature?.toString() ?: ""
-        val isGif = allowGifAnimation && signatureStr.contains(".gif", ignoreCase = true)
-        val isAnimatable = allowGifAnimation && (
+        // Animated formats stay static during motion; they may animate only once the list is idle.
+        val isGif = allowGifAnimation && !isMoving && signatureStr.contains(".gif", ignoreCase = true)
+        val isAnimatable = allowGifAnimation && !isMoving && (
             signatureStr.contains(".avif", ignoreCase = true) ||
             signatureStr.contains(".apng", ignoreCase = true)
         )
-        // Heavy software codecs (no hardware decode) are expensive to decode. The default 0.4x
-        // thumbnail pass would decode them twice; skip it so they load closer to PNG speed.
+        // Heavy software codecs (no hardware decode) are expensive to decode. The idle refined pass
+        // skips the extra thumbnail sub-request for them so they decode once, not twice.
         val isHeavyCodec = HEAVY_CODEC_EXTENSIONS.any { signatureStr.contains(it, ignoreCase = true) }
+        val tier = if (isMoving) "MOTION" else "REFINED"
         GlideImage(
             modifier = modifier,
             model = model,
@@ -70,12 +83,27 @@ val GlideMediaImageRenderer = object : MediaImageRenderer {
             loading = placeholder(0x4D444444.toDrawable()),
             failure = placeholder(0x33444444.toDrawable()),
             requestBuilderTransform = {
-                var request = it.centerCrop().diskCacheStrategy(DiskCacheStrategy.ALL)
-                if (!isHeavyCodec) {
-                    request = request.thumbnail(request.clone().sizeMultiplier(0.4f))
+                val base = it.centerCrop().diskCacheStrategy(DiskCacheStrategy.ALL)
+                // Cheap MOTION-tier sub-request: small, static, stable key. It is used both as the
+                // standalone request during a fling and as the idle refined request's thumbnail
+                // placeholder, so the same bitmap is decoded once and reused (no flicker/re-decode).
+                var motion = base.clone().override(THUMBNAIL_MOTION_PX)
+                if (signature != null) motion = motion.signature(ObjectKey(signatureStr))
+
+                var request = if (isMoving) {
+                    // Moving: load only the cheap tier — no full-size sibling, no animation.
+                    motion
+                } else {
+                    var refined = base
+                    if (signature != null) refined = refined.signature(ObjectKey(signatureStr))
+                    // Show the cached motion bitmap instantly while the refined image decodes.
+                    if (!isHeavyCodec) refined = refined.thumbnail(motion)
+                    refined
                 }
-                if (signature != null) {
-                    request = request.signature(ObjectKey(signatureStr))
+                // Phase 1 (#1076): attach the bounded telemetry listener (staging/debug only;
+                // null in release so this is a no-op there).
+                ThumbnailTelemetry.listener(surface = "grid", tier = tier)?.let {
+                    request = request.addListener(it)
                 }
                 if (isGif) {
                     request = request.decode(GifDrawable::class.java)

@@ -50,6 +50,8 @@ import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.LocalMediaDistributor
 import com.dot.gallery.core.LocalMediaSelector
+import com.dot.gallery.core.image.thumbnail.LocalThumbnailMotion
+import com.dot.gallery.core.image.thumbnail.rememberThumbnailMotionState
 import com.dot.gallery.core.Settings.Misc.rememberFavoriteIconPosition
 import com.dot.gallery.core.presentation.components.Error
 import com.dot.gallery.core.presentation.components.LoadingMedia
@@ -291,8 +293,14 @@ private fun <T : Media> GridPinchZoomScope.MediaGridContentWithHeaders(
         val cellState = remember(isSelectionActive, selectedMedia.value, favoriteIconPosition, cloudSyncStates, cloudBackedUpIds) {
             MediaCellState(isSelectionActive, selectedMedia.value, favoriteIconPosition, cloudSyncStates, cloudBackedUpIds)
         }
+        // Phase 3 (#1076): publish debounced scroll-motion so cells load the cheap MOTION tier
+        // during a fling and refine only once the grid settles.
+        val thumbnailMotion = rememberThumbnailMotionState({ gridState.isScrollInProgress })
         key(gridCells) {
-        CompositionLocalProvider(LocalMediaCellState provides cellState) {
+        CompositionLocalProvider(
+            LocalMediaCellState provides cellState,
+            LocalThumbnailMotion provides thumbnailMotion,
+        ) {
         LazyVerticalGrid(
             state = gridState,
             modifier = modifier
@@ -464,9 +472,14 @@ private fun <T : Media> GridPinchZoomScope.MediaGridContent(
     val cellState = remember(selectionActive, selectedMedia.value, favoriteIconPosition, cloudSyncStates) {
         MediaCellState(selectionActive, selectedMedia.value, favoriteIconPosition, cloudSyncStates)
     }
+    // Phase 3 (#1076): publish debounced scroll-motion for the header-less media grid too.
+    val thumbnailMotion = rememberThumbnailMotionState({ gridState.isScrollInProgress })
 
     key(gridCells) {
-    CompositionLocalProvider(LocalMediaCellState provides cellState) {
+    CompositionLocalProvider(
+        LocalMediaCellState provides cellState,
+        LocalThumbnailMotion provides thumbnailMotion,
+    ) {
     LazyVerticalGrid(
         state = gridState,
         modifier = modifier

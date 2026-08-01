@@ -98,6 +98,13 @@ class DatabaseUpdaterWorker @AssistedInject constructor(
                 database.getMediaDao().setMediaVersion(MediaVersion(mediaVersion))
                 database.getMediaDao().updateMedia(it)
                 database.getClassifierDao().deleteDeclassifiedImages(it.fastMap { m -> m.id })
+                // Drop category memberships whose media was just removed from the mirror so the
+                // Library/Categories UI never shows a stale count or a blank cover (#1076).
+                // Guarded on a non-empty mirror so we never wipe every membership.
+                if (it.isNotEmpty()) {
+                    val removed = database.getCategoryDao().cleanupCategoriesForDeletedMedia()
+                    if (removed > 0) printDebug("Removed $removed orphaned category memberships")
+                }
             }
         }
 

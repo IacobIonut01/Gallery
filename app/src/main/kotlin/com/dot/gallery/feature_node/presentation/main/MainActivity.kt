@@ -47,6 +47,7 @@ import com.dot.gallery.feature_node.domain.util.EventHandler
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
 import com.dot.gallery.feature_node.presentation.util.toggleOrientation
 import com.dot.gallery.ui.theme.GalleryTheme
+import com.dot.gallery.core.image.thumbnail.ThumbnailTelemetry
 import com.dot.gallery.core.metrics.StartupTracer
 import dagger.hilt.android.AndroidEntryPoint
 import dev.chrisbanes.haze.LocalHazeStyle
@@ -200,6 +201,13 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // Phase 1 (#1076): flush bounded thumbnail telemetry when backgrounding so a scroll/soak
+        // session's latency + cache-source distribution can be read from logcat (staging/debug only).
+        ThumbnailTelemetry.logDump()
     }
 
     private fun enforceSecureFlag() {

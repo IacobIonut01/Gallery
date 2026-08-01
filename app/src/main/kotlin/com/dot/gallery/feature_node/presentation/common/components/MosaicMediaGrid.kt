@@ -62,6 +62,8 @@ import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.Constants.mosaicColumnsList
 import com.dot.gallery.core.LocalMediaDistributor
 import com.dot.gallery.core.LocalMediaSelector
+import com.dot.gallery.core.image.thumbnail.LocalThumbnailMotion
+import com.dot.gallery.core.image.thumbnail.rememberThumbnailMotionState
 import com.dot.gallery.core.Settings.Misc.rememberFavoriteIconPosition
 import com.dot.gallery.core.presentation.components.Error
 import com.dot.gallery.core.presentation.components.LoadingMedia
@@ -387,8 +389,13 @@ fun <T : Media> MosaicMediaGrid(
         val cellState = remember(isSelectionActive, selectedMedia.value, favoriteIconPosition, cloudSyncStates) {
             MediaCellState(isSelectionActive, selectedMedia.value, favoriteIconPosition, cloudSyncStates)
         }
+        // Phase 3 (#1076): publish debounced scroll-motion for the mosaic grid too.
+        val thumbnailMotion = rememberThumbnailMotionState({ gridState.isScrollInProgress })
         key(safeColumns) {
-        CompositionLocalProvider(LocalMediaCellState provides cellState) {
+        CompositionLocalProvider(
+            LocalMediaCellState provides cellState,
+            LocalThumbnailMotion provides thumbnailMotion,
+        ) {
         LazyVerticalGrid(
             state = gridState,
             modifier = modifier

@@ -33,7 +33,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
+import androidx.compose.runtime.CompositionLocalProvider
 import com.dot.gallery.core.LocalMediaSelector
+import com.dot.gallery.core.image.thumbnail.LocalThumbnailMotion
+import com.dot.gallery.core.image.thumbnail.rememberThumbnailMotionState
 import com.dot.gallery.core.presentation.components.MediaItemHeader
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaItem
@@ -82,7 +85,10 @@ fun <T: Media> PickerMediaScreen(
     }
     val selector = LocalMediaSelector.current
     val selectedMedia = selector.selectedMedia.collectAsStateWithLifecycle()
+    // Phase 3 (#1076): cheap MOTION tier while the picker grid is flinging.
+    val thumbnailMotion = rememberThumbnailMotionState({ gridState.isScrollInProgress })
 
+    CompositionLocalProvider(LocalThumbnailMotion provides thumbnailMotion) {
     LazyVerticalGrid(
         state = gridState,
         modifier = Modifier
@@ -188,5 +194,6 @@ fun <T: Media> PickerMediaScreen(
                 }
             }
         }
+    }
     }
 }

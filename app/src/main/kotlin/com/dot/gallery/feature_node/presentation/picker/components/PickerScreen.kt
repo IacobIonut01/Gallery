@@ -40,6 +40,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.runtime.CompositionLocalProvider
+import com.dot.gallery.core.image.thumbnail.LocalThumbnailMotion
+import com.dot.gallery.core.image.thumbnail.rememberThumbnailMotionState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -1056,8 +1060,13 @@ private fun PickerAlbumsGrid(
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: androidx.compose.animation.AnimatedContentScope
 ) {
+    // Phase 3 (#1076): album covers (RenderImage) load the cheap MOTION tier while scrolling.
+    val gridState = rememberLazyGridState()
+    val thumbnailMotion = rememberThumbnailMotionState({ gridState.isScrollInProgress })
+    CompositionLocalProvider(LocalThumbnailMotion provides thumbnailMotion) {
     with(sharedTransitionScope) {
         LazyVerticalGrid(
+            state = gridState,
             columns = GridCells.Adaptive(Dimens.Album()),
             modifier = Modifier
                 .fillMaxSize()
@@ -1130,6 +1139,7 @@ private fun PickerAlbumsGrid(
                 }
             }
         }
+    }
     }
 }
 

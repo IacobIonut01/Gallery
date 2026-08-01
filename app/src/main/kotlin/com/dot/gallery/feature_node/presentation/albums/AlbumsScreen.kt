@@ -56,6 +56,9 @@ import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.Constants.albumCellsList
 import com.dot.gallery.core.LocalMediaDistributor
 import com.dot.gallery.core.ScrollToTopHandler
+import androidx.compose.runtime.CompositionLocalProvider
+import com.dot.gallery.core.image.thumbnail.LocalThumbnailMotion
+import com.dot.gallery.core.image.thumbnail.rememberThumbnailMotionState
 import com.dot.gallery.core.animateOrJumpToTop
 import com.dot.gallery.core.Settings
 import com.dot.gallery.core.Settings.Album.rememberAlbumGridSize
@@ -173,6 +176,14 @@ fun AlbumsScreen(
     val listState = rememberLazyListState()
     var viewType by rememberLastViewType()
     val pinnedAlbumsAsGrid by rememberPinnedAlbumsAsGrid()
+    // Phase 3 (#1076): album covers render through the shared RenderImage, so publishing the
+    // active view's debounced scroll-motion makes them use the cheap MOTION tier while scrolling.
+    val thumbnailMotion = rememberThumbnailMotionState({
+        when (viewType) {
+            Settings.Album.ViewType.LIST -> listState.isScrollInProgress
+            else -> pinchState.gridState.isScrollInProgress
+        }
+    })
 
     LaunchedEffect(pinchState.isZooming) {
         lastCellIndex = albumCellsList.indexOf(pinchState.currentCells)
@@ -207,6 +218,7 @@ fun AlbumsScreen(
             )
         }
     ) { innerPaddingValues ->
+        CompositionLocalProvider(LocalThumbnailMotion provides thumbnailMotion) {
         when (viewType) {
             Settings.Album.ViewType.GRID -> {
                 with(sharedTransitionScope) {
@@ -883,6 +895,7 @@ fun AlbumsScreen(
                     }
                 }
             }
+        }
         }
     }
     /** Error State Handling Block **/
