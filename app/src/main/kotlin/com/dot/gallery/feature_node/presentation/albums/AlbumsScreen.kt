@@ -117,6 +117,8 @@ fun AlbumsScreen(
     onEditGroup: (AlbumGroupWithAlbums) -> Unit = {},
     onAddToGroup: ((Album) -> Unit)? = null,
     onToggleMergeSubfolders: ((Album) -> Unit)? = null,
+    onMergeParentSubfolders: ((Album) -> Unit)? = null,
+    onToggleMergedSubfolderDisplayMode: ((Album) -> Unit)? = null,
     onCollectionClick: (CollectionWithCount) -> Unit = {},
     onCollectionRename: (CollectionWithCount) -> Unit = {},
     onCollectionDelete: (CollectionWithCount) -> Unit = {},
@@ -132,6 +134,11 @@ fun AlbumsScreen(
     val mergedSubfolderAlbums by distributor.mergedSubfolderAlbumsFlow.collectAsStateWithLifecycle()
     val mergedSubfolderIds = remember(mergedSubfolderAlbums) {
         mergedSubfolderAlbums.mapTo(HashSet()) { it.id }
+    }
+    val subGalleryIds = remember(mergedSubfolderAlbums) {
+        mergedSubfolderAlbums.filter {
+            it.displayMode == com.dot.gallery.feature_node.domain.model.MergedSubfolderAlbum.DISPLAY_MODE_SUB_GALLERY
+        }.mapTo(HashSet()) { it.id }
     }
     val mediaState = distributor.timelineMediaFlow.collectAsStateWithLifecycle(
         context = Dispatchers.IO,
@@ -277,7 +284,11 @@ fun AlbumsScreen(
                                             CarouselPinnedAlbums(
                                                 albumList = albumsState.value.albumsPinned,
                                                 onAlbumClick = onAlbumClick,
-                                                onAlbumLongClick = onAlbumLongClick
+                                                onAlbumLongClick = onAlbumLongClick,
+                                                mergedSubfolderIds = mergedSubfolderIds,
+                                                subGalleryIds = subGalleryIds,
+                                                onToggleMergeSubfolders = onToggleMergeSubfolders,
+                                                onToggleMergedSubfolderDisplayMode = onToggleMergedSubfolderDisplayMode
                                             )
                                         }
                                     }
@@ -304,7 +315,10 @@ fun AlbumsScreen(
                                         onAddToGroup = onAddToGroup,
                                         onMoveToSection = onMoveToSection,
                                         onToggleMergeSubfolders = onToggleMergeSubfolders,
-                                        isMergedSubfolder = item.id in mergedSubfolderIds
+                                        onMergeParentSubfolders = onMergeParentSubfolders,
+                                        onToggleMergedSubfolderDisplayMode = onToggleMergedSubfolderDisplayMode,
+                                        isMergedSubfolder = item.id in mergedSubfolderIds,
+                                        isSubGallery = item.id in subGalleryIds
                                     )
                                 }
                             }
@@ -381,7 +395,10 @@ fun AlbumsScreen(
                                                 onAddToGroup = onAddToGroup,
                                                 onMoveToSection = onMoveToSection,
                                                 onToggleMergeSubfolders = onToggleMergeSubfolders,
-                                                isMergedSubfolder = item.id in mergedSubfolderIds
+                                                onMergeParentSubfolders = onMergeParentSubfolders,
+                                                onToggleMergedSubfolderDisplayMode = onToggleMergedSubfolderDisplayMode,
+                                                isMergedSubfolder = item.id in mergedSubfolderIds,
+                                                isSubGallery = item.id in subGalleryIds
                                             )
                                         }
                                     }
@@ -414,7 +431,10 @@ fun AlbumsScreen(
                                         onAddToGroup = onAddToGroup,
                                         onMoveToSection = onMoveToSection,
                                         onToggleMergeSubfolders = onToggleMergeSubfolders,
-                                        isMergedSubfolder = item.id in mergedSubfolderIds
+                                        onMergeParentSubfolders = onMergeParentSubfolders,
+                                        onToggleMergedSubfolderDisplayMode = onToggleMergedSubfolderDisplayMode,
+                                        isMergedSubfolder = item.id in mergedSubfolderIds,
+                                        isSubGallery = item.id in subGalleryIds
                                     )
                                 }
                             }
@@ -627,7 +647,11 @@ fun AlbumsScreen(
                                         CarouselPinnedAlbums(
                                             albumList = albumsState.value.albumsPinned,
                                             onAlbumClick = onAlbumClick,
-                                            onAlbumLongClick = onAlbumLongClick
+                                            onAlbumLongClick = onAlbumLongClick,
+                                            mergedSubfolderIds = mergedSubfolderIds,
+                                            subGalleryIds = subGalleryIds,
+                                            onToggleMergeSubfolders = onToggleMergeSubfolders,
+                                            onToggleMergedSubfolderDisplayMode = onToggleMergedSubfolderDisplayMode
                                         )
                                     }
                                 }
@@ -653,7 +677,10 @@ fun AlbumsScreen(
                                     onAddToGroup = onAddToGroup,
                                     onMoveToSection = onMoveToSection,
                                     onToggleMergeSubfolders = onToggleMergeSubfolders,
-                                    isMergedSubfolder = item.id in mergedSubfolderIds
+                                    onMergeParentSubfolders = onMergeParentSubfolders,
+                                    onToggleMergedSubfolderDisplayMode = onToggleMergedSubfolderDisplayMode,
+                                    isMergedSubfolder = item.id in mergedSubfolderIds,
+                                    isSubGallery = item.id in subGalleryIds
                                 )
                             }
                         }
@@ -723,7 +750,10 @@ fun AlbumsScreen(
                                             onAddToGroup = onAddToGroup,
                                             onMoveToSection = onMoveToSection,
                                             onToggleMergeSubfolders = onToggleMergeSubfolders,
-                                            isMergedSubfolder = item.id in mergedSubfolderIds
+                                            onMergeParentSubfolders = onMergeParentSubfolders,
+                                            onToggleMergedSubfolderDisplayMode = onToggleMergedSubfolderDisplayMode,
+                                            isMergedSubfolder = item.id in mergedSubfolderIds,
+                                            isSubGallery = item.id in subGalleryIds
                                         )
                                     }
                                 }
@@ -756,7 +786,10 @@ fun AlbumsScreen(
                                     onAddToGroup = onAddToGroup,
                                     onMoveToSection = onMoveToSection,
                                     onToggleMergeSubfolders = onToggleMergeSubfolders,
-                                    isMergedSubfolder = item.id in mergedSubfolderIds
+                                    onMergeParentSubfolders = onMergeParentSubfolders,
+                                    onToggleMergedSubfolderDisplayMode = onToggleMergedSubfolderDisplayMode,
+                                    isMergedSubfolder = item.id in mergedSubfolderIds,
+                                    isSubGallery = item.id in subGalleryIds
                                 )
                             }
                         }

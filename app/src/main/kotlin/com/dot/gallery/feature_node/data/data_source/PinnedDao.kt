@@ -21,8 +21,14 @@ interface PinnedDao {
     @Upsert
     suspend fun insertPinnedAlbum(pinnedAlbum: PinnedAlbum)
 
+    @Upsert
+    suspend fun insertPinnedAlbums(pinnedAlbums: List<PinnedAlbum>)
+
     @Delete
     suspend fun removePinnedAlbum(pinnedAlbum: PinnedAlbum)
+
+    @Query("DELETE FROM pinned_table WHERE id IN (:albumIds)")
+    suspend fun removePinnedAlbums(albumIds: List<Long>)
 
     @Query("SELECT EXISTS(SELECT * FROM pinned_table WHERE id = :albumId)")
     fun albumIsPinned(albumId: Long): Boolean

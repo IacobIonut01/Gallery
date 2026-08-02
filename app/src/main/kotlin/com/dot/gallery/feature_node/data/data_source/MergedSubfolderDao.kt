@@ -27,4 +27,7 @@ interface MergedSubfolderDao {
     @Query("SELECT id FROM merged_subfolder_table")
     suspend fun getMergedSubfolderAlbumIds(): List<Long>
 
+    @Query("UPDATE merged_subfolder_table SET displayMode = :displayMode WHERE id = :id")
+    suspend fun updateDisplayMode(id: Long, displayMode: String)
+
 }

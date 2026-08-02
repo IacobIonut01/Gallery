@@ -529,6 +529,8 @@ fun NavigationComp(
                         scope.launch { groupSheetState.show() }
                     },
                     onToggleMergeSubfolders = albumsViewModel::toggleMergeSubfolders,
+                    onMergeParentSubfolders = albumsViewModel::mergeParentSubfolders,
+                    onToggleMergedSubfolderDisplayMode = albumsViewModel::toggleMergedSubfolderDisplayMode,
                     onCollectionClick = { cwc ->
                         eventHandler.navigate(
                             Screen.CollectionViewScreen.collectionId(cwc.collection.id)
@@ -598,14 +600,19 @@ fun NavigationComp(
                 val argumentAlbumId = remember(backStackEntry) {
                     backStackEntry.arguments?.getLong("albumId") ?: -1
                 }
-                val albumMediaState = distributor.albumTimelineMediaFlow(argumentAlbumId)
-                    .collectAsStateWithLifecycle()
+                val albumMediaFlow = remember(argumentAlbumId) {
+                    distributor.albumTimelineMediaFlow(argumentAlbumId)
+                }
+                val albumMediaState = albumMediaFlow.collectAsStateWithLifecycle(initialValue = MediaState())
                 AlbumTimelineScreen(
                     albumId = argumentAlbumId,
                     albumName = argumentAlbumName,
                     paddingValues = paddingValues,
                     albumMediaState = albumMediaState,
                     metadataState = metadataState,
+                    onAlbumClick = { album ->
+                        navController.navigate(Screen.AlbumViewScreen.album(album.id, album.label))
+                    },
                     isScrolling = isScrolling,
                     sharedTransitionScope = this@SharedTransitionLayout,
                     animatedContentScope = this
@@ -760,8 +767,10 @@ fun NavigationComp(
                     )
                 } else null
                 val privateFolderState = privateFolderViewModel?.mediaState?.collectAsStateWithLifecycle()
-                val albumMediaState = distributor.albumTimelineMediaFlow(albumId)
-                    .collectAsStateWithLifecycle()
+                val albumMediaFlow = remember(albumId) {
+                    distributor.albumTimelineMediaFlow(albumId)
+                }
+                val albumMediaState = albumMediaFlow.collectAsStateWithLifecycle(initialValue = MediaState())
                 val mediaState by rememberedDerivedState(albumId, privateFolderState?.value, albumMediaState.value) {
                     if (isPrivateFolder) {
                         privateFolderState ?: albumMediaState

@@ -249,7 +249,7 @@ fun ImageSearchPickerSheet(
     val albumMediaState by remember(selectedAlbum) {
         selectedAlbum?.let { distributor.albumTimelineMediaFlow(it.id) }
             ?: kotlinx.coroutines.flow.MutableStateFlow(MediaState<Media.UriMedia>())
-    }.collectAsStateWithLifecycle()
+    }.collectAsStateWithLifecycle(initialValue = MediaState())
 
     val navState: ImagePickerNavState = if (selectedAlbum != null) {
         ImagePickerNavState.AlbumDetail(selectedAlbum!!)

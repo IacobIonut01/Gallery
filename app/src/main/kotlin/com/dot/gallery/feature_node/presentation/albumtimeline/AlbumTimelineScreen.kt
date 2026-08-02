@@ -9,6 +9,7 @@ import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -127,6 +128,7 @@ fun AlbumTimelineScreen(
     isScrolling: MutableState<Boolean>,
     albumMediaState: State<MediaState<Media.UriMedia>>,
     metadataState: State<MediaMetadataState>,
+    onAlbumClick: (Album) -> Unit,
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
 ) {
@@ -152,17 +154,28 @@ fun AlbumTimelineScreen(
     val isRefreshing by distributor.isRefreshing.collectAsStateWithLifecycle()
     val refreshScope = rememberCoroutineScope()
     val albumsState by distributor.albumsFlow.collectAsStateWithLifecycle()
+    val mergedSubfolderConfigs by distributor.mergedSubfolderAlbumsFlow.collectAsStateWithLifecycle()
+    val isSubGallery = mergedSubfolderConfigs.any {
+        it.id == albumId &&
+            it.displayMode == com.dot.gallery.feature_node.domain.model.MergedSubfolderAlbum.DISPLAY_MODE_SUB_GALLERY
+    }
     val currentAlbum = remember(albumsState, albumId) {
         albumsState.albums.find { it.id == albumId }
+            ?: albumsState.albumsWithBlacklisted.find { it.id == albumId }
     }
-    val mergedAlbumIds = currentAlbum?.mergedAlbumIds ?: emptyList()
-    val constituentAlbums = remember(albumsState, mergedAlbumIds) {
-        if (mergedAlbumIds.size > 1) {
-            val idSet = mergedAlbumIds.toSet()
-            albumsState.albumsWithBlacklisted.filter { it.id in idSet }
+    val mergedAlbumIds = currentAlbum?.sourceAlbumIds ?: emptyList()
+    val constituentAlbums = remember(albumsState, mergedAlbumIds, currentAlbum) {
+        if (mergedAlbumIds.size > 1 || currentAlbum?.mergesSubfolders == true) {
+            val rawById = albumsState.albumsWithBlacklisted.associateBy { it.id }
+            mergedAlbumIds.mapNotNull(rawById::get).filterNot {
+                currentAlbum?.mergesSubfolders == true && it.id == currentAlbum.id
+            }
         } else emptyList()
     }
-    var showMergedBanner by rememberSaveable { mutableStateOf(true) }
+    val resolvedAlbumName = currentAlbum?.label ?: albumName
+    val hasMergeInfo = currentAlbum?.isMerged == true && constituentAlbums.isNotEmpty()
+    var showMergedBanner by rememberSaveable(albumId) { mutableStateOf(true) }
+    val showMergeContent = hasMergeInfo && (isSubGallery || showMergedBanner)
     val context = androidx.compose.ui.platform.LocalContext.current
     val selector = LocalMediaSelector.current
     val selectedMedia = selector.selectedMedia.collectAsStateWithLifecycle()
@@ -215,7 +228,7 @@ fun AlbumTimelineScreen(
                     ),
                     title = {
                         TwoLinedDateToolbarTitle(
-                            albumName = albumName,
+                            albumName = resolvedAlbumName,
                             dateHeader = mediaState.value.dateHeader
                         )
                     },
@@ -318,7 +331,7 @@ fun AlbumTimelineScreen(
                         mappedData = mappedData,
                         columns = currentColumns,
                         allowHeaders = true,
-                        leadingItemCount = if (constituentAlbums.size > 1 && showMergedBanner) 1 else 0,
+                        leadingItemCount = if (showMergeContent) 1 else 0,
                     ),
                     headers = headers,
                     state = mosaicGridState,
@@ -334,16 +347,22 @@ fun AlbumTimelineScreen(
                         allowSelection = true,
                         canScroll = !mosaicPinchState.isZooming,
                         allowHeaders = true,
-                        aboveGridContent = if (constituentAlbums.size > 1 && showMergedBanner) {
+                        aboveGridContent = if (showMergeContent) {
                             {
                                 AlbumsMergedBanner(
                                     constituentAlbums = constituentAlbums,
+                                    mergesSubfolders = currentAlbum.mergesSubfolders,
+                                    mergesByName = currentAlbum.mergesByName,
+                                    dismissible = !isSubGallery,
+                                    onAlbumClick = onAlbumClick,
                                     onDismiss = { showMergedBanner = false }
                                 )
                             }
                         } else null,
                         isScrolling = isScrolling,
-                        emptyContent = { EmptyMedia() },
+                        emptyContent = {
+                            if (!isSubGallery || constituentAlbums.isEmpty()) EmptyMedia()
+                        },
                         sharedTransitionScope = sharedTransitionScope,
                         animatedContentScope = animatedContentScope,
                         onMediaClick = {
@@ -371,16 +390,22 @@ fun AlbumTimelineScreen(
                         ),
                         canScroll = canScroll,
                         allowHeaders = !hideTimelineOnAlbum,
-                        aboveGridContent = if (constituentAlbums.size > 1 && showMergedBanner) {
+                        aboveGridContent = if (showMergeContent) {
                             {
                                 AlbumsMergedBanner(
                                     constituentAlbums = constituentAlbums,
+                                    mergesSubfolders = currentAlbum.mergesSubfolders,
+                                    mergesByName = currentAlbum.mergesByName,
+                                    dismissible = !isSubGallery,
+                                    onAlbumClick = onAlbumClick,
                                     onDismiss = { showMergedBanner = false }
                                 )
                             }
                         } else null,
                         isScrolling = isScrolling,
-                        emptyContent = { EmptyMedia() },
+                        emptyContent = {
+                            if (!isSubGallery || constituentAlbums.isEmpty()) EmptyMedia()
+                        },
                         sharedTransitionScope = sharedTransitionScope,
                         animatedContentScope = animatedContentScope
                     ) {
@@ -420,6 +445,10 @@ fun AlbumTimelineScreen(
 @Composable
 private fun AlbumsMergedBanner(
     constituentAlbums: List<Album>,
+    mergesSubfolders: Boolean,
+    mergesByName: Boolean,
+    dismissible: Boolean,
+    onAlbumClick: (Album) -> Unit,
     onDismiss: () -> Unit
 ) {
     Surface(
@@ -443,23 +472,35 @@ private fun AlbumsMergedBanner(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = stringResource(R.string.albums_merged_title),
+                        text = stringResource(
+                            if (mergesSubfolders) R.string.subfolders_merged_title
+                            else R.string.albums_merged_title
+                        ),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = stringResource(R.string.albums_merged_description, constituentAlbums.size),
+                        text = stringResource(
+                            when {
+                                mergesSubfolders && mergesByName -> R.string.folders_combined_description
+                                mergesSubfolders -> R.string.subfolders_merged_description
+                                else -> R.string.albums_merged_description
+                            },
+                            constituentAlbums.size
+                        ),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                IconButton(onClick = onDismiss) {
-                    Icon(
-                        imageVector = Icons.Outlined.Close,
-                        contentDescription = stringResource(R.string.dismiss),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                if (dismissible) {
+                    IconButton(onClick = onDismiss) {
+                        Icon(
+                            imageVector = Icons.Outlined.Close,
+                            contentDescription = stringResource(R.string.dismiss),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
             Spacer(modifier = Modifier.height(12.dp))
@@ -474,7 +515,9 @@ private fun AlbumsMergedBanner(
                 ) { album ->
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.width(72.dp)
+                        modifier = Modifier
+                            .width(72.dp)
+                            .clickable { onAlbumClick(album) }
                     ) {
                         GlideImage(
                             modifier = Modifier

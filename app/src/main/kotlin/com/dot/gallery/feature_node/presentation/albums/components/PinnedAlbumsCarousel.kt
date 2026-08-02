@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AccountTree
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -64,7 +66,11 @@ fun CarouselPinnedAlbums(
     modifier: Modifier = Modifier,
     albumList: List<Album>,
     onAlbumClick: (Album) -> Unit,
-    onAlbumLongClick: (Album) -> Unit
+    onAlbumLongClick: (Album) -> Unit,
+    mergedSubfolderIds: Set<Long> = emptySet(),
+    subGalleryIds: Set<Long> = emptySet(),
+    onToggleMergeSubfolders: ((Album) -> Unit)? = null,
+    onToggleMergedSubfolderDisplayMode: ((Album) -> Unit)? = null
 ) {
     val scope = rememberCoroutineScope()
     val appBottomSheetState = rememberAppBottomSheetState()
@@ -128,9 +134,25 @@ fun CarouselPinnedAlbums(
     )
 
     val unpinTitle = stringResource(R.string.unpin)
+    val mergeTitle = stringResource(
+        if (selectedAlbum?.id in mergedSubfolderIds) R.string.unmerge_subfolders
+        else R.string.merge_subfolders
+    )
+    val layoutTitle = stringResource(
+        if (selectedAlbum?.id in subGalleryIds) R.string.show_combined_timeline
+        else R.string.browse_subfolders
+    )
     val tertiaryContainer = MaterialTheme.colorScheme.tertiaryContainer
     val onTertiaryContainer = MaterialTheme.colorScheme.onTertiaryContainer
-    val optionList = remember {
+    val optionList = remember(
+        selectedAlbum,
+        mergedSubfolderIds,
+        subGalleryIds,
+        onToggleMergeSubfolders,
+        onToggleMergedSubfolderDisplayMode,
+        mergeTitle,
+        layoutTitle
+    ) {
         mutableStateListOf(
             OptionItem(
                 text = unpinTitle,
@@ -146,7 +168,41 @@ fun CarouselPinnedAlbums(
                     }
                 }
             )
-        )
+        ).apply {
+            if (onToggleMergeSubfolders != null) {
+                add(
+                    OptionItem(
+                        icon = Icons.Outlined.AccountTree,
+                        text = mergeTitle,
+                        onClick = {
+                            scope.launch {
+                                appBottomSheetState.hide()
+                                currentAlbum?.let(onToggleMergeSubfolders)
+                                currentAlbum = null
+                            }
+                        }
+                    )
+                )
+            }
+            if (
+                selectedAlbum?.id in mergedSubfolderIds &&
+                onToggleMergedSubfolderDisplayMode != null
+            ) {
+                add(
+                    OptionItem(
+                        icon = Icons.Outlined.AccountTree,
+                        text = layoutTitle,
+                        onClick = {
+                            scope.launch {
+                                appBottomSheetState.hide()
+                                currentAlbum?.let(onToggleMergedSubfolderDisplayMode)
+                                currentAlbum = null
+                            }
+                        }
+                    )
+                )
+            }
+        }
     }
 
     OptionSheet(

@@ -5,6 +5,8 @@
 
 package com.dot.gallery.feature_node.presentation.util
 
+import android.net.Uri
+
 sealed class Screen(val route: String) {
     data object TimelineScreen : Screen("timeline_screen")
     data object AlbumsScreen : Screen("albums_screen")
@@ -12,6 +14,9 @@ sealed class Screen(val route: String) {
     data object AlbumViewScreen : Screen("album_view_screen") {
 
         fun albumAndName() = "$route?albumId={albumId}&albumName={albumName}"
+
+        fun album(id: Long, name: String) =
+            "$route?albumId=$id&albumName=${Uri.encode(name)}"
 
     }
     data object MediaViewScreen : Screen("media_screen") {

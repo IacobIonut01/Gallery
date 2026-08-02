@@ -63,13 +63,21 @@ interface MediaRepository {
 
     suspend fun insertPinnedAlbum(pinnedAlbum: PinnedAlbum)
 
+    suspend fun insertPinnedAlbums(pinnedAlbums: List<PinnedAlbum>)
+
     suspend fun removePinnedAlbum(pinnedAlbum: PinnedAlbum)
+
+    suspend fun removePinnedAlbums(albumIds: List<Long>)
 
     fun getPinnedAlbums(): Flow<List<PinnedAlbum>>
 
     suspend fun insertLockedAlbum(lockedAlbum: LockedAlbum)
 
+    suspend fun insertLockedAlbums(lockedAlbums: List<LockedAlbum>)
+
     suspend fun removeLockedAlbum(lockedAlbum: LockedAlbum)
+
+    suspend fun removeLockedAlbums(albumIds: List<Long>)
 
     fun getLockedAlbums(): Flow<List<LockedAlbum>>
 
@@ -82,6 +90,8 @@ interface MediaRepository {
     suspend fun getBlacklistedAlbumsAsync(): List<IgnoredAlbum>
 
     fun getMediaByAlbumId(albumId: Long, skipBatching: Boolean = false): Flow<Resource<List<UriMedia>>>
+
+    fun getMediaByAlbumIds(albumIds: Set<Long>, skipBatching: Boolean = false): Flow<Resource<List<UriMedia>>>
 
     fun getMediaByAlbumIdWithType(
         albumId: Long,
@@ -321,6 +331,8 @@ interface MediaRepository {
     suspend fun insertMergedSubfolderAlbum(mergedSubfolderAlbum: MergedSubfolderAlbum)
 
     suspend fun removeMergedSubfolderAlbum(mergedSubfolderAlbum: MergedSubfolderAlbum)
+
+    suspend fun updateMergedSubfolderDisplayMode(id: Long, displayMode: String)
 
     fun getMergedSubfolderAlbums(): Flow<List<MergedSubfolderAlbum>>
 

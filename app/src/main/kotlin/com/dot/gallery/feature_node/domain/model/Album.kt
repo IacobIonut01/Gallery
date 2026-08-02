@@ -26,9 +26,17 @@ data class Album(
     val isPinned: Boolean = false,
     val isLocked: Boolean = false,
     val mergedAlbumIds: List<Long> = emptyList(),
+    val mergeReasons: List<AlbumMergeReason> = emptyList(),
+    val storageVolume: String? = null,
 ) : Parcelable {
 
-    val isMerged: Boolean get() = mergedAlbumIds.size > 1
+    val sourceAlbumIds: List<Long> get() = mergedAlbumIds.ifEmpty { listOf(id) }
+
+    val isMerged: Boolean get() = sourceAlbumIds.size > 1 || mergeReasons.isNotEmpty()
+
+    val mergesSubfolders: Boolean get() = AlbumMergeReason.SUBFOLDERS in mergeReasons
+
+    val mergesByName: Boolean get() = AlbumMergeReason.SAME_NAME in mergeReasons
 
     val key: String
         get() = "{$id, $uri, $timestamp}"
@@ -38,7 +46,8 @@ data class Album(
 
     @IgnoredOnParcel
     @Stable
-    val volume: String = pathToThumbnail.substringBeforeLast("/").removeSuffix(relativePath.removeSuffix("/"))
+    val volume: String = storageVolume
+        ?: pathToThumbnail.substringBeforeLast("/").removeSuffix(relativePath.removeSuffix("/"))
 
     @IgnoredOnParcel
     @Stable

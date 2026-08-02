@@ -17,12 +17,13 @@ import com.dot.gallery.core.util.Query
 import com.dot.gallery.core.util.SdkCompat
 import com.dot.gallery.core.util.and
 import com.dot.gallery.core.util.eq
+import com.dot.gallery.core.util.join
+import com.dot.gallery.core.util.or
 import com.dot.gallery.core.util.ext.mapEachRow
 import com.dot.gallery.core.util.ext.queryFlow
 import com.dot.gallery.core.util.ext.querySteppedFlow
 import com.dot.gallery.core.util.ext.tryGetLong
 import com.dot.gallery.core.util.ext.tryGetString
-import com.dot.gallery.core.util.join
 import com.dot.gallery.feature_node.data.data_source.mediastore.MediaQuery
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaType
@@ -30,6 +31,13 @@ import com.dot.gallery.feature_node.presentation.util.getDate
 import com.dot.gallery.feature_node.presentation.util.parseTimestampFromFilename
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+
+private fun mediaBucketQuery(bucketCount: Int): Query? = List(bucketCount) {
+    MediaStore.Files.FileColumns.BUCKET_ID eq Query.ARG
+}.join(Query::or)
+
+internal fun mediaBucketSelection(bucketCount: Int): String =
+    mediaBucketQuery(bucketCount)?.build().orEmpty()
 
 /**
  * Media flow
@@ -44,15 +52,17 @@ class MediaFlow(
     private val contentResolver: ContentResolver,
     private val buckedId: Long,
     private val mimeType: String? = null,
-    private val skipBatching: Boolean = false
+    private val skipBatching: Boolean = false,
+    private val bucketIds: Set<Long> = setOf(buckedId)
 ) : QueryFlow<Media.UriMedia>() {
     init {
-        assert(buckedId != MediaStoreBuckets.MEDIA_STORE_BUCKET_PLACEHOLDER.id) {
+        assert(buckedId != MediaStoreBuckets.MEDIA_STORE_BUCKET_PLACEHOLDER.id || bucketIds.isEmpty()) {
             "MEDIA_STORE_BUCKET_PLACEHOLDER found"
         }
     }
 
     override fun flowCursor(): Flow<Cursor?> {
+        if (bucketIds.isEmpty()) return flowOf(null)
         // Trash and Favorites are not supported on API 29
         if (!SdkCompat.supportsTrash && buckedId == MediaStoreBuckets.MEDIA_STORE_BUCKET_TRASH.id) {
             return flowOf(null)
@@ -78,6 +88,8 @@ class MediaFlow(
             MediaStoreBuckets.MEDIA_STORE_BUCKET_VIDEOS.id -> MediaQuery.Selection.video
             else -> MediaQuery.Selection.imageOrVideo
         }
+        val orderedBucketIds = bucketIds.sorted()
+        val usesBucketFilter = MediaStoreBuckets.entries.none { it.id == buckedId }
         val albumFilter = when (buckedId) {
             MediaStoreBuckets.MEDIA_STORE_BUCKET_FAVORITES.id ->
                 if (SdkCompat.supportsFavorites)
@@ -93,26 +105,21 @@ class MediaFlow(
             MediaStoreBuckets.MEDIA_STORE_BUCKET_PHOTOS.id,
             MediaStoreBuckets.MEDIA_STORE_BUCKET_VIDEOS.id -> null
 
-            else -> MediaStore.Files.FileColumns.BUCKET_ID eq Query.ARG
+            else -> mediaBucketQuery(orderedBucketIds.size)
         }
         val rawMimeType = mimeType?.takeIf { PickerUtils.isMimeTypeNotGeneric(it) }
         val mimeTypeQuery = rawMimeType?.let {
             MediaStore.Files.FileColumns.MIME_TYPE eq Query.ARG
         }
-
-        // Join all the non-null queries
         val selection = listOfNotNull(
             imageOrVideo,
             albumFilter,
             mimeTypeQuery,
-        ).join(Query::and)
-
-        val selectionArgs = listOfNotNull(
-            buckedId.takeIf {
-                MediaStoreBuckets.entries.toTypedArray().none { bucket -> it == bucket.id }
-            }?.toString(),
-            rawMimeType,
-        ).toTypedArray()
+        ).join(Query::and)?.build()
+        val selectionArgs = buildList {
+            if (usesBucketFilter) addAll(orderedBucketIds.map(Long::toString))
+            rawMimeType?.let(::add)
+        }.toTypedArray()
 
         val sortOrder = when (buckedId) {
             MediaStoreBuckets.MEDIA_STORE_BUCKET_TRASH.id ->
@@ -123,7 +130,7 @@ class MediaFlow(
         }
 
         val queryArgs = Bundle().apply {
-            putString(ContentResolver.QUERY_ARG_SQL_SELECTION, selection?.build())
+            putString(ContentResolver.QUERY_ARG_SQL_SELECTION, selection)
             putStringArray(ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS, selectionArgs)
             putString(ContentResolver.QUERY_ARG_SQL_SORT_ORDER, sortOrder)
 

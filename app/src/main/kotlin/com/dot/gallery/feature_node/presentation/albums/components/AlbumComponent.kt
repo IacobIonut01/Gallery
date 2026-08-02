@@ -79,6 +79,7 @@ import com.dot.gallery.cloud.ui.descriptor.ProviderBrandIcon
 import com.dot.gallery.core.LocalMediaHandler
 import com.dot.gallery.core.presentation.components.LocalMediaImageRenderer
 import com.dot.gallery.feature_node.domain.model.Album
+import com.dot.gallery.feature_node.domain.model.AlbumMergeResolver
 import com.dot.gallery.feature_node.presentation.common.components.OptionItem
 import com.dot.gallery.feature_node.presentation.common.components.OptionLayoutStyle
 import com.dot.gallery.feature_node.presentation.common.components.OptionSheet
@@ -108,7 +109,10 @@ fun AlbumComponent(
     onRemoveFromGroup: ((Album) -> Unit)? = null,
     onMoveToSection: ((Album) -> Unit)? = null,
     onToggleMergeSubfolders: ((Album) -> Unit)? = null,
-    isMergedSubfolder: Boolean = false
+    onMergeParentSubfolders: ((Album) -> Unit)? = null,
+    onToggleMergedSubfolderDisplayMode: ((Album) -> Unit)? = null,
+    isMergedSubfolder: Boolean = false,
+    isSubGallery: Boolean = false
 ) {
     val scope = rememberCoroutineScope()
     val appBottomSheetState = rememberAppBottomSheetState()
@@ -129,7 +133,10 @@ fun AlbumComponent(
             onRemoveFromGroup = onRemoveFromGroup,
             onMoveToSection = onMoveToSection,
             onToggleMergeSubfolders = onToggleMergeSubfolders,
-            isMergedSubfolder = isMergedSubfolder
+            onMergeParentSubfolders = onMergeParentSubfolders,
+            onToggleMergedSubfolderDisplayMode = onToggleMergedSubfolderDisplayMode,
+            isMergedSubfolder = isMergedSubfolder,
+            isSubGallery = isSubGallery
         )
         Box(
             modifier = Modifier
@@ -247,7 +254,10 @@ fun AlbumRowComponent(
     onAddToGroup: ((Album) -> Unit)? = null,
     onMoveToSection: ((Album) -> Unit)? = null,
     onToggleMergeSubfolders: ((Album) -> Unit)? = null,
-    isMergedSubfolder: Boolean = false
+    onMergeParentSubfolders: ((Album) -> Unit)? = null,
+    onToggleMergedSubfolderDisplayMode: ((Album) -> Unit)? = null,
+    isMergedSubfolder: Boolean = false,
+    isSubGallery: Boolean = false
 ) {
     val scope = rememberCoroutineScope()
     val appBottomSheetState = rememberAppBottomSheetState()
@@ -280,7 +290,10 @@ fun AlbumRowComponent(
             onAddToGroup = onAddToGroup,
             onMoveToSection = onMoveToSection,
             onToggleMergeSubfolders = onToggleMergeSubfolders,
-            isMergedSubfolder = isMergedSubfolder
+            onMergeParentSubfolders = onMergeParentSubfolders,
+            onToggleMergedSubfolderDisplayMode = onToggleMergedSubfolderDisplayMode,
+            isMergedSubfolder = isMergedSubfolder,
+            isSubGallery = isSubGallery
         )
         Box(
             modifier = Modifier
@@ -358,12 +371,15 @@ fun AlbumOptionSheet(
     onRemoveFromGroup: ((Album) -> Unit)? = null,
     onMoveToSection: ((Album) -> Unit)? = null,
     onToggleMergeSubfolders: ((Album) -> Unit)? = null,
-    isMergedSubfolder: Boolean = false
+    onMergeParentSubfolders: ((Album) -> Unit)? = null,
+    onToggleMergedSubfolderDisplayMode: ((Album) -> Unit)? = null,
+    isMergedSubfolder: Boolean = false,
+    isSubGallery: Boolean = false
 ) {
     val isCloudAlbum = remember(album) { album.relativePath.startsWith("cloud/") }
     val scope = rememberCoroutineScope()
     val trashTitle = stringResource(R.string.move_album_to_trash)
-    val pinTitle = stringResource(R.string.pin)
+    val pinTitle = stringResource(if (album.isPinned) R.string.unpin else R.string.pin)
     val changeThumbnailTitle = stringResource(R.string.change_thumbnail)
     val ignoredTitle = stringResource(id = R.string.add_to_ignored)
     val lockTitle = stringResource(if (album.isLocked) R.string.unlock_album else R.string.lock_album)
@@ -373,6 +389,10 @@ fun AlbumOptionSheet(
     val mergeSubfoldersTitle = stringResource(
         if (isMergedSubfolder) R.string.unmerge_subfolders else R.string.merge_subfolders
     )
+    val mergedLayoutTitle = stringResource(
+        if (isSubGallery) R.string.show_combined_timeline else R.string.browse_subfolders
+    )
+    val mergeParentSubfoldersTitle = stringResource(R.string.merge_parent_subfolders)
     var isSelectingThumbnail by rememberSaveable { mutableStateOf(false) }
     val handler = LocalMediaHandler.current
     val hasThumbnail by handler.hasAlbumThumbnail(album.id)
@@ -418,7 +438,25 @@ fun AlbumOptionSheet(
             )
         )
     }
-    val optionList = remember(onMoveAlbumToTrash, onTogglePinClick, onToggleIgnoreClick, onToggleLockClick, album.isLocked, isCloudAlbum) {
+    val optionList = remember(
+        onMoveAlbumToTrash,
+        onTogglePinClick,
+        onToggleIgnoreClick,
+        onToggleLockClick,
+        onAddToGroup,
+        onRemoveFromGroup,
+        onMoveToSection,
+        onToggleMergeSubfolders,
+        onMergeParentSubfolders,
+        onToggleMergedSubfolderDisplayMode,
+        album.isPinned,
+        album.isLocked,
+        isCloudAlbum,
+        isMergedSubfolder,
+        mergeSubfoldersTitle,
+        mergedLayoutTitle,
+        mergeParentSubfoldersTitle
+    ) {
         mutableListOf<OptionItem>().apply {
             add(
                 OptionItem(
@@ -469,7 +507,7 @@ fun AlbumOptionSheet(
                     )
                 )
             }
-            if (onToggleIgnoreClick != null) {
+            if (onToggleIgnoreClick != null && !AlbumMergeResolver.isVirtualAlbumId(album.id)) {
                 add(
                     OptionItem(
                         icon = Icons.Outlined.VisibilityOff,
@@ -534,6 +572,38 @@ fun AlbumOptionSheet(
                             scope.launch {
                                 appBottomSheetState.hide()
                                 onToggleMergeSubfolders(album)
+                            }
+                        }
+                    )
+                )
+            }
+            if (
+                !isMergedSubfolder &&
+                album.relativePath.trim('/').contains('/') &&
+                onMergeParentSubfolders != null
+            ) {
+                add(
+                    OptionItem(
+                        icon = Icons.Outlined.AccountTree,
+                        text = mergeParentSubfoldersTitle,
+                        onClick = {
+                            scope.launch {
+                                appBottomSheetState.hide()
+                                onMergeParentSubfolders(album)
+                            }
+                        }
+                    )
+                )
+            }
+            if (isMergedSubfolder && onToggleMergedSubfolderDisplayMode != null) {
+                add(
+                    OptionItem(
+                        icon = Icons.Outlined.Folder,
+                        text = mergedLayoutTitle,
+                        onClick = {
+                            scope.launch {
+                                appBottomSheetState.hide()
+                                onToggleMergedSubfolderDisplayMode(album)
                             }
                         }
                     )

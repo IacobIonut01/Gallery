@@ -21,8 +21,14 @@ interface LockedAlbumDao {
     @Upsert
     suspend fun insertLockedAlbum(lockedAlbum: LockedAlbum)
 
+    @Upsert
+    suspend fun insertLockedAlbums(lockedAlbums: List<LockedAlbum>)
+
     @Delete
     suspend fun removeLockedAlbum(lockedAlbum: LockedAlbum)
+
+    @Query("DELETE FROM locked_table WHERE id IN (:albumIds)")
+    suspend fun removeLockedAlbums(albumIds: List<Long>)
 
     @Query("SELECT EXISTS(SELECT * FROM locked_table WHERE id = :albumId)")
     fun albumIsLocked(albumId: Long): Boolean

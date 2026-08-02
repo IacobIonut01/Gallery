@@ -14,6 +14,7 @@ import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.AlbumGroup
 import com.dot.gallery.feature_node.domain.model.AlbumGroupMember
 import com.dot.gallery.feature_node.domain.model.AlbumGroupWithAlbums
+import com.dot.gallery.feature_node.domain.model.AlbumMergeResolver
 import com.dot.gallery.feature_node.domain.model.AlbumSection
 import com.dot.gallery.feature_node.domain.model.AlbumSectionMember
 import com.dot.gallery.feature_node.domain.model.AlbumSectionType
@@ -653,16 +654,19 @@ class MediaDistributorImpl @Inject constructor(
                 val thumbnail = thumbnailMap[album.id] ?: return@map album
                 album.copy(uri = thumbnail.thumbnailUri)
             }
-            val data = localAlbums + cloudAlbums.map { it.toAlbum() } + unsortedCloudAlbums
-            val cleanData = data.removeBlacklisted(blacklistedAlbums)
+            val rawLocalAlbums = localAlbums.removeBlacklisted(blacklistedAlbums)
                 .mapPinned(pinnedAlbums)
                 .mapLocked(lockedAlbums)
-
-            val subfolderMergedData = mergeSubfolderAlbums(
-                cleanData,
-                mergedSubfolders.mapTo(HashSet()) { it.id }
+            val subfolderMergedData = AlbumMergeResolver.mergeSubfolders(
+                rawLocalAlbums,
+                mergedSubfolders
             )
-            val mergedData = if (shouldMerge) mergeAlbumsByLabel(subfolderMergedData) else subfolderMergedData
+            val mergedLocalAlbums = if (shouldMerge) {
+                AlbumMergeResolver.mergeByName(subfolderMergedData)
+            } else subfolderMergedData
+            val remoteAlbums = cloudAlbums.map { it.toAlbum() } + unsortedCloudAlbums
+            val mergedData = mergedLocalAlbums + remoteAlbums
+            val data = localAlbums + remoteAlbums
 
             val groupMemberAlbumIds = groupMembers.mapTo(HashSet(groupMembers.size)) { it.albumId }
             val membersByGroupId = groupMembers.groupBy { it.groupId }
@@ -673,22 +677,20 @@ class MediaDistributorImpl @Inject constructor(
                 AlbumGroupWithAlbums(
                     group = group,
                     albums = mergedData.filter { album ->
-                        if (album.isMerged) album.mergedAlbumIds.any { it in memberAlbumIds }
-                        else album.id in memberAlbumIds
+                        album.id in memberAlbumIds || album.sourceAlbumIds.any { it in memberAlbumIds }
                     }
                 )
             }
             val groupedMergedIds = mergedData
                 .filter { album ->
-                    if (album.isMerged) album.mergedAlbumIds.any { it in groupMemberAlbumIds }
-                    else album.id in groupMemberAlbumIds
+                    album.id in groupMemberAlbumIds || album.sourceAlbumIds.any { it in groupMemberAlbumIds }
                 }
                 .mapTo(HashSet()) { it.id }
 
             val unpinnedUngroupedAll = mergedData.filter { album ->
                 !album.isPinned && album.id !in groupedMergedIds &&
-                    (if (album.isMerged) album.mergedAlbumIds.none { it in collectionAlbumIds }
-                     else album.id !in collectionAlbumIds)
+                    album.id !in collectionAlbumIds &&
+                    album.sourceAlbumIds.none { it in collectionAlbumIds }
             }
             // Cloud albums live in their own dedicated section — keep them out of the
             // local unpinned list and out of section classification.
@@ -721,9 +723,8 @@ class MediaDistributorImpl @Inject constructor(
                 albumsUnpinned = if (areSectionsEnabled && sections.isNotEmpty()) emptyList() else unpinnedUngrouped,
                 albumsCloud = cloudAlbumList,
                 albumsPinned = mergedData.filter { album ->
-                    album.isPinned &&
-                        (if (album.isMerged) album.mergedAlbumIds.none { it in collectionAlbumIds }
-                         else album.id !in collectionAlbumIds)
+                    album.isPinned && album.id !in collectionAlbumIds &&
+                        album.sourceAlbumIds.none { it in collectionAlbumIds }
                 }.sortedBy { it.label },
                 albumGroups = albumGroups,
                 albumSections = albumSections,
@@ -741,22 +742,14 @@ class MediaDistributorImpl @Inject constructor(
     override val timelineMediaFlow: SharedFlow<MediaState<Media.UriMedia>> =
         mediaFlow(-1L, null, triggerDatabaseUpdate = true)
 
-    private val albumTimelineCache = ConcurrentHashMap<Long, StateFlow<MediaState<Media.UriMedia>>>()
-
     @OptIn(ExperimentalCoroutinesApi::class)
     @Suppress("UNCHECKED_CAST")
-    override fun albumTimelineMediaFlow(albumId: Long): StateFlow<MediaState<Media.UriMedia>> =
-        albumTimelineCache.getOrPut(albumId) {
-            if (MediaTypeAlbum.isMediaTypeAlbumId(albumId)) {
-                mediaTypeAlbumTimelineMediaFlow(albumId)
-            } else if (isUnsortedCloudAlbumId(albumId)) {
-                unsortedCloudAlbumTimelineMediaFlow(albumId)
-            } else if (isCloudAlbumId(albumId)) {
-                cloudAlbumTimelineMediaFlow(albumId)
-            } else {
-                localAlbumTimelineMediaFlow(albumId)
-            }
-        }
+    override fun albumTimelineMediaFlow(albumId: Long): Flow<MediaState<Media.UriMedia>> = when {
+        MediaTypeAlbum.isMediaTypeAlbumId(albumId) -> mediaTypeAlbumTimelineMediaFlow(albumId)
+        isUnsortedCloudAlbumId(albumId) -> unsortedCloudAlbumTimelineMediaFlow(albumId)
+        isCloudAlbumId(albumId) -> cloudAlbumTimelineMediaFlow(albumId)
+        else -> localAlbumTimelineMediaFlow(albumId)
+    }
 
     /**
      * Virtual media-type "album" (Videos/Photos/GIFs/Raw). Derived from the unified timeline
@@ -876,12 +869,30 @@ class MediaDistributorImpl @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Suppress("UNCHECKED_CAST")
-    private fun localAlbumTimelineMediaFlow(albumId: Long): StateFlow<MediaState<Media.UriMedia>> =
+    private fun localAlbumTimelineMediaFlow(albumId: Long): Flow<MediaState<Media.UriMedia>> =
         hasPermission.flatMapLatest { granted ->
             if (!granted) flowOf(MediaState())
             else {
+                val mediaSource = combine(albumsFlow, mergedSubfolderAlbumsFlow) { state, configs ->
+                    val subGallery = configs.any {
+                        it.id == albumId &&
+                            it.displayMode == MergedSubfolderAlbum.DISPLAY_MODE_SUB_GALLERY
+                    }
+                    if (subGallery) {
+                        val config = configs.first { it.id == albumId }
+                        state.albumsWithBlacklisted.firstOrNull {
+                            it.volume == config.volume &&
+                                it.relativePath.trim('/') == config.relativePath.trim('/')
+                        }?.let { setOf(it.id) }
+                            ?: albumId.takeUnless(AlbumMergeResolver::isVirtualAlbumId)?.let(::setOf)
+                            ?: emptySet()
+                    } else AlbumMergeResolver.resolveSourceAlbumIds(albumId, state.albums)
+                        .filterNot(AlbumMergeResolver::isVirtualAlbumId)
+                        .toSet()
+                }.distinctUntilChanged()
+                    .flatMapLatest { repository.getMediaByAlbumIds(it) }
                 combine(
-                    repository.mediaFlow(albumId, null),
+                    mediaSource,
                     settingsFlow,
                     blacklistedAlbumsFlow,
                     dateFormatsFlow,
@@ -925,7 +936,7 @@ class MediaDistributorImpl @Inject constructor(
                     )
                 }
             }
-        }.stateIn(appScope, prioritySharingMethod, MediaState())
+        }
 
 
     override val favoritesMediaFlow: SharedFlow<MediaState<Media.UriMedia>> =
@@ -1306,75 +1317,6 @@ class MediaDistributorImpl @Inject constructor(
             StartupTracer.end(scanSpan)
         }
         return toScan.map { ScannedMedia(it.id) }
-    }
-
-    private fun mergeSubfolderAlbums(
-        albums: List<Album>,
-        mergedSubfolderIds: Set<Long>
-    ): List<Album> {
-        if (mergedSubfolderIds.isEmpty()) return albums
-        val parentAlbums = albums.filter { it.id in mergedSubfolderIds }
-        if (parentAlbums.isEmpty()) return albums
-
-        val absorbedIds = HashSet<Long>()
-        val result = mutableListOf<Album>()
-
-        for (parent in parentAlbums) {
-            val parentPath = parent.relativePath.removeSuffix("/") + "/"
-            val children = albums.filter { album ->
-                album.id != parent.id &&
-                    album.id !in absorbedIds &&
-                    album.relativePath.startsWith(parentPath)
-            }
-            if (children.isEmpty()) {
-                continue
-            }
-            val allRelated = listOf(parent) + children
-            val mergedIds = allRelated.map { it.id }
-            children.forEach { absorbedIds.add(it.id) }
-            result.add(
-                parent.copy(
-                    count = allRelated.sumOf { it.count },
-                    size = allRelated.sumOf { it.size },
-                    timestamp = allRelated.maxOf { it.timestamp },
-                    isPinned = allRelated.any { it.isPinned },
-                    isLocked = allRelated.any { it.isLocked },
-                    mergedAlbumIds = mergedIds
-                )
-            )
-        }
-
-        for (album in albums) {
-            if (album.id !in absorbedIds && album.id !in mergedSubfolderIds) {
-                result.add(album)
-            } else if (album.id in mergedSubfolderIds && result.none { it.id == album.id }) {
-                result.add(album)
-            }
-        }
-
-        return result
-    }
-
-    private fun mergeAlbumsByLabel(albums: List<Album>): List<Album> {
-        val grouped = albums.groupBy { it.label }
-        return grouped.flatMap { (_, sameNameAlbums) ->
-            if (sameNameAlbums.size <= 1) {
-                sameNameAlbums
-            } else {
-                val primary = sameNameAlbums.maxBy { it.timestamp }
-                val mergedIds = sameNameAlbums.map { it.id }
-                listOf(
-                    primary.copy(
-                        count = sameNameAlbums.sumOf { it.count },
-                        size = sameNameAlbums.sumOf { it.size },
-                        timestamp = sameNameAlbums.maxOf { it.timestamp },
-                        isPinned = sameNameAlbums.any { it.isPinned },
-                        isLocked = sameNameAlbums.any { it.isLocked },
-                        mergedAlbumIds = mergedIds
-                    )
-                )
-            }
-        }
     }
 
     /**

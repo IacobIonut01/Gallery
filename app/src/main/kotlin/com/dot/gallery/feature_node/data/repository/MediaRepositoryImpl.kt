@@ -223,8 +223,17 @@ class MediaRepositoryImpl(
     override suspend fun insertPinnedAlbum(pinnedAlbum: PinnedAlbum) =
         database.getPinnedDao().insertPinnedAlbum(pinnedAlbum)
 
+    override suspend fun insertPinnedAlbums(pinnedAlbums: List<PinnedAlbum>) =
+        database.getPinnedDao().insertPinnedAlbums(pinnedAlbums)
+
     override suspend fun removePinnedAlbum(pinnedAlbum: PinnedAlbum) =
         database.getPinnedDao().removePinnedAlbum(pinnedAlbum)
+
+    override suspend fun removePinnedAlbums(albumIds: List<Long>) {
+        albumIds.chunked(SQLITE_BIND_CHUNK_SIZE).forEach {
+            database.getPinnedDao().removePinnedAlbums(it)
+        }
+    }
 
     override fun getPinnedAlbums(): Flow<List<PinnedAlbum>> =
         database.getPinnedDao().getPinnedAlbums()
@@ -232,8 +241,17 @@ class MediaRepositoryImpl(
     override suspend fun insertLockedAlbum(lockedAlbum: LockedAlbum) =
         database.getLockedAlbumDao().insertLockedAlbum(lockedAlbum)
 
+    override suspend fun insertLockedAlbums(lockedAlbums: List<LockedAlbum>) =
+        database.getLockedAlbumDao().insertLockedAlbums(lockedAlbums)
+
     override suspend fun removeLockedAlbum(lockedAlbum: LockedAlbum) =
         database.getLockedAlbumDao().removeLockedAlbum(lockedAlbum)
+
+    override suspend fun removeLockedAlbums(albumIds: List<Long>) {
+        albumIds.chunked(SQLITE_BIND_CHUNK_SIZE).forEach {
+            database.getLockedAlbumDao().removeLockedAlbums(it)
+        }
+    }
 
     override fun getLockedAlbums(): Flow<List<LockedAlbum>> =
         database.getLockedAlbumDao().getLockedAlbums()
@@ -251,11 +269,17 @@ class MediaRepositoryImpl(
         database.getBlacklistDao().getBlacklistedAlbumsAsync()
 
     override fun getMediaByAlbumId(albumId: Long, skipBatching: Boolean): Flow<Resource<List<UriMedia>>> =
-        MediaFlow(
-            contentResolver = contentResolver,
-            buckedId = albumId,
-            skipBatching = skipBatching,
-        ).flowData().mapAsResource()
+        getMediaByAlbumIds(setOf(albumId), skipBatching)
+
+    override fun getMediaByAlbumIds(
+        albumIds: Set<Long>,
+        skipBatching: Boolean
+    ): Flow<Resource<List<UriMedia>>> = MediaFlow(
+        contentResolver = contentResolver,
+        buckedId = albumIds.firstOrNull() ?: MediaStoreBuckets.MEDIA_STORE_BUCKET_PLACEHOLDER.id,
+        skipBatching = skipBatching,
+        bucketIds = albumIds
+    ).flowData().mapAsResource()
 
     override fun getMediaByAlbumIdWithType(
         albumId: Long,
@@ -1260,6 +1284,9 @@ class MediaRepositoryImpl(
     override suspend fun removeMergedSubfolderAlbum(mergedSubfolderAlbum: MergedSubfolderAlbum) =
         database.getMergedSubfolderDao().removeMergedSubfolderAlbum(mergedSubfolderAlbum)
 
+    override suspend fun updateMergedSubfolderDisplayMode(id: Long, displayMode: String) =
+        database.getMergedSubfolderDao().updateDisplayMode(id, displayMode)
+
     override fun getMergedSubfolderAlbums(): Flow<List<MergedSubfolderAlbum>> =
         database.getMergedSubfolderDao().getMergedSubfolderAlbums()
 
@@ -1391,6 +1418,8 @@ class MediaRepositoryImpl(
         database.getAlbumSectionDao().getSectionIdForAlbum(albumId)
 
     companion object {
+        private const val SQLITE_BIND_CHUNK_SIZE = 900
+
         private fun relativePath(newPath: String) = ContentValues().apply {
             put(MediaStore.MediaColumns.RELATIVE_PATH, newPath)
         }

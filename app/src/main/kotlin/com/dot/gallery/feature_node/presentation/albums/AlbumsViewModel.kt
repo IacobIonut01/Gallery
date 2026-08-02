@@ -24,6 +24,7 @@ import com.dot.gallery.feature_node.domain.model.AlbumGroupWithAlbums
 import com.dot.gallery.feature_node.domain.model.AlbumSection
 import com.dot.gallery.feature_node.domain.model.AlbumSectionMember
 import com.dot.gallery.feature_node.domain.model.AlbumSectionType
+import com.dot.gallery.feature_node.domain.model.AlbumMergeResolver
 import com.dot.gallery.feature_node.domain.model.AlbumSectionWithAlbums
 import com.dot.gallery.feature_node.domain.model.IgnoredAlbum
 import com.dot.gallery.feature_node.domain.model.LockedAlbum
@@ -52,8 +53,28 @@ class AlbumsViewModel @Inject constructor(
     val sectionsFlow = repository.getAllAlbumSections()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
+    init {
+        viewModelScope.launch(Dispatchers.IO) {
+            val configs = repository.getMergedSubfolderAlbums().firstOrNull().orEmpty()
+            if (configs.none { it.folderKey == null }) return@launch
+            val albums = repository.getAlbums(MediaOrder.Default).firstOrNull()?.data.orEmpty()
+            val albumById = albums.associateBy { it.id }
+            configs.filter { it.folderKey == null }.forEach { config ->
+                albumById[config.id]?.let { album ->
+                    repository.insertMergedSubfolderAlbum(
+                        config.copy(
+                            folderKey = MergedSubfolderAlbum.folderKey(album.volume, album.relativePath),
+                            volume = album.volume,
+                            relativePath = album.relativePath
+                        )
+                    )
+                }
+            }
+        }
+    }
+
     fun onAlbumClick(navigate: (String) -> Unit): (Album) -> Unit = { album ->
-        navigate(Screen.AlbumViewScreen.route + "?albumId=${album.id}&albumName=${album.label}")
+        navigate(Screen.AlbumViewScreen.album(album.id, album.label))
     }
 
     val onAlbumLongClick: (Album) -> Unit = { album ->
@@ -99,7 +120,10 @@ class AlbumsViewModel @Inject constructor(
                     cloudMediaDao.delete(entity.remoteId, providerType, entity.serverConfigId)
                 }
             } else {
-                val response = repository.getMediaByAlbumId(album.id, skipBatching = true).firstOrNull()
+                val response = repository.getMediaByAlbumIds(
+                    album.sourceAlbumIds.toSet(),
+                    skipBatching = true
+                ).firstOrNull()
                 val data = response?.data ?: emptyList()
                 repository.trashMedia(result, data, true)
             }
@@ -127,33 +151,77 @@ class AlbumsViewModel @Inject constructor(
 
     private fun toggleAlbumPin(album: Album, isPinned: Boolean = true) {
         viewModelScope.launch(Dispatchers.IO) {
+            val sourceIds = album.sourceAlbumIds.distinct()
             if (isPinned) {
-                repository.insertPinnedAlbum(PinnedAlbum(album.id))
+                repository.insertPinnedAlbums(sourceIds.map(::PinnedAlbum))
             } else {
-                repository.removePinnedAlbum(PinnedAlbum(album.id))
+                repository.removePinnedAlbums(sourceIds)
             }
         }
     }
 
     fun toggleAlbumLock(album: Album) {
         viewModelScope.launch(Dispatchers.IO) {
+            val sourceIds = album.sourceAlbumIds.distinct()
             if (album.isLocked) {
-                repository.removeLockedAlbum(LockedAlbum(album.id))
+                repository.removeLockedAlbums(sourceIds)
             } else {
-                repository.insertLockedAlbum(LockedAlbum(album.id))
+                repository.insertLockedAlbums(sourceIds.map(::LockedAlbum))
             }
         }
     }
 
     fun toggleMergeSubfolders(album: Album) {
         viewModelScope.launch(Dispatchers.IO) {
-            val merged = MergedSubfolderAlbum(album.id)
+            val merged = MergedSubfolderAlbum(
+                id = album.id,
+                folderKey = MergedSubfolderAlbum.folderKey(album.volume, album.relativePath),
+                volume = album.volume,
+                relativePath = album.relativePath
+            )
             val existing = repository.getMergedSubfolderAlbums().firstOrNull() ?: emptyList()
             if (existing.any { it.id == album.id }) {
                 repository.removeMergedSubfolderAlbum(merged)
             } else {
                 repository.insertMergedSubfolderAlbum(merged)
             }
+        }
+    }
+
+    fun mergeParentSubfolders(album: Album) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val (volume, relativePath) = AlbumMergeResolver.parentFolder(album) ?: return@launch
+            val folderKey = MergedSubfolderAlbum.folderKey(volume, relativePath)
+            if (repository.getMergedSubfolderAlbums().firstOrNull().orEmpty().any {
+                    it.folderKey == folderKey
+                }) return@launch
+            val parentAlbum = repository.getAlbums(MediaOrder.Default).firstOrNull()
+                ?.data
+                ?.firstOrNull {
+                    it.volume == volume && it.relativePath.trim('/') == relativePath.trim('/')
+                }
+            repository.insertMergedSubfolderAlbum(
+                MergedSubfolderAlbum(
+                    id = parentAlbum?.id ?: AlbumMergeResolver.virtualAlbumId(volume, relativePath),
+                    folderKey = folderKey,
+                    volume = volume,
+                    relativePath = relativePath
+                )
+            )
+        }
+    }
+
+    fun toggleMergedSubfolderDisplayMode(album: Album) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val config = repository.getMergedSubfolderAlbums().firstOrNull()
+                ?.firstOrNull { it.id == album.id }
+                ?: return@launch
+            val displayMode = if (config.displayMode == MergedSubfolderAlbum.DISPLAY_MODE_SUB_GALLERY) {
+                MergedSubfolderAlbum.DISPLAY_MODE_COMBINED
+            } else {
+                MergedSubfolderAlbum.DISPLAY_MODE_SUB_GALLERY
+            }
+            repository.updateMergedSubfolderDisplayMode(album.id, displayMode)
         }
     }
 
