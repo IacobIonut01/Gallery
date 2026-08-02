@@ -48,9 +48,12 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import com.dot.gallery.cloud.core.CloudRuntimeSettings
-import com.dot.gallery.cloud.core.ProviderType
+import com.dot.gallery.cloud.core.CloudTrace
+import com.dot.gallery.cloud.core.CloudUri
 import com.dot.gallery.cloud.image.CloudImageSource
+import com.dot.gallery.cloud.image.CloudSubsamplingMode
+import com.dot.gallery.cloud.image.resolveCloudSubsamplingMode
+import com.dot.gallery.cloud.image.shouldLoadCloudOriginal
 import com.dot.gallery.core.Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION
 import com.dot.gallery.core.Settings
 import com.dot.gallery.core.decoder.EncryptedRegionDecoder
@@ -105,6 +108,7 @@ import com.github.panpf.zoomimage.util.IntSizeCompat
 import com.github.panpf.zoomimage.util.isNotEmpty
 import com.github.panpf.zoomimage.zoom.ContentScaleCompat
 import com.github.panpf.zoomimage.zoom.ScalesCalculator
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
@@ -293,6 +297,7 @@ fun <T : Media> ZoomablePagerImage(
     val mediaUri = remember(media) {
         media.getUri().toString()
     }
+    val isCloudMedia = remember(media) { media.isCloud }
     // A content-version token folded into the Sketch cache key so the memory and
     // disk result caches are tied to the current file bytes. After editing or
     // overwriting an image its URI is unchanged, so without this the viewer kept
@@ -396,7 +401,9 @@ fun <T : Media> ZoomablePagerImage(
         request = ComposableImageRequest(mediaUri) {
             resize(width = 600, height = 600, precision = Precision.LESS_PIXELS)
             crossfade(false)
-            setExtra("realMimeType", media.mimeType)
+            if (!isCloudMedia) {
+                setExtra("realMimeType", media.mimeType)
+            }
             setExtra(key = "mediaVersion", value = mediaVersion)
             if (isEncrypted) {
                 setExtra(key = "mediaKeyPreviewEnc", value = media.idLessKey)
@@ -420,7 +427,9 @@ fun <T : Media> ZoomablePagerImage(
             if (isAnimatedRaster) {
                 resize(width = ANIMATED_MAX_DIM, height = ANIMATED_MAX_DIM, precision = Precision.LESS_PIXELS)
             }
-            setExtra("realMimeType", media.mimeType)
+            if (!isCloudMedia) {
+                setExtra("realMimeType", media.mimeType)
+            }
             setExtra(key = "mediaVersion", value = mediaVersion)
             if (isEncrypted) {
                 setExtra(key = "mediaKeyPreviewEnc", value = media.idLessKey)
@@ -467,7 +476,16 @@ fun <T : Media> ZoomablePagerImage(
         if (isFullImageLoaded || pendingRotatedReload) fullPainter else previewPainter
     }
 
-    val isCloudMedia = remember(media) { media.isCloud }
+    val cloudSubsamplingMode = remember(media, customRegionFactory, isAnimated, isAnimatedRaster) {
+        resolveCloudSubsamplingMode(
+            isJxl = isJxl,
+            hasCustomRegionDecoder = customRegionFactory != null,
+            isHeif = media.isHeif,
+            isSpecialFormat = mightBeSpecial,
+            isAnimated = isAnimated,
+            isAnimatedRaster = isAnimatedRaster
+        )
+    }
 
     // Subsampling is set up the same way for both the smooth and pixel-perfect paths so that
     // high-resolution images retain native detail when zoomed. The difference is only in how the
@@ -497,29 +515,49 @@ fun <T : Media> ZoomablePagerImage(
             )
         }
     } else if (isCloudMedia) {
-        LaunchedEffect(media, isFullImageLoaded, zoomState.subsampling) {
-            // Respect the cloud "Load original image" viewer setting: when off, skip the
-            // full-resolution original download and keep the lightweight preview (data saver).
-            if (!CloudRuntimeSettings.loadOriginalImage) return@LaunchedEffect
-            val uri = media.getUri()
-            val providerName = uri.authority ?: return@LaunchedEffect
-            val providerType = try { ProviderType.valueOf(providerName) } catch (_: Exception) { return@LaunchedEffect }
+        LaunchedEffect(media, isSelected, cloudSubsamplingMode) {
+            // Upgrade the selected cloud photo from its lightweight preview to the original;
+            // neighbouring pager pages stay preview-only until selected.
+            if (!shouldLoadCloudOriginal(isSelected, cloudSubsamplingMode)) return@LaunchedEffect
+            val parsed = CloudUri.parse(media.getUri().toString()) ?: return@LaunchedEffect
             // remoteId may contain slashes (SMB/NFS/WebDAV paths like "Photos/IMG.jpg"); pathSegments
             // .first() would truncate it to the folder and request the directory as the original.
-            val remoteId = uri.path?.trimStart('/')?.takeIf { it.isNotEmpty() } ?: return@LaunchedEffect
-            val configId = uri.getQueryParameter("cfg")?.toLongOrNull() ?: -1L
+            val remoteId = parsed.remoteId
+            val configId = parsed.configId
             // Signal that the full-size original is being fetched for subsampling so the UI can show
             // a subtle loading indicator. try/finally guarantees the flag is cleared on success,
             // failure, or cancellation (e.g. swiping to another page mid-download).
             onSubsamplingLoadingChange(true)
-            val cloudSource = try {
-                CloudImageSource.create(context, providerType, remoteId, configId)
-            } catch (_: Exception) {
-                return@LaunchedEffect
+            try {
+                val cloudSource = CloudImageSource.create(
+                    context,
+                    parsed.providerType,
+                    remoteId,
+                    configId
+                )
+                zoomState.setSubsamplingImage(SubsamplingImage(imageSource = cloudSource))
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                CloudTrace.w("Unable to load cloud original '$remoteId'", e)
             } finally {
                 onSubsamplingLoadingChange(false)
             }
-            zoomState.setSubsamplingImage(SubsamplingImage(imageSource = cloudSource))
+        }
+        LaunchedEffect(zoomState.subsampling, media, cloudSubsamplingMode) {
+            when (cloudSubsamplingMode) {
+                CloudSubsamplingMode.JXL -> zoomState.subsampling.setRegionDecoders(
+                    listOf(JxlRegionDecoder.Factory())
+                )
+                CloudSubsamplingMode.CUSTOM -> zoomState.subsampling.setRegionDecoders(
+                    listOfNotNull(customRegionFactory)
+                )
+                CloudSubsamplingMode.HEIF -> zoomState.subsampling.setRegionDecoders(
+                    listOf(HeifRegionDecoder.Factory(hdrDisplay = HdrCapabilities.isHdrDisplay(context)))
+                )
+                CloudSubsamplingMode.NONE,
+                CloudSubsamplingMode.PLATFORM -> zoomState.subsampling.setRegionDecoders(emptyList())
+            }
         }
     } else if (isJxl) {
         // Android's BitmapRegionDecoder can't decode JXL, so enable subsampling backed by a

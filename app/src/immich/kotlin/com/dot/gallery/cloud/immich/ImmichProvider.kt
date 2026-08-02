@@ -342,7 +342,7 @@ class ImmichProvider @Inject constructor(
 
     override fun getRemoteAssets(page: Int, pageSize: Int): Flow<Resource<List<CloudMediaEntity>>> = flow {
         try {
-            val configId = currentConfig?.id ?: 0L
+            val configId = requireConfigId()
             val body = mapOf<String, Any>(
                 "page" to (page + 1),
                 "size" to pageSize,
@@ -367,7 +367,7 @@ class ImmichProvider @Inject constructor(
 
     override fun getRemoteFavorites(): Flow<Resource<List<CloudMediaEntity>>> = flow {
         try {
-            val configId = currentConfig?.id ?: 0L
+            val configId = requireConfigId()
             val body = mapOf<String, Any>("isFavorite" to true, "size" to 1000, "withExif" to true)
             val response = requireApi().searchAssets(body)
             if (response.isSuccessful) {
@@ -385,7 +385,7 @@ class ImmichProvider @Inject constructor(
 
     override fun getRemoteTrashed(): Flow<Resource<List<CloudMediaEntity>>> = flow {
         try {
-            val configId = currentConfig?.id ?: 0L
+            val configId = requireConfigId()
             val body = mapOf<String, Any>("isTrashed" to true, "size" to 1000, "withExif" to true)
             val response = requireApi().searchAssets(body)
             if (response.isSuccessful) {
@@ -406,7 +406,7 @@ class ImmichProvider @Inject constructor(
 
     override fun getRemoteAlbums(): Flow<Resource<List<CloudAlbum>>> = flow {
         try {
-            val configId = currentConfig?.id ?: 0L
+            val configId = requireConfigId()
             val response = requireApi().getAlbums()
             if (response.isSuccessful) {
                 val albums = response.body()?.map { dto ->
@@ -435,7 +435,7 @@ class ImmichProvider @Inject constructor(
 
     override fun getRemoteAlbumMedia(albumId: String): Flow<Resource<List<CloudMediaEntity>>> = flow {
         try {
-            val configId = currentConfig?.id ?: 0L
+            val configId = requireConfigId()
             val response = requireApi().getAlbumById(albumId)
             if (response.isSuccessful) {
                 val entities = response.body()?.assets?.map { it.toCloudMediaEntity(configId, baseUrl) } ?: emptyList()
@@ -452,7 +452,7 @@ class ImmichProvider @Inject constructor(
 
     override suspend fun createAlbum(name: String): Result<CloudAlbum> {
         return try {
-            val configId = currentConfig?.id ?: 0L
+            val configId = requireConfigId()
             val response = requireApi().createAlbum(mapOf("albumName" to name))
             if (response.isSuccessful) {
                 val dto = response.body()!!
@@ -557,7 +557,7 @@ class ImmichProvider @Inject constructor(
 
     override suspend fun search(query: String): Result<List<CloudMediaEntity>> {
         return try {
-            val configId = currentConfig?.id ?: 0L
+            val configId = requireConfigId()
             val response = requireApi().metadataSearch(
                 mapOf("originalFileName" to query, "page" to 1, "size" to 100, "withExif" to true)
             )
@@ -652,7 +652,7 @@ class ImmichProvider @Inject constructor(
 
     override fun getPersonMedia(personId: String): Flow<Resource<List<Media>>> = flow {
         try {
-            val configId = currentConfig?.id ?: 0L
+            val configId = requireConfigId()
             val allMedia = mutableListOf<Media>()
             var page = 1
             var hasMore = true
@@ -719,7 +719,7 @@ class ImmichProvider @Inject constructor(
 
     override suspend fun smartSearch(query: String): Result<List<Media>> {
         return try {
-            val configId = currentConfig?.id ?: 0L
+            val configId = requireConfigId()
             val response = requireApi().smartSearch(ImmichSearchDto(query = query))
             if (response.isSuccessful) {
                 val media = response.body()?.assets?.items
@@ -776,7 +776,7 @@ class ImmichProvider @Inject constructor(
         checksum: String?
     ): Result<CloudMediaEntity> {
         return try {
-            val configId = currentConfig?.id ?: 0L
+            val configId = requireConfigId()
             val mediaUri = localMedia.getUri()
             val requestBody = ContentResolverRequestBody(
                 context = context,
@@ -868,7 +868,7 @@ class ImmichProvider @Inject constructor(
 
     override suspend fun getChangedSince(timestamp: Long): Result<List<CloudMediaEntity>> {
         return try {
-            val configId = currentConfig?.id ?: 0L
+            val configId = requireConfigId()
             val isoTime = java.time.Instant.ofEpochMilli(timestamp).toString()
             val body = mapOf<String, Any>(
                 "updatedAfter" to isoTime,
@@ -930,7 +930,7 @@ class ImmichProvider @Inject constructor(
 
     override fun getRemoteArchived(): Flow<Resource<List<CloudMediaEntity>>> = flow {
         try {
-            val configId = currentConfig?.id ?: 0L
+            val configId = requireConfigId()
             val body = mapOf<String, Any>("visibility" to "archive", "size" to 1000, "withExif" to true)
             val response = requireApi().searchAssets(body)
             if (response.isSuccessful) {
@@ -1060,7 +1060,7 @@ class ImmichProvider @Inject constructor(
 
     override fun getMemories(): Flow<Resource<List<MemoryInfo>>> = flow {
         try {
-            val configId = currentConfig?.id ?: 0L
+            val configId = requireConfigId()
             val response = requireApi().getMemories()
             if (response.isSuccessful) {
                 val memories = response.body()?.map { dto ->

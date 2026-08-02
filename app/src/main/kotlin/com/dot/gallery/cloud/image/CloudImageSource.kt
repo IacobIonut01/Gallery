@@ -12,14 +12,73 @@ import com.dot.gallery.cloud.core.resolveRemote
 import com.dot.gallery.cloud.offline.CloudMediaCache
 import com.github.panpf.zoomimage.subsampling.ImageSource
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import okhttp3.OkHttpClient
+import okhttp3.Call
+import okhttp3.Callback
 import okhttp3.Request
+import okhttp3.Response
 import okio.Source
 import okio.buffer
 import okio.sink
 import okio.source
 import java.io.File
+import java.io.IOException
+
+internal enum class CloudSubsamplingMode {
+    NONE,
+    PLATFORM,
+    JXL,
+    CUSTOM,
+    HEIF
+}
+
+internal fun resolveCloudSubsamplingMode(
+    isJxl: Boolean,
+    hasCustomRegionDecoder: Boolean,
+    isHeif: Boolean,
+    isSpecialFormat: Boolean,
+    isAnimated: Boolean,
+    isAnimatedRaster: Boolean
+): CloudSubsamplingMode = when {
+    isJxl -> CloudSubsamplingMode.JXL
+    hasCustomRegionDecoder -> CloudSubsamplingMode.CUSTOM
+    isHeif && !isAnimated -> CloudSubsamplingMode.HEIF
+    isSpecialFormat -> CloudSubsamplingMode.NONE
+    !isAnimated && !isAnimatedRaster -> CloudSubsamplingMode.PLATFORM
+    else -> CloudSubsamplingMode.NONE
+}
+
+internal fun shouldLoadCloudOriginal(
+    isSelected: Boolean,
+    subsamplingMode: CloudSubsamplingMode
+): Boolean = isSelected && subsamplingMode != CloudSubsamplingMode.NONE
+
+private val cloudOriginalLocks = Array(64) { Mutex() }
+
+internal suspend fun storeCloudOriginal(target: File, write: suspend (File) -> Unit) {
+    val lockIndex = (target.absolutePath.hashCode() and Int.MAX_VALUE) % cloudOriginalLocks.size
+    cloudOriginalLocks[lockIndex].withLock {
+        if (target.isFile && target.length() > 0L) return
+        val temporaryFile = File.createTempFile("${target.name}.", ".tmp", target.parentFile)
+        try {
+            write(temporaryFile)
+            check(temporaryFile.length() > 0L) { "Downloaded original is empty" }
+            if (!temporaryFile.renameTo(target)) {
+                try {
+                    temporaryFile.copyTo(target, overwrite = true)
+                } catch (e: Exception) {
+                    target.delete()
+                    throw e
+                }
+            }
+        } finally {
+            temporaryFile.delete()
+        }
+    }
+}
 
 /**
  * [ImageSource] for cloud media that serves the **original** image to ZoomImage's subsampling
@@ -77,9 +136,7 @@ class CloudImageSource private constructor(
             configId: Long = -1L,
         ): CloudImageSource = withContext(Dispatchers.IO) {
             val file = cacheFileFor(context, providerType, remoteId, configId)
-            if (!file.exists() || file.length() == 0L) {
-                downloadOriginal(providerType, remoteId, configId, file)
-            }
+            downloadOriginal(providerType, remoteId, configId, file)
             CloudImageSource(providerType, remoteId, configId, file)
         }
 
@@ -90,11 +147,13 @@ class CloudImageSource private constructor(
             configId: Long,
         ): File {
             val dir = File(context.cacheDir, "cloud_zoom_originals").apply { mkdirs() }
-            val ext = remoteId.substringAfterLast('.', "").takeIf { it.length in 1..5 } ?: "img"
-            return File(dir, "${keyOf(providerType, remoteId, configId).hashCode()}.$ext")
+            val ext = remoteId.substringAfterLast('/').substringAfterLast('.', "")
+                .takeIf { it.length in 1..5 && it.all { char -> char.isLetterOrDigit() } } ?: "img"
+            val key = CloudMediaCache.keyFor(providerType, configId, remoteId, "original")
+            return File(dir, "$key.$ext")
         }
 
-        private fun downloadOriginal(
+        private suspend fun downloadOriginal(
             providerType: ProviderType,
             remoteId: String,
             configId: Long,
@@ -115,27 +174,60 @@ class CloudImageSource private constructor(
                 CloudMediaCache.keyFor(providerType, configId, remoteId, "original")
             )
 
-            val client = CloudFetcherRegistryHolder.okHttpClient ?: OkHttpClient()
-            CloudTrace.d("ZoomSource[$providerType] original '$remoteId' -> GET $url")
-            val response = CloudTrace.time("ZoomSource[$providerType] original '$remoteId' download") {
-                client.newCall(requestBuilder.build()).execute()
+            val client = CloudFetcherRegistryHolder.okHttpClient
+                ?: throw IllegalStateException("Cloud OkHttpClient not initialized")
+            // Stream to a temp file then rename, so a partial/failed download never leaves a
+            // truncated file that a later open would treat as complete.
+            storeCloudOriginal(target) { temporaryFile ->
+                CloudTrace.d("ZoomSource[$providerType] original '$remoteId' -> GET $url")
+                val start = System.nanoTime()
+                try {
+                    downloadToFile(client.newCall(requestBuilder.build()), temporaryFile)
+                    CloudTrace.d(
+                        "ZoomSource[$providerType] original '$remoteId' download took " +
+                            "${(System.nanoTime() - start) / 1_000_000}ms"
+                    )
+                } catch (e: Exception) {
+                    CloudTrace.w(
+                        "ZoomSource[$providerType] original '$remoteId' download failed after " +
+                            "${(System.nanoTime() - start) / 1_000_000}ms",
+                        e
+                    )
+                    throw e
+                }
             }
-            response.use {
-                if (!it.isSuccessful) {
-                    CloudTrace.w("ZoomSource[$providerType] original '$remoteId' -> HTTP ${it.code}")
-                    throw Exception("HTTP ${it.code}: ${it.message}")
-                }
-                val body = it.body ?: throw Exception("Empty response body")
-                // Stream to a temp file then rename, so a partial/failed download never leaves a
-                // truncated file that a later open would treat as complete.
-                val tmp = File(target.path + ".tmp")
-                body.source().use { src ->
-                    tmp.sink().buffer().use { sink -> sink.writeAll(src) }
-                }
-                if (!tmp.renameTo(target)) {
-                    tmp.copyTo(target, overwrite = true)
-                    tmp.delete()
-                }
+        }
+
+        private suspend fun downloadToFile(call: Call, target: File) {
+            suspendCancellableCoroutine<Unit> { continuation ->
+                continuation.invokeOnCancellation { call.cancel() }
+                call.enqueue(object : Callback {
+                    override fun onFailure(call: Call, e: IOException) {
+                        target.delete()
+                        if (continuation.isActive) continuation.resumeWith(Result.failure(e))
+                    }
+
+                    override fun onResponse(call: Call, response: Response) {
+                        response.use {
+                            try {
+                                if (!it.isSuccessful) {
+                                    throw IOException("HTTP ${it.code}: ${it.message}")
+                                }
+                                it.body.source().use { source ->
+                                    target.sink().buffer().use { sink -> sink.writeAll(source) }
+                                }
+                                if (continuation.isActive) {
+                                    continuation.resumeWith(Result.success(Unit))
+                                } else {
+                                    target.delete()
+                                }
+                            } catch (e: Exception) {
+                                target.delete()
+                                if (continuation.isActive) continuation.resumeWith(Result.failure(e))
+                            }
+                        }
+                    }
+                })
             }
         }
     }
