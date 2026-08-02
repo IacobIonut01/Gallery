@@ -11,7 +11,20 @@ import com.dot.gallery.cloud.data.entity.CloudMediaEntity
 import com.dot.gallery.feature_node.domain.model.Media
 
 interface SyncCapableProvider : MediaCapabilityProvider {
-    suspend fun uploadAsset(localMedia: Media, targetPath: String? = null): Result<CloudMediaEntity>
+    val maxConcurrentUploads: Int get() = 1
+    val requiresUploadChecksum: Boolean get() = false
+
+    suspend fun uploadAsset(
+        localMedia: Media,
+        targetPath: String? = null
+    ): Result<CloudMediaEntity>
+
+    suspend fun uploadAsset(
+        localMedia: Media,
+        targetPath: String? = null,
+        checksum: String
+    ): Result<CloudMediaEntity> = uploadAsset(localMedia, targetPath)
+
     suspend fun downloadAsset(remoteId: String): Result<Uri>
     suspend fun getChangedSince(timestamp: Long): Result<List<CloudMediaEntity>>
     suspend fun bulkUploadCheck(hashes: List<String>): Result<Map<String, Boolean>>

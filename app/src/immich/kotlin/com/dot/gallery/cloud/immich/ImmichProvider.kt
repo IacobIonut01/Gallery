@@ -22,6 +22,7 @@ import com.dot.gallery.cloud.core.PersonInfo
 import com.dot.gallery.cloud.core.ProviderCapability
 import com.dot.gallery.cloud.core.ProviderType
 import com.dot.gallery.cloud.core.SharedLinkInfo
+import com.dot.gallery.cloud.core.SyncState
 import com.dot.gallery.cloud.core.ThumbnailSize
 import com.dot.gallery.cloud.core.capabilities.MapCapableProvider
 import com.dot.gallery.cloud.core.capabilities.MemoriesCapableProvider
@@ -52,17 +53,21 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flow
+import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.logging.HttpLoggingInterceptor
+import okio.BufferedSink
+import okio.source
 import com.dot.gallery.cloud.network.LanBindingSocketFactory
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.io.File
+import java.io.IOException
 import java.security.SecureRandom
 import java.security.cert.X509Certificate
 import java.util.concurrent.TimeUnit
@@ -71,6 +76,23 @@ import javax.inject.Singleton
 import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
+
+private class ContentResolverRequestBody(
+    private val context: Context,
+    private val uri: Uri,
+    private val mediaType: MediaType?,
+    private val length: Long
+) : RequestBody() {
+    override fun contentType(): MediaType? = mediaType
+
+    override fun contentLength(): Long = length
+
+    override fun writeTo(sink: BufferedSink) {
+        val input = context.contentResolver.openInputStream(uri)
+            ?: throw IOException("Cannot open media file")
+        input.source().use { source -> sink.writeAll(source) }
+    }
+}
 
 @Singleton
 class ImmichProvider @Inject constructor(
@@ -88,6 +110,8 @@ class ImmichProvider @Inject constructor(
 
     override val providerType = ProviderType.IMMICH
     override val displayName = "Immich"
+    override val maxConcurrentUploads = 3
+    override val requiresUploadChecksum = true
 
     private val _connectionState = MutableStateFlow(ConnectionState.DISCONNECTED)
     override val connectionState: StateFlow<ConnectionState> = _connectionState.asStateFlow()
@@ -736,43 +760,79 @@ class ImmichProvider @Inject constructor(
 
     // === Sync ===
 
-    override suspend fun uploadAsset(localMedia: Media, targetPath: String?): Result<CloudMediaEntity> {
+    override suspend fun uploadAsset(
+        localMedia: Media,
+        targetPath: String?
+    ): Result<CloudMediaEntity> = uploadAssetInternal(localMedia, null)
+
+    override suspend fun uploadAsset(
+        localMedia: Media,
+        targetPath: String?,
+        checksum: String
+    ): Result<CloudMediaEntity> = uploadAssetInternal(localMedia, checksum)
+
+    private suspend fun uploadAssetInternal(
+        localMedia: Media,
+        checksum: String?
+    ): Result<CloudMediaEntity> {
         return try {
             val configId = currentConfig?.id ?: 0L
             val mediaUri = localMedia.getUri()
-            val contentResolver = context.contentResolver
-            val inputStream = contentResolver.openInputStream(mediaUri)
-                ?: return Result.failure(Exception("Cannot open media file"))
-            val mimeType = localMedia.mimeType
-            val fileName = localMedia.label
-            val tempFile = File(context.cacheDir, "upload_${System.currentTimeMillis()}_$fileName")
-            try {
-                inputStream.use { input -> tempFile.outputStream().use { output -> input.copyTo(output) } }
-                val requestBody = tempFile.asRequestBody(mimeType.toMediaTypeOrNull())
-                val filePart = MultipartBody.Part.createFormData("assetData", fileName, requestBody)
-                val deviceAssetId = localMedia.id.toString().toRequestBody("text/plain".toMediaTypeOrNull())
-                val deviceId = "android-gallery".toRequestBody("text/plain".toMediaTypeOrNull())
-                val createdIso = java.time.Instant.ofEpochSecond(localMedia.definedTimestamp).toString()
-                val modifiedIso = java.time.Instant.ofEpochSecond(localMedia.timestamp).toString()
-                val fileCreatedAt = createdIso.toRequestBody("text/plain".toMediaTypeOrNull())
-                val fileModifiedAt = modifiedIso.toRequestBody("text/plain".toMediaTypeOrNull())
-                val response = requireApi().uploadAsset(
-                    file = filePart,
-                    deviceAssetId = deviceAssetId,
-                    deviceId = deviceId,
-                    fileCreatedAt = fileCreatedAt,
-                    fileModifiedAt = fileModifiedAt
-                )
-                if (response.isSuccessful) {
-                    val dto = response.body()!!
-                    val entity = dto.toCloudMediaEntity(configId, baseUrl)
-                    cloudMediaDao.insert(entity)
-                    Result.success(entity)
-                } else {
-                    Result.failure(Exception("Upload failed: ${response.code()} ${response.message()}"))
+            val requestBody = ContentResolverRequestBody(
+                context = context,
+                uri = mediaUri,
+                mediaType = localMedia.mimeType.toMediaTypeOrNull(),
+                length = localMedia.size.takeIf { it > 0L } ?: -1L
+            )
+            val filePart = MultipartBody.Part.createFormData(
+                "assetData",
+                localMedia.label,
+                requestBody
+            )
+            val textType = "text/plain".toMediaTypeOrNull()
+            val deviceAssetId = localMedia.id.toString().toRequestBody(textType)
+            val deviceId = "android-gallery".toRequestBody(textType)
+            val createdIso = java.time.Instant.ofEpochSecond(localMedia.definedTimestamp).toString()
+            val modifiedIso = java.time.Instant.ofEpochSecond(localMedia.timestamp).toString()
+            val fileCreatedAt = createdIso.toRequestBody(textType)
+            val fileModifiedAt = modifiedIso.toRequestBody(textType)
+            val response = requireApi().uploadAsset(
+                file = filePart,
+                deviceAssetId = deviceAssetId,
+                deviceId = deviceId,
+                fileCreatedAt = fileCreatedAt,
+                fileModifiedAt = fileModifiedAt,
+                checksum = checksum
+            )
+            if (response.isSuccessful) {
+                val uploaded = response.body()
+                    ?: return Result.failure(Exception("Upload returned an empty response"))
+                if (uploaded.id.isBlank()) {
+                    return Result.failure(Exception("Upload returned no asset id"))
                 }
-            } finally {
-                tempFile.delete()
+                val entity = CloudMediaEntity(
+                    remoteId = uploaded.id,
+                    providerType = ProviderType.IMMICH,
+                    serverConfigId = configId,
+                    label = localMedia.label,
+                    path = localMedia.path,
+                    relativePath = localMedia.relativePath,
+                    mimeType = localMedia.mimeType,
+                    timestamp = localMedia.timestamp * 1000L,
+                    takenTimestamp = localMedia.takenTimestamp,
+                    size = localMedia.size,
+                    duration = localMedia.duration,
+                    favorite = localMedia.favorite != 0,
+                    syncState = SyncState.SYNCED,
+                    localCopyPath = mediaUri.toString(),
+                    contentHash = checksum,
+                    thumbnailUrl = "$baseUrl/api/assets/${uploaded.id}/thumbnail",
+                    originalUrl = "$baseUrl/api/assets/${uploaded.id}/original"
+                )
+                cloudMediaDao.insert(entity)
+                Result.success(entity)
+            } else {
+                Result.failure(Exception("Upload failed: ${response.code()} ${response.message()}"))
             }
         } catch (e: Exception) {
             Result.failure(e)

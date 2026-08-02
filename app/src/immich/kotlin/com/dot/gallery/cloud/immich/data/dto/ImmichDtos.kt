@@ -249,6 +249,11 @@ data class ImmichSharedLinkAlbumDto(
     @SerializedName("albumThumbnailAssetId") val albumThumbnailAssetId: String? = null
 )
 
+data class ImmichAssetMediaResponseDto(
+    val id: String = "",
+    val status: String = ""
+)
+
 data class ImmichBulkUploadCheckDto(
     val assets: List<ImmichBulkCheckItemDto> = emptyList()
 )

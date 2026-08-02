@@ -7,6 +7,7 @@ package com.dot.gallery.cloud.immich.data.api
 
 import com.dot.gallery.cloud.immich.data.dto.ImmichAlbumDto
 import com.dot.gallery.cloud.immich.data.dto.ImmichAssetDto
+import com.dot.gallery.cloud.immich.data.dto.ImmichAssetMediaResponseDto
 import com.dot.gallery.cloud.immich.data.dto.ImmichBulkUploadCheckDto
 import com.dot.gallery.cloud.immich.data.dto.ImmichBulkUploadCheckResultDto
 import com.dot.gallery.cloud.immich.data.dto.ImmichLoginDto
@@ -29,6 +30,7 @@ import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.HTTP
+import retrofit2.http.Header
 import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.PUT
@@ -81,8 +83,9 @@ interface ImmichApiService {
         @Part("deviceAssetId") deviceAssetId: RequestBody,
         @Part("deviceId") deviceId: RequestBody,
         @Part("fileCreatedAt") fileCreatedAt: RequestBody,
-        @Part("fileModifiedAt") fileModifiedAt: RequestBody
-    ): Response<ImmichAssetDto>
+        @Part("fileModifiedAt") fileModifiedAt: RequestBody,
+        @Header("x-immich-checksum") checksum: String? = null
+    ): Response<ImmichAssetMediaResponseDto>
 
     @POST("api/assets/bulk-upload-check")
     suspend fun bulkUploadCheck(

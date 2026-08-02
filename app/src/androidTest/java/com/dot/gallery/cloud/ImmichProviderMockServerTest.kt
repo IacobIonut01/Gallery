@@ -5,6 +5,7 @@
 
 package com.dot.gallery.cloud
 
+import androidx.core.net.toUri
 import androidx.room.Room
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -16,6 +17,7 @@ import com.dot.gallery.cloud.immich.ImmichProvider
 import com.dot.gallery.cloud.immich.data.api.ImmichAuthInterceptor
 import com.dot.gallery.core.Resource
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
+import com.dot.gallery.feature_node.domain.model.Media
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.Dispatcher
@@ -29,6 +31,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Exercises [ImmichProvider]'s HTTP wiring against a [MockWebServer]: the Immich v2.x `/api`
@@ -194,6 +197,55 @@ class ImmichProviderMockServerTest {
         assertEquals("album-1", albums.single().remoteId)
         assertEquals("Trip", albums.single().name)
         assertEquals(5, albums.single().assetCount)
+    }
+
+    @Test
+    fun uploadStreamsSourceWithoutCreatingTemporaryCopy() = runBlocking {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val source = context.cacheDir.resolve("immich-upload-source.jpg").apply {
+            writeText("streamed-upload-payload")
+        }
+        val sawTemporaryUploadCopy = AtomicBoolean(false)
+        server.dispatcher = dispatcher { req ->
+            if (req.path?.endsWith("/api/assets") == true) {
+                sawTemporaryUploadCopy.set(
+                    context.cacheDir.listFiles().orEmpty().any { it.name.startsWith("upload_") }
+                )
+                assertEquals("sha1-checksum", req.getHeader("x-immich-checksum"))
+                assertTrue(req.body.readUtf8().contains("streamed-upload-payload"))
+                json("""{ "id": "uploaded-1", "status": "created" }""")
+            } else {
+                null
+            }
+        }
+        provider.configure(
+            CloudServerConfig(id = 5, providerType = ProviderType.IMMICH, serverUrl = baseUrl(), apiKey = "KEY")
+        )
+        val media = Media.UriMedia(
+            id = 42,
+            label = "source.jpg",
+            uri = source.toUri(),
+            path = source.path,
+            relativePath = "",
+            albumID = 1,
+            albumLabel = "Camera",
+            timestamp = 1_705_315_800,
+            takenTimestamp = null,
+            fullDate = "",
+            mimeType = "image/jpeg",
+            favorite = 0,
+            trashed = 0,
+            size = source.length()
+        )
+
+        val result = provider.uploadAsset(media, checksum = "sha1-checksum")
+
+        assertTrue("upload should succeed: ${result.exceptionOrNull()}", result.isSuccess)
+        assertEquals("source.jpg", result.getOrThrow().label)
+        assertEquals("image/jpeg", result.getOrThrow().mimeType)
+        assertEquals("sha1-checksum", result.getOrThrow().contentHash)
+        assertTrue(!sawTemporaryUploadCopy.get())
+        assertTrue(source.delete())
     }
 
     @Test
