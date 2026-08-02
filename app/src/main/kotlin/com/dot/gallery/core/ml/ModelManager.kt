@@ -176,10 +176,28 @@ class ModelManager @Inject constructor(
      * Check if all model files for [group] are present and non-empty.
      */
     fun checkModelsPresent(group: ModelGroup): Boolean {
-        return group.files.all { fileName ->
+        val signature = group.files.joinToString(":") { fileName ->
             val file = getDestinationFile(fileName)
-            file.exists() && file.length() > 0
+            "$fileName:${file.length()}:${file.lastModified()}"
         }
+        modelValidationCache[group]?.takeIf { it.first == signature }?.let { return it.second }
+        val valid = group.files.all { fileName ->
+            val file = getDestinationFile(fileName)
+            val expected = EXPECTED_CHECKSUMS[fileName]
+            file.exists() && file.length() > 0 && (expected == null || file.sha256() == expected)
+        }
+        modelValidationCache[group] = signature to valid
+        return valid
+    }
+
+    fun processorRevision(group: ModelGroup): String = group.files.joinToString(":") { fileName ->
+        EXPECTED_CHECKSUMS[fileName] ?: fileName
+    }
+
+    fun isModelFileValid(fileName: String): Boolean {
+        val file = getDestinationFile(fileName)
+        val expected = EXPECTED_CHECKSUMS[fileName]
+        return file.exists() && file.length() > 0 && (expected == null || file.sha256() == expected)
     }
 
     /**
@@ -205,6 +223,7 @@ class ModelManager @Inject constructor(
     /** Cache of computed per-file SHA-256 infos, so the (potentially expensive, e.g. ~130 MB
      * ArcFace) hashing runs only once per install rather than on every recomposition. */
     private val fileInfoCache = ConcurrentHashMap<ModelGroup, List<ModelFileInfo>>()
+    private val modelValidationCache = ConcurrentHashMap<ModelGroup, Pair<String, Boolean>>()
 
     /**
      * Get detailed info (name, size, SHA-256) for each installed file in [group].

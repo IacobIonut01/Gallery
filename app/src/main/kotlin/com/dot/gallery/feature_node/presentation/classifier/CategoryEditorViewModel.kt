@@ -18,8 +18,8 @@ import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.presentation.search.SearchHelper
 import com.dot.gallery.feature_node.presentation.search.util.dot
 import com.dot.gallery.feature_node.presentation.util.mapMediaToItem
-import androidx.work.WorkManager
-import com.dot.gallery.core.workers.startCategoryClassification
+import com.dot.gallery.core.smart.SmartScanScheduler
+import com.dot.gallery.feature_node.data.data_source.SmartScanFeature
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -41,7 +41,7 @@ import javax.inject.Inject
 class CategoryEditorViewModel @Inject constructor(
     private val repository: MediaRepository,
     private val searchHelper: SearchHelper,
-    private val workManager: WorkManager
+    private val smartScanScheduler: SmartScanScheduler
 ) : ViewModel() {
 
     // Date format settings
@@ -334,7 +334,7 @@ class CategoryEditorViewModel @Inject constructor(
                     )
                     repository.updateCategory(updatedCategory)
                     if (searchTermsChanged || thresholdChanged || refImagesChanged) {
-                        workManager.startCategoryClassification()
+                        smartScanScheduler.automatic(SmartScanFeature.CATEGORIES.bit)
                     }
                 } else {
                     val category = Category(
@@ -345,7 +345,7 @@ class CategoryEditorViewModel @Inject constructor(
                         isUserCreated = true
                     )
                     repository.createCategory(category)
-                    workManager.startCategoryClassification()
+                    smartScanScheduler.automatic(SmartScanFeature.CATEGORIES.bit)
                 }
                 _saveSuccess.value = true
                 withContext(Dispatchers.Main) {

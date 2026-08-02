@@ -5,6 +5,7 @@
 
 package com.dot.gallery.cloud.data.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
@@ -18,5 +19,7 @@ data class OcrResultEntity(
     val mediaId: Long,
     val fullText: String,
     val blocksJson: String = "[]",
-    val timestamp: Long = 0L
+    val timestamp: Long = 0L,
+    @ColumnInfo(defaultValue = "''")
+    val resultRevision: String = ""
 )

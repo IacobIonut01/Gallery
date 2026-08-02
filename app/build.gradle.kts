@@ -309,6 +309,7 @@ android {
                 )
             }
         }
+        getByName("androidTest").assets.srcDir("$projectDir/schemas")
     }
 
     flavorDimensions += listOf("abi", "ml")
@@ -527,6 +528,7 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.espresso.core)
+    androidTestImplementation(libs.room.testing)
     androidTestImplementation(libs.mockwebserver)
     androidTestImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.compose.ui.test.junit4)

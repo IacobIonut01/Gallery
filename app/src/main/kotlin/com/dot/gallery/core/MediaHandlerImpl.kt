@@ -86,7 +86,7 @@ class MediaHandlerImpl @Inject constructor(
                     val providerType = try { ProviderType.valueOf(providerName) } catch (_: Exception) { return@forEach }
                     val provider = getCloudProvider(providerName, configId) ?: return@forEach
                     provider.toggleFavorite(remoteId, favorite)
-                    cloudMediaDao.updateFavorite(remoteId, providerType, favorite)
+                    cloudMediaDao.updateFavorite(remoteId, providerType, configId, favorite)
                 }
             }
         }
@@ -183,7 +183,7 @@ class MediaHandlerImpl @Inject constructor(
                     val providerType = try { ProviderType.valueOf(providerName) } catch (_: Exception) { return@forEach }
                     val provider = getCloudProvider(providerName, configId) ?: return@forEach
                     provider.deleteAsset(remoteId)
-                    cloudMediaDao.delete(remoteId, providerType)
+                    cloudMediaDao.delete(remoteId, providerType, configId)
                 }
             }
         }

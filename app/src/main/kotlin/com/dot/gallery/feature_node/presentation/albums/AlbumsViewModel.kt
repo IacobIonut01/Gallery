@@ -90,12 +90,13 @@ class AlbumsViewModel @Inject constructor(
                 // Cloud album: delete all media in this album from the cloud provider
                 val providerName = album.relativePath.removePrefix("cloud/").split("/").firstOrNull() ?: return@launch
                 val providerType = try { ProviderType.valueOf(providerName) } catch (_: Exception) { return@launch }
-                val provider = providerRegistry.get(providerType) as? RemoteMediaProvider ?: return@launch
                 val cloudMedia = cloudMediaDao.getByProvider(providerType).firstOrNull() ?: emptyList()
                 val albumMedia = cloudMedia.filter { it.relativePath.contains(album.label) }
                 albumMedia.forEach { entity ->
+                    val provider = providerRegistry.getByConfigId(entity.serverConfigId) as? RemoteMediaProvider
+                        ?: return@forEach
                     provider.deleteAsset(entity.remoteId)
-                    cloudMediaDao.delete(entity.remoteId, providerType)
+                    cloudMediaDao.delete(entity.remoteId, providerType, entity.serverConfigId)
                 }
             } else {
                 val response = repository.getMediaByAlbumId(album.id, skipBatching = true).firstOrNull()

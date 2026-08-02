@@ -30,6 +30,7 @@ import com.dot.gallery.feature_node.domain.util.isVideo
 import com.dot.gallery.feature_node.presentation.util.formattedAddress
 import com.dot.gallery.feature_node.presentation.util.printDebug
 import com.dot.gallery.feature_node.presentation.util.printWarning
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -209,12 +210,18 @@ fun MediaMetadata.getIcon(): ImageVector? {
     }
 }
 
+enum class MetadataParsingPolicy {
+    ON_DEMAND_COMPATIBLE,
+    BULK_ISOLATED_ONLY
+}
+
 @Suppress("DEPRECATION")
 suspend fun Context.retrieveExtraMediaMetadata(
     isolatedParser: IsolatedMetadataParser,
     geocoder: Geocoder?,
     media: Media,
-    usePerFileIsolation: Boolean = false
+    usePerFileIsolation: Boolean = false,
+    policy: MetadataParsingPolicy = MetadataParsingPolicy.ON_DEMAND_COMPATIBLE
 ): MediaMetadata? =
     withContext(Dispatchers.IO) {
         runCatching {
@@ -224,22 +231,33 @@ suspend fun Context.retrieveExtraMediaMetadata(
 
             if (media.isImage) {
                 val bundle = if (usePerFileIsolation) {
-                    isolatedParser.parseImageMetadataPerFile(uri, label, media.id)
+                    isolatedParser.parseImageMetadataPerFile(
+                        uri,
+                        label,
+                        media.id,
+                        fallbackToShared = policy == MetadataParsingPolicy.ON_DEMAND_COMPATIBLE
+                    )
                 } else {
                     isolatedParser.parseImageMetadata(uri, label)
                 }
                 if (bundle != null) {
-                    mediaMetadataFromImageBundle(media.id, bundle, geocoder, this@retrieveExtraMediaMetadata)
-                } else {
-                    // The isolated parse returned nothing — either metadata-extractor can't read
-                    // this format or the isolated service is unavailable on the device. Fall back
-                    // to an in-process ExifInterface/BitmapFactory read so the properties sheet
-                    // still shows resolution, size and any embedded EXIF instead of nothing (#1002).
+                    mediaMetadataFromImageBundle(
+                        media.id,
+                        bundle,
+                        geocoder,
+                        this@retrieveExtraMediaMetadata,
+                        allowInProcessFallback = policy == MetadataParsingPolicy.ON_DEMAND_COMPATIBLE
+                    )
+                } else if (policy == MetadataParsingPolicy.ON_DEMAND_COMPATIBLE) {
                     buildFallbackImageMetadata(media.id, uri, geocoder, this@retrieveExtraMediaMetadata)
-                }
+                } else null
             } else if (media.isVideo) {
                 val bundle = if (usePerFileIsolation) {
-                    isolatedParser.parseVideoMetadataPerFile(uri, media.id)
+                    isolatedParser.parseVideoMetadataPerFile(
+                        uri,
+                        media.id,
+                        fallbackToShared = policy == MetadataParsingPolicy.ON_DEMAND_COMPATIBLE
+                    )
                 } else {
                     isolatedParser.parseVideoMetadata(uri)
                 } ?: return@runCatching null
@@ -250,6 +268,7 @@ suspend fun Context.retrieveExtraMediaMetadata(
                 printDebug("Retrieved metadata for ${media.id} - $uri\n$it")
             }
         }.getOrElse {
+            if (it is CancellationException) throw it
             it.printStackTrace()
             null
         }
@@ -264,7 +283,8 @@ private suspend fun mediaMetadataFromImageBundle(
     mediaId: Long,
     bundle: Bundle,
     geocoder: Geocoder?,
-    context: Context
+    context: Context,
+    allowInProcessFallback: Boolean
 ): MediaMetadata {
     val gpsLatitude = if (bundle.containsKey(Keys.KEY_GPS_LAT)) bundle.getDouble(Keys.KEY_GPS_LAT) else null
     val gpsLongitude = if (bundle.containsKey(Keys.KEY_GPS_LON)) bundle.getDouble(Keys.KEY_GPS_LON) else null
@@ -292,7 +312,7 @@ private suspend fun mediaMetadataFromImageBundle(
     var imgH = bundle.getInt(Keys.KEY_IMAGE_HEIGHT, 0)
 
     // BitmapFactory fallback runs in main process (needs ContentResolver)
-    if (imgW == 0 || imgH == 0) {
+    if (allowInProcessFallback && (imgW == 0 || imgH == 0)) {
         // We need the URI again for the fallback — reconstruct from mediaId
         // This is a rare path so we tolerate the extra cost
         val uri = ContentUris.withAppendedId(

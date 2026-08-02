@@ -258,7 +258,7 @@ class CloudRepositoryImpl @Inject constructor(
         val result = provider.deleteAsset(remoteId)
         if (result.isSuccess) {
             // Drop from the local cache so the timeline/backup sheet update reactively.
-            cloudMediaDao.delete(remoteId, type)
+            cloudMediaDao.delete(remoteId, type, configId)
         }
         return result
     }

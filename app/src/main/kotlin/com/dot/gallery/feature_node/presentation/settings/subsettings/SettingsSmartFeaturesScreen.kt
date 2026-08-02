@@ -38,8 +38,8 @@ fun SettingsSmartFeaturesScreen(
     val handler = LocalEventHandler.current
     val aiAvailable = viewModel.areAiFeaturesAvailable
     val modelStatus by viewModel.modelStatus(ModelGroup.SEARCH).collectAsStateWithLifecycle()
-    val isMetadataWorkerRunning by viewModel.isMetadataWorkerRunning.collectAsStateWithLifecycle()
-    val metadataProgress by viewModel.metadataProgress.collectAsStateWithLifecycle()
+    val activeSmartScan by viewModel.activeSmartScan.collectAsStateWithLifecycle()
+    val latestSmartScan by viewModel.latestSmartScan.collectAsStateWithLifecycle()
 
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
@@ -75,15 +75,25 @@ fun SettingsSmartFeaturesScreen(
             }
         } else ""
         val databaseHeader = stringResource(R.string.database)
-        val refreshMetadataTitle = stringResource(R.string.refresh_metadata)
-        val metadataSummary = when {
-            isMetadataWorkerRunning && metadataProgress in 1..99 ->
-                stringResource(R.string.metadata_collecting_progress, metadataProgress)
-            isMetadataWorkerRunning ->
-                stringResource(R.string.metadata_collecting)
-            else ->
-                stringResource(R.string.metadata_idle)
-        }
+        val scanManagerTitle = stringResource(R.string.smart_scan_manager_title)
+        val smartScanSummary = activeSmartScan?.let { run ->
+            val percent = if (run.totalMedia <= 0) 0 else (run.processedMedia * 100 / run.totalMedia).coerceIn(0, 100)
+            stringResource(
+                R.string.smart_scan_progress,
+                run.currentPhase?.storedValue.orEmpty(),
+                percent,
+                run.failedMedia,
+                run.skippedMedia
+            )
+        } ?: latestSmartScan?.let { run ->
+            stringResource(
+                R.string.smart_scan_last_result,
+                run.status.storedValue,
+                run.processedMedia,
+                run.failedMedia,
+                run.skippedMedia
+            )
+        } ?: stringResource(R.string.smart_scan_manager_summary)
         val storageHeader = stringResource(R.string.edit_backups_storage)
         val editBackupsTitle = stringResource(R.string.edit_backups)
         val editBackupsSummary = stringResource(R.string.edit_backups_summary)
@@ -118,10 +128,9 @@ fun SettingsSmartFeaturesScreen(
                 Header(databaseHeader)
 
                 Preference(
-                    title = refreshMetadataTitle,
-                    summary = metadataSummary,
-                    enabled = !isMetadataWorkerRunning,
-                    onClick = { viewModel.refreshMetadata() }
+                    title = scanManagerTitle,
+                    summary = smartScanSummary,
+                    onClick = { handler.navigate(Screen.SmartScanPreferenceDetailScreen()) }
                 )
 
                 Header(storageHeader)

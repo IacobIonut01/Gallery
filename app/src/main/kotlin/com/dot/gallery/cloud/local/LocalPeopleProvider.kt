@@ -9,6 +9,7 @@ import com.dot.gallery.cloud.core.PersonInfo
 import com.dot.gallery.cloud.core.ProviderCapability
 import com.dot.gallery.cloud.core.ProviderType
 import com.dot.gallery.cloud.core.capabilities.PeopleCapableProvider
+import com.dot.gallery.cloud.data.dao.CloudMediaDao
 import com.dot.gallery.cloud.data.dao.DetectedFaceDao
 import com.dot.gallery.cloud.data.dao.PersonDao
 import com.dot.gallery.core.Resource
@@ -32,6 +33,7 @@ import javax.inject.Singleton
 class LocalPeopleProvider @Inject constructor(
     private val personDao: PersonDao,
     private val faceDao: DetectedFaceDao,
+    private val cloudMediaDao: CloudMediaDao,
     private val mediaRepository: MediaRepository,
     private val modelManager: ModelManager
 ) : LocalCapabilityProvider(), PeopleCapableProvider {
@@ -68,8 +70,9 @@ class LocalPeopleProvider @Inject constructor(
             emit(Resource.Success(emptyList()))
             return@flow
         }
-        val media = mediaRepository.getCompleteMedia().first().data.orEmpty()
-        emit(Resource.Success(media.filter { it.id in ids }))
+        val local = mediaRepository.getCompleteMedia().first().data.orEmpty()
+        val cloud = cloudMediaDao.getAllCachedAsync().map { it.toUriMedia() }
+        emit(Resource.Success((local + cloud).filter { it.id in ids }))
     }
 
     override fun getPersonThumbnailUrl(personId: String): String? = null

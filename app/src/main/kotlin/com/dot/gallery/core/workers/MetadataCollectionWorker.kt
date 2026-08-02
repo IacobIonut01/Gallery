@@ -16,7 +16,6 @@ import com.dot.gallery.core.Settings
 import com.dot.gallery.core.sandbox.IsolatedMetadataParser
 import com.dot.gallery.core.util.ProgressThrottler
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
-import com.dot.gallery.cloud.core.cloudMediaId
 import com.dot.gallery.feature_node.domain.model.MediaMetadata
 import com.dot.gallery.feature_node.domain.model.MediaVersion
 import com.dot.gallery.feature_node.domain.model.retrieveExtraMediaMetadata
@@ -79,7 +78,7 @@ class MetadataCollectionWorker @AssistedInject constructor(
             printDebug("Deleting forgotten metadata...")
             val localIds = it.fastMap { m -> m.id }
             val cloudIds = try {
-                database.getCloudMediaDao().getAllAsync().map { c -> cloudMediaId(c.providerType, c.serverConfigId, c.remoteId) }
+                database.getCloudMediaDao().getAllAsync().map { c -> c.globalMediaId }
             } catch (_: Exception) { emptyList() }
             database.getMetadataDao().deleteForgottenMetadata(localIds + cloudIds)
         }
@@ -128,7 +127,7 @@ class MetadataCollectionWorker @AssistedInject constructor(
             var count = 0
             var skipped = 0
             for (entity in cloudEntities) {
-                val mediaId = cloudMediaId(entity.providerType, entity.serverConfigId, entity.remoteId)
+                val mediaId = entity.globalMediaId
                 val existing = metadataDao.getCoreMetadata(mediaId)
                 if (existing != null && (existing.imageWidth > 0 || existing.manufacturerName != null)) {
                     skipped++

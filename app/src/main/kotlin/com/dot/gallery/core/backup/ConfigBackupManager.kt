@@ -254,7 +254,8 @@ class ConfigBackupManager @Inject constructor(
         return cloudMediaDao.getFavoritesAsync().map { entity ->
             CloudFavoriteEntry(
                 providerType = entity.providerType.name,
-                remoteId = entity.remoteId
+                remoteId = entity.remoteId,
+                serverConfigId = entity.serverConfigId
             )
         }
     }
@@ -583,7 +584,8 @@ class ConfigBackupManager @Inject constructor(
         manifest.cloudFavorites.forEach { fav ->
             val providerType = runCatching { ProviderType.valueOf(fav.providerType) }.getOrNull()
                 ?: return@forEach
-            cloudMediaDao.updateFavorite(fav.remoteId, providerType, true)
+            if (fav.serverConfigId <= 0L) return@forEach
+            cloudMediaDao.updateFavorite(fav.remoteId, providerType, fav.serverConfigId, true)
             count++
         }
         return count

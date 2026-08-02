@@ -5,6 +5,7 @@
 
 package com.dot.gallery.feature_node.domain.model
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
@@ -43,7 +44,9 @@ data class MediaCategory(
     val categoryId: Long,
     val similarityScore: Float,
     val addedAt: Long = System.currentTimeMillis(),
-    val isManuallyAdded: Boolean = false
+    val isManuallyAdded: Boolean = false,
+    @ColumnInfo(defaultValue = "''")
+    val resultRevision: String = ""
 )
 
 /**

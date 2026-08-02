@@ -48,6 +48,15 @@ interface DetectedFaceDao {
     @Query("DELETE FROM detected_faces WHERE mediaId = :mediaId")
     suspend fun deleteByMedia(mediaId: Long)
 
+    @Query(
+        """
+        DELETE FROM detected_faces
+        WHERE NOT EXISTS (SELECT 1 FROM media WHERE media.id = detected_faces.mediaId)
+          AND NOT EXISTS (SELECT 1 FROM cloud_media WHERE cloud_media.globalMediaId = detected_faces.mediaId)
+        """
+    )
+    suspend fun deleteOrphans(): Int
+
     @Query("DELETE FROM detected_faces")
     suspend fun deleteAll()
 }

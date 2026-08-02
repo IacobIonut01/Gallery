@@ -293,8 +293,9 @@ open class WebDavMediaProvider(
         withContext(Dispatchers.IO) {
             try {
                 val client = webDavClient ?: throw IllegalStateException("Not configured")
+                val configId = currentConfig?.id ?: throw IllegalStateException("Not configured")
                 client.delete(resolveRemotePath(remoteId))
-                cloudMediaDao.delete(remoteId, dialect.providerType)
+                cloudMediaDao.delete(remoteId, dialect.providerType, configId)
                 Result.success(Unit)
             } catch (e: Exception) {
                 Result.failure(e)

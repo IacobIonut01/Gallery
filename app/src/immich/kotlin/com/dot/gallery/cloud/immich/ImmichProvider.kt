@@ -187,6 +187,9 @@ class ImmichProvider @Inject constructor(
     private fun requireApi(): ImmichApiService = apiService
         ?: throw IllegalStateException("ImmichProvider not configured. Call configure() first.")
 
+    private fun requireConfigId(): Long = currentConfig?.id
+        ?: throw IllegalStateException("ImmichProvider not configured. Call configure() first.")
+
     // === Auth ===
 
     private fun createIsolatedApiService(
@@ -461,7 +464,12 @@ class ImmichProvider @Inject constructor(
         return try {
             val response = requireApi().updateAsset(remoteId, mapOf("isFavorite" to favorite))
             if (response.isSuccessful) {
-                cloudMediaDao.updateFavorite(remoteId, ProviderType.IMMICH, favorite)
+                cloudMediaDao.updateFavorite(
+                    remoteId,
+                    ProviderType.IMMICH,
+                    requireConfigId(),
+                    favorite
+                )
                 Result.success(Unit)
             } else {
                 Result.failure(Exception("Failed to toggle favorite: ${response.code()}"))
@@ -475,7 +483,12 @@ class ImmichProvider @Inject constructor(
         return try {
             val response = requireApi().deleteAssets(mapOf("ids" to listOf(remoteId), "force" to false))
             if (response.isSuccessful) {
-                cloudMediaDao.updateTrashed(remoteId, ProviderType.IMMICH, true)
+                cloudMediaDao.updateTrashed(
+                    remoteId,
+                    ProviderType.IMMICH,
+                    requireConfigId(),
+                    true
+                )
                 Result.success(Unit)
             } else {
                 Result.failure(Exception("Failed to trash asset: ${response.code()}"))
@@ -489,7 +502,12 @@ class ImmichProvider @Inject constructor(
         return try {
             val response = requireApi().restoreAssets(mapOf("ids" to listOf(remoteId)))
             if (response.isSuccessful) {
-                cloudMediaDao.updateTrashed(remoteId, ProviderType.IMMICH, false)
+                cloudMediaDao.updateTrashed(
+                    remoteId,
+                    ProviderType.IMMICH,
+                    requireConfigId(),
+                    false
+                )
                 Result.success(Unit)
             } else {
                 Result.failure(Exception("Failed to restore asset: ${response.code()}"))
@@ -503,7 +521,7 @@ class ImmichProvider @Inject constructor(
         return try {
             val response = requireApi().deleteAssets(mapOf("ids" to listOf(remoteId), "force" to true))
             if (response.isSuccessful) {
-                cloudMediaDao.delete(remoteId, ProviderType.IMMICH)
+                cloudMediaDao.delete(remoteId, ProviderType.IMMICH, requireConfigId())
                 Result.success(Unit)
             } else {
                 Result.failure(Exception("Failed to delete asset: ${response.code()}"))
@@ -835,7 +853,12 @@ class ImmichProvider @Inject constructor(
             val visibility = if (archived) "archive" else "timeline"
             val response = requireApi().updateAsset(remoteId, mapOf("visibility" to visibility))
             if (response.isSuccessful) {
-                cloudMediaDao.updateArchived(remoteId, ProviderType.IMMICH, archived)
+                cloudMediaDao.updateArchived(
+                    remoteId,
+                    ProviderType.IMMICH,
+                    requireConfigId(),
+                    archived
+                )
                 Result.success(Unit)
             } else {
                 Result.failure(Exception("Failed to toggle archive: ${response.code()}"))

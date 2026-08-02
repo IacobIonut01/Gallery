@@ -28,6 +28,8 @@ import com.dot.gallery.R
 import com.dot.gallery.core.ml.DownloadInfo
 import com.dot.gallery.core.ml.ModelGroup
 import com.dot.gallery.core.ml.ModelManager
+import com.dot.gallery.core.smart.SmartScanScheduler
+import com.dot.gallery.feature_node.data.data_source.SmartScanFeature
 import com.dot.gallery.feature_node.presentation.util.printInfo
 import com.dot.gallery.feature_node.presentation.util.printWarning
 import dagger.assisted.Assisted
@@ -44,6 +46,7 @@ import java.net.URL
 @HiltWorker
 class ModelDownloadWorker @AssistedInject constructor(
     private val modelManager: ModelManager,
+    private val smartScanScheduler: SmartScanScheduler,
     @Assisted private val appContext: Context,
     @Assisted workerParams: WorkerParameters
 ) : CoroutineWorker(appContext, workerParams) {
@@ -114,8 +117,8 @@ class ModelDownloadWorker @AssistedInject constructor(
                 val destFile = modelManager.getDestinationFile(fileName)
                 destFile.parentFile?.mkdirs()
 
-                // Skip files that already exist and are non-empty
-                if (destFile.exists() && destFile.length() > 0) {
+                // Skip files that already exist and match the expected checksum
+                if (modelManager.isModelFileValid(fileName)) {
                     downloadedBytes += destFile.length()
                     completedFiles++
                     val overallProgress = (completedFiles.toFloat() / totalFiles) * 100f
@@ -157,6 +160,19 @@ class ModelDownloadWorker @AssistedInject constructor(
 
             // Validate all files are present
             modelManager.onDownloadComplete(group)
+            if (!modelManager.isReady(group)) {
+                return@withContext Result.failure(
+                    workDataOf(KEY_ERROR to "Downloaded model checksum validation failed")
+                )
+            }
+            when (group) {
+                ModelGroup.SEARCH -> smartScanScheduler.automatic(
+                    SmartScanFeature.EMBEDDINGS.bit or SmartScanFeature.CATEGORIES.bit
+                )
+                ModelGroup.FACE_DETECT, ModelGroup.FACE_RECOGNITION ->
+                    smartScanScheduler.automatic(SmartScanFeature.PERSONS.bit)
+                ModelGroup.CUTOUT -> Unit
+            }
             setProgress(workDataOf(KEY_PROGRESS to 100f, KEY_STATUS to "Complete"))
             printInfo("ModelDownloadWorker: All models downloaded successfully")
             return@withContext Result.success()

@@ -12,6 +12,7 @@ import androidx.room.Entity
 import androidx.room.Index
 import com.dot.gallery.cloud.core.ProviderType
 import com.dot.gallery.cloud.core.SyncState
+import com.dot.gallery.cloud.core.cloudMediaId
 import com.dot.gallery.core.Constants
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.presentation.util.getDate
@@ -25,13 +26,16 @@ import com.dot.gallery.feature_node.presentation.util.getDate
         Index(value = ["timestamp"]),
         Index(value = ["favorite"]),
         Index(value = ["trashed"]),
-        Index(value = ["contentHash"])
+        Index(value = ["contentHash"]),
+        Index(value = ["globalMediaId"], unique = true)
     ]
 )
 data class CloudMediaEntity(
     val remoteId: String,
     val providerType: ProviderType,
     val serverConfigId: Long,
+    @ColumnInfo(defaultValue = "0")
+    val globalMediaId: Long = cloudMediaId(providerType, serverConfigId, remoteId),
     val label: String = "",
     val path: String = "",
     val relativePath: String = "",
@@ -73,6 +77,12 @@ data class CloudMediaEntity(
     @ColumnInfo(defaultValue = "")
     val fileId: String = ""
 ) {
+    init {
+        require(globalMediaId == cloudMediaId(providerType, serverConfigId, remoteId)) {
+            "globalMediaId must be derived from providerType, serverConfigId, and remoteId"
+        }
+    }
+
     fun toUriMedia(): Media.UriMedia {
         val base = "cloud://${providerType.name}/$remoteId?size=preview"
         // Thread the server's numeric file id through the URI so the image
@@ -96,7 +106,7 @@ data class CloudMediaEntity(
         // video would be mis-handled as a still image: no player, and no server poster thumbnail.
         val resolvedDuration = duration ?: if (mimeType.startsWith("video/")) "" else null
         return Media.UriMedia(
-            id = com.dot.gallery.cloud.core.cloudMediaId(providerType, serverConfigId, remoteId),
+            id = globalMediaId,
             label = label,
             uri = cloudUri,
             path = displayPath,

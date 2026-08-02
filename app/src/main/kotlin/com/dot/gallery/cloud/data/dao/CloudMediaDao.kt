@@ -36,11 +36,24 @@ interface CloudMediaDao {
     @Query("SELECT * FROM cloud_media WHERE trashed = 1 AND providerType = :providerType ORDER BY timestamp DESC")
     fun getTrashedByProvider(providerType: ProviderType): Flow<List<CloudMediaEntity>>
 
-    @Query("SELECT * FROM cloud_media WHERE remoteId = :remoteId AND providerType = :providerType")
-    suspend fun getByRemoteId(remoteId: String, providerType: ProviderType): CloudMediaEntity?
+    @Query("SELECT * FROM cloud_media WHERE globalMediaId = :globalMediaId LIMIT 1")
+    suspend fun getByGlobalMediaId(globalMediaId: Long): CloudMediaEntity?
 
-    @Query("SELECT * FROM cloud_media WHERE contentHash = :hash LIMIT 1")
-    suspend fun getByContentHash(hash: String): CloudMediaEntity?
+    @Query(
+        """
+        SELECT * FROM cloud_media
+        WHERE remoteId = :remoteId AND providerType = :providerType AND serverConfigId = :serverConfigId
+        LIMIT 1
+        """
+    )
+    suspend fun getByRemoteId(
+        remoteId: String,
+        providerType: ProviderType,
+        serverConfigId: Long
+    ): CloudMediaEntity?
+
+    @Query("SELECT * FROM cloud_media WHERE contentHash = :hash AND serverConfigId = :serverConfigId LIMIT 1")
+    suspend fun getByContentHash(hash: String, serverConfigId: Long): CloudMediaEntity?
 
     @Query("SELECT * FROM cloud_media WHERE syncState = :state ORDER BY timestamp DESC")
     fun getBySyncState(state: SyncState): Flow<List<CloudMediaEntity>>
@@ -99,23 +112,79 @@ interface CloudMediaDao {
     @Update
     suspend fun update(item: CloudMediaEntity)
 
-    @Query("UPDATE cloud_media SET syncState = :state WHERE remoteId = :remoteId AND providerType = :providerType")
-    suspend fun updateSyncState(remoteId: String, providerType: ProviderType, state: SyncState)
+    @Query(
+        """
+        UPDATE cloud_media SET syncState = :state
+        WHERE remoteId = :remoteId AND providerType = :providerType AND serverConfigId = :serverConfigId
+        """
+    )
+    suspend fun updateSyncState(
+        remoteId: String,
+        providerType: ProviderType,
+        serverConfigId: Long,
+        state: SyncState
+    )
 
-    @Query("UPDATE cloud_media SET favorite = :favorite WHERE remoteId = :remoteId AND providerType = :providerType")
-    suspend fun updateFavorite(remoteId: String, providerType: ProviderType, favorite: Boolean)
+    @Query(
+        """
+        UPDATE cloud_media SET favorite = :favorite
+        WHERE remoteId = :remoteId AND providerType = :providerType AND serverConfigId = :serverConfigId
+        """
+    )
+    suspend fun updateFavorite(
+        remoteId: String,
+        providerType: ProviderType,
+        serverConfigId: Long,
+        favorite: Boolean
+    )
 
-    @Query("UPDATE cloud_media SET trashed = :trashed WHERE remoteId = :remoteId AND providerType = :providerType")
-    suspend fun updateTrashed(remoteId: String, providerType: ProviderType, trashed: Boolean)
+    @Query(
+        """
+        UPDATE cloud_media SET trashed = :trashed
+        WHERE remoteId = :remoteId AND providerType = :providerType AND serverConfigId = :serverConfigId
+        """
+    )
+    suspend fun updateTrashed(
+        remoteId: String,
+        providerType: ProviderType,
+        serverConfigId: Long,
+        trashed: Boolean
+    )
 
-    @Query("UPDATE cloud_media SET archived = :archived WHERE remoteId = :remoteId AND providerType = :providerType")
-    suspend fun updateArchived(remoteId: String, providerType: ProviderType, archived: Boolean)
+    @Query(
+        """
+        UPDATE cloud_media SET archived = :archived
+        WHERE remoteId = :remoteId AND providerType = :providerType AND serverConfigId = :serverConfigId
+        """
+    )
+    suspend fun updateArchived(
+        remoteId: String,
+        providerType: ProviderType,
+        serverConfigId: Long,
+        archived: Boolean
+    )
 
-    @Query("UPDATE cloud_media SET localCopyPath = :path, syncState = :state WHERE remoteId = :remoteId AND providerType = :providerType")
-    suspend fun updateLocalCopy(remoteId: String, providerType: ProviderType, path: String, state: SyncState)
+    @Query(
+        """
+        UPDATE cloud_media SET localCopyPath = :path, syncState = :state
+        WHERE remoteId = :remoteId AND providerType = :providerType AND serverConfigId = :serverConfigId
+        """
+    )
+    suspend fun updateLocalCopy(
+        remoteId: String,
+        providerType: ProviderType,
+        serverConfigId: Long,
+        path: String,
+        state: SyncState
+    )
 
-    @Query("DELETE FROM cloud_media WHERE remoteId = :remoteId AND providerType = :providerType")
-    suspend fun delete(remoteId: String, providerType: ProviderType)
+    @Query(
+        """
+        DELETE FROM cloud_media
+        WHERE remoteId = :remoteId AND providerType = :providerType AND serverConfigId = :serverConfigId
+        """
+    )
+    suspend fun delete(remoteId: String, providerType: ProviderType, serverConfigId: Long)
 
     @Query("DELETE FROM cloud_media WHERE serverConfigId = :configId")
     suspend fun deleteByServerConfig(configId: Long)

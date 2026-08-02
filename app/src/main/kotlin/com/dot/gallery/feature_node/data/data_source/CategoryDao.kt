@@ -81,11 +81,17 @@ interface CategoryDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMediaCategories(mediaCategories: List<MediaCategory>)
 
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertAutomaticMediaCategories(mediaCategories: List<MediaCategory>)
+
     @Query("DELETE FROM media_category WHERE mediaId = :mediaId AND categoryId = :categoryId")
     suspend fun removeMediaFromCategory(mediaId: Long, categoryId: Long)
 
     @Query("DELETE FROM media_category WHERE categoryId = :categoryId")
     suspend fun removeAllMediaFromCategory(categoryId: Long)
+
+    @Query("DELETE FROM media_category WHERE categoryId = :categoryId AND isManuallyAdded = 0")
+    suspend fun removeAutomaticMediaFromCategory(categoryId: Long)
 
     @Query("DELETE FROM media_category WHERE mediaId = :mediaId")
     suspend fun removeMediaFromAllCategories(mediaId: Long)
@@ -103,12 +109,32 @@ interface CategoryDao {
      *
      * @return the number of orphaned rows deleted.
      */
-    @Query("DELETE FROM media_category WHERE mediaId NOT IN (SELECT id FROM media)")
+    @Query(
+        """
+        DELETE FROM media_category
+        WHERE NOT EXISTS (SELECT 1 FROM media WHERE media.id = media_category.mediaId)
+          AND NOT EXISTS (SELECT 1 FROM cloud_media WHERE cloud_media.globalMediaId = media_category.mediaId)
+        """
+    )
     suspend fun cleanupCategoriesForDeletedMedia(): Int
 
     /** Number of rows currently mirrored in the internal `media` table. */
     @Query("SELECT COUNT(*) FROM media")
     suspend fun getMirroredMediaCount(): Int
+
+    @Query(
+        """
+        SELECT COUNT(DISTINCT mc.mediaId)
+        FROM media_category mc
+        WHERE EXISTS (SELECT 1 FROM media WHERE media.id = mc.mediaId)
+           OR EXISTS (
+               SELECT 1 FROM cloud_media
+               WHERE cloud_media.globalMediaId = mc.mediaId
+                 AND cloud_media.trashed = 0 AND cloud_media.archived = 0
+           )
+        """
+    )
+    fun getDistinctClassifiedMediaCount(): Flow<Int>
 
     // Get all media IDs in a category, ordered by similarity score
     @Query("""
@@ -183,14 +209,20 @@ interface CategoryDao {
     // picks the highest-scored *existing* media as the cover, so a deleted cover falls back to
     // the next valid member and stale counts never show phantom items (#1076).
     @Query("""
-        SELECT c.*, COUNT(mc.mediaId) as mediaCount, 
-               (SELECT mc2.mediaId FROM media_category mc2 
-                INNER JOIN media m2 ON m2.id = mc2.mediaId
-                WHERE mc2.categoryId = c.id 
+        WITH valid_media AS (
+            SELECT id FROM media
+            UNION ALL
+            SELECT globalMediaId AS id FROM cloud_media
+            WHERE trashed = 0 AND archived = 0
+        )
+        SELECT c.*, COUNT(mc.mediaId) as mediaCount,
+               (SELECT mc2.mediaId FROM media_category mc2
+                INNER JOIN valid_media vm2 ON vm2.id = mc2.mediaId
+                WHERE mc2.categoryId = c.id
                 ORDER BY mc2.similarityScore DESC LIMIT 1) as thumbnailMediaId
         FROM categories c
         INNER JOIN media_category mc ON c.id = mc.categoryId
-        INNER JOIN media m ON m.id = mc.mediaId
+        INNER JOIN valid_media vm ON vm.id = mc.mediaId
         GROUP BY c.id
         HAVING mediaCount > 0
         ORDER BY c.isPinned DESC, c.name ASC
@@ -200,8 +232,8 @@ interface CategoryDao {
     // Batch update for reclassification
     @Transaction
     suspend fun reclassifyMediaForCategory(categoryId: Long, mediaCategories: List<MediaCategory>) {
-        removeAllMediaFromCategory(categoryId)
-        insertMediaCategories(mediaCategories)
+        removeAutomaticMediaFromCategory(categoryId)
+        if (mediaCategories.isNotEmpty()) insertAutomaticMediaCategories(mediaCategories)
     }
 
     // Delete all data (for reset)
@@ -221,14 +253,20 @@ interface CategoryDao {
     // Same existence validation as getCategoriesWithMediaCount so carousels never surface a
     // stale count or a deleted cover (#1076).
     @Query("""
+        WITH valid_media AS (
+            SELECT id FROM media
+            UNION ALL
+            SELECT globalMediaId AS id FROM cloud_media
+            WHERE trashed = 0 AND archived = 0
+        )
         SELECT c.*, COUNT(mc.mediaId) as mediaCount,
-               (SELECT mc2.mediaId FROM media_category mc2 
-                INNER JOIN media m2 ON m2.id = mc2.mediaId
-                WHERE mc2.categoryId = c.id 
+               (SELECT mc2.mediaId FROM media_category mc2
+                INNER JOIN valid_media vm2 ON vm2.id = mc2.mediaId
+                WHERE mc2.categoryId = c.id
                 ORDER BY mc2.similarityScore DESC LIMIT 1) as thumbnailMediaId
         FROM categories c
         INNER JOIN media_category mc ON c.id = mc.categoryId
-        INNER JOIN media m ON m.id = mc.mediaId
+        INNER JOIN valid_media vm ON vm.id = mc.mediaId
         GROUP BY c.id
         ORDER BY mediaCount DESC
         LIMIT :limit

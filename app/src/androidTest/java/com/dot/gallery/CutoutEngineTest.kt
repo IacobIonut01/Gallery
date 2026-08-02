@@ -53,12 +53,10 @@ class CutoutEngineTest {
             val samResult = session.runDecoder(listOf(centerPoint))
             assertNotNull("SAM Decoder should return a valid cutout result", samResult)
             
-            // 6. Test finalizeCutout (pass-through of the cached SAM result)
-            val finalResult = session.finalizeCutout(samResult!!.originalBounds)
-            assertNotNull("finalizeCutout should return a valid cutout result", finalResult)
-            assertTrue("finalizeCutout should return the cached SAM result", samResult === finalResult)
-            
-            // Cleanup bitmap (since they are the same object, only recycle once)
+            // 6. Verify the decoder result remains usable for export
+            assertTrue("SAM result bitmap should remain valid", !samResult!!.bitmap.isRecycled)
+
+            // Cleanup bitmap
             samResult.bitmap.recycle()
         } finally {
             session.close()

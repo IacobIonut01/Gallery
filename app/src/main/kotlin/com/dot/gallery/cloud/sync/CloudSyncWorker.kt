@@ -23,6 +23,8 @@ import com.dot.gallery.cloud.data.dao.CloudMediaDao
 import com.dot.gallery.cloud.data.dao.CloudServerConfigDao
 import com.dot.gallery.cloud.data.dao.SyncStateDao
 import com.dot.gallery.cloud.data.entity.SyncStateEntity
+import com.dot.gallery.core.smart.SmartScanScheduler
+import com.dot.gallery.feature_node.data.data_source.SmartScanFeature
 import com.dot.gallery.feature_node.presentation.util.printDebug
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -36,12 +38,14 @@ class CloudSyncWorker @AssistedInject constructor(
     private val registry: ProviderRegistry,
     private val configDao: CloudServerConfigDao,
     private val syncStateDao: SyncStateDao,
-    private val cloudMediaDao: CloudMediaDao
+    private val cloudMediaDao: CloudMediaDao,
+    private val smartScanScheduler: SmartScanScheduler
 ) : CoroutineWorker(context, workerParams) {
 
     override suspend fun doWork(): Result {
         printDebug("CloudSyncWorker: Starting sync...")
         try {
+            var mediaChanged = false
             val configs = configDao.getAll().first()
             for (config in configs) {
                 if (!config.isActive || !config.syncEnabled) continue
@@ -68,6 +72,7 @@ class CloudSyncWorker @AssistedInject constructor(
                         // made the periodic worker a no-op beyond advancing the timestamp.
                         if (changed.isNotEmpty()) {
                             cloudMediaDao.insertAll(changed)
+                            mediaChanged = true
                         }
                     }.onFailure { e ->
                         printDebug("CloudSyncWorker: Sync failed for ${config.providerType.displayName} #${config.id}: ${e.message}")
@@ -85,6 +90,7 @@ class CloudSyncWorker @AssistedInject constructor(
 
                 printDebug("CloudSyncWorker: Done syncing ${config.providerType.displayName}")
             }
+            if (mediaChanged) smartScanScheduler.automatic(SmartScanFeature.ALL_MASK)
             return Result.success()
         } catch (e: Exception) {
             printDebug("CloudSyncWorker: Failed: ${e.message}")

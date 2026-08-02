@@ -1,5 +1,6 @@
 package com.dot.gallery.feature_node.domain.model
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import kotlinx.serialization.Serializable
@@ -11,6 +12,8 @@ data class ImageEmbedding(
     val id: Long,
     val date: Long,
     val embedding: FloatArray,
+    @ColumnInfo(defaultValue = "''")
+    val resultRevision: String = "",
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -21,6 +24,7 @@ data class ImageEmbedding(
         if (id != other.id) return false
         if (date != other.date) return false
         if (!embedding.contentEquals(other.embedding)) return false
+        if (resultRevision != other.resultRevision) return false
 
         return true
     }
@@ -29,6 +33,7 @@ data class ImageEmbedding(
         var result = id.hashCode()
         result = 31 * result + date.hashCode()
         result = 31 * result + embedding.contentHashCode()
+        result = 31 * result + resultRevision.hashCode()
         return result
     }
 }

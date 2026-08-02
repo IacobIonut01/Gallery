@@ -16,4 +16,13 @@ interface ImageEmbeddingDao {
 
     @Query("SELECT * FROM image_embeddings")
     fun getRecords(): Flow<List<ImageEmbedding>>
+
+    @Query(
+        """
+        DELETE FROM image_embeddings
+        WHERE NOT EXISTS (SELECT 1 FROM media WHERE media.id = image_embeddings.id)
+          AND NOT EXISTS (SELECT 1 FROM cloud_media WHERE cloud_media.globalMediaId = image_embeddings.id)
+        """
+    )
+    suspend fun deleteOrphans(): Int
 }

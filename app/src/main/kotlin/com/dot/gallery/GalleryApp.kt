@@ -11,8 +11,6 @@ import android.net.ConnectivityManager
 import android.net.Network
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
-import androidx.work.ExistingWorkPolicy
-import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.dot.gallery.cloud.core.ProviderRegistry
 import com.dot.gallery.cloud.di.CloudProviderInitializer
@@ -40,7 +38,7 @@ import com.dot.gallery.core.decoder.supportPsdDecoder
 import com.dot.gallery.core.decoder.supportJp2Decoder
 import com.dot.gallery.core.decoder.supportTiffDecoder
 import com.dot.gallery.core.decoder.supportRawDecoder
-import com.dot.gallery.core.workers.MetadataCollectionWorker
+import com.dot.gallery.core.smart.SmartScanScheduler
 import com.dot.gallery.core.workers.TempVaultCleanupWorker
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.github.panpf.sketch.PlatformContext
@@ -142,6 +140,9 @@ class GalleryApp : Application(), SingletonSketch.Factory, Configuration.Provide
     lateinit var workManager: WorkManager
 
     @Inject
+    lateinit var smartScanScheduler: SmartScanScheduler
+
+    @Inject
     lateinit var repository: MediaRepository
 
     @Inject
@@ -231,15 +232,6 @@ class GalleryApp : Application(), SingletonSketch.Factory, Configuration.Provide
             SandboxedDecoderHolder.init(isolatedImageDecoder, this)
         }
 
-        StartupTracer.trace("WorkManager.enqueueMetadata") {
-            workManager.enqueueUniqueWork(
-                uniqueWorkName = "MetadataCollection",
-                existingWorkPolicy = ExistingWorkPolicy.APPEND_OR_REPLACE,
-                request = OneTimeWorkRequestBuilder<MetadataCollectionWorker>()
-                    .build()
-            )
-        }
-
         StartupTracer.trace("TempVaultCleanupWorker.schedule") {
             TempVaultCleanupWorker.schedule(workManager)
         }
@@ -254,11 +246,13 @@ class GalleryApp : Application(), SingletonSketch.Factory, Configuration.Provide
             StartupTracer.trace("ModelManager.initializeModels") {
                 modelManager.initializeModels()
             }
+            smartScanScheduler.all(userVisible = false)
         }
 
         // Auto-configure cloud providers asynchronously (off main thread)
         appScope.launch {
             cloudProviderInitializer.initializeAsync()
+            smartScanScheduler.all(userVisible = false)
         }
 
         // Re-resolve auto-switching server URLs when the network changes

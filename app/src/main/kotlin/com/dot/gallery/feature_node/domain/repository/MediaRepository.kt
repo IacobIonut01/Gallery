@@ -246,6 +246,7 @@ interface MediaRepository {
     fun getAllCategories(): Flow<List<Category>>
     suspend fun getAllCategoriesAsync(): List<Category>
     fun getCategoriesWithMediaCount(): Flow<List<CategoryWithMediaCount>>
+    fun getDistinctClassifiedMediaCount(): Flow<Int>
     fun getCategoryCount(): Flow<Int>
     fun getTopCategories(limit: Int = 10): Flow<List<CategoryWithMediaCount>>
     
@@ -281,7 +282,7 @@ interface MediaRepository {
 
     fun hasAlbumThumbnail(albumId: Long): Flow<Boolean>
 
-    suspend fun collectMetadataFor(media: Media)
+    suspend fun collectMetadataFor(media: Media, bulk: Boolean = false)
 
     suspend fun addImageEmbedding(imageEmbedding: ImageEmbedding)
 

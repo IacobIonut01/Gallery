@@ -56,9 +56,8 @@ fun centerCrop(bitmap: Bitmap, imageSize: Int): Bitmap {
         cropY = bitmap.height / 2 - bitmap.width / 2
         cropSize = bitmap.width
     }
-    var bitmapCropped = Bitmap.createBitmap(
-        bitmap, cropX, cropY, cropSize, cropSize
-    )
-    bitmapCropped = bitmapCropped.scale(imageSize, imageSize, false)
-    return bitmapCropped
+    val cropped = Bitmap.createBitmap(bitmap, cropX, cropY, cropSize, cropSize)
+    val scaled = cropped.scale(imageSize, imageSize, false)
+    if (scaled !== cropped && cropped !== bitmap) cropped.recycle()
+    return scaled
 }

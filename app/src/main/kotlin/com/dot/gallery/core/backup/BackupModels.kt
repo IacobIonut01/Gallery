@@ -59,11 +59,12 @@ data class LocalFavoriteEntry(
     val timestamp: Long
 )
 
-/** A cloud favorite, identified by its provider and remote id. */
+/** A cloud favorite, identified by its owning account, provider, and remote id. */
 @Serializable
 data class CloudFavoriteEntry(
     val providerType: String,
-    val remoteId: String
+    val remoteId: String,
+    val serverConfigId: Long = 0L
 )
 
 /** A cloud server configuration. Mirrors [com.dot.gallery.cloud.data.entity.CloudServerConfigEntity]. */

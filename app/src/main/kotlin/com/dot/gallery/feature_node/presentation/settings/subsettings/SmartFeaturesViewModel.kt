@@ -17,7 +17,10 @@ import com.dot.gallery.core.ml.ModelManager
 import com.dot.gallery.core.ml.ModelStatus
 import com.dot.gallery.core.workers.cancelModelDownload
 import com.dot.gallery.core.workers.downloadModels
-import com.dot.gallery.core.workers.forceMetadataCollect
+import com.dot.gallery.core.smart.SmartScanScheduler
+import com.dot.gallery.feature_node.data.data_source.SmartScanDao
+import com.dot.gallery.feature_node.data.data_source.SmartScanFeature
+import com.dot.gallery.feature_node.data.data_source.SmartScanRunEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -29,7 +32,9 @@ import javax.inject.Inject
 @HiltViewModel
 class SmartFeaturesViewModel @Inject constructor(
     private val modelManager: ModelManager,
-    private val workManager: WorkManager
+    private val workManager: WorkManager,
+    private val smartScanScheduler: SmartScanScheduler,
+    smartScanDao: SmartScanDao
 ) : ViewModel() {
 
     // Per-group observable state. UI screens pass the relevant [ModelGroup] (SEARCH for smart
@@ -45,6 +50,18 @@ class SmartFeaturesViewModel @Inject constructor(
 
     val hasInternetPermission: Boolean get() = modelManager.hasInternetPermission
     val areAiFeaturesAvailable: Boolean get() = modelManager.areAiFeaturesAvailable
+
+    val activeSmartScan: StateFlow<SmartScanRunEntity?> = smartScanDao.observeActiveRun().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
+
+    val latestSmartScan: StateFlow<SmartScanRunEntity?> = smartScanDao.observeLatestRun().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
 
     val isMetadataWorkerRunning: StateFlow<Boolean> = workManager.getWorkInfosFlow(
         WorkQuery.fromUniqueWorkNames("MetadataCollection")
@@ -85,7 +102,32 @@ class SmartFeaturesViewModel @Inject constructor(
         }
     }
 
-    fun refreshMetadata() {
-        workManager.forceMetadataCollect()
+    fun refreshMetadata() = request(SmartScanFeature.METADATA.bit)
+
+    fun refreshEmbeddings() = request(SmartScanFeature.EMBEDDINGS.bit)
+
+    fun refreshCategories() = request(SmartScanFeature.CATEGORIES.bit)
+
+    fun refreshPersons() = request(SmartScanFeature.PERSONS.bit)
+
+    fun refreshAll() {
+        viewModelScope.launch { smartScanScheduler.all(userVisible = true) }
+    }
+
+    fun fullRefresh() {
+        viewModelScope.launch { smartScanScheduler.fullRefresh() }
+    }
+
+    fun cancelActiveScan() {
+        val runId = activeSmartScan.value?.runId ?: return
+        viewModelScope.launch { smartScanScheduler.cancel(runId) }
+    }
+
+    fun retryLatestScan() {
+        viewModelScope.launch { smartScanScheduler.retryFailed(latestSmartScan.value?.runId) }
+    }
+
+    private fun request(features: Int) {
+        viewModelScope.launch { smartScanScheduler.manual(features) }
     }
 }

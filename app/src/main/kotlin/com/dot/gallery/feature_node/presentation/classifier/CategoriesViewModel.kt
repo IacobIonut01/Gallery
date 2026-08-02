@@ -10,15 +10,15 @@ import com.dot.gallery.core.MediaDistributor
 import com.dot.gallery.core.ml.ModelGroup
 import com.dot.gallery.core.ml.ModelManager
 import com.dot.gallery.core.ml.ModelStatus
-import com.dot.gallery.core.workers.CategoryWorker
+import com.dot.gallery.core.smart.SmartScanScheduler
 import com.dot.gallery.core.workers.VaultOperationWorker
 import com.dot.gallery.core.workers.enqueueVaultOperation
-import com.dot.gallery.core.workers.startCategoryClassification
 import com.dot.gallery.feature_node.domain.util.getUri
 import com.dot.gallery.core.workers.startClassification
-import com.dot.gallery.core.workers.stopCategoryClassification
 import com.dot.gallery.core.workers.stopClassification
 import com.dot.gallery.feature_node.data.data_source.CategoryWithMediaCount
+import com.dot.gallery.feature_node.data.data_source.SmartScanDao
+import com.dot.gallery.feature_node.data.data_source.SmartScanFeature
 import com.dot.gallery.feature_node.domain.model.Category
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
@@ -46,7 +46,9 @@ class CategoriesViewModel @Inject constructor(
     private val repository: MediaRepository,
     private val distributor: MediaDistributor,
     private val workManager: WorkManager,
-    private val modelManager: ModelManager
+    private val modelManager: ModelManager,
+    private val smartScanScheduler: SmartScanScheduler,
+    smartScanDao: SmartScanDao
 ) : ViewModel() {
 
     val modelStatus: StateFlow<ModelStatus> = modelManager.status(ModelGroup.SEARCH)
@@ -73,6 +75,9 @@ class CategoriesViewModel @Inject constructor(
     val categoriesWithCount: StateFlow<List<CategoryWithMediaCount>> = repository.getCategoriesWithMediaCount()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val distinctClassifiedMediaCount: StateFlow<Int> = repository.getDistinctClassifiedMediaCount()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+
     /**
      * Flow of all categories (including empty ones)
      */
@@ -88,22 +93,22 @@ class CategoriesViewModel @Inject constructor(
     /**
      * Worker state for the new category classification
      */
-    val isCategoryWorkerRunning: StateFlow<Boolean> = workManager.getWorkInfosByTagFlow(CategoryWorker.TAG)
-        .map { workInfos -> workInfos.any { it.state == State.RUNNING || it.state == State.ENQUEUED } }
+    private val activeSmartScan = smartScanDao.observeActiveRun()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    val isCategoryWorkerRunning: StateFlow<Boolean> = activeSmartScan
+        .map { it?.requestedFeatures?.and(SmartScanFeature.CATEGORIES.bit) != 0 }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
-    val categoryWorkerProgress: StateFlow<Float> = workManager.getWorkInfosByTagFlow(CategoryWorker.TAG)
-        .map { workInfos ->
-            workInfos.firstOrNull { it.state == State.RUNNING }
-                ?.progress?.getFloat(CategoryWorker.KEY_PROGRESS, 0f) ?: 0f
+    val categoryWorkerProgress: StateFlow<Float> = activeSmartScan
+        .map { run ->
+            if (run == null || run.totalMedia <= 0) 0f
+            else (run.processedMedia.toFloat() / run.totalMedia.toFloat()) * 100f
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0f)
 
-    val categoryWorkerStatus: StateFlow<String> = workManager.getWorkInfosByTagFlow(CategoryWorker.TAG)
-        .map { workInfos ->
-            workInfos.firstOrNull { it.state == State.RUNNING }
-                ?.progress?.getString(CategoryWorker.KEY_STATUS) ?: ""
-        }
+    val categoryWorkerStatus: StateFlow<String> = activeSmartScan
+        .map { it?.currentPhase?.storedValue.orEmpty() }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "")
 
     // ============ Legacy Classification System (kept for backward compatibility) ============
@@ -156,8 +161,7 @@ class CategoriesViewModel @Inject constructor(
         viewModelScope.launch {
             // Initialize default categories if needed
             repository.initializeDefaultCategories()
-            // Start the worker
-            workManager.startCategoryClassification()
+            smartScanScheduler.manual(SmartScanFeature.CATEGORIES.bit)
         }
     }
 
@@ -165,7 +169,8 @@ class CategoriesViewModel @Inject constructor(
      * Stop the category classification worker
      */
     fun stopCategoryClassification() {
-        workManager.stopCategoryClassification()
+        val runId = activeSmartScan.value?.runId ?: return
+        viewModelScope.launch { smartScanScheduler.cancel(runId) }
     }
 
     /**
@@ -180,7 +185,7 @@ class CategoriesViewModel @Inject constructor(
             )
             repository.createCategory(category)
             // Trigger reclassification to include the new category
-            workManager.startCategoryClassification()
+            smartScanScheduler.automatic(SmartScanFeature.CATEGORIES.bit)
         }
     }
 
@@ -194,7 +199,7 @@ class CategoriesViewModel @Inject constructor(
                 embedding = null // Clear embedding so it gets regenerated
             ))
             // Trigger reclassification
-            workManager.startCategoryClassification()
+            smartScanScheduler.automatic(SmartScanFeature.CATEGORIES.bit)
         }
     }
 
@@ -205,7 +210,7 @@ class CategoriesViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             repository.updateCategoryThreshold(categoryId, threshold.coerceIn(Category.MIN_THRESHOLD, Category.MAX_THRESHOLD))
             // Trigger reclassification
-            workManager.startCategoryClassification()
+            smartScanScheduler.automatic(SmartScanFeature.CATEGORIES.bit)
         }
     }
 
@@ -261,7 +266,7 @@ class CategoriesViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             repository.resetCategoryData()
             repository.initializeDefaultCategories()
-            workManager.startCategoryClassification()
+            smartScanScheduler.automatic(SmartScanFeature.CATEGORIES.bit)
         }
     }
 
@@ -303,8 +308,7 @@ class CategoriesViewModel @Inject constructor(
      * This replaces the old ONNX-based classification.
      */
     fun startClassification() {
-        // Use the new CLIP-based category classification
-        workManager.startCategoryClassification()
+        viewModelScope.launch { smartScanScheduler.automatic(SmartScanFeature.CATEGORIES.bit) }
     }
 
     fun deleteClassifications() {
@@ -317,8 +321,7 @@ class CategoriesViewModel @Inject constructor(
      * Stop the category classification
      */
     fun stopClassification() {
-        // Stop both the old and new systems for safety
-        workManager.stopCategoryClassification()
+        stopCategoryClassification()
         workManager.stopClassification()
     }
 

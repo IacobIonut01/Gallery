@@ -124,6 +124,7 @@ import com.dot.gallery.feature_node.presentation.settings.subsettings.SettingsBa
 import com.dot.gallery.feature_node.presentation.settings.subsettings.SettingsBackupExportScreen
 import com.dot.gallery.feature_node.presentation.settings.subsettings.SettingsBackupImportScreen
 import com.dot.gallery.feature_node.presentation.settings.subsettings.SettingsSmartFeaturesScreen
+import com.dot.gallery.feature_node.presentation.settings.subsettings.SmartScanPreferenceDetailScreen
 import com.dot.gallery.cloud.core.ProviderType
 import com.dot.gallery.cloud.ui.CloudAccountsScreen
 import com.dot.gallery.cloud.ui.CloudAddServerScreen
@@ -919,6 +920,7 @@ fun NavigationComp(
             ) {
                 val categoriesViewModel = hiltViewModel<CategoriesViewModel>()
                 val categoriesWithCount by categoriesViewModel.categoriesWithCount.collectAsStateWithLifecycle()
+                val distinctMediaCount by categoriesViewModel.distinctClassifiedMediaCount.collectAsStateWithLifecycle()
                 val distributor = LocalMediaDistributor.current
                 val categoryMediaState by distributor.timelineMediaFlow.collectAsStateWithLifecycle(
                     context = Dispatchers.IO,
@@ -926,6 +928,7 @@ fun NavigationComp(
                 )
                 CategoriesScreen(
                     categoriesWithCount = categoriesWithCount,
+                    distinctMediaCount = distinctMediaCount,
                     mediaState = categoryMediaState,
                     sharedTransitionScope = this@SharedTransitionLayout,
                     animatedContentScope = this
@@ -1245,6 +1248,9 @@ fun NavigationComp(
             }
             composable(Screen.SettingsSmartFeaturesScreen()) {
                 SettingsSmartFeaturesScreen()
+            }
+            composable(Screen.SmartScanPreferenceDetailScreen()) {
+                SmartScanPreferenceDetailScreen()
             }
             composable(Screen.AIModelsManagerScreen()) {
                 AIModelsManagerScreen()

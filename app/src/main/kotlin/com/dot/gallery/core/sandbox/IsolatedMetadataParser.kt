@@ -181,11 +181,13 @@ class IsolatedMetadataParser(private val context: Context) {
     suspend fun parseImageMetadataPerFile(
         uri: Uri,
         label: String,
-        mediaId: Long
+        mediaId: Long,
+        fallbackToShared: Boolean = true
     ): Bundle? = withContext(Dispatchers.IO) {
         val startNs = System.nanoTime()
         val conn = bindPerFile(mediaId)
         if (conn == null) {
+            if (!fallbackToShared) return@withContext null
             printWarning("IsolatedMetadataParser: per-file bind failed, falling back to shared")
             return@withContext parseImageMetadata(uri, label)
         }
@@ -214,11 +216,13 @@ class IsolatedMetadataParser(private val context: Context) {
      */
     suspend fun parseVideoMetadataPerFile(
         uri: Uri,
-        mediaId: Long
+        mediaId: Long,
+        fallbackToShared: Boolean = true
     ): Bundle? = withContext(Dispatchers.IO) {
         val startNs = System.nanoTime()
         val conn = bindPerFile(mediaId)
         if (conn == null) {
+            if (!fallbackToShared) return@withContext null
             printWarning("IsolatedMetadataParser: per-file bind failed, falling back to shared")
             return@withContext parseVideoMetadata(uri)
         }

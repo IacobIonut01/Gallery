@@ -119,18 +119,22 @@ class SearchVisionHelper(private val modelManager: ModelManager) {
 
     fun getImageEmbedding(session: OrtSession, bitmap: Bitmap): FloatArray {
         val rawBitmap = centerCrop(bitmap, 224)
-        val inputShape = longArrayOf(1, 3, 224, 224)
-        val inputName = "pixel_values"
-        val imgData = preProcess(rawBitmap)
-        val inputTensor = OnnxTensor.createTensor(ortEnv, imgData, inputShape)
+        try {
+            val inputShape = longArrayOf(1, 3, 224, 224)
+            val inputName = "pixel_values"
+            val imgData = preProcess(rawBitmap)
+            val inputTensor = OnnxTensor.createTensor(ortEnv, imgData, inputShape)
 
-        return inputTensor.use {
-            val output = session.run(Collections.singletonMap(inputName, inputTensor))
-            output.use {
-                @Suppress("UNCHECKED_CAST") val rawOutput =
-                    ((output?.get(0)?.value) as Array<FloatArray>)[0]
-                return@use normalizeL2(rawOutput)
+            return inputTensor.use {
+                val output = session.run(Collections.singletonMap(inputName, inputTensor))
+                output.use {
+                    @Suppress("UNCHECKED_CAST") val rawOutput =
+                        ((output?.get(0)?.value) as Array<FloatArray>)[0]
+                    return@use normalizeL2(rawOutput)
+                }
             }
+        } finally {
+            if (rawBitmap !== bitmap) rawBitmap.recycle()
         }
     }
 

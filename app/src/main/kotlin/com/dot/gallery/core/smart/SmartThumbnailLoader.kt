@@ -1,0 +1,66 @@
+/*
+ * SPDX-FileCopyrightText: 2023-2026 IacobIacob01
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package com.dot.gallery.core.smart
+
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.ColorSpace
+import android.os.CancellationSignal
+import android.util.Size
+import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.util.isCloud
+import com.github.panpf.sketch.asBitmapOrNull
+import com.github.panpf.sketch.decode.BitmapColorSpace
+import com.github.panpf.sketch.request.ImageRequest
+import com.github.panpf.sketch.sketch
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
+import javax.inject.Inject
+import javax.inject.Singleton
+
+@Singleton
+class SmartThumbnailLoader @Inject constructor(
+    @ApplicationContext private val context: Context
+) {
+    private val decodeMutex = Mutex()
+
+    suspend fun load(media: Media.UriMedia, size: Int): Bitmap? = decodeMutex.withLock {
+        withContext(Dispatchers.IO) {
+            val cloud = media.isCloud
+            val source = if (!cloud) {
+                runCatching {
+                    context.contentResolver.loadThumbnail(
+                        media.uri,
+                        Size(size, size),
+                        CancellationSignal()
+                    )
+                }.getOrNull()
+            } else {
+                runCatching {
+                    val request = ImageRequest(context, media.uri.toString()) {
+                        colorSpace(BitmapColorSpace(ColorSpace.Named.SRGB))
+                        size(size, size)
+                    }
+                    context.sketch.execute(request).image?.asBitmapOrNull()
+                }.getOrNull()
+            } ?: return@withContext null
+            if (source.width !in 1..MAX_DIMENSION || source.height !in 1..MAX_DIMENSION) {
+                if (!cloud) source.recycle()
+                return@withContext null
+            }
+            val owned = source.copy(Bitmap.Config.ARGB_8888, false)
+            if (!cloud) source.recycle()
+            owned
+        }
+    }
+
+    private companion object {
+        const val MAX_DIMENSION = 1024
+    }
+}

@@ -2,7 +2,6 @@ package com.dot.gallery.feature_node.presentation.library
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.work.WorkManager
 import com.dot.gallery.cloud.core.PersonInfo
 import com.dot.gallery.cloud.core.ProviderCapability
 import com.dot.gallery.cloud.core.ProviderRegistry
@@ -14,9 +13,10 @@ import com.dot.gallery.core.Resource
 import com.dot.gallery.core.ml.ModelGroup
 import com.dot.gallery.core.ml.ModelManager
 import com.dot.gallery.core.ml.ModelStatus
+import com.dot.gallery.core.smart.SmartScanScheduler
 import com.dot.gallery.core.util.SdkCompat
-import com.dot.gallery.core.workers.startCategoryClassification
 import com.dot.gallery.feature_node.data.data_source.CategoryWithMediaCount
+import com.dot.gallery.feature_node.data.data_source.SmartScanFeature
 import com.dot.gallery.feature_node.domain.model.LibraryIndicatorState
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaState
@@ -62,7 +62,7 @@ data class CloudLibraryState(
 class LibraryViewModel @Inject constructor(
     private val repository: MediaRepository,
     private val mediaDistributor: MediaDistributor,
-    private val workManager: WorkManager,
+    private val smartScanScheduler: SmartScanScheduler,
     private val modelManager: ModelManager,
     private val cloudRepository: CloudRepository,
     private val providerRegistry: ProviderRegistry,
@@ -254,7 +254,7 @@ class LibraryViewModel @Inject constructor(
      * Start the category classification using the new CLIP-based system
      */
     fun startClassification() {
-        workManager.startCategoryClassification()
+        viewModelScope.launch { smartScanScheduler.manual(SmartScanFeature.CATEGORIES.bit) }
     }
 
 }

@@ -44,7 +44,7 @@ import com.dot.gallery.core.util.ext.updateImageDescription
 import com.dot.gallery.core.util.ext.updateMedia
 import com.dot.gallery.core.util.ext.updateMediaExif
 import com.dot.gallery.core.workers.copyMedia
-import com.dot.gallery.core.workers.updateDatabase
+import com.dot.gallery.core.smart.SmartScanScheduler
 import com.dot.gallery.feature_node.data.data_source.CategoryWithMediaCount
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
 import com.dot.gallery.feature_node.data.data_source.KeychainHolder
@@ -69,6 +69,7 @@ import com.dot.gallery.feature_node.domain.model.Media.EncryptedMedia
 import com.dot.gallery.feature_node.domain.model.Media.UriMedia
 import com.dot.gallery.feature_node.domain.model.MediaCategory
 import com.dot.gallery.feature_node.domain.model.MediaMetadata
+import com.dot.gallery.feature_node.domain.model.MetadataParsingPolicy
 import com.dot.gallery.core.Settings
 import com.dot.gallery.core.sandbox.IsolatedMetadataParser
 import com.dot.gallery.feature_node.domain.model.LockedAlbum
@@ -122,7 +123,8 @@ class MediaRepositoryImpl(
     private val keychainHolder: KeychainHolder,
     private val geocoder: Geocoder?,
     private val isolatedParser: IsolatedMetadataParser,
-    private val metadataSanitizer: MetadataSanitizer
+    private val metadataSanitizer: MetadataSanitizer,
+    private val smartScanScheduler: SmartScanScheduler
 ) : MediaRepository {
 
     private val contentResolver = context.contentResolver
@@ -142,7 +144,7 @@ class MediaRepositoryImpl(
         if (!updateDatabaseMutex.isLocked) {
             updateDatabaseMutex.withLock {
                 delay(5000) // Delay to ensure the database is not updated too frequently
-                workManager.updateDatabase()
+                smartScanScheduler.all(userVisible = false)
             }
         }
         //workManager.scheduleMediaMigrationCheck()
@@ -1028,6 +1030,9 @@ class MediaRepositoryImpl(
     override fun getCategoriesWithMediaCount(): Flow<List<CategoryWithMediaCount>> =
         categoryDao.getCategoriesWithMediaCount()
 
+    override fun getDistinctClassifiedMediaCount(): Flow<Int> =
+        categoryDao.getDistinctClassifiedMediaCount()
+
     override fun getCategoryCount(): Flow<Int> =
         categoryDao.getCategoryCount()
 
@@ -1112,31 +1117,39 @@ class MediaRepositoryImpl(
     override fun getAlbumThumbnails(): Flow<List<AlbumThumbnail>> =
         database.getAlbumThumbnailDao().getAlbumThumbnailsFlow()
 
-    override suspend fun collectMetadataFor(media: Media) {
+    override suspend fun collectMetadataFor(media: Media, bulk: Boolean) {
         if (media.isCloud) {
-            collectCloudMetadata(media)
+            if (!collectCloudMetadata(media) && bulk) throw IllegalStateException("cloud_metadata_unavailable")
             return
         }
-        val metadata = context.retrieveExtraMediaMetadata(isolatedParser, geocoder, media, shouldUsePerFileIsolation())
+        val metadata = context.retrieveExtraMediaMetadata(
+            isolatedParser = isolatedParser,
+            geocoder = geocoder,
+            media = media,
+            usePerFileIsolation = bulk || shouldUsePerFileIsolation(),
+            policy = if (bulk) MetadataParsingPolicy.BULK_ISOLATED_ONLY else MetadataParsingPolicy.ON_DEMAND_COMPATIBLE
+        )
         if (metadata != null) {
             database.getMetadataDao().addMetadata(metadata)
             printDebug("collectMetadataFor: saved metadata for ${media.id}")
         } else {
+            if (bulk) throw IllegalStateException("metadata_unavailable")
             printWarning("collectMetadataFor: no metadata returned for ${media.id} (uri=${media.getUri()})")
         }
     }
 
-    private suspend fun collectCloudMetadata(media: Media) = withContext(Dispatchers.IO) {
+    private suspend fun collectCloudMetadata(media: Media): Boolean = withContext(Dispatchers.IO) {
         val uri = media.getUri()
-        val providerName = uri.authority ?: return@withContext
+        val providerName = uri.authority ?: return@withContext false
         // remoteId may contain slashes (SMB/NFS/WebDAV paths like "Photos/IMG.jpg"); pathSegments
         // .first() would truncate it and never match the stored entity's remoteId.
-        val remoteId = uri.path?.trimStart('/')?.takeIf { it.isNotEmpty() } ?: return@withContext
+        val remoteId = uri.path?.trimStart('/')?.takeIf { it.isNotEmpty() } ?: return@withContext false
         val providerType = try {
             com.dot.gallery.cloud.core.ProviderType.valueOf(providerName)
-        } catch (_: Exception) { return@withContext }
-        val entity = database.getCloudMediaDao().getByRemoteId(remoteId, providerType)
-            ?: return@withContext
+        } catch (_: Exception) { return@withContext false }
+        val serverConfigId = uri.getQueryParameter("cfg")?.toLongOrNull() ?: return@withContext false
+        val entity = database.getCloudMediaDao().getByRemoteId(remoteId, providerType, serverConfigId)
+            ?: return@withContext false
         val locationName = listOfNotNull(entity.city, entity.state, entity.country)
             .joinToString(", ").ifBlank { null }
         val metadata = MediaMetadata(
@@ -1173,6 +1186,7 @@ class MediaRepositoryImpl(
         )
         database.getMetadataDao().addMetadata(metadata)
         printDebug("collectMetadataFor: saved cloud metadata for ${media.id}")
+        true
     }
 
     private fun parseDurationToMs(duration: String): Long? {

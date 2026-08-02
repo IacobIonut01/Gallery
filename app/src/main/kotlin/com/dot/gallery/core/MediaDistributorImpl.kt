@@ -40,11 +40,12 @@ import com.dot.gallery.feature_node.domain.model.VaultState
 import com.dot.gallery.feature_node.domain.model.ScannedMedia
 import com.dot.gallery.feature_node.domain.model.shouldIgnore
 import com.dot.gallery.feature_node.data.data_source.ScannedMediaDao
+import com.dot.gallery.feature_node.data.data_source.SmartScanDao
+import com.dot.gallery.feature_node.data.data_source.SmartScanFeature
 import com.dot.gallery.cloud.core.CloudAlbum
 import com.dot.gallery.cloud.core.ConnectionState
 import com.dot.gallery.cloud.core.SyncState
 import com.dot.gallery.cloud.core.cloudAlbumId
-import com.dot.gallery.cloud.core.cloudMediaId
 import com.dot.gallery.cloud.core.stableIdHash
 import com.dot.gallery.cloud.data.entity.CloudMediaEntity
 import com.dot.gallery.cloud.data.repository.CloudRepository
@@ -106,7 +107,8 @@ class MediaDistributorImpl @Inject constructor(
     private val cloudRepository: CloudRepository,
     private val eventHandler: EventHandler,
     workManager: WorkManager,
-    private val scannedMediaDao: ScannedMediaDao
+    private val scannedMediaDao: ScannedMediaDao,
+    private val smartScanDao: SmartScanDao
 ) : MediaDistributor {
     
     private val sharingMethod = SharingStarted.WhileSubscribed(5_000L)
@@ -348,7 +350,7 @@ class MediaDistributorImpl @Inject constructor(
 
     override val cloudSyncStates: StateFlow<Map<Long, SyncState>> =
         cloudRepository.getCachedMedia().map { entities ->
-            entities.associate { cloudMediaId(it.providerType, it.serverConfigId, it.remoteId) to it.syncState }
+            entities.associate { it.globalMediaId to it.syncState }
         }.stateIn(appScope, SharingStarted.Eagerly, emptyMap())
 
     init {
@@ -1106,14 +1108,14 @@ class MediaDistributorImpl @Inject constructor(
      */
     override val metadataFlow: Flow<MediaMetadataState> = combine(
         repository.getMetadata(),
-        workManager.getWorkInfosForUniqueWorkFlow("MetadataCollection")
-            .map { it.lastOrNull()?.state == WorkInfo.State.RUNNING },
-        workManager.getWorkInfosForUniqueWorkFlow("MetadataCollection")
-            .map { it.lastOrNull()?.progress?.getInt("progress", 0) ?: 0 }
-    ) { metadata, isRunning, progress ->
+        smartScanDao.observeActiveRun()
+    ) { metadata, run ->
+        val isMetadataRun = run?.requestedFeatures?.and(SmartScanFeature.METADATA.bit) != 0
+        val progress = if (run == null || run.totalMedia <= 0) 0
+        else (run.processedMedia * 100 / run.totalMedia).coerceIn(0, 100)
         MediaMetadataState(
             metadata = metadata,
-            isLoading = isRunning,
+            isLoading = isMetadataRun,
             isLoadingProgress = progress
         )
     }

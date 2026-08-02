@@ -10,7 +10,6 @@ import androidx.work.workDataOf
 import com.dot.gallery.BuildConfig
 import com.dot.gallery.cloud.core.ThumbnailSize
 import com.dot.gallery.cloud.core.capabilities.RemoteMediaProvider
-import com.dot.gallery.cloud.core.cloudMediaId
 import com.dot.gallery.cloud.data.dao.CloudMediaDao
 import com.dot.gallery.cloud.image.CloudFetcherRegistryHolder
 import com.dot.gallery.core.ml.ModelGroup
@@ -65,7 +64,7 @@ class SearchIndexerUpdaterWorker @AssistedInject constructor(
         // Collect cloud media that needs indexing
         val cloudEntities = cloudMediaDao.getAllCachedAsync()
         val cloudToBeIndexed = cloudEntities.filter { entity ->
-            cloudMediaId(entity.providerType, entity.serverConfigId, entity.remoteId) !in indexedIds
+            entity.globalMediaId !in indexedIds
         }
 
         val totalLocal = toBeIndexed.size

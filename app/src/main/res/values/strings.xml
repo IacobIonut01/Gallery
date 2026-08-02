@@ -1,6 +1,9 @@
 <resources>
     <string name="app_name">ReFra</string>
     <string name="app_name_gallery">Gallery</string>
+    <string name="smart_scan_notification_channel">Smart Scan</string>
+    <string name="smart_scan_notification_title">Scanning media</string>
+    <string name="smart_scan_notification_progress">Processing media: %1$d%%</string>
     <string name="change_app_name">App name</string>
     <string name="change_app_name_summary">Change the app name shown on your launcher</string>
     <string name="favorite_icon_on_thumbnails">Favorite icon on thumbnails</string>
@@ -740,6 +743,32 @@
     <string name="metadata_collecting">Collecting metadata…</string>
     <string name="metadata_collecting_progress">Collecting metadata… %1$d%%</string>
     <string name="metadata_idle">Tap to refresh media metadata from your library</string>
+    <string name="refresh_embeddings">Refresh search embeddings</string>
+    <string name="refresh_embeddings_summary">Repair missing or stale local and cloud search data</string>
+    <string name="refresh_categories">Refresh categories</string>
+    <string name="refresh_categories_summary">Repair embeddings first, then update automatic category matches</string>
+    <string name="refresh_persons">Refresh persons</string>
+    <string name="refresh_persons_summary">Scan local photos and available cloud previews for faces</string>
+    <string name="refresh_all_smart_features">Refresh all Smart Features</string>
+    <string name="refresh_all_smart_features_summary">Run metadata, search, categories, and persons serially</string>
+    <string name="smart_scan_progress">%1$s · %2$d%% · %3$d failed · %4$d skipped</string>
+    <string name="smart_scan_last_result">Last scan: %1$s · %2$d processed · %3$d failed · %4$d skipped</string>
+    <string name="smart_scan_cancel">Cancel Smart Features scan</string>
+    <string name="smart_scan_retry">Retry failed Smart Features items</string>
+    <string name="smart_scan_manager_title">Smart Features data</string>
+    <string name="smart_scan_manager_summary">Refresh and repair metadata, search, categories, and persons</string>
+    <string name="smart_scan_manager_description">Manage the on-device data used by Smart Features. Refreshes are incremental, keep valid results, and continue past files that cannot be processed.</string>
+    <string name="smart_scan_actions_header">Refresh data</string>
+    <string name="smart_scan_controls_header">Scan controls</string>
+    <string name="smart_scan_metadata_detail">Refresh local and cached cloud metadata without rebuilding unrelated Smart Features</string>
+    <string name="smart_scan_face_models_unavailable">Face detection and recognition models are required</string>
+    <string name="smart_scan_cancel_summary">Stop the current scan while preserving completed results</string>
+    <string name="smart_scan_retry_summary">Retry items from the latest incomplete scan</string>
+    <string name="smart_scan_running_title">Smart Features scan in progress</string>
+    <string name="smart_scan_latest_title">Latest scan</string>
+    <string name="smart_scan_rebuild_header">Rebuild data</string>
+    <string name="smart_scan_full_refresh">Full refresh</string>
+    <string name="smart_scan_full_refresh_summary">Reprocess every item even when its current Smart Features data is already complete</string>
 
     <string name="video_playback">Video Playback</string>
     <string name="interface_settings">Interface</string>

@@ -101,15 +101,12 @@ import dev.chrisbanes.haze.hazeSource
 @Composable
 fun CategoriesScreen(
     categoriesWithCount: List<CategoryWithMediaCount>,
+    distinctMediaCount: Int,
     mediaState: MediaState<Media.UriMedia>,
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
 ) {
     val eventHandler = LocalEventHandler.current
-
-    val totalMediaCount by remember(categoriesWithCount) {
-        derivedStateOf { categoriesWithCount.sumOf { it.mediaCount } }
-    }
 
     var lastCellIndex by rememberAlbumGridSize()
     var canScroll by rememberSaveable { mutableStateOf(true) }
@@ -144,7 +141,7 @@ fun CategoriesScreen(
                 title = {
                     TwoLinedDateToolbarTitle(
                         albumName = stringResource(R.string.categories),
-                        dateHeader = stringResource(R.string.classified_media, totalMediaCount)
+                        dateHeader = stringResource(R.string.classified_media, distinctMediaCount)
                     )
                 },
                 navigationIcon = {

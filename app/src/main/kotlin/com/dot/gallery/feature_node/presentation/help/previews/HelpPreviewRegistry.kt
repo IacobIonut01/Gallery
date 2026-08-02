@@ -320,6 +320,7 @@ private fun CategoriesPreviewMini(modifier: Modifier = Modifier) {
             PreviewScreenProvider { sharedScope, animScope ->
                 CategoriesScreen(
                     categoriesWithCount = remember { HelpMockData.MOCK_CATEGORIES_WITH_COUNT },
+                    distinctMediaCount = remember { HelpMockData.MOCK_CATEGORIES_WITH_COUNT.sumOf { it.mediaCount } },
                     mediaState = remember { MediaState() },
                     sharedTransitionScope = sharedScope,
                     animatedContentScope = animScope,

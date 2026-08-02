@@ -133,6 +133,19 @@ class CloudMediaDaoTest {
     }
 
     @Test
+    fun rowMutationsAreScopedToOwningAccount() = runBlocking {
+        val first = media("shared-id", ProviderType.IMMICH, 1L)
+        val second = media("shared-id", ProviderType.IMMICH, 2L)
+        dao.insertAll(listOf(first, second))
+
+        dao.updateFavorite("shared-id", ProviderType.IMMICH, 2L, true)
+
+        assertEquals(false, dao.getByRemoteId("shared-id", ProviderType.IMMICH, 1L)?.favorite)
+        assertEquals(true, dao.getByRemoteId("shared-id", ProviderType.IMMICH, 2L)?.favorite)
+        assertEquals(first.globalMediaId, dao.getByGlobalMediaId(first.globalMediaId)?.globalMediaId)
+    }
+
+    @Test
     fun favoritesArchivedTrashedCountsAreScoped() = runBlocking {
         dao.insertAll(
             listOf(

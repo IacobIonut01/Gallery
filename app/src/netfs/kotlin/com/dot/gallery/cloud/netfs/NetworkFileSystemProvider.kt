@@ -244,7 +244,10 @@ open class NetworkFileSystemProvider(
     override suspend fun toggleFavorite(remoteId: String, favorite: Boolean): Result<Unit> =
         withContext(Dispatchers.IO) {
             // Network shares have no server-side favorites — persist locally only.
-            runCatching { cloudMediaDao.updateFavorite(remoteId, backend.providerType, favorite) }
+            runCatching {
+                val configId = currentConfig?.id ?: error("Not configured")
+                cloudMediaDao.updateFavorite(remoteId, backend.providerType, configId, favorite)
+            }
         }
 
     override suspend fun toggleArchive(remoteId: String, archived: Boolean): Result<Unit> =
@@ -257,8 +260,9 @@ open class NetworkFileSystemProvider(
 
     override suspend fun deleteAsset(remoteId: String): Result<Unit> = withContext(Dispatchers.IO) {
         try {
+            val configId = currentConfig?.id ?: error("Not configured")
             backend.delete(requireConnection(), remoteId)
-            cloudMediaDao.delete(remoteId, backend.providerType)
+            cloudMediaDao.delete(remoteId, backend.providerType, configId)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

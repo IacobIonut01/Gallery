@@ -5,6 +5,7 @@
 
 package com.dot.gallery.cloud.data.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
@@ -36,7 +37,9 @@ data class DetectedFaceEntity(
     val right: Float = 0f,
     val bottom: Float = 0f,
     val confidence: Float = 0f,
-    val timestamp: Long = 0L
+    val timestamp: Long = 0L,
+    @ColumnInfo(defaultValue = "''")
+    val resultRevision: String = ""
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

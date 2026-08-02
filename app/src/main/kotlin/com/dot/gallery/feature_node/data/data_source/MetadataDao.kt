@@ -52,6 +52,40 @@ interface MetadataDao {
     suspend fun deleteOrphansFlags(ids: List<Long>)
 
     @Transaction
+    suspend fun deleteOrphans() {
+        deleteMissingCore()
+        deleteMissingVideo()
+        deleteMissingFlags()
+    }
+
+    @Query(
+        """
+        DELETE FROM media_metadata_core
+        WHERE NOT EXISTS (SELECT 1 FROM media WHERE media.id = media_metadata_core.mediaId)
+          AND NOT EXISTS (SELECT 1 FROM cloud_media WHERE cloud_media.globalMediaId = media_metadata_core.mediaId)
+        """
+    )
+    suspend fun deleteMissingCore(): Int
+
+    @Query(
+        """
+        DELETE FROM media_metadata_video
+        WHERE NOT EXISTS (SELECT 1 FROM media WHERE media.id = media_metadata_video.mediaId)
+          AND NOT EXISTS (SELECT 1 FROM cloud_media WHERE cloud_media.globalMediaId = media_metadata_video.mediaId)
+        """
+    )
+    suspend fun deleteMissingVideo(): Int
+
+    @Query(
+        """
+        DELETE FROM media_metadata_flags
+        WHERE NOT EXISTS (SELECT 1 FROM media WHERE media.id = media_metadata_flags.mediaId)
+          AND NOT EXISTS (SELECT 1 FROM cloud_media WHERE cloud_media.globalMediaId = media_metadata_flags.mediaId)
+        """
+    )
+    suspend fun deleteMissingFlags(): Int
+
+    @Transaction
     suspend fun deleteForMedia(mediaId: Long) {
         deleteCore(mediaId)
         deleteVideo(mediaId)

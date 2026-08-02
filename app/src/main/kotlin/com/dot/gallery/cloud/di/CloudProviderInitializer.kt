@@ -19,6 +19,8 @@ import com.dot.gallery.cloud.data.repository.CloudRepository
 import com.dot.gallery.cloud.network.ServerUrlResolver
 import com.dot.gallery.cloud.sync.CloudIndexProgressManager
 import com.dot.gallery.core.Resource
+import com.dot.gallery.core.smart.SmartScanScheduler
+import com.dot.gallery.feature_node.data.data_source.SmartScanFeature
 import com.dot.gallery.feature_node.presentation.util.printDebug
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -46,7 +48,8 @@ class CloudProviderInitializer @Inject constructor(
     private val cloudMediaDao: CloudMediaDao,
     private val cloudRepository: CloudRepository,
     private val urlResolver: ServerUrlResolver,
-    private val indexProgressManager: CloudIndexProgressManager
+    private val indexProgressManager: CloudIndexProgressManager,
+    private val smartScanScheduler: SmartScanScheduler
 ) {
 
     private val factoriesByType by lazy { providerFactories.associateBy { it.providerType } }
@@ -91,6 +94,7 @@ class CloudProviderInitializer @Inject constructor(
                     if (page >= MAX_PREFETCH_PAGES) break
                 }
                 printDebug("CloudProviderInitializer: Cached $total assets for $label")
+                if (total > 0) smartScanScheduler.automatic(SmartScanFeature.ALL_MASK)
             } catch (e: Exception) {
                 printDebug("CloudProviderInitializer: Asset prefetch failed for $label: ${e.message}")
             } finally {
