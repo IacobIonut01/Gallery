@@ -1147,7 +1147,7 @@
     <string name="private_folder_moving">Zum privaten Ordner verschieben…</string>
     <string name="private_folder_move_failed">Elemente konnten nicht in den privaten Ordner verschoben werden</string>
     <string name="private_folder_move_out">Move out</string>
-    <string name="private_folder_move_out_confirm_title">Move out of private folder?</string>
+    <string name="private_folder_move_out_confirm_title">Aus privatem Ordner verschieben?</string>
     <string name="private_folder_move_out_confirm_summary">The selected items will be restored to your gallery and removed from the private folder.</string>
     <string name="private_folder_moving_out">Moving out of private folder…</string>
     <string name="private_folder_move_out_failed">Could not move items out of the private folder</string>
@@ -1235,7 +1235,7 @@
     <string name="cloud_add_smb">SMB-Freigabe hinzufügen</string>
     <string name="cloud_add_nfs">NFS-Freigabe hinzufügen</string>
     <string name="cloud_owncloud_variants">ownCloud variants</string>
-    <string name="cloud_network_shares">Network shares</string>
+    <string name="cloud_network_shares">Netzwerkteilungen</string>
     <string name="cloud_network_share_lan_note">Network shares are reachable on your local network only.</string>
     <string name="cloud_lan_only">Nur LAN</string>
     <string name="cloud_lan_offline_warning">Not on Wi-Fi. Network shares (SMB/NFS) are only reachable on your local network.</string>
@@ -1255,8 +1255,8 @@
     <string name="cloud_step_server">Server</string>
     <string name="cloud_step_credentials">Credentials</string>
     <string name="cloud_step_networking">Networking</string>
-    <string name="cloud_step_sync">Sync</string>
-    <string name="cloud_step_review">Review</string>
+    <string name="cloud_step_sync">Synchronisation</string>
+    <string name="cloud_step_review">Überprüfen</string>
     <string name="cloud_step_server_desc">Where is your server?</string>
     <string name="cloud_step_credentials_desc">Sign in so we can connect.</string>
     <string name="cloud_step_networking_desc">Optionally use a faster URL on your home network.</string>
@@ -1264,14 +1264,14 @@
     <string name="cloud_step_review_desc">Check everything looks right.</string>
     <string name="cloud_show_secret">Einblenden</string>
     <string name="cloud_hide_secret">Ausblenden</string>
-    <string name="cloud_sync_folders_title">Back up local folders</string>
+    <string name="cloud_sync_folders_title">Sichere lokale Ordner</string>
     <string name="cloud_sync_folders_desc">Choose which folders on this device to upload to the server.</string>
     <string name="cloud_sync_albums_title">Sync remote albums</string>
     <string name="cloud_sync_albums_desc">Choose which of the server\'s albums to pull into your gallery.</string>
-    <string name="cloud_sync_no_local">No local folders found on this device.</string>
+    <string name="cloud_sync_no_local">Auf diesem Gerät keine lokalen Ordner gefunden.</string>
     <string name="cloud_sync_loading_albums">Alben laden…</string>
     <string name="cloud_sync_no_remote">This server has no albums yet.</string>
-    <string name="cloud_sync_retry">Retry</string>
+    <string name="cloud_sync_retry">Erneut versuchen</string>
     <string name="cloud_sync_item_count">%1$d Gegenstände</string>
     <string name="cloud_sync_count_selected">%1$d Ausgewählt</string>
     <string name="cloud_review_folders">Folders to back up</string>
@@ -1327,10 +1327,10 @@
     <string name="cloud_assets_count">%d Remote-Assets</string>
     <string name="cloud_last_connected">Zuletzt verbunden: %s</string>
     <string name="cloud_media">Cloud</string>
-    <string name="cloud_backed_up_title">Backed up</string>
+    <string name="cloud_backed_up_title">Gesichert</string>
     <string name="cloud_backed_up_summary">Backed up on %d cloud provider(s)</string>
-    <string name="cloud_backed_up_tap_hint">Tap to manage backups</string>
-    <string name="cloud_backup_delete">Delete from this provider</string>
+    <string name="cloud_backed_up_tap_hint">Klicke, um Sicherungen zu verwalten</string>
+    <string name="cloud_backup_delete">Von diesem Anbieter löschen</string>
     <string name="cloud_sync_header">Synchronisation</string>
     <string name="cloud_sync_now">Jetzt synchronisieren</string>
     <string name="cloud_sync_now_syncing">Synchronisieren…</string>
@@ -1428,38 +1428,38 @@
     <string name="cloud_backup_no_albums">Keine Alben ausgewählt</string>
     <string name="cloud_backup_albums_count">%1$d Alben ausgewählt</string>
     <string name="cloud_backup_per_account">Per account</string>
-    <string name="cloud_backup_account_progress">%1$d / %2$d backed up</string>
+    <string name="cloud_backup_account_progress">%1$d / %2$d gesichert</string>
     <string name="cloud_backup_account_albums">%1$d Alben</string>
-    <string name="cloud_backup_dashboard_title">Backup &amp; Sync</string>
-    <string name="cloud_backup_overall_backed_up">%1$d%% backed up</string>
+    <string name="cloud_backup_dashboard_title">Sicherung &amp; Synchronisation</string>
+    <string name="cloud_backup_overall_backed_up">%1$d%% gesichert</string>
     <string name="cloud_backup_overall_caption">%1$d of %2$d items across %3$d services</string>
     <string name="cloud_backup_services">Dienste</string>
     <!-- Destinations matrix (album × cloud fan-out) -->
-    <string name="cloud_destinations_title">Destinations</string>
+    <string name="cloud_destinations_title">Zielpunkte</string>
     <string name="cloud_destinations_subtitle">Choose which albums back up to each cloud. An album can go to several clouds for redundancy.</string>
     <string name="cloud_destinations_album_summary">%1$d items \u00b7 %2$d clouds</string>
     <string name="cloud_destinations_album_none">%1$d items \u00b7 not backed up</string>
     <string name="cloud_destinations_all_clouds">All clouds</string>
     <string name="cloud_destinations_no_accounts">No cloud services connected</string>
-    <string name="cloud_destinations_no_albums">No local albums found</string>
-    <string name="cloud_destinations_select_all_albums">Back up all albums here</string>
+    <string name="cloud_destinations_no_albums">Keine lokalen Alben gefunden</string>
+    <string name="cloud_destinations_select_all_albums">Sichere alle Alben hier</string>
     <string name="cloud_destinations_clear_all_albums">Entferne alle Alben</string>
     <string name="cloud_destinations_account_albums">%1$d Alben</string>
     <string name="cloud_destinations_add_account">Füge einen Dienst hinzu</string>
-    <string name="cloud_destinations_delete_local">Delete from device after backup</string>
+    <string name="cloud_destinations_delete_local">Nach der Sicherung vom Gerät löschen</string>
     <string name="cloud_destinations_delete_local_summary">Local copies are removed only once each item is backed up to all selected clouds.</string>
     <string name="cloud_destinations_sheet_title">Where should this album back up?</string>
     <string name="cloud_destinations_pick_subtitle">Choose which albums back up to this service.</string>
     <string name="cloud_destinations_album_backing_up">%1$d items \u00b7 backing up</string>
-    <string name="cloud_backup_global_options">Global options</string>
+    <string name="cloud_backup_global_options">Globale Optionen</string>
     <string name="cloud_offline_title">Offline &amp; Cache</string>
     <string name="cloud_offline_summary">Cached media and downloads for offline use</string>
     <string name="cloud_backup_autosync">Auto-Synchronisation</string>
-    <string name="cloud_backup_now">Back up now</string>
-    <string name="cloud_backup_all_now">Back up all now</string>
+    <string name="cloud_backup_now">Sichere jetzt</string>
+    <string name="cloud_backup_all_now">Sichere jetzt alles</string>
     <string name="cloud_backup_service_settings">Diensteinstellungen</string>
     <string name="cloud_backup_no_services">No cloud services connected</string>
-    <string name="cloud_backup_add_service">Add a service</string>
+    <string name="cloud_backup_add_service">Einen Dienst hinzufügen</string>
     <string name="cloud_backup_uploading_short">Hochladen\u2026</string>
     <string name="cloud_backup_select_albums">Alben auswählen</string>
     <string name="cloud_backup_start">Sicherung starten</string>
@@ -1492,13 +1492,13 @@
     <string name="cloud_people">Personen</string>
     <string name="cloud_people_empty">Keine Personen gefunden</string>
     <string name="cloud_people_unknown">Unbekannt</string>
-    <string name="scan_for_people">Scan for people</string>
+    <string name="scan_for_people">Nach Leuten scannen</string>
     <string name="cloud_person_detail_title">Person</string>
     <string name="cloud_person_edit_name">Name bearbeiten</string>
     <string name="cloud_person_add_name">Namen hinzufügen</string>
     <string name="cloud_person_name_hint">Name</string>
     <string name="cloud_person_hide">Verstecken</string>
-    <string name="cloud_person_merge">Merge</string>
+    <string name="cloud_person_merge">Zusammenführen</string>
     <string name="cloud_person_set_cover">Set cover</string>
     <string name="cloud_person_blur_everywhere">Blur everywhere</string>
     <string name="cloud_person_blur_everywhere_summary">Obscure this person\'s face in every photo they appear in and save the results as new copies.</string>
@@ -1675,14 +1675,14 @@
     <!-- Common -->
     <string name="setup_step_progress">Schritt %1$d von %2$d</string>
     <string name="setup_continue">Fortführen</string>
-    <string name="setup_finish">Finish</string>
-    <string name="setup_grant_permissions">Grant Permissions</string>
+    <string name="setup_finish">Beenden</string>
+    <string name="setup_grant_permissions">Berechtigungen erteilen</string>
     <!-- Welcome page -->
-    <string name="setup_welcome_subtitle">Your private, on-device gallery</string>
+    <string name="setup_welcome_subtitle">Deine private, lokale Galerie</string>
     <!-- Permissions page -->
-    <string name="setup_permissions_title">Permissions</string>
+    <string name="setup_permissions_title">Berechtigungen</string>
     <string name="setup_permissions_subtitle">ReFra only uses what it needs to show and manage your media. Tap a permission to learn why.</string>
-    <string name="setup_permission_used_for">Used for:</string>
+    <string name="setup_permission_used_for">Genutzt für:</string>
     <!-- Permission reasons (where/why) -->
     <string name="setup_reason_read_images"><![CDATA[Displaying your photos in the timeline, albums and viewer. Without this, the gallery stays empty.]]></string>
     <string name="setup_reason_read_videos"><![CDATA[Showing and playing your videos in the timeline, albums and viewer.]]></string>
@@ -1694,11 +1694,11 @@
     <!-- Looks & Feel page -->
     <string name="setup_looks_title">Looks &amp; Feel</string>
     <string name="setup_looks_subtitle">Make the app feel like yours.</string>
-    <string name="setup_section_app_name">App name</string>
-    <string name="setup_section_app_logo">App logo</string>
+    <string name="setup_section_app_name">Anwendungsname</string>
+    <string name="setup_section_app_logo">Anwendungslogo</string>
     <string name="setup_looks_restart_note">The app will restart when you finish setup to apply the chosen name and icon.</string>
-    <string name="setup_section_appearance">Appearance</string>
-    <string name="setup_appearance_summary">Light or dark mode, accent colors and more.</string>
+    <string name="setup_section_appearance">Darstellung</string>
+    <string name="setup_appearance_summary">Hell oder Dunkelmodus, Akzentfarben und mehr.</string>
     <string name="setup_open_appearance">Customize appearance</string>
     <!-- Cloud sync page -->
     <string name="setup_cloud_title">Cloud sync</string>
@@ -1709,7 +1709,7 @@
     <string name="setup_cloud_none">You have no cloud account connected. You can always set this up later from Settings.</string>
     <string name="setup_cap_remote_assets">Browse remote media</string>
     <string name="setup_cap_remote_albums">Remote albums</string>
-    <string name="setup_cap_sync">Backup &amp; sync</string>
+    <string name="setup_cap_sync">Sicherung &amp; Synchronisation</string>
     <string name="setup_cap_people">Leute &amp; Gesichter</string>
     <string name="setup_cap_map">Karte &amp; Orte</string>
     <string name="setup_cap_smart_search">Intelligente Suche</string>
@@ -1725,7 +1725,7 @@
     <string name="setup_ai_download">Lade KI Modelle</string>
     <string name="setup_ai_download_size">One-time download · works offline afterwards</string>
     <string name="setup_ai_no_internet">An internet connection is required to download the AI models.</string>
-    <string name="setup_ai_features_title">What you\'ll get</string>
+    <string name="setup_ai_features_title">Was du bekommen wirst</string>
     <string name="setup_ai_feature_categories_title">Intelligente Kategorien</string>
     <string name="setup_ai_feature_categories_desc">Photos are automatically sorted into groups like nature, people and food.</string>
     <string name="setup_ai_feature_search_title">Suche nach Beschreibung</string>
@@ -1739,7 +1739,7 @@
     <string name="setup_ai_extra_cutout_size">Extra one-time download (~44 MB)</string>
     <string name="setup_ai_extra_cutout_ready">Subject cutout is ready.</string>
     <string name="setup_ai_faces_title">Gesichter &amp; Leute</string>
-    <string name="setup_ai_faces_blur_title">Blur faces</string>
+    <string name="setup_ai_faces_blur_title">Gesichter verwischen</string>
     <string name="setup_ai_faces_blur_desc">Automatically detect and blur faces in the photo editor.</string>
     <string name="setup_ai_faces_blur_download">Füge Gesichtserkennung hinzu</string>
     <string name="setup_ai_faces_blur_size">Extra one-time download (~1.3 MB)</string>
@@ -1751,7 +1751,7 @@
     <string name="setup_ai_faces_people_ready">Leute gruppieren ist bereit.</string>
     <string name="setup_skip_for_now">Überspringe für jetzt</string>
     <!-- Tips &amp; Tricks page -->
-    <string name="setup_tips_title">Tips &amp; Tricks</string>
+    <string name="setup_tips_title">Tipps &amp; Tricks</string>
     <string name="setup_tips_subtitle">You\'re all set!</string>
     <string name="setup_tips_body">Open the Help page any time from Settings to discover tips and tricks for every feature, read what\'s new in each release and get the most out of the app.</string>
     <!-- Library shortcuts customization -->
@@ -1767,7 +1767,7 @@
     <string name="library_shortcut_hide">Hide shortcut</string>
     <string name="library_shortcut_drag">Drag to reorder</string>
     <string name="library_section_visible">Shown</string>
-    <string name="library_section_hidden">Hidden</string>
+    <string name="library_section_hidden">Versteckt</string>
     <!-- Subject Cutout -->
     <string name="cutout_no_object">No object detected under long-press</string>
     <string name="cutout_init_failed">Failed to initialize cutout engine</string>
@@ -1779,15 +1779,15 @@
     <string name="cutout_action">Cut out subject</string>
     <string name="cutout_include">Include</string>
     <string name="cutout_exclude">Exclude</string>
-    <string name="cutout_undo">Undo</string>
+    <string name="cutout_undo">Rückgängig machen</string>
     <string name="cutout_redo">Redo</string>
-    <string name="cutout_reset">Reset</string>
+    <string name="cutout_reset">Zurücksetzen</string>
     <string name="cutout_copy">Kopieren</string>
     <string name="cutout_share">Teilen</string>
     <string name="cutout_save">Speichern</string>
     <string name="cutout_close">Close cutout</string>
     <string name="cutout_tool">Cutout</string>
-    <string name="cutout_background_removal">Background Removal</string>
+    <string name="cutout_background_removal">Hintergrundentfernung</string>
     <string name="cutout_remove_background">Entferne Hintergrund</string>
     <string name="cutout_save_choice_title">Save cutout as</string>
     <string name="cutout_save_transparent_png">Transparent PNG</string>
@@ -1814,7 +1814,7 @@
     <string name="slideshow_transition_fade">Fade</string>
     <string name="slideshow_transition_slide">Rutschen</string>
     <string name="slideshow_transition_ken_burns">Ken Burns</string>
-    <string name="slideshow_content_header">Content</string>
+    <string name="slideshow_content_header">Inhalt</string>
     <string name="slideshow_settings_summary">Interval, transitions, shuffle and more</string>
     <string name="slideshow_play">Spielen</string>
     <string name="slideshow_pause">Pausieren</string>
