@@ -237,16 +237,17 @@ class MediaStoreQueryBenchmark {
             )?.use { cursor ->
                 while (cursor.moveToNext()) {
                     cursor.getLong(0)   // _ID
-                    cursor.getString(1) // DATA
-                    cursor.getString(2) // RELATIVE_PATH
-                    cursor.getString(3) // DISPLAY_NAME
-                    cursor.getLong(4)    // BUCKET_ID
-                    cursor.getString(5) // BUCKET_DISPLAY_NAME
-                    cursor.getLong(7)    // DATE_MODIFIED
-                    cursor.getLong(9)    // SIZE
-                    cursor.getString(10) // MIME_TYPE
-                    cursor.getInt(11)   // IS_FAVORITE
-                    cursor.getInt(12)   // IS_TRASHED
+                    cursor.getString(1) // VOLUME_NAME
+                    cursor.getString(2) // DATA
+                    cursor.getString(3) // RELATIVE_PATH
+                    cursor.getString(4) // DISPLAY_NAME
+                    cursor.getLong(5)    // BUCKET_ID
+                    cursor.getString(6) // BUCKET_DISPLAY_NAME
+                    cursor.getLong(8)    // DATE_MODIFIED
+                    cursor.getLong(10)   // SIZE
+                    cursor.getString(11) // MIME_TYPE
+                    cursor.getInt(12)   // IS_FAVORITE
+                    cursor.getInt(13)   // IS_TRASHED
                 }
             }
         }

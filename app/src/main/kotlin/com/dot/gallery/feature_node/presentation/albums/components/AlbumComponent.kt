@@ -77,6 +77,8 @@ import com.dot.gallery.R
 import com.dot.gallery.cloud.core.ProviderType
 import com.dot.gallery.cloud.ui.descriptor.ProviderBrandIcon
 import com.dot.gallery.core.LocalMediaHandler
+import com.dot.gallery.core.Settings.Misc.rememberTrashEnabled
+import com.dot.gallery.core.util.SdkCompat
 import com.dot.gallery.core.presentation.components.LocalMediaImageRenderer
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.AlbumMergeResolver
@@ -89,6 +91,7 @@ import com.dot.gallery.feature_node.presentation.util.formatSize
 import com.dot.gallery.feature_node.presentation.util.printError
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.rememberFeedbackManager
+import com.dot.gallery.feature_node.presentation.vault.components.ConfirmationSheet
 import com.dot.gallery.ui.theme.Shapes
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -378,7 +381,13 @@ fun AlbumOptionSheet(
 ) {
     val isCloudAlbum = remember(album) { album.relativePath.startsWith("cloud/") }
     val scope = rememberCoroutineScope()
-    val trashTitle = stringResource(R.string.move_album_to_trash)
+    val trashEnabled by rememberTrashEnabled()
+    val useRecoverableTrash = !isCloudAlbum && trashEnabled && SdkCompat.supportsTrash
+    val trashTitle = stringResource(
+        if (useRecoverableTrash) R.string.move_album_to_trash
+        else R.string.delete_album_permanently
+    )
+    val removeAlbumState = rememberAppBottomSheetState()
     val pinTitle = stringResource(if (album.isPinned) R.string.unpin else R.string.pin)
     val changeThumbnailTitle = stringResource(R.string.change_thumbnail)
     val ignoredTitle = stringResource(id = R.string.add_to_ignored)
@@ -455,18 +464,19 @@ fun AlbumOptionSheet(
         isMergedSubfolder,
         mergeSubfoldersTitle,
         mergedLayoutTitle,
-        mergeParentSubfoldersTitle
+        mergeParentSubfoldersTitle,
+        trashTitle
     ) {
         mutableListOf<OptionItem>().apply {
             add(
                 OptionItem(
                     icon = Icons.Outlined.Delete,
                     text = trashTitle,
-                    enabled = onMoveAlbumToTrash != null,
+                    enabled = onMoveAlbumToTrash != null && !isCloudAlbum,
                     onClick = {
                         scope.launch {
                             appBottomSheetState.hide()
-                            onMoveAlbumToTrash?.invoke(album)
+                            removeAlbumState.show()
                         }
                     }
                 )
@@ -700,6 +710,22 @@ fun AlbumOptionSheet(
                 )
             }
         }
+    )
+    ConfirmationSheet(
+        state = removeAlbumState,
+        title = stringResource(
+            if (useRecoverableTrash) R.string.album_trash_confirm_title
+            else R.string.album_delete_confirm_title
+        ),
+        summary = stringResource(
+            if (useRecoverableTrash) R.string.album_trash_confirm_summary
+            else R.string.album_delete_confirm_summary
+        ),
+        confirmText = stringResource(
+            if (useRecoverableTrash) R.string.action_move_to_trash
+            else R.string.action_delete_permanently
+        ),
+        onConfirm = { onMoveAlbumToTrash?.invoke(album) }
     )
 }
 

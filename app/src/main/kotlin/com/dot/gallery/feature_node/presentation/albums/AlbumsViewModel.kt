@@ -1,5 +1,6 @@
 package com.dot.gallery.feature_node.presentation.albums
 
+import android.content.Context
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import androidx.compose.runtime.Composable
@@ -15,6 +16,8 @@ import com.dot.gallery.core.presentation.components.FilterKind
 import com.dot.gallery.core.presentation.components.FilterOption
 import com.dot.gallery.cloud.core.ProviderRegistry
 import com.dot.gallery.cloud.core.ProviderType
+import com.dot.gallery.core.Settings.Misc.getTrashEnabled
+import com.dot.gallery.core.util.SdkCompat
 import com.dot.gallery.cloud.core.capabilities.RemoteMediaProvider
 import com.dot.gallery.cloud.data.dao.CloudMediaDao
 import com.dot.gallery.feature_node.domain.model.Album
@@ -36,6 +39,7 @@ import com.dot.gallery.feature_node.domain.util.MediaOrder
 import com.dot.gallery.feature_node.domain.util.OrderType
 import com.dot.gallery.feature_node.presentation.util.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.firstOrNull
@@ -47,7 +51,8 @@ import javax.inject.Inject
 class AlbumsViewModel @Inject constructor(
     private val repository: MediaRepository,
     private val cloudMediaDao: CloudMediaDao,
-    private val providerRegistry: ProviderRegistry
+    private val providerRegistry: ProviderRegistry,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     val sectionsFlow = repository.getAllAlbumSections()
@@ -116,8 +121,9 @@ class AlbumsViewModel @Inject constructor(
                 albumMedia.forEach { entity ->
                     val provider = providerRegistry.getByConfigId(entity.serverConfigId) as? RemoteMediaProvider
                         ?: return@forEach
-                    provider.deleteAsset(entity.remoteId)
-                    cloudMediaDao.delete(entity.remoteId, providerType, entity.serverConfigId)
+                    if (provider.deleteAsset(entity.remoteId).isSuccess) {
+                        cloudMediaDao.delete(entity.remoteId, providerType, entity.serverConfigId)
+                    }
                 }
             } else {
                 val response = repository.getMediaByAlbumIds(
@@ -125,7 +131,12 @@ class AlbumsViewModel @Inject constructor(
                     skipBatching = true
                 ).firstOrNull()
                 val data = response?.data ?: emptyList()
-                repository.trashMedia(result, data, true)
+                val trashEnabled = getTrashEnabled(context).firstOrNull() ?: SdkCompat.supportsTrash
+                if (trashEnabled && SdkCompat.supportsTrash) {
+                    repository.trashMedia(result, data, true)
+                } else {
+                    repository.deleteMedia(result, data)
+                }
             }
         }
     }

@@ -61,9 +61,6 @@ import com.dot.gallery.cloud.util.CloudMediaDownloader
 import java.io.File
 import java.io.FileOutputStream
 
-val sdcardRegex = "^/storage/[A-Z0-9]+-[A-Z0-9]+/.*$".toRegex()
-
-
 @Composable
 fun rememberBitmapPainter(bitmap: Bitmap): State<Painter> {
     return remember(bitmap) { derivedStateOf { BitmapPainter(image = bitmap.asImageBitmap()) } }
@@ -143,34 +140,6 @@ fun Bitmap.flipVertically(): Bitmap {
 fun Bitmap.rotate(degrees: Float): Bitmap {
     val matrix = Matrix().apply { postRotate(degrees) }
     return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
-}
-
-fun List<Media>.canBeTrashed(hasFullAccess: Boolean = false): Boolean {
-    if (hasFullAccess) return true
-    return find { it.path.matches(sdcardRegex) } == null
-}
-
-/**
- * first pair = trashable
- * second pair = non-trashable
- */
-fun List<Media>.mediaPair(hasFullAccess: Boolean = false): Pair<List<Media>, List<Media>> {
-    if (hasFullAccess) return this to emptyList()
-    val trashableMedia = ArrayList<Media>()
-    val nonTrashableMedia = ArrayList<Media>()
-    forEach {
-        if (it.path.matches(sdcardRegex)) {
-            nonTrashableMedia.add(it)
-        } else {
-            trashableMedia.add(it)
-        }
-    }
-    return trashableMedia to nonTrashableMedia
-}
-
-fun Media.canBeTrashed(hasFullAccess: Boolean = false): Boolean {
-    if (hasFullAccess) return true
-    return !path.matches(sdcardRegex)
 }
 
 @Composable

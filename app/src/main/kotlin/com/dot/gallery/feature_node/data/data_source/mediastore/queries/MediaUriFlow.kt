@@ -136,6 +136,8 @@ class MediaUriFlow(
             var i = 0
 
             val id = it.getLong(indexCache[i++])
+            val volumeName = it.tryGetString(indexCache[i++]).orEmpty()
+                .ifEmpty { MediaStore.VOLUME_EXTERNAL }
             val path = it.tryGetString(indexCache[i++]).orEmpty()
             val relativePath = it.tryGetString(indexCache[i++]).orEmpty()
             val title = it.tryGetString(indexCache[i++]).orEmpty()
@@ -153,7 +155,7 @@ class MediaUriFlow(
             // IS_FAVORITE and IS_TRASHED are only available on API 30+
             val isFavorite = if (SdkCompat.supportsFavorites) it.getInt(indexCache[i++]) else 0
             val isTrashed = if (SdkCompat.supportsTrash) it.getInt(indexCache[i]) else 0
-            val uri = MediaQuery.mediaStoreItemUri(id, mimeType, path)
+            val uri = MediaQuery.mediaStoreItemUri(id, mimeType, path, volumeName)
             val formattedDate = (takenTimestamp?.div(1000) ?: modifiedTimestamp).getDate(Constants.FULL_DATE_FORMAT)
             Media.UriMedia(
                 id = id,

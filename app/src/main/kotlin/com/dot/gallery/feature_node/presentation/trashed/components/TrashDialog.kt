@@ -9,7 +9,6 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -28,8 +27,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ErrorOutline
 import com.dot.gallery.core.presentation.components.SetupButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -70,9 +67,6 @@ import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialogA
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialogAction.TRASH
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.GlideInvalidation
-import com.dot.gallery.core.util.SdkCompat
-import com.dot.gallery.feature_node.presentation.util.canBeTrashed
-import com.dot.gallery.feature_node.presentation.util.mediaPair
 import com.dot.gallery.feature_node.presentation.util.rememberFeedbackManager
 import com.dot.gallery.ui.theme.Shapes
 import kotlinx.coroutines.launch
@@ -123,7 +117,13 @@ fun <T : Media> TrashDialog(
         ) {
             val tertiaryContainer = MaterialTheme.colorScheme.tertiaryContainer
             val tertiaryOnContainer = MaterialTheme.colorScheme.onTertiaryContainer
-            val mainButtonDefaultText = stringResource(R.string.action_confirm)
+            val mainButtonDefaultText = stringResource(
+                when (action) {
+                    TRASH -> R.string.action_move_to_trash
+                    DELETE -> R.string.action_delete_permanently
+                    RESTORE -> R.string.trash_restore
+                }
+            )
             val mainButtonConfirmText = stringResource(R.string.action_confirmed)
             val mainButtonText = remember(confirmed) {
                 if (confirmed) mainButtonConfirmText else mainButtonDefaultText
@@ -199,44 +199,6 @@ fun <T : Media> TrashDialog(
                     )
                 }
 
-                val hasFullAccess = remember { SdkCompat.hasFullFileAccess }
-                val mediaPair = dataCopy.mediaPair(hasFullAccess)
-
-                AnimatedVisibility(visible = mediaPair.second.isNotEmpty() && !confirmed) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .background(
-                                    color = MaterialTheme.colorScheme.errorContainer,
-                                    shape = Shapes.large
-                                )
-                                .padding(horizontal = 16.dp, vertical = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Icon(
-                                modifier = Modifier.size(18.dp),
-                                imageVector = Icons.Outlined.ErrorOutline,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onErrorContainer
-                            )
-                            Text(
-                                text = stringResource(R.string.trash_incompatible_title),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onErrorContainer
-                            )
-                        }
-                        Text(
-                            text = stringResource(R.string.trash_incompatible_summary),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
                 val alpha by animateFloatAsState(
                     targetValue = if (!confirmed) 1f else 0.5f,
                     label = "alphaAnimation"
@@ -266,12 +228,7 @@ fun <T : Media> TrashDialog(
                     ) {
                         val context = LocalContext.current
                         val longPressText = stringResource(R.string.long_press_to_remove)
-                        val canBeTrashed = it.canBeTrashed(hasFullAccess)
-                        val borderWidth = if (canBeTrashed) 0.5.dp else 2.dp
-                        val borderColor =
-                            if (canBeTrashed) MaterialTheme.colorScheme.onSurfaceVariant
-                            else MaterialTheme.colorScheme.error
-                        val shape = if (canBeTrashed) Shapes.large else Shapes.extraLarge
+                        val shape = Shapes.large
                         val feedbackManager = rememberFeedbackManager()
                         Box(
                             modifier = Modifier
@@ -279,8 +236,8 @@ fun <T : Media> TrashDialog(
                                 .size(width = 80.dp, height = 120.dp)
                                 .clip(shape)
                                 .border(
-                                    width = borderWidth,
-                                    color = borderColor,
+                                    width = 0.5.dp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     shape = shape
                                 )
                                 .combinedClickable(
@@ -359,8 +316,4 @@ fun <T : Media> TrashDialog(
             Spacer(modifier = Modifier)
         }
     }
-}
-
-enum class TrashDialogAction {
-    TRASH, DELETE, RESTORE
 }

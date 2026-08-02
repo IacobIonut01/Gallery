@@ -40,7 +40,7 @@ fun <T : Media> PrivateFolderDeleteButton(
         currentMedia = media,
         imageVector = Icons.Outlined.DeleteOutline,
         followTheme = followTheme,
-        title = stringResource(id = R.string.trash_delete),
+        title = stringResource(id = R.string.action_delete_permanently),
         enabled = enabled
     ) {
         scope.launch { state.show() }

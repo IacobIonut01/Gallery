@@ -31,33 +31,32 @@ import com.dot.gallery.core.LocalMediaSelector
 import com.dot.gallery.core.Position
 import com.dot.gallery.core.SettingsEntity
 import com.dot.gallery.core.presentation.components.SetupButton
+import com.dot.gallery.core.util.SdkCompat
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaState
+import com.dot.gallery.feature_node.domain.util.isCloud
 import com.dot.gallery.feature_node.presentation.settings.components.SettingsItem
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
-import com.dot.gallery.feature_node.presentation.util.rememberIsMediaManager
 import kotlinx.coroutines.launch
 
 @Composable
-fun <T: Media> AutoDeleteFooter(
+fun <T : Media> AutoDeleteFooter(
     mediaState: State<MediaState<T>>,
 ) {
     val handler = LocalMediaHandler.current
     val selector = LocalMediaSelector.current
     val scope = rememberCoroutineScope()
-    val isMediaManager = rememberIsMediaManager()
     val deleteSheetState = rememberAppBottomSheetState()
     val restoreSheetState = rememberAppBottomSheetState()
+    val media = mediaState.value.media
     val result = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartIntentSenderForResult(),
         onResult = {
             if (it.resultCode == Activity.RESULT_OK) {
                 selector.clearSelection()
-                if (isMediaManager) {
-                    scope.launch {
-                        deleteSheetState.hide()
-                        restoreSheetState.hide()
-                    }
+                scope.launch {
+                    deleteSheetState.hide()
+                    restoreSheetState.hide()
                 }
             }
         }
@@ -71,7 +70,7 @@ fun <T: Media> AutoDeleteFooter(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         AnimatedVisibility(
-            visible = mediaState.value.media.isNotEmpty(),
+            visible = media.isNotEmpty(),
             enter = enterAnimation,
             exit = exitAnimation
         ) {
@@ -82,17 +81,7 @@ fun <T: Media> AutoDeleteFooter(
                 SetupButton(
                     modifier = Modifier.weight(1f),
                     onClick = {
-                        scope.launch {
-                            if (isMediaManager) {
-                                restoreSheetState.show()
-                            } else {
-                                handler.trashMedia(
-                                    result,
-                                    mediaState.value.media,
-                                    false
-                                )
-                            }
-                        }
+                        scope.launch { restoreSheetState.show() }
                     },
                     containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                     contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
@@ -104,18 +93,12 @@ fun <T: Media> AutoDeleteFooter(
                 SetupButton(
                     modifier = Modifier.weight(1f),
                     onClick = {
-                        scope.launch {
-                            if (isMediaManager) {
-                                deleteSheetState.show()
-                            } else {
-                                handler.deleteMedia(result, mediaState.value.media)
-                            }
-                        }
+                        scope.launch { deleteSheetState.show() }
                     },
                     applyHorizontalPadding = false,
                     applyBottomPadding = false,
                     applyInsets = false,
-                    text = stringResource(R.string.trash_delete_all)
+                    text = stringResource(R.string.action_delete_all_permanently)
                 )
             }
         }
@@ -133,16 +116,22 @@ fun <T: Media> AutoDeleteFooter(
 
     TrashDialog(
         appBottomSheetState = deleteSheetState,
-        data = mediaState.value.media,
+        data = media,
         action = TrashDialogAction.DELETE
     ) {
         handler.deleteMedia(result, it)
+        if (it.all { item -> item.isCloud } || !SdkCompat.supportsMediaStoreRequests) {
+            selector.clearSelection()
+        }
     }
     TrashDialog(
         appBottomSheetState = restoreSheetState,
-        data = mediaState.value.media,
+        data = media,
         action = TrashDialogAction.RESTORE
     ) {
         handler.trashMedia(result, it, false)
+        if (it.all { item -> item.isCloud }) {
+            selector.clearSelection()
+        }
     }
 }

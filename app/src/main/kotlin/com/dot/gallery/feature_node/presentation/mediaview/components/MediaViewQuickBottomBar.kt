@@ -14,8 +14,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.dot.gallery.R
 import com.dot.gallery.cloud.core.CloudRuntimeSettings
+import com.dot.gallery.cloud.ui.CloudSelectionViewModel
 import com.dot.gallery.core.LocalEventHandler
 import com.dot.gallery.core.LocalMediaHandler
 import com.dot.gallery.feature_node.presentation.mediaview.LocalMediaViewerVisualPolicy
@@ -41,6 +43,9 @@ import com.dot.gallery.feature_node.presentation.mediaview.components.actionbutt
 import com.dot.gallery.feature_node.presentation.mediaview.components.actionbuttons.RestoreButton
 import com.dot.gallery.feature_node.presentation.mediaview.components.actionbuttons.ShareButton
 import com.dot.gallery.feature_node.presentation.mediaview.components.actionbuttons.TrashButton
+import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialog
+import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialogAction
+import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
 import com.dot.gallery.feature_node.presentation.privatefolder.PrivateFolderViewModel
 import com.dot.gallery.feature_node.presentation.util.rememberActivityResult
@@ -59,6 +64,7 @@ fun <T : Media> MediaViewQuickBottomBar(
     onTrashConfirmed: () -> Unit = {}
 ) {
     val handler = LocalMediaHandler.current
+    val cloudSelectionViewModel = hiltViewModel<CloudSelectionViewModel>()
     val allowBlur = LocalMediaViewerVisualPolicy.current.allowBlur
     val isVideo by rememberedDerivedState(currentMedia) {
         currentMedia?.isVideo ?: false
@@ -84,6 +90,8 @@ fun <T : Media> MediaViewQuickBottomBar(
     if (currentMedia != null) {
         if (currentMedia.isTrashed) {
             val scope = rememberCoroutineScope()
+            val restoreSheetState = rememberAppBottomSheetState()
+            val deleteSheetState = rememberAppBottomSheetState()
             val result = rememberActivityResult(onResultOk = onTrashConfirmed)
             // Restore Component
             MediaViewButton(
@@ -93,20 +101,32 @@ fun <T : Media> MediaViewQuickBottomBar(
                 followTheme = followTheme,
                 enabled = enabled
             ) {
-                scope.launch {
-                    handler.trashMedia(result = result, arrayListOf(it), trash = false)
-                }
+                scope.launch { restoreSheetState.show() }
             }
             // Delete Component
             MediaViewButton(
                 currentMedia = currentMedia,
                 imageVector = Icons.Outlined.DeleteOutline,
-                title = stringResource(id = R.string.trash_delete),
+                title = stringResource(id = R.string.action_delete_permanently),
                 enabled = enabled
             ) {
-                scope.launch {
-                    handler.deleteMedia(result = result, arrayListOf(it))
-                }
+                scope.launch { deleteSheetState.show() }
+            }
+            TrashDialog(
+                appBottomSheetState = restoreSheetState,
+                data = listOf(currentMedia),
+                action = TrashDialogAction.RESTORE
+            ) {
+                handler.trashMedia(result = result, mediaList = it, trash = false)
+                if (currentMedia.isCloud) onTrashConfirmed()
+            }
+            TrashDialog(
+                appBottomSheetState = deleteSheetState,
+                data = listOf(currentMedia),
+                action = TrashDialogAction.DELETE
+            ) {
+                handler.deleteMedia(result = result, mediaList = it)
+                if (currentMedia.isCloud || !SdkCompat.supportsMediaStoreRequests) onTrashConfirmed()
             }
         } else {
             // Read-only mode (cloud Advanced setting): hide all write/share actions for cloud
@@ -198,6 +218,8 @@ fun <T : Media> MediaViewQuickBottomBar(
                         deleteMedia = deleteMedia,
                         currentVault = currentVault,
                         followTheme = followTheme,
+                        cloudSupportsTrash = currentMedia.isCloud &&
+                            cloudSelectionViewModel.supportsTrash(listOf(currentMedia)),
                         onTrashConfirmed = onTrashConfirmed
                     )
                 }

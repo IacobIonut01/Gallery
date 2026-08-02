@@ -113,6 +113,7 @@ import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedStat
 import com.dot.gallery.feature_node.presentation.privatefolder.PrivateFolderMoveViewModel
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialog
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialogAction
+import com.dot.gallery.feature_node.presentation.trashed.components.resolveTrashDialogAction
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
 import com.dot.gallery.feature_node.presentation.util.launchEditIntent
 import com.dot.gallery.feature_node.presentation.util.rememberActivityResult
@@ -274,7 +275,12 @@ fun <T : Media> BoxScope.SelectionSheet(
         base
     }
     val showFavoriteButton by rememberShowFavoriteButton()
-    val trashEnabled = rememberTrashEnabled()
+    val trashEnabled by rememberTrashEnabled()
+    val effectiveTrashAction = resolveTrashDialogAction(
+        trashRequested = shouldMoveToTrash,
+        trashEnabled = trashEnabled,
+        trashSupported = SdkCompat.supportsTrash
+    )
 
     // Cloud/remote albums: when the whole selection is remote media, the local
     // actions (copy/move/vault/edit/rotate/local-trash) don't apply. We swap the
@@ -286,6 +292,7 @@ fun <T : Media> BoxScope.SelectionSheet(
     val cloudDeleteConfirmState = rememberAppBottomSheetState()
     val selectedSnapshot = selectedMedia.toList()
     val isCloudSelection = cloudSelectionViewModel.isCloudSelection(selectedSnapshot)
+    val isMixedCloudSelection = selectedSnapshot.any { it.isCloud } && !isCloudSelection
     val cloudSupportsFavorite = isCloudSelection && cloudSelectionViewModel.supportsFavorite(selectedSnapshot)
     val cloudSupportsTrash = isCloudSelection && cloudSelectionViewModel.supportsTrash(selectedSnapshot)
 
@@ -614,11 +621,12 @@ fun <T : Media> BoxScope.SelectionSheet(
                             }
                             
                             SelectionAction.TRASH -> {
-                                if (isInPrivateFolder) {
+                                if (isMixedCloudSelection) {
+                                } else if (isInPrivateFolder) {
                                     SelectionBarColumn(
                                         imageVector = action.icon,
                                         tabletMode = tabletMode,
-                                        title = stringResource(R.string.trash_delete)
+                                        title = stringResource(R.string.action_delete_permanently)
                                     ) {
                                         scope.launch { privateFolderDeleteConfirmState.show() }
                                     }
@@ -626,13 +634,15 @@ fun <T : Media> BoxScope.SelectionSheet(
                                     SelectionBarColumn(
                                         imageVector = action.icon,
                                         tabletMode = tabletMode,
-                                        title = stringResource(R.string.trash_delete)
+                                        title = stringResource(R.string.action_delete_permanently)
                                     ) {
                                         scope.launch { vaultDeleteConfirmState.show() }
                                     }
                                 } else {
-                                    val trashEnabledRes = remember(trashEnabled) {
-                                        if (trashEnabled.value) R.string.trash else R.string.trash_delete
+                                    val trashEnabledRes = if (trashEnabled && SdkCompat.supportsTrash) {
+                                        R.string.trash
+                                    } else {
+                                        R.string.action_delete_permanently
                                     }
                                     SelectionBarColumn(
                                         imageVector = action.icon,
@@ -893,15 +903,15 @@ fun <T : Media> BoxScope.SelectionSheet(
     TrashDialog(
         appBottomSheetState = trashSheetState,
         data = selectedMedia,
-        action = remember(shouldMoveToTrash) {
-            if (shouldMoveToTrash) TrashDialogAction.TRASH else TrashDialogAction.DELETE
-        },
+        action = effectiveTrashAction,
     ) {
-        selector.clearSelection()
-        if (shouldMoveToTrash && SdkCompat.supportsTrash) {
+        if (effectiveTrashAction == TrashDialogAction.TRASH) {
             handler.trashMedia(result, it, true)
         } else {
             handler.deleteMedia(result, it)
+            if (!SdkCompat.supportsMediaStoreRequests) {
+                selector.clearSelection()
+            }
         }
     }
 

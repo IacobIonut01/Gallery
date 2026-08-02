@@ -60,14 +60,15 @@ import com.dot.gallery.R
 import com.dot.gallery.core.LocalMediaHandler
 import com.dot.gallery.core.LocalMediaSelector
 import com.dot.gallery.core.Settings
+import com.dot.gallery.core.util.SdkCompat
 import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
 import com.dot.gallery.core.presentation.components.SelectAllAddon
 import com.dot.gallery.core.presentation.components.SelectionAddon
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaState
+import com.dot.gallery.feature_node.domain.util.isCloud
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
-import com.dot.gallery.feature_node.presentation.util.rememberIsMediaManager
 import com.dot.gallery.ui.theme.Shapes
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
@@ -85,7 +86,6 @@ fun <T : Media> BoxScope.TrashSelectionSheet(
     val handler = LocalMediaHandler.current
     val isSelectionActive by selector.isSelectionActive.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
-    val isMediaManager = rememberIsMediaManager()
     val deleteSheetState = rememberAppBottomSheetState()
     val restoreSheetState = rememberAppBottomSheetState()
     val result = rememberLauncherForActivityResult(
@@ -93,11 +93,9 @@ fun <T : Media> BoxScope.TrashSelectionSheet(
         onResult = {
             if (it.resultCode == Activity.RESULT_OK) {
                 selector.clearSelection()
-                if (isMediaManager) {
-                    scope.launch {
-                        deleteSheetState.hide()
-                        restoreSheetState.hide()
-                    }
+                scope.launch {
+                    deleteSheetState.hide()
+                    restoreSheetState.hide()
                 }
             }
         }
@@ -189,27 +187,15 @@ fun <T : Media> BoxScope.TrashSelectionSheet(
                     title = stringResource(R.string.trash_restore),
                     tabletMode = tabletMode,
                     onItemClick = {
-                        scope.launch {
-                            if (isMediaManager) {
-                                restoreSheetState.show()
-                            } else {
-                                handler.trashMedia(result, selectedMedia, false)
-                            }
-                        }
+                        scope.launch { restoreSheetState.show() }
                     }
                 )
                 SelectionBarItem(
                     imageVector = Icons.Outlined.DeleteOutline,
-                    title = stringResource(R.string.trash_delete),
+                    title = stringResource(R.string.action_delete_permanently),
                     tabletMode = tabletMode,
                     onItemClick = {
-                        scope.launch {
-                            if (isMediaManager) {
-                                deleteSheetState.show()
-                            } else {
-                                handler.deleteMedia(result, selectedMedia)
-                            }
-                        }
+                        scope.launch { deleteSheetState.show() }
                     }
                 )
             }
@@ -222,6 +208,9 @@ fun <T : Media> BoxScope.TrashSelectionSheet(
         action = TrashDialogAction.DELETE
     ) {
         handler.deleteMedia(result, it)
+        if (it.all { media -> media.isCloud } || !SdkCompat.supportsMediaStoreRequests) {
+            selector.clearSelection()
+        }
     }
     TrashDialog(
         appBottomSheetState = restoreSheetState,
@@ -229,6 +218,9 @@ fun <T : Media> BoxScope.TrashSelectionSheet(
         action = TrashDialogAction.RESTORE
     ) {
         handler.trashMedia(result, it, false)
+        if (it.all { media -> media.isCloud }) {
+            selector.clearSelection()
+        }
     }
 }
 

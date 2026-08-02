@@ -114,11 +114,6 @@ interface MediaRepository {
         trash: Boolean
     )
 
-    suspend fun <T: Media> trashMediaDirectly(
-        mediaList: List<T>,
-        trash: Boolean
-    ): Boolean
-
     suspend fun <T: Media> copyMedia(
         from: T,
         path: String

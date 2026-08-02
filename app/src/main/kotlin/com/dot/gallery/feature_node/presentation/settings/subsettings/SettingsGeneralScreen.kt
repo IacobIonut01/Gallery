@@ -47,12 +47,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import com.dot.gallery.R
+import com.dot.gallery.core.LocalEventHandler
 import com.dot.gallery.core.Position
 import com.dot.gallery.core.Settings
 import com.dot.gallery.core.Settings.Misc.rememberAppLogoAlias
 import com.dot.gallery.core.Settings.Misc.rememberAppNameAlias
 import com.dot.gallery.core.Settings.Misc.rememberTrashConfirmationEnabled
 import com.dot.gallery.core.SettingsEntity
+import com.dot.gallery.core.navigate
 import com.dot.gallery.core.util.SdkCompat
 import com.dot.gallery.feature_node.presentation.settings.components.BaseSettingsScreen
 import com.dot.gallery.feature_node.presentation.util.Screen
@@ -220,10 +222,18 @@ private fun GeneralListScreen(
     @Composable
     fun settings(): SnapshotStateList<SettingsEntity> {
         val res = LocalResources.current
+        val eventHandler = LocalEventHandler.current
 
         val trashSectionPref = remember(res) {
             SettingsEntity.Header(title = res.getString(R.string.trash))
         }
+
+        val openTrashPref = rememberPreference(
+            title = stringResource(R.string.settings_open_trash),
+            summary = stringResource(R.string.settings_open_trash_summary),
+            onClick = { eventHandler.navigate(Screen.TrashedScreen()) },
+            screenPosition = Position.Top,
+        )
 
         val trashCanEnabledPref = rememberSwitchPreference(
             trashCanEnabled,
@@ -232,7 +242,7 @@ private fun GeneralListScreen(
             isChecked = trashCanEnabled,
             onCheck = onTrashChange,
             onClick = { onDetailClick(DETAIL_TRASH) },
-            screenPosition = Position.Top
+            screenPosition = Position.Middle
         )
 
         val trashConfirmationEnabledPref = rememberSwitchPreference(
@@ -303,13 +313,14 @@ private fun GeneralListScreen(
         )
 
         return remember(
-            trashCanEnabledPref, trashConfirmationEnabledPref,
+            openTrashPref, trashCanEnabledPref, trashConfirmationEnabledPref,
             secureModePref, allowVibrationsPref, appNamePref, appLogoPref,
             vaultEncryptPref
         ) {
             mutableStateListOf<SettingsEntity>().apply {
                 if (SdkCompat.supportsTrash) {
                     add(trashSectionPref)
+                    add(openTrashPref)
                     add(trashCanEnabledPref)
                     add(trashConfirmationEnabledPref)
                 }

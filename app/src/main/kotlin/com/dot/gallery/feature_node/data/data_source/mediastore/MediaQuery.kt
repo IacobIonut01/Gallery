@@ -16,6 +16,7 @@ object MediaQuery {
 
     private val MediaProjectionBase = arrayOf(
         MediaStore.Files.FileColumns._ID,
+        MediaStore.Files.FileColumns.VOLUME_NAME,
         MediaStore.Files.FileColumns.DATA,
         MediaStore.Files.FileColumns.RELATIVE_PATH,
         MediaStore.Files.FileColumns.DISPLAY_NAME,
@@ -54,6 +55,7 @@ object MediaQuery {
         get() {
             val base = arrayOf(
                 MediaStore.Files.FileColumns._ID,
+                MediaStore.Files.FileColumns.VOLUME_NAME,
                 MediaStore.Files.FileColumns.DATA,
                 MediaStore.Files.FileColumns.DATE_TAKEN,
                 MediaStore.Files.FileColumns.DATE_MODIFIED,
@@ -70,6 +72,7 @@ object MediaQuery {
 
     val AlbumsProjection = arrayOf(
         MediaStore.Files.FileColumns._ID,
+        MediaStore.Files.FileColumns.VOLUME_NAME,
         MediaStore.Files.FileColumns.DATA,
         MediaStore.Files.FileColumns.RELATIVE_PATH,
         MediaStore.Files.FileColumns.DISPLAY_NAME,
@@ -147,12 +150,18 @@ object MediaQuery {
      * is safe for regular images/videos too (Files is a superset), so it's used whenever the file's
      * extension is one of the unclassified formats regardless of how MediaStore classified the row.
      */
-    fun mediaStoreItemUri(id: Long, mimeType: String, pathOrDisplayName: String): Uri {
+    fun mediaStoreItemUri(
+        id: Long,
+        mimeType: String,
+        pathOrDisplayName: String,
+        volumeName: String = MediaStore.VOLUME_EXTERNAL
+    ): Uri {
         val ext = pathOrDisplayName.substringAfterLast('.', "").lowercase()
         val base = when {
-            ext in ExtraImageExtensions -> MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL)
-            mimeType.contains("image") -> MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-            else -> MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+            ext in ExtraImageExtensions -> MediaStore.Files.getContentUri(volumeName)
+            mimeType.contains("image") -> MediaStore.Images.Media.getContentUri(volumeName)
+            mimeType.contains("video") -> MediaStore.Video.Media.getContentUri(volumeName)
+            else -> MediaStore.Files.getContentUri(volumeName)
         }
         return ContentUris.withAppendedId(base, id)
     }

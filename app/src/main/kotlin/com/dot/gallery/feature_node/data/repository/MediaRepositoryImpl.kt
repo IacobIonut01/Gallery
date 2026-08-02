@@ -19,7 +19,6 @@ import android.os.Build
 import android.provider.MediaStore
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
-import androidx.core.app.ActivityOptionsCompat
 import com.dot.gallery.core.util.SdkCompat
 import androidx.datastore.preferences.core.Preferences
 import androidx.work.WorkManager
@@ -325,7 +324,9 @@ class MediaRepositoryImpl(
         val senderRequest: IntentSenderRequest = IntentSenderRequest.Builder(intentSender)
             .setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION, 0)
             .build()
-        result.launch(senderRequest)
+        withContext(Dispatchers.Main.immediate) {
+            result.launch(senderRequest)
+        }
     }
 
     override suspend fun <T : Media> trashMedia(
@@ -334,10 +335,7 @@ class MediaRepositoryImpl(
         trash: Boolean
     ) {
         if (!SdkCompat.supportsMediaStoreRequests) {
-            // Trash not supported on API 29; delete directly instead
-            if (trash) {
-                deleteMedia(result, mediaList)
-            }
+            // Trash not supported on API 29
             return
         }
         val intentSender = MediaStore.createTrashRequest(
@@ -348,31 +346,9 @@ class MediaRepositoryImpl(
         val senderRequest: IntentSenderRequest = IntentSenderRequest.Builder(intentSender)
             .setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION, 0)
             .build()
-        result.launch(senderRequest, ActivityOptionsCompat.makeTaskLaunchBehind())
-    }
-
-    override suspend fun <T : Media> trashMediaDirectly(
-        mediaList: List<T>,
-        trash: Boolean
-    ): Boolean = withContext(Dispatchers.IO) {
-        var allSuccess = true
-        mediaList.forEach { media ->
-            runCatching {
-                val values = ContentValues().apply {
-                    put(MediaStore.Files.FileColumns.IS_TRASHED, if (trash) 1 else 0)
-                }
-                contentResolver.update(media.getUri(), values, null, null) > 0
-            }.onFailure {
-                printWarning("Failed to trash media ${media.id} directly: ${it.message}")
-                allSuccess = false
-            }.onSuccess { success ->
-                if (!success) {
-                    printWarning("ContentResolver update returned 0 for media ${media.id}")
-                    allSuccess = false
-                }
-            }
+        withContext(Dispatchers.Main.immediate) {
+            result.launch(senderRequest)
         }
-        allSuccess
     }
 
     override suspend fun <T : Media> deleteMedia(
@@ -400,7 +376,9 @@ class MediaRepositoryImpl(
         val senderRequest: IntentSenderRequest = IntentSenderRequest.Builder(intentSender)
             .setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION, 0)
             .build()
-        result.launch(senderRequest)
+        withContext(Dispatchers.Main.immediate) {
+            result.launch(senderRequest)
+        }
     }
 
     override suspend fun <T : Media> copyMedia(

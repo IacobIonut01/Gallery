@@ -24,7 +24,7 @@ import com.dot.gallery.R
 @Composable
 fun EmptyTrash(
     modifier: Modifier = Modifier,
-    title: String = stringResource(R.string.empty_trash_title),
+    title: String = stringResource(R.string.trash_empty_state_title),
 ) {
     Column(
         modifier = modifier.padding(top = 64.dp),
@@ -32,8 +32,7 @@ fun EmptyTrash(
         verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically)
     ) {
         Icon(
-            modifier = Modifier
-                .size(128.dp),
+            modifier = Modifier.size(128.dp),
             imageVector = Icons.Outlined.Delete,
             contentDescription = stringResource(R.string.empty_trash_cd),
             tint = MaterialTheme.colorScheme.primary

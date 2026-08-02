@@ -20,20 +20,16 @@ import com.dot.gallery.core.decoder.format.ImageReencoder
 import com.dot.gallery.core.metadata.MetadataRemovalMode
 import com.dot.gallery.core.metadata.SanitizationCapability
 import com.dot.gallery.core.metadata.SanitizationResult
-import com.dot.gallery.core.Settings.Misc.getTrashEnabled
 import com.dot.gallery.core.workers.VaultOperationWorker
 import com.dot.gallery.core.workers.enqueueVaultOperation
-import com.dot.gallery.core.util.SdkCompat
 import com.dot.gallery.core.workers.rotateImage
 import com.dot.gallery.feature_node.domain.util.getUri
 import com.dot.gallery.feature_node.domain.util.isCloud
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.Vault
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
-import com.dot.gallery.feature_node.presentation.util.sdcardRegex
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
@@ -110,7 +106,7 @@ class MediaHandlerImpl @Inject constructor(
         result: ActivityResultLauncher<IntentSenderRequest>,
         mediaList: List<T>,
         trash: Boolean
-    ) = withContext(Dispatchers.Default) {
+    ) {
         val (cloudMedia, localMedia) = mediaList.partition { it.isCloud }
 
         if (cloudMedia.isNotEmpty()) {
@@ -128,24 +124,7 @@ class MediaHandlerImpl @Inject constructor(
         }
 
         if (localMedia.isNotEmpty()) {
-            val isTrashEnabled = getTrashEnabled(context).firstOrNull() ?: true
-            if ((isTrashEnabled || !trash)) {
-                val hasFullAccess = SdkCompat.hasFullFileAccess
-                val internalMedia = localMedia.filter { !it.path.matches(sdcardRegex) }
-                val sdCardMedia = localMedia.filter { it.path.matches(sdcardRegex) }
-                if (internalMedia.isNotEmpty()) {
-                    repository.trashMedia(result, internalMedia, trash)
-                }
-                if (sdCardMedia.isNotEmpty()) {
-                    if (hasFullAccess) {
-                        repository.trashMediaDirectly(sdCardMedia, trash)
-                    } else {
-                        repository.deleteMedia(result, sdCardMedia)
-                    }
-                }
-            } else {
-                repository.deleteMedia(result, localMedia)
-            }
+            repository.trashMedia(result, localMedia, trash)
         }
     }
 
@@ -182,8 +161,9 @@ class MediaHandlerImpl @Inject constructor(
                     val (providerName, remoteId, configId) = extractCloudInfo(media) ?: return@forEach
                     val providerType = try { ProviderType.valueOf(providerName) } catch (_: Exception) { return@forEach }
                     val provider = getCloudProvider(providerName, configId) ?: return@forEach
-                    provider.deleteAsset(remoteId)
-                    cloudMediaDao.delete(remoteId, providerType, configId)
+                    if (provider.deleteAsset(remoteId).isSuccess) {
+                        cloudMediaDao.delete(remoteId, providerType, configId)
+                    }
                 }
             }
         }

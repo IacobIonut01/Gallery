@@ -169,6 +169,8 @@ class MediaFlow(
         var i = 0
 
         val id = it.getLong(indexCache[i++])
+        val volumeName = it.tryGetString(indexCache[i++]).orEmpty()
+            .ifEmpty { MediaStore.VOLUME_EXTERNAL }
         val path = it.tryGetString(indexCache[i++]).orEmpty()
         val relativePath = it.tryGetString(indexCache[i++]).orEmpty()
         val title = it.tryGetString(indexCache[i++]).orEmpty()
@@ -188,7 +190,7 @@ class MediaFlow(
         val isTrashAlbum = buckedId == MediaStoreBuckets.MEDIA_STORE_BUCKET_TRASH.id
         val isTrashed = if (SdkCompat.supportsTrash) it.getInt(indexCache[if (isTrashAlbum) i++ else i]) else 0
         val expiryTimestamp = if (isTrashAlbum && SdkCompat.supportsTrash) it.tryGetLong(indexCache[i]) else null
-        val uri = MediaQuery.mediaStoreItemUri(id, mimeType, path)
+        val uri = MediaQuery.mediaStoreItemUri(id, mimeType, path, volumeName)
         val formattedDate = (takenTimestamp?.div(1000) ?: modifiedTimestamp).getDate(Constants.FULL_DATE_FORMAT)
         Media.UriMedia(
             id = id,

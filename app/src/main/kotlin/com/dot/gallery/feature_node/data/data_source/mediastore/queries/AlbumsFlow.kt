@@ -121,6 +121,7 @@ class AlbumsFlow(
         mutableMapOf<Int, Album>().apply {
             it?.use {
                 val idIndex = it.getColumnIndex(MediaStore.Files.FileColumns._ID)
+                val volumeNameIndex = it.getColumnIndex(MediaStore.Files.FileColumns.VOLUME_NAME)
                 val albumIdIndex = it.getColumnIndex(MediaStore.Files.FileColumns.BUCKET_ID)
                 val labelIndex = it.getColumnIndex(MediaStore.Files.FileColumns.BUCKET_DISPLAY_NAME)
                 val thumbnailPathIndex = it.getColumnIndex(MediaStore.Files.FileColumns.DATA)
@@ -146,6 +147,8 @@ class AlbumsFlow(
                     } ?: run {
                         val albumId = it.getLong(albumIdIndex)
                         val id = it.getLong(idIndex)
+                        val volumeName = it.tryGetString(volumeNameIndex).orEmpty()
+                            .ifEmpty { MediaStore.VOLUME_EXTERNAL }
                         val label = it.tryGetString(labelIndex, Build.MODEL)
                         val thumbnailPath = it.tryGetString(thumbnailPathIndex).orEmpty()
                         val thumbnailRelativePath = it.tryGetString(thumbnailRelativePathIndex).orEmpty()
@@ -157,10 +160,11 @@ class AlbumsFlow(
                         this[bucketId] = Album(
                             id = albumId,
                             label = label ?: Build.MODEL,
-                            uri = MediaQuery.mediaStoreItemUri(id, mimeType, thumbnailPath),
+                            uri = MediaQuery.mediaStoreItemUri(id, mimeType, thumbnailPath, volumeName),
                             pathToThumbnail = thumbnailPath,
                             relativePath = thumbnailRelativePath,
-                            timestamp = thumbnailDateTaken?.div(1000) ?: thumbnailDate
+                            timestamp = thumbnailDateTaken?.div(1000) ?: thumbnailDate,
+                            storageVolume = volumeName
                         ).apply {
                             this.count += 1
                             this.size += size
