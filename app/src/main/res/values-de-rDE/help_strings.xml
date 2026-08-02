@@ -95,12 +95,12 @@
     <string name="help_tip_nav_auto_hide_bars_p1_s3">Scroll down to see them hide, scroll up to bring them back</string>
     <!-- GET STARTED: PERSONALIZATION -->
     <string name="help_tip_personalize_theme_title">Ändere dein Design</string>
-    <string name="help_tip_personalize_theme_subtitle">Light, dark, or follow your system</string>
-    <string name="help_tip_personalize_theme_p1_title">Choose your theme</string>
+    <string name="help_tip_personalize_theme_subtitle">Hell, Dunkel, oder folge dem Systemstandard</string>
+    <string name="help_tip_personalize_theme_p1_title">Wähle dein Design</string>
     <string name="help_tip_personalize_theme_p1_desc">Gallery supports light and dark themes, and can follow your system setting automatically. The theme affects all screens, dialogs, and menus throughout the app. Most users prefer the system default so Gallery matches the rest of their phone.</string>
-    <string name="help_tip_personalize_theme_p2_title">Theme options</string>
+    <string name="help_tip_personalize_theme_p2_title">Design-Optionen</string>
     <string name="help_tip_personalize_theme_p2_desc">System default follows your phone\'s current mode. Force dark mode keeps Gallery dark regardless of system settings — great for nighttime browsing. If you have an OLED display, enable AMOLED pure black for true black backgrounds that save battery and look stunning.</string>
-    <string name="help_tip_personalize_theme_p2_s1">Go to Settings &gt; Appearance</string>
+    <string name="help_tip_personalize_theme_p2_s1">Gehe zu Einstellungen &gt; Darstellung</string>
     <string name="help_tip_personalize_theme_p2_s2">Choose System, Light, or Force Dark</string>
     <string name="help_tip_personalize_theme_p2_s3">For OLED screens, also enable \'AMOLED pure black\'</string>
     <string name="help_tip_personalize_colors_title">Customize color palette</string>
@@ -126,7 +126,7 @@
     <string name="help_tip_personalize_amoled_p1_s1">Gehe zu Einstellungen &gt; Aussehen</string>
     <string name="help_tip_personalize_amoled_p1_s2">Aktiviere Erzwinge Dunkelmodus zuerst</string>
     <string name="help_tip_personalize_amoled_p1_s3">Toggle \'AMOLED pure black\'</string>
-    <string name="help_tip_personalize_amoled_p1_s4">Enjoy true blacks on your OLED display</string>
+    <string name="help_tip_personalize_amoled_p1_s4">Genieße tiefschwarz auf deinem OLED Bildschirm</string>
     <string name="help_tip_personalize_dark_mode_title">Wechsel zwischen Hell und Dunkel</string>
     <string name="help_tip_personalize_dark_mode_subtitle">Wähle den Modus, welcher am einfachsten für deine Augen sind</string>
     <string name="help_tip_personalize_dark_mode_p1_title">Heller und dunkler Modus</string>
