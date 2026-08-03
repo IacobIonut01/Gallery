@@ -36,6 +36,10 @@ val abiVersionCodes = mapOf(
     "x86" to 1,
     "universal" to 0
 )
+val pinnedNdkVersion = Properties().run {
+    rootProject.file("gradle.properties").inputStream().use { load(it) }
+    getProperty("refra.ndkVersion") ?: error("Missing refra.ndkVersion in gradle.properties")
+}
 
 apkVersioning {
     flavorVersionCodes.set(abiVersionCodes)
@@ -81,7 +85,7 @@ android {
     // Native HEIC tiled decoder (libheif + libde265, built via CMake/NDK). Pinned to the latest
     // stable NDK r29 line and CMake 3.31.x. CMake 4.x is intentionally avoided because it drops
     // support for `cmake_minimum_required(VERSION < 3.5)`, which breaks libde265/libheif scripts.
-    ndkVersion = "29.0.14033849"
+    ndkVersion = pinnedNdkVersion
 
     defaultConfig {
         applicationId = "com.dot.gallery"

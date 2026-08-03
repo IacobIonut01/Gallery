@@ -38,18 +38,14 @@ if [ -z "$SDK" ] || [ ! -d "$SDK" ]; then
     exit 1
 fi
 
-NDK_DIR=""
-for cand in "$SDK/ndk/29.0.14033849" "$SDK/ndk/29."* ; do
-    if [ -d "$cand" ]; then NDK_DIR="$cand"; break; fi
-done
-if [ -z "$NDK_DIR" ]; then
-    NDK_DIR="$(ls -d "$SDK/ndk/"* 2>/dev/null | sort -V | tail -n1 || true)"
-fi
-if [ -z "$NDK_DIR" ] || [ ! -d "$NDK_DIR" ]; then
-    echo "ERROR: No NDK found under $SDK/ndk. Install NDK r29." >&2
+NDK_VERSION="$(sed -n 's/^refra\.ndkVersion=//p' "$REPO_ROOT/gradle.properties" | head -n1)"
+NDK_DIR="$SDK/ndk/$NDK_VERSION"
+TOOLCHAIN="$NDK_DIR/build/cmake/android.toolchain.cmake"
+if [ -z "$NDK_VERSION" ] || [ ! -f "$TOOLCHAIN" ] ||
+    ! grep -Fqx "Pkg.Revision = $NDK_VERSION" "$NDK_DIR/source.properties"; then
+    echo "ERROR: Pinned NDK $NDK_VERSION not found or invalid. Install ndk;$NDK_VERSION." >&2
     exit 1
 fi
-TOOLCHAIN="$NDK_DIR/build/cmake/android.toolchain.cmake"
 
 CMAKE_BIN="$SDK/cmake/$CMAKE_VERSION/bin/cmake"
 NINJA_BIN="$SDK/cmake/$CMAKE_VERSION/bin/ninja"
