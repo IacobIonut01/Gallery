@@ -44,8 +44,8 @@
     <string name="back_cd">返回</string>
     <string name="settings_title">設定</string>
     <string name="settings_general">一般</string>
-    <string name="settings_trash_title">使用垃圾桶</string>
-    <string name="settings_trash_summary">保留刪除的的媒體 30 天。\n停用此功能可能導致誤刪媒體。</string>
+    <string name="settings_trash_title">啟用垃圾桶</string>
+    <string name="settings_trash_summary">保留刪除的媒體 30 天\n停用此功能有誤刪媒體的風險</string>
     <string name="move_album_to_trash">將相簿移到垃圾桶</string>
     <string name="pinned_albums_title">釘選的相簿</string>
     <string name="unpin">取消釘選</string>
@@ -56,16 +56,16 @@
     <string name="show_in_app">在應用程式中顯示</string>
     <string name="open_externally">使用其他應用程式開啟</string>
     <string name="no_map_app">沒有可顯示該位置的應用程式</string>
-    <string name="map_appearance_header">Map</string>
-    <string name="map_appearance_title">Map appearance</string>
-    <string name="map_appearance_description">Choose whether maps follow ReFra’s appearance or always use bright or dark map colors.</string>
-    <string name="map_appearance_system">Follow app appearance</string>
-    <string name="map_appearance_light">Light</string>
-    <string name="map_appearance_dark">Dark</string>
-    <string name="map_appearance_action">Change map appearance</string>
-    <string name="map_cluster_title">Photos in this location</string>
-    <string name="map_cluster_count">%1$d photos</string>
-    <string name="map_marker_photo">Photo on map</string>
+    <string name="map_appearance_header">地圖</string>
+    <string name="map_appearance_title">地圖外觀</string>
+    <string name="map_appearance_description">選擇地圖是否採用 ReFra 的預設樣式，或是始終使用淺色或深色的地圖配色。</string>
+    <string name="map_appearance_system">跟隨系統</string>
+    <string name="map_appearance_light">亮色</string>
+    <string name="map_appearance_dark">暗色</string>
+    <string name="map_appearance_action">變更地圖外觀</string>
+    <string name="map_cluster_title">在此處的照片</string>
+    <string name="map_cluster_count">%1$d 張照片</string>
+    <string name="map_marker_photo">地圖上的照片</string>
     <string name="app_dev">由 %s 提供</string>
     <string name="app_dev_name">IacobIonut01</string>
     <string name="donate">捐贈</string>
@@ -180,23 +180,23 @@
     <string name="add_to_ignored">隱藏相簿</string>
     <string name="override">覆寫</string>
     <string name="save_copy">儲存副本</string>
-    <string name="edit_override_permission_denied">Permission denied. Grant full media access to overwrite the original, or save a copy instead.</string>
-    <string name="edit_override_failed">Couldn\'t overwrite the original. Try saving a copy instead.</string>
-    <string name="edit_save_copy_failed">Failed to save the edited copy.</string>
-    <string name="edit_load_failed">Couldn\'t open this image in the editor.</string>
-    <string name="edit_load_failed_restore_title">Couldn\'t open image</string>
-    <string name="edit_load_failed_restore_summary">This file may be damaged. A backed-up original is available — restore it?</string>
-    <string name="edit_restore_failed">Failed to restore the original.</string>
-    <string name="overwrite_unavailable_title">Can\'t overwrite this format</string>
-    <string name="overwrite_unavailable_summary">This image format can\'t be re-encoded on your device, so the original can\'t be overwritten. A new PNG copy will be created instead.</string>
-    <string name="overwrite_unavailable_create_copy">Create copy</string>
-    <string name="reencode_quality_title">Save quality</string>
-    <string name="reencode_quality_summary">How edited and rotated images are re-encoded when saved</string>
-    <string name="reencode_quality_mode_auto">Automatic</string>
-    <string name="reencode_quality_mode_auto_summary">Lossless where supported (JXL), otherwise high quality</string>
-    <string name="reencode_quality_mode_manual">Manual</string>
-    <string name="reencode_quality_lossy">Lossy quality</string>
-    <string name="reencode_quality_jxl_effort">JXL effort</string>
+    <string name="edit_override_permission_denied">權限遭拒絕。請授予完整的媒體存取權限以覆寫原始檔案，或改為儲存一份副本。</string>
+    <string name="edit_override_failed">無法覆寫原始檔案。請嘗試另存一份副本。</string>
+    <string name="edit_save_copy_failed">無法儲存已編輯的副本。</string>
+    <string name="edit_load_failed">無法在編輯器中開啟這張圖片。</string>
+    <string name="edit_load_failed_restore_title">無法開啟圖片</string>
+    <string name="edit_load_failed_restore_summary">此檔案可能已損毀。系統中備有備份的原始檔案 — 是否要還原？</string>
+    <string name="edit_restore_failed">無法還原原始內容。</string>
+    <string name="overwrite_unavailable_title">無法覆寫此格式</string>
+    <string name="overwrite_unavailable_summary">此圖像格式無法在您的裝置上重新編碼，因此無法覆寫原始檔案。系統將改為建立一個新的 PNG 副本。</string>
+    <string name="overwrite_unavailable_create_copy">建立副本</string>
+    <string name="reencode_quality_title">儲存畫質</string>
+    <string name="reencode_quality_summary">編輯和旋轉後的圖片在儲存時的重新編碼方式</string>
+    <string name="reencode_quality_mode_auto">自動</string>
+    <string name="reencode_quality_mode_auto_summary">若支援無損格式（JXL）則採用無損格式，否則採用高品質格式</string>
+    <string name="reencode_quality_mode_manual">手動</string>
+    <string name="reencode_quality_lossy">有損品質</string>
+    <string name="reencode_quality_jxl_effort">JXL 等級</string>
     <!-- RAW develop -->
     <string name="raw_develop">Develop RAW</string>
     <string name="raw_develop_title">Develop RAW</string>
@@ -440,7 +440,7 @@
     <string name="ai_models_manager">AI 模型管理器</string>
     <string name="ai_models_download">下載 AI 模型</string>
     <string name="ai_models_download_summary">下載用於影像搜尋與分類的 AI 模型（約 147 MB）</string>
-    <string name="ai_models_downloading">下載 AI 模型…</string>
+    <string name="ai_models_downloading">正在下載 AI 模型…</string>
     <string name="ai_models_ready_summary">提供由 AI 驅動的搜尋與分類功能</string>
     <string name="ai_models_error">AI 模型錯誤</string>
     <string name="ai_models_delete">刪除 AI 模型</string>
@@ -454,16 +454,16 @@
     <string name="ai_models_files">模型檔案</string>
     <string name="ai_models_feature_search">依描述搜尋</string>
     <string name="ai_models_feature_categories">自動分類</string>
-    <string name="ai_models_feature_cutout">Subject Cutout</string>
-    <string name="ai_models_feature_faces">Faces &amp; People</string>
+    <string name="ai_models_feature_cutout">物體剪影</string>
+    <string name="ai_models_feature_faces">人臉辨識</string>
     <!-- Per-feature model groups -->
     <string name="ai_models_group_search_title">Search &amp; Categories</string>
     <string name="ai_models_group_search_desc">CLIP models that power smart search and automatic categories.</string>
     <string name="ai_models_group_search_download_summary">Download the CLIP models (~147 MB)</string>
-    <string name="ai_models_group_cutout_title">Subject Cutout</string>
-    <string name="ai_models_group_cutout_desc">MobileSAM models that isolate subjects in the media viewer.</string>
+    <string name="ai_models_group_cutout_title">物體剪影</string>
+    <string name="ai_models_group_cutout_desc">MobileSAM 模型會將主要物體在媒體檢視器中進行隔離。</string>
     <string name="ai_models_group_cutout_download_summary">Download the MobileSAM models (~44 MB)</string>
-    <string name="ai_models_group_cutout_ready_summary">Subject cutout is available in the media viewer</string>
+    <string name="ai_models_group_cutout_ready_summary">媒體檢視器提供「物體剪影」功能</string>
     <string name="ai_models_source_cutout_url">huggingface.co/Acly/MobileSAM</string>
     <string name="ai_models_group_face_detect_title">Face Detection</string>
     <string name="ai_models_group_face_detect_desc">UltraFace RFB-320, a lightweight face detector that powers the editor\'s automatic \"Blur faces\" action.</string>
@@ -1129,7 +1129,7 @@
     <string name="security_private_folder">Private folder</string>
     <string name="security_private_folder_summary_none">Not configured</string>
     <string name="security_private_folder_summary">%s</string>
-    <string name="security_private_folder_description">Designate a folder on your device that is only accessible through this app. Its contents are completely hidden from the normal timeline, albums, and search results.\n\nHow it works — The folder is accessed through the Storage Access Framework (SAF), which means its contents are not indexed by the system media scanner and will not appear in other gallery apps or file managers that rely on MediaStore. When you pick a folder, a .nomedia file is automatically created inside it to prevent Android from scanning its contents. This ensures photos and videos in the folder stay hidden from all other apps.\n\nWhere you can find it — Once configured, a \"Private folder\" entry appears in your album list. Opening it requires authentication if you have app lock enabled.\n\nWhat you can do — Browse, view, and delete photos and videos inside the private folder. Files are displayed in a dedicated viewer with the same features as the main gallery (zoom, swipe, metadata).\n\nChoosing a folder — You can pick any folder your device allows, including internal storage, SD card, or a USB drive. The app remembers your choice across restarts. You can change or remove the folder at any time without affecting the files themselves.\n\nImportant — Do not delete the .nomedia file inside the private folder. If removed, Android will scan the folder and its contents may appear in other gallery apps. The app will recreate it automatically the next time you open the private folder settings.</string>
+    <string name="security_private_folder_description">在您的裝置上指定一個僅能透過此應用程式存取的資料夾。該資料夾的內容將完全隱藏於一般時間軸、相簿及搜尋結果之外。\n\n運作原理 — 此資料夾是透過「儲存空間存取框架」（SAF）進行存取，這意味著其內容不會被系統媒體掃描器索引，也不會出現在其他依賴 MediaStore 的相簿應用程式或檔案管理員中。當您選取一個資料夾時，系統會自動在其內部建立一個 .nomedia 檔案，以防止 Android 掃描其內容。 這確保了該資料夾中的照片和影片對所有其他應用程式保持隱藏狀態。\n\n位置 — 設定完成後，相簿清單中會出現「私人資料夾」選項。若您已啟用應用程式鎖定功能，開啟時需進行驗證。\n\n可執行的操作 — 瀏覽、檢視及刪除私人資料夾內的照片和影片。 檔案將顯示於專用檢視器中，其功能與主相簿相同（縮放、滑動、元資料）。\n\n選擇資料夾 — 您可以選擇裝置允許的任何資料夾，包括內部儲存空間、SD 卡或 USB 隨身碟。應用程式會在重新啟動後記住您的選擇。 您可以隨時變更或移除該資料夾，而不會影響檔案本身。\n\n重要提示 — 請勿刪除私密資料夾內的 .nomedia 檔案。若將其移除，Android 系統將掃描該資料夾，其內容可能會出現在其他相簿應用程式中。下次您開啟私密資料夾設定時，本應用程式會自動重新建立該檔案。</string>
     <string name="security_private_folder_status_active">Folder configured</string>
     <string name="security_private_folder_status_none">No folder selected</string>
     <string name="security_private_folder_pick">Pick folder</string>
@@ -1667,9 +1667,9 @@
     <string name="cloud_net_wifi_pick_none">Not set</string>
     <!-- ============================ Setup wizard ============================ -->
     <!-- App logo -->
-    <string name="change_app_logo">App logo</string>
-    <string name="change_app_logo_summary">Switch between the ReFra and classic Gallery launcher icon</string>
-    <string name="app_logo_description">Choose the launcher icon used on your home screen and app drawer. The app will restart to apply the change.</string>
+    <string name="change_app_logo">應用程式圖示</string>
+    <string name="change_app_logo_summary">選擇於主畫面啟動器上使用 ReFra 或經典相簿圖示</string>
+    <string name="app_logo_description">選擇主畫面啟動器上顯示的名稱與圖示。應用程式將重新啟動以套用變更。</string>
     <!-- Common -->
     <string name="setup_step_progress">Step %1$d of %2$d</string>
     <string name="setup_continue">Continue</string>
@@ -1685,7 +1685,7 @@
     <string name="setup_reason_read_images"><![CDATA[Displaying your photos in the timeline, albums and viewer. Without this, the gallery stays empty.]]></string>
     <string name="setup_reason_read_videos"><![CDATA[Showing and playing your videos in the timeline, albums and viewer.]]></string>
     <string name="setup_reason_media_location"><![CDATA[Reading GPS data embedded in your photos & videos to power the Map and location details.]]></string>
-    <string name="setup_reason_internet"><![CDATA[Downloading map tiles for location previews, casting media to nearby devices, downloading optional AI models and syncing with cloud servers. Media never leaves your device unless you set up cloud sync.]]></string>
+    <string name="setup_reason_internet"><![CDATA[下載地圖圖塊以預覽位置、將媒體內容傳輸至附近裝置、下載可選的 AI 模型，以及與雲端伺服器同步。除非您設定了雲端同步，否則媒體內容絕不會離開您的裝置。]]></string>
     <string name="setup_reason_notifications"><![CDATA[Showing progress for background tasks such as backups, encryption and downloads.]]></string>
     <string name="setup_reason_manage_media"><![CDATA[Skipping the extra system confirmation dialog when you favorite, trash or edit several items at once.]]></string>
     <string name="setup_reason_manage_files"><![CDATA[Creating albums outside the standard Pictures and DCIM folders, managing files anywhere on your storage, and showing extra photo formats the system doesn\'t recognize (such as JPEG XL, JPEG 2000 and Photoshop files).]]></string>
@@ -1693,7 +1693,7 @@
     <string name="setup_looks_title">Looks &amp; Feel</string>
     <string name="setup_looks_subtitle">Make the app feel like yours.</string>
     <string name="setup_section_app_name">App name</string>
-    <string name="setup_section_app_logo">App logo</string>
+    <string name="setup_section_app_logo">應用程式圖示</string>
     <string name="setup_looks_restart_note">The app will restart when you finish setup to apply the chosen name and icon.</string>
     <string name="setup_section_appearance">Appearance</string>
     <string name="setup_appearance_summary">Light or dark mode, accent colors and more.</string>
@@ -1708,7 +1708,7 @@
     <string name="setup_cap_remote_assets">Browse remote media</string>
     <string name="setup_cap_remote_albums">Remote albums</string>
     <string name="setup_cap_sync">Backup &amp; sync</string>
-    <string name="setup_cap_people">People &amp; faces</string>
+    <string name="setup_cap_people">人臉辨識</string>
     <string name="setup_cap_map">Map &amp; places</string>
     <string name="setup_cap_smart_search">Smart search</string>
     <string name="setup_cap_text_search">Text search</string>
@@ -1736,7 +1736,7 @@
     <string name="setup_ai_extra_cutout_download">Add Subject Cutout</string>
     <string name="setup_ai_extra_cutout_size">Extra one-time download (~44 MB)</string>
     <string name="setup_ai_extra_cutout_ready">Subject cutout is ready.</string>
-    <string name="setup_ai_faces_title">Faces &amp; People</string>
+    <string name="setup_ai_faces_title">人臉辨識</string>
     <string name="setup_ai_faces_blur_title">Blur faces</string>
     <string name="setup_ai_faces_blur_desc">Automatically detect and blur faces in the photo editor.</string>
     <string name="setup_ai_faces_blur_download">Add face detection</string>
