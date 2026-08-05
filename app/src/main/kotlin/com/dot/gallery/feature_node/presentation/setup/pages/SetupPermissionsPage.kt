@@ -137,9 +137,38 @@ fun SetupPermissionsPage(
                             ) == PackageManager.PERMISSION_GRANTED
                     )
                 }
+                var localNetworkGranted by remember {
+                    mutableStateOf(
+                        Build.VERSION.SDK_INT < 37 ||
+                            ContextCompat.checkSelfPermission(
+                                context, Manifest.permission.ACCESS_LOCAL_NETWORK
+                            ) == PackageManager.PERMISSION_GRANTED
+                    )
+                }
                 RepeatOnResume {
                     isStorageManager = Environment.isExternalStorageManager()
                     canManageMedia = MediaStore.canManageMedia(context)
+                    if (Build.VERSION.SDK_INT >= 37) {
+                        localNetworkGranted = ContextCompat.checkSelfPermission(
+                            context, Manifest.permission.ACCESS_LOCAL_NETWORK
+                        ) == PackageManager.PERMISSION_GRANTED
+                    }
+                }
+
+                if (Build.VERSION.SDK_INT >= 37 && !BuildConfig.OFFLINE_MODE) {
+                    val localNetworkPermission = rememberPermissionState(
+                        permission = Manifest.permission.ACCESS_LOCAL_NETWORK,
+                        onPermissionResult = { localNetworkGranted = it }
+                    )
+                    SetupPermissionItem(
+                        icon = Icons.Rounded.SignalWifi4Bar,
+                        title = stringResource(R.string.permission_local_network_title),
+                        reason = stringResource(R.string.setup_reason_local_network),
+                        optional = true,
+                        granted = localNetworkGranted,
+                        grantActionLabel = stringResource(R.string.setup_grant_permissions),
+                        onGrant = { localNetworkPermission.launchPermissionRequest() }
+                    )
                 }
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {

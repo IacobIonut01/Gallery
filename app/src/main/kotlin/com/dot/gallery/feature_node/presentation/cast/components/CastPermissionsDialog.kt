@@ -5,9 +5,13 @@
 
 package com.dot.gallery.feature_node.presentation.cast.components
 
+import android.Manifest
 import android.content.Intent
+import android.os.Build
 import android.net.Uri
 import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -41,6 +45,12 @@ fun CastPermissionsDialog(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
+    val missingLocalNetworkPermission = Build.VERSION.SDK_INT >= 37 && permissions.any {
+        it.permission == Manifest.permission.ACCESS_LOCAL_NETWORK && !it.granted
+    }
+    val localNetworkPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted -> if (granted) onDismiss() }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -71,17 +81,24 @@ fun CastPermissionsDialog(
         confirmButton = {
             TextButton(
                 onClick = {
-                    context.startActivity(
-                        Intent(
-                            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                            Uri.fromParts("package", context.packageName, null)
-                        ).apply {
-                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        }
-                    )
+                    if (missingLocalNetworkPermission) {
+                        localNetworkPermissionLauncher.launch(Manifest.permission.ACCESS_LOCAL_NETWORK)
+                    } else {
+                        context.startActivity(
+                            Intent(
+                                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                Uri.fromParts("package", context.packageName, null)
+                            ).apply {
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                        )
+                    }
                 }
             ) {
-                Text(stringResource(R.string.cast_open_settings))
+                Text(stringResource(
+                    if (missingLocalNetworkPermission) R.string.setup_grant_permissions
+                    else R.string.cast_open_settings
+                ))
             }
         },
         dismissButton = {

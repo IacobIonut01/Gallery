@@ -5,6 +5,14 @@
 
 package com.dot.gallery.cloud.ui
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -60,6 +68,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -68,6 +77,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
 import com.dot.gallery.cloud.core.ProviderType
@@ -85,6 +95,10 @@ import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetStat
 import dev.chrisbanes.haze.LocalHazeStyle
 import dev.chrisbanes.haze.hazeEffect
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.net.InetAddress
+import java.net.URI
 
 @Composable
 fun CloudAddServerScreen(
@@ -357,6 +371,65 @@ private fun CredentialsStep(
     credentialValues: CredentialValues,
     viewModel: CloudAccountsViewModel
 ) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var showLocalNetworkRationale by remember { mutableStateOf(false) }
+    var pendingConnectionTest by remember { mutableStateOf<(() -> Unit)?>(null) }
+    val localNetworkPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        val action = pendingConnectionTest
+        pendingConnectionTest = null
+        if (granted) action?.invoke()
+    }
+    val testConnection: () -> Unit = {
+        val action = viewModel::testConnection
+        if (Build.VERSION.SDK_INT < 37 || ContextCompat.checkSelfPermission(
+                context, Manifest.permission.ACCESS_LOCAL_NETWORK
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            action()
+        } else {
+            scope.launch {
+                if (isDirectLocalResource(context, state.serverUrl)) {
+                    pendingConnectionTest = action
+                    showLocalNetworkRationale = true
+                } else {
+                    action()
+                }
+            }
+        }
+    }
+
+    if (showLocalNetworkRationale) {
+        AlertDialog(
+            onDismissRequest = {
+                showLocalNetworkRationale = false
+                pendingConnectionTest?.invoke()
+                pendingConnectionTest = null
+            },
+            title = { Text(stringResource(R.string.local_network_permission_dialog_title)) },
+            text = { Text(stringResource(R.string.local_network_permission_dialog_message)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showLocalNetworkRationale = false
+                    localNetworkPermissionLauncher.launch(Manifest.permission.ACCESS_LOCAL_NETWORK)
+                }) {
+                    Text(stringResource(R.string.setup_grant_permissions))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showLocalNetworkRationale = false
+                    pendingConnectionTest?.invoke()
+                    pendingConnectionTest = null
+                }) {
+                    Text(stringResource(R.string.local_network_permission_not_now))
+                }
+            }
+        )
+    }
+
     AppTextField(
         value = state.displayName,
         onValueChange = viewModel::updateDisplayName,
@@ -391,7 +464,7 @@ private fun CredentialsStep(
         applyHorizontalPadding = false,
         applyBottomPadding = false,
         applyInsets = false,
-        onClick = viewModel::testConnection
+        onClick = testConnection
     )
     state.testResult?.let { result ->
         Spacer(Modifier.height(8.dp))
@@ -415,6 +488,27 @@ private fun CredentialsStep(
         }
     }
 }
+
+private suspend fun isDirectLocalResource(context: Context, serverUrl: String): Boolean =
+    withContext(Dispatchers.IO) {
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE)
+            as? ConnectivityManager
+        val activeCapabilities = connectivityManager?.activeNetwork?.let {
+            connectivityManager.getNetworkCapabilities(it)
+        }
+        if (activeCapabilities?.hasTransport(NetworkCapabilities.TRANSPORT_VPN) == true) {
+            return@withContext false
+        }
+
+        val host = runCatching { URI(serverUrl).host }.getOrNull()
+            ?: runCatching { URI("https://$serverUrl").host }.getOrNull()
+            ?: return@withContext false
+        runCatching {
+            InetAddress.getAllByName(host).any {
+                it.isSiteLocalAddress || it.isLoopbackAddress || it.isLinkLocalAddress
+            }
+        }.getOrDefault(false)
+    }
 
 /**
  * Credential input that, for secret fields (password / API key / secrets), renders a trailing
