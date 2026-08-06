@@ -41,6 +41,7 @@ import com.dot.gallery.core.decoder.supportRawDecoder
 import com.dot.gallery.core.smart.SmartScanScheduler
 import com.dot.gallery.core.workers.TempVaultCleanupWorker
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
+import com.dot.gallery.feature_node.presentation.frameextract.FrameSourceCleanup
 import com.github.panpf.sketch.PlatformContext
 import com.github.panpf.sketch.SingletonSketch
 import com.github.panpf.sketch.Sketch
@@ -186,6 +187,7 @@ class GalleryApp : Application(), SingletonSketch.Factory, Configuration.Provide
 
         appScope.launch {
             metadataSanitizer.recoverPendingTransactions()
+            FrameSourceCleanup.sweep(this@GalleryApp)
         }
 
         CloudFetcherRegistryHolder.registry = providerRegistry

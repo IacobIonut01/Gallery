@@ -7,6 +7,7 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import com.dot.gallery.feature_node.presentation.frameextract.FrameSourceCleanup
 import com.dot.gallery.feature_node.presentation.util.printDebug
 import dagger.hilt.android.EntryPointAccessors
 import dagger.assisted.Assisted
@@ -59,6 +60,7 @@ class TempVaultCleanupWorker @AssistedInject constructor(
                 }
             }
         }
+        FrameSourceCleanup.sweep(appContext)
         printDebug("TempVaultCleanupWorker removed $deletedCount stale temp/meta files")
         runCatching {
             val ep = EntryPointAccessors.fromApplication(appContext, com.dot.gallery.core.metrics.MetricsCollectorEntryPoint::class.java)

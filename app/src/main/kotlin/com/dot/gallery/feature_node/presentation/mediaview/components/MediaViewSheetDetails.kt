@@ -110,6 +110,7 @@ fun <T : Media> MediaViewSheetDetails(
     restoreMedia: ((Vault, T, () -> Unit) -> Unit)?,
     currentVault: Vault?,
     motionPhotoState: MotionPhotoState? = null,
+    onOpenFramePicker: () -> Unit = {},
     cloudBackups: List<Media.UriMedia> = emptyList(),
     metadataSanitizationState: MediaViewViewModel.MetadataSanitizationUiState =
         MediaViewViewModel.MetadataSanitizationUiState.Idle,
@@ -424,6 +425,7 @@ fun <T : Media> MediaViewSheetDetails(
                         item(key = "motion_photo") {
                             MotionPhotoShotsSection(
                                 state = motionPhotoState,
+                                onOpenFramePicker = onOpenFramePicker,
                                 modifier = Modifier
                                     .widthIn(max = 600.dp)
                                     .fillMaxWidth()
@@ -616,7 +618,9 @@ fun <T : Media> MediaViewSheetDetails(
                             albumsState = albumsState,
                             vaults = vaultState,
                             restoreMedia = restoreMedia,
-                            currentVault = currentVault
+                            currentVault = currentVault,
+                            isMotionPhoto = motionPhotoState?.isDetected == true || metadata?.isMotionPhoto == true,
+                            onOpenFramePicker = onOpenFramePicker,
                         )
                     }
                     item(key = "spacer") {

@@ -22,6 +22,7 @@ import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.CopyAll
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.MovieCreation
 import androidx.compose.material.icons.outlined.Restore
@@ -64,7 +65,6 @@ import com.dot.gallery.feature_node.domain.util.canMakeActions
 import com.dot.gallery.feature_node.domain.util.getUri
 import com.dot.gallery.feature_node.domain.util.isCloud
 import com.dot.gallery.feature_node.domain.util.isEncrypted
-import com.dot.gallery.feature_node.domain.util.isHeif
 import com.dot.gallery.feature_node.domain.util.isImage
 import com.dot.gallery.feature_node.domain.util.isLocalContent
 import com.dot.gallery.feature_node.domain.util.isVideo
@@ -104,7 +104,9 @@ fun <T : Media> MediaViewSheetActions(
     albumsState: State<AlbumState>,
     vaults: State<VaultState>,
     restoreMedia: ((Vault, T, () -> Unit) -> Unit)?,
-    currentVault: Vault?
+    currentVault: Vault?,
+    isMotionPhoto: Boolean = false,
+    onOpenFramePicker: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -141,25 +143,11 @@ fun <T : Media> MediaViewSheetActions(
     val exportingText = stringResource(R.string.motion_photo_exporting)
     val exportSuccessText = stringResource(R.string.motion_photo_export_success)
     val exportFailedText = stringResource(R.string.motion_photo_export_failed)
+    val extractFramesText = stringResource(R.string.frame_picker_extract_frames)
     val handler = LocalMediaHandler.current
     // Lazily create a single KeychainHolder for encrypted operations
     val keychainHolder = remember(currentVault) {
         if (currentVault != null) lazy { KeychainHolder(context) } else null
-    }
-
-    // Detect Motion Photo (embedded video) to offer a "Save as video" export
-    var isMotionPhoto by remember(media) { mutableStateOf(false) }
-    LaunchedEffect(media) {
-        // Motion Photos only ever live in JPEG/HEIC containers. Restricting detection to those
-        // avoids running metadata-extractor (which loads the whole file) on huge non-photo formats
-        // like 16-bit TIFF, where it OOMs.
-        val motionPhotoCandidate = !media.isEncrypted && !media.isCloud && media.isImage &&
-                (media.mimeType == "image/jpeg" || media.mimeType == "image/jpg" || media.isHeif)
-        isMotionPhoto = if (motionPhotoCandidate) {
-            withContext(Dispatchers.IO) {
-                MotionPhotoHelper.parseInfo(context, media.getUri()) != null
-            }
-        } else false
     }
 
     // "Use as album cover" is offered for local, non-encrypted media that live in a real album.
@@ -195,7 +183,16 @@ fun <T : Media> MediaViewSheetActions(
     }
 
     // Build action list
-    val actions = remember(media, albumsState.value, vaults.value, currentVault, isMotionPhoto, canSetAlbumCover) {
+    val actions = remember(
+        media,
+        albumsState.value,
+        vaults.value,
+        currentVault,
+        isMotionPhoto,
+        canSetAlbumCover,
+        extractFramesText,
+        onOpenFramePicker,
+    ) {
         buildList<ActionGridItem> {
             // Share
             add(ActionGridItem(
@@ -266,8 +263,15 @@ fun <T : Media> MediaViewSheetActions(
                     }
                 }
             ))
+            if (media.isVideo || isMotionPhoto) {
+                add(ActionGridItem(
+                    icon = Icons.Outlined.Image,
+                    text = extractFramesText,
+                    onClick = onOpenFramePicker,
+                ))
+            }
             // Save Motion Photo embedded video as a standalone file
-            if (isMotionPhoto) {
+            if (isMotionPhoto && !media.isCloud && !media.isEncrypted) {
                 add(ActionGridItem(
                     icon = Icons.Outlined.MovieCreation,
                     text = exportVideoText,

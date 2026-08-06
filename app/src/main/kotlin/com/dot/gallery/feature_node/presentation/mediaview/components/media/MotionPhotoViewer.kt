@@ -51,6 +51,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -61,6 +62,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.compose.modifiers.resizeWithContentScale
 import androidx.media3.ui.compose.state.rememberPresentationState
+import com.dot.gallery.R
 import com.dot.gallery.feature_node.presentation.mediaview.LocalMediaViewerVisualPolicy
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.util.MotionPhotoInfo
@@ -389,6 +391,7 @@ fun MotionPhotoFilmstrip(
 fun MotionPhotoShotsSection(
     state: MotionPhotoState,
     modifier: Modifier = Modifier,
+    onOpenFramePicker: () -> Unit = {},
 ) {
     // Hide entirely until composite filmstrip is loaded
     val compositeImage = remember(state.compositeFilmstrip) {
@@ -412,7 +415,7 @@ fun MotionPhotoShotsSection(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
-            text = "Shots in this photo",
+            text = stringResource(R.string.frame_picker_shots_heading),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurface
         )
@@ -448,6 +451,7 @@ fun MotionPhotoShotsSection(
                     )
                     .height(FILMSTRIP_HEIGHT)
                     .onSizeChanged { size -> stripWidthPx = size.width.toFloat() }
+                    .pointerInput(Unit) { detectTapGestures { onOpenFramePicker() } }
             )
         }
     }

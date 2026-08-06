@@ -52,6 +52,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisallowComposableCalls
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableLongState
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -85,6 +87,7 @@ import androidx.core.graphics.createBitmap
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.ExoPlayer
 import com.composables.core.BottomSheet
 import com.composables.core.SheetDetent.Companion.FullyExpanded
 import com.composables.core.rememberBottomSheetState
@@ -125,6 +128,8 @@ import com.dot.gallery.feature_node.presentation.cast.components.CastButton
 import com.dot.gallery.feature_node.presentation.cast.components.CastPermissionsDialog
 import com.dot.gallery.feature_node.presentation.cast.components.CastStatusBanner
 import com.dot.gallery.feature_node.presentation.cast.components.FCastDevicePickerDialog
+import com.dot.gallery.feature_node.presentation.frameextract.FramePickerActivity
+import com.dot.gallery.feature_node.presentation.frameextract.FrameSourceSpec
 import com.dot.gallery.feature_node.presentation.mediaview.MediaViewViewModel.MediaViewEvent
 import com.dot.gallery.feature_node.presentation.mediaview.components.GroupMemberSelectionBar
 import com.dot.gallery.feature_node.presentation.mediaview.components.GroupMemberStrip
@@ -197,6 +202,11 @@ fun <T> rememberedDerivedState(
     return remember(*keys) {
         derivedStateOf(block)
     }
+}
+
+private class VideoFramePickerControllerRef {
+    var player: ExoPlayer? = null
+    var position: MutableLongState? = null
 }
 
 @androidx.annotation.OptIn(UnstableApi::class)
@@ -489,6 +499,30 @@ fun <T : Media> MediaViewScreen(
     var isBottomDark by remember { mutableStateOf(false) }
     val autoContrast by rememberAutoContrast()
     val motionPhotoState = motionPhotoStateFactory(currentMedia)
+    val videoFramePickerController = remember(currentMedia?.id) { VideoFramePickerControllerRef() }
+    val openFramePicker: () -> Unit = remember(currentMedia, motionPhotoState.motionInfo, currentVault) {
+        {
+            currentMedia?.let { media ->
+                motionPhotoState.stopPlayback()
+                videoFramePickerController.player?.pause()
+                val metadata = metadataState.value.metadataMap[media.id]
+                FramePickerActivity.launch(
+                    context,
+                    FrameSourceSpec.from(
+                        media = media,
+                        metadata = metadata,
+                        currentVault = currentVault,
+                        motionPhotoHint = motionPhotoState.isDetected || metadata?.isMotionPhoto == true,
+                        preferredPresentationTimeUs = motionPhotoState.motionInfo
+                            ?.presentationTimestampUs ?: -1L,
+                        initialPositionMs = if (media.isVideo) {
+                            videoFramePickerController.position?.longValue
+                        } else null,
+                    ),
+                )
+            }
+        }
+    }
     // Key rotation helpers by the *settled* pager media id, not currentMedia?.id.
     // During a cancelled swipe the pager's currentPage briefly flips to the neighbour
     // page and back; keying off it would reset this rememberSaveable state and make the
@@ -1041,6 +1075,12 @@ fun <T : Media> MediaViewScreen(
                                     {}
                                 }
                             ) { player, isPlaying, currentTime, totalTime, buffer, frameRate, subtitleState ->
+                                if (index == currentPage) {
+                                    SideEffect {
+                                        videoFramePickerController.position = currentTime
+                                        videoFramePickerController.player = player
+                                    }
+                                }
                                 val subtitleTracks = subtitleState.subtitleTracks
                                 val onSelectSubtitle = subtitleState.onSelectSubtitle
                                 val onDisableSubtitles = subtitleState.onDisableSubtitles
@@ -1394,12 +1434,7 @@ fun <T : Media> MediaViewScreen(
             ) {
                 MotionPhotoFilmstrip(
                     state = motionPhotoState,
-                    onTap = {
-                        if (sheetState.currentDetent == imageOnlyDetent) {
-                            showUI = !showUI
-                            windowInsetsController.toggleSystemBars(showUI)
-                        }
-                    }
+                    onTap = openFramePicker
                 )
             }
             // Group member thumbnail strip (for grouped RAW+JPG, bursts, edits)
@@ -1624,6 +1659,7 @@ fun <T : Media> MediaViewScreen(
                         restoreMedia = restoreMedia,
                         currentVault = currentVault,
                         motionPhotoState = motionPhotoState,
+                        onOpenFramePicker = openFramePicker,
                         cloudBackups = currentCloudBackups,
                         metadataSanitizationState = metadataSanitizationUiState,
                         probeMetadataSanitization = probeMetadataSanitization,

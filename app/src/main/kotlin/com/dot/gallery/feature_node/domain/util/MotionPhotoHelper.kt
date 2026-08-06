@@ -12,9 +12,17 @@ import com.dot.gallery.feature_node.presentation.util.printDebug
 import com.dot.gallery.feature_node.presentation.util.printWarning
 import com.drew.imaging.ImageMetadataReader
 import com.drew.metadata.xmp.XmpDirectory
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.InputStream
+import java.nio.ByteBuffer
+import java.util.UUID
+import kotlin.coroutines.coroutineContext
 
 /**
  * Describes the embedded video inside a Motion Photo / Microvideo file.
@@ -52,11 +60,7 @@ object MotionPhotoHelper {
     // Samsung uses a binary marker appended to the file
     private val SAMSUNG_MARKER = "MotionPhoto_Data".toByteArray(Charsets.US_ASCII)
 
-    // The Samsung marker and its trailing video live at the very end of the file. Only scan a
-    // bounded tail instead of reading the whole file into memory: a large photo (e.g. 150+ MP)
-    // can be well over 100 MB and reading it all triggers an OutOfMemoryError. Real Samsung
-    // motion-photo clips are a few MB, so this window comfortably covers them.
-    private const val SAMSUNG_TAIL_SCAN_BYTES = 16 * 1024 * 1024
+    // Samsung markers are scanned with constant memory so large embedded clips remain detectable.
 
     // ---------------------------------------------------------------------------------
 
@@ -70,7 +74,7 @@ object MotionPhotoHelper {
             // running it on a huge non-photo container (e.g. a 16-bit TIFF) OOMs. Motion Photos are
             // only ever JPEG/HEIC, so bail out unless the header actually looks like one.
             if (!looksLikeJpegOrHeic(context, uri)) {
-                printDebug("MotionPhoto: header is not JPEG/HEIC, skipping metadata read for $uri")
+                printDebug("MotionPhoto: header is not JPEG/HEIC, skipping metadata read")
                 return null
             }
             // First try XMP-based detection
@@ -84,65 +88,16 @@ object MotionPhotoHelper {
                     dir.xmpProperties.forEach { (k, v) -> props[k] = v }
                 }
 
-                printDebug("MotionPhoto: XMP props for $uri: ${
-                    props.filter { it.key.contains("Camera", true) || it.key.contains("Container", true) || it.key.contains("Micro", true) || it.key.contains("Motion", true) }
-                }")
-
-                // 1. Try Motion Photo v2/v3 offset
-                val motionPhotoFlag = props[KEY_MOTION_PHOTO]
-                val microVideoFlag = props[KEY_MICRO_VIDEO]
-
-                if (motionPhotoFlag != "1" && microVideoFlag != "1") return@use null
-
-                var videoOffset: Long? = null
-                var pts: Long = -1L
-
-                // v2/v3: explicit MotionPhotoVideoOffset
-                props[KEY_MOTION_PHOTO_OFFSET]?.toLongOrNull()?.let { offset ->
-                    if (offset > 0) videoOffset = offset
-                }
-
-                // v2/v3: Container-based offset – find the item whose Semantic is "MotionPhoto"
-                if (videoOffset == null) {
-                    // Find the key prefix for the MotionPhoto container item
-                    val motionEntry = props.entries.firstOrNull { (k, v) ->
-                        k.endsWith(ITEM_SEMANTIC_SUFFIX) && v == SEMANTIC_MOTION_PHOTO
-                    }
-                    if (motionEntry != null) {
-                        val prefix = motionEntry.key.removeSuffix(ITEM_SEMANTIC_SUFFIX)
-                        val length = props["$prefix$ITEM_LENGTH_SUFFIX"]?.toLongOrNull()
-                        val padding = props["$prefix$ITEM_PADDING_SUFFIX"]?.toLongOrNull() ?: 0L
-                        if (length != null && length > 0) {
-                            videoOffset = length + padding
-                            printDebug("MotionPhoto: Container item found at prefix=$prefix, length=$length, padding=$padding")
-                        }
-                    }
-                }
-
-                // v1: MicroVideoOffset
-                if (videoOffset == null) {
-                    props[KEY_MICRO_VIDEO_OFFSET]?.toLongOrNull()?.let { offset ->
-                        if (offset > 0) videoOffset = offset
-                    }
-                }
-
-                // Presentation timestamp
-                props[KEY_MOTION_PHOTO_PTS]?.toLongOrNull()?.let { pts = it }
-                if (pts < 0) {
-                    props[KEY_MICRO_VIDEO_PTS]?.toLongOrNull()?.let { pts = it }
-                }
-
-                videoOffset?.let { MotionPhotoInfo(it, pts) }
+                resolveInfo(props)
             }
 
             if (xmpResult != null) return xmpResult
 
-            // Fallback: try Samsung binary marker detection. Only scan a bounded tail of the file
-            // (the marker + video are appended at EOF) to avoid loading huge photos into memory.
-            printDebug("MotionPhoto: XMP detection found nothing, trying Samsung marker for $uri")
-            val tail = readFileTail(context, uri, SAMSUNG_TAIL_SCAN_BYTES) ?: return null
-            findSamsungMarkerOffset(tail)?.let { offset ->
-                printDebug("MotionPhoto: Samsung marker found at offset $offset for $uri")
+            // Fallback: scan for the Samsung binary marker without loading the source into memory.
+            printDebug("MotionPhoto: XMP detection found nothing, trying Samsung marker")
+            val offset = findSamsungMarkerOffset(context, uri) ?: return null
+            offset.let {
+                printDebug("MotionPhoto: Samsung marker found at offset $offset")
                 MotionPhotoInfo(offset)
             }
         } catch (e: Throwable) {
@@ -152,6 +107,48 @@ object MotionPhotoHelper {
             null
         }
     }
+
+    fun resolveInfo(properties: Map<String, String>): MotionPhotoInfo? {
+        if (properties[KEY_MOTION_PHOTO] != "1" && properties[KEY_MICRO_VIDEO] != "1") return null
+
+        var videoOffset = properties[KEY_MOTION_PHOTO_OFFSET]
+            ?.toLongOrNull()
+            ?.takeIf { it > 0L }
+
+        if (videoOffset == null) {
+            val motionEntry = properties.entries.firstOrNull { (key, value) ->
+                key.endsWith(ITEM_SEMANTIC_SUFFIX) && value == SEMANTIC_MOTION_PHOTO
+            }
+            if (motionEntry != null) {
+                val prefix = motionEntry.key.removeSuffix(ITEM_SEMANTIC_SUFFIX)
+                val length = properties["$prefix$ITEM_LENGTH_SUFFIX"]?.toLongOrNull()
+                val padding = properties["$prefix$ITEM_PADDING_SUFFIX"]?.toLongOrNull() ?: 0L
+                if (length != null && length > 0L && padding >= 0L && length <= Long.MAX_VALUE - padding) {
+                    videoOffset = length + padding
+                }
+            }
+        }
+
+        if (videoOffset == null) {
+            videoOffset = properties[KEY_MICRO_VIDEO_OFFSET]
+                ?.toLongOrNull()
+                ?.takeIf { it > 0L }
+        }
+
+        val presentationTimestampUs = properties[KEY_MOTION_PHOTO_PTS]
+            ?.toLongOrNull()
+            ?.takeIf { it >= 0L }
+            ?: properties[KEY_MICRO_VIDEO_PTS]?.toLongOrNull()?.takeIf { it >= 0L }
+            ?: -1L
+        return videoOffset?.let { MotionPhotoInfo(it, presentationTimestampUs) }
+    }
+
+    fun videoStart(fileSize: Long, videoOffset: Long): Long? =
+        if (fileSize > 0L && videoOffset in 1..fileSize) fileSize - videoOffset else null
+
+    fun hasMp4Ftyp(header: ByteArray, bytesRead: Int = header.size): Boolean =
+        bytesRead >= 8 && header[4] == 'f'.code.toByte() && header[5] == 't'.code.toByte() &&
+            header[6] == 'y'.code.toByte() && header[7] == 'p'.code.toByte()
 
     /**
      * Cheaply sniff the leading bytes to confirm the file is a JPEG or an ISO-BMFF (HEIC/HEIF)
@@ -183,38 +180,17 @@ object MotionPhotoHelper {
                 header[6] == 'y'.code.toByte() && header[7] == 'p'.code.toByte()
     }
 
-    /**
-     * Reads up to [maxBytes] from the **end** of the file at [uri] without loading the whole file
-     * into memory. Returns the tail bytes (ending at EOF) or the entire file if it is smaller than
-     * [maxBytes]. Returns `null` if the file length cannot be determined (in which case the caller
-     * should skip the scan rather than risk an OutOfMemoryError).
-     */
-    private fun readFileTail(context: Context, uri: Uri, maxBytes: Int): ByteArray? {
-        val length = try {
-            context.contentResolver.openFileDescriptor(uri, "r")?.use { it.statSize }
-        } catch (e: Exception) {
-            null
+    private fun findSamsungMarkerOffset(context: Context, uri: Uri): Long? =
+        context.contentResolver.openInputStream(uri)?.use { input ->
+            val scan = scanSamsungMarker(input)
+            scan.lastMarkerEnd?.let { scan.totalBytes - it }
         }
-        if (length == null || length <= 0L) return null
-
-        return context.contentResolver.openInputStream(uri)?.use { stream ->
-            val skipTarget = (length - maxBytes).coerceAtLeast(0L)
-            var skipped = 0L
-            while (skipped < skipTarget) {
-                val s = stream.skip(skipTarget - skipped)
-                if (s <= 0L) break
-                skipped += s
-            }
-            if (skipped < skipTarget) return@use null
-            stream.readBytes()
-        }
-    }
 
     /**
      * Attempts to find the Samsung MotionPhoto_Data marker inside the file
      * and returns the offset of the video data after the marker.
      */
-    private fun findSamsungMarkerOffset(bytes: ByteArray): Long? {
+    fun findSamsungMarkerOffset(bytes: ByteArray): Long? {
         val marker = SAMSUNG_MARKER
         val markerLen = marker.size
         if (bytes.size < markerLen + 4) return null
@@ -246,61 +222,200 @@ object MotionPhotoHelper {
     suspend fun extractVideo(
         context: Context,
         uri: Uri,
-        info: MotionPhotoInfo
+        info: MotionPhotoInfo,
+        outputDirectory: File = File(context.cacheDir, "frame_picker_sources"),
     ): File? = withContext(Dispatchers.IO) {
+        outputDirectory.mkdirs()
+        val partFile = File(outputDirectory, "${UUID.randomUUID()}.part")
+        val outputFile = File(outputDirectory, "${partFile.nameWithoutExtension}.mp4")
         try {
-            val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
-                ?: return@withContext null
-
-            var offset = info.videoOffset
-
-            // Sanity-check: if offset is bigger than file, try Samsung marker fallback
-            if (offset <= 0 || offset > bytes.size) {
-                offset = findSamsungMarkerOffset(bytes) ?: return@withContext null
-            }
-
-            val videoStart = (bytes.size - offset).toInt()
-            if (videoStart < 0 || videoStart >= bytes.size) {
-                printWarning("MotionPhoto: invalid video start $videoStart for file size ${bytes.size}")
-                return@withContext null
-            }
-
-            val videoBytes = bytes.copyOfRange(videoStart, bytes.size)
-
-            // Quick sanity: MP4 files start with 'ftyp' box (at byte 4)
-            if (videoBytes.size > 8) {
-                val ftyp = String(videoBytes, 4, 4, Charsets.US_ASCII)
-                if (ftyp != "ftyp") {
-                    printWarning("MotionPhoto: extracted data does not start with ftyp box (got '$ftyp'), trying Samsung marker fallback")
-                    // Fallback to Samsung marker
-                    val samsungOffset = findSamsungMarkerOffset(bytes)
-                    if (samsungOffset != null && samsungOffset != offset) {
-                        val samsungStart = (bytes.size - samsungOffset).toInt()
-                        if (samsungStart in 0 until bytes.size) {
-                            val samsungVideoBytes = bytes.copyOfRange(samsungStart, bytes.size)
-                            if (samsungVideoBytes.size > 8) {
-                                val samsungFtyp = String(samsungVideoBytes, 4, 4, Charsets.US_ASCII)
-                                if (samsungFtyp == "ftyp") {
-                                    val tmpFile = File(context.cacheDir, "motion_photo_${System.currentTimeMillis()}.mp4")
-                                    tmpFile.writeBytes(samsungVideoBytes)
-                                    printDebug("MotionPhoto: extracted ${samsungVideoBytes.size} bytes (Samsung fallback) to ${tmpFile.absolutePath}")
-                                    return@withContext tmpFile
-                                }
-                            }
-                        }
+            val fileSize = context.contentResolver.openFileDescriptor(uri, "r")?.use { it.statSize }
+                ?.takeIf { it > 0L }
+                ?: copySourceToSeekableFile(context, uri, outputDirectory)?.let { sourceCopy ->
+                    try {
+                        return@withContext extractVideoFromFile(sourceCopy, info, outputDirectory)
+                    } finally {
+                        sourceCopy.delete()
                     }
-                    // Still no luck, write what we have
                 }
-            }
+                ?: return@withContext null
+            val initialStart = videoStart(fileSize, info.videoOffset)
+            val resolvedStart = initialStart?.takeIf {
+                sourceHasFtyp(context, uri, it)
+            } ?: findSamsungVideoStart(context, uri, fileSize)
+                ?: return@withContext null
+            val byteCount = fileSize - resolvedStart
+            if (byteCount <= 8L) return@withContext null
 
-            val tmpFile = File(context.cacheDir, "motion_photo_${System.currentTimeMillis()}.mp4")
-            tmpFile.writeBytes(videoBytes)
-            printDebug("MotionPhoto: extracted ${videoBytes.size} bytes to ${tmpFile.absolutePath}")
-            tmpFile
+            context.contentResolver.openFileDescriptor(uri, "r")?.use { descriptor ->
+                FileInputStream(descriptor.fileDescriptor).channel.use { input ->
+                    FileOutputStream(partFile).channel.use { output ->
+                        input.position(resolvedStart)
+                        var copied = 0L
+                        while (copied < byteCount) {
+                            coroutineContext.ensureActive()
+                            val count = input.transferTo(input.position(), byteCount - copied, output)
+                            if (count <= 0L) break
+                            input.position(input.position() + count)
+                            copied += count
+                        }
+                        if (copied != byteCount) throw java.io.IOException("Incomplete Motion Photo extraction")
+                    }
+                }
+            } ?: return@withContext null
+            if (!partFile.renameTo(outputFile)) throw java.io.IOException("Unable to publish extracted video")
+            outputFile
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             printWarning("MotionPhoto: extraction failed: ${e.message}")
+            partFile.delete()
+            outputFile.delete()
             null
         }
+    }
+
+    suspend fun extractVideoFromFile(
+        sourceFile: File,
+        info: MotionPhotoInfo,
+        outputDirectory: File,
+    ): File? = withContext(Dispatchers.IO) {
+        outputDirectory.mkdirs()
+        val fileSize = sourceFile.length()
+        val initialStart = videoStart(fileSize, info.videoOffset)
+        val resolvedStart = initialStart?.takeIf { sourceHasFtyp(sourceFile, it) }
+            ?: findSamsungVideoStart(sourceFile)
+            ?: return@withContext null
+        val partFile = File(outputDirectory, "${UUID.randomUUID()}.part")
+        val outputFile = File(outputDirectory, "${partFile.nameWithoutExtension}.mp4")
+        try {
+            FileInputStream(sourceFile).channel.use { input ->
+                FileOutputStream(partFile).channel.use { output ->
+                    input.position(resolvedStart)
+                    val byteCount = fileSize - resolvedStart
+                    var copied = 0L
+                    while (copied < byteCount) {
+                        coroutineContext.ensureActive()
+                        val count = input.transferTo(input.position(), byteCount - copied, output)
+                        if (count <= 0L) break
+                        input.position(input.position() + count)
+                        copied += count
+                    }
+                    if (copied != byteCount) throw java.io.IOException("Incomplete Motion Photo extraction")
+                }
+            }
+            if (!partFile.renameTo(outputFile)) throw java.io.IOException("Unable to publish extracted video")
+            outputFile
+        } catch (e: Exception) {
+            partFile.delete()
+            outputFile.delete()
+            if (e is CancellationException) throw e
+            printWarning("MotionPhoto: file extraction failed: ${e.message}")
+            null
+        }
+    }
+
+    private fun copySourceToSeekableFile(context: Context, uri: Uri, outputDirectory: File): File? {
+        val partFile = File(outputDirectory, "${UUID.randomUUID()}.source.part")
+        val sourceFile = File(outputDirectory, "${partFile.nameWithoutExtension}.source")
+        return try {
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                FileOutputStream(partFile).use(input::copyTo)
+            } ?: return null
+            if (!partFile.renameTo(sourceFile)) throw java.io.IOException("Unable to publish source copy")
+            sourceFile
+        } catch (_: Exception) {
+            partFile.delete()
+            sourceFile.delete()
+            null
+        }
+    }
+
+    private fun sourceHasFtyp(context: Context, uri: Uri, start: Long): Boolean {
+        val header = ByteArray(12)
+        return try {
+            context.contentResolver.openFileDescriptor(uri, "r")?.use { descriptor ->
+                FileInputStream(descriptor.fileDescriptor).channel.use { channel ->
+                    channel.position(start)
+                    val read = channel.read(ByteBuffer.wrap(header))
+                    hasMp4Ftyp(header, read)
+                }
+            } ?: false
+        } catch (_: Exception) {
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                if (!input.skipFully(start)) return@use false
+                hasMp4Ftyp(header, input.read(header))
+            } ?: false
+        }
+    }
+
+    private fun sourceHasFtyp(sourceFile: File, start: Long): Boolean {
+        val header = ByteArray(12)
+        return try {
+            FileInputStream(sourceFile).channel.use { channel ->
+                channel.position(start)
+                hasMp4Ftyp(header, channel.read(ByteBuffer.wrap(header)))
+            }
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    private fun findSamsungVideoStart(context: Context, uri: Uri, fileSize: Long): Long? =
+        context.contentResolver.openInputStream(uri)?.use { input ->
+            scanSamsungMarker(input).lastMarkerEnd?.takeIf { sourceHasFtyp(context, uri, it) }
+        }?.takeIf { it in 0 until fileSize }
+
+    private fun findSamsungVideoStart(sourceFile: File): Long? =
+        sourceFile.inputStream().use { input ->
+            scanSamsungMarker(input).lastMarkerEnd?.takeIf { sourceHasFtyp(sourceFile, it) }
+        }
+
+    private data class SamsungMarkerScan(val totalBytes: Long, val lastMarkerEnd: Long?)
+
+    private fun scanSamsungMarker(input: InputStream): SamsungMarkerScan {
+        val marker = SAMSUNG_MARKER
+        val window = ByteArray(marker.size)
+        var total = 0L
+        var count = 0
+        var cursor = 0
+        var lastEnd: Long? = null
+        val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+        while (true) {
+            val read = input.read(buffer)
+            if (read < 0) break
+            for (bufferIndex in 0 until read) {
+                window[cursor] = buffer[bufferIndex]
+                cursor = (cursor + 1) % marker.size
+                count = (count + 1).coerceAtMost(marker.size)
+                total++
+                if (count == marker.size) {
+                    var matches = true
+                    for (index in marker.indices) {
+                        if (window[(cursor + index) % marker.size] != marker[index]) {
+                            matches = false
+                            break
+                        }
+                    }
+                    if (matches) lastEnd = total
+                }
+            }
+        }
+        return SamsungMarkerScan(total, lastEnd)
+    }
+
+    private fun InputStream.skipFully(byteCount: Long): Boolean {
+        var remaining = byteCount
+        while (remaining > 0L) {
+            val skipped = skip(remaining)
+            if (skipped > 0L) {
+                remaining -= skipped
+            } else if (read() >= 0) {
+                remaining--
+            } else {
+                return false
+            }
+        }
+        return true
     }
 
     /**
@@ -319,21 +434,32 @@ object MotionPhotoHelper {
             val durationUs = (retriever.extractMetadata(
                 MediaMetadataRetriever.METADATA_KEY_DURATION
             )?.toLongOrNull() ?: 0L) * 1000L // ms → µs
+            val width = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)
+                ?.toIntOrNull() ?: 1
+            val height = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)
+                ?.toIntOrNull() ?: 1
+            val scale = minOf(1f, 512f / maxOf(width, height))
+            val targetWidth = (width * scale).toInt().coerceAtLeast(1)
+            val targetHeight = (height * scale).toInt().coerceAtLeast(1)
 
             if (durationUs <= 0 || numFrames <= 0) return@withContext frames
 
             val intervalUs = durationUs / numFrames
             for (i in 0 until numFrames) {
+                coroutineContext.ensureActive()
                 val timeUs = i * intervalUs + intervalUs / 2
-                val bitmap = retriever.getFrameAtTime(
+                val bitmap = retriever.getScaledFrameAtTime(
                     timeUs,
-                    MediaMetadataRetriever.OPTION_CLOSEST_SYNC
+                    MediaMetadataRetriever.OPTION_CLOSEST,
+                    targetWidth,
+                    targetHeight,
                 )
                 if (bitmap != null) {
                     frames.add(bitmap)
                 }
             }
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             printWarning("MotionPhoto: frame extraction failed: ${e.message}")
         } finally {
             try { retriever.release() } catch (_: Exception) {}
@@ -359,6 +485,7 @@ object MotionPhotoHelper {
     ): Uri? = withContext(Dispatchers.IO) {
         val info = parseInfo(context, uri) ?: return@withContext null
         val tmpFile = extractVideo(context, uri, info) ?: return@withContext null
+        var insertedUri: Uri? = null
         try {
             val baseName = sourceLabel.substringBeforeLast('.', sourceLabel)
             val displayName = "${baseName}_motion.mp4"
@@ -380,6 +507,7 @@ object MotionPhotoHelper {
             }
 
             val insertUri = resolver.insert(collection, values) ?: return@withContext null
+            insertedUri = insertUri
 
             resolver.openOutputStream(insertUri)?.use { output ->
                 tmpFile.inputStream().use { input -> input.copyTo(output) }
@@ -391,12 +519,16 @@ object MotionPhotoHelper {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 values.clear()
                 values.put(MediaStore.MediaColumns.IS_PENDING, 0)
-                resolver.update(insertUri, values, null, null)
+                if (resolver.update(insertUri, values, null, null) <= 0) {
+                    throw java.io.IOException("Unable to publish extracted video")
+                }
             }
 
             printDebug("MotionPhoto: saved extracted video to $insertUri")
+            insertedUri = null
             insertUri
         } catch (e: Exception) {
+            insertedUri?.let { context.contentResolver.delete(it, null, null) }
             printWarning("MotionPhoto: saveVideoToGallery failed: ${e.message}")
             null
         } finally {

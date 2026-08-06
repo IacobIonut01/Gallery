@@ -684,6 +684,17 @@ object Settings {
             )
         }
 
+        private val FRAME_EXPORT_FORMAT = stringPreferencesKey("frame_export_format")
+
+        suspend fun getFrameExportFormat(context: Context): String =
+            context.activeDataStore.data.first()[FRAME_EXPORT_FORMAT] ?: "jpeg"
+
+        suspend fun setFrameExportFormat(context: Context, value: String) {
+            context.activeDataStore.edit { preferences ->
+                preferences[FRAME_EXPORT_FORMAT] = value
+            }
+        }
+
         private val OLD_NAVBAR = booleanPreferencesKey("old_navbar")
 
         @Composable

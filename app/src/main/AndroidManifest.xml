@@ -293,6 +293,13 @@
         </activity>
 
         <activity
+            android:name=".feature_node.presentation.frameextract.FramePickerActivity"
+            android:exported="false"
+            android:configChanges="orientation|keyboard|keyboardHidden|screenSize|screenLayout|smallestScreenSize|uiMode"
+            android:screenOrientation="fullSensor"
+            android:theme="@style/Theme.Gallery" />
+
+        <activity
             android:name=".feature_node.presentation.edit.EditActivity"
             android:configChanges="orientation|keyboard|keyboardHidden|screenSize|screenLayout|smallestScreenSize|uiMode"
             android:screenOrientation="fullUser"

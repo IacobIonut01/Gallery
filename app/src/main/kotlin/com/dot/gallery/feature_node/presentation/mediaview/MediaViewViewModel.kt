@@ -97,7 +97,6 @@ class MediaViewViewModel @Inject constructor(
             val result = repository.sanitizeMediaMetadata(media, mode)
             if (result is SanitizationResult.Success) {
                 cleanupMotionPhoto()
-                currentMotionMediaId = null
                 prepareMotionPhoto(media)
             }
             _metadataSanitizationState.value = MetadataSanitizationUiState.Complete(media.id, result)
@@ -127,7 +126,6 @@ class MediaViewViewModel @Inject constructor(
         val info: MotionPhotoInfo? = null,
         val videoFile: File? = null,
         val durationMs: Long = 0L,
-        val thumbnails: List<Bitmap> = emptyList(),
         val compositeFilmstrip: Bitmap? = null
     )
 
@@ -135,6 +133,7 @@ class MediaViewViewModel @Inject constructor(
     val motionPhotoExtraction: StateFlow<MotionPhotoExtraction> = _motionPhotoExtraction.asStateFlow()
 
     private var currentMotionMediaId: Long? = null
+    private var currentMotionMediaKey: String? = null
     private var extractionJob: Job? = null
 
     fun prepareMotionPhoto(media: Media?) {
@@ -142,7 +141,7 @@ class MediaViewViewModel @Inject constructor(
             cleanupMotionPhoto()
             return
         }
-        if (media.id == currentMotionMediaId) return
+        if (media.id == currentMotionMediaId && media.key == currentMotionMediaKey) return
 
         // Release any playing motion player before switching to a new media item,
         // otherwise the old player + progress loop keeps running and its surface
@@ -153,6 +152,8 @@ class MediaViewViewModel @Inject constructor(
         val oldFile = _motionPhotoExtraction.value.videoFile
 
         currentMotionMediaId = media.id
+        currentMotionMediaKey = media.key
+        val expectedMediaKey = media.key
         _motionPhotoExtraction.value = MotionPhotoExtraction()
 
         extractionJob = viewModelScope.launch(Dispatchers.IO) {
@@ -160,9 +161,14 @@ class MediaViewViewModel @Inject constructor(
 
             val uri: Uri = media.getUri()
             val info = MotionPhotoHelper.parseInfo(context, uri) ?: return@launch
+            if (currentMotionMediaKey != expectedMediaKey) return@launch
             _motionPhotoExtraction.value = MotionPhotoExtraction(info = info)
 
             val file = MotionPhotoHelper.extractVideo(context, uri, info) ?: return@launch
+            if (currentMotionMediaKey != expectedMediaKey) {
+                file.delete()
+                return@launch
+            }
 
             val duration = try {
                 MediaMetadataRetriever().use { mmr ->
@@ -172,15 +178,24 @@ class MediaViewViewModel @Inject constructor(
                 }
             } catch (_: Exception) { 0L }
 
+            if (currentMotionMediaKey != expectedMediaKey) {
+                file.delete()
+                return@launch
+            }
             _motionPhotoExtraction.value = MotionPhotoExtraction(
                 info = info, videoFile = file, durationMs = duration
             )
 
             val frames = MotionPhotoHelper.extractFrames(file, NUM_FILMSTRIP_FRAMES)
             val composite = stitchFrames(frames, FILMSTRIP_THUMB_HEIGHT)
+            if (currentMotionMediaKey != expectedMediaKey) {
+                composite?.recycle()
+                file.delete()
+                return@launch
+            }
             _motionPhotoExtraction.value = MotionPhotoExtraction(
                 info = info, videoFile = file, durationMs = duration,
-                thumbnails = frames, compositeFilmstrip = composite
+                compositeFilmstrip = composite
             )
         }
     }
@@ -191,6 +206,7 @@ class MediaViewViewModel @Inject constructor(
         _motionPhotoExtraction.value.videoFile?.delete()
         _motionPhotoExtraction.value = MotionPhotoExtraction()
         currentMotionMediaId = null
+        currentMotionMediaKey = null
     }
 
     // ======================== Motion Photo Playback ========================
@@ -315,6 +331,7 @@ class MediaViewViewModel @Inject constructor(
             canvas.drawBitmap(scaled[i], x, 0f, null)
             x += scaled[i].width
             if (scaled[i] !== frames[i]) scaled[i].recycle()
+            frames[i].recycle()
         }
         return composite
     }
