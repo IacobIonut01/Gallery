@@ -112,6 +112,24 @@ interface MetadataDao {
     @Query("SELECT * FROM media_metadata_core WHERE mediaId = :id")
     suspend fun getCoreMetadata(id: Long): MediaMetadataCore?
 
+    @Query(
+        """
+        SELECT EXISTS(SELECT 1 FROM media_metadata_core WHERE mediaId = :mediaId)
+           AND EXISTS(SELECT 1 FROM media_metadata_video WHERE mediaId = :mediaId)
+           AND EXISTS(SELECT 1 FROM media_metadata_flags WHERE mediaId = :mediaId)
+        """
+    )
+    suspend fun hasCompleteMetadata(mediaId: Long): Boolean
+
+    @Query(
+        """
+        SELECT core.mediaId FROM media_metadata_core AS core
+        INNER JOIN media_metadata_video AS video ON video.mediaId = core.mediaId
+        INNER JOIN media_metadata_flags AS flags ON flags.mediaId = core.mediaId
+        """
+    )
+    suspend fun getCompleteMetadataIds(): List<Long>
+
     @Query("UPDATE media_metadata_core SET imageDescription = :description WHERE mediaId = :mediaId")
     suspend fun updateImageDescription(mediaId: Long, description: String)
 

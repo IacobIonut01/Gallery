@@ -100,6 +100,42 @@ interface SmartScanDao {
     @Query(
         """
         UPDATE smart_scan_runs
+        SET status = 'queued', workId = :workId, leaseOwner = NULL, leaseExpiresAt = NULL,
+            updatedAt = :now
+        WHERE runId = :runId AND status IN ('queued', 'running')
+        """
+    )
+    suspend fun resetRunForRecovery(runId: String, workId: String, now: Long): Int
+
+    @Query(
+        """
+        UPDATE smart_scan_phases
+        SET status = 'queued', leaseOwner = NULL, leaseExpiresAt = NULL, updatedAt = :now
+        WHERE runId = :runId AND status = 'running'
+        """
+    )
+    suspend fun resetPhasesForRecovery(runId: String, now: Long): Int
+
+    @Query(
+        """
+        UPDATE media_feature_state
+        SET status = 'pending', leaseOwner = NULL, leaseExpiresAt = NULL, updatedAt = :now
+        WHERE runId = :runId AND status = 'processing'
+        """
+    )
+    suspend fun resetFeaturesForRecovery(runId: String, now: Long): Int
+
+    @Transaction
+    suspend fun prepareRunRecovery(runId: String, workId: String, now: Long): Boolean {
+        if (resetRunForRecovery(runId, workId, now) != 1) return false
+        resetPhasesForRecovery(runId, now)
+        resetFeaturesForRecovery(runId, now)
+        return true
+    }
+
+    @Query(
+        """
+        UPDATE smart_scan_runs
         SET currentPhase = :phase, sourceSnapshot = :sourceSnapshot, updatedAt = :now
         WHERE runId = :runId AND status = 'running' AND leaseOwner = :owner
         """
@@ -123,6 +159,9 @@ interface SmartScanDao {
 
     @Query("SELECT * FROM media_feature_state WHERE mediaId = :mediaId AND feature = :feature LIMIT 1")
     suspend fun getFeatureState(mediaId: Long, feature: MediaFeature): MediaFeatureStateEntity?
+
+    @Query("SELECT * FROM media_feature_state WHERE feature = :feature")
+    suspend fun getFeatureStates(feature: MediaFeature): List<MediaFeatureStateEntity>
 
     @Query("SELECT * FROM media_feature_state WHERE mediaId = :mediaId")
     fun observeFeatureStates(mediaId: Long): Flow<List<MediaFeatureStateEntity>>
@@ -170,8 +209,15 @@ interface SmartScanDao {
             )
             val activePhases = phases.map { it.copy(runId = active.runId) }
             insertPhasesIfAbsent(activePhases)
-            activePhases.forEach { requeueTerminalPhase(active.runId, it.phase, run.updatedAt) }
-            val workId = active.workId ?: run.workId?.also {
+            if (run.fullRefresh) {
+                activePhases.forEach { requeueTerminalPhase(active.runId, it.phase, run.updatedAt) }
+            }
+            val promotedWorkId = run.workId.takeIf {
+                run.userVisible && !active.userVisible && active.status == SmartScanStatus.QUEUED
+            }
+            val workId = promotedWorkId?.also {
+                attachWork(active.runId, it, run.updatedAt)
+            } ?: active.workId ?: run.workId?.also {
                 attachWork(active.runId, it, run.updatedAt)
             }
             return SmartScanScheduleResult(active.runId, created = false, workId = workId)
@@ -204,7 +250,9 @@ interface SmartScanDao {
         WHERE runId = :runId
           AND (
             status = 'queued'
-            OR (status = 'running' AND (leaseExpiresAt IS NULL OR leaseExpiresAt <= :now))
+            OR (status = 'running' AND (
+                leaseOwner = :owner OR leaseExpiresAt IS NULL OR leaseExpiresAt <= :now
+            ))
           )
         """
     )
@@ -241,7 +289,7 @@ interface SmartScanDao {
         """
         UPDATE smart_scan_phases
         SET status = 'running',
-            startedAt = COALESCE(startedAt, :now),
+            startedAt = :now,
             updatedAt = :now,
             leaseOwner = :owner,
             leaseExpiresAt = :leaseExpiresAt,
@@ -250,7 +298,9 @@ interface SmartScanDao {
         WHERE runId = :runId AND phase = :phase
           AND (
             status = 'queued'
-            OR (status = 'running' AND (leaseExpiresAt IS NULL OR leaseExpiresAt <= :now))
+            OR (status = 'running' AND (
+                leaseOwner = :owner OR leaseExpiresAt IS NULL OR leaseExpiresAt <= :now
+            ))
           )
         """
     )
@@ -373,6 +423,15 @@ interface SmartScanDao {
         """
     )
     suspend fun recoverExpiredFeatureLeases(now: Long): Int
+
+    @Query(
+        """
+        UPDATE media_feature_state
+        SET status = 'pending', leaseOwner = NULL, leaseExpiresAt = NULL, updatedAt = :now
+        WHERE runId = :runId AND status = 'processing' AND leaseOwner LIKE :ownerPrefix || ':%'
+        """
+    )
+    suspend fun releaseFeatureLeases(runId: String, ownerPrefix: String, now: Long): Int
 
     @Query(
         """
@@ -559,9 +618,19 @@ interface SmartScanDao {
     )
     suspend fun cancelPhases(runId: String, now: Long): Int
 
+    @Query(
+        """
+        UPDATE media_feature_state
+        SET status = 'pending', updatedAt = :now, leaseOwner = NULL, leaseExpiresAt = NULL, runId = NULL
+        WHERE runId = :runId AND status = 'processing'
+        """
+    )
+    suspend fun releaseRunFeatureLeases(runId: String, now: Long): Int
+
     @Transaction
     suspend fun cancelRun(runId: String, now: Long): SmartScanRunEntity? {
         val run = getRun(runId) ?: return null
+        releaseRunFeatureLeases(runId, now)
         finishRun(runId, SmartScanStatus.CANCELLED, now, "cancelled")
         cancelPhases(runId, now)
         return run

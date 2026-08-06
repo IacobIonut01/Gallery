@@ -31,6 +31,9 @@ interface CategoryDao {
     @Update
     suspend fun updateCategory(category: Category)
 
+    @Query("UPDATE categories SET embedding = :embedding WHERE id = :categoryId")
+    suspend fun updateCategoryEmbedding(categoryId: Long, embedding: FloatArray)
+
     @Delete
     suspend fun deleteCategory(category: Category)
 
@@ -92,6 +95,15 @@ interface CategoryDao {
 
     @Query("DELETE FROM media_category WHERE categoryId = :categoryId AND isManuallyAdded = 0")
     suspend fun removeAutomaticMediaFromCategory(categoryId: Long)
+
+    @Query("SELECT * FROM media_category WHERE categoryId = :categoryId AND isManuallyAdded = 0")
+    suspend fun getAutomaticMediaCategories(categoryId: Long): List<MediaCategory>
+
+    @Query("SELECT * FROM media_category WHERE isManuallyAdded = 0")
+    suspend fun getAllAutomaticMediaCategories(): List<MediaCategory>
+
+    @Query("UPDATE media_category SET resultRevision = :revision WHERE categoryId = :categoryId AND isManuallyAdded = 0")
+    suspend fun updateAutomaticResultRevision(categoryId: Long, revision: String): Int
 
     @Query("DELETE FROM media_category WHERE mediaId = :mediaId")
     suspend fun removeMediaFromAllCategories(mediaId: Long)

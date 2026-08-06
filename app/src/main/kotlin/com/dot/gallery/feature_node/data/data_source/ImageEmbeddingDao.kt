@@ -6,6 +6,13 @@ import androidx.room.Upsert
 import com.dot.gallery.feature_node.domain.model.ImageEmbedding
 import kotlinx.coroutines.flow.Flow
 
+data class ImageEmbeddingHeader(
+    val id: Long,
+    val date: Long,
+    val resultRevision: String,
+    val embeddingBytes: Int
+)
+
 @Dao
 interface ImageEmbeddingDao {
     @Upsert
@@ -16,6 +23,18 @@ interface ImageEmbeddingDao {
 
     @Query("SELECT * FROM image_embeddings")
     fun getRecords(): Flow<List<ImageEmbedding>>
+
+    @Query("SELECT id, date, resultRevision, length(embedding) AS embeddingBytes FROM image_embeddings")
+    suspend fun getHeaders(): List<ImageEmbeddingHeader>
+
+    @Query("SELECT id FROM image_embeddings")
+    suspend fun getIds(): List<Long>
+
+    @Query("SELECT COUNT(*) FROM image_embeddings")
+    suspend fun count(): Int
+
+    @Query("UPDATE image_embeddings SET resultRevision = :revision WHERE id = :id")
+    suspend fun updateResultRevision(id: Long, revision: String): Int
 
     @Query(
         """

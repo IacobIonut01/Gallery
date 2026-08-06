@@ -5,7 +5,13 @@
 
 package com.dot.gallery.cloud
 
+import com.dot.gallery.cloud.sync.backupDestinationConfigIds
+import com.dot.gallery.cloud.sync.isBackupRevisionCached
+import com.dot.gallery.cloud.sync.mapWorkerPool
 import com.dot.gallery.cloud.sync.runWorkerPool
+import com.dot.gallery.cloud.sync.shouldDeferChecksumCheck
+import com.dot.gallery.cloud.immich.data.dto.ImmichAssetDto
+import com.dot.gallery.cloud.immich.data.dto.ImmichBulkCheckResultItemDto
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -47,5 +53,102 @@ class CloudUploadWorkerPoolTest {
         }
 
         assertTrue(peak.get() <= 2)
+    }
+
+    @Test
+    fun deleteLocalCoverageIncludesEveryConfiguredDestination() {
+        val destinations = backupDestinationConfigIds(
+            albumId = 10L,
+            albumIdsByConfig = mapOf(
+                1L to setOf(10L, 20L),
+                2L to setOf(10L),
+                3L to setOf(30L)
+            )
+        )
+
+        assertEquals(setOf(1L, 2L), destinations)
+    }
+
+    @Test
+    fun immichAssetRevisionUsesModifiedTimeAndDeviceAssetId() {
+        val entity = ImmichAssetDto(
+            id = "remote-id",
+            deviceAssetId = "42",
+            originalFileName = "photo.jpg",
+            originalMimeType = "image/jpeg",
+            fileCreatedAt = "2026-01-01T00:00:00Z",
+            fileModifiedAt = "2026-01-02T03:04:05Z"
+        ).toCloudMediaEntity(serverConfigId = 7L, baseUrl = "https://immich.example")
+
+        assertEquals("42", entity.fileId)
+        assertEquals(1767323045000L, entity.lastSyncedAt)
+    }
+
+    @Test
+    fun immichPresenceRequiresNonTrashedDuplicate() {
+        val duplicate = ImmichBulkCheckResultItemDto(
+            action = "reject",
+            assetId = "asset-id",
+            reason = "duplicate",
+            isTrashed = false
+        )
+
+        assertTrue(duplicate.isSafeDuplicate())
+        assertTrue(!duplicate.copy(isTrashed = true).isSafeDuplicate())
+        assertTrue(!duplicate.copy(reason = "unsupported-format").isSafeDuplicate())
+        assertTrue(!duplicate.copy(assetId = null).isSafeDuplicate())
+    }
+
+    @Test
+    fun cachedRemoteRevisionSkipsPreviouslyUploadedImmichAsset() {
+        val remoteRevisions = setOf("42|photo.jpg|image/jpeg|1234|100")
+
+        assertTrue(
+            isBackupRevisionCached(
+                uri = "content://media/42",
+                mediaId = 42L,
+                label = "photo.jpg",
+                mimeType = "image/jpeg",
+                size = 1234L,
+                timestamp = 100L,
+                localRevisions = emptySet(),
+                remoteRevisions = remoteRevisions
+            )
+        )
+        assertTrue(
+            !isBackupRevisionCached(
+                uri = "content://media/42",
+                mediaId = 42L,
+                label = "photo.jpg",
+                mimeType = "image/jpeg",
+                size = 1234L,
+                timestamp = 101L,
+                localRevisions = emptySet(),
+                remoteRevisions = remoteRevisions
+            )
+        )
+    }
+
+    @Test
+    fun smallImmichQueueUsesFastStartChecksumPath() {
+        assertTrue(shouldDeferChecksumCheck(itemCount = 6, maxConcurrentUploads = 3))
+        assertTrue(!shouldDeferChecksumCheck(itemCount = 7, maxConcurrentUploads = 3))
+    }
+
+    @Test
+    fun mapsConcurrentlyWhilePreservingInputOrder() = runBlocking {
+        val active = AtomicInteger()
+        val peak = AtomicInteger()
+
+        val mapped = mapWorkerPool((0 until 6).toList(), maxConcurrency = 3) { item ->
+            val current = active.incrementAndGet()
+            peak.updateAndGet { previous -> maxOf(previous, current) }
+            delay((6 - item).toLong())
+            active.decrementAndGet()
+            item * 2
+        }
+
+        assertEquals(listOf(0, 2, 4, 6, 8, 10), mapped)
+        assertEquals(3, peak.get())
     }
 }

@@ -57,6 +57,8 @@ data class ImmichAssetDto(
             contentHash = checksum,
             thumbnailUrl = "$baseUrl/api/assets/$id/thumbnail",
             originalUrl = "$baseUrl/api/assets/$id/original",
+            lastSyncedAt = parseIsoTimestamp(fileModifiedAt ?: ""),
+            fileId = deviceAssetId,
             latitude = exifInfo?.latitude,
             longitude = exifInfo?.longitude,
             city = exifInfo?.city,
@@ -270,8 +272,15 @@ data class ImmichBulkUploadCheckResultDto(
 data class ImmichBulkCheckResultItemDto(
     val id: String = "",
     val action: String = "",
-    val assetId: String? = null
-)
+    val assetId: String? = null,
+    val reason: String? = null,
+    val isTrashed: Boolean? = null
+) {
+    fun isSafeDuplicate(): Boolean = action == "reject" &&
+        reason == "duplicate" &&
+        !assetId.isNullOrBlank() &&
+        isTrashed != true
+}
 
 data class ImmichMemoryDto(
     val id: String = "",

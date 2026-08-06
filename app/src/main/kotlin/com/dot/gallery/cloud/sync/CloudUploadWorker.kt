@@ -37,23 +37,28 @@ import com.dot.gallery.cloud.data.dao.CloudDeleteLocalPrefDao
 import com.dot.gallery.cloud.data.dao.CloudMediaDao
 import com.dot.gallery.cloud.data.dao.CloudServerConfigDao
 import com.dot.gallery.cloud.data.dao.CloudUploadPrefDao
+import com.dot.gallery.cloud.data.entity.CloudMediaEntity
 import com.dot.gallery.cloud.data.entity.CloudServerConfigEntity
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
+import com.dot.gallery.feature_node.domain.util.getUri
 import com.dot.gallery.feature_node.presentation.util.printDebug
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import com.dot.gallery.feature_node.domain.util.getUri
+import kotlinx.coroutines.withContext
 import androidx.work.workDataOf
 import java.security.MessageDigest
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.min
@@ -94,6 +99,11 @@ class CloudUploadWorker @AssistedInject constructor(
         val remoteId: String
     )
 
+    private data class UploadOutcome(
+        val result: kotlin.Result<CloudMediaEntity>? = null,
+        val alreadyPresent: Boolean = false
+    )
+
     override suspend fun doWork(): Result {
         printDebug("CloudUploadWorker: Starting upload check...")
         try {
@@ -124,7 +134,7 @@ class CloudUploadWorker @AssistedInject constructor(
             // Build the upload queue per account: each account uploads ONLY the
             // local albums that have been enabled for that account.
             val tasks = mutableListOf<UploadTask>()
-            val hashCache = mutableMapOf<String, String?>()
+            val hashCache = ConcurrentHashMap<String, String>()
 
             for (config in activeConfigs) {
                 // "Require charging" is a background-only constraint: a user-initiated "Upload now"
@@ -148,13 +158,18 @@ class CloudUploadWorker @AssistedInject constructor(
                 }
 
                 val accountLabel = config.displayName.ifBlank { config.providerType.displayName }
-                val cachedLocalRevisions = cloudMediaDao.getByServerConfig(config.id).first()
-                    .mapNotNull { entity ->
-                        entity.localCopyPath.takeIf { it.isNotBlank() }?.let {
-                            "$it|${entity.size}|${entity.timestamp / 1000L}"
-                        }
-                    }
+                val cachedLocalRevisions = cloudMediaDao.getLocalRevisions(config.id)
+                    .map { "${it.localCopyPath}|${it.size}|${it.timestamp / 1000L}" }
                     .toSet()
+                val cachedRemoteRevisions = if (syncProvider.requiresUploadChecksum) {
+                    cloudMediaDao.getRemoteRevisions(config.id)
+                        .map {
+                            "${it.fileId}|${it.label}|${it.mimeType}|${it.size}|${it.lastSyncedAt / 1000L}"
+                        }
+                        .toSet()
+                } else {
+                    emptySet()
+                }
 
                 for (pref in enabledPrefs) {
                     // Path-based stores (WebDAV/ownCloud/Nextcloud/SMB/NFS) mirror each
@@ -177,56 +192,64 @@ class CloudUploadWorker @AssistedInject constructor(
                         continue
                     }
 
-                    val candidates = albumMedia.filter { media ->
-                        "${media.getUri()}|${media.size}|${media.timestamp}" !in cachedLocalRevisions
+                    val candidates = albumMedia.filterNot { media ->
+                        isBackupRevisionCached(
+                            uri = media.getUri().toString(),
+                            mediaId = media.id,
+                            label = media.label,
+                            mimeType = media.mimeType,
+                            size = media.size,
+                            timestamp = media.timestamp,
+                            localRevisions = cachedLocalRevisions,
+                            remoteRevisions = cachedRemoteRevisions
+                        )
                     }
-                    val notPresent = candidates.filter { media ->
-                        !runCatching { syncProvider.remoteExists(media, albumTarget) }.getOrDefault(false)
-                    }
+                    val notPresent = candidates
                     if (notPresent.isEmpty()) continue
 
-                    if (!syncProvider.requiresUploadChecksum) {
-                        notPresent.forEach { media ->
-                            tasks.add(
-                                UploadTask(
-                                    media = media,
-                                    provider = syncProvider,
-                                    accountLabel = accountLabel,
-                                    configId = config.id,
-                                    albumLabel = pref.albumLabel,
-                                    checksum = null,
-                                    targetPath = albumTarget
-                                )
+                    fun queue(media: Media, checksum: String?) {
+                        tasks.add(
+                            UploadTask(
+                                media = media,
+                                provider = syncProvider,
+                                accountLabel = accountLabel,
+                                configId = config.id,
+                                albumLabel = pref.albumLabel,
+                                checksum = checksum,
+                                targetPath = albumTarget
                             )
-                        }
+                        )
+                    }
+
+                    if (!syncProvider.requiresUploadChecksum || shouldDeferChecksumCheck(
+                            itemCount = notPresent.size,
+                            maxConcurrentUploads = syncProvider.maxConcurrentUploads
+                        )
+                    ) {
+                        notPresent.forEach { queue(it, null) }
                         continue
                     }
 
                     notPresent.chunked(BULK_CHECK_SIZE).forEach chunkLoop@ { chunk ->
-                        val mediaWithHashes = chunk.mapNotNull { media ->
-                            val hash = cachedSha1(media, hashCache) ?: return@mapNotNull null
-                            media to hash
+                        val hashed = mapWorkerPool(
+                            items = chunk,
+                            maxConcurrency = syncProvider.maxConcurrentUploads
+                        ) { media ->
+                            media to cachedSha1(media, hashCache)
+                        }
+                        hashed.filter { it.second == null }.forEach { queue(it.first, null) }
+                        val mediaWithHashes = hashed.mapNotNull { (media, hash) ->
+                            hash?.let { media to it }
                         }
                         if (mediaWithHashes.isEmpty()) return@chunkLoop
                         val alreadyUploaded = syncProvider.bulkUploadCheck(mediaWithHashes.map { it.second })
                             .getOrElse { error ->
                                 printDebug("CloudUploadWorker: Bulk check failed for $accountLabel: ${error.message}")
+                                mediaWithHashes.forEach { queue(it.first, null) }
                                 return@chunkLoop
                             }
                         mediaWithHashes.forEachIndexed { idx, (media, hash) ->
-                            if (alreadyUploaded[idx.toString()] != true) {
-                                tasks.add(
-                                    UploadTask(
-                                        media = media,
-                                        provider = syncProvider,
-                                        accountLabel = accountLabel,
-                                        configId = config.id,
-                                        albumLabel = pref.albumLabel,
-                                        checksum = hash,
-                                        targetPath = albumTarget
-                                    )
-                                )
-                            }
+                            if (alreadyUploaded[idx.toString()] != true) queue(media, hash)
                         }
                     }
                 }
@@ -257,61 +280,65 @@ class CloudUploadWorker @AssistedInject constructor(
             }
 
             val progressMutex = Mutex()
-            for (providerTasks in tasks.groupBy { it.provider }.values) {
-                runWorkerPool(
-                    items = providerTasks,
-                    maxConcurrency = providerTasks.first().provider.maxConcurrentUploads
-                ) { task ->
-                    if (isStopped) return@runWorkerPool
-                    val uploadResult = try {
-                        task.checksum?.let {
-                            task.provider.uploadAsset(task.media, task.targetPath, it)
-                        } ?: task.provider.uploadAsset(task.media, task.targetPath)
-                    } catch (e: CancellationException) {
-                        throw e
-                    } catch (e: Exception) {
-                        kotlin.Result.failure(e)
-                    }
-                    progressMutex.withLock {
-                        uploadResult.onSuccess { entity ->
-                            completedItems++
-                            completedFiles.add(task.media.label)
-                            if (entity.remoteId.isNotBlank()) {
-                                uploadedAssets.add(
-                                    UploadedAsset(task.configId, task.albumLabel, entity.remoteId)
-                                )
+            coroutineScope {
+                tasks.groupBy { it.provider }.values.map { providerTasks ->
+                    launch {
+                        val configId = providerTasks.first().configId
+                        accountUploadMutexes.computeIfAbsent(configId) { Mutex() }.withLock {
+                            runWorkerPool(
+                                items = providerTasks,
+                                maxConcurrency = providerTasks.first().provider.maxConcurrentUploads
+                            ) { task ->
+                                if (isStopped) return@runWorkerPool
+                                val outcome = executeUpload(task, hashCache)
+                                progressMutex.withLock {
+                                    if (outcome.alreadyPresent) {
+                                        completedItems++
+                                        completedFiles.add(task.media.label)
+                                        printDebug("CloudUploadWorker: [${task.accountLabel}] already backed up ${task.media.label}")
+                                    }
+                                    outcome.result?.onSuccess { entity ->
+                                        completedItems++
+                                        completedFiles.add(task.media.label)
+                                        if (entity.remoteId.isNotBlank()) {
+                                            uploadedAssets.add(
+                                                UploadedAsset(task.configId, task.albumLabel, entity.remoteId)
+                                            )
+                                        }
+                                        printDebug("CloudUploadWorker: [${task.accountLabel}] uploaded ${task.media.label}")
+                                    }?.onFailure { e ->
+                                        failedItems++
+                                        failedFiles.add(task.media.label)
+                                        printDebug("CloudUploadWorker: [${task.accountLabel}] upload failed for ${task.media.label}: ${e.message}")
+                                    }
+                                    setProgress(workDataOf(
+                                        KEY_TOTAL_ITEMS to totalItems,
+                                        KEY_COMPLETED_ITEMS to completedItems,
+                                        KEY_FAILED_ITEMS to failedItems,
+                                        KEY_CURRENT_FILE to task.media.label,
+                                        KEY_CURRENT_ACCOUNT to task.accountLabel,
+                                        KEY_COMPLETED_FILES to completedFiles.takeLast(MAX_TRACKED_FILES).toTypedArray(),
+                                        KEY_FAILED_FILES to failedFiles.takeLast(MAX_TRACKED_FILES).toTypedArray()
+                                    ))
+                                    if (showTotalProgress) {
+                                        runCatching {
+                                            setForeground(
+                                                progressForegroundInfo(
+                                                    completedItems + failedItems,
+                                                    totalItems,
+                                                    task.media.label,
+                                                    showDetailProgress
+                                                )
+                                            )
+                                        }
+                                    }
+                                }
                             }
-                            printDebug("CloudUploadWorker: [${task.accountLabel}] uploaded ${task.media.label}")
-                        }.onFailure { e ->
-                            failedItems++
-                            failedFiles.add(task.media.label)
-                            printDebug("CloudUploadWorker: [${task.accountLabel}] upload failed for ${task.media.label}: ${e.message}")
-                        }
-                        setProgress(workDataOf(
-                            KEY_TOTAL_ITEMS to totalItems,
-                            KEY_COMPLETED_ITEMS to completedItems,
-                            KEY_FAILED_ITEMS to failedItems,
-                            KEY_CURRENT_FILE to task.media.label,
-                            KEY_CURRENT_ACCOUNT to task.accountLabel,
-                            KEY_COMPLETED_FILES to completedFiles.takeLast(MAX_TRACKED_FILES).toTypedArray(),
-                            KEY_FAILED_FILES to failedFiles.takeLast(MAX_TRACKED_FILES).toTypedArray()
-                        ))
-                        if (showTotalProgress) {
-                            runCatching {
-                                setForeground(
-                                    progressForegroundInfo(
-                                        completedItems + failedItems,
-                                        totalItems,
-                                        task.media.label,
-                                        showDetailProgress
-                                    )
-                                )
-                            }
                         }
                     }
-                }
-                if (isStopped) return Result.retry()
+                }.joinAll()
             }
+            if (isStopped) return Result.retry()
 
             setProgress(workDataOf(
                 KEY_TOTAL_ITEMS to totalItems,
@@ -334,10 +361,12 @@ class CloudUploadWorker @AssistedInject constructor(
             // Gated local deletion: delete-local is a GLOBAL per-album setting, and an asset is
             // removed ONLY once it's confirmed present on EVERY cloud that album backs up to.
             // This runs after all uploads so partial fan-out never causes data loss.
-            runDeleteLocalPass(activeConfigs)
+            runDeleteLocalPass()
 
             printDebug("CloudUploadWorker: Upload check complete")
-            return Result.success()
+            return if (failedItems > 0) Result.retry() else Result.success()
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             printDebug("CloudUploadWorker: Failed: ${e.message}")
             return Result.retry()
@@ -350,15 +379,17 @@ class CloudUploadWorker @AssistedInject constructor(
      * its coverage check fails, the album is skipped entirely so a partially-backed-up asset is
      * never deleted.
      */
-    private suspend fun runDeleteLocalPass(activeConfigs: List<CloudServerConfigEntity>) {
+    private suspend fun runDeleteLocalPass() {
         try {
             val deleteAlbums = deleteLocalPrefDao.getEnabledAlbumIds().toSet()
             if (deleteAlbums.isEmpty()) return
-            val enabledByConfig = activeConfigs.associateWith { uploadPrefDao.getEnabledByConfigList(it.id) }
+            val allConfigs = configDao.getAll().first()
+            val albumIdsByConfig = allConfigs.associate { config ->
+                config.id to uploadPrefDao.getEnabledByConfigList(config.id).map { it.albumId }.toSet()
+            }
             for (albumId in deleteAlbums) {
-                val destConfigs = activeConfigs.filter { cfg ->
-                    enabledByConfig[cfg]?.any { it.albumId == albumId } == true
-                }
+                val destinationIds = backupDestinationConfigIds(albumId, albumIdsByConfig)
+                val destConfigs = allConfigs.filter { it.id in destinationIds }
                 if (destConfigs.isEmpty()) continue
                 val destProviders = destConfigs.mapNotNull { registry.getByConfigId(it.id) as? SyncCapableProvider }
                 if (destProviders.size != destConfigs.size) {
@@ -390,6 +421,8 @@ class CloudUploadWorker @AssistedInject constructor(
                     }
                 }
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             printDebug("CloudUploadWorker: delete-local pass failed: ${e.message}")
         }
@@ -439,6 +472,8 @@ class CloudUploadWorker @AssistedInject constructor(
                         }
                 }
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             printDebug("CloudUploadWorker: album-sync pass failed: ${e.message}")
         }
@@ -514,25 +549,61 @@ class CloudUploadWorker @AssistedInject constructor(
         }
     }
 
-    private fun cachedSha1(media: Media, cache: MutableMap<String, String?>): String? {
-        val key = "${media.getUri()}|${media.size}|${media.timestamp}"
-        if (cache.containsKey(key)) return cache[key]
-        return computeSha1(media).also { cache[key] = it }
+    private suspend fun executeUpload(
+        task: UploadTask,
+        hashCache: ConcurrentHashMap<String, String>
+    ): UploadOutcome {
+        return try {
+            if (task.provider.remoteExists(task.media, task.targetPath)) {
+                return UploadOutcome(alreadyPresent = true)
+            }
+            val checksum = task.checksum ?: if (task.provider.requiresUploadChecksum) {
+                cachedSha1(task.media, hashCache)
+                    ?: return UploadOutcome(kotlin.Result.failure(Exception("Could not read media for checksum")))
+            } else {
+                null
+            }
+            if (task.provider.requiresUploadChecksum && task.checksum == null) {
+                val requiredChecksum = checksum
+                    ?: return UploadOutcome(kotlin.Result.failure(Exception("Checksum is required")))
+                val alreadyPresent = task.provider.bulkUploadCheck(listOf(requiredChecksum))
+                    .getOrElse { return UploadOutcome(kotlin.Result.failure(it)) }["0"] == true
+                if (alreadyPresent) return UploadOutcome(alreadyPresent = true)
+            }
+            val result = checksum?.let {
+                task.provider.uploadAsset(task.media, task.targetPath, it)
+            } ?: task.provider.uploadAsset(task.media, task.targetPath)
+            UploadOutcome(result = result)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            UploadOutcome(kotlin.Result.failure(e))
+        }
     }
 
-    private fun computeSha1(media: Media): String? {
-        return try {
+    private suspend fun cachedSha1(media: Media, cache: ConcurrentHashMap<String, String>): String? {
+        val key = "${media.getUri()}|${media.size}|${media.timestamp}"
+        cache[key]?.let { return it.takeUnless { value -> value == HASH_FAILED } }
+        val computed = computeSha1(media) ?: HASH_FAILED
+        return (cache.putIfAbsent(key, computed) ?: computed).takeUnless { it == HASH_FAILED }
+    }
+
+    private suspend fun computeSha1(media: Media): String? = withContext(Dispatchers.IO) {
+        try {
             val uri = media.getUri()
             applicationContext.contentResolver.openInputStream(uri)?.use { input ->
                 val digest = MessageDigest.getInstance("SHA-1")
                 val buffer = ByteArray(HASH_BUFFER_SIZE)
                 while (true) {
+                    currentCoroutineContext().ensureActive()
                     val read = input.read(buffer)
                     if (read == -1) break
                     digest.update(buffer, 0, read)
                 }
                 digest.digest().joinToString("") { "%02x".format(it) }
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             null
         }
@@ -561,6 +632,7 @@ class CloudUploadWorker @AssistedInject constructor(
         const val TAG_BACKUP = "cloud_upload_backup"
         private const val MAX_TRACKED_FILES = 50
         private const val HASH_BUFFER_SIZE = 64 * 1024
+        private const val HASH_FAILED = ""
         private const val BULK_CHECK_SIZE = 500
 
         // Backup notification channels + ids.
@@ -568,6 +640,7 @@ class CloudUploadWorker @AssistedInject constructor(
         private const val CHANNEL_STATUS = "cloud_backup_status"
         private const val NOTIFICATION_ID_PROGRESS = 91001
         private const val NOTIFICATION_ID_STATUS = 91002
+        private val accountUploadMutexes = ConcurrentHashMap<Long, Mutex>()
 
         fun schedule(
             workManager: WorkManager,
@@ -627,6 +700,26 @@ class CloudUploadWorker @AssistedInject constructor(
     }
 }
 
+internal fun backupDestinationConfigIds(
+    albumId: Long,
+    albumIdsByConfig: Map<Long, Set<Long>>
+): Set<Long> = albumIdsByConfig.filterValues { albumId in it }.keys
+
+internal fun isBackupRevisionCached(
+    uri: String,
+    mediaId: Long,
+    label: String,
+    mimeType: String,
+    size: Long,
+    timestamp: Long,
+    localRevisions: Set<String>,
+    remoteRevisions: Set<String>
+): Boolean = "$uri|$size|$timestamp" in localRevisions ||
+    "$mediaId|$label|$mimeType|$size|$timestamp" in remoteRevisions
+
+internal fun shouldDeferChecksumCheck(itemCount: Int, maxConcurrentUploads: Int): Boolean =
+    itemCount <= maxConcurrentUploads.coerceAtLeast(1) * 2
+
 internal suspend fun <T> runWorkerPool(
     items: List<T>,
     maxConcurrency: Int,
@@ -644,4 +737,17 @@ internal suspend fun <T> runWorkerPool(
             }
         }
     }.joinAll()
+}
+
+internal suspend fun <T, R> mapWorkerPool(
+    items: List<T>,
+    maxConcurrency: Int,
+    transform: suspend (T) -> R
+): List<R> {
+    val results = arrayOfNulls<Any?>(items.size)
+    runWorkerPool(items.indices.toList(), maxConcurrency) { index ->
+        results[index] = transform(items[index])
+    }
+    @Suppress("UNCHECKED_CAST")
+    return results.map { it as R }
 }

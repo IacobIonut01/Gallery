@@ -9,6 +9,8 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.dot.gallery.cloud.core.ProviderType
 import com.dot.gallery.cloud.core.cloudMediaId
+import com.dot.gallery.feature_node.domain.util.FloatVectorCodec
+import kotlinx.serialization.json.Json
 
 /**
  * Adds durable smart-scan orchestration state and a single account-safe media id namespace.
@@ -176,4 +178,205 @@ private fun backfillGlobalMediaIds(db: SupportSQLiteDatabase) {
             arrayOf<Any>(globalMediaId, key.remoteId, key.providerType.name, key.serverConfigId)
         )
     }
+}
+
+val MIGRATION_42_43 = object : Migration(42, 43) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        migrateImageEmbeddings(db)
+        migrateCategoryEmbeddings(db)
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `face_clusters` (
+                `personId` TEXT NOT NULL,
+                `centroid` BLOB NOT NULL,
+                `faceCount` INTEGER NOT NULL,
+                `updatedAt` INTEGER NOT NULL,
+                PRIMARY KEY(`personId`),
+                FOREIGN KEY(`personId`) REFERENCES `people`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE
+            )
+            """.trimIndent()
+        )
+        backfillFaceClusters(db)
+    }
+}
+
+private fun migrateImageEmbeddings(db: SupportSQLiteDatabase) {
+    db.execSQL(
+        """
+        CREATE TABLE `image_embeddings_43` (
+            `id` INTEGER NOT NULL,
+            `date` INTEGER NOT NULL,
+            `embedding` BLOB NOT NULL,
+            `resultRevision` TEXT NOT NULL DEFAULT '',
+            PRIMARY KEY(`id`)
+        )
+        """.trimIndent()
+    )
+    val invalidIds = mutableListOf<Long>()
+    val insert = db.compileStatement(
+        "INSERT INTO `image_embeddings_43` (`id`, `date`, `embedding`, `resultRevision`) VALUES (?, ?, ?, ?)"
+    )
+    try {
+        db.query("SELECT `id`, `date`, `embedding`, `resultRevision` FROM `image_embeddings`").use { cursor ->
+            while (cursor.moveToNext()) {
+                val embedding = decodeLegacyVector(cursor.getString(2), expectedSize = 512)
+                if (embedding == null) {
+                    invalidIds += cursor.getLong(0)
+                    continue
+                }
+                insert.clearBindings()
+                insert.bindLong(1, cursor.getLong(0))
+                insert.bindLong(2, cursor.getLong(1))
+                insert.bindBlob(3, FloatVectorCodec.encode(embedding))
+                insert.bindString(4, cursor.getString(3))
+                insert.executeInsert()
+            }
+        }
+    } finally {
+        insert.close()
+    }
+    db.execSQL("DROP TABLE `image_embeddings`")
+    db.execSQL("ALTER TABLE `image_embeddings_43` RENAME TO `image_embeddings`")
+    invalidIds.forEach { mediaId ->
+        db.execSQL(
+            """
+            UPDATE `media_feature_state`
+            SET `status` = 'pending', `resultRevision` = '', `nextRetryAt` = NULL,
+                `leaseOwner` = NULL, `leaseExpiresAt` = NULL, `runId` = NULL,
+                `lastErrorCode` = 'invalid_legacy_embedding'
+            WHERE `mediaId` = ? AND `feature` = 'search_embedding'
+            """.trimIndent(),
+            arrayOf<Any>(mediaId)
+        )
+    }
+}
+
+private fun migrateCategoryEmbeddings(db: SupportSQLiteDatabase) {
+    db.execSQL(
+        """
+        CREATE TABLE `media_category_43_backup` AS
+        SELECT `mediaId`, `categoryId`, `similarityScore`, `addedAt`, `isManuallyAdded`, `resultRevision`
+        FROM `media_category`
+        """.trimIndent()
+    )
+    db.execSQL("DROP TABLE `media_category`")
+    db.execSQL(
+        """
+        CREATE TABLE `categories_43` (
+            `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            `name` TEXT NOT NULL,
+            `searchTerms` TEXT NOT NULL,
+            `embedding` BLOB,
+            `referenceImageIds` TEXT NOT NULL DEFAULT '[]',
+            `threshold` REAL NOT NULL,
+            `isUserCreated` INTEGER NOT NULL,
+            `isPinned` INTEGER NOT NULL,
+            `createdAt` INTEGER NOT NULL,
+            `updatedAt` INTEGER NOT NULL
+        )
+        """.trimIndent()
+    )
+    db.query(
+        """
+        SELECT `id`, `name`, `searchTerms`, `embedding`, `referenceImageIds`, `threshold`,
+               `isUserCreated`, `isPinned`, `createdAt`, `updatedAt`
+        FROM `categories`
+        """.trimIndent()
+    ).use { cursor ->
+        while (cursor.moveToNext()) {
+            val embedding = if (cursor.isNull(3)) null else decodeLegacyVector(cursor.getString(3), expectedSize = 512)
+            db.execSQL(
+                """
+                INSERT INTO `categories_43` (
+                    `id`, `name`, `searchTerms`, `embedding`, `referenceImageIds`, `threshold`,
+                    `isUserCreated`, `isPinned`, `createdAt`, `updatedAt`
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """.trimIndent(),
+                arrayOf(
+                    cursor.getLong(0), cursor.getString(1), cursor.getString(2),
+                    embedding?.let(FloatVectorCodec::encode), cursor.getString(4), cursor.getDouble(5),
+                    cursor.getInt(6), cursor.getInt(7), cursor.getLong(8), cursor.getLong(9)
+                )
+            )
+        }
+    }
+    db.execSQL("DROP TABLE `categories`")
+    db.execSQL("ALTER TABLE `categories_43` RENAME TO `categories`")
+    db.execSQL(
+        """
+        CREATE TABLE `media_category` (
+            `mediaId` INTEGER NOT NULL,
+            `categoryId` INTEGER NOT NULL,
+            `similarityScore` REAL NOT NULL,
+            `addedAt` INTEGER NOT NULL,
+            `isManuallyAdded` INTEGER NOT NULL,
+            `resultRevision` TEXT NOT NULL DEFAULT '',
+            PRIMARY KEY(`mediaId`, `categoryId`),
+            FOREIGN KEY(`categoryId`) REFERENCES `categories`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE
+        )
+        """.trimIndent()
+    )
+    db.execSQL(
+        """
+        INSERT INTO `media_category` (`mediaId`, `categoryId`, `similarityScore`, `addedAt`, `isManuallyAdded`, `resultRevision`)
+        SELECT `mediaId`, `categoryId`, `similarityScore`, `addedAt`, `isManuallyAdded`, `resultRevision`
+        FROM `media_category_43_backup`
+        """.trimIndent()
+    )
+    db.execSQL("DROP TABLE `media_category_43_backup`")
+    db.execSQL("CREATE INDEX `index_media_category_categoryId` ON `media_category` (`categoryId`)")
+    db.execSQL("CREATE INDEX `index_media_category_mediaId` ON `media_category` (`mediaId`)")
+    db.execSQL("CREATE INDEX `index_media_category_similarityScore` ON `media_category` (`similarityScore`)")
+}
+
+private fun backfillFaceClusters(db: SupportSQLiteDatabase) {
+    var personId: String? = null
+    var sum = FloatArray(0)
+    var count = 0
+    var updatedAt = 0L
+
+    fun persist() {
+        val id = personId ?: return
+        if (count <= 0) return
+        val centroid = FloatArray(sum.size) { sum[it] / count }
+        db.execSQL(
+            "INSERT OR REPLACE INTO `face_clusters` (`personId`, `centroid`, `faceCount`, `updatedAt`) VALUES (?, ?, ?, ?)",
+            arrayOf<Any>(id, FloatVectorCodec.encode(centroid), count, updatedAt)
+        )
+    }
+
+    db.query(
+        """
+        SELECT faces.`personId`, faces.`embedding`, people.`lastUpdated`
+        FROM `detected_faces` AS faces
+        INNER JOIN `people` AS people ON people.`id` = faces.`personId`
+        WHERE faces.`personId` IS NOT NULL AND faces.`embedding` IS NOT NULL
+        ORDER BY faces.`personId`
+        """.trimIndent()
+    ).use { cursor ->
+        while (cursor.moveToNext()) {
+            val currentId = cursor.getString(0)
+            val values = runCatching { FloatVectorCodec.decode(cursor.getBlob(1)) }.getOrNull()
+                ?.takeIf { it.size == 512 && it.all(Float::isFinite) } ?: continue
+            if (personId != currentId) {
+                persist()
+                personId = currentId
+                sum = FloatArray(values.size)
+                count = 0
+                updatedAt = cursor.getLong(2)
+            }
+            values.indices.forEach { sum[it] += values[it] }
+            count++
+        }
+    }
+    persist()
+}
+
+private fun decodeLegacyVector(value: String, expectedSize: Int): FloatArray? = runCatching {
+    Json.decodeFromString<FloatArray>(value)
+}.getOrNull()?.takeIf {
+    if (it.size != expectedSize || it.any { value -> !value.isFinite() }) return@takeIf false
+    var normSquared = 0.0
+    it.forEach { value -> normSquared += value * value }
+    normSquared in 0.9..1.1
 }

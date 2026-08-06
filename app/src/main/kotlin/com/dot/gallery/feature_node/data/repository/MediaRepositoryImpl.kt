@@ -115,6 +115,12 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.File
 
+internal fun shouldUsePerFileMetadataIsolation(mode: String, bulk: Boolean): Boolean = when (mode) {
+    Settings.Security.METADATA_ISOLATION_PER_FILE -> true
+    Settings.Security.METADATA_ISOLATION_HYBRID -> !bulk
+    else -> false
+}
+
 class MediaRepositoryImpl(
     private val context: Context,
     private val workManager: WorkManager,
@@ -132,10 +138,10 @@ class MediaRepositoryImpl(
      * Whether on-demand metadata operations should use per-file isolation.
      * This is true for both hybrid and per-file modes.
      */
-    private suspend fun shouldUsePerFileIsolation(): Boolean {
+    private suspend fun shouldUsePerFileIsolation(bulk: Boolean = false): Boolean {
         val mode = Settings.Security.getMetadataIsolationMode(context)
             .firstOrNull() ?: Settings.Security.METADATA_ISOLATION_SHARED
-        return mode != Settings.Security.METADATA_ISOLATION_SHARED
+        return shouldUsePerFileMetadataIsolation(mode, bulk)
     }
 
     private var updateDatabaseMutex = Mutex()
@@ -1128,7 +1134,7 @@ class MediaRepositoryImpl(
             isolatedParser = isolatedParser,
             geocoder = geocoder,
             media = media,
-            usePerFileIsolation = bulk || shouldUsePerFileIsolation(),
+            usePerFileIsolation = shouldUsePerFileIsolation(bulk),
             policy = if (bulk) MetadataParsingPolicy.BULK_ISOLATED_ONLY else MetadataParsingPolicy.ON_DEMAND_COMPATIBLE
         )
         if (metadata != null) {

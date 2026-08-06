@@ -91,6 +91,7 @@ import com.dot.gallery.core.navigate
 import com.dot.gallery.core.navigateUp
 import com.dot.gallery.core.presentation.components.EmptyMedia
 import com.dot.gallery.core.presentation.components.SelectionSheet
+import com.dot.gallery.feature_node.data.data_source.SmartScanStatus
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaItem
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
@@ -369,68 +370,17 @@ fun SearchScreen(
                     LazyColumn(
                         verticalArrangement = Arrangement.spacedBy(1.dp)
                     ) {
+                        if (searchIndexerState.isIndexing) {
+                            item(key = "search_index_status") {
+                                SearchIndexStatusCard(
+                                    state = searchIndexerState,
+                                    modifier = Modifier.animateItem()
+                                )
+                            }
+                        }
                         if (tipResults.isNotEmpty()) {
                             item(key = "help_tips") { helpTipsContent() }
                         }
-                        if (searchIndexerState.isIndexing)
-                            item {
-                                ListItem(
-                                    modifier = Modifier
-                                        .animateItem()
-                                        .padding(16.dp)
-                                        .clip(RoundedCornerShape(16.dp)),
-                                    leadingContent = {
-                                        Icon(
-                                            imageVector = Icons.Outlined.ImageSearch,
-                                            contentDescription = "Search Indexer",
-                                            tint = MaterialTheme.colorScheme.onPrimary
-                                        )
-                                    },
-                                    headlineContent = {
-                                        Text(
-                                            text = "Search function limited"
-                                        )
-                                    },
-                                    supportingContent = {
-                                        Column(
-                                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                                            modifier = Modifier.padding(bottom = 8.dp)
-                                        ) {
-                                            Text(
-                                                text = "Search indexer is running. Results may not be accurate."
-                                            )
-                                            if (searchIndexerState.progress == 0f) {
-                                                LinearProgressIndicator(
-                                                    color = MaterialTheme.colorScheme.onPrimary,
-                                                    trackColor = MaterialTheme.colorScheme.primaryContainer.copy(
-                                                        alpha = 0.5f
-                                                    ),
-                                                    gapSize = 0.dp,
-                                                    strokeCap = StrokeCap.Round
-                                                )
-                                            } else {
-                                                LinearProgressIndicator(
-                                                    progress = { searchIndexerState.progress / 100f },
-                                                    color = MaterialTheme.colorScheme.onPrimary,
-                                                    trackColor = MaterialTheme.colorScheme.primaryContainer.copy(
-                                                        alpha = 0.5f
-                                                    ),
-                                                    drawStopIndicator = {},
-                                                    gapSize = 0.dp,
-                                                    strokeCap = StrokeCap.Round
-                                                )
-                                            }
-                                        }
-                                    },
-                                    colors = ListItemDefaults.colors(
-                                        containerColor = MaterialTheme.colorScheme.primary,
-                                        headlineColor = MaterialTheme.colorScheme.onPrimary,
-                                        supportingColor = MaterialTheme.colorScheme.onPrimary.copy(
-                                            alpha = 0.7f
-                                        )
-                                    )
-                                )
-                            }
                         // History and Suggestions
                         SettingsOptionLayout(
                             optionList = historyItems,
@@ -573,21 +523,30 @@ fun SearchScreen(
                     enter = enterAnimation,
                     exit = exitAnimation
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .animateContentSize()
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        LoadingIndicator(
-                            modifier = Modifier.size(128.dp),
-                        )
-                        Icon(
-                            imageVector = Icons.Outlined.Search,
-                            contentDescription = stringResource(id = R.string.search_images_videos),
-                            tint = MaterialTheme.colorScheme.onPrimary
-                        )
+                    LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                        if (searchIndexerState.isIndexing) {
+                            item(key = "loading_search_index_status") {
+                                SearchIndexStatusCard(searchIndexerState)
+                            }
+                        }
+                        item(key = "search_loading") {
+                            Box(
+                                modifier = Modifier
+                                    .animateContentSize()
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                LoadingIndicator(
+                                    modifier = Modifier.size(128.dp),
+                                )
+                                Icon(
+                                    imageVector = Icons.Outlined.Search,
+                                    contentDescription = stringResource(id = R.string.search_images_videos),
+                                    tint = MaterialTheme.colorScheme.onPrimary
+                                )
+                            }
+                        }
                     }
                 }
                 AnimatedVisibility(
@@ -681,9 +640,12 @@ fun SearchScreen(
                     // Help & Tips ride above the grid as a single full-width leading
                     // item so they scroll seamlessly with the media results.
                     val aboveGridContent: (@Composable () -> Unit)? =
-                        if (tipResults.isNotEmpty() || sortChipsContent != null) {
+                        if (searchIndexerState.isIndexing || tipResults.isNotEmpty() || sortChipsContent != null) {
                             {
                                 Column(modifier = Modifier.fillMaxWidth()) {
+                                    if (searchIndexerState.isIndexing) {
+                                        SearchIndexStatusCard(searchIndexerState)
+                                    }
                                     helpTipsContent()
                                     sortChipsContent?.invoke()
                                 }
@@ -795,11 +757,20 @@ fun SearchScreen(
                     enter = enterAnimation,
                     exit = exitAnimation
                 ) {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        helpTipsContent()
-                        EmptyMedia(
-                            title = "No results found",
-                        )
+                    LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                        if (searchIndexerState.isIndexing) {
+                            item(key = "empty_search_index_status") {
+                                SearchIndexStatusCard(searchIndexerState)
+                            }
+                        }
+                        if (tipResults.isNotEmpty()) {
+                            item(key = "empty_help_tips") { helpTipsContent() }
+                        }
+                        item(key = "empty_results") {
+                            EmptyMedia(
+                                title = "No results found",
+                            )
+                        }
                     }
                 }
             }
@@ -842,6 +813,98 @@ fun SearchScreen(
                 }
             )
         }
+    }
+}
+
+@Composable
+private fun searchEtaLabel(estimatedRemainingMillis: Long): String {
+    val totalMinutes = (estimatedRemainingMillis / 60_000L).coerceAtLeast(0L)
+    if (totalMinutes < 1) return stringResource(R.string.smart_scan_eta_under_minute)
+    val hours = totalMinutes / 60
+    val minutes = totalMinutes % 60
+    return if (hours > 0) {
+        stringResource(R.string.smart_scan_eta_hours, hours, minutes)
+    } else {
+        stringResource(R.string.smart_scan_eta_minutes, totalMinutes)
+    }
+}
+
+@Composable
+private fun SearchIndexStatusCard(
+    state: SearchIndexerState,
+    modifier: Modifier = Modifier
+) {
+    ListItem(
+        modifier = modifier
+            .padding(16.dp)
+            .clip(RoundedCornerShape(16.dp)),
+        leadingContent = {
+            Icon(
+                imageVector = Icons.Outlined.ImageSearch,
+                contentDescription = stringResource(R.string.smart_search_index_title),
+                tint = MaterialTheme.colorScheme.onPrimary
+            )
+        },
+        supportingContent = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.padding(bottom = 8.dp)
+            ) {
+                Text(
+                    text = when {
+                        state.status == SmartScanStatus.RUNNING && state.total > 0 -> stringResource(
+                            R.string.smart_search_index_progress,
+                            state.processed,
+                            state.total,
+                            state.stageNumber,
+                            state.stageCount
+                        )
+                        state.status == SmartScanStatus.RUNNING -> stringResource(
+                            R.string.smart_search_index_preparing,
+                            state.stageNumber,
+                            state.stageCount
+                        )
+                        else -> stringResource(
+                            R.string.smart_search_index_waiting,
+                            state.stageNumber,
+                            state.stageCount
+                        )
+                    }
+                )
+                state.estimatedRemainingMillis?.let {
+                    Text(
+                        text = searchEtaLabel(it),
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                }
+                if (state.status == SmartScanStatus.RUNNING && state.total > 0) {
+                    LinearProgressIndicator(
+                        progress = { state.progress },
+                        modifier = Modifier.fillMaxWidth(),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        trackColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                        drawStopIndicator = {},
+                        gapSize = 0.dp,
+                        strokeCap = StrokeCap.Round
+                    )
+                } else {
+                    LinearProgressIndicator(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        trackColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                        gapSize = 0.dp,
+                        strokeCap = StrokeCap.Round
+                    )
+                }
+            }
+        },
+        colors = ListItemDefaults.colors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            headlineColor = MaterialTheme.colorScheme.onPrimary,
+            supportingColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
+        )
+    ) {
+        Text(text = stringResource(R.string.smart_search_index_title))
     }
 }
 

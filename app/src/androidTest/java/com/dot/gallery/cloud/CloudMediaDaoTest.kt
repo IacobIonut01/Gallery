@@ -9,6 +9,7 @@ import androidx.room.Room
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.dot.gallery.cloud.core.ProviderType
+import com.dot.gallery.cloud.core.SyncState
 import com.dot.gallery.cloud.data.dao.CloudMediaDao
 import com.dot.gallery.cloud.data.entity.CloudMediaEntity
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
@@ -173,6 +174,32 @@ class CloudMediaDaoTest {
         val ids = dao.getAllForTimeline().first().map { it.toUriMedia().id }
         assertTrue("all cloud ids must be negative", ids.all { it < 0L })
         assertEquals("ids must be unique across accounts/providers", ids.size, ids.toSet().size)
+    }
+
+    @Test
+    fun remoteRefreshPreservesLocalBackupRevision() = runBlocking {
+        val uploaded = media("asset", ProviderType.IMMICH, 1L, timestamp = 2_000L).copy(
+            localCopyPath = "content://media/external/images/media/42",
+            size = 1234L,
+            syncState = SyncState.SYNCED
+        )
+        dao.insert(uploaded)
+
+        dao.insertAll(
+            listOf(
+                media("asset", ProviderType.IMMICH, 1L, timestamp = 3_000L).copy(
+                    label = "refreshed.jpg",
+                    size = 1234L,
+                    syncState = SyncState.REMOTE_ONLY
+                )
+            )
+        )
+
+        val refreshed = dao.getByRemoteId("asset", ProviderType.IMMICH, 1L)!!
+        assertEquals("refreshed.jpg", refreshed.label)
+        assertEquals(uploaded.localCopyPath, refreshed.localCopyPath)
+        assertEquals(uploaded.timestamp, refreshed.timestamp)
+        assertEquals(SyncState.SYNCED, refreshed.syncState)
     }
 
     @Test

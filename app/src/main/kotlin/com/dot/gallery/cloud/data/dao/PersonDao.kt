@@ -6,9 +6,8 @@
 package com.dot.gallery.cloud.data.dao
 
 import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Upsert
 import com.dot.gallery.cloud.core.ProviderType
 import com.dot.gallery.cloud.data.entity.PersonEntity
 import kotlinx.coroutines.flow.Flow
@@ -31,10 +30,10 @@ interface PersonDao {
     @Query("SELECT * FROM people WHERE id = :id")
     suspend fun getById(id: String): PersonEntity?
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertAll(people: List<PersonEntity>)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insert(person: PersonEntity)
 
     @Query("UPDATE people SET name = :name WHERE id = :id")

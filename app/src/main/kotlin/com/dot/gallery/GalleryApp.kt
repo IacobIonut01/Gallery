@@ -60,8 +60,11 @@ import okio.FileSystem
 import okio.Path
 import okio.Path.Companion.toPath
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import com.dot.gallery.core.metrics.StartupTracer
 import okhttp3.Cache
@@ -244,17 +247,33 @@ class GalleryApp : Application(), SingletonSketch.Factory, Configuration.Provide
         }
 
         // Initialize ML models (copies from assets on withML, checks presence on noML)
-        appScope.launch {
-            StartupTracer.trace("ModelManager.initializeModels") {
-                modelManager.initializeModels()
-            }
-            smartScanScheduler.all(userVisible = false)
-        }
-
         // Auto-configure cloud providers asynchronously (off main thread)
         appScope.launch {
-            cloudProviderInitializer.initializeAsync()
-            smartScanScheduler.all(userVisible = false)
+            listOf(
+                "SearchIndexerUpdater",
+                "DatabaseUpdaterWorker",
+                "MetadataCollection",
+                "FaceIndexer",
+                "CategoryWorker"
+            ).forEach { workManager.cancelUniqueWork(it).result.get() }
+            workManager.cancelAllWorkByTag("CategoryClassifier").result.get()
+            workManager.cancelAllWorkByTag("ImageClassifier").result.get()
+            listOf(
+                async {
+                    runCatching {
+                        StartupTracer.trace("ModelManager.initializeModels") {
+                            modelManager.initializeModels()
+                        }
+                    }.onFailure { if (it is CancellationException) throw it }
+                },
+                async {
+                    runCatching { cloudProviderInitializer.initializeAsync() }
+                        .onFailure { if (it is CancellationException) throw it }
+                }
+            ).awaitAll()
+            if (!smartScanScheduler.resumeActiveRun()) {
+                smartScanScheduler.all(userVisible = false)
+            }
         }
 
         // Re-resolve auto-switching server URLs when the network changes

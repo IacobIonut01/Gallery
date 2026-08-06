@@ -9,11 +9,36 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import com.dot.gallery.cloud.core.ProviderType
 import com.dot.gallery.cloud.core.SyncState
 import com.dot.gallery.cloud.data.entity.CloudMediaEntity
 import kotlinx.coroutines.flow.Flow
+
+data class CloudMediaLocalState(
+    val remoteId: String,
+    val providerType: ProviderType,
+    val serverConfigId: Long,
+    val localCopyPath: String,
+    val size: Long,
+    val timestamp: Long,
+    val syncState: SyncState
+)
+
+data class CloudMediaLocalRevision(
+    val localCopyPath: String,
+    val size: Long,
+    val timestamp: Long
+)
+
+data class CloudMediaRemoteRevision(
+    val fileId: String,
+    val label: String,
+    val mimeType: String,
+    val size: Long,
+    val lastSyncedAt: Long
+)
 
 @Dao
 interface CloudMediaDao {
@@ -23,6 +48,32 @@ interface CloudMediaDao {
 
     @Query("SELECT * FROM cloud_media WHERE serverConfigId = :configId ORDER BY timestamp DESC")
     fun getByServerConfig(configId: Long): Flow<List<CloudMediaEntity>>
+
+    @Query(
+        """
+        SELECT localCopyPath, size, timestamp FROM cloud_media
+        WHERE serverConfigId = :configId AND localCopyPath != ''
+            AND syncState = 'SYNCED' AND trashed = 0
+        """
+    )
+    suspend fun getLocalRevisions(configId: Long): List<CloudMediaLocalRevision>
+
+    @Query(
+        """
+        SELECT fileId, label, mimeType, size, lastSyncedAt FROM cloud_media
+        WHERE serverConfigId = :configId AND fileId != '' AND lastSyncedAt > 0
+            AND trashed = 0
+        """
+    )
+    suspend fun getRemoteRevisions(configId: Long): List<CloudMediaRemoteRevision>
+
+    @Query(
+        """
+        SELECT remoteId, providerType, serverConfigId, localCopyPath, size, timestamp, syncState FROM cloud_media
+        WHERE serverConfigId = :configId AND localCopyPath != '' AND remoteId IN (:remoteIds)
+        """
+    )
+    suspend fun getLocalStates(configId: Long, remoteIds: List<String>): List<CloudMediaLocalState>
 
     @Query("SELECT * FROM cloud_media WHERE favorite = 1 AND trashed = 0 AND archived = 0 ORDER BY timestamp DESC")
     fun getFavorites(): Flow<List<CloudMediaEntity>>
@@ -104,7 +155,28 @@ interface CloudMediaDao {
     suspend fun countTrashed(): Int
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAll(items: List<CloudMediaEntity>)
+    suspend fun insertAllRaw(items: List<CloudMediaEntity>)
+
+    @Transaction
+    suspend fun insertAll(items: List<CloudMediaEntity>) {
+        items.groupBy { it.serverConfigId }.forEach { (configId, configItems) ->
+            configItems.chunked(900).forEach { chunk ->
+                val localStates = getLocalStates(configId, chunk.map { it.remoteId })
+                    .associateBy { it.providerType to it.remoteId }
+                insertAllRaw(
+                    chunk.map { item ->
+                        val local = localStates[item.providerType to item.remoteId]
+                        if (local == null) item else item.copy(
+                            localCopyPath = local.localCopyPath,
+                            size = local.size,
+                            timestamp = local.timestamp,
+                            syncState = local.syncState
+                        )
+                    }
+                )
+            }
+        }
+    }
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(item: CloudMediaEntity)

@@ -26,7 +26,9 @@ import com.dot.gallery.core.LocalEventHandler
 import com.dot.gallery.core.ml.ModelGroup
 import com.dot.gallery.core.ml.ModelStatus
 import com.dot.gallery.core.navigate
+import com.dot.gallery.core.smart.SmartScanPlan
 import com.dot.gallery.core.presentation.components.NavigationBackButton
+import com.dot.gallery.feature_node.data.data_source.SmartScanStatus
 import com.dot.gallery.feature_node.presentation.settings.components.settings
 import com.dot.gallery.feature_node.presentation.util.Screen
 
@@ -39,6 +41,7 @@ fun SettingsSmartFeaturesScreen(
     val aiAvailable = viewModel.areAiFeaturesAvailable
     val modelStatus by viewModel.modelStatus(ModelGroup.SEARCH).collectAsStateWithLifecycle()
     val activeSmartScan by viewModel.activeSmartScan.collectAsStateWithLifecycle()
+    val activeSmartScanPhases by viewModel.activeSmartScanPhases.collectAsStateWithLifecycle()
     val latestSmartScan by viewModel.latestSmartScan.collectAsStateWithLifecycle()
 
     val scrollBehavior =
@@ -76,19 +79,47 @@ fun SettingsSmartFeaturesScreen(
         } else ""
         val databaseHeader = stringResource(R.string.database)
         val scanManagerTitle = stringResource(R.string.smart_scan_manager_title)
-        val smartScanSummary = activeSmartScan?.let { run ->
-            val percent = if (run.totalMedia <= 0) 0 else (run.processedMedia * 100 / run.totalMedia).coerceIn(0, 100)
-            stringResource(
-                R.string.smart_scan_progress,
-                run.currentPhase?.storedValue.orEmpty(),
-                percent,
-                run.failedMedia,
-                run.skippedMedia
-            )
+        val activePhase = activeSmartScanPhases.firstOrNull { it.phase == activeSmartScan?.currentPhase }
+            ?: activeSmartScanPhases.firstOrNull { it.status == SmartScanStatus.RUNNING }
+            ?: activeSmartScanPhases.firstOrNull { it.status == SmartScanStatus.QUEUED }
+        val activePhaseLabel = activePhase?.phase?.label().orEmpty()
+        val smartScanSummary = activeSmartScan?.let {
+            val overallPercent = (SmartScanPlan.overallProgress(activeSmartScanPhases) * 100).toInt()
+            if (activePhase != null && activePhase.totalMedia > 0) {
+                val eta = activePhase
+                    .takeIf { it.status == SmartScanStatus.RUNNING }
+                    ?.let {
+                        SmartScanPlan.estimatedRemainingMillis(
+                            it.totalMedia,
+                            it.processedMedia,
+                            it.startedAt
+                        )
+                    }
+                if (eta == null) {
+                    stringResource(
+                        R.string.smart_scan_settings_progress,
+                        activePhaseLabel,
+                        activePhase.processedMedia,
+                        activePhase.totalMedia,
+                        overallPercent
+                    )
+                } else {
+                    stringResource(
+                        R.string.smart_scan_settings_progress_eta,
+                        activePhaseLabel,
+                        activePhase.processedMedia,
+                        activePhase.totalMedia,
+                        overallPercent,
+                        smartScanEtaLabel(eta)
+                    )
+                }
+            } else {
+                stringResource(R.string.smart_scan_settings_preparing, activePhaseLabel, overallPercent)
+            }
         } ?: latestSmartScan?.let { run ->
             stringResource(
                 R.string.smart_scan_last_result,
-                run.status.storedValue,
+                run.status.label(),
                 run.processedMedia,
                 run.failedMedia,
                 run.skippedMedia

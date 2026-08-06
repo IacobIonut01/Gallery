@@ -6,11 +6,15 @@
 package com.dot.gallery.feature_node.presentation.settings.subsettings
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -24,6 +28,9 @@ import com.dot.gallery.core.Position
 import com.dot.gallery.core.SettingsEntity
 import com.dot.gallery.core.ml.ModelGroup
 import com.dot.gallery.core.ml.ModelStatus
+import com.dot.gallery.core.smart.SmartScanPlan
+import com.dot.gallery.feature_node.data.data_source.SmartScanPhase
+import com.dot.gallery.feature_node.data.data_source.SmartScanPhaseEntity
 import com.dot.gallery.feature_node.data.data_source.SmartScanRunEntity
 import com.dot.gallery.feature_node.data.data_source.SmartScanStatus
 import com.dot.gallery.feature_node.presentation.settings.components.ChooserPreferenceDetailScreen
@@ -37,6 +44,7 @@ fun SmartScanPreferenceDetailScreen(
     val faceDetectStatus by viewModel.modelStatus(ModelGroup.FACE_DETECT).collectAsStateWithLifecycle()
     val faceRecognitionStatus by viewModel.modelStatus(ModelGroup.FACE_RECOGNITION).collectAsStateWithLifecycle()
     val activeScan by viewModel.activeSmartScan.collectAsStateWithLifecycle()
+    val activePhases by viewModel.activeSmartScanPhases.collectAsStateWithLifecycle()
     val latestScan by viewModel.latestSmartScan.collectAsStateWithLifecycle()
     val searchReady = searchStatus == ModelStatus.READY
     val personsReady = faceDetectStatus == ModelStatus.READY && faceRecognitionStatus == ModelStatus.READY
@@ -47,6 +55,7 @@ fun SmartScanPreferenceDetailScreen(
         customContent = {
             SmartScanDetailContent(
                 activeScan = activeScan,
+                activePhases = activePhases,
                 latestScan = latestScan,
                 searchReady = searchReady,
                 personsReady = personsReady,
@@ -66,6 +75,7 @@ fun SmartScanPreferenceDetailScreen(
 @Composable
 private fun SmartScanDetailContent(
     activeScan: SmartScanRunEntity?,
+    activePhases: List<SmartScanPhaseEntity>,
     latestScan: SmartScanRunEntity?,
     searchReady: Boolean,
     personsReady: Boolean,
@@ -87,14 +97,13 @@ private fun SmartScanDetailContent(
     )
 
     Column(modifier = Modifier.fillMaxWidth()) {
-        activeScan?.let { ScanProgressCard(it) }
+        activeScan?.let { ScanProgressCard(it, activePhases) }
         if (activeScan == null && latestScan != null) ScanResultCard(latestScan)
 
-        Text(
-            text = stringResource(R.string.smart_scan_actions_header),
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(start = 24.dp, top = 16.dp, end = 24.dp, bottom = 8.dp)
+        SettingsItem(
+            item = SettingsEntity.Header(
+                title = stringResource(R.string.smart_scan_actions_header)
+            )
         )
         ScanAction(
             title = stringResource(R.string.refresh_metadata),
@@ -135,11 +144,10 @@ private fun SmartScanDetailContent(
             onClick = onAll
         )
 
-        Text(
-            text = stringResource(R.string.smart_scan_rebuild_header),
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(start = 24.dp, top = 24.dp, end = 24.dp, bottom = 8.dp)
+        SettingsItem(
+            item = SettingsEntity.Header(
+                title = stringResource(R.string.smart_scan_rebuild_header)
+            )
         )
         ScanAction(
             title = stringResource(R.string.smart_scan_full_refresh),
@@ -151,11 +159,10 @@ private fun SmartScanDetailContent(
 
         AnimatedVisibility(visible = running || retryable) {
             Column {
-                Text(
-                    text = stringResource(R.string.smart_scan_controls_header),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(start = 24.dp, top = 24.dp, end = 24.dp, bottom = 8.dp)
+                SettingsItem(
+                    item = SettingsEntity.Header(
+                        title = stringResource(R.string.smart_scan_controls_header)
+                    )
                 )
                 if (running) {
                     ScanAction(
@@ -180,30 +187,112 @@ private fun SmartScanDetailContent(
 }
 
 @Composable
-private fun ScanProgressCard(run: SmartScanRunEntity) {
-    val progress = if (run.totalMedia <= 0) 0f
-    else (run.processedMedia.toFloat() / run.totalMedia.toFloat()).coerceIn(0f, 1f)
-    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp)) {
-        Text(
-            text = stringResource(R.string.smart_scan_running_title),
-            style = MaterialTheme.typography.titleMedium
-        )
-        Text(
-            text = stringResource(
-                R.string.smart_scan_progress,
-                run.currentPhase?.storedValue.orEmpty(),
-                (progress * 100).toInt(),
-                run.failedMedia,
-                run.skippedMedia
-            ),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
-        )
-        LinearProgressIndicator(
-            progress = { progress },
-            modifier = Modifier.fillMaxWidth()
-        )
+private fun ScanProgressCard(run: SmartScanRunEntity, phases: List<SmartScanPhaseEntity>) {
+    val current = phases.firstOrNull { it.phase == run.currentPhase }
+        ?: phases.firstOrNull { it.status == SmartScanStatus.RUNNING }
+        ?: phases.firstOrNull { it.status == SmartScanStatus.QUEUED }
+    val overallProgress = SmartScanPlan.overallProgress(phases)
+    val stageNumber = phases.indexOf(current).takeIf { it >= 0 }?.plus(1) ?: 0
+    val estimatedRemainingMillis = current
+        ?.takeIf { it.status == SmartScanStatus.RUNNING }
+        ?.let { SmartScanPlan.estimatedRemainingMillis(it.totalMedia, it.processedMedia, it.startedAt) }
+
+    Surface(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.smart_scan_running_title),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        text = stringResource(
+                            R.string.smart_scan_stage_number,
+                            stageNumber,
+                            phases.size
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Text(
+                    text = "${(overallProgress * 100).toInt()}%",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+            LinearProgressIndicator(
+                progress = { overallProgress },
+                modifier = Modifier.fillMaxWidth()
+            )
+            current?.let { phase ->
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(
+                        text = phase.phase.label(),
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    Text(
+                        text = if (phase.totalMedia > 0) {
+                            stringResource(
+                                R.string.smart_scan_stage_items,
+                                phase.processedMedia,
+                                phase.totalMedia,
+                                phase.failedMedia,
+                                phase.skippedMedia
+                            )
+                        } else {
+                            stringResource(R.string.smart_scan_preparing_stage)
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    estimatedRemainingMillis?.let {
+                        Text(
+                            text = smartScanEtaLabel(it),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    if (phase.totalMedia > 0) {
+                        LinearProgressIndicator(
+                            progress = {
+                                (phase.processedMedia.toFloat() / phase.totalMedia).coerceIn(0f, 1f)
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    } else {
+                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                    }
+                }
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                phases.forEach { phase ->
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = phase.phase.label(),
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = phase.status.label(),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = if (phase.status == SmartScanStatus.RUNNING) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            }
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -217,7 +306,7 @@ private fun ScanResultCard(run: SmartScanRunEntity) {
         Text(
             text = stringResource(
                 R.string.smart_scan_last_result,
-                run.status.storedValue,
+                run.status.label(),
                 run.processedMedia,
                 run.failedMedia,
                 run.skippedMedia
@@ -228,6 +317,44 @@ private fun ScanResultCard(run: SmartScanRunEntity) {
         )
     }
 }
+
+@Composable
+internal fun smartScanEtaLabel(estimatedRemainingMillis: Long): String {
+    val totalMinutes = (estimatedRemainingMillis / 60_000L).coerceAtLeast(0L)
+    if (totalMinutes < 1) return stringResource(R.string.smart_scan_eta_under_minute)
+    val hours = totalMinutes / 60
+    val minutes = totalMinutes % 60
+    return if (hours > 0) {
+        stringResource(R.string.smart_scan_eta_hours, hours, minutes)
+    } else {
+        stringResource(R.string.smart_scan_eta_minutes, totalMinutes)
+    }
+}
+
+@Composable
+internal fun SmartScanPhase.label(): String = stringResource(
+    when (this) {
+        SmartScanPhase.SOURCE_SYNC -> R.string.smart_scan_phase_source_sync
+        SmartScanPhase.METADATA -> R.string.smart_scan_phase_metadata
+        SmartScanPhase.SEARCH_INDEX -> R.string.smart_scan_phase_search_index
+        SmartScanPhase.CATEGORY_CLASSIFICATION -> R.string.smart_scan_phase_categories
+        SmartScanPhase.FACE_INDEX -> R.string.smart_scan_phase_people
+    }
+)
+
+@Composable
+internal fun SmartScanStatus.label(): String = stringResource(
+    when (this) {
+        SmartScanStatus.QUEUED -> R.string.smart_scan_status_queued
+        SmartScanStatus.RUNNING -> R.string.smart_scan_status_running
+        SmartScanStatus.SUCCEEDED -> R.string.smart_scan_status_complete
+        SmartScanStatus.PARTIAL -> R.string.smart_scan_status_partial
+        SmartScanStatus.BLOCKED -> R.string.smart_scan_status_blocked
+        SmartScanStatus.INTERRUPTED -> R.string.smart_scan_status_interrupted
+        SmartScanStatus.FAILED -> R.string.smart_scan_status_failed
+        SmartScanStatus.CANCELLED -> R.string.smart_scan_status_cancelled
+    }
+)
 
 @Composable
 private fun ScanAction(

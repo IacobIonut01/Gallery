@@ -12,10 +12,13 @@ api.properties
 /.kotlin
 /.vscode
 /.windsurf
+/.devin
+AGENTS.md
+CONTEXT.md
 **/build
 **/.kotlin
 
-# Signing material (PQC hybrid signing, #901) — never commit
+# Signing material (PQC hybrid signing)
 new_release.jks
 *.lineage
 *.keystore
@@ -27,6 +30,6 @@ yolo_vs_sam/
 
 ml-models/segment/
 
-# >>> ml-models split (managed) — reassembled at build time, do not commit
+# >>> ml-models split (managed)
 ml-models/src/main/assets/arcface.onnx
 # <<< ml-models split (managed)

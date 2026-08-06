@@ -14,7 +14,6 @@ import androidx.core.app.NotificationCompat
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
-import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
@@ -24,6 +23,7 @@ import com.dot.gallery.core.smart.SmartScanPhaseResult
 import com.dot.gallery.core.smart.SmartScanPlan
 import com.dot.gallery.core.smart.SmartScanProcessorRegistry
 import com.dot.gallery.core.smart.SmartScanProgress
+import com.dot.gallery.core.smart.SmartScanScheduler
 import com.dot.gallery.feature_node.data.data_source.SmartScanDao
 import com.dot.gallery.feature_node.data.data_source.SmartScanPhase
 import com.dot.gallery.feature_node.data.data_source.SmartScanPhaseEntity
@@ -45,14 +45,21 @@ import kotlinx.coroutines.withContext
 class SmartScanWorker @AssistedInject constructor(
     private val dao: SmartScanDao,
     private val processors: SmartScanProcessorRegistry,
+    private val scheduler: SmartScanScheduler,
     private val workManager: WorkManager,
     @Assisted private val appContext: Context,
     @Assisted workerParams: WorkerParameters
 ) : CoroutineWorker(appContext, workerParams) {
     private val runId = inputData.getString(KEY_RUN_ID).orEmpty()
+    private val requestedPhase = inputData.getString(KEY_PHASE)?.let { storedValue ->
+        SmartScanPhase.entries.firstOrNull { it.storedValue == storedValue }
+    }
     private val owner = id.toString()
     private var activePhase: SmartScanPhase? = null
     private var userVisible = false
+    private var isForeground = false
+    private var activeWorkItemCount: Int? = null
+    private var lastProgressPersistedAt = 0L
 
     override suspend fun doWork(): Result {
         if (runId.isBlank()) return Result.failure(workDataOf(KEY_ERROR_CODE to "missing_run_id"))
@@ -66,10 +73,13 @@ class SmartScanWorker @AssistedInject constructor(
         if (dao.claimRunLease(runId, owner, now, now + LEASE_MILLIS) != 1) {
             return resultFor(initial.status)
         }
-        if (userVisible) setForeground(foregroundInfo(0, null))
+        if (userVisible) {
+            setForeground(foregroundInfo(0, null, 0, 0, null))
+            isForeground = true
+        }
 
         return try {
-            dispatch()
+            requestedPhase?.let { dispatchPhase(it) } ?: dispatch()
         } catch (cancelled: CancellationException) {
             withContext(NonCancellable) { persistInterruption() }
             throw cancelled
@@ -86,7 +96,9 @@ class SmartScanWorker @AssistedInject constructor(
     private suspend fun dispatch(): Result {
         while (currentCoroutineContext().isActive) {
             val run = dao.getRun(runId) ?: return Result.failure()
-            if (run.status == SmartScanStatus.CANCELLED) return Result.failure()
+            if (run.status !in setOf(SmartScanStatus.QUEUED, SmartScanStatus.RUNNING)) {
+                return resultFor(run.status)
+            }
             val planned = SmartScanPlan.phasesFor(run.requestedFeatures)
             val phases = dao.getPhases(runId).associateBy { it.phase }
             val next = planned.firstOrNull { phase ->
@@ -98,21 +110,85 @@ class SmartScanWorker @AssistedInject constructor(
                 return Result.retry()
             }
             activePhase = next
+            activeWorkItemCount = null
+            lastProgressPersistedAt = 0L
             check(dao.updateCurrentPhase(runId, owner, next, run.sourceSnapshot, now) == 1) {
                 "run_lease_lost"
             }
-            val outcome = runProcessorWithHeartbeat(processor, run.sourceSnapshot, run.fullRefresh)
+            publishAggregate()
+            val phaseFullRefresh = run.fullRefresh
+            val outcome = runProcessorWithHeartbeat(processor, run.sourceSnapshot, phaseFullRefresh)
             finishPhase(next, outcome)
+            if (!phaseFullRefresh && dao.getRun(runId)?.fullRefresh == true) {
+                dao.requeueTerminalPhase(runId, next, System.currentTimeMillis())
+            }
             activePhase = null
         }
 
+        return finishRun()
+    }
+
+    private suspend fun dispatchPhase(phase: SmartScanPhase): Result {
+        val run = dao.getRun(runId) ?: return Result.failure()
+        if (run.status !in setOf(SmartScanStatus.QUEUED, SmartScanStatus.RUNNING)) {
+            return resultFor(run.status)
+        }
+        val planned = SmartScanPlan.phasesFor(run.requestedFeatures)
+        if (phase !in planned) return continueRun()
+        val phases = dao.getPhases(runId).associateBy { it.phase }
+        val next = planned.firstOrNull {
+            phases[it]?.status in setOf(SmartScanStatus.QUEUED, SmartScanStatus.RUNNING)
+        } ?: return finishRun()
+        if (next != phase) return continueRun()
+
+        val processor = processors.processorFor(phase)
+        val now = System.currentTimeMillis()
+        if (dao.claimPhaseLease(runId, phase, owner, now, now + LEASE_MILLIS, processor.revision) != 1) {
+            return Result.retry()
+        }
+        activePhase = phase
+        activeWorkItemCount = null
+        lastProgressPersistedAt = 0L
+        check(dao.updateCurrentPhase(runId, owner, phase, run.sourceSnapshot, now) == 1) {
+            "run_lease_lost"
+        }
+        publishAggregate()
+        val phaseFullRefresh = run.fullRefresh
+        val outcome = runProcessorWithHeartbeat(processor, run.sourceSnapshot, phaseFullRefresh)
+        finishPhase(phase, outcome)
+        if (!phaseFullRefresh && dao.getRun(runId)?.fullRefresh == true) {
+            dao.requeueTerminalPhase(runId, phase, System.currentTimeMillis())
+        }
+        activePhase = null
+        val remaining = dao.getPhases(runId).any {
+            it.phase in SmartScanPlan.phasesFor(dao.getRun(runId)?.requestedFeatures ?: 0) &&
+                it.status in setOf(SmartScanStatus.QUEUED, SmartScanStatus.RUNNING)
+        }
+        return if (remaining) continueRun() else finishRun()
+    }
+
+    private suspend fun continueRun(): Result {
+        val now = System.currentTimeMillis()
+        dao.releaseFeatureLeases(runId, owner, now)
+        if (dao.releaseRunLease(runId, owner, now) != 1) return Result.retry()
+        return if (scheduler.enqueueNextPhase(runId, completedWorkId = owner)) Result.success() else Result.retry()
+    }
+
+    private suspend fun finishRun(): Result {
         val terminalPhases = dao.getPhases(runId)
             .filter { it.phase in SmartScanPlan.phasesFor(dao.getRun(runId)?.requestedFeatures ?: 0) }
         val requestedFeaturePhases = terminalPhases.filter { it.phase != SmartScanPhase.SOURCE_SYNC }
         val status = SmartScanPlan.terminalStatus(requestedFeaturePhases.map { it.status })
         val error = requestedFeaturePhases.firstNotNullOfOrNull { it.lastErrorCode }
         val finished = dao.finishRunIfComplete(runId, owner, status, System.currentTimeMillis(), error)
-        if (finished != 1) return dispatch()
+        if (finished != 1) {
+            val current = dao.getRun(runId) ?: return Result.failure()
+            return if (current.status in setOf(SmartScanStatus.QUEUED, SmartScanStatus.RUNNING)) {
+                Result.retry()
+            } else {
+                resultFor(current.status)
+            }
+        }
         publishAggregate()
         return resultFor(status)
     }
@@ -130,7 +206,7 @@ class SmartScanWorker @AssistedInject constructor(
         }
         try {
             processor.process(
-                SmartScanPhaseContext(runId, sourceSnapshot, fullRefresh) { progress ->
+                SmartScanPhaseContext(runId, owner, sourceSnapshot, fullRefresh) { progress ->
                     persistProgress(processor.phase, progress)
                 }
             )
@@ -140,7 +216,7 @@ class SmartScanWorker @AssistedInject constructor(
     }
 
     private suspend fun finishPhase(phase: SmartScanPhase, result: SmartScanPhaseResult) {
-        persistProgress(phase, result.progress)
+        persistProgress(phase, result.progress, force = true)
         val now = System.currentTimeMillis()
         when (result) {
             is SmartScanPhaseResult.Completed -> {
@@ -159,8 +235,17 @@ class SmartScanWorker @AssistedInject constructor(
         publishAggregate()
     }
 
-    private suspend fun persistProgress(phase: SmartScanPhase, progress: SmartScanProgress) {
+    private suspend fun persistProgress(
+        phase: SmartScanPhase,
+        progress: SmartScanProgress,
+        force: Boolean = false
+    ) {
         currentCoroutineContext().ensureActive()
+        val now = System.currentTimeMillis()
+        activeWorkItemCount = if (phase == SmartScanPhase.SOURCE_SYNC) null else progress.total
+        val updateInterval = if (userVisible) FOREGROUND_PROGRESS_UPDATE_MILLIS else BACKGROUND_PROGRESS_UPDATE_MILLIS
+        if (!force && now - lastProgressPersistedAt < updateInterval) return
+        userVisible = userVisible || dao.getRun(runId)?.userVisible == true
         renewLeases(phase)
         dao.updatePhaseSummary(
             runId,
@@ -170,15 +255,22 @@ class SmartScanWorker @AssistedInject constructor(
             progress.succeeded,
             progress.skipped,
             progress.failed,
-            System.currentTimeMillis()
+            now
         )
+        lastProgressPersistedAt = now
         publishAggregate()
     }
 
     private suspend fun publishAggregate() {
         val phases = dao.getPhases(runId)
         val aggregate = SmartScanPlan.aggregate(phases.map { it.toProgress() })
+        val current = phases.firstOrNull { it.phase == activePhase }
+        val overallPercent = (SmartScanPlan.overallProgress(phases) * 100).toInt()
         val now = System.currentTimeMillis()
+        val estimatedRemainingMillis = current?.let {
+            SmartScanPlan.estimatedRemainingMillis(it.totalMedia, it.processedMedia, it.startedAt, now)
+        }
+        val mediaCount = activeWorkItemCount ?: 0
         dao.updateRunSummary(
             runId,
             aggregate.total,
@@ -190,13 +282,24 @@ class SmartScanWorker @AssistedInject constructor(
         )
         setProgress(
             workDataOf(
-                KEY_PROGRESS to aggregate.percent,
+                KEY_PROGRESS to overallPercent,
                 KEY_TOTAL to aggregate.total,
                 KEY_PROCESSED to aggregate.processed,
                 KEY_PHASE to activePhase?.storedValue
             )
         )
-        if (userVisible) setForeground(foregroundInfo(aggregate.percent, activePhase))
+        if (userVisible || isForeground || SmartScanPlan.requiresForeground(mediaCount)) {
+            setForeground(
+                foregroundInfo(
+                    overallPercent,
+                    activePhase,
+                    current?.processedMedia ?: 0,
+                    current?.totalMedia ?: 0,
+                    estimatedRemainingMillis
+                )
+            )
+            isForeground = true
+        }
     }
 
     private suspend fun renewLeases(phase: SmartScanPhase) {
@@ -207,17 +310,20 @@ class SmartScanWorker @AssistedInject constructor(
 
     private suspend fun persistInterruption() {
         val run = dao.getRun(runId) ?: return
-        if (run.status == SmartScanStatus.CANCELLED) return
         val now = System.currentTimeMillis()
-        if (stopReason == WorkInfo.STOP_REASON_CANCELLED_BY_APP) {
-            dao.cancelRun(runId, now)
-        } else {
-            activePhase?.let { dao.releasePhaseLease(runId, it, owner, now) }
-            dao.releaseRunLease(runId, owner, now)
-        }
+        dao.releaseFeatureLeases(runId, owner, now)
+        if (run.status == SmartScanStatus.CANCELLED) return
+        activePhase?.let { dao.releasePhaseLease(runId, it, owner, now) }
+        dao.releaseRunLease(runId, owner, now)
     }
 
-    private fun foregroundInfo(progress: Int, phase: SmartScanPhase?): ForegroundInfo {
+    private fun foregroundInfo(
+        progress: Int,
+        phase: SmartScanPhase?,
+        processed: Int,
+        total: Int,
+        estimatedRemainingMillis: Long?
+    ): ForegroundInfo {
         val manager = appContext.getSystemService(NotificationManager::class.java)
         if (manager.getNotificationChannel(CHANNEL_ID) == null) {
             manager.createNotificationChannel(
@@ -231,8 +337,37 @@ class SmartScanWorker @AssistedInject constructor(
         val notification = NotificationCompat.Builder(appContext, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentTitle(appContext.getString(R.string.smart_scan_notification_title))
-            .setContentText(phase?.let { appContext.getString(R.string.smart_scan_notification_progress, progress) })
-            .setProgress(100, progress, false)
+            .setContentText(
+                phase?.let {
+                    if (total > 0) {
+                        val eta = estimatedRemainingMillis?.let(::formatEta)
+                        if (eta == null) {
+                            appContext.getString(
+                                R.string.smart_scan_notification_stage_progress,
+                                appContext.getString(it.labelRes()),
+                                processed,
+                                total,
+                                progress
+                            )
+                        } else {
+                            appContext.getString(
+                                R.string.smart_scan_notification_stage_progress_eta,
+                                appContext.getString(it.labelRes()),
+                                processed,
+                                total,
+                                progress,
+                                eta
+                            )
+                        }
+                    } else {
+                        appContext.getString(
+                            R.string.smart_scan_notification_stage_preparing,
+                            appContext.getString(it.labelRes())
+                        )
+                    }
+                } ?: appContext.getString(R.string.smart_scan_preparing_stage)
+            )
+            .setProgress(100, progress, phase == null)
             .setOngoing(true)
             .setSilent(true)
             .addAction(
@@ -247,6 +382,26 @@ class SmartScanWorker @AssistedInject constructor(
             ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
         }
         return ForegroundInfo(NOTIFICATION_ID, notification, type)
+    }
+
+    private fun formatEta(estimatedRemainingMillis: Long): String {
+        val totalMinutes = (estimatedRemainingMillis / 60_000L).coerceAtLeast(0L)
+        if (totalMinutes < 1) return appContext.getString(R.string.smart_scan_eta_under_minute)
+        val hours = totalMinutes / 60
+        val minutes = totalMinutes % 60
+        return if (hours > 0) {
+            appContext.getString(R.string.smart_scan_eta_hours, hours, minutes)
+        } else {
+            appContext.getString(R.string.smart_scan_eta_minutes, totalMinutes)
+        }
+    }
+
+    private fun SmartScanPhase.labelRes(): Int = when (this) {
+        SmartScanPhase.SOURCE_SYNC -> R.string.smart_scan_phase_source_sync
+        SmartScanPhase.METADATA -> R.string.smart_scan_phase_metadata
+        SmartScanPhase.SEARCH_INDEX -> R.string.smart_scan_phase_search_index
+        SmartScanPhase.CATEGORY_CLASSIFICATION -> R.string.smart_scan_phase_categories
+        SmartScanPhase.FACE_INDEX -> R.string.smart_scan_phase_people
     }
 
     private fun resultFor(status: SmartScanStatus): Result = when (status) {
@@ -275,6 +430,8 @@ class SmartScanWorker @AssistedInject constructor(
         private const val NOTIFICATION_ID = 0x5343414E
         private const val LEASE_MILLIS = 5 * 60 * 1000L
         private const val HEARTBEAT_MILLIS = 60 * 1000L
+        private const val FOREGROUND_PROGRESS_UPDATE_MILLIS = 1_500L
+        private const val BACKGROUND_PROGRESS_UPDATE_MILLIS = 5_000L
 
         fun runTag(runId: String) = "smart_scan_run_$runId"
     }

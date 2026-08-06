@@ -4,7 +4,22 @@ import android.net.Uri
 import androidx.room.TypeConverter
 import com.dot.gallery.feature_node.domain.model.Media
 import kotlinx.serialization.json.Json
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import java.util.UUID
+
+object FloatVectorCodec {
+    fun encode(values: FloatArray): ByteArray =
+        ByteBuffer.allocate(values.size * Float.SIZE_BYTES).order(ByteOrder.BIG_ENDIAN).apply {
+            values.forEach(::putFloat)
+        }.array()
+
+    fun decode(bytes: ByteArray): FloatArray {
+        require(bytes.size % Float.SIZE_BYTES == 0) { "Invalid float vector byte count" }
+        val buffer = ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN)
+        return FloatArray(bytes.size / Float.SIZE_BYTES) { buffer.float }
+    }
+}
 
 object Converters {
     @TypeConverter
@@ -38,10 +53,10 @@ object Converters {
     fun toUUID(value: String): UUID = UUID.fromString(value)
 
     @TypeConverter
-    fun fromFloatArray(array: FloatArray): String = Json.encodeToString(array)
+    fun fromFloatArray(array: FloatArray): ByteArray = FloatVectorCodec.encode(array)
 
     @TypeConverter
-    fun toFloatArray(value: String): FloatArray = Json.decodeFromString(value)
+    fun toFloatArray(value: ByteArray): FloatArray = FloatVectorCodec.decode(value)
 
     @TypeConverter
     fun fromLongList(list: List<Long>?): String = Json.encodeToString(list ?: emptyList())

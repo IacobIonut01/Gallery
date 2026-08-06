@@ -827,13 +827,17 @@ class ImmichProvider @Inject constructor(
                     localCopyPath = mediaUri.toString(),
                     contentHash = checksum,
                     thumbnailUrl = "$baseUrl/api/assets/${uploaded.id}/thumbnail",
-                    originalUrl = "$baseUrl/api/assets/${uploaded.id}/original"
+                    originalUrl = "$baseUrl/api/assets/${uploaded.id}/original",
+                    lastSyncedAt = localMedia.timestamp * 1000L,
+                    fileId = localMedia.id.toString()
                 )
                 cloudMediaDao.insert(entity)
                 Result.success(entity)
             } else {
                 Result.failure(Exception("Upload failed: ${response.code()} ${response.message()}"))
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -896,11 +900,15 @@ class ImmichProvider @Inject constructor(
             }
             val response = requireApi().bulkUploadCheck(ImmichBulkUploadCheckDto(assets = items))
             if (response.isSuccessful) {
-                val results = response.body()?.results?.associate { it.id to (it.action == "reject") } ?: emptyMap()
+                val results = response.body()?.results?.associate {
+                    it.id to it.isSafeDuplicate()
+                } ?: emptyMap()
                 Result.success(results)
             } else {
                 Result.failure(Exception("Bulk check failed: ${response.code()}"))
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.failure(e)
         }

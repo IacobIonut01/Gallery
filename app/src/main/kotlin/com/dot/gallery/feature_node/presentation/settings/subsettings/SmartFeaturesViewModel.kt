@@ -7,9 +7,7 @@ package com.dot.gallery.feature_node.presentation.settings.subsettings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.work.WorkInfo
 import androidx.work.WorkManager
-import androidx.work.WorkQuery
 import com.dot.gallery.core.ml.DownloadInfo
 import com.dot.gallery.core.ml.ModelFileInfo
 import com.dot.gallery.core.ml.ModelGroup
@@ -17,13 +15,18 @@ import com.dot.gallery.core.ml.ModelManager
 import com.dot.gallery.core.ml.ModelStatus
 import com.dot.gallery.core.workers.cancelModelDownload
 import com.dot.gallery.core.workers.downloadModels
+import com.dot.gallery.core.smart.SmartScanPlan
 import com.dot.gallery.core.smart.SmartScanScheduler
 import com.dot.gallery.feature_node.data.data_source.SmartScanDao
 import com.dot.gallery.feature_node.data.data_source.SmartScanFeature
+import com.dot.gallery.feature_node.data.data_source.SmartScanPhaseEntity
 import com.dot.gallery.feature_node.data.data_source.SmartScanRunEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -63,26 +66,19 @@ class SmartFeaturesViewModel @Inject constructor(
         initialValue = null
     )
 
-    val isMetadataWorkerRunning: StateFlow<Boolean> = workManager.getWorkInfosFlow(
-        WorkQuery.fromUniqueWorkNames("MetadataCollection")
-    ).map { infos ->
-        infos.any { it.state == WorkInfo.State.RUNNING || it.state == WorkInfo.State.ENQUEUED }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = false
-    )
-
-    val metadataProgress: StateFlow<Int> = workManager.getWorkInfosFlow(
-        WorkQuery.fromUniqueWorkNames("MetadataCollection")
-    ).map { infos ->
-        infos.firstOrNull { it.state == WorkInfo.State.RUNNING }
-            ?.progress?.getInt("progress", -1) ?: -1
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = -1
-    )
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val activeSmartScanPhases: StateFlow<List<SmartScanPhaseEntity>> = activeSmartScan
+        .flatMapLatest { run ->
+            if (run == null) flowOf(emptyList()) else smartScanDao.observePhases(run.runId)
+        }
+        .map { phases ->
+            phases.sortedBy { SmartScanPlan.orderedPhases.indexOf(it.phase) }
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
     fun downloadModels(group: ModelGroup) {
         if (!modelManager.hasInternetPermission) return

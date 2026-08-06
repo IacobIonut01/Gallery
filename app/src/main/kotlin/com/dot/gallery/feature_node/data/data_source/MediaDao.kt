@@ -50,6 +50,9 @@ interface MediaDao {
     @Query("DELETE FROM media WHERE id NOT IN (:mediaIds)")
     suspend fun deleteMediaNotInList(mediaIds: List<Long>)
 
+    @Query("DELETE FROM media WHERE id IN (:mediaIds)")
+    suspend fun deleteMediaByIds(mediaIds: List<Long>)
+
     /** MediaVersion */
     @Upsert(entity = MediaVersion::class)
     suspend fun setMediaVersion(version: MediaVersion)

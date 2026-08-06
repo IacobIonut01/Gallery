@@ -44,6 +44,10 @@ class FaceHelper(private val modelManager: ModelManager) {
 
     private var detectSession: OrtSession? = null
     private var recogSession: OrtSession? = null
+    private val detectPixels = IntArray(INPUT_W * INPUT_H)
+    private val detectBuffer = FloatBuffer.allocate(3 * INPUT_H * INPUT_W)
+    private val recognitionPixels = IntArray(RECOG_SIZE * RECOG_SIZE)
+    private val recognitionBuffer = FloatBuffer.allocate(RECOG_SIZE * RECOG_SIZE * 3)
 
     val isDetectionAvailable: Boolean get() = modelManager.isReady(ModelGroup.FACE_DETECT)
     val isRecognitionAvailable: Boolean get() = modelManager.isReady(ModelGroup.FACE_RECOGNITION)
@@ -75,27 +79,25 @@ class FaceHelper(private val modelManager: ModelManager) {
         val session = detector()
         val resized = bitmap.scale(INPUT_W, INPUT_H)
 
-        val buffer = FloatBuffer.allocate(3 * INPUT_H * INPUT_W)
+        resized.getPixels(detectPixels, 0, INPUT_W, 0, 0, INPUT_W, INPUT_H)
+        detectBuffer.clear()
         // NCHW, RGB, (px - 127) / 128
         for (c in 0 until 3) {
-            for (y in 0 until INPUT_H) {
-                for (x in 0 until INPUT_W) {
-                    val px = resized.getPixel(x, y)
-                    val v = when (c) {
-                        0 -> (px shr 16) and 0xFF // R
-                        1 -> (px shr 8) and 0xFF  // G
-                        else -> px and 0xFF       // B
-                    }
-                    buffer.put((v - 127f) / 128f)
+            detectPixels.forEach { px ->
+                val v = when (c) {
+                    0 -> (px shr 16) and 0xFF // R
+                    1 -> (px shr 8) and 0xFF  // G
+                    else -> px and 0xFF       // B
                 }
+                detectBuffer.put((v - 127f) / 128f)
             }
         }
-        buffer.rewind()
+        detectBuffer.rewind()
         if (resized != bitmap) resized.recycle()
 
         val inputName = session.inputNames.iterator().next()
         val tensor = OnnxTensor.createTensor(
-            ortEnv, buffer, longArrayOf(1, 3, INPUT_H.toLong(), INPUT_W.toLong())
+            ortEnv, detectBuffer, longArrayOf(1, 3, INPUT_H.toLong(), INPUT_W.toLong())
         )
         val results = tensor.use {
             session.run(Collections.singletonMap(inputName, tensor))
@@ -154,22 +156,20 @@ class FaceHelper(private val modelManager: ModelManager) {
             if (crop != face) crop.recycle()
 
             // ArcFace (garavv/arc.onnx): NHWC 1x112x112x3, RGB, (px - 127.5) / 127.5
-            val buffer = FloatBuffer.allocate(RECOG_SIZE * RECOG_SIZE * 3)
-            for (y in 0 until RECOG_SIZE) {
-                for (x in 0 until RECOG_SIZE) {
-                    val px = face.getPixel(x, y)
-                    buffer.put((((px shr 16) and 0xFF) - 127.5f) / 127.5f)
-                    buffer.put((((px shr 8) and 0xFF) - 127.5f) / 127.5f)
-                    buffer.put(((px and 0xFF) - 127.5f) / 127.5f)
-                }
+            face.getPixels(recognitionPixels, 0, RECOG_SIZE, 0, 0, RECOG_SIZE, RECOG_SIZE)
+            recognitionBuffer.clear()
+            recognitionPixels.forEach { px ->
+                recognitionBuffer.put((((px shr 16) and 0xFF) - 127.5f) / 127.5f)
+                recognitionBuffer.put((((px shr 8) and 0xFF) - 127.5f) / 127.5f)
+                recognitionBuffer.put(((px and 0xFF) - 127.5f) / 127.5f)
             }
-            buffer.rewind()
+            recognitionBuffer.rewind()
             face.recycle()
 
             val session = recognizer()
             val inputName = session.inputNames.iterator().next()
             val tensor = OnnxTensor.createTensor(
-                ortEnv, buffer, longArrayOf(1, RECOG_SIZE.toLong(), RECOG_SIZE.toLong(), 3)
+                ortEnv, recognitionBuffer, longArrayOf(1, RECOG_SIZE.toLong(), RECOG_SIZE.toLong(), 3)
             )
             val out = tensor.use { session.run(Collections.singletonMap(inputName, tensor)) }
             out.use {

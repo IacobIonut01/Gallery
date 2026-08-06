@@ -18,6 +18,7 @@ import com.github.panpf.sketch.request.ImageRequest
 import com.github.panpf.sketch.sketch
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -34,13 +35,22 @@ class SmartThumbnailLoader @Inject constructor(
         withContext(Dispatchers.IO) {
             val cloud = media.isCloud
             val source = if (!cloud) {
-                runCatching {
-                    context.contentResolver.loadThumbnail(
-                        media.uri,
-                        Size(size, size),
-                        CancellationSignal()
-                    )
-                }.getOrNull()
+                suspendCancellableCoroutine { continuation ->
+                    val cancellationSignal = CancellationSignal()
+                    continuation.invokeOnCancellation { cancellationSignal.cancel() }
+                    val bitmap = runCatching {
+                        context.contentResolver.loadThumbnail(
+                            media.uri,
+                            Size(size, size),
+                            cancellationSignal
+                        )
+                    }.getOrNull()
+                    if (continuation.isActive) {
+                        continuation.resume(bitmap) { _, cancelledBitmap, _ -> cancelledBitmap?.recycle() }
+                    } else {
+                        bitmap?.recycle()
+                    }
+                }
             } else {
                 runCatching {
                     val request = ImageRequest(context, media.uri.toString()) {

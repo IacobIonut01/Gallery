@@ -15,6 +15,7 @@ import com.dot.gallery.cloud.core.ProviderType
 import com.dot.gallery.cloud.data.dao.DetectedFaceDao
 import com.dot.gallery.cloud.data.dao.PersonDao
 import com.dot.gallery.cloud.data.entity.DetectedFaceEntity
+import com.dot.gallery.cloud.data.entity.FaceClusterEntity
 import com.dot.gallery.cloud.data.entity.PersonEntity
 import com.dot.gallery.core.ml.DetectedFaceBox
 import com.dot.gallery.core.ml.FaceHelper
@@ -31,19 +32,21 @@ import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaCategory
 import com.dot.gallery.feature_node.domain.model.MediaVersion
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
+import com.dot.gallery.feature_node.domain.util.FloatVectorCodec
 import com.dot.gallery.feature_node.presentation.search.helpers.SearchVisionHelper
 import com.dot.gallery.feature_node.presentation.search.util.dot
 import com.dot.gallery.feature_node.presentation.util.mediaStoreVersion
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.yield
 import java.io.File
-import java.nio.ByteBuffer
 import java.util.UUID
 import javax.inject.Inject
 
@@ -74,6 +77,7 @@ sealed interface SmartScanPhaseResult {
 
 data class SmartScanPhaseContext(
     val runId: String,
+    val owner: String,
     val sourceSnapshot: String,
     val fullRefresh: Boolean,
     val reportProgress: suspend (SmartScanProgress) -> Unit
@@ -83,6 +87,69 @@ interface SmartScanPhaseProcessor {
     val phase: SmartScanPhase
     val revision: String
     suspend fun process(context: SmartScanPhaseContext): SmartScanPhaseResult
+}
+
+internal data class FeatureWorkDecision(
+    val shouldProcess: Boolean,
+    val stateToPersist: MediaFeatureStateEntity? = null
+)
+
+internal fun prepareFeatureWork(
+    existing: MediaFeatureStateEntity?,
+    mediaId: Long,
+    feature: MediaFeature,
+    sourceRevision: String,
+    resultRevision: String,
+    fullRefresh: Boolean,
+    now: Long,
+    terminalOutputPresent: Boolean = true
+): FeatureWorkDecision {
+    if (existing == null) {
+        return FeatureWorkDecision(
+            shouldProcess = true,
+            stateToPersist = MediaFeatureStateEntity(
+                mediaId = mediaId,
+                feature = feature,
+                sourceRevision = sourceRevision,
+                updatedAt = now
+            )
+        )
+    }
+    if (existing.status == MediaFeatureStatus.PROCESSING &&
+        existing.leaseExpiresAt?.let { it > now } == true
+    ) return FeatureWorkDecision(false)
+
+    val sameSource = existing.sourceRevision == sourceRevision
+    val sameResult = existing.resultRevision == resultRevision
+    if (!fullRefresh && sameSource) {
+        when (existing.status) {
+            MediaFeatureStatus.PENDING -> return FeatureWorkDecision(true)
+            MediaFeatureStatus.FAILED -> if (sameResult) {
+                return FeatureWorkDecision(existing.nextRetryAt?.let { it <= now } != false)
+            }
+            MediaFeatureStatus.SUCCEEDED,
+            MediaFeatureStatus.SKIPPED,
+            MediaFeatureStatus.BLOCKED -> if (sameResult && terminalOutputPresent) return FeatureWorkDecision(false)
+            MediaFeatureStatus.PROCESSING -> Unit
+        }
+    }
+
+    return FeatureWorkDecision(
+        shouldProcess = true,
+        stateToPersist = existing.copy(
+            status = MediaFeatureStatus.PENDING,
+            sourceRevision = sourceRevision,
+            resultRevision = "",
+            attemptCount = if (sameSource && !fullRefresh) existing.attemptCount else 0,
+            updatedAt = now,
+            lastAttemptAt = if (sameSource && !fullRefresh) existing.lastAttemptAt else null,
+            nextRetryAt = null,
+            leaseOwner = null,
+            leaseExpiresAt = null,
+            runId = null,
+            lastErrorCode = null
+        )
+    )
 }
 
 class SmartScanProcessorRegistry @Inject constructor(
@@ -112,7 +179,7 @@ abstract class MediaPhaseProcessor(
     }
 
     protected suspend fun media(): List<Media.UriMedia> =
-        localMedia() + database.getCloudMediaDao().getAllCachedAsync().map { it.toUriMedia() }
+        database.getMediaDao().getMedia() + database.getCloudMediaDao().getAllCachedAsync().map { it.toUriMedia() }
 
     protected fun sourceRevision(media: Media): String =
         "${media.timestamp}:${media.size}:${media.mimeType}:${media.path}"
@@ -145,15 +212,23 @@ class SourceSyncProcessor @Inject constructor(
 
     override suspend fun process(context: SmartScanPhaseContext): SmartScanPhaseResult {
         val media = localMedia()
-        val mediaStoreVersion = appContext.mediaStoreVersion
-        database.withTransaction {
-            database.getMediaDao().updateMedia(media)
-            database.getMediaDao().setMediaVersion(MediaVersion(mediaStoreVersion))
-        }
         val cloud = database.getCloudMediaDao().getAllCachedAsync()
+        val total = media.size + cloud.size
+        progress(context, total, 0, 0, 0, 0)
+        val mediaStoreVersion = appContext.mediaStoreVersion
+        val mediaDao = database.getMediaDao()
+        val existing = mediaDao.getMedia().associateBy { it.id }
+        val changed = media.filter { existing[it.id] != it }
+        val currentIds = media.mapTo(hashSetOf()) { it.id }
+        val removedIds = existing.keys.filterNot(currentIds::contains)
+        database.withTransaction {
+            if (changed.isNotEmpty()) mediaDao.addMediaList(changed)
+            removedIds.chunked(MEDIA_DELETE_BATCH_SIZE).forEach { mediaDao.deleteMediaByIds(it) }
+            mediaDao.setMediaVersion(MediaVersion(mediaStoreVersion))
+        }
         val snapshot = "$mediaStoreVersion:${media.size}:${cloud.size}:" +
             "${media.maxOfOrNull { it.timestamp } ?: 0L}:${cloud.maxOfOrNull { it.timestamp } ?: 0L}"
-        val summary = progress(context, media.size + cloud.size, media.size + cloud.size, media.size + cloud.size, 0, 0)
+        val summary = progress(context, total, total, total, 0, 0)
         return SmartScanPhaseResult.Completed(summary, snapshot)
     }
 }
@@ -167,31 +242,58 @@ class MetadataPhaseProcessor @Inject constructor(
 
     override suspend fun process(context: SmartScanPhaseContext): SmartScanPhaseResult {
         val scanDao = database.getSmartScanDao()
-        database.getMetadataDao().deleteOrphans()
+        val metadataDao = database.getMetadataDao()
+        metadataDao.deleteOrphans()
         val now = System.currentTimeMillis()
+        val states = scanDao.getFeatureStates(MediaFeature.METADATA).associateBy { it.mediaId }
+        val completeIds = if (context.fullRefresh) emptySet() else metadataDao.getCompleteMetadataIds().toHashSet()
+        val statesToPersist = mutableListOf<MediaFeatureStateEntity>()
         val candidates = media().filter { item ->
             val source = sourceRevision(item)
-            val state = scanDao.getFeatureState(item.id, MediaFeature.METADATA)
-            val isCurrent = state?.status == MediaFeatureStatus.SUCCEEDED &&
-                state.sourceRevision == source && state.resultRevision == revision
-            if (!SmartScanPlan.shouldProcess(context.fullRefresh, isCurrent)) false else {
-                scanDao.upsertFeatureState(
-                    MediaFeatureStateEntity(
-                        mediaId = item.id,
-                        feature = MediaFeature.METADATA,
-                        sourceRevision = source,
-                        updatedAt = now
-                    )
+            val state = states[item.id]
+            val activeLease = state?.status == MediaFeatureStatus.PROCESSING &&
+                state.leaseExpiresAt?.let { it > now } == true
+            val current = !context.fullRefresh && item.id in completeIds &&
+                state?.status == MediaFeatureStatus.SUCCEEDED && state.sourceRevision == source &&
+                state.resultRevision == revision
+            if (activeLease || current) {
+                false
+            } else if (item.id in completeIds && state?.sourceRevision == source) {
+                statesToPersist += state.copy(
+                    status = MediaFeatureStatus.SUCCEEDED,
+                    sourceRevision = source,
+                    resultRevision = revision,
+                    updatedAt = now,
+                    nextRetryAt = null,
+                    leaseOwner = null,
+                    leaseExpiresAt = null,
+                    runId = null,
+                    lastErrorCode = null
                 )
-                true
+                false
+            } else {
+                val decision = prepareFeatureWork(
+                    state,
+                    item.id,
+                    MediaFeature.METADATA,
+                    source,
+                    revision,
+                    context.fullRefresh,
+                    now,
+                    terminalOutputPresent = item.id in completeIds
+                )
+                decision.stateToPersist?.let(statesToPersist::add)
+                decision.shouldProcess
             }
         }
+        if (statesToPersist.isNotEmpty()) scanDao.upsertFeatureStates(statesToPersist)
         var succeeded = 0
         var skipped = 0
         var failed = 0
+        progress(context, candidates.size, 0, 0, 0, 0)
         candidates.forEachIndexed { index, item ->
             currentCoroutineContext().ensureActive()
-            val owner = "${context.runId}:metadata:${item.id}"
+            val owner = "${context.owner}:metadata:${item.id}"
             val attemptAt = System.currentTimeMillis()
             if (scanDao.claimFeatureLease(
                     item.id,
@@ -247,6 +349,24 @@ class MetadataPhaseProcessor @Inject constructor(
     }
 }
 
+private const val MEDIA_DELETE_BATCH_SIZE = 500
+private const val SEARCH_EMBEDDING_DIMENSION = 512
+private const val FACE_EMBEDDING_DIMENSION = 512
+
+internal fun isValidEmbeddingVector(values: FloatArray, expectedSize: Int): Boolean {
+    if (values.size != expectedSize || values.any { !it.isFinite() }) return false
+    val normSquared = values.fold(0.0) { sum, value -> sum + value * value }
+    return normSquared in 0.9..1.1
+}
+
+internal fun canAdoptExistingSearchEmbedding(
+    embedding: ImageEmbedding?,
+    timestamp: Long,
+    revision: String
+): Boolean = embedding != null && embedding.date == timestamp &&
+    (embedding.resultRevision.isBlank() || embedding.resultRevision == revision) &&
+    isValidEmbeddingVector(embedding.embedding, SEARCH_EMBEDDING_DIMENSION)
+
 class SearchIndexPhaseProcessor @Inject constructor(
     repository: MediaRepository,
     database: InternalDatabase,
@@ -261,33 +381,77 @@ class SearchIndexPhaseProcessor @Inject constructor(
         if (!BuildConfig.ENABLE_INDEXING) return SmartScanPhaseResult.Blocked("indexing_disabled")
         if (!modelManager.isReady(ModelGroup.SEARCH)) return SmartScanPhaseResult.Blocked("search_model_unavailable")
         val scanDao = database.getSmartScanDao()
-        database.getImageEmbeddingDao().deleteOrphans()
+        val imageEmbeddingDao = database.getImageEmbeddingDao()
+        imageEmbeddingDao.deleteOrphans()
+        val now = System.currentTimeMillis()
+        val states = scanDao.getFeatureStates(MediaFeature.SEARCH_EMBEDDING).associateBy { it.mediaId }
+        val headers = imageEmbeddingDao.getHeaders().associateBy { it.id }
+        val statesToPersist = mutableListOf<MediaFeatureStateEntity>()
         val candidates = media().filter { it.mimeType.startsWith("image/") }.filter { item ->
             val source = sourceRevision(item)
-            val embedding = repository.getRecord(item.id)
-            val state = scanDao.getFeatureState(item.id, MediaFeature.SEARCH_EMBEDDING)
-            if (!context.fullRefresh && embedding?.date == item.timestamp && embedding.resultRevision == revision &&
-                state?.status == MediaFeatureStatus.SUCCEEDED && state.sourceRevision == source
-            ) false else {
-                scanDao.upsertFeatureState(
-                    MediaFeatureStateEntity(
-                        mediaId = item.id,
-                        feature = MediaFeature.SEARCH_EMBEDDING,
-                        sourceRevision = source,
-                        updatedAt = System.currentTimeMillis()
+            val state = states[item.id]
+            val header = headers[item.id]
+            val activeLease = state?.status == MediaFeatureStatus.PROCESSING &&
+                state.leaseExpiresAt?.let { it > now } == true
+            val outputPresent = header?.embeddingBytes == SEARCH_EMBEDDING_DIMENSION * Float.SIZE_BYTES
+            val current = !context.fullRefresh && outputPresent && header.date == item.timestamp &&
+                header.resultRevision == revision && state?.status == MediaFeatureStatus.SUCCEEDED &&
+                state.sourceRevision == source && state.resultRevision == revision
+            if (activeLease || current) {
+                false
+            } else if (!context.fullRefresh && header?.date == item.timestamp &&
+                canAdoptExistingSearchEmbedding(repository.getRecord(item.id), item.timestamp, revision)
+            ) {
+                database.withTransaction {
+                    check(imageEmbeddingDao.updateResultRevision(item.id, revision) == 1)
+                    scanDao.upsertFeatureState(
+                        state?.copy(
+                            status = MediaFeatureStatus.SUCCEEDED,
+                            sourceRevision = source,
+                            resultRevision = revision,
+                            updatedAt = now,
+                            nextRetryAt = null,
+                            leaseOwner = null,
+                            leaseExpiresAt = null,
+                            runId = null,
+                            lastErrorCode = null
+                        ) ?: MediaFeatureStateEntity(
+                            mediaId = item.id,
+                            feature = MediaFeature.SEARCH_EMBEDDING,
+                            status = MediaFeatureStatus.SUCCEEDED,
+                            sourceRevision = source,
+                            resultRevision = revision,
+                            updatedAt = now
+                        )
                     )
+                }
+                false
+            } else {
+                val decision = prepareFeatureWork(
+                    state,
+                    item.id,
+                    MediaFeature.SEARCH_EMBEDDING,
+                    source,
+                    revision,
+                    context.fullRefresh,
+                    now,
+                    terminalOutputPresent = outputPresent
                 )
-                true
+                decision.stateToPersist?.let(statesToPersist::add)
+                decision.shouldProcess
             }
         }
+        if (statesToPersist.isNotEmpty()) scanDao.upsertFeatureStates(statesToPersist)
         var succeeded = 0
         var skipped = 0
         var failed = 0
+        progress(context, candidates.size, 0, 0, 0, 0)
+        if (candidates.isEmpty()) return SmartScanPhaseResult.Completed(SmartScanProgress.EMPTY)
         val helper = SearchVisionHelper(modelManager)
         helper.setupVisionSession().use { session ->
             candidates.forEachIndexed { index, item ->
                 currentCoroutineContext().ensureActive()
-                val owner = "${context.runId}:embedding:${item.id}"
+                val owner = "${context.owner}:embedding:${item.id}"
                 val attemptAt = System.currentTimeMillis()
                 if (scanDao.claimFeatureLease(
                         item.id,
@@ -306,11 +470,13 @@ class SearchIndexPhaseProcessor @Inject constructor(
                     withTimeout(ITEM_TIMEOUT_MILLIS) {
                     val bitmap = thumbnailLoader.load(item, 224) ?: error("decode_failed")
                     try {
+                        val embedding = helper.getImageEmbedding(session, bitmap)
+                        check(isValidEmbeddingVector(embedding, SEARCH_EMBEDDING_DIMENSION))
                         repository.addImageEmbedding(
                             ImageEmbedding(
                                 item.id,
                                 item.timestamp,
-                                helper.getImageEmbedding(session, bitmap),
+                                embedding,
                                 resultRevision = revision
                             )
                         )
@@ -356,6 +522,15 @@ class SearchIndexPhaseProcessor @Inject constructor(
     }
 }
 
+internal fun canAdoptExistingCategoryResults(
+    mappings: List<MediaCategory>,
+    validMediaIds: Set<Long>,
+    revision: String
+): Boolean = mappings.isNotEmpty() && mappings.all {
+    it.mediaId in validMediaIds && it.similarityScore.isFinite() &&
+        (it.resultRevision.isBlank() || it.resultRevision == revision)
+}
+
 class CategoryClassificationPhaseProcessor @Inject constructor(
     repository: MediaRepository,
     database: InternalDatabase,
@@ -375,37 +550,82 @@ class CategoryClassificationPhaseProcessor @Inject constructor(
             categoryDao.insertCategories(Category.DEFAULT_CATEGORIES)
             categories = categoryDao.getAllCategoriesAsync()
         }
-        val embeddings = repository.getImageEmbeddings().firstOrNull().orEmpty()
-        if (embeddings.isEmpty()) return SmartScanPhaseResult.Blocked("embeddings_unavailable")
+        val imageEmbeddingDao = database.getImageEmbeddingDao()
+        val embeddingIds = imageEmbeddingDao.getIds().toHashSet()
+        if (embeddingIds.isEmpty()) return SmartScanPhaseResult.Blocked("embeddings_unavailable")
         val scanDao = database.getSmartScanDao()
+        val states = scanDao.getFeatureStates(MediaFeature.CATEGORY_CLASSIFICATION).associateBy { it.mediaId }
+        val mappingsByCategory = categoryDao.getAllAutomaticMediaCategories().groupBy { it.categoryId }
         val embeddingGeneration =
-            "${embeddings.size}:${scanDao.getFeatureGeneration(MediaFeature.SEARCH_EMBEDDING)}:$revision"
+            "${embeddingIds.size}:${scanDao.getFeatureGeneration(MediaFeature.SEARCH_EMBEDDING)}:$revision"
+        val now = System.currentTimeMillis()
+        val statesToPersist = mutableListOf<MediaFeatureStateEntity>()
         categories = categories.filter { category ->
             val source = "$embeddingGeneration:${category.updatedAt}:${category.searchTerms}:" +
                 "${category.threshold}:${category.referenceImageIds.joinToString(",")}"
-            val state = scanDao.getFeatureState(category.id, MediaFeature.CATEGORY_CLASSIFICATION)
-            val isCurrent = state?.status == MediaFeatureStatus.SUCCEEDED &&
+            val state = states[category.id]
+            val activeLease = state?.status == MediaFeatureStatus.PROCESSING &&
+                state.leaseExpiresAt?.let { it > now } == true
+            val current = !context.fullRefresh && state?.status == MediaFeatureStatus.SUCCEEDED &&
                 state.sourceRevision == source && state.resultRevision == revision
-            if (!SmartScanPlan.shouldProcess(context.fullRefresh, isCurrent)) false else {
-                scanDao.upsertFeatureState(
-                    MediaFeatureStateEntity(
-                        mediaId = category.id,
-                        feature = MediaFeature.CATEGORY_CLASSIFICATION,
-                        sourceRevision = source,
-                        updatedAt = System.currentTimeMillis()
+            val mappings = mappingsByCategory[category.id].orEmpty()
+            if (activeLease || current) {
+                false
+            } else {
+                if (!context.fullRefresh && canAdoptExistingCategoryResults(mappings, embeddingIds, revision)) {
+                    database.withTransaction {
+                        check(categoryDao.updateAutomaticResultRevision(category.id, revision) == mappings.size)
+                        scanDao.upsertFeatureState(
+                            state?.copy(
+                                status = MediaFeatureStatus.SUCCEEDED,
+                                sourceRevision = source,
+                                resultRevision = revision,
+                                updatedAt = now,
+                                nextRetryAt = null,
+                                leaseOwner = null,
+                                leaseExpiresAt = null,
+                                runId = null,
+                                lastErrorCode = null
+                            ) ?: MediaFeatureStateEntity(
+                                mediaId = category.id,
+                                feature = MediaFeature.CATEGORY_CLASSIFICATION,
+                                status = MediaFeatureStatus.SUCCEEDED,
+                                sourceRevision = source,
+                                resultRevision = revision,
+                                updatedAt = now
+                            )
+                        )
+                    }
+                    false
+                } else {
+                    val decision = prepareFeatureWork(
+                        state,
+                        category.id,
+                        MediaFeature.CATEGORY_CLASSIFICATION,
+                        source,
+                        revision,
+                        context.fullRefresh,
+                        now
                     )
-                )
-                true
+                    decision.stateToPersist?.let(statesToPersist::add)
+                    decision.shouldProcess
+                }
             }
         }
+        if (statesToPersist.isNotEmpty()) scanDao.upsertFeatureStates(statesToPersist)
+        if (categories.isEmpty()) return SmartScanPhaseResult.Completed(SmartScanProgress.EMPTY)
+        val embeddings = repository.getImageEmbeddings().firstOrNull().orEmpty()
+        if (embeddings.isEmpty()) return SmartScanPhaseResult.Blocked("embeddings_unavailable")
+        val embeddingById = embeddings.associateBy { it.id }
         val helper = SearchVisionHelper(modelManager)
         var succeeded = 0
         var skipped = 0
         var failed = 0
+        progress(context, categories.size, 0, 0, 0, 0)
         helper.setupTextSession().use { session ->
             categories.forEachIndexed { index, category ->
                 currentCoroutineContext().ensureActive()
-                val owner = "${context.runId}:category:${category.id}"
+                val owner = "${context.owner}:category:${category.id}"
                 val attemptAt = System.currentTimeMillis()
                 if (scanDao.claimFeatureLease(
                         category.id,
@@ -421,13 +641,16 @@ class CategoryClassificationPhaseProcessor @Inject constructor(
                     return@forEachIndexed
                 }
                 val result = runCatching {
-                    val categoryEmbedding = category.embedding ?: if (category.searchTerms.isNotBlank()) {
+                    val cachedEmbedding = category.embedding?.takeIf {
+                        states[category.id]?.resultRevision == revision &&
+                            isValidEmbeddingVector(it, SEARCH_EMBEDDING_DIMENSION)
+                    }
+                    val categoryEmbedding = cachedEmbedding ?: if (category.searchTerms.isNotBlank()) {
                         helper.getTextEmbedding(session, category.searchTerms).also {
-                            categoryDao.updateCategory(category.copy(embedding = it, updatedAt = System.currentTimeMillis()))
+                            categoryDao.updateCategoryEmbedding(category.id, it)
                         }
                     } else null
-                    val references = category.referenceImageIds.toSet()
-                    val referenceEmbeddings = embeddings.filter { it.id in references }
+                    val referenceEmbeddings = category.referenceImageIds.mapNotNull(embeddingById::get)
                     if (categoryEmbedding == null && referenceEmbeddings.isEmpty()) {
                         scanDao.finishFeature(
                             category.id,
@@ -488,6 +711,23 @@ class CategoryClassificationPhaseProcessor @Inject constructor(
     }
 }
 
+internal fun canAdoptExistingFaceResults(
+    faces: List<DetectedFaceEntity>,
+    timestamp: Long,
+    revision: String
+): Boolean = faces.isNotEmpty() && faces.all { face ->
+    if (face.timestamp != timestamp ||
+        face.resultRevision.isNotBlank() && face.resultRevision != revision
+    ) return@all false
+    val values = floatArrayOf(face.left, face.top, face.right, face.bottom, face.confidence)
+    if (values.any { !it.isFinite() }) return@all false
+    val validEmbedding = face.embedding?.takeIf { it.size == FACE_EMBEDDING_DIMENSION * Float.SIZE_BYTES }
+        ?.let { bytes ->
+            isValidEmbeddingVector(FloatVectorCodec.decode(bytes), FACE_EMBEDDING_DIMENSION)
+        } ?: false
+    face.right > face.left && face.bottom > face.top && validEmbedding
+}
+
 class FaceIndexPhaseProcessor @Inject constructor(
     repository: MediaRepository,
     database: InternalDatabase,
@@ -502,7 +742,12 @@ class FaceIndexPhaseProcessor @Inject constructor(
         get() = "face-v2:${modelManager.processorRevision(ModelGroup.FACE_DETECT)}:" +
             modelManager.processorRevision(ModelGroup.FACE_RECOGNITION)
 
-    private data class Cluster(val personId: String, val centroid: FloatArray, var count: Int)
+    private data class Cluster(
+        val personId: String,
+        var centroid: FloatArray,
+        var normalizedCentroid: FloatArray,
+        var count: Int
+    )
 
     override suspend fun process(context: SmartScanPhaseContext): SmartScanPhaseResult {
         if (!BuildConfig.ENABLE_INDEXING) return SmartScanPhaseResult.Blocked("indexing_disabled")
@@ -510,48 +755,88 @@ class FaceIndexPhaseProcessor @Inject constructor(
             !modelManager.isReady(ModelGroup.FACE_RECOGNITION)
         ) return SmartScanPhaseResult.Blocked("face_model_unavailable")
         val scanDao = database.getSmartScanDao()
-        faceDao.deleteOrphans()
+        val orphanPeople = faceDao.getOrphanPersonIds()
+        val removedOrphans = faceDao.deleteOrphans()
+        val touchedPeople = orphanPeople.toHashSet()
+        val now = System.currentTimeMillis()
+        val states = scanDao.getFeatureStates(MediaFeature.FACE_DETECTION).associateBy { it.mediaId }
+        val headers = faceDao.getHeaders().groupBy { it.mediaId }
+        val statesToPersist = mutableListOf<MediaFeatureStateEntity>()
         val candidates = media().filter { it.mimeType.startsWith("image/") }.filter { item ->
             val source = sourceRevision(item)
-            val existing = faceDao.getByMedia(item.id)
-            val state = scanDao.getFeatureState(item.id, MediaFeature.FACE_DETECTION)
-            if (!context.fullRefresh && existing.isNotEmpty() && state == null && existing.all { it.resultRevision.isBlank() }) {
-                scanDao.upsertFeatureState(
-                    MediaFeatureStateEntity(
-                        mediaId = item.id,
-                        feature = MediaFeature.FACE_DETECTION,
-                        status = MediaFeatureStatus.SUCCEEDED,
-                        sourceRevision = source,
-                        resultRevision = revision,
-                        updatedAt = System.currentTimeMillis()
-                    )
-                )
+            val state = states[item.id]
+            val existingHeaders = headers[item.id].orEmpty()
+            val activeLease = state?.status == MediaFeatureStatus.PROCESSING &&
+                state.leaseExpiresAt?.let { it > now } == true
+            val current = !context.fullRefresh && existingHeaders.isNotEmpty() &&
+                existingHeaders.all { it.timestamp == item.timestamp && it.resultRevision == revision } &&
+                state?.status == MediaFeatureStatus.SUCCEEDED && state.sourceRevision == source &&
+                state.resultRevision == revision
+            if (activeLease || current) {
                 false
-            } else if (!context.fullRefresh && existing.isNotEmpty() &&
-                existing.all { it.timestamp == item.timestamp && it.resultRevision == revision } &&
-                state?.status == MediaFeatureStatus.SUCCEEDED && state.sourceRevision == source
-            ) false else {
-                scanDao.upsertFeatureState(
-                    MediaFeatureStateEntity(
-                        mediaId = item.id,
-                        feature = MediaFeature.FACE_DETECTION,
-                        sourceRevision = source,
-                        updatedAt = System.currentTimeMillis()
+            } else {
+                val existing = if (!context.fullRefresh && existingHeaders.isNotEmpty()) {
+                    faceDao.getByMedia(item.id)
+                } else {
+                    emptyList()
+                }
+                if (!context.fullRefresh && canAdoptExistingFaceResults(existing, item.timestamp, revision)) {
+                    existing.mapNotNullTo(touchedPeople) { it.personId }
+                    database.withTransaction {
+                        check(faceDao.updateResultRevision(item.id, revision) == existing.size)
+                        scanDao.upsertFeatureState(
+                            state?.copy(
+                                status = MediaFeatureStatus.SUCCEEDED,
+                                sourceRevision = source,
+                                resultRevision = revision,
+                                updatedAt = now,
+                                nextRetryAt = null,
+                                leaseOwner = null,
+                                leaseExpiresAt = null,
+                                runId = null,
+                                lastErrorCode = null
+                            ) ?: MediaFeatureStateEntity(
+                                mediaId = item.id,
+                                feature = MediaFeature.FACE_DETECTION,
+                                status = MediaFeatureStatus.SUCCEEDED,
+                                sourceRevision = source,
+                                resultRevision = revision,
+                                updatedAt = now
+                            )
+                        )
+                    }
+                    false
+                } else {
+                    val decision = prepareFeatureWork(
+                        state,
+                        item.id,
+                        MediaFeature.FACE_DETECTION,
+                        source,
+                        revision,
+                        context.fullRefresh,
+                        now,
+                        terminalOutputPresent = existingHeaders.isNotEmpty()
                     )
-                )
-                true
+                    decision.stateToPersist?.let(statesToPersist::add)
+                    decision.shouldProcess
+                }
             }
         }
-        val clusters = buildInitialClusters(candidates.mapTo(hashSetOf()) { it.id })
-        val touchedPeople = hashSetOf<String>()
+        if (statesToPersist.isNotEmpty()) scanDao.upsertFeatureStates(statesToPersist)
+        if (candidates.isEmpty()) {
+            if (removedOrphans > 0) persistClusters(buildInitialClusters(forceRebuild = true), touchedPeople)
+            return SmartScanPhaseResult.Completed(SmartScanProgress.EMPTY)
+        }
+        val clusters = buildInitialClusters(forceRebuild = removedOrphans > 0)
         var succeeded = 0
         var skipped = 0
         var failed = 0
+        progress(context, candidates.size, 0, 0, 0, 0)
         val helper = FaceHelper(modelManager)
         try {
             candidates.forEachIndexed { index, item ->
                 currentCoroutineContext().ensureActive()
-                val owner = "${context.runId}:face:${item.id}"
+                val owner = "${context.owner}:face:${item.id}"
                 val attemptAt = System.currentTimeMillis()
                 if (scanDao.claimFeatureLease(
                         item.id,
@@ -566,56 +851,77 @@ class FaceIndexPhaseProcessor @Inject constructor(
                     progress(context, candidates.size, index + 1, succeeded, skipped, failed)
                     return@forEachIndexed
                 }
+                val clusterSnapshot = clusters.mapTo(mutableListOf()) {
+                    it.copy(centroid = it.centroid.copyOf(), normalizedCentroid = it.normalizedCentroid.copyOf())
+                }
                 val result = runCatching {
                     val bitmap = thumbnailLoader.load(item, 640) ?: error("decode_failed")
                     try {
                         val faces = helper.detect(bitmap)
                         val embeddedFaces = faces.map { face ->
-                            face to requireNotNull(helper.embed(bitmap, face.rectF))
+                            val embedding = requireNotNull(helper.embed(bitmap, face.rectF))
+                            check(isValidEmbeddingVector(embedding, FACE_EMBEDDING_DIMENSION))
+                            face to embedding
                         }
-                        faceDao.getByMedia(item.id).mapNotNullTo(touchedPeople) { it.personId }
-                        faceDao.deleteByMedia(item.id)
-                        if (embeddedFaces.isEmpty()) {
-                            faceDao.insert(DetectedFaceEntity(mediaId = item.id, timestamp = item.timestamp, resultRevision = revision))
+                        val existingFaces = faceDao.getByMedia(item.id)
+                        existingFaces.mapNotNullTo(touchedPeople) { it.personId }
+                        removeFromClusters(existingFaces, clusters)
+                        val detected = if (embeddedFaces.isEmpty()) {
+                            listOf(DetectedFaceEntity(mediaId = item.id, timestamp = item.timestamp, resultRevision = revision))
                         } else {
-                            embeddedFaces.forEach { (face, embedding) ->
-                                val personId = assignCluster(
-                                    embedding,
-                                    clusters,
-                                    item,
-                                    face,
-                                    bitmap,
-                                    touchedPeople
-                                )
-                                faceDao.insert(
-                                    DetectedFaceEntity(
-                                        mediaId = item.id,
-                                        personId = personId,
-                                        embedding = encode(embedding),
-                                        left = face.left,
-                                        top = face.top,
-                                        right = face.right,
-                                        bottom = face.bottom,
-                                        confidence = face.confidence,
-                                        timestamp = item.timestamp,
-                                        resultRevision = revision
-                                    )
+                            embeddedFaces.map { (face, embedding) ->
+                                DetectedFaceEntity(
+                                    mediaId = item.id,
+                                    personId = assignCluster(
+                                        embedding,
+                                        clusters,
+                                        item,
+                                        face,
+                                        bitmap,
+                                        touchedPeople
+                                    ),
+                                    embedding = FloatVectorCodec.encode(embedding),
+                                    left = face.left,
+                                    top = face.top,
+                                    right = face.right,
+                                    bottom = face.bottom,
+                                    confidence = face.confidence,
+                                    timestamp = item.timestamp,
+                                    resultRevision = revision
                                 )
                             }
+                        }
+                        val completedAt = System.currentTimeMillis()
+                        database.withTransaction {
+                            faceDao.deleteByMedia(item.id)
+                            faceDao.insertAll(detected)
+                            persistClusterRows(clusters, touchedPeople, completedAt)
+                            val itemPeople = existingFaces.mapNotNullTo(hashSetOf()) { it.personId }
+                            detected.mapNotNullTo(itemPeople) { it.personId }
+                            itemPeople.forEach { personId ->
+                                personDao.updateFaceCount(personId, faceDao.countForPerson(personId), completedAt)
+                            }
+                            check(
+                                scanDao.finishFeature(
+                                    item.id,
+                                    MediaFeature.FACE_DETECTION,
+                                    owner,
+                                    MediaFeatureStatus.SUCCEEDED,
+                                    revision,
+                                    completedAt
+                                ) == 1
+                            )
                         }
                     } finally {
                         bitmap.recycle()
                     }
-                    scanDao.finishFeature(
-                        item.id,
-                        MediaFeature.FACE_DETECTION,
-                        owner,
-                        MediaFeatureStatus.SUCCEEDED,
-                        revision,
-                        System.currentTimeMillis()
-                    )
                 }
                 if (result.isSuccess) succeeded++ else {
+                    val previousPeople = clusterSnapshot.mapTo(hashSetOf()) { it.personId }
+                    val newPeople = clusters.mapNotNullTo(hashSetOf()) { it.personId.takeIf { id -> id !in previousPeople } }
+                    withContext(NonCancellable) { deletePeople(newPeople) }
+                    clusters.clear()
+                    clusters.addAll(clusterSnapshot)
                     val error = result.exceptionOrNull()
                     if (error is CancellationException && error !is TimeoutCancellationException) throw error
                     scanDao.finishFeature(
@@ -636,10 +942,7 @@ class FaceIndexPhaseProcessor @Inject constructor(
         } finally {
             helper.close()
         }
-        val now = System.currentTimeMillis()
-        touchedPeople.forEach { personId ->
-            personDao.updateFaceCount(personId, faceDao.countForPerson(personId), now)
-        }
+        persistClusters(clusters, touchedPeople)
         val summary = SmartScanProgress(candidates.size, candidates.size, succeeded, skipped, failed)
         return when {
             failed == candidates.size && candidates.isNotEmpty() ->
@@ -649,19 +952,91 @@ class FaceIndexPhaseProcessor @Inject constructor(
         }
     }
 
-    private suspend fun buildInitialClusters(excludedMediaIds: Set<Long>): MutableList<Cluster> = faceDao.getAll()
-        .filter { it.mediaId !in excludedMediaIds && it.personId != null && it.embedding != null }
-        .groupBy { requireNotNull(it.personId) }
-        .map { (personId, faces) ->
-            val first = decode(requireNotNull(faces.first().embedding))
-            val sum = FloatArray(first.size)
-            faces.forEach { face ->
-                val values = decode(requireNotNull(face.embedding))
-                values.indices.forEach { index -> sum[index] += values[index] }
+    private suspend fun deletePeople(personIds: Set<String>) {
+        personIds.forEach { personId ->
+            personDao.getById(personId)?.thumbnailUrl?.let { value ->
+                runCatching { File(requireNotNull(value.toUri().path)).delete() }
             }
-            sum.indices.forEach { index -> sum[index] /= faces.size }
-            Cluster(personId, FaceHelper.l2Normalize(sum), faces.size)
-        }.toMutableList()
+            personDao.deleteById(personId)
+        }
+    }
+
+    private suspend fun persistClusters(clusters: List<Cluster>, touchedPeople: Set<String>) {
+        val completedAt = System.currentTimeMillis()
+        database.withTransaction {
+            persistClusterRows(clusters, touchedPeople, completedAt)
+        }
+        touchedPeople.forEach { personId ->
+            personDao.updateFaceCount(personId, faceDao.countForPerson(personId), completedAt)
+        }
+    }
+
+    private suspend fun persistClusterRows(
+        clusters: List<Cluster>,
+        touchedPeople: Set<String>,
+        updatedAt: Long
+    ) {
+        val activeClusters = clusters.filter { it.count > 0 }.map {
+            FaceClusterEntity(it.personId, it.centroid, it.count, updatedAt)
+        }
+        if (activeClusters.isNotEmpty()) faceDao.upsertClusters(activeClusters)
+        val emptyClusterIds = touchedPeople - activeClusters.mapTo(hashSetOf()) { it.personId }
+        if (emptyClusterIds.isNotEmpty()) faceDao.deleteClusters(emptyClusterIds.toList())
+    }
+
+    private suspend fun buildInitialClusters(forceRebuild: Boolean): MutableList<Cluster> {
+        val persisted = faceDao.getClusters().filter {
+            it.faceCount > 0 && it.centroid.size == FACE_EMBEDDING_DIMENSION && it.centroid.all(Float::isFinite)
+        }
+        val personCounts = faceDao.getPersonCounts().associate { it.personId to it.faceCount }
+        val persistedCountsMatch = !forceRebuild && persisted.size == personCounts.size && persisted.all {
+            personCounts[it.personId] == it.faceCount
+        }
+        if (persistedCountsMatch && persisted.isNotEmpty()) {
+            return persisted.mapTo(mutableListOf()) {
+                Cluster(it.personId, it.centroid.copyOf(), FaceHelper.l2Normalize(it.centroid), it.faceCount)
+            }
+        }
+        val rebuilt = faceDao.getAll()
+            .filter { it.personId != null && it.embedding != null }
+            .groupBy { requireNotNull(it.personId) }
+            .mapNotNull { (personId, faces) ->
+                val vectors = faces.mapNotNull { face ->
+                    runCatching { FloatVectorCodec.decode(requireNotNull(face.embedding)) }.getOrNull()
+                        ?.takeIf { it.size == FACE_EMBEDDING_DIMENSION && it.all(Float::isFinite) }
+                }
+                if (vectors.isEmpty()) return@mapNotNull null
+                val sum = FloatArray(FACE_EMBEDDING_DIMENSION)
+                vectors.forEach { values ->
+                    values.indices.forEach { index -> sum[index] += values[index] }
+                }
+                val centroid = FloatArray(sum.size) { sum[it] / vectors.size }
+                Cluster(personId, centroid, FaceHelper.l2Normalize(centroid), vectors.size)
+            }.toMutableList()
+        if (rebuilt.isNotEmpty()) {
+            val now = System.currentTimeMillis()
+            faceDao.upsertClusters(rebuilt.map { FaceClusterEntity(it.personId, it.centroid, it.count, now) })
+        }
+        return rebuilt
+    }
+
+    private fun removeFromClusters(faces: List<DetectedFaceEntity>, clusters: List<Cluster>) {
+        faces.forEach { face ->
+            val personId = face.personId ?: return@forEach
+            val embedding = face.embedding?.let {
+                runCatching { FloatVectorCodec.decode(it) }.getOrNull()
+            }?.takeIf { it.size == FACE_EMBEDDING_DIMENSION && it.all(Float::isFinite) } ?: return@forEach
+            val cluster = clusters.firstOrNull { it.personId == personId } ?: return@forEach
+            if (cluster.count > 1) {
+                val newCount = cluster.count - 1
+                cluster.centroid = FloatArray(cluster.centroid.size) { index ->
+                    (cluster.centroid[index] * cluster.count - embedding[index]) / newCount
+                }
+                cluster.normalizedCentroid = FaceHelper.l2Normalize(cluster.centroid)
+            }
+            cluster.count = (cluster.count - 1).coerceAtLeast(0)
+        }
+    }
 
     private suspend fun assignCluster(
         embedding: FloatArray,
@@ -671,17 +1046,24 @@ class FaceIndexPhaseProcessor @Inject constructor(
         bitmap: Bitmap,
         touchedPeople: MutableSet<String>
     ): String {
-        val best = clusters.maxByOrNull { FaceHelper.cosine(embedding, it.centroid) }
-        if (best != null && FaceHelper.cosine(embedding, best.centroid) >= CLUSTER_THRESHOLD) {
-            best.centroid.indices.forEach { index ->
-                best.centroid[index] =
-                    (best.centroid[index] * best.count + embedding[index]) / (best.count + 1)
+        var best: Cluster? = null
+        var bestScore = Float.NEGATIVE_INFINITY
+        clusters.forEach { cluster ->
+            val score = FaceHelper.cosine(embedding, cluster.normalizedCentroid)
+            if (score > bestScore) {
+                best = cluster
+                bestScore = score
             }
-            val normalized = FaceHelper.l2Normalize(best.centroid)
-            System.arraycopy(normalized, 0, best.centroid, 0, normalized.size)
-            best.count++
-            touchedPeople += best.personId
-            return best.personId
+        }
+        best?.takeIf { bestScore >= CLUSTER_THRESHOLD }?.let { cluster ->
+            val newCount = cluster.count + 1
+            cluster.centroid = FloatArray(cluster.centroid.size) { index ->
+                (cluster.centroid[index] * cluster.count + embedding[index]) / newCount
+            }
+            cluster.normalizedCentroid = FaceHelper.l2Normalize(cluster.centroid)
+            cluster.count = newCount
+            touchedPeople += cluster.personId
+            return cluster.personId
         }
 
         val personId = "local_${UUID.randomUUID()}"
@@ -696,7 +1078,7 @@ class FaceIndexPhaseProcessor @Inject constructor(
                 lastUpdated = System.currentTimeMillis()
             )
         )
-        clusters += Cluster(personId, embedding.copyOf(), 1)
+        clusters += Cluster(personId, embedding.copyOf(), embedding.copyOf(), 1)
         touchedPeople += personId
         return personId
     }
@@ -717,14 +1099,6 @@ class FaceIndexPhaseProcessor @Inject constructor(
         if (crop != bitmap) crop.recycle()
         file.toUri().toString()
     }.getOrNull()
-
-    private fun encode(values: FloatArray): ByteArray = ByteBuffer.allocate(values.size * Float.SIZE_BYTES).apply {
-        values.forEach(::putFloat)
-    }.array()
-
-    private fun decode(bytes: ByteArray): FloatArray = ByteBuffer.wrap(bytes).let { buffer ->
-        FloatArray(bytes.size / Float.SIZE_BYTES) { buffer.float }
-    }
 
     companion object {
         private const val CLUSTER_THRESHOLD = 0.45f

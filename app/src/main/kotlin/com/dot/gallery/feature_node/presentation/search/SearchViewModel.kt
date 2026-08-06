@@ -5,14 +5,17 @@ import android.graphics.BitmapFactory
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.work.WorkInfo
-import androidx.work.WorkManager
 import com.dot.gallery.R
 import com.dot.gallery.core.MediaDistributor
 import com.dot.gallery.core.Settings
+import com.dot.gallery.core.smart.SmartScanPlan
 import com.dot.gallery.core.ml.ModelGroup
 import com.dot.gallery.core.ml.ModelManager
 import com.dot.gallery.core.ml.ModelStatus
+import com.dot.gallery.feature_node.data.data_source.SmartScanDao
+import com.dot.gallery.feature_node.data.data_source.SmartScanFeature
+import com.dot.gallery.feature_node.data.data_source.SmartScanPhase
+import com.dot.gallery.feature_node.data.data_source.SmartScanStatus
 import com.dot.gallery.feature_node.domain.model.LocationMedia
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaMetadata
@@ -44,6 +47,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
@@ -64,7 +69,7 @@ data class SearchResultsState(
 @HiltViewModel
 class SearchViewModel @Inject constructor(
     mediaDistributor: MediaDistributor,
-    workManager: WorkManager,
+    smartScanDao: SmartScanDao,
     private val searchHelper: SearchHelper,
     repository: MediaRepository,
     modelManager: ModelManager,
@@ -288,17 +293,41 @@ class SearchViewModel @Inject constructor(
             initialValue = MediaMetadataState()
         )
 
-    val searchIndexerState = combine(
-        workManager.getWorkInfosByTagFlow("SearchIndexerUpdater")
-            .map { it.lastOrNull()?.state == WorkInfo.State.RUNNING },
-        workManager.getWorkInfosByTagFlow("SearchIndexerUpdater")
-            .map { it.lastOrNull()?.progress?.getFloat("progress", 0f) ?: 0f }
-    ) { isRunning, progress ->
-        SearchIndexerState(
-            isIndexing = isRunning,
-            progress = progress
-        )
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, SearchIndexerState())
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val searchIndexerState = smartScanDao.observeActiveRun()
+        .flatMapLatest { run ->
+            if (run == null || run.requestedFeatures and SmartScanFeature.EMBEDDINGS.bit == 0) {
+                flowOf(SearchIndexerState())
+            } else {
+                smartScanDao.observePhases(run.runId).map { phases ->
+                    val planned = SmartScanPlan.phasesFor(run.requestedFeatures)
+                    val searchPhase = phases.firstOrNull { it.phase == SmartScanPhase.SEARCH_INDEX }
+                    if (searchPhase == null ||
+                        searchPhase.status != SmartScanStatus.QUEUED &&
+                        searchPhase.status != SmartScanStatus.RUNNING
+                    ) SearchIndexerState() else SearchIndexerState(
+                        isIndexing = true,
+                        status = searchPhase.status,
+                        progress = if (searchPhase.totalMedia <= 0) 0f else
+                            (searchPhase.processedMedia.toFloat() / searchPhase.totalMedia).coerceIn(0f, 1f),
+                        processed = searchPhase.processedMedia,
+                        total = searchPhase.totalMedia,
+                        stageNumber = planned.indexOf(SmartScanPhase.SEARCH_INDEX) + 1,
+                        stageCount = planned.size,
+                        estimatedRemainingMillis = if (searchPhase.status == SmartScanStatus.RUNNING) {
+                            SmartScanPlan.estimatedRemainingMillis(
+                                searchPhase.totalMedia,
+                                searchPhase.processedMedia,
+                                searchPhase.startedAt
+                            )
+                        } else {
+                            null
+                        }
+                    )
+                }
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, SearchIndexerState())
 
     private var searchJob: Job? = null
 

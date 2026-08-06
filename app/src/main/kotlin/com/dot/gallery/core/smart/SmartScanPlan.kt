@@ -7,6 +7,7 @@ package com.dot.gallery.core.smart
 
 import com.dot.gallery.feature_node.data.data_source.SmartScanFeature
 import com.dot.gallery.feature_node.data.data_source.SmartScanPhase
+import com.dot.gallery.feature_node.data.data_source.SmartScanPhaseEntity
 import com.dot.gallery.feature_node.data.data_source.SmartScanStatus
 
 data class SmartScanProgress(
@@ -39,6 +40,8 @@ data class SmartScanProgress(
 }
 
 object SmartScanPlan {
+    const val FOREGROUND_MEDIA_THRESHOLD = 1_000
+
     val orderedPhases = listOf(
         SmartScanPhase.SOURCE_SYNC,
         SmartScanPhase.METADATA,
@@ -64,6 +67,38 @@ object SmartScanPlan {
 
     fun aggregate(progress: Iterable<SmartScanProgress>): SmartScanProgress =
         progress.fold(SmartScanProgress.EMPTY, SmartScanProgress::plus)
+
+    fun estimatedRemainingMillis(
+        total: Int,
+        processed: Int,
+        startedAt: Long?,
+        now: Long = System.currentTimeMillis()
+    ): Long? {
+        if (startedAt == null || total <= 0 || processed <= 0 || processed >= total || now <= startedAt) return null
+        val elapsed = now - startedAt
+        return (((total - processed).toDouble() * elapsed) / processed)
+            .toLong()
+            .coerceAtLeast(0L)
+    }
+
+    fun requiresForeground(mediaCount: Int): Boolean = mediaCount > FOREGROUND_MEDIA_THRESHOLD
+
+    fun overallProgress(phases: List<SmartScanPhaseEntity>): Float {
+        if (phases.isEmpty()) return 0f
+        return phases.sumOf { phase ->
+            when (phase.status) {
+                SmartScanStatus.SUCCEEDED,
+                SmartScanStatus.PARTIAL,
+                SmartScanStatus.BLOCKED,
+                SmartScanStatus.FAILED,
+                SmartScanStatus.CANCELLED -> 1.0
+                SmartScanStatus.RUNNING -> if (phase.totalMedia <= 0) 0.0
+                else phase.processedMedia.coerceIn(0, phase.totalMedia).toDouble() / phase.totalMedia
+                SmartScanStatus.QUEUED,
+                SmartScanStatus.INTERRUPTED -> 0.0
+            }
+        }.div(phases.size).toFloat().coerceIn(0f, 1f)
+    }
 
     fun terminalStatus(statuses: Iterable<SmartScanStatus>): SmartScanStatus {
         val values = statuses.toList()
