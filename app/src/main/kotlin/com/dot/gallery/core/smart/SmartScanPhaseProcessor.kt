@@ -13,6 +13,7 @@ import com.dot.gallery.BuildConfig
 import com.dot.gallery.core.Resource
 import com.dot.gallery.cloud.core.ProviderType
 import com.dot.gallery.cloud.data.dao.DetectedFaceDao
+import com.dot.gallery.cloud.data.dao.DetectedFaceHeader
 import com.dot.gallery.cloud.data.dao.PersonDao
 import com.dot.gallery.cloud.data.entity.DetectedFaceEntity
 import com.dot.gallery.cloud.data.entity.FaceClusterEntity
@@ -728,6 +729,16 @@ internal fun canAdoptExistingFaceResults(
     face.right > face.left && face.bottom > face.top && validEmbedding
 }
 
+internal fun isCurrentFaceDetection(
+    state: MediaFeatureStateEntity?,
+    sourceRevision: String,
+    resultRevision: String,
+    timestamp: Long,
+    headers: List<DetectedFaceHeader>
+): Boolean = state?.status == MediaFeatureStatus.SUCCEEDED &&
+    state.sourceRevision == sourceRevision && state.resultRevision == resultRevision &&
+    (headers.isEmpty() || headers.all { it.timestamp == timestamp && it.resultRevision == resultRevision })
+
 class FaceIndexPhaseProcessor @Inject constructor(
     repository: MediaRepository,
     database: InternalDatabase,
@@ -768,10 +779,13 @@ class FaceIndexPhaseProcessor @Inject constructor(
             val existingHeaders = headers[item.id].orEmpty()
             val activeLease = state?.status == MediaFeatureStatus.PROCESSING &&
                 state.leaseExpiresAt?.let { it > now } == true
-            val current = !context.fullRefresh && existingHeaders.isNotEmpty() &&
-                existingHeaders.all { it.timestamp == item.timestamp && it.resultRevision == revision } &&
-                state?.status == MediaFeatureStatus.SUCCEEDED && state.sourceRevision == source &&
-                state.resultRevision == revision
+            val current = !context.fullRefresh && isCurrentFaceDetection(
+                state = state,
+                sourceRevision = source,
+                resultRevision = revision,
+                timestamp = item.timestamp,
+                headers = existingHeaders
+            )
             if (activeLease || current) {
                 false
             } else {

@@ -104,6 +104,41 @@ class SmartScanPlanTest {
     }
 
     @Test
+    fun successfulFaceScanWithNoRowsIsCurrent() {
+        val state = MediaFeatureStateEntity(
+            mediaId = 7L,
+            feature = MediaFeature.FACE_DETECTION,
+            status = MediaFeatureStatus.SUCCEEDED,
+            sourceRevision = "source",
+            resultRevision = "face-v2",
+            updatedAt = 10L
+        )
+
+        assertEquals(
+            true,
+            isCurrentFaceDetection(state, "source", "face-v2", timestamp = 100L, headers = emptyList())
+        )
+        assertEquals(
+            false,
+            isCurrentFaceDetection(state, "changed", "face-v2", timestamp = 100L, headers = emptyList())
+        )
+        assertEquals(
+            false,
+            isCurrentFaceDetection(state, "source", "face-v3", timestamp = 100L, headers = emptyList())
+        )
+        assertEquals(
+            false,
+            isCurrentFaceDetection(
+                state.copy(status = MediaFeatureStatus.PENDING),
+                "source",
+                "face-v2",
+                timestamp = 100L,
+                headers = emptyList()
+            )
+        )
+    }
+
+    @Test
     fun changedInputResetsFailedFeatureWithoutOverwritingActiveLease() {
         val failed = MediaFeatureStateEntity(
             mediaId = 7L,
