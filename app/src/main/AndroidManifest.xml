@@ -21,6 +21,9 @@
     <!-- Required to download Map Preview for Media and FCast media serving -->
     <uses-permission android:name="android.permission.INTERNET"/>
 
+    <!-- Android 17+ requires runtime approval for direct connections to LAN addresses. -->
+    <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK"/>
+
     <!-- Required for FCast device discovery and media streaming -->
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>

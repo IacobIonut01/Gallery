@@ -120,32 +120,40 @@ class FCastSession @Inject constructor(
     /**
      * Returns a list of all required cast permissions with their current grant status.
      */
-    fun checkPermissions(): List<CastPermission> = listOf(
-        CastPermission(
+    fun checkPermissions(): List<CastPermission> = buildList {
+        add(CastPermission(
             permission = Manifest.permission.INTERNET,
             labelRes = R.string.cast_perm_internet,
             descriptionRes = R.string.cast_perm_internet_desc,
             granted = hasPermission(Manifest.permission.INTERNET)
-        ),
-        CastPermission(
+        ))
+        add(CastPermission(
             permission = Manifest.permission.ACCESS_WIFI_STATE,
             labelRes = R.string.cast_perm_wifi_state,
             descriptionRes = R.string.cast_perm_wifi_state_desc,
             granted = hasPermission(Manifest.permission.ACCESS_WIFI_STATE)
-        ),
-        CastPermission(
+        ))
+        add(CastPermission(
             permission = Manifest.permission.ACCESS_NETWORK_STATE,
             labelRes = R.string.cast_perm_network_state,
             descriptionRes = R.string.cast_perm_network_state_desc,
             granted = hasPermission(Manifest.permission.ACCESS_NETWORK_STATE)
-        ),
-        CastPermission(
+        ))
+        add(CastPermission(
             permission = Manifest.permission.CHANGE_WIFI_MULTICAST_STATE,
             labelRes = R.string.cast_perm_multicast,
             descriptionRes = R.string.cast_perm_multicast_desc,
             granted = hasPermission(Manifest.permission.CHANGE_WIFI_MULTICAST_STATE)
-        ),
-    )
+        ))
+        if (Build.VERSION.SDK_INT >= 37) {
+            add(CastPermission(
+                permission = Manifest.permission.ACCESS_LOCAL_NETWORK,
+                labelRes = R.string.permission_local_network_title,
+                descriptionRes = R.string.setup_reason_local_network,
+                granted = hasPermission(Manifest.permission.ACCESS_LOCAL_NETWORK)
+            ))
+        }
+    }
 
     /**
      * Returns true if all required permissions are granted.
