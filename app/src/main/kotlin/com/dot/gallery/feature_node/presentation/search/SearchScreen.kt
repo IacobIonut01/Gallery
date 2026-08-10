@@ -135,6 +135,7 @@ fun SearchScreen(
     val tipResults by viewModel.tipResults.collectAsStateWithLifecycle()
     val selectedImageMedia by viewModel.selectedImageMedia.collectAsStateWithLifecycle()
     val isModelAvailable by viewModel.isModelAvailable.collectAsStateWithLifecycle()
+    val searchableMediaIds by viewModel.searchableMediaIds.collectAsStateWithLifecycle()
     var searchHistory by rememberSearchHistory()
 
     // Image-to-image search UI state
@@ -151,27 +152,27 @@ fun SearchScreen(
 
     val visualSearchLabel = stringResource(R.string.visual_search)
     val historyItems by rememberedDerivedState {
-        if (searchHistory.isEmpty()) {
-            emptyList()
-        } else {
-            listOf(SettingsEntity.Header("History")) +
-                    searchHistory.map { entry ->
-                        if (entry.mediaId != null) {
-                            SettingsEntity.Preference(
-                                icon = if (entry.mediaUri == null) Icons.Outlined.ImageSearch else null,
-                                iconUri = entry.mediaUri,
-                                title = entry.mediaLabel ?: entry.query,
-                                summary = visualSearchLabel,
-                                onClick = { viewModel.restoreImageSearch(entry.mediaId) },
-                                tag = entry.mediaId
-                            )
-                        } else {
-                            SettingsEntity.Preference(
-                                title = entry.query,
-                                onClick = { viewModel.setQuery(entry.query, apply = true) }
-                            )
-                        }
-                    }.take(5)
+        val visibleHistory = searchHistory.filter { entry ->
+            entry.mediaId == null || entry.mediaId in searchableMediaIds
+        }.take(5)
+        if (visibleHistory.isEmpty()) emptyList() else {
+            listOf(SettingsEntity.Header("History")) + visibleHistory.map { entry ->
+                if (entry.mediaId != null) {
+                    SettingsEntity.Preference(
+                        icon = if (entry.mediaUri == null) Icons.Outlined.ImageSearch else null,
+                        iconUri = entry.mediaUri,
+                        title = entry.mediaLabel ?: entry.query,
+                        summary = visualSearchLabel,
+                        onClick = { viewModel.restoreImageSearch(entry.mediaId) },
+                        tag = entry.mediaId
+                    )
+                } else {
+                    SettingsEntity.Preference(
+                        title = entry.query,
+                        onClick = { viewModel.setQuery(entry.query, apply = true) }
+                    )
+                }
+            }
         }
     }
     val resources = LocalResources.current

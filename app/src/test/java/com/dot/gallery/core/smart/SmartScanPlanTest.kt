@@ -379,6 +379,43 @@ class SmartScanPlanTest {
     }
 
     @Test
+    fun ignoredTimelineAlbumsAreExcludedFromSmartFeaturesUnlessEnabled() {
+        val media = listOf(1L, 2L)
+
+        assertEquals(
+            listOf(1L),
+            smartFeatureMediaPool(
+                media,
+                includeIgnoredAlbums = false,
+                isIgnored = { it == 2L },
+                isLocked = { false }
+            )
+        )
+        assertEquals(
+            media,
+            smartFeatureMediaPool(
+                media,
+                includeIgnoredAlbums = true,
+                isIgnored = { it == 2L },
+                isLocked = { false }
+            )
+        )
+    }
+
+    @Test
+    fun lockedAlbumsAreAlwaysExcludedFromSmartFeatures() {
+        assertEquals(
+            listOf(1L),
+            smartFeatureMediaPool(
+                listOf(1L, 2L),
+                includeIgnoredAlbums = true,
+                isIgnored = { false },
+                isLocked = { it == 2L }
+            )
+        )
+    }
+
+    @Test
     fun terminalStatusPreservesPartialBlockedAndFailedMeaning() {
         assertEquals(
             SmartScanStatus.SUCCEEDED,

@@ -310,6 +310,17 @@ object Settings {
             )
     }
 
+    object SmartFeatures {
+        private val INCLUDE_IGNORED_ALBUMS = booleanPreferencesKey("smart_features_include_ignored_albums")
+
+        fun includeIgnoredAlbums(context: Context): Flow<Boolean> =
+            context.activeDataStore.data.map { it[INCLUDE_IGNORED_ALBUMS] ?: false }
+
+        suspend fun setIncludeIgnoredAlbums(context: Context, include: Boolean) {
+            context.activeDataStore.edit { it[INCLUDE_IGNORED_ALBUMS] = include }
+        }
+    }
+
     object Search {
         val HISTORY_V2 = stringPreferencesKey("search_history_v2")
 

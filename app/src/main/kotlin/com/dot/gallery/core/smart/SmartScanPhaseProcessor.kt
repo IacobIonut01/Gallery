@@ -11,6 +11,7 @@ import androidx.core.net.toUri
 import androidx.room.withTransaction
 import com.dot.gallery.BuildConfig
 import com.dot.gallery.core.Resource
+import com.dot.gallery.core.Settings
 import com.dot.gallery.cloud.core.ProviderType
 import com.dot.gallery.cloud.data.dao.DetectedFaceDao
 import com.dot.gallery.cloud.data.dao.DetectedFaceHeader
@@ -43,6 +44,7 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
@@ -203,6 +205,13 @@ abstract class MediaPhaseProcessor(
     }
 }
 
+internal fun <T> smartFeatureMediaPool(
+    media: List<T>,
+    includeIgnoredAlbums: Boolean,
+    isIgnored: (T) -> Boolean,
+    isLocked: (T) -> Boolean
+): List<T> = media.filterNot { isLocked(it) || !includeIgnoredAlbums && isIgnored(it) }
+
 class SourceSyncProcessor @Inject constructor(
     repository: MediaRepository,
     database: InternalDatabase,
@@ -212,7 +221,14 @@ class SourceSyncProcessor @Inject constructor(
     override val revision = "source-v1"
 
     override suspend fun process(context: SmartScanPhaseContext): SmartScanPhaseResult {
-        val media = localMedia()
+        val ignoredAlbums = repository.getBlacklistedAlbumsAsync()
+        val lockedAlbumIds = repository.getLockedAlbums().first().mapTo(hashSetOf()) { it.id }
+        val media = smartFeatureMediaPool(
+            media = localMedia(),
+            includeIgnoredAlbums = Settings.SmartFeatures.includeIgnoredAlbums(appContext).first(),
+            isIgnored = { item -> ignoredAlbums.any { it.matchesMedia(item) } },
+            isLocked = { item -> item.albumID in lockedAlbumIds }
+        )
         val cloud = database.getCloudMediaDao().getAllCachedAsync()
         val total = media.size + cloud.size
         progress(context, total, 0, 0, 0, 0)

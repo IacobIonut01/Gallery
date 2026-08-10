@@ -764,6 +764,8 @@
     <string name="refresh_persons_summary">Scan local photos and available cloud previews for faces</string>
     <string name="refresh_all_smart_features">Refresh all Smart Features</string>
     <string name="refresh_all_smart_features_summary">Run metadata, search, categories, and persons serially</string>
+    <string name="smart_features_include_ignored_albums">Include ignored albums</string>
+    <string name="smart_features_include_ignored_albums_summary">Include timeline-hidden media in Smart Features and Smart Search. Changing this starts a full refresh; locked albums stay private.</string>
     <string name="smart_scan_stage_number">Stage %1$d of %2$d</string>
     <string name="smart_scan_stage_items">%1$d of %2$d items · %3$d failed · %4$d skipped</string>
     <string name="smart_scan_preparing_stage">Preparing this stage…</string>

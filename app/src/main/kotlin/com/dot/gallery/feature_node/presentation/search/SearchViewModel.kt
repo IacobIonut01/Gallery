@@ -23,6 +23,7 @@ import com.dot.gallery.feature_node.domain.model.MediaMetadataState
 import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.domain.util.MediaGroupType
+import com.dot.gallery.feature_node.domain.util.MediaOrder
 import com.dot.gallery.feature_node.domain.util.classifyGroupType
 import com.dot.gallery.feature_node.domain.util.getUri
 import com.dot.gallery.feature_node.domain.util.groupKey
@@ -65,6 +66,22 @@ data class SearchResultsState(
     val progress: Float = 0f,
     val results: MediaState<Media.UriMedia> = MediaState(isLoading = false)
 )
+
+internal fun <T, K> smartSearchMediaPool(
+    timelineMedia: List<T>,
+    completeLocalMedia: List<T>,
+    includeIgnoredAlbums: Boolean,
+    identity: (T) -> K,
+    isSearchableIgnoredMedia: (T) -> Boolean,
+    sort: (List<T>) -> List<T>
+): List<T> {
+    if (!includeIgnoredAlbums) return timelineMedia
+    val includedIds = timelineMedia.mapTo(hashSetOf(), identity)
+    val ignoredMedia = completeLocalMedia.filter { item ->
+        identity(item) !in includedIds && isSearchableIgnoredMedia(item)
+    }
+    return sort(timelineMedia + ignoredMedia)
+}
 
 @HiltViewModel
 class SearchViewModel @Inject constructor(
@@ -116,7 +133,6 @@ class SearchViewModel @Inject constructor(
     val selectedImageMedia = _selectedImageMedia.asStateFlow()
 
     private val _searchResultsState = MutableStateFlow(SearchResultsState())
-    val searchResultsState = _searchResultsState.asStateFlow()
 
     private val dateFormats = mediaDistributor.dateFormatsFlow
 
@@ -275,16 +291,69 @@ class SearchViewModel @Inject constructor(
         )
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    private val allMedia = mediaDistributor.timelineMediaFlow
-        .mapLatest { state ->
-            updateQueriedMedia(state)
-            state
+    private val ignoredMediaSource = Settings.SmartFeatures.includeIgnoredAlbums(context)
+        .flatMapLatest { includeIgnoredAlbums ->
+            if (includeIgnoredAlbums) {
+                repository.getCompleteMedia().map { includeIgnoredAlbums to it.data.orEmpty() }
+            } else {
+                flowOf(includeIgnoredAlbums to emptyList())
+            }
         }
-        .stateIn(
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val allMedia = combine(
+        mediaDistributor.timelineMediaFlow,
+        ignoredMediaSource,
+        mediaDistributor.blacklistedAlbumsFlow,
+        repository.getLockedAlbums()
+    ) { timelineState, (includeIgnoredAlbums, completeLocalMedia), ignoredAlbums, lockedAlbums ->
+        val lockedAlbumIds = lockedAlbums.mapTo(hashSetOf()) { it.id }
+        val unlockedTimelineMedia = timelineState.media.filterNot { it.albumID in lockedAlbumIds }
+        timelineState.copy(
+            media = smartSearchMediaPool(
+                timelineMedia = unlockedTimelineMedia,
+                completeLocalMedia = completeLocalMedia,
+                includeIgnoredAlbums = includeIgnoredAlbums,
+                identity = { it.id },
+                isSearchableIgnoredMedia = { item ->
+                    item.albumID !in lockedAlbumIds && ignoredAlbums.any { it.matchesMedia(item) }
+                },
+                sort = MediaOrder.Default::sortMedia
+            )
+        )
+    }.mapLatest { state ->
+        updateQueriedMedia(state)
+        state
+    }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.Eagerly,
             initialValue = MediaState()
         )
+
+    val searchableMediaIds: StateFlow<Set<Long>> = allMedia
+        .map { state -> state.media.mapTo(hashSetOf()) { it.id } }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptySet())
+
+    val searchResultsState: StateFlow<SearchResultsState> = combine(
+        _searchResultsState,
+        searchableMediaIds,
+        dateFormats
+    ) { state, searchableIds, formats ->
+        val filteredMedia = state.results.media.filter { it.id in searchableIds }
+        if (filteredMedia.size == state.results.media.size) state else {
+            state.copy(
+                results = mapMediaToItem(
+                    data = filteredMedia,
+                    error = state.results.error,
+                    albumId = -1L,
+                    groupSimilarMedia = state.results.mediaGroups.isNotEmpty(),
+                    defaultDateFormat = formats.first,
+                    extendedDateFormat = formats.second,
+                    weeklyDateFormat = formats.third
+                ).copy(isLoading = state.results.isLoading)
+            )
+        }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, SearchResultsState())
 
     private val metadata = mediaDistributor.metadataFlow
         .stateIn(
@@ -441,7 +510,7 @@ class SearchViewModel @Inject constructor(
                         if (m != null) score to m else null
                     }
                     val mediaState = mapMediaToItem(
-                        data = results.map { it.second },
+                        data = currentlySearchable(results.map { it.second }),
                         error = "",
                         albumId = -1L,
                         defaultDateFormat = dateFormats.value.first,
@@ -471,8 +540,20 @@ class SearchViewModel @Inject constructor(
         }
     }
 
+    private fun currentlySearchable(media: List<Media.UriMedia>): List<Media.UriMedia> {
+        val currentMedia = allMedia.value.media.associateBy { it.id }
+        return media.mapNotNull { currentMedia[it.id] }
+    }
+
     private fun updateQueriedMedia(newMediaState: MediaState<Media.UriMedia>) {
         viewModelScope.launch(Dispatchers.IO) {
+            val selectedMedia = _selectedImageMedia.value
+            if (selectedMedia != null && newMediaState.media.none { it.id == selectedMedia.id }) {
+                searchJob?.cancel()
+                _selectedImageMedia.value = null
+                _searchResultsState.tryEmit(SearchResultsState())
+                return@launch
+            }
             val query = _query.value
             if (query.isEmpty()) return@launch
             val resultsState = _searchResultsState.value
@@ -483,7 +564,7 @@ class SearchViewModel @Inject constructor(
                 val updatedResults = resultsState.results.media.mapNotNull { mediaItem ->
                     newMediaState.media.find { it.id == mediaItem.id }
                 }
-                if (updatedResults.isNotEmpty()) {
+                if (updatedResults != resultsState.results.media) {
                     _searchResultsState.tryEmit(
                         resultsState.copy(
                             results = MediaState(
@@ -670,7 +751,7 @@ class SearchViewModel @Inject constructor(
                     filteredMedia.map { 1f to it }
                 )
                 val mediaState = mapMediaToItem(
-                    data = results.map { it.second },
+                    data = currentlySearchable(results.map { it.second }),
                     error = "",
                     albumId = -1L,
                     defaultDateFormat = dateFormats.value.first,
@@ -717,7 +798,7 @@ class SearchViewModel @Inject constructor(
                             isRelevanceSearch = true,
                             progress = 0.5f,
                             results = mapMediaToItem(
-                                data = results.map { it.second },
+                                data = currentlySearchable(results.map { it.second }),
                                 error = "",
                                 albumId = -1L,
                                 defaultDateFormat = dateFormats.value.first,
@@ -737,7 +818,7 @@ class SearchViewModel @Inject constructor(
                     isRelevanceSearch = true,
                     progress = 1f,
                     results = mapMediaToItem(
-                        data = results.map { it.second },
+                        data = currentlySearchable(results.map { it.second }),
                         error = "",
                         albumId = -1L,
                         defaultDateFormat = dateFormats.value.first,

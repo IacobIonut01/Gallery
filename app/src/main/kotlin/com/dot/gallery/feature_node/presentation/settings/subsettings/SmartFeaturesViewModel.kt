@@ -5,9 +5,11 @@
 
 package com.dot.gallery.feature_node.presentation.settings.subsettings
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.WorkManager
+import com.dot.gallery.core.Settings
 import com.dot.gallery.core.ml.DownloadInfo
 import com.dot.gallery.core.ml.ModelFileInfo
 import com.dot.gallery.core.ml.ModelGroup
@@ -22,6 +24,7 @@ import com.dot.gallery.feature_node.data.data_source.SmartScanFeature
 import com.dot.gallery.feature_node.data.data_source.SmartScanPhaseEntity
 import com.dot.gallery.feature_node.data.data_source.SmartScanRunEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -37,7 +40,8 @@ class SmartFeaturesViewModel @Inject constructor(
     private val modelManager: ModelManager,
     private val workManager: WorkManager,
     private val smartScanScheduler: SmartScanScheduler,
-    smartScanDao: SmartScanDao
+    smartScanDao: SmartScanDao,
+    @param:ApplicationContext private val context: Context
 ) : ViewModel() {
 
     // Per-group observable state. UI screens pass the relevant [ModelGroup] (SEARCH for smart
@@ -53,6 +57,12 @@ class SmartFeaturesViewModel @Inject constructor(
 
     val hasInternetPermission: Boolean get() = modelManager.hasInternetPermission
     val areAiFeaturesAvailable: Boolean get() = modelManager.areAiFeaturesAvailable
+
+    val includeIgnoredAlbums: StateFlow<Boolean> = Settings.SmartFeatures.includeIgnoredAlbums(context).stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = false
+    )
 
     val activeSmartScan: StateFlow<SmartScanRunEntity?> = smartScanDao.observeActiveRun().stateIn(
         scope = viewModelScope,
@@ -95,6 +105,13 @@ class SmartFeaturesViewModel @Inject constructor(
     fun deleteModels(group: ModelGroup) {
         viewModelScope.launch {
             modelManager.deleteModels(group)
+        }
+    }
+
+    fun setIncludeIgnoredAlbums(include: Boolean) {
+        viewModelScope.launch {
+            Settings.SmartFeatures.setIncludeIgnoredAlbums(context, include)
+            smartScanScheduler.fullRefresh()
         }
     }
 

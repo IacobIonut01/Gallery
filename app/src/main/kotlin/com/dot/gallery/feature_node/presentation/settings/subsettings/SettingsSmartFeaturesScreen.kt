@@ -43,6 +43,7 @@ fun SettingsSmartFeaturesScreen(
     val activeSmartScan by viewModel.activeSmartScan.collectAsStateWithLifecycle()
     val activeSmartScanPhases by viewModel.activeSmartScanPhases.collectAsStateWithLifecycle()
     val latestSmartScan by viewModel.latestSmartScan.collectAsStateWithLifecycle()
+    val includeIgnoredAlbums by viewModel.includeIgnoredAlbums.collectAsStateWithLifecycle()
 
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
@@ -62,6 +63,8 @@ fun SettingsSmartFeaturesScreen(
     ) { padding ->
         // Resolve strings outside the non-composable settings{} DSL
         val smartFeaturesHeader = stringResource(R.string.ai_category)
+        val includeIgnoredAlbumsTitle = stringResource(R.string.smart_features_include_ignored_albums)
+        val includeIgnoredAlbumsSummary = stringResource(R.string.smart_features_include_ignored_albums_summary)
         val aiModelsManagerTitle = if (aiAvailable) stringResource(R.string.ai_models_manager) else ""
         val modelSummary = if (aiAvailable) when (modelStatus) {
             ModelStatus.READY -> stringResource(R.string.ai_models_ready_summary)
@@ -141,6 +144,14 @@ fun SettingsSmartFeaturesScreen(
             settings {
                 if (aiAvailable) {
                     Header(smartFeaturesHeader)
+
+                    SwitchPreference(
+                        title = includeIgnoredAlbumsTitle,
+                        summary = includeIgnoredAlbumsSummary,
+                        enabled = activeSmartScan == null,
+                        isChecked = includeIgnoredAlbums,
+                        onCheck = viewModel::setIncludeIgnoredAlbums
+                    )
 
                     Preference(
                         title = aiModelsManagerTitle,
