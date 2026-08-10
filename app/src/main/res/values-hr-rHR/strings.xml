@@ -1685,6 +1685,11 @@
     <string name="setup_permissions_title">Dozvole</string>
     <string name="setup_permissions_subtitle">ReFra koristi samo ono što joj je potrebno za prikaz i upravljanje vašim medijima. Dodirnite dozvolu da biste saznali razlog.</string>
     <string name="setup_permission_used_for">Koristi se za:</string>
+    <string name="permission_local_network_title">Direct local network access</string>
+    <string name="setup_reason_local_network">Optional. Grant this only when ReFra connects directly to a server on your current network.</string>
+    <string name="local_network_permission_dialog_title">Allow direct local network access?</string>
+    <string name="local_network_permission_dialog_message">This server resolves to a device on your current local network. Android requires permission before ReFra can connect to it directly.</string>
+    <string name="local_network_permission_not_now">Not now</string>
     <!-- Permission reasons (where/why) -->
     <string name="setup_reason_read_images"><![CDATA[Prikazivanje vaših fotografija na vremenskoj crti, u albumima i pregledniku. Bez ovoga, galerija ostaje prazna.]]></string>
     <string name="setup_reason_read_videos"><![CDATA[Prikazivanje i reprodukciju vaših videozapisa na vremenskoj crti, u albumima i pregledniku.]]></string>
