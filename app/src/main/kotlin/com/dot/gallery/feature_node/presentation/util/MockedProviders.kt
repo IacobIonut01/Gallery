@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import com.dot.gallery.cloud.core.SyncState
+import com.dot.gallery.core.AlbumMediaLoadMode
 import com.dot.gallery.core.MediaDistributor
 import com.dot.gallery.core.decoder.format.ImageReencoder
 import com.dot.gallery.core.metadata.MediaContainerFormat
@@ -72,7 +73,10 @@ open class MockedMediaDistributor: MediaDistributor {
     override val lockedAlbumsFlow: StateFlow<List<LockedAlbum>> = MutableStateFlow(emptyList())
     override val mergedSubfolderAlbumsFlow: StateFlow<List<MergedSubfolderAlbum>> = MutableStateFlow(emptyList())
     override val timelineMediaFlow: StateFlow<MediaState<Media.UriMedia>> = MutableStateFlow(MediaState())
-    override fun albumTimelineMediaFlow(albumId: Long): Flow<MediaState<Media.UriMedia>> = MutableStateFlow(MediaState())
+    override fun albumTimelineMediaFlow(
+        albumId: Long,
+        loadMode: AlbumMediaLoadMode
+    ): Flow<MediaState<Media.UriMedia>> = MutableStateFlow(MediaState())
     override val favoritesMediaFlow: StateFlow<MediaState<Media.UriMedia>> = MutableStateFlow(MediaState())
     override val trashMediaFlow: StateFlow<MediaState<Media.UriMedia>> = MutableStateFlow(MediaState())
     override val cloudSyncStates: StateFlow<Map<Long, SyncState>> = MutableStateFlow(emptyMap())

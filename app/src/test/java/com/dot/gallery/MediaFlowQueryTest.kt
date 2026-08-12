@@ -4,8 +4,10 @@
  */
 package com.dot.gallery
 
+import com.dot.gallery.core.AlbumMediaLoadMode
 import com.dot.gallery.feature_node.data.data_source.mediastore.queries.mediaBucketSelection
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -22,5 +24,11 @@ class MediaFlowQueryTest {
 
         assertEquals(1_500, selection.count { it == '?' })
         assertTrue(selection.contains("bucket_id = ?"))
+    }
+
+    @Test
+    fun completeAlbumLoadBypassesProgressiveMediaStoreBatch() {
+        assertFalse(AlbumMediaLoadMode.Progressive.skipBatching)
+        assertTrue(AlbumMediaLoadMode.Complete.skipBatching)
     }
 }

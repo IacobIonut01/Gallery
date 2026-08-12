@@ -744,11 +744,14 @@ class MediaDistributorImpl @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Suppress("UNCHECKED_CAST")
-    override fun albumTimelineMediaFlow(albumId: Long): Flow<MediaState<Media.UriMedia>> = when {
+    override fun albumTimelineMediaFlow(
+        albumId: Long,
+        loadMode: AlbumMediaLoadMode
+    ): Flow<MediaState<Media.UriMedia>> = when {
         MediaTypeAlbum.isMediaTypeAlbumId(albumId) -> mediaTypeAlbumTimelineMediaFlow(albumId)
         isUnsortedCloudAlbumId(albumId) -> unsortedCloudAlbumTimelineMediaFlow(albumId)
         isCloudAlbumId(albumId) -> cloudAlbumTimelineMediaFlow(albumId)
-        else -> localAlbumTimelineMediaFlow(albumId)
+        else -> localAlbumTimelineMediaFlow(albumId, loadMode)
     }
 
     /**
@@ -869,7 +872,10 @@ class MediaDistributorImpl @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Suppress("UNCHECKED_CAST")
-    private fun localAlbumTimelineMediaFlow(albumId: Long): Flow<MediaState<Media.UriMedia>> =
+    private fun localAlbumTimelineMediaFlow(
+        albumId: Long,
+        loadMode: AlbumMediaLoadMode
+    ): Flow<MediaState<Media.UriMedia>> =
         hasPermission.flatMapLatest { granted ->
             if (!granted) flowOf(MediaState())
             else {
@@ -890,7 +896,9 @@ class MediaDistributorImpl @Inject constructor(
                         .filterNot(AlbumMergeResolver::isVirtualAlbumId)
                         .toSet()
                 }.distinctUntilChanged()
-                    .flatMapLatest { repository.getMediaByAlbumIds(it) }
+                    .flatMapLatest {
+                        repository.getMediaByAlbumIds(it, skipBatching = loadMode.skipBatching)
+                    }
                 combine(
                     mediaSource,
                     settingsFlow,

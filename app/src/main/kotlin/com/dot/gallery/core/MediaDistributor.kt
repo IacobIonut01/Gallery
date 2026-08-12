@@ -22,6 +22,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 
+enum class AlbumMediaLoadMode(val skipBatching: Boolean) {
+    Progressive(false),
+    Complete(true)
+}
+
 interface MediaDistributor {
 
     /**
@@ -59,7 +64,10 @@ interface MediaDistributor {
      * Media
      */
     val timelineMediaFlow: SharedFlow<MediaState<Media.UriMedia>>
-    fun albumTimelineMediaFlow(albumId: Long): Flow<MediaState<Media.UriMedia>>
+    fun albumTimelineMediaFlow(
+        albumId: Long,
+        loadMode: AlbumMediaLoadMode = AlbumMediaLoadMode.Progressive
+    ): Flow<MediaState<Media.UriMedia>>
     val favoritesMediaFlow: SharedFlow<MediaState<Media.UriMedia>>
     val trashMediaFlow: SharedFlow<MediaState<Media.UriMedia>>
 
