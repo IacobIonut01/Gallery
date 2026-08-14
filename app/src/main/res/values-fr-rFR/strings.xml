@@ -957,7 +957,7 @@
     <string name="section_type_common">System albums</string>
     <string name="section_type_apps">App albums</string>
     <string name="section_type_uncategorized">Other albums</string>
-    <string name="section_type_custom">Custom section</string>
+    <string name="section_type_custom">Rubrique personnalisée</string>
     <string name="hidden">Hidden</string>
     <string name="section_auto">Automatic</string>
     <string name="section_actions">Section actions</string>
