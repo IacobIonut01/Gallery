@@ -51,7 +51,7 @@
     <string name="unpin">Unpin</string>
     <string name="pin">Pin</string>
     <string name="nav_timeline">Timeline</string>
-    <string name="location_cd">Media Location</string>
+    <string name="location_cd">Ubicació dels mitjans</string>
     <string name="location_map_cd">Location Map</string>
     <string name="show_in_app">Show in app</string>
     <string name="open_externally">Open externally</string>
