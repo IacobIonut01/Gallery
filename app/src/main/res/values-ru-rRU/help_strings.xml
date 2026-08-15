@@ -105,7 +105,7 @@
     <string name="help_tip_personalize_theme_p2_s3">For OLED screens, also enable \'AMOLED pure black\'</string>
     <string name="help_tip_personalize_colors_title">Customize color palette</string>
     <string name="help_tip_personalize_colors_subtitle">Pick any color to theme the entire app</string>
-    <string name="help_tip_personalize_colors_p1_title">Color palette</string>
+    <string name="help_tip_personalize_colors_p1_title">Цветовая палитра</string>
     <string name="help_tip_personalize_colors_p1_desc">Make Gallery truly yours by customizing its color scheme. System colors match your phone\'s wallpaper-based theme (Material You). Neutral gives a clean, subtle look. Preset palettes offer curated color combinations. Or pick any custom color you like — Gallery will generate a complete theme from it.</string>
     <string name="help_tip_personalize_colors_p2_title">Make it yours</string>
     <string name="help_tip_personalize_colors_p2_desc">The chosen color affects buttons, highlights, icons, cards, and backgrounds throughout the entire app. Experiment with different options to find what suits you — you can always change it later. Tip: System colors update automatically when you change your phone\'s wallpaper.</string>
@@ -129,7 +129,7 @@
     <string name="help_tip_personalize_amoled_p1_s4">Enjoy true blacks on your OLED display</string>
     <string name="help_tip_personalize_dark_mode_title">Switch between light and dark</string>
     <string name="help_tip_personalize_dark_mode_subtitle">Choose the mode that\'s easiest on your eyes</string>
-    <string name="help_tip_personalize_dark_mode_p1_title">Light and dark mode</string>
+    <string name="help_tip_personalize_dark_mode_p1_title">Светлый и тёмный режим</string>
     <string name="help_tip_personalize_dark_mode_p1_desc">Light mode is clean and bright, best for well-lit environments. Dark mode reduces eye strain at night and saves battery on OLED screens. The system default option automatically switches based on your phone\'s settings, so Gallery always matches the rest of your apps.</string>
     <string name="help_tip_personalize_blur_title">Enable fancy blur effects</string>
     <string name="help_tip_personalize_blur_subtitle">Beautiful frosted glass effects throughout the app</string>
@@ -137,7 +137,7 @@
     <string name="help_tip_personalize_blur_p1_desc">Enable blur effects for a modern frosted glass look on the navigation bar, overlays, and the selection sheet. This gives Gallery a polished, layered appearance. Requires Android 12 or later. If you notice any performance impact on older devices, you can disable this.</string>
     <string name="help_tip_personalize_blur_p1_s1">Go to Settings &gt; Appearance</string>
     <string name="help_tip_personalize_blur_p1_s2">Toggle \'Allow fancy blur\'</string>
-    <string name="help_tip_personalize_blur_p1_s3">Note: requires Android 12+</string>
+    <string name="help_tip_personalize_blur_p1_s3">Примечание: требует Android 12+</string>
     <string name="help_tip_personalize_shared_elements_title">Shared element transitions</string>
     <string name="help_tip_personalize_shared_elements_subtitle">Smooth animations when opening photos</string>
     <string name="help_tip_personalize_shared_elements_p1_title">Smooth transitions</string>
@@ -147,7 +147,7 @@
     <string name="help_tip_personalize_shared_elements_p1_s3">Tap any photo to see the effect</string>
     <string name="help_tip_personalize_app_name_title">Change the app name</string>
     <string name="help_tip_personalize_app_name_subtitle">Display as \'Gallery\' or \'Refra\' on your home screen</string>
-    <string name="help_tip_personalize_app_name_p1_title">App name</string>
+    <string name="help_tip_personalize_app_name_p1_title">Название приложения</string>
     <string name="help_tip_personalize_app_name_p1_desc">Choose whether the app shows as \'Gallery\' or \'Refra\' on your home screen and in the app drawer. \'Refra\' is the app\'s alternative name. This changes the icon label only — the app itself stays the same. You may need to restart your launcher or wait a moment for the change to appear on your home screen.</string>
     <string name="help_tip_personalize_app_name_p1_s1">Go to Settings &gt; General</string>
     <string name="help_tip_personalize_app_name_p1_s2">Tap \'App name\'</string>
@@ -248,10 +248,10 @@
     <string name="help_tip_view_motion_photo_subtitle">Play the short video clip embedded in motion photos</string>
     <string name="help_tip_view_motion_photo_p1_title">Motion photos</string>
     <string name="help_tip_view_motion_photo_p1_desc">Motion photos (captured by many modern phones) contain a still image plus a short video clip of the moment before and after the shot. Gallery automatically detects these and shows a special icon in the viewer — tap it to play the embedded clip. This brings your memories to life with the movement and sound from that moment.</string>
-    <string name="help_tip_view_full_brightness_title">Full brightness viewing</string>
-    <string name="help_tip_view_full_brightness_subtitle">Automatically increase brightness when viewing photos</string>
-    <string name="help_tip_view_full_brightness_p1_title">Full brightness</string>
-    <string name="help_tip_view_full_brightness_p1_desc">When enabled, Gallery automatically boosts your screen to maximum brightness while viewing photos in the full-screen viewer. This ensures you see accurate colors and details, especially helpful when viewing photos outdoors or in bright environments. Brightness returns to your normal level when you leave the viewer.</string>
+    <string name="help_tip_view_full_brightness_title">Полная яркость при просмотре</string>
+    <string name="help_tip_view_full_brightness_subtitle">Автоматическое увеличение яркости при просмотре фотографий</string>
+    <string name="help_tip_view_full_brightness_p1_title">Полная яркость</string>
+    <string name="help_tip_view_full_brightness_p1_desc">Если эта функция включена, приложение «Галерея» автоматически повышает яркость экрана до максимального уровня при просмотре фотографий в полноэкранном режиме. Это позволяет точно воспроизводить цвета и детали, что особенно полезно при просмотре фотографий на улице или в условиях яркого освещения. При выходе из просмотрщика яркость возвращается к обычному уровню.</string>
     <string name="help_tip_view_full_brightness_p1_s1">Go to Settings &gt; Media viewer</string>
     <string name="help_tip_view_full_brightness_p1_s2">Toggle \'Full brightness viewing\'</string>
     <string name="help_tip_view_full_brightness_p1_s3">Brightness is boosted only while viewing, not in the grid</string>
@@ -325,8 +325,8 @@
     <string name="help_tip_viewer_default_editor_p2_desc">When set to external, Gallery opens the Android system picker showing all compatible photo editors on your device. Pick your favorite once and it becomes the default. This is ideal if you prefer a dedicated editor for things like HDR adjustments, RAW processing, or advanced retouching.</string>
     <string name="help_tip_viewer_auto_play_title">Auto-play videos</string>
     <string name="help_tip_viewer_auto_play_subtitle">Videos start playing automatically when opened</string>
-    <string name="help_tip_viewer_auto_play_p1_title">Auto-play</string>
-    <string name="help_tip_viewer_auto_play_p1_desc">When enabled, videos begin playing immediately when you swipe to them or tap to open them. Disable this if you prefer to manually press play, for example when browsing in public or on a limited data connection. Videos will still show a thumbnail preview when auto-play is off.</string>
+    <string name="help_tip_viewer_auto_play_p1_title">Автовоспроизведение</string>
+    <string name="help_tip_viewer_auto_play_p1_desc">Если эта функция включена, видео начинает воспроизводиться сразу же, как только вы пролистываете страницу или нажимаете на него, чтобы открыть. Отключите эту функцию, если предпочитаете запускать воспроизведение вручную, например, при просмотре в общественных местах или при ограниченном трафике. При отключенном автоматическом воспроизведении видео по-прежнему будут отображаться в виде миниатюр.</string>
     <string name="help_tip_viewer_auto_play_p1_s1">Go to Settings &gt; Media viewer</string>
     <string name="help_tip_viewer_auto_play_p1_s2">Toggle \'Auto-play videos\'</string>
     <string name="help_tip_viewer_auto_hide_video_title">Auto-hide UI on video play</string>
