@@ -60,10 +60,10 @@
     <string name="map_appearance_title">Map appearance</string>
     <string name="map_appearance_description">Choose whether maps follow ReFra’s appearance or always use bright or dark map colors.</string>
     <string name="map_appearance_system">Follow app appearance</string>
-    <string name="map_appearance_light">Light</string>
-    <string name="map_appearance_dark">Dark</string>
+    <string name="map_appearance_light">Светлая</string>
+    <string name="map_appearance_dark">Темная</string>
     <string name="map_appearance_action">Change map appearance</string>
-    <string name="map_cluster_title">Photos in this location</string>
+    <string name="map_cluster_title">Фотографии в этом месте</string>
     <string name="map_cluster_count">%1$d photos</string>
     <string name="map_marker_photo">Photo on map</string>
     <string name="app_dev">от %s</string>
@@ -73,12 +73,12 @@
     <string name="donate_button_cd">Кнопка пожертвования</string>
     <string name="github_button_cd">Кнопка GitHub</string>
     <string name="github_url">https://github.com/IacobIonut01/Gallery</string>
-    <string name="dismiss_banner">Dismiss banner</string>
-    <string name="dismiss_banner_title">Move banner?</string>
+    <string name="dismiss_banner">Убрать баннер</string>
+    <string name="dismiss_banner_title">Переместить баннер?</string>
     <string name="dismiss_banner_message">The Donate and GitHub buttons will move to a compact bar at the bottom of the Settings page.</string>
     <string name="dismiss_banner_confirm">Move to bottom</string>
-    <string name="show_banner">Show banner</string>
-    <string name="restore_banner_title">Restore banner?</string>
+    <string name="show_banner">Показать баннер</string>
+    <string name="restore_banner_title">Восстановить баннер?</string>
     <string name="restore_banner_message">The full Donate and GitHub banner will be restored at the top of the Settings page.</string>
     <string name="restore_banner_confirm">Move to top</string>
     <string name="use_as">Использовать как</string>
@@ -190,10 +190,10 @@
     <string name="overwrite_unavailable_title">Can\'t overwrite this format</string>
     <string name="overwrite_unavailable_summary">This image format can\'t be re-encoded on your device, so the original can\'t be overwritten. A new PNG copy will be created instead.</string>
     <string name="overwrite_unavailable_create_copy">Create copy</string>
-    <string name="reencode_quality_title">Save quality</string>
+    <string name="reencode_quality_title">Сохранить качество</string>
     <string name="reencode_quality_summary">How edited and rotated images are re-encoded when saved</string>
-    <string name="reencode_quality_mode_auto">Automatic</string>
-    <string name="reencode_quality_mode_auto_summary">Lossless where supported (JXL), otherwise high quality</string>
+    <string name="reencode_quality_mode_auto">Автоматически</string>
+    <string name="reencode_quality_mode_auto_summary">Без потерь, если поддерживается (JXL), в противном случае высокое качество</string>
     <string name="reencode_quality_mode_manual">Manual</string>
     <string name="reencode_quality_lossy">Lossy quality</string>
     <string name="reencode_quality_jxl_effort">JXL effort</string>
@@ -201,8 +201,8 @@
     <string name="raw_develop">Develop RAW</string>
     <string name="raw_develop_title">Develop RAW</string>
     <string name="raw_develop_wb">White balance</string>
-    <string name="raw_wb_camera">Camera</string>
-    <string name="raw_wb_auto">Auto</string>
+    <string name="raw_wb_camera">Камера</string>
+    <string name="raw_wb_auto">Авто</string>
     <string name="raw_wb_daylight">Daylight</string>
     <string name="raw_develop_exposure">Exposure</string>
     <string name="raw_develop_highlight">Highlight recovery</string>
@@ -225,8 +225,8 @@
     <string name="raw_develop_export">Export</string>
     <string name="raw_export_jpeg">JPEG</string>
     <string name="raw_export_png">PNG</string>
-    <string name="raw_export_tiff8">TIFF (8-bit)</string>
-    <string name="raw_export_tiff16">TIFF (16-bit)</string>
+    <string name="raw_export_tiff8">TIFF (8-бит)</string>
+    <string name="raw_export_tiff16">TIFF (16-бит)</string>
     <string name="raw_export_choose_format">Save developed copy</string>
     <string name="raw_export_choose_format_subtitle">Choose a format for your developed RAW</string>
     <string name="raw_export_tiff_unavailable">TIFF keeps full bit depth but can\'t include crop, filters or markup — remove them to export TIFF.</string>
@@ -235,25 +235,25 @@
     <string name="raw_export_failed">Export failed</string>
     <!-- RAW developer tabs -->
     <string name="raw_tab_white_balance">White balance</string>
-    <string name="raw_tab_tone">Tone</string>
+    <string name="raw_tab_tone">Тон</string>
     <string name="raw_tab_detail">Detail</string>
-    <string name="raw_tab_colour">Colour</string>
+    <string name="raw_tab_colour">Цвет</string>
     <string name="raw_tab_output">Output</string>
     <!-- RAW developer controls -->
     <string name="raw_wb_custom">Custom</string>
-    <string name="raw_wb_temp">Temperature</string>
-    <string name="raw_wb_tint">Tint</string>
-    <string name="raw_tone_brightness">Brightness</string>
-    <string name="raw_tone_contrast">Contrast</string>
-    <string name="raw_tone_shadows">Shadows</string>
+    <string name="raw_wb_temp">Температура</string>
+    <string name="raw_wb_tint">Оттенок</string>
+    <string name="raw_tone_brightness">Яркость</string>
+    <string name="raw_tone_contrast">Контраст</string>
+    <string name="raw_tone_shadows">Тени</string>
     <string name="raw_tone_highlights">Highlights</string>
     <string name="raw_detail_sharpen">Sharpen</string>
     <string name="raw_detail_noise_reduction">Noise reduction</string>
-    <string name="raw_nr_off">Off</string>
+    <string name="raw_nr_off">Выкл</string>
     <string name="raw_nr_low">Low</string>
     <string name="raw_nr_medium">Medium</string>
     <string name="raw_nr_high">High</string>
-    <string name="raw_colour_saturation">Saturation</string>
+    <string name="raw_colour_saturation">Насыщенность</string>
     <string name="raw_colour_vibrance">Vibrance</string>
     <string name="raw_output_default_format">Default export format</string>
     <string name="edit_revert_failed">Failed to revert to the original.</string>
@@ -272,13 +272,13 @@
     <string name="edit_backups_delete_all_summary">Permanently delete all original image backups</string>
     <string name="edit_backups_delete_all_confirmation">This will permanently delete all original image backups. You will no longer be able to revert any edited photos to their originals.</string>
     <string name="edit_backups_delete_selected">Delete Selected</string>
-    <string name="edit_backups_free_space">Free Space</string>
-    <string name="edit_backups_section_actions">Actions</string>
-    <string name="edit_backups_used_percent">Used %1$s%%</string>
+    <string name="edit_backups_free_space">Свободное место</string>
+    <string name="edit_backups_section_actions">Действия</string>
+    <string name="edit_backups_used_percent">Использовано %1$s%%</string>
     <string name="edit_backups_selected_count">%1$d selected</string>
-    <string name="edit_backups_select">Select</string>
+    <string name="edit_backups_select">Выбрать</string>
     <string name="edit_backups_viewing_original">Оригинал</string>
-    <string name="edit_backups_viewing_edited">Edited</string>
+    <string name="edit_backups_viewing_edited">Изменено</string>
     <string name="favorite">В избранное</string>
     <string name="set_default_launch_screen">Установить экран запуска по умолчанию</string>
     <string name="use_last_opened_screen">Использовать последний открытый экран</string>
@@ -291,18 +291,18 @@
     <string name="toggle_audio_cd">Переключение звука</string>
     <string name="auto">Авто</string>
     <string name="change_playback_speed_cd">Изменение скорости воспроизведения</string>
-    <string name="change_subtitle_track_cd">Change subtitle track</string>
-    <string name="more_options_cd">More options</string>
-    <string name="subtitle_off">Off</string>
-    <string name="add_subtitle_file">Add subtitle file</string>
-    <string name="subtitles_title">Subtitles</string>
+    <string name="change_subtitle_track_cd">Сменить дорожку субтитров</string>
+    <string name="more_options_cd">Дополнительные параметры</string>
+    <string name="subtitle_off">Выкл</string>
+    <string name="add_subtitle_file">Добавить файл субтитров</string>
+    <string name="subtitles_title">Субтитры</string>
     <string name="subtitle_external_label">External</string>
     <string name="remove_subtitle_track">Remove subtitle track</string>
     <string name="location_new_album">Расположение: Внутреннее хранилище/%1$s</string>
     <string name="permission_manage_files_title">Управление всеми файлами</string>
     <string name="permission_manage_files_summary">"Позволяет приложению создавать, изменять и удалять файлы и альбомы, доступ к которым ранее был ограничен системой. (Включая альбомы вне папок Pictures и DCIM, а также альбомы с SD-карты)"</string>
     <string name="vault">Сейф</string>
-    <string name="cloud">Cloud</string>
+    <string name="cloud">Облако</string>
     <string name="picker_preparing">Preparing %1$d of %2$d…</string>
     <string name="picker_preparing_generic">Preparing…</string>
     <string name="picker_prepare_failed">Some items could not be prepared</string>
@@ -335,12 +335,12 @@
     <string name="setup_location_options_both">Оба</string>
     <string name="setup_location_type_title">Что будет игнорировано</string>
     <string name="setup_location_type_subtitle">Вы можете выбрать один альбом или создать шаблон Regex для совпадения нескольких</string>
-    <string name="setup_location_types_single">Single Album</string>
-    <string name="setup_location_types_multiple">Multiple Albums</string>
+    <string name="setup_location_types_single">Один альбом</string>
+    <string name="setup_location_types_multiple">Несколько альбомов</string>
     <string name="setup_location_types_regex">Шаблон регулярного выражения</string>
     <string name="setup_type_selection_title">Выбор</string>
     <string name="setup_type_selection_subtitle">Выберите альбом, который будет игнорироваться</string>
-    <string name="setup_type_multiple_title">Multiple Selection</string>
+    <string name="setup_type_multiple_title">Множественный выбор</string>
     <string name="setup_type_multiple_subtitle">Select albums to ignore</string>
     <string name="setup_type_regex_label">Шаблон регулярного выражения</string>
     <string name="setup_type_regex_summary">Игнорируйте альбомы автоматически, используя регулярное выражение для сопоставления шаблонов.\n\nПрежде чем продолжить, ваш шаблон должен быть валидным.</string>
@@ -360,9 +360,9 @@
     <string name="setup_confirmation_where">Где следует игнорировать</string>
     <string name="setup_confirmation_who">Что будет игнорировано</string>
     <string name="setup_confirmation_matched">Совпавшие альбомы</string>
-    <string name="setup_confirmation_type">Type</string>
-    <string name="setup_confirmation_location">Location</string>
-    <string name="setup_confirmation_albums">Albums</string>
+    <string name="setup_confirmation_type">Тип</string>
+    <string name="setup_confirmation_location">Местоположение</string>
+    <string name="setup_confirmation_albums">Альбомы</string>
     <string name="setup_confirmation_regex">Шаблон</string>
     <string name="setup_confirmation_preview">Предпросмотр</string>
     <string name="setup_type_single">Один альбом</string>
@@ -423,9 +423,9 @@
     <string name="metadata_mode_everything_description">Removes all optional metadata while retaining only data required to render or play the media.</string>
     <string name="metadata_preserved_title">What is preserved</string>
     <string name="metadata_preserved_description">Encoded pixels, video and audio remain untouched. Orientation, animation, color and HDR data, codec configuration, timing, and required container structure are retained.</string>
-    <string name="remove_metadata_confirm">Remove</string>
-    <string name="remove_metadata_running">Removing…</string>
-    <string name="remove_metadata_success">Metadata removed</string>
+    <string name="remove_metadata_confirm">Удалить</string>
+    <string name="remove_metadata_running">Удаление…</string>
+    <string name="remove_metadata_success">Метаданные удалены</string>
     <string name="remove_metadata_failed">Metadata could not be removed</string>
     <string name="remove_metadata_rolled_back">Сбой при удалении метаданных. Исходный файл восстановлен.</string>
     <string name="view_all_metadata">Посмотреть все метаданные</string>
@@ -436,7 +436,7 @@
     <string name="disclaimer_classification">Ваши медиафайлы не загружаются на сервер, вся классификация выполняется локально на вашем устройстве с помощью TensorFlow-Lite с предварительно обученной моделью, доступной в исходном коде приложения.</string>
     <string name="ai_category">Умные функции</string>
     <!-- AI Model Management -->
-    <string name="ai_models_not_installed">AI models are not installed. Download them from Settings &gt; Smart Features.</string>
+    <string name="ai_models_not_installed">ИИ-модели не установлены. Загрузите их в настройках &gt; Умные функции.</string>
     <string name="ai_models_manager">Менеджер ИИ моделей</string>
     <string name="ai_models_download">Загрузить ИИ модели</string>
     <string name="ai_models_download_summary">Скачать ИИ модели для поиска и классификации изображений (~147 МБ)</string>
@@ -459,7 +459,7 @@
     <!-- Per-feature model groups -->
     <string name="ai_models_group_search_title">Search &amp; Categories</string>
     <string name="ai_models_group_search_desc">CLIP models that power smart search and automatic categories.</string>
-    <string name="ai_models_group_search_download_summary">Download the CLIP models (~147 MB)</string>
+    <string name="ai_models_group_search_download_summary">Скачать CLIP модели (~147 МБ)</string>
     <string name="ai_models_group_cutout_title">Subject Cutout</string>
     <string name="ai_models_group_cutout_desc">MobileSAM models that isolate subjects in the media viewer.</string>
     <string name="ai_models_group_cutout_download_summary">Download the MobileSAM models (~44 MB)</string>
@@ -481,7 +481,7 @@
     <string name="delete_category_title">Удалить категорию?</string>
     <string name="delete_category_confirmation">Вы уверены, что хотите удалить эту категорию? Это действие нельзя отменить.</string>
     <string name="category_name">Название категории</string>
-    <string name="category_name_hint">e.g., Nature, Food, Travel</string>
+    <string name="category_name_hint">пр., «Природа», «Еда», «Путешествия»</string>
     <string name="search_terms">Условия поиска</string>
     <string name="search_terms_hint">Comma-separated keywords to match images</string>
     <string name="search_terms_example">закат, восход, «золотой час», небо</string>
@@ -497,8 +497,8 @@
     <string name="category_helper_text">Добавьте имя, условия поиска и скорректируйте точность, чтобы создать категорию</string>
     <string name="reset_categories">Сбросить категории</string>
     <string name="reset_categories_summary">Удалить все категории и восстановить по умолчанию</string>
-    <string name="create">Create</string>
-    <string name="save">Save</string>
+    <string name="create">Создать</string>
+    <string name="save">Сохранить</string>
     <string name="browse_categories">Browse categories</string>
     <string name="category_media_count">%1$d items</string>
     <!-- Category Editor (unified create/edit) -->
@@ -508,7 +508,7 @@
     <string name="describe_content_example">e.g., photos of my dog at the beach</string>
     <string name="quick_start">Quick start</string>
     <string name="quick_start_subtitle">Tap a suggestion to get started</string>
-    <string name="matching_preview">Preview</string>
+    <string name="matching_preview">Предпросмотр</string>
     <string name="see_all_matches">See all %1$d matches</string>
     <string name="sensitivity">Sensitivity</string>
     <string name="sensitivity_broad">Broad</string>
@@ -537,7 +537,7 @@
     <string name="categories">Категории</string>
     <string name="classified_media">%1$s классифицированных медиа</string>
     <string name="scan_for_new_categories">Сканировать новые категории</string>
-    <string name="ai_models_not_available">AI models are not downloaded. Download them from Settings → Smart Features.</string>
+    <string name="ai_models_not_available">ИИ-модели не установлены. Загрузите их в Настройки → Умные функции.</string>
     <string name="scanning_media">Сканирование медиа...</string>
     <string name="date_header_title">Заголовок даты</string>
     <string name="media_view">Просмотр медиа</string>
@@ -563,9 +563,9 @@
     <string name="type_stylus">Перо</string>
     <string name="type_highlighter">Хайлайтер</string>
     <string name="type_marker">Маркер</string>
-    <string name="type_blur">Blur</string>
+    <string name="type_blur">Размытие</string>
     <string name="type_mosaic">Mosaic</string>
-    <string name="type_text">Text</string>
+    <string name="type_text">Текст</string>
     <string name="type_erase">Ластик</string>
     <string name="type_pan">Pan</string>
     <string name="filters">Фильтры</string>
@@ -766,7 +766,7 @@
     <string name="downloading">Загрузка…</string>
     <string name="download_complete">Загрузка завершена</string>
     <string name="download_failed">Ошибка загрузки</string>
-    <string name="cloud_delete">Delete</string>
+    <string name="cloud_delete">Удалить</string>
     <string name="cloud_action_desc_delete">Permanently delete the selected items from the server</string>
     <string name="cloud_media_trash_confirm_title">Move to trash?</string>
     <string name="cloud_media_trash_confirm_summary">The selected items will be moved to the server\'s trash. You can restore them later.</string>
@@ -809,22 +809,22 @@
     <string name="media_types">Типы медиа</string>
     <string name="camera_models">Модели камер</string>
     <string name="special_modes">Special Modes</string>
-    <string name="night_mode">Night Mode</string>
-    <string name="panoramas">Panoramas</string>
+    <string name="night_mode">Ночной режим</string>
+    <string name="panoramas">Панорамы</string>
     <string name="photospheres">Photospheres</string>
     <string name="long_exposures">Long Exposures</string>
     <string name="motion_photos">Motion Photos</string>
-    <string name="motion_photo_pill">Motion</string>
-    <string name="motion_photo_export_video">Save as video</string>
-    <string name="motion_photo_exporting">Saving video…</string>
-    <string name="motion_photo_export_success">Video saved to gallery</string>
-    <string name="motion_photo_export_failed">Couldn\'t save video</string>
+    <string name="motion_photo_pill">Движение</string>
+    <string name="motion_photo_export_video">Сохранить как видео</string>
+    <string name="motion_photo_exporting">Сохранение видео…</string>
+    <string name="motion_photo_export_success">Видео сохранено в галерею</string>
+    <string name="motion_photo_export_failed">Не удалось сохранить видео</string>
     <string name="media_groupings">Media Groupings</string>
     <string name="group_type_bursts">Bursts</string>
     <string name="group_type_raw_jpg">RAW + JPG</string>
     <string name="group_type_edits">Edits</string>
     <string name="sort_most_accurate">Most accurate</string>
-    <string name="sort_by_date">Date</string>
+    <string name="sort_by_date">Дата</string>
     <plurals name="item_count">
         <item quantity="one">%s элемент</item>
         <item quantity="few">%s эл.</item>
@@ -936,7 +936,7 @@
     <string name="pinned_albums_as_grid_description">When enabled, pinned albums appear as the same grid tiles as the rest of your albums (wrapping to multiple rows), placed before the other albums. When disabled, they show as a wide, horizontally scrollable banner carousel.</string>
     <!-- Media type albums -->
     <string name="media_type_albums_section">Media types</string>
-    <string name="media_type_gifs">GIFs</string>
+    <string name="media_type_gifs">GIF-файлы</string>
     <string name="media_type_raw">Raw</string>
     <string name="media_type_albums_setting_title">Show media type albums</string>
     <string name="media_type_albums_setting_summary">Add quick albums for Videos, Photos, GIFs and Raw files at the top of the Albums tab</string>
@@ -1001,7 +1001,7 @@
     <string name="help_make_most">Make the most of Gallery</string>
     <string name="help_explore_tips">Explore more tips</string>
     <string name="help_done">Done</string>
-    <string name="help_open_settings">Open settings</string>
+    <string name="help_open_settings">Открыть настройки</string>
     <string name="help_latest">Latest</string>
     <string name="help_not_found">This tip could not be found.</string>
     <string name="help_cat_basics">The basics</string>
@@ -1013,7 +1013,7 @@
     <string name="help_cat_viewer_settings">Media viewer settings</string>
     <string name="help_cat_editing">Photo editing</string>
     <string name="help_cat_search">Search</string>
-    <string name="help_cat_ai">AI features</string>
+    <string name="help_cat_ai">ИИ-функции</string>
     <string name="help_cat_albums">Albums &amp; collections</string>
     <string name="help_cat_vault">Сейф</string>
     <string name="help_cat_cloud_sync">Cloud &amp; sync</string>
@@ -1029,7 +1029,7 @@
     <string name="help_cat_selection_actions">Selection &amp; batch actions</string>
     <string name="help_cat_accessibility">Accessibility &amp; advanced</string>
     <!-- FCast -->
-    <string name="cancel">Cancel</string>
+    <string name="cancel">Отменить</string>
     <string name="cast_connect">Cast</string>
     <string name="cast_disconnect">Disconnect</string>
     <string name="cast_select_device">Select a device</string>
@@ -1038,10 +1038,10 @@
     <string name="cast_casting_to">Casting to %1$s</string>
     <string name="cast_stop">Stop casting</string>
     <string name="cast_manual_connect">Connect manually</string>
-    <string name="cast_enter_ip">Enter IP address</string>
+    <string name="cast_enter_ip">Введите IP-адрес</string>
     <string name="cast_ip_hint">192.168.1.100</string>
-    <string name="cast_port_hint">Port (default: 46899)</string>
-    <string name="cast_connect_button">Connect</string>
+    <string name="cast_port_hint">Порт (по умолчанию: 46899)</string>
+    <string name="cast_connect_button">Подключиться</string>
     <string name="cast_this_media">Cast this media</string>
     <string name="cast_stop_current">Stop current cast</string>
     <string name="cast_permissions_required">Permissions required</string>
@@ -1059,7 +1059,7 @@
     <string name="settings_backup">Backup &amp; restore</string>
     <string name="settings_backup_summary">Экспорт и импорт настроек, избранного и сейфов</string>
     <string name="backup_include_header">Include in backup</string>
-    <string name="backup_include_settings">App settings</string>
+    <string name="backup_include_settings">Настройки приложения</string>
     <string name="backup_include_settings_summary">All preferences and customizations</string>
     <string name="backup_include_local_favorites">Local favorites</string>
     <string name="backup_include_local_favorites_summary">Re-applied on import where matching photos are found</string>
@@ -1193,7 +1193,7 @@
     <string name="date_headers_title">Date separators</string>
     <string name="date_headers_summary">Show or hide date separators per section</string>
     <string name="date_headers_description">Date separators organize your media into groups by date. Enable or disable them for each section of the app.</string>
-    <string name="date_headers_timeline">Timeline</string>
+    <string name="date_headers_timeline">Хронология</string>
     <string name="date_headers_albums">Альбомы</string>
     <string name="date_headers_favorites">Избранное</string>
     <string name="date_headers_vault">Сейф</string>
@@ -1207,7 +1207,7 @@
     <string name="media_grouping_restart_note">Changes apply instantly across the app</string>
     <string name="group_method_monthly">Ежемесячно</string>
     <string name="group_method_yearly">Ежегодно</string>
-    <string name="group_method_timeline">Timeline</string>
+    <string name="group_method_timeline">Хронология</string>
     <string name="group_method_albums">Альбомы</string>
     <string name="group_method_favorites">Избранное</string>
     <string name="group_method_vault">Сейф</string>
@@ -1244,7 +1244,7 @@
     <string name="cloud_lan_only">LAN only</string>
     <string name="cloud_lan_offline_warning">Not on Wi-Fi. Network shares (SMB/NFS) are only reachable on your local network.</string>
     <string name="cloud_cap_remote_assets">Photos</string>
-    <string name="cloud_cap_remote_albums">Albums</string>
+    <string name="cloud_cap_remote_albums">Альбомы</string>
     <string name="cloud_cap_sync">Sync</string>
     <string name="cloud_cap_share_link">Share links</string>
     <string name="cloud_cap_people">People</string>
@@ -1252,8 +1252,8 @@
     <string name="cloud_cap_smart_search">Smart search</string>
     <string name="cloud_cap_text_search">Search</string>
     <string name="cloud_cap_ocr">OCR</string>
-    <string name="cloud_cap_archive">Archive</string>
-    <string name="cloud_cap_memories">Memories</string>
+    <string name="cloud_cap_archive">Архив</string>
+    <string name="cloud_cap_memories">Воспоминания</string>
     <string name="cloud_setup_help">How to connect</string>
     <string name="cloud_wizard_step">Step %1$d of %2$d</string>
     <string name="cloud_step_server">Server</string>
@@ -1261,13 +1261,13 @@
     <string name="cloud_step_networking">Networking</string>
     <string name="cloud_step_sync">Sync</string>
     <string name="cloud_step_review">Review</string>
-    <string name="cloud_step_server_desc">Where is your server?</string>
+    <string name="cloud_step_server_desc">Где находится ваш сервер?</string>
     <string name="cloud_step_credentials_desc">Sign in so we can connect.</string>
     <string name="cloud_step_networking_desc">Optionally use a faster URL on your home network.</string>
     <string name="cloud_step_sync_desc">Pick what to back up and what to bring in.</string>
     <string name="cloud_step_review_desc">Check everything looks right.</string>
-    <string name="cloud_show_secret">Show</string>
-    <string name="cloud_hide_secret">Hide</string>
+    <string name="cloud_show_secret">Показать</string>
+    <string name="cloud_hide_secret">Скрыть</string>
     <string name="cloud_sync_folders_title">Back up local folders</string>
     <string name="cloud_sync_folders_desc">Choose which folders on this device to upload to the server.</string>
     <string name="cloud_sync_albums_title">Sync remote albums</string>
@@ -1275,15 +1275,15 @@
     <string name="cloud_sync_no_local">No local folders found on this device.</string>
     <string name="cloud_sync_loading_albums">Loading albums…</string>
     <string name="cloud_sync_no_remote">This server has no albums yet.</string>
-    <string name="cloud_sync_retry">Retry</string>
+    <string name="cloud_sync_retry">Повторить</string>
     <string name="cloud_sync_item_count">%1$d items</string>
     <string name="cloud_sync_count_selected">%1$d selected</string>
     <string name="cloud_review_folders">Folders to back up</string>
     <string name="cloud_review_albums">Albums to sync</string>
     <string name="setup_cloud_add_another">Add another provider</string>
-    <string name="cloud_next">Next</string>
-    <string name="cloud_back">Back</string>
-    <string name="cloud_net_local_url_hint">https://192.168.1.10 or smb://192.168.1.10/share</string>
+    <string name="cloud_next">Далее</string>
+    <string name="cloud_back">Назад</string>
+    <string name="cloud_net_local_url_hint">https://192.168.1.10 или smb://192.168.1.10/share</string>
     <string name="cloud_net_ssid_optional">Wi-Fi name (leave blank to disable switching)</string>
     <string name="cloud_review_external_url">External URL</string>
     <string name="cloud_review_local_url">Local URL</string>
@@ -1335,8 +1335,8 @@
     <string name="cloud_backed_up_summary">Backed up on %d cloud provider(s)</string>
     <string name="cloud_backed_up_tap_hint">Tap to manage backups</string>
     <string name="cloud_backup_delete">Delete from this provider</string>
-    <string name="cloud_sync_header">Sync</string>
-    <string name="cloud_sync_now">Sync now</string>
+    <string name="cloud_sync_header">Синхронизировать</string>
+    <string name="cloud_sync_now">Синхронизировать сейчас</string>
     <string name="cloud_sync_now_syncing">Cинхронизация…</string>
     <string name="cloud_sync_fetching_media">Fetching media…</string>
     <string name="cloud_sync_synced_media">Synced %d media items…</string>
@@ -1359,7 +1359,7 @@
     <string name="cloud_empty">No cloud media found</string>
     <string name="cloud_empty_description">Your cloud server has no photos or videos, or sync has not completed yet.</string>
     <string name="cloud_error_title">Could not load cloud media</string>
-    <string name="cloud_retry">Retry</string>
+    <string name="cloud_retry">Повторить</string>
     <string name="cloud_offline">Offline — showing cached data</string>
     <string name="cloud_album_not_found">Cloud album not found</string>
     <string name="cloud_url_required">Server URL is required</string>
@@ -1381,9 +1381,9 @@
     <string name="cloud_find_duplicates">Найти дубликаты</string>
     <string name="cloud_find_duplicates_summary">Найти локальные файлы, которые уже хранятся в облаке</string>
     <string name="cloud_dedup_delete_local">Удалить локальные копии</string>
-    <string name="cloud_archive">Archive</string>
+    <string name="cloud_archive">Архив</string>
     <string name="cloud_archive_empty">No archived items</string>
-    <string name="cloud_archive_info_title">Archive</string>
+    <string name="cloud_archive_info_title">Архив</string>
     <string name="cloud_archive_info_summary">Архивные фото и видео скрыты в вашей ленте, но их по-прежнему можно найти здесь</string>
     <string name="cloud_shared_links">Shared Links</string>
     <string name="cloud_shared_links_empty">No shared links</string>
@@ -1410,7 +1410,7 @@
     <string name="cloud_shared_links_edit_allow_upload">Allow public user to upload</string>
     <string name="cloud_shared_links_edit_allow_download_badge">Скачать</string>
     <string name="cloud_shared_links_edit_show_metadata_badge">EXIF</string>
-    <string name="cloud_shared_links_confirm">Confirm</string>
+    <string name="cloud_shared_links_confirm">Подтвердить</string>
     <string name="cloud_shared_links_expires_on">Expires %1$s</string>
     <string name="cloud_shared_links_no_expiry">No expiry</string>
     <string name="cloud_shared_links_link_copied">Link copied to clipboard</string>
@@ -1458,7 +1458,7 @@
     <string name="cloud_backup_global_options">Global options</string>
     <string name="cloud_offline_title">Offline &amp; Cache</string>
     <string name="cloud_offline_summary">Cached media and downloads for offline use</string>
-    <string name="cloud_backup_autosync">Auto-sync</string>
+    <string name="cloud_backup_autosync">Автосинхронизация</string>
     <string name="cloud_backup_now">Back up now</string>
     <string name="cloud_backup_all_now">Back up all now</string>
     <string name="cloud_backup_service_settings">Service settings</string>
@@ -1478,7 +1478,7 @@
     <string name="cloud_backup_cellular_photos_summary">Upload photos over mobile data</string>
     <string name="cloud_backup_cellular_videos">Use cellular data for videos</string>
     <string name="cloud_backup_cellular_videos_summary">Upload videos over mobile data</string>
-    <string name="cloud_backup_background">Background</string>
+    <string name="cloud_backup_background">Фон</string>
     <string name="cloud_backup_require_charging">Require charging</string>
     <string name="cloud_backup_require_charging_summary">Only backup when device is charging</string>
     <string name="cloud_backup_album_sync">Album synchronization</string>
@@ -1501,8 +1501,8 @@
     <string name="cloud_person_edit_name">Переименовать</string>
     <string name="cloud_person_add_name">Добавить имя</string>
     <string name="cloud_person_name_hint">Имя</string>
-    <string name="cloud_person_hide">Hide</string>
-    <string name="cloud_person_merge">Merge</string>
+    <string name="cloud_person_hide">Скрыть</string>
+    <string name="cloud_person_merge">Объединить</string>
     <string name="cloud_person_set_cover">Set cover</string>
     <string name="cloud_person_blur_everywhere">Blur everywhere</string>
     <string name="cloud_person_blur_everywhere_summary">Obscure this person\'s face in every photo they appear in and save the results as new copies.</string>
@@ -1530,12 +1530,12 @@
     <string name="cloud_free_space_90d">90 дней</string>
     <string name="cloud_free_space_6m">6 месяцев</string>
     <string name="cloud_free_space_1y">1 год</string>
-    <string name="cloud_free_space_never">Never</string>
+    <string name="cloud_free_space_never">Никогда</string>
     <string name="cloud_free_space_never_summary">Automatic removal is off. Pick a time range to scan for local copies to remove.</string>
     <string name="cloud_free_space_scan">Scan for backed-up items</string>
     <string name="cloud_free_space_scanning">Scanning…</string>
     <string name="cloud_free_space_remove_count">Remove %1$d local copies</string>
-    <string name="cloud_settings_more_header">Preferences</string>
+    <string name="cloud_settings_more_header">Предпочтения</string>
     <!-- Memories -->
     <string name="cloud_memories">Воспоминания</string>
     <string name="cloud_memories_empty">Пока нет воспоминаний</string>
@@ -1579,7 +1579,7 @@
     <string name="cloud_adv_troubleshooting">Устранение неполадок</string>
     <string name="cloud_adv_verbose">Verbose logging</string>
     <string name="cloud_adv_verbose_summary">Enable detailed logging for debugging</string>
-    <string name="cloud_adv_sync">Sync</string>
+    <string name="cloud_adv_sync">Синхронизировать</string>
     <string name="cloud_adv_sync_deletions">Sync remote deletions</string>
     <string name="cloud_adv_sync_deletions_summary">[EXPERIMENTAL] Auto-delete or restore local items when remote changes</string>
     <string name="cloud_adv_display">Display</string>
@@ -1604,7 +1604,7 @@
     <string name="cloud_viewer_loop_summary">Restart videos when they reach the end</string>
     <string name="cloud_viewer_force_original">Force original video</string>
     <string name="cloud_viewer_force_original_summary">Always stream the original quality video</string>
-    <string name="cloud_viewer_recommended">Use recommended settings</string>
+    <string name="cloud_viewer_recommended">Использовать рекомендуемые настройки</string>
     <string name="cloud_viewer_recommended_summary">Preview on · original off · autoplay on · no loop</string>
     <string name="cloud_accounts">Облачные аккаунты</string>
     <!-- Cloud Accounts Screen (redesigned) -->
@@ -1645,9 +1645,9 @@
     <string name="cloud_upload_completed_count">%1$d completed</string>
     <string name="cloud_upload_failed_count">%1$d failed</string>
     <string name="cloud_upload_item_done">Завершено</string>
-    <string name="cloud_upload_item_failed">Failed</string>
-    <string name="cloud_upload_item_uploading">Uploading…</string>
-    <string name="cloud_upload_item_pending">Waiting…</string>
+    <string name="cloud_upload_item_failed">Ошибка</string>
+    <string name="cloud_upload_item_uploading">Загрузка…</string>
+    <string name="cloud_upload_item_pending">Ожидание…</string>
     <!-- Person birthday -->
     <string name="cloud_person_add_birthday">Добавить день рождения</string>
     <string name="cloud_person_edit_birthday">Редактировать день рождения</string>
@@ -1662,34 +1662,34 @@
     <string name="cloud_net_external_hint">https://immich.example.com</string>
     <string name="cloud_net_remove">Удалить</string>
     <!-- Wi-Fi SSID picker sheet -->
-    <string name="cloud_net_pick_wifi">Select Wi-Fi network</string>
+    <string name="cloud_net_pick_wifi">Выберите Wi-Fi сеть</string>
     <string name="cloud_net_wifi_sheet_desc">Pick your connected Wi-Fi or type a name. Leave empty to disable network switching.</string>
     <string name="cloud_net_wifi_connected">Connected: %1$s</string>
     <string name="cloud_net_wifi_not_connected">Not connected to Wi-Fi, or location permission is required to read the network name.</string>
     <string name="cloud_net_wifi_manual_label">Network name</string>
-    <string name="cloud_net_wifi_manual_hint">Enter Wi-Fi name</string>
+    <string name="cloud_net_wifi_manual_hint">Введите название Wi-Fi сети</string>
     <string name="cloud_net_wifi_disable">Disable switching</string>
     <string name="cloud_net_wifi_blank_summary">No network — switching disabled</string>
     <string name="cloud_net_wifi_pick_none">Not set</string>
     <!-- ============================ Setup wizard ============================ -->
     <!-- App logo -->
-    <string name="change_app_logo">App logo</string>
+    <string name="change_app_logo">Логотип приложения</string>
     <string name="change_app_logo_summary">Switch between the ReFra and classic Gallery launcher icon</string>
     <string name="app_logo_description">Choose the launcher icon used on your home screen and app drawer. The app will restart to apply the change.</string>
     <!-- Common -->
     <string name="setup_step_progress">Step %1$d of %2$d</string>
     <string name="setup_continue">Continue</string>
     <string name="setup_finish">Finish</string>
-    <string name="setup_grant_permissions">Grant Permissions</string>
+    <string name="setup_grant_permissions">Предоставить разрешения</string>
     <!-- Welcome page -->
-    <string name="setup_welcome_subtitle">Your private, on-device gallery</string>
+    <string name="setup_welcome_subtitle">Ваша личная галерея на устройстве</string>
     <!-- Permissions page -->
-    <string name="setup_permissions_title">Permissions</string>
-    <string name="setup_permissions_subtitle">ReFra only uses what it needs to show and manage your media. Tap a permission to learn why.</string>
-    <string name="setup_permission_used_for">Used for:</string>
-    <string name="permission_local_network_title">Direct local network access</string>
-    <string name="setup_reason_local_network">Optional. Grant this only when ReFra connects directly to a server on your current network.</string>
-    <string name="local_network_permission_dialog_title">Allow direct local network access?</string>
+    <string name="setup_permissions_title">Разрешения</string>
+    <string name="setup_permissions_subtitle">ReFra использует только то, что нужно для отображения и управления вашим медиа. Нажмите на разрешение, чтобы узнать, зачем оно требуется.</string>
+    <string name="setup_permission_used_for">Используется для:</string>
+    <string name="permission_local_network_title">Прямой доступ к локальной сети</string>
+    <string name="setup_reason_local_network">Необязательно. Дайте это только в том случае, если ReFra подключается напрямую к серверу в вашей текущей сети.</string>
+    <string name="local_network_permission_dialog_title">Разрешить прямой доступ к локальной сети?</string>
     <string name="local_network_permission_dialog_message">This server resolves to a device on your current local network. Android requires permission before ReFra can connect to it directly.</string>
     <string name="local_network_permission_not_now">Not now</string>
     <!-- Permission reasons (where/why) -->
@@ -1703,14 +1703,14 @@
     <!-- Looks & Feel page -->
     <string name="setup_looks_title">Looks &amp; Feel</string>
     <string name="setup_looks_subtitle">Make the app feel like yours.</string>
-    <string name="setup_section_app_name">App name</string>
-    <string name="setup_section_app_logo">App logo</string>
+    <string name="setup_section_app_name">Название приложения</string>
+    <string name="setup_section_app_logo">Логотип приложения</string>
     <string name="setup_looks_restart_note">The app will restart when you finish setup to apply the chosen name and icon.</string>
-    <string name="setup_section_appearance">Appearance</string>
+    <string name="setup_section_appearance">Внешний вид</string>
     <string name="setup_appearance_summary">Light or dark mode, accent colors and more.</string>
-    <string name="setup_open_appearance">Customize appearance</string>
+    <string name="setup_open_appearance">Настроить внешний вид</string>
     <!-- Cloud sync page -->
-    <string name="setup_cloud_title">Cloud sync</string>
+    <string name="setup_cloud_title">Облачная синхронизация</string>
     <string name="setup_cloud_subtitle">Optionally connect a server to back up and sync your media. Everything stays optional and under your control.</string>
     <string name="setup_cloud_enable">Set up cloud sync</string>
     <string name="setup_cloud_choose_provider">Choose a provider</string>
@@ -1721,21 +1721,21 @@
     <string name="setup_cap_sync">Backup &amp; sync</string>
     <string name="setup_cap_people">People &amp; faces</string>
     <string name="setup_cap_map">Map &amp; places</string>
-    <string name="setup_cap_smart_search">Smart search</string>
+    <string name="setup_cap_smart_search">Умный поиск</string>
     <string name="setup_cap_text_search">Text search</string>
     <string name="setup_cap_share_link">Shared links</string>
     <string name="setup_cap_ocr">Text recognition</string>
-    <string name="setup_cap_archive">Archive</string>
+    <string name="setup_cap_archive">Архив</string>
     <string name="setup_cap_memories">Memories</string>
     <!-- AI models page -->
-    <string name="setup_ai_title">AI Models</string>
+    <string name="setup_ai_title">ИИ-модели</string>
     <string name="setup_ai_subtitle">Enable on-device smart search and automatic categories. Models run entirely on your device.</string>
     <string name="setup_ai_ready">AI models are installed and ready.</string>
-    <string name="setup_ai_download">Download AI models</string>
+    <string name="setup_ai_download">Загрузить ИИ-модели</string>
     <string name="setup_ai_download_size">One-time download · works offline afterwards</string>
     <string name="setup_ai_no_internet">An internet connection is required to download the AI models.</string>
     <string name="setup_ai_features_title">What you\'ll get</string>
-    <string name="setup_ai_feature_categories_title">Smart categories</string>
+    <string name="setup_ai_feature_categories_title">Умные категории</string>
     <string name="setup_ai_feature_categories_desc">Photos are automatically sorted into groups like nature, people and food.</string>
     <string name="setup_ai_feature_search_title">Search by description</string>
     <string name="setup_ai_feature_search_desc">Find shots using natural language — no manual tags or albums needed.</string>
@@ -1788,12 +1788,12 @@
     <string name="cutout_action">Cut out subject</string>
     <string name="cutout_include">Include</string>
     <string name="cutout_exclude">Exclude</string>
-    <string name="cutout_undo">Undo</string>
-    <string name="cutout_redo">Redo</string>
+    <string name="cutout_undo">Отменить</string>
+    <string name="cutout_redo">Повторить</string>
     <string name="cutout_reset">Reset</string>
     <string name="cutout_copy">Copy</string>
     <string name="cutout_share">Share</string>
-    <string name="cutout_save">Save</string>
+    <string name="cutout_save">Сохранить</string>
     <string name="cutout_close">Close cutout</string>
     <string name="cutout_tool">Cutout</string>
     <string name="cutout_background_removal">Background Removal</string>
@@ -1811,8 +1811,8 @@
     <string name="slideshow_more_settings">More settings</string>
     <string name="slideshow_interval">Interval</string>
     <string name="slideshow_interval_value">Interval: %1$d s</string>
-    <string name="slideshow_seconds_suffix">s</string>
-    <string name="slideshow_random">Shuffle</string>
+    <string name="slideshow_seconds_suffix">с</string>
+    <string name="slideshow_random">Перемешать</string>
     <string name="slideshow_reverse">Reverse order</string>
     <string name="slideshow_include_gifs">Include GIFs</string>
     <string name="slideshow_include_videos">Include videos</string>
@@ -1823,10 +1823,10 @@
     <string name="slideshow_transition_fade">Fade</string>
     <string name="slideshow_transition_slide">Slide</string>
     <string name="slideshow_transition_ken_burns">Ken Burns</string>
-    <string name="slideshow_content_header">Content</string>
+    <string name="slideshow_content_header">Содержание</string>
     <string name="slideshow_settings_summary">Interval, transitions, shuffle and more</string>
-    <string name="slideshow_play">Play</string>
-    <string name="slideshow_pause">Pause</string>
+    <string name="slideshow_play">Воспроизвести</string>
+    <string name="slideshow_pause">Приостановить</string>
     <string name="slideshow_next">Next</string>
     <string name="slideshow_previous">Previous</string>
     <string name="slideshow_exit">Exit slideshow</string>
