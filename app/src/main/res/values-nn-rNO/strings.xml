@@ -2,8 +2,8 @@
 <resources>
     <string name="app_name">ReFra</string>
     <string name="app_name_gallery">Gallery</string>
-    <string name="change_app_name">App name</string>
-    <string name="change_app_name_summary">Change the app name shown on your launcher</string>
+    <string name="change_app_name">Appnamn</string>
+    <string name="change_app_name_summary">Endra appnamnet som visast i appstartaren</string>
     <string name="favorite_icon_on_thumbnails">Favorite icon on thumbnails</string>
     <string name="fav_position_disabled">Hidden</string>
     <string name="fav_position_bottom_end">Bottom right</string>
@@ -56,7 +56,7 @@
     <string name="show_in_app">Show in app</string>
     <string name="open_externally">Open externally</string>
     <string name="no_map_app">No app available to show the location</string>
-    <string name="map_appearance_header">Map</string>
+    <string name="map_appearance_header">Kart</string>
     <string name="map_appearance_title">Map appearance</string>
     <string name="map_appearance_description">Choose whether maps follow ReFra’s appearance or always use bright or dark map colors.</string>
     <string name="map_appearance_system">Follow app appearance</string>
@@ -173,9 +173,9 @@
     <string name="album_name">Albumnamn</string>
     <string name="create_new_album">Opprett album</string>
     <string name="copy">Copy</string>
-    <string name="copy_to_clipboard">Copy to clipboard</string>
+    <string name="copy_to_clipboard">Kopier til utklippstavla</string>
     <string name="copied_to_clipboard">Copied to clipboard</string>
-    <string name="error_copying_to_clipboard">Failed to copy to clipboard</string>
+    <string name="error_copying_to_clipboard">Klarte ikkje kopiera til utklippstavla</string>
     <string name="ignored_albums">Ignored Albums</string>
     <string name="add_to_ignored">Add to ignored albums</string>
     <string name="override">Overwrite</string>
@@ -319,7 +319,7 @@
     <string name="new_vault">Nytt kvelv</string>
     <string name="delete_vault">Slett kvelv</string>
     <string name="unknown_vault">Ukjent kvelv</string>
-    <string name="hide">Hide</string>
+    <string name="hide">Skjul</string>
     <string name="ignored_albums_text">Select what albums you would like to not see in the main Timeline, in the Albums tab or both.\n\nYou can either select individual albums or create a wildcard pattern to automatically hide any albums that matches it.</string>
     <string name="no_ignored_albums">No ignored albums</string>
     <string name="wildcard_summary_first">Wildcard: %1$s\nMatched albums: %2$s</string>
@@ -969,21 +969,21 @@
     <string name="find_similar">Find similar</string>
     <string name="image_search_preview">Image search preview</string>
     <!-- Collections -->
-    <string name="create_collection">Create collection</string>
-    <string name="new_collection">New collection</string>
-    <string name="collection_name">Collection name</string>
-    <string name="collection_name_hint">Enter collection name</string>
-    <string name="rename_collection">Rename</string>
-    <string name="delete_collection">Delete collection</string>
-    <string name="delete_collection_confirm">Are you sure you want to delete this collection? The media inside will not be deleted.</string>
-    <string name="add_to_collection">Add to collection</string>
-    <string name="remove_from_collection">Remove from collection</string>
-    <string name="collection_empty">This collection is empty</string>
-    <string name="n_items_in_collection">%1$d items</string>
+    <string name="create_collection">Opprett samling</string>
+    <string name="new_collection">Ny samling</string>
+    <string name="collection_name">Namn på samling</string>
+    <string name="collection_name_hint">Skriv inn namnet på samlinga</string>
+    <string name="rename_collection">Gje nytt namn</string>
+    <string name="delete_collection">Slett samling</string>
+    <string name="delete_collection_confirm">Er du sikker på at du vil sletta samlinga? Medium som samlinga inneheld vert ikkje sletta.</string>
+    <string name="add_to_collection">Legg til i samling</string>
+    <string name="remove_from_collection">Fjern frå samling</string>
+    <string name="collection_empty">Samlinga er tom</string>
+    <string name="n_items_in_collection">%1$d element</string>
     <string name="create_and_add">Create &amp; add</string>
-    <string name="pin_collection">Pin</string>
-    <string name="unpin_collection">Unpin</string>
-    <string name="select_albums_for_collection">Add albums</string>
+    <string name="pin_collection">Fest</string>
+    <string name="unpin_collection">Løys</string>
+    <string name="select_albums_for_collection">Legg til album</string>
     <string name="select_albums_for_collection_subtitle">Select albums to add their media to this collection</string>
     <string name="add_selected">Add selected</string>
     <!-- Help & Tips Screen -->
