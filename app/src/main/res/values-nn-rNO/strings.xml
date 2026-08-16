@@ -3,7 +3,7 @@
     <string name="app_name">ReFra</string>
     <string name="app_name_gallery">Gallery</string>
     <string name="change_app_name">Appnamn</string>
-    <string name="change_app_name_summary">Endra appnamnet som visast i appstartaren</string>
+    <string name="change_app_name_summary">Endra appnamnet som visast i applista</string>
     <string name="favorite_icon_on_thumbnails">Favorite icon on thumbnails</string>
     <string name="fav_position_disabled">Hidden</string>
     <string name="fav_position_bottom_end">Bottom right</string>
@@ -64,7 +64,7 @@
     <string name="map_appearance_dark">Dark</string>
     <string name="map_appearance_action">Change map appearance</string>
     <string name="map_cluster_title">Photos in this location</string>
-    <string name="map_cluster_count">%1$d photos</string>
+    <string name="map_cluster_count">%1$d foto</string>
     <string name="map_marker_photo">Photo on map</string>
     <string name="app_dev">er laga av %s</string>
     <string name="app_dev_name">IacobIonut01</string>
@@ -121,12 +121,12 @@
     <string name="allow_gif_animation_summary">Play GIF animations in the timeline and album grid. Disable to reduce lag in folders with many GIFs</string>
     <string name="amoled_mode_title">Bruk AMOLED-modus</string>
     <string name="amoled_mode_summary">Aukar kontrasten. Best eigna for bruk med AMOLED-skjermar.</string>
-    <string name="use_system_font_title">Use system font</string>
-    <string name="use_system_font_summary">Use your device\'s default font instead of the built-in one</string>
+    <string name="use_system_font_title">Bruk systemskrifta</string>
+    <string name="use_system_font_summary">Bruk systemskrifta til eininga i staden for den innebygde skrifta</string>
     <string name="use_system_font_description">When enabled, the app uses your device\'s system font instead of the built-in Google Sans font. This can improve readability if you use a custom system font.</string>
     <string name="color_palette_preview_description">Icons, text, and more match colors in your wallpaper</string>
-    <string name="color_palette_wallpaper_colors">Wallpaper colors</string>
-    <string name="color_palette_other_colors">Other colors</string>
+    <string name="color_palette_wallpaper_colors">Bakgrunnsfargar</string>
+    <string name="color_palette_other_colors">Andre fargar</string>
     <string name="media_details">Detaljar</string>
     <string name="edit_metadata">Rediger metadata</string>
     <string name="dialog_to_trash">Flytt til papirkorga</string>
@@ -161,8 +161,8 @@
     <string name="internet_summary"><![CDATA[Tillet appen å førehandsvisa lokasjon frå bileta og videoane dine]]></string>
     <string name="fancy_blur">Fancy sløringseffekt</string>
     <string name="fancy_blur_summary">Gjer bakgrunnen uklar ved vising av medium</string>
-    <string name="auto_contrast">Auto Contrast (Beta)</string>
-    <string name="auto_contrast_summary">Adjust button contrast based on image brightness</string>
+    <string name="auto_contrast">Auto-kontrast (betafunksjon)</string>
+    <string name="auto_contrast_summary">Justerer kontrasten på knappar ut frå biletlysstyrken</string>
     <string name="auto_contrast_description">Continuously samples the screen to detect image brightness and adjusts media viewer UI colors accordingly. Over dark regions, buttons and icons appear white with a dark backdrop. Over bright regions, they switch to black with a light backdrop. Works in both light and dark themes. Status bar icons also adapt to match the image brightness behind them. Updates in real-time as you zoom, pan, and swipe between media.</string>
     <string name="old_navbar">Use Material Navigation</string>
     <string name="old_navbar_summary">Show the old navigation bar UI (with rails for bigger screens)</string>
@@ -716,8 +716,8 @@
     <string name="allow_vibrations_description">Allows the app to send haptic feedback during certain actions and gestures, such as long-pressing to select or pinch-to-zoom transitions.</string>
     <string name="trash_enabled_description">When enabled, deleted photos and videos are moved to trash and kept for 30 days before permanent deletion. When disabled, deleting is immediate and irreversible.</string>
     <string name="trash_confirmation_description">Shows a confirmation dialog before moving items to the trash, preventing accidental deletions.</string>
-    <string name="follow_system_theme_description">When enabled, the app follows your device\'s light/dark mode setting automatically. Disable to manually choose light or dark mode below.</string>
-    <string name="dark_mode_description">Forces the app to use dark mode regardless of your system setting. Only available when \"Follow System Theme\" is disabled.</string>
+    <string name="follow_system_theme_description">Når denne er slått på, følgjer appen eininga sine innstillingar for lys og mørk modus. Når denne er slått av, kan du velja mellom lys og mørk modus i valet nedanfor.</string>
+    <string name="dark_mode_description">Ignorerer systeminnstillingane og tvingar appen til å bruka mørk modus. Dette valet er tilgjengeleg når «Følg systemtemaet» er slått av.</string>
     <string name="amoled_mode_description">Uses a pure black background instead of dark grey, providing higher contrast and saving battery on AMOLED screens.</string>
     <string name="timeline_layout_description">Choose how photos are arranged in the timeline grid. The uniform grid shows equal-sized thumbnails, while the mosaic layout varies sizes for a more dynamic look.</string>
     <string name="favorite_icon_description">Choose where the favorite heart icon appears on thumbnails in the grid, or hide it entirely.</string>
@@ -1699,10 +1699,10 @@
     <!-- Looks & Feel page -->
     <string name="setup_looks_title">Looks &amp; Feel</string>
     <string name="setup_looks_subtitle">Make the app feel like yours.</string>
-    <string name="setup_section_app_name">App name</string>
-    <string name="setup_section_app_logo">App logo</string>
+    <string name="setup_section_app_name">Appnamn</string>
+    <string name="setup_section_app_logo">Applogo</string>
     <string name="setup_looks_restart_note">The app will restart when you finish setup to apply the chosen name and icon.</string>
-    <string name="setup_section_appearance">Appearance</string>
+    <string name="setup_section_appearance">Utsjånad</string>
     <string name="setup_appearance_summary">Light or dark mode, accent colors and more.</string>
     <string name="setup_open_appearance">Customize appearance</string>
     <!-- Cloud sync page -->
