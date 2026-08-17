@@ -958,11 +958,6 @@
     <string name="help_tip_video_options_popup_subtitle">Компактан анимирани искачући прозор за контролу видеа</string>
     <string name="help_tip_video_options_popup_p1_title">Чистије контроле видео записа</string>
     <string name="help_tip_video_options_popup_p1_desc">Дугмад за контролу видеа (титлови, брзина, јачина звука, ротација) су спојена у једно дугме \"више опција\" које се шири у замућени анимирани искачући прозор. Искачући прозор користи распоред у реду у хоризонталном положају (landscape) и у колони у вертикалном положају (portrait), одржавајући преглед видео записа чистим, а истовремено пружајући брз приступ свим контролама.</string>
-    <!-- RELEASE NOTES: 4.3.0 -->
-    <!-- RELEASE NOTES: 4.2.3 -->
-    <!-- RELEASE NOTES: 4.2.2 -->
-    <!-- RELEASE NOTES: 4.2.1 -->
-    <!-- RELEASE NOTES -->
     <!-- TIMELINE: PER-SCREEN GROUPING (5.0.0) -->
     <string name="help_tip_timeline_group_period_title">Груписање по дану, месецу или години</string>
     <string name="help_tip_timeline_group_period_subtitle">Изаберите како сваки екран групише медије — и подесите то за сваки екран појединачно</string>
@@ -1064,13 +1059,143 @@
     <string name="help_tip_cloud_explore_p1_desc">Повезан сервер откључава више начина за прегледање: видите препознате људе и отворите све њихове фотографије, истражите медије са гео-ознакама на мапи и прегледајте албуме који су подељени са вама. Чак можете уредити име и датум рођења особе директно из Галерије.</string>
     <string name="help_tip_cloud_explore_p2_title">Паметна претрага и дељени линкови</string>
     <string name="help_tip_cloud_explore_p2_desc">Користите паметну претрагу засновану на CLIP технологији да пронађете фотографије описујући их природним језиком. Такође можете креирати линкове за дељење ресурса и албума, а затим их листирати, уређивати или брисати — све изнутар Галерије.</string>
-    <!-- RELEASE NOTES: 5.0.0 -->
-    <!-- RELEASE NOTES: 5.0.1 -->
-    <!-- RELEASE NOTES: 5.0.2 -->
     <!-- Fix black video on hide (5.0.3) -->
-    <string name="help_tip_video_fix_black_title">Fix black video on hide</string>
-    <string name="help_tip_video_fix_black_subtitle">Stop video blacking out when the bars hide</string>
-    <string name="help_tip_video_fix_black_p1_title">Keep video visible</string>
-    <string name="help_tip_video_fix_black_p1_desc">On some devices (notably Samsung) a playing video can black out when the system bars are shown or hidden, even though it keeps playing. Enable Media Viewer › Video Playback › \'Fix black video on hide\' to re-bind the player surface on every bar change. It is on by default for Samsung devices and off elsewhere — turn it off if you don\'t need it.</string>
-    <!-- RELEASE NOTES: 5.0.3 -->
+    <string name="help_tip_video_fix_black_title">Поправи црни видео при скривању</string>
+    <string name="help_tip_video_fix_black_subtitle">Зауставите зацрњење видеа када се траке сакрију</string>
+    <string name="help_tip_video_fix_black_p1_title">Задржи видео видљивим</string>
+    <string name="help_tip_video_fix_black_p1_desc">На неким уређајима (посебно Samsung) видео који се репродукује може да се зацрни када се системске траке прикажу или сакрију, иако се репродукција наставља. Омогућите Прегледач медија › Репродукција видеа › \'Поправи црни видео при скривању\' да бисте поново повезали површину плејера при свакој промени траке. Ово је подразумевано укључено за Samsung уређаје, а искључено за остале — искључите ако вам није потребно.</string>
+    <!-- HELP SEARCH -->
+    <string name="help_search_hint">Претражи помоћ и савете</string>
+    <string name="help_search_clear">Очисти претрагу</string>
+    <string name="help_search_no_results">Није пронађена помоћ за „%1$s“</string>
+    <string name="help_search_section_tips">Савети и упутства</string>
+    <string name="help_search_section_settings">Подешавања</string>
+    <string name="help_search_section_actions">Брзе радње</string>
+    <string name="help_search_section_changelog">Шта је ново</string>
+    <string name="help_search_see_all">Прикажи свих %1$d резултата</string>
+    <string name="help_tips_section_title">Помоћ и савети</string>
+    <string name="help_quick_actions">Брзе радње</string>
+    <!-- HELP QUICK-ACTION LABELS -->
+    <string name="help_qa_open_timeline">Отвори временску линију</string>
+    <string name="help_qa_open_albums">Отвори албуме</string>
+    <string name="help_qa_open_search">Отвори претрагу</string>
+    <string name="help_qa_open_categories">Отвори категорије</string>
+    <string name="help_qa_open_vault">Отвори сеф</string>
+    <string name="help_qa_open_trash">Отвори смеће</string>
+    <string name="help_qa_open_favorites">Отвори омиљено</string>
+    <string name="help_qa_open_locations">Отвори локације</string>
+    <string name="help_qa_open_library">Отвори библиотеку</string>
+    <string name="help_qa_open_color_palette">Отвори палету боја</string>
+    <string name="help_qa_open_appearance">Отвори подешавања изгледа</string>
+    <!-- COVERAGE COMPLETION TIPS (100% audit) -->
+    <string name="help_tip_view_cutout_title">Исеци објекат</string>
+    <string name="help_tip_view_cutout_subtitle">Издвоји особу или објекат из позадине</string>
+    <string name="help_tip_view_cutout_p1_title">Издвоји детектовани објекат</string>
+    <string name="help_tip_view_cutout_p1_desc">У прегледачу, ReFra може детектовати главни објекат директно на уређају и приказати истакнути предлог. Отворите га да прилагодите маску, а затим копирајте, поделите или сачувајте провидни исечак. Такође можете подесити да дуги притисак покреће исецање у подешавањима прегледача медија.</string>
+    <string name="help_tip_view_cutout_p1_s1">Отворите фотографију са јасним објектом</string>
+    <string name="help_tip_view_cutout_p1_s2">Додирните предлог за исецање објекта</string>
+    <string name="help_tip_view_cutout_p1_s3">Прецизирајте контуру помоћу тачака за укључивање или искључивање</string>
+    <string name="help_tip_view_cutout_p1_s4">Копирајте, поделите или сачувајте исечак</string>
+    <string name="help_tip_slideshow_play_title">Покрени пројекцију слајдова</string>
+    <string name="help_tip_slideshow_play_subtitle">Аутоматско пуштање слика из албума преко целог екрана</string>
+    <string name="help_tip_slideshow_play_p1_title">Покрени из прегледача</string>
+    <string name="help_tip_slideshow_play_p1_desc">Отворите било коју фотографију, а затим изаберите Пројекција слајдова из менија са опцијама за аутоматски преглед слика из албума преко целог екрана.</string>
+    <string name="help_tip_slideshow_play_p1_s1">Отворите фотографију у албуму</string>
+    <string name="help_tip_slideshow_play_p1_s2">Отворите мени са опцијама</string>
+    <string name="help_tip_slideshow_play_p1_s3">Додирните Пројекција слајдова да бисте започели</string>
+    <string name="help_tip_settings_slideshow_title">Подешавања пројекције слајдова</string>
+    <string name="help_tip_settings_slideshow_subtitle">Подесите интервал, редослед и понављање</string>
+    <string name="help_tip_settings_slideshow_p1_title">Подешавање репродукције</string>
+    <string name="help_tip_settings_slideshow_p1_desc">Прилагодите колико дуго се свака ставка приказује, да ли се репродукција понавља и којим редоследом се ставке појављују.</string>
+    <string name="help_tip_settings_slideshow_p1_s1">Отворите подешавања пројекције слајдова</string>
+    <string name="help_tip_settings_slideshow_p1_s2">Подесите интервал по ставци</string>
+    <string name="help_tip_settings_slideshow_p1_s3">Изаберите редослед и понављање</string>
+    <string name="help_tip_settings_date_format_title">Формат датума</string>
+    <string name="help_tip_settings_date_format_subtitle">Изаберите начин приказивања датума</string>
+    <string name="help_tip_settings_date_format_p1_title">Изаберите свој формат</string>
+    <string name="help_tip_settings_date_format_p1_desc">ReFra подразумевано прати системски датум и подешавања за 12/24-часовни формат. Промените ово само ако желите прилагођени шаблон и користите дугме за информације да прегледате подржане симболе формата.</string>
+    <string name="help_tip_settings_date_format_p1_s1">Отворите Формат датума</string>
+    <string name="help_tip_settings_date_format_p1_s2">Задржите Прати систем или унесите прилагођени шаблон</string>
+    <string name="help_tip_settings_date_format_p1_s3">Прегледајте резултат и по потреби отворите упутство за формат</string>
+    <string name="help_tip_basics_setup_title">Прво подешавање</string>
+    <string name="help_tip_basics_setup_subtitle">Доделите дозволе и изаберите подразумеване опције</string>
+    <string name="help_tip_basics_setup_p1_title">Први кораци</string>
+    <string name="help_tip_basics_setup_p1_desc">При првом покретању, ReFra вас води кроз дозволе, изглед, AI моделе, налоге у облаку и корисне савете. Подешавању се можете вратити у било ком тренутку.</string>
+    <string name="help_tip_albums_ignored_manage_title">Управљање игнорисаним албумима</string>
+    <string name="help_tip_albums_ignored_manage_subtitle">Прегледајте и вратите скривене фасцикле</string>
+    <string name="help_tip_albums_ignored_manage_p1_title">Листа игнорисаних албума</string>
+    <string name="help_tip_albums_ignored_manage_p1_desc">Погледајте сваки албум који сте сакрили са временске линије и вратите било који од њих на једном месту.</string>
+    <string name="help_tip_albums_ignored_manage_p1_s1">Отворите Игнорисане албуме</string>
+    <string name="help_tip_albums_ignored_manage_p1_s2">Прегледајте скривене фасцикле</string>
+    <string name="help_tip_albums_ignored_manage_p1_s3">Вратите било коју фасциклу коју желите</string>
+    <string name="help_tip_cloud_add_server_title">Додај сервер</string>
+    <string name="help_tip_cloud_add_server_subtitle">Повежите Immich, WebDAV, SMB и друге</string>
+    <string name="help_tip_cloud_add_server_p1_title">Чаробњак за подешавање</string>
+    <string name="help_tip_cloud_add_server_p1_desc">Чаробњак вас корак по корак води кроз адресу сервера, креденцијале, мрежу и опције синхронизације.</string>
+    <string name="help_tip_cloud_add_server_p1_s1">Изаберите врсту добављача</string>
+    <string name="help_tip_cloud_add_server_p1_s2">Унесите сервер и креденцијале</string>
+    <string name="help_tip_cloud_add_server_p1_s3">Подесите мрежу и синхронизацију</string>
+    <string name="help_tip_cloud_add_server_p1_s4">Прегледајте и сачувајте</string>
+    <string name="help_tip_cloud_destinations_title">Одредишта за резервну копију</string>
+    <string name="help_tip_cloud_destinations_subtitle">Повежите сваки албум са једним или више облака</string>
+    <string name="help_tip_cloud_destinations_p1_title">Матрица одредишта</string>
+    <string name="help_tip_cloud_destinations_p1_desc">Изаберите тачно који се албуми чувају на којим повезаним налозима помоћу једноставне матрице.</string>
+    <string name="help_tip_cloud_provider_settings_title">Подешавања налога</string>
+    <string name="help_tip_cloud_provider_settings_subtitle">Управљајте повезаним налогом</string>
+    <string name="help_tip_cloud_provider_settings_p1_title">Опције по налогу</string>
+    <string name="help_tip_cloud_provider_settings_p1_desc">Уређујте мрежне поставке, албуме за резервну копију и понашање синхронизације независно за сваки повезани налог.</string>
+    <string name="help_tip_cloud_shared_links_title">Дељени линкови</string>
+    <string name="help_tip_cloud_shared_links_subtitle">Управљајте линковима које сте поделили</string>
+    <string name="help_tip_cloud_shared_links_p1_title">Прегледајте дељене линкови</string>
+    <string name="help_tip_cloud_shared_links_p1_desc">Погледајте и озовите јавне линкове креиране на вашим повезаним серверима.</string>
+    <string name="help_tip_cloud_sync_status_title">Статус синхронизације</string>
+    <string name="help_tip_cloud_sync_status_subtitle">Пратите отпремања и преузимања</string>
+    <string name="help_tip_cloud_sync_status_p1_title">Напредак у реалном времену</string>
+    <string name="help_tip_cloud_sync_status_p1_desc">Пратите напредак резервне копије и погледајте шта је на чекању, у току или неуспешно.</string>
+    <string name="help_tip_cloud_people_title">Људи</string>
+    <string name="help_tip_cloud_people_subtitle">Прегледајте лица са вашег сервера</string>
+    <string name="help_tip_cloud_people_p1_title">Груписање лица</string>
+    <string name="help_tip_cloud_people_p1_desc">Истражите особе које је детектовао ваш сервер у облаку и отворите фотографије сваке од њих.</string>
+    <string name="help_tip_cloud_free_up_space_title">Ослободи простор</string>
+    <string name="help_tip_cloud_free_up_space_subtitle">Уклоните локалне копије које су безбедно сачуване</string>
+    <string name="help_tip_cloud_free_up_space_p1_title">Ослободите меморију</string>
+    <string name="help_tip_cloud_free_up_space_p1_desc">Избришите копије медија са уређаја које су већ безбедно сачуване у облаку.</string>
+    <string name="help_tip_media_type_albums_title">Преглед према врсти медија</string>
+    <string name="help_tip_media_type_albums_subtitle">Аутоматски албуми за фотографије, видео записе, GIF-ове и RAW датотеке</string>
+    <string name="help_tip_media_type_albums_p1_title">Албуми према врсти медија</string>
+    <string name="help_tip_media_type_albums_p1_desc">ReFra креира виртуелне албуме из ваше обједињене библиотеке како бисте све фотографије, видео записе, GIF-ове или RAW датотеке отворили заједно. Њихова видљивост се контролише у подешавањима Временске линије и албума.</string>
+    <string name="help_tip_media_type_albums_p1_s1">Отворите Албуме и скролујте до Врсте медија</string>
+    <string name="help_tip_media_type_albums_p1_s2">Отворите врсту да бисте прегледали одговарајуће медије</string>
+    <string name="help_tip_media_type_albums_p1_s3">Користите подешавања Временске линије и албума за приказивање или скривање овог одељка</string>
+    <string name="help_tip_raw_develop_title">Развијање RAW фотографија</string>
+    <string name="help_tip_raw_develop_subtitle">Прилагодите податке са сензора пре извоза</string>
+    <string name="help_tip_raw_develop_p1_title">Користите контроле за развијање</string>
+    <string name="help_tip_raw_develop_p1_desc">Отворите подржану RAW фотографију у уређивачу да бисте прилагодили баланс беле, експозицију, светле тонове, излазну боју и демозаиковање. ReFra користи безбедни преглед меморије уз очување пуне резолуције на излазу.</string>
+    <string name="help_tip_raw_develop_p1_s1">Отворите RAW фотографију и додирните Уреди</string>
+    <string name="help_tip_raw_develop_p1_s2">Изаберите опције у картици Развијање</string>
+    <string name="help_tip_raw_develop_p1_s3">Примените додатно опсецање, филтер или цртање</string>
+    <string name="help_tip_raw_develop_p1_s4">Сачувајте копију или извезите као JPEG, PNG или TIFF</string>
+    <string name="help_tip_people_grouping_title">Груписање људи на уређају</string>
+    <string name="help_tip_people_grouping_subtitle">Пронађите лица без отпремања библиотеке</string>
+    <string name="help_tip_people_grouping_p1_title">Скенирајте и организујте људе</string>
+    <string name="help_tip_people_grouping_p1_desc">Док је модел за лица инсталиран, ReFra скенира и групише људе локално. Можете покренути ново скенирање у одељку Људи, сакрити особу, спојити групе и креирати замагљене копије када је приватност важна.</string>
+    <string name="help_tip_people_grouping_p1_s1">Инсталирајте модел за детекцију лица</string>
+    <string name="help_tip_people_grouping_p1_s2">Отворите Библиотеку, а затим Људи</string>
+    <string name="help_tip_people_grouping_p1_s3">Додирните Скенирај за људе и сачекајте индексирање</string>
+    <string name="help_tip_people_grouping_p1_s4">Отворите особу да бисте управљали групом или замаглили лица</string>
+    <string name="help_tip_album_cover_title">Изаберите омот албума</string>
+    <string name="help_tip_album_cover_subtitle">Користите било коју локалну фотографију као сличицу</string>
+    <string name="help_tip_album_cover_p1_title">Поставите прилагођени омот</string>
+    <string name="help_tip_album_cover_p1_desc">За локалну, нешифровану фотографију у стварном албуму, отворите радње прегледача и изаберите Користи као омот албума. Такође можете омогућити ову радњу у прилагодљивом менију за избор.</string>
+    <string name="help_tip_album_cover_p1_s1">Отворите жељену фотографију из њеног албума</string>
+    <string name="help_tip_album_cover_p1_s2">Отворите радње, а затим Користи као</string>
+    <string name="help_tip_album_cover_p1_s3">Изаберите Користи као омот албума</string>
+    <string name="help_tip_metadata_sanitize_title">Уклоните осетљиве метаподатке</string>
+    <string name="help_tip_metadata_sanitize_subtitle">Очистите подржане датотеке без поновне компресије пиксела</string>
+    <string name="help_tip_metadata_sanitize_p1_title">Изаберите шта желите да уклоните</string>
+    <string name="help_tip_metadata_sanitize_p1_desc">У детаљима фотографије изаберите Уклони метаподатке и изаберите само локацију, описна поља или све подржане метаподатке. ReFra записује и верификује очишћену копију без губитка квалитета пре него што замени оригинал.</string>
+    <string name="help_tip_metadata_sanitize_p1_s1">Отворите подржану локалну фотографију</string>
+    <string name="help_tip_metadata_sanitize_p1_s2">Проширите њене детаље и додирните Уклони метаподатке</string>
+    <string name="help_tip_metadata_sanitize_p1_s3">Изаберите ниво чишћења</string>
+    <string name="help_tip_metadata_sanitize_p1_s4">Потврдите тек након што прегледате упозорење о замени</string>
 </resources>
