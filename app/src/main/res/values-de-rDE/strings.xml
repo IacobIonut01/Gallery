@@ -418,7 +418,7 @@
     <string name="metadata_mode_location">Nur Standort</string>
     <string name="metadata_mode_location_description">Entfernt Koordinaten, Höhe, Orte, Routen und GPS-Zeitstempel.</string>
     <string name="metadata_mode_privacy">Datenschutzbezogen</string>
-    <string name="metadata_mode_privacy_description">Also removes embedded dates, people data, device identity, authorship, descriptions, edit history, and provenance.</string>
+    <string name="metadata_mode_privacy_description">Außerdem werden eingebettete Datumsangaben, Personendaten, Gerätekennungen, Autorenangaben, Beschreibungen, Bearbeitungsverlauf und Herkunftsangaben entfernt.</string>
     <string name="metadata_mode_everything">Alles Löschbare</string>
     <string name="metadata_mode_everything_description">Entfernt optionale Metadaten; behält nur für Anzeige und Wiedergabe notwendige Daten.</string>
     <string name="metadata_preserved_title">Beibehaltene Daten</string>
@@ -458,10 +458,10 @@
     <string name="ai_models_feature_faces">Gesichter &amp; Leute</string>
     <!-- Per-feature model groups -->
     <string name="ai_models_group_search_title">Suche &amp; Kategorien</string>
-    <string name="ai_models_group_search_desc">CLIP models that power smart search and automatic categories.</string>
+    <string name="ai_models_group_search_desc">CLIP-Modelle, die die intelligente Suche und die automatische Kategorisierung ermöglichen.</string>
     <string name="ai_models_group_search_download_summary">CLIP-Modelle herunterladen (~147 MB)</string>
     <string name="ai_models_group_cutout_title">Motivausschnitt</string>
-    <string name="ai_models_group_cutout_desc">MobileSAM models that isolate subjects in the media viewer.</string>
+    <string name="ai_models_group_cutout_desc">MobileSAM-Modelle, die Objekte im Medien-Betrachter isolieren.</string>
     <string name="ai_models_group_cutout_download_summary">MobileSAM-Modelle herunterladen (~44 MB)</string>
     <string name="ai_models_group_cutout_ready_summary">Das Freistellen von Motiven ist in der Medienansicht verfügbar</string>
     <string name="ai_models_source_cutout_url">huggingface.co/Acly/MobileSAM</string>
@@ -473,7 +473,7 @@
     <string name="ai_models_group_face_recognition_title">Gesichtserkennung (Leute)</string>
     <string name="ai_models_group_face_recognition_desc">ArcFace face-embedding model that groups the same person across your photos, fully on-device. Requires Face Detection.</string>
     <string name="ai_models_group_face_recognition_download_summary">ArcFace-Modell herunterladen (~130 MB)</string>
-    <string name="ai_models_group_face_recognition_ready_summary">On-device People grouping is available in the Library</string>
+    <string name="ai_models_group_face_recognition_ready_summary">Die geräteinterne Personengruppierung ist in der Bibliothek verfügbar</string>
     <string name="ai_models_source_face_recognition_url">huggingface.co/garavv/arcface-onnx</string>
     <!-- New Category System -->
     <string name="add_category">Kategorie hinzufügen</string>
@@ -550,7 +550,7 @@
     <string name="date_format_following_system">Systemformat folgen</string>
     <string name="date_format_info_action">Format Hilfe</string>
     <string name="date_format_info_title">Format strings</string>
-    <string name="date_format_info_summary">Leave a field empty to follow your device\'s date and time format. To customize, combine the pattern letters below (based on Unicode date patterns).</string>
+    <string name="date_format_info_summary">Lassen Sie ein Feld leer, um das Datums- und Zeitformat Ihres Geräts zu übernehmen. Um das Format anzupassen, kombinieren Sie die unten aufgeführten Musterbuchstaben (basierend auf Unicode-Datumsmustern).</string>
     <string name="date_format_info_time_section">Zeit</string>
     <string name="date_format_info_date_section">Datum Komponenten</string>
     <string name="date_format_info_standard_section">Übliche Formate</string>
@@ -769,9 +769,9 @@
     <string name="cloud_delete">Löschen</string>
     <string name="cloud_action_desc_delete">Ausgewählte Elemente dauerhaft vom Server löschen</string>
     <string name="cloud_media_trash_confirm_title">Zum Papierkorb verschieben?</string>
-    <string name="cloud_media_trash_confirm_summary">The selected items will be moved to the server\'s trash. You can restore them later.</string>
+    <string name="cloud_media_trash_confirm_summary">Die ausgewählten Elemente werden in den Papierkorb des Servers verschoben. Sie können sie später wiederherstellen.</string>
     <string name="cloud_media_delete_confirm_title">Endgültig löschen?</string>
-    <string name="cloud_media_delete_confirm_summary">The selected items will be permanently deleted from the server. This cannot be undone.</string>
+    <string name="cloud_media_delete_confirm_summary">Die ausgewählten Elemente werden endgültig vom Server gelöscht. Dieser Vorgang kann nicht rückgängig gemacht werden.</string>
     <string name="extended_date_header_title">Erweiterte Datumsüberschrift</string>
     <string name="clear_selection">Alle entfernen</string>
     <string name="selfies">Selfies</string>
@@ -928,13 +928,13 @@
     <string name="dismiss">Verwerfen</string>
     <!-- Pinned albums layout -->
     <string name="pinned_albums_as_grid_title">Angepinnte Alben als Kacheln</string>
-    <string name="pinned_albums_as_grid_summary">Show pinned albums as regular tiles above the other albums, instead of a scrolling banner</string>
-    <string name="pinned_albums_as_grid_description">When enabled, pinned albums appear as the same grid tiles as the rest of your albums (wrapping to multiple rows), placed before the other albums. When disabled, they show as a wide, horizontally scrollable banner carousel.</string>
+    <string name="pinned_albums_as_grid_summary">Angepinnte Alben als reguläre Kacheln über den anderen Alben anzeigen, anstatt eines scrollenden Banners</string>
+    <string name="pinned_albums_as_grid_description">Wenn diese Funktion aktiviert ist, werden angeheftete Alben als Rasterkacheln angezeigt, genau wie Ihre übrigen Alben (auf mehrere Zeilen verteilt), und stehen vor den anderen Alben. Wenn sie deaktiviert ist, werden sie als breites, horizontal scrollbares Banner-Karussell angezeigt.</string>
     <!-- Media type albums -->
     <string name="media_type_albums_section">Medien Typen</string>
     <string name="media_type_gifs">GIFs</string>
     <string name="media_type_raw">Raw</string>
-    <string name="media_type_albums_setting_title">Show media type albums</string>
+    <string name="media_type_albums_setting_title">Alben nach Medientyp anzeigen</string>
     <string name="media_type_albums_setting_summary">Add quick albums for Videos, Photos, GIFs and Raw files at the top of the Albums tab</string>
     <!-- Album Sections -->
     <string name="album_sections_title">Alben nach Bereichen organisieren</string>
