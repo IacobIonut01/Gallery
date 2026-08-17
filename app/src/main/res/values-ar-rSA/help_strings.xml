@@ -346,7 +346,7 @@
     <string name="help_tip_viewer_fav_button_title">Show favorite button</string>
     <string name="help_tip_viewer_fav_button_subtitle">Toggle the favorite button in the viewer</string>
     <string name="help_tip_viewer_fav_button_p1_title">زر المفضلة</string>
-    <string name="help_tip_viewer_fav_button_p1_desc">The heart button in the viewer toolbar lets you quickly mark or unmark a photo as a favorite with a single tap. If you rarely use favorites, hiding this button declutters the toolbar. You can still favorite photos from the info sheet (swipe up) or the selection action sheet.</string>
+    <string name="help_tip_viewer_fav_button_p1_desc">يتيح لك زر «القلب» الموجود في شريط أدوات العارض وضع علامة «مفضلة» على صورة ما أو إزالتها بسرعة بنقرة واحدة. إذا كنت نادرًا ما تستخدم ميزة «المفضلة»، فإن إخفاء هذا الزر يساعد في تنظيم شريط الأدوات. ولا يزال بإمكانك إضافة الصور إلى قائمة «المفضلة» من ورقة المعلومات (بالتمرير لأعلى) أو من ورقة إجراءات التحديد.</string>
     <string name="help_tip_viewer_fav_button_p1_s1">Go to Settings &gt; Media viewer</string>
     <string name="help_tip_viewer_fav_button_p1_s2">Toggle \'Show favorite button\'</string>
     <string name="help_tip_viewer_fav_button_p1_s3">You can still favorite via the info sheet even if hidden</string>
