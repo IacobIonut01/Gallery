@@ -722,7 +722,7 @@
     <string name="help_tip_settings_selection_titles_title">Show selection titles</string>
     <string name="help_tip_settings_selection_titles_subtitle">Display titles in the selection action sheet</string>
     <string name="help_tip_settings_selection_titles_p1_title">Selection titles</string>
-    <string name="help_tip_settings_selection_titles_p1_desc">When you select photos, the bottom action sheet shows icons for available actions. Enabling titles adds text labels under each icon (Share, Delete, Copy, etc.) for clarity. Disabling titles gives a cleaner, more compact look. If you already know what each icon does, hiding titles saves space.</string>
+    <string name="help_tip_settings_selection_titles_p1_desc">عند تحديد الصور، تعرض قائمة الإجراءات السفلية أيقونات للإجراءات المتاحة. يؤدي تفعيل العناوين إلى إضافة تسميات نصية أسفل كل أيقونة (مشاركة، حذف، نسخ، إلخ) من أجل الوضوح. أما تعطيل العناوين فيمنح المظهر مظهرًا أنظف وأكثر إيجازًا. وإذا كنت تعرف بالفعل وظيفة كل أيقونة، فإن إخفاء العناوين يوفر مساحة.</string>
     <string name="help_tip_settings_selection_titles_p1_s1">Go to Settings &gt; Navigation</string>
     <string name="help_tip_settings_selection_titles_p1_s2">Toggle \'Show selection titles\'</string>
     <string name="help_tip_settings_selection_titles_p1_s3">With titles: labels under each action icon</string>
