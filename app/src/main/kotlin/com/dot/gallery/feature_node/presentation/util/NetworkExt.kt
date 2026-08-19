@@ -18,6 +18,14 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 
+internal inline fun runNetworkCallbackOperation(operation: () -> Unit): Boolean =
+    try {
+        operation()
+        true
+    } catch (_: RuntimeException) {
+        false
+    }
+
 @ExperimentalCoroutinesApi
 @Composable
 fun connectivityState(): State<ConnectionState> {
@@ -43,9 +51,9 @@ private fun Context.observeConnectivityAsFlow() = callbackFlow {
         .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
         .build()
 
-    try {
-        connectivityManager.registerNetworkCallback(networkRequest, callback)
-    } catch (_: SecurityException) {
+    if (!runNetworkCallbackOperation {
+            connectivityManager.registerNetworkCallback(networkRequest, callback)
+        }) {
         // ACCESS_NETWORK_STATE permission not available
         trySend(ConnectionState.Unavailable)
         awaitClose()
@@ -59,7 +67,9 @@ private fun Context.observeConnectivityAsFlow() = callbackFlow {
     // Remove callback when not used
     awaitClose {
         // Remove listeners
-        connectivityManager.unregisterNetworkCallback(callback)
+        runNetworkCallbackOperation {
+            connectivityManager.unregisterNetworkCallback(callback)
+        }
     }
 }
 

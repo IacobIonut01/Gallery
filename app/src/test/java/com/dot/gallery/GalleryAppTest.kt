@@ -1,7 +1,10 @@
 package com.dot.gallery
 
+import com.dot.gallery.feature_node.presentation.util.runNetworkCallbackOperation
 import okio.Path.Companion.toPath
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
 
@@ -15,5 +18,15 @@ class GalleryAppTest {
 
         assertEquals(internalCacheDirectory.absolutePath.toPath(), result.parent)
         assertEquals("sketch", result.name)
+    }
+
+    @Test
+    fun networkCallbackOperationHandlesMissingPermission() {
+        assertFalse(runNetworkCallbackOperation { throw SecurityException("missing permission") })
+    }
+
+    @Test
+    fun networkCallbackOperationReportsSuccessfulRegistration() {
+        assertTrue(runNetworkCallbackOperation {})
     }
 }

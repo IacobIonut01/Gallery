@@ -14,6 +14,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import com.dot.gallery.core.activeDataStore
 import com.dot.gallery.feature_node.presentation.util.printDebug
+import com.dot.gallery.feature_node.presentation.util.runNetworkCallbackOperation
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -111,8 +112,9 @@ class OfflineModeManager @Inject constructor(
                 recomputeSnapshots()
             }
         }
-        runCatching { cm.registerDefaultNetworkCallback(callback) }
-            .onFailure { printDebug("OfflineModeManager: connectivity callback failed: ${it.message}") }
+        if (!runNetworkCallbackOperation { cm.registerDefaultNetworkCallback(callback) }) {
+            printDebug("OfflineModeManager: connectivity callback registration failed")
+        }
     }
 
     private fun updateFromCapabilities(caps: NetworkCapabilities?) {

@@ -44,6 +44,7 @@ import com.dot.gallery.core.workers.TempVaultCleanupWorker
 import com.dot.gallery.feature_node.data.data_source.SmartScanFeature
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.presentation.frameextract.FrameSourceCleanup
+import com.dot.gallery.feature_node.presentation.util.runNetworkCallbackOperation
 import com.github.panpf.sketch.PlatformContext
 import com.github.panpf.sketch.SingletonSketch
 import com.github.panpf.sketch.Sketch
@@ -306,10 +307,11 @@ class GalleryApp : Application(), SingletonSketch.Factory, Configuration.Provide
                 appScope.launch { cloudProviderInitializer.reconfigureActiveProviders() }
             }
         }
-        try {
-            connectivityManager.registerDefaultNetworkCallback(callback)
-        } catch (_: Exception) {
+        if (!runNetworkCallbackOperation {
+                connectivityManager.registerDefaultNetworkCallback(callback)
+            }) {
             // ACCESS_NETWORK_STATE unavailable or callback registration failed; skip auto-switch.
+            return
         }
     }
 
