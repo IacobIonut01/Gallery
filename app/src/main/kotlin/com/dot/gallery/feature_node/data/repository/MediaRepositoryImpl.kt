@@ -20,9 +20,10 @@ import android.os.Build
 import android.provider.MediaStore
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
-import com.dot.gallery.core.util.SdkCompat
 import androidx.datastore.preferences.core.Preferences
+import androidx.room.withTransaction
 import androidx.work.WorkManager
+import com.dot.gallery.core.util.SdkCompat
 import com.dot.gallery.core.Resource
 import com.dot.gallery.core.activeDataStore
 import com.dot.gallery.core.decoder.format.ImageReencoder
@@ -71,6 +72,7 @@ import com.dot.gallery.feature_node.domain.model.Media.EncryptedMedia
 import com.dot.gallery.feature_node.domain.model.Media.UriMedia
 import com.dot.gallery.feature_node.domain.model.MediaCategory
 import com.dot.gallery.feature_node.domain.model.MediaMetadata
+import com.dot.gallery.feature_node.domain.model.MediaVersion
 import com.dot.gallery.feature_node.domain.model.MetadataParsingPolicy
 import com.dot.gallery.core.Settings
 import com.dot.gallery.core.sandbox.IsolatedMetadataParser
@@ -103,6 +105,7 @@ import com.dot.gallery.feature_node.presentation.picker.AllowedMedia.PHOTOS
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia.VIDEOS
 import com.dot.gallery.feature_node.presentation.util.printDebug
 import com.dot.gallery.feature_node.presentation.util.printError
+import com.dot.gallery.feature_node.presentation.util.mediaStoreVersion
 import com.dot.gallery.feature_node.presentation.util.printInfo
 import com.dot.gallery.feature_node.presentation.util.printWarning
 import kotlinx.coroutines.Dispatchers
@@ -148,13 +151,26 @@ class MediaRepositoryImpl(
         return shouldUsePerFileMetadataIsolation(mode, bulk)
     }
 
-    private var updateDatabaseMutex = Mutex()
+    private val updateDatabaseMutex = Mutex()
     override suspend fun updateInternalDatabase() {
-        if (!updateDatabaseMutex.isLocked) {
-            updateDatabaseMutex.withLock {
-                delay(5000) // Delay to ensure the database is not updated too frequently
-                smartScanScheduler.automaticIfNeeded(SmartScanFeature.ALL_MASK)
+        updateDatabaseMutex.withLock {
+            delay(5000) // Delay to ensure the database is not updated too frequently
+            val mediaVersion = context.mediaStoreVersion
+            val mediaDao = database.getMediaDao()
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R ||
+                !mediaDao.isMediaVersionUpToDate(mediaVersion)
+            ) {
+                getCompleteMedia().firstOrNull()?.data?.let { media ->
+                    database.withTransaction {
+                        mediaDao.updateMedia(media)
+                        mediaDao.setMediaVersion(MediaVersion(mediaVersion))
+                        if (media.isNotEmpty()) {
+                            database.getClassifierDao().deleteDeclassifiedImages(media.map { it.id })
+                        }
+                    }
+                }
             }
+            smartScanScheduler.automaticIfNeeded(SmartScanFeature.ALL_MASK)
         }
         //workManager.scheduleMediaMigrationCheck()
     }

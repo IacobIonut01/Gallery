@@ -30,7 +30,7 @@ import org.junit.runner.RunWith
  *  - counts and covers ignore memberships whose media no longer exists in the internal mirror;
  *  - deleting the current cover promotes the next highest-scored *existing* member;
  *  - deleting every member drops the category from the populated list;
- *  - the orphan cleanup query removes exactly the stale rows (bind-limit-free).
+ *  - the orphan cleanup query removes stale automatic rows without losing manual assignments.
  */
 @RunWith(AndroidJUnit4::class)
 class CategoryIntegrityDaoTest {
@@ -72,8 +72,13 @@ class CategoryIntegrityDaoTest {
         mediaDao.updateMedia(ids.map { media(it) })
     }
 
-    private fun membership(mediaId: Long, categoryId: Long, score: Float) =
-        MediaCategory(mediaId = mediaId, categoryId = categoryId, similarityScore = score)
+    private fun membership(mediaId: Long, categoryId: Long, score: Float, isManual: Boolean = false) =
+        MediaCategory(
+            mediaId = mediaId,
+            categoryId = categoryId,
+            similarityScore = score,
+            isManuallyAdded = isManual
+        )
 
     @Test
     fun countAndCover_ignoreMediaMissingFromMirror() = runBlocking {
@@ -125,6 +130,19 @@ class CategoryIntegrityDaoTest {
     }
 
     @Test
+    fun deletingLastMirroredMedia_dropsCategoryFromPopulatedList() = runBlocking {
+        val categoryId = categoryDao.insertCategory(Category(name = "Art", searchTerms = ""))
+        categoryDao.insertMediaCategory(membership(10, categoryId, 0.9f))
+        mirror(10)
+
+        mirror()
+        assertTrue(categoryDao.getCategoriesWithMediaCount().first().isEmpty())
+
+        mirror(10)
+        assertEquals(10L, categoryDao.getCategoriesWithMediaCount().first()[0].thumbnailMediaId)
+    }
+
+    @Test
     fun cleanup_removesOnlyOrphanedMemberships() = runBlocking {
         val categoryId = categoryDao.insertCategory(Category(name = "Art", searchTerms = ""))
         categoryDao.insertMediaCategories(
@@ -140,6 +158,20 @@ class CategoryIntegrityDaoTest {
         assertEquals(1, removed)
         assertEquals(2, categoryDao.getMediaCountInCategoryAsync(categoryId))
         assertNull(categoryDao.getSimilarityScore(20, categoryId))
+    }
+
+    @Test
+    fun cleanup_preservesManualMembershipForRestoredMedia() = runBlocking {
+        val categoryId = categoryDao.insertCategory(Category(name = "Art", searchTerms = ""))
+        categoryDao.insertMediaCategory(membership(10, categoryId, 1f, isManual = true))
+        mirror(99)
+
+        assertEquals(0, categoryDao.cleanupCategoriesForDeletedMedia())
+
+        mirror(10)
+        val restored = categoryDao.getCategoriesWithMediaCount().first()
+        assertEquals(1, restored.size)
+        assertEquals(10L, restored[0].thumbnailMediaId)
     }
 
     @Test

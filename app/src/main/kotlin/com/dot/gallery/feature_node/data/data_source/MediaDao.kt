@@ -37,6 +37,11 @@ interface MediaDao {
 
     @Transaction
     suspend fun updateMedia(mediaList: List<UriMedia>) {
+        if (mediaList.isEmpty()) {
+            deleteAllMedia()
+            return
+        }
+
         // Upsert the items in mediaList
         addMediaList(mediaList)
 
@@ -46,6 +51,9 @@ interface MediaDao {
         // Delete items from the database that are not in mediaList
         deleteMediaNotInList(mediaIds)
     }
+
+    @Query("DELETE FROM media")
+    suspend fun deleteAllMedia()
 
     @Query("DELETE FROM media WHERE id NOT IN (:mediaIds)")
     suspend fun deleteMediaNotInList(mediaIds: List<Long>)

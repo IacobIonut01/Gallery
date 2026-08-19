@@ -112,19 +112,20 @@ interface CategoryDao {
     suspend fun cleanupOrphanedMediaCategories(validMediaIds: List<Long>)
 
     /**
-     * Removes category memberships whose media no longer exists in the authoritative
+     * Removes automatic category memberships whose media no longer exists in the authoritative
      * internal `media` mirror (kept in sync with MediaStore by [DatabaseUpdaterWorker]).
      *
      * Uses a correlated subquery instead of a bound `IN (...)` list so it is safe for
      * arbitrarily large libraries (no SQLite bind-variable limit). Callers MUST ensure the
-     * `media` table has been populated first, otherwise every membership would be removed.
+     * `media` table has been populated first, otherwise every automatic membership would be removed.
      *
      * @return the number of orphaned rows deleted.
      */
     @Query(
         """
         DELETE FROM media_category
-        WHERE NOT EXISTS (SELECT 1 FROM media WHERE media.id = media_category.mediaId)
+        WHERE isManuallyAdded = 0
+          AND NOT EXISTS (SELECT 1 FROM media WHERE media.id = media_category.mediaId)
           AND NOT EXISTS (SELECT 1 FROM cloud_media WHERE cloud_media.globalMediaId = media_category.mediaId)
         """
     )

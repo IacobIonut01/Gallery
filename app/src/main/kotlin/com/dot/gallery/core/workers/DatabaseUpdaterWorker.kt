@@ -11,6 +11,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import androidx.room.withTransaction
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
 import com.dot.gallery.feature_node.domain.model.MediaVersion
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
@@ -95,16 +96,13 @@ class DatabaseUpdaterWorker @AssistedInject constructor(
                 repository.getCompleteMedia().map { it.data ?: emptyList() }.firstOrNull()
             media?.let {
                 printDebug("Database is not up to date. Updating to version $mediaVersion")
-                database.getMediaDao().setMediaVersion(MediaVersion(mediaVersion))
-                database.getMediaDao().updateMedia(it)
-                database.getClassifierDao().deleteDeclassifiedImages(it.fastMap { m -> m.id })
-                // Drop category memberships whose media was just removed from the mirror so the
-                // Library/Categories UI never shows a stale count or a blank cover (#1076).
-                // Guarded on a non-empty mirror so we never wipe every membership.
-                if (it.isNotEmpty()) {
-                    val removed = database.getCategoryDao().cleanupCategoriesForDeletedMedia()
-                    if (removed > 0) printDebug("Removed $removed orphaned category memberships")
+                database.withTransaction {
+                    database.getMediaDao().updateMedia(it)
+                    database.getClassifierDao().deleteDeclassifiedImages(it.fastMap { m -> m.id })
+                    database.getMediaDao().setMediaVersion(MediaVersion(mediaVersion))
                 }
+                // Keep category memberships so trashed or temporarily unavailable media regain
+                // their assignments when restored; category queries filter against this mirror.
             }
         }
 
