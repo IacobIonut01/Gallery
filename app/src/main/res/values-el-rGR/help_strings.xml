@@ -1073,42 +1073,6 @@
     <string name="help_tip_video_fix_black_p1_title">Keep video visible</string>
     <string name="help_tip_video_fix_black_p1_desc">On some devices (notably Samsung) a playing video can black out when the system bars are shown or hidden, even though it keeps playing. Enable Media Viewer › Video Playback › \'Fix black video on hide\' to re-bind the player surface on every bar change. It is on by default for Samsung devices and off elsewhere — turn it off if you don\'t need it.</string>
     <!-- RELEASE NOTES: 5.0.3 -->
-
-    <string name="help_tip_motion_photo_frames_title">Εξαγωγή καρέ από Motion Photo</string>
-    <string name="help_tip_motion_photo_frames_subtitle">Αποθηκεύστε συγκεκριμένες στιγμές από το ενσωματωμένο κλιπ</string>
-    <string name="help_tip_motion_photo_frames_p1_title">Επιλογή και εξαγωγή καρέ</string>
-    <string name="help_tip_motion_photo_frames_p1_desc">Ανοίξτε μια Motion Photo στην προβολή και πατήστε τη λωρίδα καρέ της ή επιλέξτε Εξαγωγή καρέ από το φύλλο ενεργειών. Μεταβείτε σε μια συγκεκριμένη στιγμή, επιλέξτε ένα ή περισσότερα καρέ και εξαγάγετέ τα στη μορφή εικόνας που προτιμάτε.</string>
-    <string name="help_tip_motion_photo_frames_p1_s1">Ανοίξτε μια Motion Photo στην προβολή</string>
-    <string name="help_tip_motion_photo_frames_p1_s2">Πατήστε τη λωρίδα καρέ ή επιλέξτε Εξαγωγή καρέ</string>
-    <string name="help_tip_motion_photo_frames_p1_s3">Μετακινηθείτε στο κλιπ και επιλέξτε τις στιγμές που θέλετε</string>
-    <string name="help_tip_motion_photo_frames_p1_s4">Επιλέξτε μορφή και εξαγάγετε τα επιλεγμένα καρέ</string>
-
-    <string name="help_tip_search_ignored_albums_title">Αναζήτηση σε αγνοημένα άλμπουμ</string>
-    <string name="help_tip_search_ignored_albums_subtitle">Βρείτε κρυφά πολυμέσα χωρίς να τα επαναφέρετε στη χρονογραμμή</string>
-    <string name="help_tip_search_ignored_albums_p1_title">Ασφαλής επέκταση του Smart Search</string>
-    <string name="help_tip_search_ignored_albums_p1_desc">Συμπεριλάβετε τα άλμπουμ που είναι κρυμμένα από τη χρονογραμμή στα Smart Features και Smart Search, χωρίς να γίνουν ορατά στη χρονογραμμή ή στην καρτέλα Άλμπουμ. Η επιλογή είναι απενεργοποιημένη από προεπιλογή, η αλλαγή της ξεκινά πλήρη ανανέωση και τα κλειδωμένα άλμπουμ παραμένουν πάντα εξαιρούμενα.</string>
-    <string name="help_tip_search_ignored_albums_p1_s1">Ανοίξτε Ρυθμίσεις > Smart Features</string>
-    <string name="help_tip_search_ignored_albums_p1_s2">Εναλλάξτε τη Συμπερίληψη αγνοημένων άλμπουμ</string>
-    <string name="help_tip_search_ignored_albums_p1_s3">Περιμένετε να ολοκληρωθεί η πλήρης ανανέωση των Smart Features</string>
-    <string name="help_tip_search_ignored_albums_p1_s4">Αναζητήστε κρυφά πολυμέσα ενώ τα κλειδωμένα άλμπουμ παραμένουν ιδιωτικά</string>
-
-    <string name="help_tip_cloud_nextcloud_login_title">Ασφαλής σύνδεση στο Nextcloud</string>
-    <string name="help_tip_cloud_nextcloud_login_subtitle">Χρησιμοποιήστε εξουσιοδότηση μέσω προγράμματος περιήγησης και έλεγχο ταυτότητας δύο παραγόντων</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_title">Nextcloud Login Flow v2</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_desc">Το ReFra ανοίγει τον διακομιστή Nextcloud στο πρόγραμμα περιήγησης του συστήματος, ώστε να συνδεθείτε και να ολοκληρώσετε εκεί τον έλεγχο ταυτότητας δύο παραγόντων. Μετά την έγκριση, το Nextcloud δημιουργεί έναν ειδικό κωδικό πρόσβασης για την εφαρμογή, τον οποίο το ReFra αποθηκεύει κρυπτογραφημένο στη συσκευή σας.</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s1">Προσθέστε λογαριασμό Nextcloud και εισαγάγετε τη διεύθυνση URL του διακομιστή</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s2">Συνεχίστε στο πρόγραμμα περιήγησης του συστήματος</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s3">Συνδεθείτε, ολοκληρώστε τον έλεγχο ταυτότητας δύο παραγόντων και εγκρίνετε την πρόσβαση</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s4">Επιστρέψτε στο ReFra ενώ ολοκληρώνεται η σύνδεση</string>
-
-    <string name="help_tip_accessibility_remote_settings_title">Πλοήγηση στις ρυθμίσεις χωρίς αφή</string>
-    <string name="help_tip_accessibility_remote_settings_subtitle">Χρησιμοποιήστε πληκτρολόγιο, πλήκτρα κατεύθυνσης ή τηλεχειριστήριο σε όλες τις ρυθμίσεις</string>
-    <string name="help_tip_accessibility_remote_settings_p1_title">Προβλέψιμη πλοήγηση εστίασης</string>
-    <string name="help_tip_accessibility_remote_settings_p1_desc">Οι λίστες ρυθμίσεων, οι οθόνες λεπτομερειών, τα στοιχεία επιλογής και οι κάτω ενέργειες υποστηρίζουν κατευθυντική εστίαση. Το ReFra επισημαίνει καθαρά το εστιασμένο στοιχείο και τοποθετεί την εστίαση σε ένα ενεργό στοιχείο όταν ανοίγει μια οθόνη.</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s1">Χρησιμοποιήστε τα βέλη ή τα πλήκτρα κατεύθυνσης για μετακίνηση μεταξύ των στοιχείων</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s2">Πατήστε Enter ή το κεντρικό κουμπί για να ενεργοποιήσετε ένα στοιχείο</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s3">Χρησιμοποιήστε το Πίσω για έξοδο από μια οθόνη λεπτομερειών</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s4">Συνεχίστε από το επισημασμένο στοιχείο ρυθμίσεων</string>
     <string name="help_search_hint">Αναζήτηση στη βοήθεια και τις συμβουλές</string>
     <string name="help_search_clear">Εκκαθάριση αναζήτησης</string>
     <string name="help_search_no_results">Δεν βρέθηκε βοήθεια για \"%1$s\"</string>

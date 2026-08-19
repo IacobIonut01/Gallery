@@ -1073,42 +1073,6 @@
     <string name="help_tip_video_fix_black_p1_title">Keep video visible</string>
     <string name="help_tip_video_fix_black_p1_desc">On some devices (notably Samsung) a playing video can black out when the system bars are shown or hidden, even though it keeps playing. Enable Media Viewer › Video Playback › \'Fix black video on hide\' to re-bind the player surface on every bar change. It is on by default for Samsung devices and off elsewhere — turn it off if you don\'t need it.</string>
     <!-- RELEASE NOTES: 5.0.3 -->
-
-    <string name="help_tip_motion_photo_frames_title">Išskirkite „Motion Photo“ kadrus</string>
-    <string name="help_tip_motion_photo_frames_subtitle">Išsaugokite tikslias įterpto klipo akimirkas</string>
-    <string name="help_tip_motion_photo_frames_p1_title">Pasirinkite ir eksportuokite kadrus</string>
-    <string name="help_tip_motion_photo_frames_p1_desc">Atverkite „Motion Photo“ peržiūros priemonėje, tada palieskite kino juostą arba veiksmų skydelyje pasirinkite Išskirti kadrus. Pereikite į tikslią akimirką, pasirinkite vieną ar kelis kadrus ir eksportuokite juos norimu vaizdo formatu.</string>
-    <string name="help_tip_motion_photo_frames_p1_s1">Atverkite „Motion Photo“ peržiūros priemonėje</string>
-    <string name="help_tip_motion_photo_frames_p1_s2">Palieskite kino juostą arba pasirinkite Išskirti kadrus</string>
-    <string name="help_tip_motion_photo_frames_p1_s3">Slinkite ir pasirinkite norimas akimirkas</string>
-    <string name="help_tip_motion_photo_frames_p1_s4">Pasirinkite formatą ir eksportuokite pasirinktus kadrus</string>
-
-    <string name="help_tip_search_ignored_albums_title">Ieškokite ignoruojamuose albumuose</string>
-    <string name="help_tip_search_ignored_albums_subtitle">Raskite paslėptą mediją negrąžindami jos į laiko juostą</string>
-    <string name="help_tip_search_ignored_albums_p1_title">Saugiai išplėskite išmaniąją paiešką</string>
-    <string name="help_tip_search_ignored_albums_p1_desc">Įtraukite laiko juostoje paslėptus albumus į išmaniąsias funkcijas ir išmaniąją paiešką, nepadarydami jų matomų laiko juostoje ar skirtuke Albumai. Pagal numatytuosius nustatymus ši parinktis išjungta; ją pakeitus pradedamas visiškas atnaujinimas, o užrakinti albumai visada lieka neįtraukti.</string>
-    <string name="help_tip_search_ignored_albums_p1_s1">Atverkite Nustatymai &gt; Išmaniosios funkcijos</string>
-    <string name="help_tip_search_ignored_albums_p1_s2">Perjunkite Įtraukti ignoruojamus albumus</string>
-    <string name="help_tip_search_ignored_albums_p1_s3">Palaukite, kol bus baigtas visiškas išmaniųjų funkcijų atnaujinimas</string>
-    <string name="help_tip_search_ignored_albums_p1_s4">Ieškokite paslėptos medijos, o užrakinti albumai liks privatūs</string>
-
-    <string name="help_tip_cloud_nextcloud_login_title">Saugiai prisijunkite prie „Nextcloud“</string>
-    <string name="help_tip_cloud_nextcloud_login_subtitle">Naudokite naršyklės įgaliojimą ir dviejų veiksnių autentifikavimą</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_title">„Nextcloud Login Flow v2“</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_desc">„ReFra“ atveria jūsų „Nextcloud“ serverį sistemos naršyklėje, kur galite prisijungti ir atlikti dviejų veiksnių autentifikavimą. Patvirtinus „Nextcloud“ sukuria konkrečiai programėlei skirtą slaptažodį, kurį „ReFra“ užšifruotą saugo jūsų įrenginyje.</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s1">Pridėkite „Nextcloud“ paskyrą ir įveskite jos serverio URL</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s2">Tęskite sistemos naršyklėje</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s3">Prisijunkite, atlikite dviejų veiksnių autentifikavimą ir patvirtinkite prieigą</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s4">Grįžkite į „ReFra“, kol baigiamas prisijungimas</string>
-
-    <string name="help_tip_accessibility_remote_settings_title">Naršykite nustatymus neliesdami ekrano</string>
-    <string name="help_tip_accessibility_remote_settings_subtitle">Visuose nustatymuose naudokite klaviatūrą, D-pad arba nuotolinio valdymo pultą</string>
-    <string name="help_tip_accessibility_remote_settings_p1_title">Nuspėjamas fokusavimo valdymas</string>
-    <string name="help_tip_accessibility_remote_settings_p1_desc">Nustatymų sąrašai, išsamios informacijos ekranai, pasirinkimo valdikliai ir apatiniai veiksmai palaiko kryptinį fokusavimą. „ReFra“ aiškiai paryškina sufokusuotą valdiklį ir atveriant ekraną perkelia fokusą į elementą, su kuriuo galima sąveikauti.</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s1">Valdiklius keiskite rodyklių klavišais arba D-pad</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s2">Paspauskite Enter arba centrinį mygtuką, kad suaktyvintumėte valdiklį</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s3">Naudokite Atgal, kad išeitumėte iš išsamios informacijos ekrano</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s4">Tęskite nuo paryškinto nustatymų valdiklio</string>
     <string name="help_search_hint">Ieškoti žinyne ir patarimuose</string>
     <string name="help_search_clear">Išvalyti paiešką</string>
     <string name="help_search_no_results">Pagal užklausą „%1$s“ žinyne nieko nerasta</string>

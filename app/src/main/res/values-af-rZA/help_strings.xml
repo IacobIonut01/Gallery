@@ -1073,42 +1073,6 @@
     <string name="help_tip_video_fix_black_p1_title">Keep video visible</string>
     <string name="help_tip_video_fix_black_p1_desc">On some devices (notably Samsung) a playing video can black out when the system bars are shown or hidden, even though it keeps playing. Enable Media Viewer › Video Playback › \'Fix black video on hide\' to re-bind the player surface on every bar change. It is on by default for Samsung devices and off elsewhere — turn it off if you don\'t need it.</string>
     <!-- RELEASE NOTES: 5.0.3 -->
-
-    <string name="help_tip_motion_photo_frames_title">Onttrek Motion Photo-rame</string>
-    <string name="help_tip_motion_photo_frames_subtitle">Stoor presiese oomblikke uit die ingebedde snit</string>
-    <string name="help_tip_motion_photo_frames_p1_title">Kies en voer rame uit</string>
-    <string name="help_tip_motion_photo_frames_p1_desc">Maak ’n Motion Photo in die kyker oop en tik dan op die filmstrook daarvan, of kies Onttrek rame op die aksieblad. Beweeg na ’n presiese oomblik, kies een of meer rame en voer dit in jou voorkeurbeeldformaat uit.</string>
-    <string name="help_tip_motion_photo_frames_p1_s1">Maak ’n Motion Photo in die kyker oop</string>
-    <string name="help_tip_motion_photo_frames_p1_s2">Tik op die filmstrook of kies Onttrek rame</string>
-    <string name="help_tip_motion_photo_frames_p1_s3">Beweeg deur die snit en kies die oomblikke wat jy wil hê</string>
-    <string name="help_tip_motion_photo_frames_p1_s4">Kies ’n formaat en voer die geselekteerde rame uit</string>
-
-    <string name="help_tip_search_ignored_albums_title">Deursoek geïgnoreerde albums</string>
-    <string name="help_tip_search_ignored_albums_subtitle">Vind versteekte media sonder om dit na die tydlyn terug te bring</string>
-    <string name="help_tip_search_ignored_albums_p1_title">Brei Smart Search veilig uit</string>
-    <string name="help_tip_search_ignored_albums_p1_desc">Sluit albums wat op die tydlyn versteek is by Smart Features en Smart Search in sonder om hulle op die tydlyn of Albums-oortjie sigbaar te maak. Die opsie is by verstek af, ’n verandering begin ’n volledige verfrissing, en geslote albums bly altyd uitgesluit.</string>
-    <string name="help_tip_search_ignored_albums_p1_s1">Maak Instellings > Smart Features oop</string>
-    <string name="help_tip_search_ignored_albums_p1_s2">Skakel Sluit geïgnoreerde albums in aan of af</string>
-    <string name="help_tip_search_ignored_albums_p1_s3">Laat die volledige Smart Features-verfrissing klaarloop</string>
-    <string name="help_tip_search_ignored_albums_p1_s4">Deursoek versteekte media terwyl geslote albums privaat bly</string>
-
-    <string name="help_tip_cloud_nextcloud_login_title">Meld veilig by Nextcloud aan</string>
-    <string name="help_tip_cloud_nextcloud_login_subtitle">Gebruik blaaiermagtiging en tweefaktorstawing</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_title">Nextcloud Login Flow v2</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_desc">ReFra maak jou Nextcloud-bediener in die stelselblaaier oop sodat jy daar kan aanmeld en tweefaktorstawing kan voltooi. Ná goedkeuring skep Nextcloud ’n programspesifieke wagwoord wat ReFra geënkripteer op jou toestel stoor.</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s1">Voeg ’n Nextcloud-rekening by en voer die bediener-URL in</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s2">Gaan voort na die stelselblaaier</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s3">Meld aan, voltooi tweefaktorstawing en keur toegang goed</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s4">Keer terug na ReFra terwyl die verbinding voltooi word</string>
-
-    <string name="help_tip_accessibility_remote_settings_title">Navigeer instellings sonder aanraking</string>
-    <string name="help_tip_accessibility_remote_settings_subtitle">Gebruik ’n sleutelbord, rigtingknoppies of afstandbeheer regdeur die instellings</string>
-    <string name="help_tip_accessibility_remote_settings_p1_title">Voorspelbare fokusnavigasie</string>
-    <string name="help_tip_accessibility_remote_settings_p1_desc">Instellingslyste, detailskerms, seleksiekontroles en onderste aksies ondersteun rigtingfokus. ReFra lig die gefokusde kontrole duidelik uit en plaas fokus op ’n uitvoerbare item wanneer ’n skerm oopmaak.</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s1">Gebruik pyltjie- of rigtingknoppies om tussen kontroles te beweeg</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s2">Druk Enter of die middelknoppie om ’n kontrole te aktiveer</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s3">Gebruik Terug om ’n detailskerm te verlaat</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s4">Gaan voort vanaf die uitgeligte instellingskontrole</string>
     <string name="help_search_hint">Soek hulp en wenke</string>
     <string name="help_search_clear">Vee soektog uit</string>
     <string name="help_search_no_results">Geen hulp vir \"%1$s\" gevind nie</string>

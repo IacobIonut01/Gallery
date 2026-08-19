@@ -1073,41 +1073,6 @@
     <string name="help_tip_video_fix_black_p1_title">Keep video visible</string>
     <string name="help_tip_video_fix_black_p1_desc">On some devices (notably Samsung) a playing video can black out when the system bars are shown or hidden, even though it keeps playing. Enable Media Viewer › Video Playback › \'Fix black video on hide\' to re-bind the player surface on every bar change. It is on by default for Samsung devices and off elsewhere — turn it off if you don\'t need it.</string>
     <!-- RELEASE NOTES: 5.0.3 -->
-    <string name="help_tip_motion_photo_frames_title">मोशन फ़ोटो से फ़्रेम निकालें</string>
-    <string name="help_tip_motion_photo_frames_subtitle">एम्बेड किए गए क्लिप से सटीक पलों को सहेजें</string>
-    <string name="help_tip_motion_photo_frames_p1_title">फ़्रेम चुनें और एक्सपोर्ट करें</string>
-    <string name="help_tip_motion_photo_frames_p1_desc">व्यूअर में कोई मोशन फ़ोटो खोलें, फिर उसकी फ़िल्मस्ट्रिप पर टैप करें या एक्शन शीट से फ़्रेम निकालें चुनें। बिल्कुल सही पल तक स्क्रब करें, एक या अधिक फ़्रेम चुनें और उन्हें अपने पसंदीदा इमेज फ़ॉर्मैट में एक्सपोर्ट करें।</string>
-    <string name="help_tip_motion_photo_frames_p1_s1">व्यूअर में कोई मोशन फ़ोटो खोलें</string>
-    <string name="help_tip_motion_photo_frames_p1_s2">फ़िल्मस्ट्रिप पर टैप करें या फ़्रेम निकालें चुनें</string>
-    <string name="help_tip_motion_photo_frames_p1_s3">स्क्रब करके अपने मनचाहे पल चुनें</string>
-    <string name="help_tip_motion_photo_frames_p1_s4">फ़ॉर्मैट चुनें और चुने गए फ़्रेम एक्सपोर्ट करें</string>
-
-    <string name="help_tip_search_ignored_albums_title">अनदेखे एल्बम में खोजें</string>
-    <string name="help_tip_search_ignored_albums_subtitle">छिपे हुए मीडिया को टाइमलाइन पर वापस लाए बिना खोजें</string>
-    <string name="help_tip_search_ignored_albums_p1_title">स्मार्ट खोज को सुरक्षित ढंग से विस्तृत करें</string>
-    <string name="help_tip_search_ignored_albums_p1_desc">टाइमलाइन से छिपे एल्बम को स्मार्ट सुविधाओं और स्मार्ट खोज में शामिल करें, लेकिन उन्हें टाइमलाइन या एल्बम टैब में दिखाई न दें। यह विकल्प डिफ़ॉल्ट रूप से बंद रहता है, इसे बदलने पर पूर्ण रीफ़्रेश शुरू होता है और लॉक किए गए एल्बम हमेशा बाहर रहते हैं।</string>
-    <string name="help_tip_search_ignored_albums_p1_s1">सेटिंग > स्मार्ट सुविधाएँ खोलें</string>
-    <string name="help_tip_search_ignored_albums_p1_s2">अनदेखे एल्बम शामिल करें को टॉगल करें</string>
-    <string name="help_tip_search_ignored_albums_p1_s3">स्मार्ट सुविधाओं का पूर्ण रीफ़्रेश पूरा होने दें</string>
-    <string name="help_tip_search_ignored_albums_p1_s4">लॉक किए गए एल्बम को निजी रखते हुए छिपा मीडिया खोजें</string>
-
-    <string name="help_tip_cloud_nextcloud_login_title">Nextcloud में सुरक्षित रूप से साइन इन करें</string>
-    <string name="help_tip_cloud_nextcloud_login_subtitle">ब्राउज़र प्राधिकरण और दो-कारक प्रमाणीकरण का उपयोग करें</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_title">Nextcloud लॉगिन फ़्लो v2</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_desc">ReFra आपके Nextcloud सर्वर को सिस्टम ब्राउज़र में खोलता है, जहाँ आप साइन इन करके दो-कारक प्रमाणीकरण पूरा कर सकते हैं। स्वीकृति के बाद Nextcloud ऐप-विशिष्ट पासवर्ड बनाता है, जिसे ReFra आपके डिवाइस पर एन्क्रिप्ट करके सहेजता है।</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s1">Nextcloud खाता जोड़ें और उसके सर्वर का URL दर्ज करें</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s2">सिस्टम ब्राउज़र में आगे बढ़ें</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s3">साइन इन करें, दो-कारक प्रमाणीकरण पूरा करें और एक्सेस स्वीकृत करें</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s4">कनेक्शन पूरा होते समय ReFra पर वापस आएँ</string>
-
-    <string name="help_tip_accessibility_remote_settings_title">बिना स्पर्श के सेटिंग में नेविगेट करें</string>
-    <string name="help_tip_accessibility_remote_settings_subtitle">सभी सेटिंग में कीबोर्ड, डी-पैड या रिमोट का उपयोग करें</string>
-    <string name="help_tip_accessibility_remote_settings_p1_title">पूर्वानुमेय फ़ोकस नेविगेशन</string>
-    <string name="help_tip_accessibility_remote_settings_p1_desc">सेटिंग सूचियाँ, विवरण स्क्रीन, चयन नियंत्रण और नीचे की कार्रवाइयाँ दिशात्मक फ़ोकस का समर्थन करती हैं। ReFra फ़ोकस किए गए नियंत्रण को स्पष्ट रूप से हाइलाइट करता है और स्क्रीन खुलने पर फ़ोकस को किसी उपयोग योग्य आइटम पर रखता है।</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s1">नियंत्रणों के बीच जाने के लिए तीर या डी-पैड कुंजियों का उपयोग करें</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s2">नियंत्रण सक्रिय करने के लिए Enter या बीच वाला बटन दबाएँ</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s3">विवरण स्क्रीन से बाहर निकलने के लिए वापस जाएँ का उपयोग करें</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s4">हाइलाइट किए गए सेटिंग नियंत्रण से आगे बढ़ें</string>
     <string name="help_search_hint">सहायता और सुझाव खोजें</string>
     <string name="help_search_clear">खोज साफ़ करें</string>
     <string name="help_search_no_results">\"%1$s\" के लिए कोई सहायता नहीं मिली</string>

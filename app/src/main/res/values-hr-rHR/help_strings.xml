@@ -1073,41 +1073,6 @@
     <string name="help_tip_video_fix_black_p1_title">Keep video visible</string>
     <string name="help_tip_video_fix_black_p1_desc">On some devices (notably Samsung) a playing video can black out when the system bars are shown or hidden, even though it keeps playing. Enable Media Viewer › Video Playback › \'Fix black video on hide\' to re-bind the player surface on every bar change. It is on by default for Samsung devices and off elsewhere — turn it off if you don\'t need it.</string>
     <!-- RELEASE NOTES: 5.0.3 -->
-    <string name="help_tip_motion_photo_frames_title">Izdvoji kadrove iz fotografije u pokretu</string>
-    <string name="help_tip_motion_photo_frames_subtitle">Spremi točne trenutke iz ugrađenog isječka</string>
-    <string name="help_tip_motion_photo_frames_p1_title">Odaberi i izvezi kadrove</string>
-    <string name="help_tip_motion_photo_frames_p1_desc">Otvori fotografiju u pokretu u pregledniku pa dodirni njezinu filmsku vrpcu ili odaberi Izdvoji kadrove na listu radnji. Pomakni se do točnog trenutka, odaberi jedan ili više kadrova i izvezi ih u željenom formatu slike.</string>
-    <string name="help_tip_motion_photo_frames_p1_s1">Otvori fotografiju u pokretu u pregledniku</string>
-    <string name="help_tip_motion_photo_frames_p1_s2">Dodirni filmsku vrpcu ili odaberi Izdvoji kadrove</string>
-    <string name="help_tip_motion_photo_frames_p1_s3">Pomiči se i odaberi željene trenutke</string>
-    <string name="help_tip_motion_photo_frames_p1_s4">Odaberi format i izvezi odabrane kadrove</string>
-
-    <string name="help_tip_search_ignored_albums_title">Pretraži zanemarene albume</string>
-    <string name="help_tip_search_ignored_albums_subtitle">Pronađi skrivene medije bez vraćanja na vremensku crtu</string>
-    <string name="help_tip_search_ignored_albums_p1_title">Sigurno proširi Pametno pretraživanje</string>
-    <string name="help_tip_search_ignored_albums_p1_desc">Uključi albume skrivene s vremenske crte u Pametne značajke i Pametno pretraživanje bez njihovog prikazivanja na vremenskoj crti ili kartici Albumi. Opcija je prema zadanim postavkama isključena, njezina promjena pokreće potpuno osvježavanje, a zaključani albumi uvijek ostaju izuzeti.</string>
-    <string name="help_tip_search_ignored_albums_p1_s1">Otvori Postavke > Pametne značajke</string>
-    <string name="help_tip_search_ignored_albums_p1_s2">Uključi Uključi zanemarene albume</string>
-    <string name="help_tip_search_ignored_albums_p1_s3">Pričekaj završetak potpunog osvježavanja Pametnih značajki</string>
-    <string name="help_tip_search_ignored_albums_p1_s4">Pretražuj skrivene medije dok zaključani albumi ostaju privatni</string>
-
-    <string name="help_tip_cloud_nextcloud_login_title">Sigurno se prijavi u Nextcloud</string>
-    <string name="help_tip_cloud_nextcloud_login_subtitle">Upotrijebi autorizaciju u pregledniku i dvofaktorsku autentifikaciju</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_title">Nextcloud tijek prijave v2</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_desc">ReFra otvara tvoj Nextcloud poslužitelj u pregledniku sustava kako bi se tamo mogao prijaviti i dovršiti dvofaktorsku autentifikaciju. Nakon odobrenja Nextcloud stvara lozinku za aplikaciju koju ReFra šifrirano pohranjuje na tvojem uređaju.</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s1">Dodaj Nextcloud račun i unesi URL njegovog poslužitelja</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s2">Nastavi u pregledniku sustava</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s3">Prijavi se, dovrši dvofaktorsku autentifikaciju i odobri pristup</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s4">Vrati se u ReFra dok dovršava povezivanje</string>
-
-    <string name="help_tip_accessibility_remote_settings_title">Kreći se postavkama bez dodira</string>
-    <string name="help_tip_accessibility_remote_settings_subtitle">Koristi tipkovnicu, D-pad ili daljinski upravljač u svim postavkama</string>
-    <string name="help_tip_accessibility_remote_settings_p1_title">Predvidljivo kretanje fokusa</string>
-    <string name="help_tip_accessibility_remote_settings_p1_desc">Popisi postavki, zasloni s pojedinostima, kontrole odabira i donje radnje podržavaju usmjereni fokus. ReFra jasno ističe fokusiranu kontrolu i postavlja fokus na element s dostupnom radnjom kada se zaslon otvori.</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s1">Koristi tipke sa strelicama ili D-pad za kretanje između kontrola</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s2">Pritisni Enter ili središnju tipku za aktiviranje kontrole</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s3">Koristi Natrag za izlazak sa zaslona s pojedinostima</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s4">Nastavi od istaknute kontrole postavki</string>
     <string name="help_search_hint">Pretraži pomoć i savjete</string>
     <string name="help_search_clear">Očisti pretraživanje</string>
     <string name="help_search_no_results">Nije pronađena pomoć za \"%1$s\"</string>

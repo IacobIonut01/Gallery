@@ -1073,42 +1073,6 @@
     <string name="help_tip_video_fix_black_p1_title">Keep video visible</string>
     <string name="help_tip_video_fix_black_p1_desc">On some devices (notably Samsung) a playing video can black out when the system bars are shown or hidden, even though it keeps playing. Enable Media Viewer › Video Playback › \'Fix black video on hide\' to re-bind the player surface on every bar change. It is on by default for Samsung devices and off elsewhere — turn it off if you don\'t need it.</string>
     <!-- RELEASE NOTES: 5.0.3 -->
-
-    <string name="help_tip_motion_photo_frames_title">Udtræk billeder fra Motion Photo</string>
-    <string name="help_tip_motion_photo_frames_subtitle">Gem præcise øjeblikke fra det integrerede klip</string>
-    <string name="help_tip_motion_photo_frames_p1_title">Vælg og eksportér billeder</string>
-    <string name="help_tip_motion_photo_frames_p1_desc">Åbn et Motion Photo i fremviseren, og tryk derefter på filmstrimlen, eller vælg Udtræk billeder på handlingsarket. Gå til et præcist øjeblik, vælg et eller flere billeder, og eksportér dem i dit foretrukne billedformat.</string>
-    <string name="help_tip_motion_photo_frames_p1_s1">Åbn et Motion Photo i fremviseren</string>
-    <string name="help_tip_motion_photo_frames_p1_s2">Tryk på filmstrimlen, eller vælg Udtræk billeder</string>
-    <string name="help_tip_motion_photo_frames_p1_s3">Gennemse klippet, og vælg de ønskede øjeblikke</string>
-    <string name="help_tip_motion_photo_frames_p1_s4">Vælg et format, og eksportér de valgte billeder</string>
-
-    <string name="help_tip_search_ignored_albums_title">Søg i ignorerede album</string>
-    <string name="help_tip_search_ignored_albums_subtitle">Find skjulte medier uden at føre dem tilbage til tidslinjen</string>
-    <string name="help_tip_search_ignored_albums_p1_title">Udvid Smart Search på en sikker måde</string>
-    <string name="help_tip_search_ignored_albums_p1_desc">Medtag album, der er skjult på tidslinjen, i Smart Features og Smart Search uden at gøre dem synlige på tidslinjen eller fanen Album. Indstillingen er deaktiveret som standard, en ændring starter en fuld opdatering, og låste album forbliver altid udelukket.</string>
-    <string name="help_tip_search_ignored_albums_p1_s1">Åbn Indstillinger > Smart Features</string>
-    <string name="help_tip_search_ignored_albums_p1_s2">Slå Medtag ignorerede album til eller fra</string>
-    <string name="help_tip_search_ignored_albums_p1_s3">Lad den fulde opdatering af Smart Features fuldføre</string>
-    <string name="help_tip_search_ignored_albums_p1_s4">Søg i skjulte medier, mens låste album forbliver private</string>
-
-    <string name="help_tip_cloud_nextcloud_login_title">Log sikkert ind på Nextcloud</string>
-    <string name="help_tip_cloud_nextcloud_login_subtitle">Brug browsergodkendelse og tofaktorgodkendelse</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_title">Nextcloud Login Flow v2</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_desc">ReFra åbner din Nextcloud-server i systembrowseren, så du kan logge ind og gennemføre tofaktorgodkendelsen dér. Efter godkendelse opretter Nextcloud en app-specifik adgangskode, som ReFra gemmer krypteret på din enhed.</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s1">Tilføj en Nextcloud-konto, og indtast serverens URL</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s2">Fortsæt til systembrowseren</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s3">Log ind, gennemfør tofaktorgodkendelsen, og godkend adgangen</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s4">Vend tilbage til ReFra, mens forbindelsen færdiggøres</string>
-
-    <string name="help_tip_accessibility_remote_settings_title">Naviger i indstillingerne uden berøring</string>
-    <string name="help_tip_accessibility_remote_settings_subtitle">Brug et tastatur, en navigationsknap eller en fjernbetjening overalt i indstillingerne</string>
-    <string name="help_tip_accessibility_remote_settings_p1_title">Forudsigelig fokusnavigation</string>
-    <string name="help_tip_accessibility_remote_settings_p1_desc">Indstillingslister, detaljeskærme, valgknapper og nederste handlinger understøtter retningsbestemt fokus. ReFra fremhæver tydeligt det fokuserede element og placerer fokus på et element, der kan aktiveres, når en skærm åbnes.</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s1">Brug piletasterne eller navigationsknappen til at flytte mellem elementerne</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s2">Tryk på Enter eller midterknappen for at aktivere et element</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s3">Brug Tilbage til at forlade en detaljeskærm</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s4">Fortsæt fra det fremhævede indstillingselement</string>
     <string name="help_search_hint">Søg i hjælp og tips</string>
     <string name="help_search_clear">Ryd søgning</string>
     <string name="help_search_no_results">Der blev ikke fundet hjælp til \"%1$s\"</string>

@@ -1073,42 +1073,6 @@
     <string name="help_tip_video_fix_black_p1_title">Keep video visible</string>
     <string name="help_tip_video_fix_black_p1_desc">On some devices (notably Samsung) a playing video can black out when the system bars are shown or hidden, even though it keeps playing. Enable Media Viewer › Video Playback › \'Fix black video on hide\' to re-bind the player surface on every bar change. It is on by default for Samsung devices and off elsewhere — turn it off if you don\'t need it.</string>
     <!-- RELEASE NOTES: 5.0.3 -->
-
-    <string name="help_tip_motion_photo_frames_title">חילוץ פריימים מ-Motion Photo</string>
-    <string name="help_tip_motion_photo_frames_subtitle">שמירת רגעים מדויקים מהסרטון המוטמע</string>
-    <string name="help_tip_motion_photo_frames_p1_title">בחירה וייצוא של פריימים</string>
-    <string name="help_tip_motion_photo_frames_p1_desc">פתח Motion Photo במציג, ולאחר מכן הקש על רצועת הסרט או בחר חילוץ פריימים מגיליון הפעולות. עבור לרגע המדויק, בחר פריים אחד או יותר וייצא אותם בפורמט התמונה המועדף עליך.</string>
-    <string name="help_tip_motion_photo_frames_p1_s1">פתח Motion Photo במציג</string>
-    <string name="help_tip_motion_photo_frames_p1_s2">הקש על רצועת הסרט או בחר חילוץ פריימים</string>
-    <string name="help_tip_motion_photo_frames_p1_s3">עבור בסרטון ובחר את הרגעים הרצויים</string>
-    <string name="help_tip_motion_photo_frames_p1_s4">בחר פורמט וייצא את הפריימים שנבחרו</string>
-
-    <string name="help_tip_search_ignored_albums_title">חיפוש באלבומים שהתעלמת מהם</string>
-    <string name="help_tip_search_ignored_albums_subtitle">איתור מדיה מוסתרת מבלי להחזיר אותה לציר הזמן</string>
-    <string name="help_tip_search_ignored_albums_p1_title">הרחבה בטוחה של החיפוש החכם</string>
-    <string name="help_tip_search_ignored_albums_p1_desc">כלול אלבומים שמוסתרים מציר הזמן בתכונות החכמות ובחיפוש החכם, מבלי להציג אותם בציר הזמן או בכרטיסייה אלבומים. האפשרות כבויה כברירת מחדל, שינוי שלה מפעיל רענון מלא, ואלבומים נעולים תמיד נשארים מחוץ לחיפוש.</string>
-    <string name="help_tip_search_ignored_albums_p1_s1">פתח הגדרות &gt; תכונות חכמות</string>
-    <string name="help_tip_search_ignored_albums_p1_s2">הפעל את כלילת האלבומים שהתעלמת מהם</string>
-    <string name="help_tip_search_ignored_albums_p1_s3">המתן לסיום הרענון המלא של התכונות החכמות</string>
-    <string name="help_tip_search_ignored_albums_p1_s4">חפש מדיה מוסתרת בזמן שאלבומים נעולים נשארים פרטיים</string>
-
-    <string name="help_tip_cloud_nextcloud_login_title">כניסה מאובטחת ל-Nextcloud</string>
-    <string name="help_tip_cloud_nextcloud_login_subtitle">שימוש באישור דרך הדפדפן ובאימות דו-שלבי</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_title">תהליך הכניסה של Nextcloud גרסה 2</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_desc">ReFra פותח את שרת Nextcloud בדפדפן המערכת כדי שתוכל להיכנס ולהשלים שם אימות דו-שלבי. לאחר האישור, Nextcloud יוצר סיסמה ייעודית לאפליקציה, ו-ReFra שומר אותה מוצפנת במכשיר.</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s1">הוסף חשבון Nextcloud והזן את כתובת השרת שלו</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s2">המשך לדפדפן המערכת</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s3">היכנס, השלם אימות דו-שלבי ואשר גישה</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s4">חזור ל-ReFra בזמן שהוא משלים את החיבור</string>
-
-    <string name="help_tip_accessibility_remote_settings_title">ניווט בהגדרות ללא מגע</string>
-    <string name="help_tip_accessibility_remote_settings_subtitle">שימוש במקלדת, בלחצני כיוון או בשלט בכל ההגדרות</string>
-    <string name="help_tip_accessibility_remote_settings_p1_title">ניווט מיקוד צפוי</string>
-    <string name="help_tip_accessibility_remote_settings_p1_desc">רשימות הגדרות, מסכי פרטים, פקדי בחירה ופעולות בתחתית המסך תומכים במיקוד כיווני. ReFra מדגיש בבירור את הפקד שבמיקוד וממקם את המיקוד על פריט שניתן להפעיל בעת פתיחת מסך.</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s1">השתמש במקשי החצים או בלחצני הכיוון כדי לעבור בין פקדים</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s2">לחץ על Enter או על הלחצן המרכזי כדי להפעיל פקד</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s3">השתמש בחזרה כדי לצאת ממסך פרטים</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s4">המשך מפקד ההגדרות המודגש</string>
     <string name="help_search_hint">חיפוש בעזרה ובטיפים</string>
     <string name="help_search_clear">ניקוי החיפוש</string>
     <string name="help_search_no_results">לא נמצאה עזרה עבור \"%1$s\"</string>

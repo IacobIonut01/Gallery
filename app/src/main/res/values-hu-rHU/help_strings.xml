@@ -1073,41 +1073,6 @@
     <string name="help_tip_video_fix_black_p1_title">Keep video visible</string>
     <string name="help_tip_video_fix_black_p1_desc">On some devices (notably Samsung) a playing video can black out when the system bars are shown or hidden, even though it keeps playing. Enable Media Viewer › Video Playback › \'Fix black video on hide\' to re-bind the player surface on every bar change. It is on by default for Samsung devices and off elsewhere — turn it off if you don\'t need it.</string>
     <!-- RELEASE NOTES: 5.0.3 -->
-    <string name="help_tip_motion_photo_frames_title">Képkockák kinyerése Mozgóképből</string>
-    <string name="help_tip_motion_photo_frames_subtitle">Pontos pillanatok mentése a beágyazott klipből</string>
-    <string name="help_tip_motion_photo_frames_p1_title">Képkockák kiválasztása és exportálása</string>
-    <string name="help_tip_motion_photo_frames_p1_desc">Nyiss meg egy Mozgóképet a megtekintőben, majd koppints a filmszalagjára, vagy válaszd a műveletlap Képkockák kinyerése elemét. Lépj a kívánt pillanathoz, jelölj ki egy vagy több képkockát, majd exportáld őket a kívánt képformátumban.</string>
-    <string name="help_tip_motion_photo_frames_p1_s1">Nyiss meg egy Mozgóképet a megtekintőben</string>
-    <string name="help_tip_motion_photo_frames_p1_s2">Koppints a filmszalagra, vagy válaszd a Képkockák kinyerése lehetőséget</string>
-    <string name="help_tip_motion_photo_frames_p1_s3">Léptess, és válaszd ki a kívánt pillanatokat</string>
-    <string name="help_tip_motion_photo_frames_p1_s4">Válassz formátumot, és exportáld a kijelölt képkockákat</string>
-
-    <string name="help_tip_search_ignored_albums_title">Keresés a mellőzött albumokban</string>
-    <string name="help_tip_search_ignored_albums_subtitle">Rejtett média keresése az idővonalra való visszahelyezés nélkül</string>
-    <string name="help_tip_search_ignored_albums_p1_title">Az Intelligens keresés biztonságos kibővítése</string>
-    <string name="help_tip_search_ignored_albums_p1_desc">Az idővonalról elrejtett albumokat felveheted az Intelligens funkciókba és az Intelligens keresésbe anélkül, hogy megjelennének az idővonalon vagy az Albumok lapon. A beállítás alapértelmezés szerint ki van kapcsolva, módosítása teljes frissítést indít, a zárolt albumok pedig mindig kimaradnak.</string>
-    <string name="help_tip_search_ignored_albums_p1_s1">Nyisd meg a Beállítások > Intelligens funkciók menüt</string>
-    <string name="help_tip_search_ignored_albums_p1_s2">Kapcsold be a Mellőzött albumok felvétele beállítást</string>
-    <string name="help_tip_search_ignored_albums_p1_s3">Várd meg az Intelligens funkciók teljes frissítésének befejezését</string>
-    <string name="help_tip_search_ignored_albums_p1_s4">Keress a rejtett médiában, miközben a zárolt albumok privátak maradnak</string>
-
-    <string name="help_tip_cloud_nextcloud_login_title">Biztonságos bejelentkezés a Nextcloudba</string>
-    <string name="help_tip_cloud_nextcloud_login_subtitle">Böngészős engedélyezés és kétlépcsős hitelesítés használata</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_title">Nextcloud bejelentkezési folyamat v2</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_desc">A ReFra megnyitja a Nextcloud-kiszolgálót a rendszer böngészőjében, ahol bejelentkezhetsz, és elvégezheted a kétlépcsős hitelesítést. Jóváhagyás után a Nextcloud alkalmazásspecifikus jelszót hoz létre, amelyet a ReFra titkosítva tárol az eszközödön.</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s1">Adj hozzá egy Nextcloud-fiókot, és add meg a kiszolgáló URL-címét</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s2">Folytasd a rendszer böngészőjében</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s3">Jelentkezz be, végezd el a kétlépcsős hitelesítést, és hagyd jóvá a hozzáférést</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s4">Térj vissza a ReFrába, amíg befejezi a csatlakozást</string>
-
-    <string name="help_tip_accessibility_remote_settings_title">Navigálás a beállításokban érintés nélkül</string>
-    <string name="help_tip_accessibility_remote_settings_subtitle">Billentyűzet, iránygombok vagy távirányító használata minden beállításnál</string>
-    <string name="help_tip_accessibility_remote_settings_p1_title">Kiszámítható fókusznavigáció</string>
-    <string name="help_tip_accessibility_remote_settings_p1_desc">A beállításlisták, a részletező képernyők, a kijelölési vezérlők és az alsó műveletek támogatják az irányított fókuszt. A ReFra jól láthatóan kiemeli a fókuszban lévő vezérlőt, és a képernyő megnyitásakor egy használható elemre helyezi a fókuszt.</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s1">A nyíl- vagy iránygombokkal lépkedhetsz a vezérlők között</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s2">A vezérlő aktiválásához nyomd meg az Enter vagy a középső gombot</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s3">A részletező képernyő elhagyásához használd a Vissza gombot</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s4">Folytasd a kiemelt beállításvezérlőtől</string>
     <string name="help_search_hint">Keresés a súgóban és a tippek között</string>
     <string name="help_search_clear">Keresés törlése</string>
     <string name="help_search_no_results">Nem található súgó ehhez: \"%1$s\"</string>

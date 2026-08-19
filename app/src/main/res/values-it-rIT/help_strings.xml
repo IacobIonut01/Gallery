@@ -1073,42 +1073,6 @@
     <string name="help_tip_video_fix_black_p1_title">Keep video visible</string>
     <string name="help_tip_video_fix_black_p1_desc">On some devices (notably Samsung) a playing video can black out when the system bars are shown or hidden, even though it keeps playing. Enable Media Viewer › Video Playback › \'Fix black video on hide\' to re-bind the player surface on every bar change. It is on by default for Samsung devices and off elsewhere — turn it off if you don\'t need it.</string>
     <!-- RELEASE NOTES: 5.0.3 -->
-
-    <string name="help_tip_motion_photo_frames_title">Estrai fotogrammi da Motion Photo</string>
-    <string name="help_tip_motion_photo_frames_subtitle">Salva momenti precisi dal filmato incorporato</string>
-    <string name="help_tip_motion_photo_frames_p1_title">Scegli ed esporta i fotogrammi</string>
-    <string name="help_tip_motion_photo_frames_p1_desc">Apri una Motion Photo nel visualizzatore, quindi tocca la pellicola o scegli Estrai fotogrammi dal pannello delle azioni. Scorri fino al momento esatto, seleziona uno o più fotogrammi ed esportali nel formato immagine che preferisci.</string>
-    <string name="help_tip_motion_photo_frames_p1_s1">Apri una Motion Photo nel visualizzatore</string>
-    <string name="help_tip_motion_photo_frames_p1_s2">Tocca la pellicola o scegli Estrai fotogrammi</string>
-    <string name="help_tip_motion_photo_frames_p1_s3">Scorri e seleziona i momenti desiderati</string>
-    <string name="help_tip_motion_photo_frames_p1_s4">Scegli un formato ed esporta i fotogrammi selezionati</string>
-
-    <string name="help_tip_search_ignored_albums_title">Cerca negli album ignorati</string>
-    <string name="help_tip_search_ignored_albums_subtitle">Trova i contenuti nascosti senza riportarli nella cronologia</string>
-    <string name="help_tip_search_ignored_albums_p1_title">Estendi la Ricerca intelligente in sicurezza</string>
-    <string name="help_tip_search_ignored_albums_p1_desc">Includi gli album nascosti dalla cronologia nelle Funzioni intelligenti e nella Ricerca intelligente senza renderli visibili nella cronologia o nella scheda Album. Per impostazione predefinita questa opzione è disattivata; modificarla avvia un aggiornamento completo e gli album bloccati rimangono sempre esclusi.</string>
-    <string name="help_tip_search_ignored_albums_p1_s1">Apri Impostazioni &gt; Funzioni intelligenti</string>
-    <string name="help_tip_search_ignored_albums_p1_s2">Attiva Includi album ignorati</string>
-    <string name="help_tip_search_ignored_albums_p1_s3">Attendi il completamento dell’aggiornamento completo delle Funzioni intelligenti</string>
-    <string name="help_tip_search_ignored_albums_p1_s4">Cerca i contenuti nascosti mentre gli album bloccati restano privati</string>
-
-    <string name="help_tip_cloud_nextcloud_login_title">Accedi a Nextcloud in sicurezza</string>
-    <string name="help_tip_cloud_nextcloud_login_subtitle">Usa l’autorizzazione nel browser e l’autenticazione a due fattori</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_title">Flusso di accesso Nextcloud v2</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_desc">ReFra apre il server Nextcloud nel browser di sistema, dove puoi accedere e completare l’autenticazione a due fattori. Dopo l’approvazione, Nextcloud crea una password specifica per l’app che ReFra archivia in forma crittografata sul dispositivo.</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s1">Aggiungi un account Nextcloud e inserisci l’URL del server</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s2">Continua nel browser di sistema</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s3">Accedi, completa l’autenticazione a due fattori e approva l’accesso</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s4">Torna a ReFra mentre completa la connessione</string>
-
-    <string name="help_tip_accessibility_remote_settings_title">Esplora le impostazioni senza toccare lo schermo</string>
-    <string name="help_tip_accessibility_remote_settings_subtitle">Usa tastiera, D-pad o telecomando in tutte le impostazioni</string>
-    <string name="help_tip_accessibility_remote_settings_p1_title">Navigazione prevedibile dello stato attivo</string>
-    <string name="help_tip_accessibility_remote_settings_p1_desc">Gli elenchi delle impostazioni, le schermate dei dettagli, i controlli di selezione e le azioni inferiori supportano lo spostamento direzionale dello stato attivo. ReFra evidenzia chiaramente il controllo attivo e posiziona lo stato attivo su un elemento utilizzabile quando si apre una schermata.</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s1">Usa i tasti freccia o il D-pad per spostarti tra i controlli</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s2">Premi Invio o il pulsante centrale per attivare un controllo</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s3">Usa Indietro per uscire da una schermata dei dettagli</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s4">Continua dal controllo delle impostazioni evidenziato</string>
     <string name="help_search_hint">Cerca nella guida e nei suggerimenti</string>
     <string name="help_search_clear">Cancella ricerca</string>
     <string name="help_search_no_results">Nessun contenuto della guida trovato per \"%1$s\"</string>

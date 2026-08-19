@@ -1073,41 +1073,6 @@
     <string name="help_tip_video_fix_black_p1_title">Keep video visible</string>
     <string name="help_tip_video_fix_black_p1_desc">On some devices (notably Samsung) a playing video can black out when the system bars are shown or hidden, even though it keeps playing. Enable Media Viewer › Video Playback › \'Fix black video on hide\' to re-bind the player surface on every bar change. It is on by default for Samsung devices and off elsewhere — turn it off if you don\'t need it.</string>
     <!-- RELEASE NOTES: 5.0.3 -->
-    <string name="help_tip_motion_photo_frames_title">Extract Motion Photo frames</string>
-    <string name="help_tip_motion_photo_frames_subtitle">Save exact moments from the embedded clip</string>
-    <string name="help_tip_motion_photo_frames_p1_title">Choose and export frames</string>
-    <string name="help_tip_motion_photo_frames_p1_desc">Open a Motion Photo in the viewer, then tap its filmstrip or choose Extract frames from the actions sheet. Scrub to an exact moment, select one or more frames, and export them in your preferred image format.</string>
-    <string name="help_tip_motion_photo_frames_p1_s1">Open a Motion Photo in the viewer</string>
-    <string name="help_tip_motion_photo_frames_p1_s2">Tap the filmstrip or choose Extract frames</string>
-    <string name="help_tip_motion_photo_frames_p1_s3">Scrub and select the moments you want</string>
-    <string name="help_tip_motion_photo_frames_p1_s4">Choose a format and export the selected frames</string>
-
-    <string name="help_tip_search_ignored_albums_title">Search ignored albums</string>
-    <string name="help_tip_search_ignored_albums_subtitle">Find hidden media without returning it to the timeline</string>
-    <string name="help_tip_search_ignored_albums_p1_title">Expand Smart Search safely</string>
-    <string name="help_tip_search_ignored_albums_p1_desc">Include timeline-hidden albums in Smart Features and Smart Search without making them visible in the timeline or Albums tab. The option is off by default, changing it starts a full refresh, and locked albums always remain excluded.</string>
-    <string name="help_tip_search_ignored_albums_p1_s1">Open Settings > Smart features</string>
-    <string name="help_tip_search_ignored_albums_p1_s2">Toggle Include ignored albums</string>
-    <string name="help_tip_search_ignored_albums_p1_s3">Allow the full Smart Features refresh to finish</string>
-    <string name="help_tip_search_ignored_albums_p1_s4">Search hidden media while locked albums stay private</string>
-
-    <string name="help_tip_cloud_nextcloud_login_title">Sign in to Nextcloud securely</string>
-    <string name="help_tip_cloud_nextcloud_login_subtitle">Use browser authorization and two-factor authentication</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_title">Nextcloud Login Flow v2</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_desc">ReFra opens your Nextcloud server in the system browser so you can sign in and complete two-factor authentication there. After approval, Nextcloud creates an app-specific password that ReFra stores encrypted on your device.</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s1">Add a Nextcloud account and enter its server URL</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s2">Continue to the system browser</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s3">Sign in, complete two-factor authentication, and approve access</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s4">Return to ReFra while it finishes connecting</string>
-
-    <string name="help_tip_accessibility_remote_settings_title">Navigate settings without touch</string>
-    <string name="help_tip_accessibility_remote_settings_subtitle">Use a keyboard, D-pad, or remote throughout settings</string>
-    <string name="help_tip_accessibility_remote_settings_p1_title">Predictable focus navigation</string>
-    <string name="help_tip_accessibility_remote_settings_p1_desc">Settings lists, detail screens, selection controls, and bottom actions support directional focus. ReFra clearly highlights the focused control and places focus on an actionable item when a screen opens.</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s1">Use arrow or D-pad keys to move between controls</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s2">Press Enter or the center button to activate a control</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s3">Use Back to leave a detail screen</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s4">Continue from the highlighted settings control</string>
     <string name="help_search_hint">Search help &amp; tips</string>
     <string name="help_search_clear">Clear search</string>
     <string name="help_search_no_results">No help found for \"%1$s\"</string>

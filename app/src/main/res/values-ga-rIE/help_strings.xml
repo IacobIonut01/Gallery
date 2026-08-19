@@ -1073,41 +1073,6 @@
     <string name="help_tip_video_fix_black_p1_title">Keep video visible</string>
     <string name="help_tip_video_fix_black_p1_desc">On some devices (notably Samsung) a playing video can black out when the system bars are shown or hidden, even though it keeps playing. Enable Media Viewer › Video Playback › \'Fix black video on hide\' to re-bind the player surface on every bar change. It is on by default for Samsung devices and off elsewhere — turn it off if you don\'t need it.</string>
     <!-- RELEASE NOTES: 5.0.3 -->
-    <string name="help_tip_motion_photo_frames_title">Bain frámaí as Grianghraf Gluaisne</string>
-    <string name="help_tip_motion_photo_frames_subtitle">Sábháil móimintí cruinne ón ngearrthóg leabaithe</string>
-    <string name="help_tip_motion_photo_frames_p1_title">Roghnaigh agus easpórtáil frámaí</string>
-    <string name="help_tip_motion_photo_frames_p1_desc">Oscail Grianghraf Gluaisne san amharcóir, ansin tapáil a stiall scannáin nó roghnaigh Bain frámaí ón mbileog gníomhartha. Téigh chuig móimint chruinn, roghnaigh fráma amháin nó níos mó agus easpórtáil iad san fhormáid íomhá is fearr leat.</string>
-    <string name="help_tip_motion_photo_frames_p1_s1">Oscail Grianghraf Gluaisne san amharcóir</string>
-    <string name="help_tip_motion_photo_frames_p1_s2">Tapáil an stiall scannáin nó roghnaigh Bain frámaí</string>
-    <string name="help_tip_motion_photo_frames_p1_s3">Cuardaigh agus roghnaigh na móimintí atá uait</string>
-    <string name="help_tip_motion_photo_frames_p1_s4">Roghnaigh formáid agus easpórtáil na frámaí roghnaithe</string>
-
-    <string name="help_tip_search_ignored_albums_title">Cuardaigh albaim a ndearnadh neamhaird orthu</string>
-    <string name="help_tip_search_ignored_albums_subtitle">Aimsigh meáin fholaithe gan iad a chur ar ais san amlíne</string>
-    <string name="help_tip_search_ignored_albums_p1_title">Leathnaigh Cuardach Cliste go sábháilte</string>
-    <string name="help_tip_search_ignored_albums_p1_desc">Cuir albaim atá folaithe ón amlíne san áireamh i nGnéithe Cliste agus i gCuardach Cliste gan iad a dhéanamh infheicthe san amlíne ná sa chluaisín Albaim. Tá an rogha múchta de réir réamhshocraithe, cuireann athrú uirthi tús le hathnuachan iomlán agus fágtar albaim ghlasáilte as an áireamh i gcónaí.</string>
-    <string name="help_tip_search_ignored_albums_p1_s1">Oscail Socruithe > Gnéithe cliste</string>
-    <string name="help_tip_search_ignored_albums_p1_s2">Cuir Cuir albaim ar tugadh neamhaird orthu san áireamh ar siúl</string>
-    <string name="help_tip_search_ignored_albums_p1_s3">Fan go gcríochnóidh athnuachan iomlán na nGnéithe Cliste</string>
-    <string name="help_tip_search_ignored_albums_p1_s4">Cuardaigh meáin fholaithe agus coinnigh albaim ghlasáilte príobháideach</string>
-
-    <string name="help_tip_cloud_nextcloud_login_title">Sínigh isteach in Nextcloud go slán</string>
-    <string name="help_tip_cloud_nextcloud_login_subtitle">Úsáid údarú brabhsálaí agus fíordheimhniú dhá fhachtóir</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_title">Sreabhadh Logála Isteach Nextcloud v2</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_desc">Osclaíonn ReFra do fhreastalaí Nextcloud i mbrabhsálaí an chórais ionas gur féidir leat síniú isteach agus fíordheimhniú dhá fhachtóir a chríochnú ann. Tar éis duit é a cheadú, cruthaíonn Nextcloud pasfhocal a bhaineann go sonrach leis an aip agus stórálann ReFra é criptithe ar do ghléas.</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s1">Cuir cuntas Nextcloud leis agus iontráil URL a fhreastalaí</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s2">Lean ar aghaidh chuig brabhsálaí an chórais</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s3">Sínigh isteach, críochnaigh fíordheimhniú dhá fhachtóir agus ceadaigh rochtain</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s4">Fill ar ReFra agus an nasc á chríochnú aige</string>
-
-    <string name="help_tip_accessibility_remote_settings_title">Déan nascleanúint sna socruithe gan teagmháil</string>
-    <string name="help_tip_accessibility_remote_settings_subtitle">Úsáid méarchlár, eochaircheap treo nó cianrialtán ar fud na socruithe</string>
-    <string name="help_tip_accessibility_remote_settings_p1_title">Nascleanúint fócais intuartha</string>
-    <string name="help_tip_accessibility_remote_settings_p1_desc">Tacaíonn liostaí socruithe, scáileáin mhionsonraí, rialuithe roghnúcháin agus gníomhartha íochtair le fócas treo. Aibhsíonn ReFra an rialú ar a bhfuil fócas go soiléir agus cuireann sé fócas ar mhír inghníomhaithe nuair a osclaítear scáileán.</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s1">Úsáid na saigheada nó eochracha an eochaircheap treo chun bogadh idir rialuithe</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s2">Brúigh Enter nó an cnaipe láir chun rialú a ghníomhachtú</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s3">Úsáid Siar chun scáileán mionsonraí a fhágáil</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s4">Lean ar aghaidh ón rialú socruithe aibhsithe</string>
     <string name="help_search_hint">Cuardaigh cabhair agus leideanna</string>
     <string name="help_search_clear">Glan an cuardach</string>
     <string name="help_search_no_results">Níor aimsíodh aon chabhair do \"%1$s\"</string>

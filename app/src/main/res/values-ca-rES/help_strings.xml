@@ -1073,42 +1073,6 @@
     <string name="help_tip_video_fix_black_p1_title">Keep video visible</string>
     <string name="help_tip_video_fix_black_p1_desc">On some devices (notably Samsung) a playing video can black out when the system bars are shown or hidden, even though it keeps playing. Enable Media Viewer › Video Playback › \'Fix black video on hide\' to re-bind the player surface on every bar change. It is on by default for Samsung devices and off elsewhere — turn it off if you don\'t need it.</string>
     <!-- RELEASE NOTES: 5.0.3 -->
-
-    <string name="help_tip_motion_photo_frames_title">Extreu fotogrames de Motion Photo</string>
-    <string name="help_tip_motion_photo_frames_subtitle">Desa moments exactes del clip incrustat</string>
-    <string name="help_tip_motion_photo_frames_p1_title">Tria i exporta fotogrames</string>
-    <string name="help_tip_motion_photo_frames_p1_desc">Obre una Motion Photo al visor i toca la tira de fotogrames o tria Extreu fotogrames al full d’accions. Desplaça’t fins a un moment exacte, selecciona un o més fotogrames i exporta’ls en el format d’imatge que prefereixis.</string>
-    <string name="help_tip_motion_photo_frames_p1_s1">Obre una Motion Photo al visor</string>
-    <string name="help_tip_motion_photo_frames_p1_s2">Toca la tira de fotogrames o tria Extreu fotogrames</string>
-    <string name="help_tip_motion_photo_frames_p1_s3">Desplaça’t pel clip i selecciona els moments que vulguis</string>
-    <string name="help_tip_motion_photo_frames_p1_s4">Tria un format i exporta els fotogrames seleccionats</string>
-
-    <string name="help_tip_search_ignored_albums_title">Cerca als àlbums ignorats</string>
-    <string name="help_tip_search_ignored_albums_subtitle">Troba contingut multimèdia ocult sense tornar-lo a la cronologia</string>
-    <string name="help_tip_search_ignored_albums_p1_title">Amplia Smart Search amb seguretat</string>
-    <string name="help_tip_search_ignored_albums_p1_desc">Inclou els àlbums ocults de la cronologia a Smart Features i Smart Search sense fer-los visibles a la cronologia ni a la pestanya Àlbums. L’opció està desactivada per defecte, canviar-la inicia una actualització completa i els àlbums bloquejats sempre en queden exclosos.</string>
-    <string name="help_tip_search_ignored_albums_p1_s1">Obre Configuració > Smart Features</string>
-    <string name="help_tip_search_ignored_albums_p1_s2">Commuta Inclou els àlbums ignorats</string>
-    <string name="help_tip_search_ignored_albums_p1_s3">Espera que acabi l’actualització completa de Smart Features</string>
-    <string name="help_tip_search_ignored_albums_p1_s4">Cerca contingut ocult mentre els àlbums bloquejats es mantenen privats</string>
-
-    <string name="help_tip_cloud_nextcloud_login_title">Inicia sessió a Nextcloud de manera segura</string>
-    <string name="help_tip_cloud_nextcloud_login_subtitle">Utilitza l’autorització del navegador i l’autenticació de doble factor</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_title">Nextcloud Login Flow v2</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_desc">ReFra obre el servidor Nextcloud al navegador del sistema perquè hi puguis iniciar sessió i completar l’autenticació de doble factor. Després de l’aprovació, Nextcloud crea una contrasenya específica per a l’aplicació que ReFra desa xifrada al dispositiu.</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s1">Afegeix un compte de Nextcloud i introdueix l’URL del servidor</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s2">Continua al navegador del sistema</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s3">Inicia sessió, completa l’autenticació de doble factor i aprova l’accés</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s4">Torna a ReFra mentre acaba de connectar-se</string>
-
-    <string name="help_tip_accessibility_remote_settings_title">Navega per la configuració sense tocar la pantalla</string>
-    <string name="help_tip_accessibility_remote_settings_subtitle">Utilitza un teclat, un comandament direccional o un comandament a distància a tota la configuració</string>
-    <string name="help_tip_accessibility_remote_settings_p1_title">Navegació de focus previsible</string>
-    <string name="help_tip_accessibility_remote_settings_p1_desc">Les llistes de configuració, les pantalles de detalls, els controls de selecció i les accions inferiors admeten el focus direccional. ReFra ressalta clarament el control enfocat i situa el focus en un element accionable quan s’obre una pantalla.</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s1">Utilitza les fletxes o el comandament direccional per moure’t entre els controls</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s2">Prem Retorn o el botó central per activar un control</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s3">Utilitza Enrere per sortir d’una pantalla de detalls</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s4">Continua des del control de configuració ressaltat</string>
     <string name="help_search_hint">Cerca a l’ajuda i els consells</string>
     <string name="help_search_clear">Esborra la cerca</string>
     <string name="help_search_no_results">No s’ha trobat ajuda per a \"%1$s\"</string>

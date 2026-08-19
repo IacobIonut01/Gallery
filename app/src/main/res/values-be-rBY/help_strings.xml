@@ -1073,42 +1073,6 @@
     <string name="help_tip_video_fix_black_p1_title">Keep video visible</string>
     <string name="help_tip_video_fix_black_p1_desc">On some devices (notably Samsung) a playing video can black out when the system bars are shown or hidden, even though it keeps playing. Enable Media Viewer › Video Playback › \'Fix black video on hide\' to re-bind the player surface on every bar change. It is on by default for Samsung devices and off elsewhere — turn it off if you don\'t need it.</string>
     <!-- RELEASE NOTES: 5.0.3 -->
-
-    <string name="help_tip_motion_photo_frames_title">Выняць кадры з Motion Photo</string>
-    <string name="help_tip_motion_photo_frames_subtitle">Захоўвайце дакладныя моманты з убудаванага кліпа</string>
-    <string name="help_tip_motion_photo_frames_p1_title">Выберыце і экспартуйце кадры</string>
-    <string name="help_tip_motion_photo_frames_p1_desc">Адкрыйце Motion Photo у сродку прагляду, затым націсніце на стужку кадраў або выберыце «Выняць кадры» на панэлі дзеянняў. Перайдзіце да патрэбнага моманту, выберыце адзін ці некалькі кадраў і экспартуйце іх у пажаданым фармаце выявы.</string>
-    <string name="help_tip_motion_photo_frames_p1_s1">Адкрыйце Motion Photo у сродку прагляду</string>
-    <string name="help_tip_motion_photo_frames_p1_s2">Націсніце на стужку кадраў або выберыце «Выняць кадры»</string>
-    <string name="help_tip_motion_photo_frames_p1_s3">Прагартайце кліп і выберыце патрэбныя моманты</string>
-    <string name="help_tip_motion_photo_frames_p1_s4">Выберыце фармат і экспартуйце выбраныя кадры</string>
-
-    <string name="help_tip_search_ignored_albums_title">Пошук у ігнараваных альбомах</string>
-    <string name="help_tip_search_ignored_albums_subtitle">Знаходзьце схаваныя медыяфайлы, не вяртаючы іх на часовую шкалу</string>
-    <string name="help_tip_search_ignored_albums_p1_title">Бяспечна пашырайце Smart Search</string>
-    <string name="help_tip_search_ignored_albums_p1_desc">Уключайце схаваныя з часовай шкалы альбомы ў Smart Features і Smart Search, не паказваючы іх на часовай шкале або ўкладцы «Альбомы». Параметр прадвызначана выключаны, яго змяненне запускае поўнае абнаўленне, а заблакіраваныя альбомы заўсёды застаюцца выключанымі.</string>
-    <string name="help_tip_search_ignored_albums_p1_s1">Адкрыйце Налады > Smart Features</string>
-    <string name="help_tip_search_ignored_albums_p1_s2">Пераключыце «Уключаць ігнараваныя альбомы»</string>
-    <string name="help_tip_search_ignored_albums_p1_s3">Дачакайцеся завяршэння поўнага абнаўлення Smart Features</string>
-    <string name="help_tip_search_ignored_albums_p1_s4">Шукайце схаваныя медыяфайлы, пакідаючы заблакіраваныя альбомы прыватнымі</string>
-
-    <string name="help_tip_cloud_nextcloud_login_title">Бяспечны ўваход у Nextcloud</string>
-    <string name="help_tip_cloud_nextcloud_login_subtitle">Выкарыстоўвайце аўтарызацыю ў браўзеры і двухфактарную аўтэнтыфікацыю</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_title">Nextcloud Login Flow v2</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_desc">ReFra адкрывае ваш сервер Nextcloud у сістэмным браўзеры, дзе можна ўвайсці і прайсці двухфактарную аўтэнтыфікацыю. Пасля зацвярджэння Nextcloud стварае спецыяльны пароль праграмы, які ReFra захоўвае на прыладзе ў зашыфраваным выглядзе.</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s1">Дадайце ўліковы запіс Nextcloud і ўвядзіце URL-адрас сервера</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s2">Перайдзіце ў сістэмны браўзер</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s3">Увайдзіце, прайдзіце двухфактарную аўтэнтыфікацыю і зацвердзіце доступ</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s4">Вярніцеся ў ReFra, пакуль праграма завяршае падключэнне</string>
-
-    <string name="help_tip_accessibility_remote_settings_title">Навігацыя па наладах без дотыку</string>
-    <string name="help_tip_accessibility_remote_settings_subtitle">Карыстайцеся клавіятурай, D-pad або пультам ва ўсіх наладах</string>
-    <string name="help_tip_accessibility_remote_settings_p1_title">Прадказальная навігацыя фокусу</string>
-    <string name="help_tip_accessibility_remote_settings_p1_desc">Спісы налад, экраны звестак, элементы выбару і ніжнія дзеянні падтрымліваюць накіраванае перамяшчэнне фокусу. ReFra выразна вылучае сфакусіраваны элемент і пры адкрыцці экрана перамяшчае фокус на элемент, з якім можна ўзаемадзейнічаць.</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s1">Выкарыстоўвайце стрэлкі або D-pad для перамяшчэння паміж элементамі</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s2">Націсніце Enter або цэнтральную кнопку, каб актываваць элемент</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s3">Выкарыстоўвайце кнопку «Назад», каб пакінуць экран звестак</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s4">Працягвайце з вылучанага элемента налад</string>
     <string name="help_search_hint">Пошук у даведцы і парадах</string>
     <string name="help_search_clear">Ачысціць пошук</string>
     <string name="help_search_no_results">Па запыце \"%1$s\" нічога не знойдзена ў даведцы</string>

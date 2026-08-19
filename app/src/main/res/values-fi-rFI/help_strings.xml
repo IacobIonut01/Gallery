@@ -1073,41 +1073,6 @@
     <string name="help_tip_video_fix_black_p1_title">Keep video visible</string>
     <string name="help_tip_video_fix_black_p1_desc">On some devices (notably Samsung) a playing video can black out when the system bars are shown or hidden, even though it keeps playing. Enable Media Viewer › Video Playback › \'Fix black video on hide\' to re-bind the player surface on every bar change. It is on by default for Samsung devices and off elsewhere — turn it off if you don\'t need it.</string>
     <!-- RELEASE NOTES: 5.0.3 -->
-    <string name="help_tip_motion_photo_frames_title">Poimi kuvia liikevalokuvasta</string>
-    <string name="help_tip_motion_photo_frames_subtitle">Tallenna tarkat hetket upotetusta leikkeestä</string>
-    <string name="help_tip_motion_photo_frames_p1_title">Valitse ja vie kuvia</string>
-    <string name="help_tip_motion_photo_frames_p1_desc">Avaa liikevalokuva katselimessa ja napauta sitten sen filminauhaa tai valitse toimintovalikosta Poimi kuvia. Siirry tarkkaan hetkeen, valitse yksi tai useampi kuva ja vie ne haluamassasi kuvamuodossa.</string>
-    <string name="help_tip_motion_photo_frames_p1_s1">Avaa liikevalokuva katselimessa</string>
-    <string name="help_tip_motion_photo_frames_p1_s2">Napauta filminauhaa tai valitse Poimi kuvia</string>
-    <string name="help_tip_motion_photo_frames_p1_s3">Selaa leikettä ja valitse haluamasi hetket</string>
-    <string name="help_tip_motion_photo_frames_p1_s4">Valitse muoto ja vie valitut kuvat</string>
-
-    <string name="help_tip_search_ignored_albums_title">Hae ohitetuista albumeista</string>
-    <string name="help_tip_search_ignored_albums_subtitle">Etsi piilotettua mediaa palauttamatta sitä aikajanalle</string>
-    <string name="help_tip_search_ignored_albums_p1_title">Laajenna älykästä hakua turvallisesti</string>
-    <string name="help_tip_search_ignored_albums_p1_desc">Sisällytä aikajanalta piilotetut albumit Älykkäisiin ominaisuuksiin ja älykkääseen hakuun näyttämättä niitä aikajanalla tai Albumit-välilehdellä. Asetus on oletuksena pois käytöstä, sen muuttaminen käynnistää täyden päivityksen ja lukitut albumit jätetään aina pois.</string>
-    <string name="help_tip_search_ignored_albums_p1_s1">Avaa Asetukset > Älykkäät ominaisuudet</string>
-    <string name="help_tip_search_ignored_albums_p1_s2">Ota Sisällytä ohitetut albumit käyttöön</string>
-    <string name="help_tip_search_ignored_albums_p1_s3">Anna Älykkäiden ominaisuuksien täyden päivityksen valmistua</string>
-    <string name="help_tip_search_ignored_albums_p1_s4">Hae piilotettua mediaa lukittujen albumien pysyessä yksityisinä</string>
-
-    <string name="help_tip_cloud_nextcloud_login_title">Kirjaudu Nextcloudiin turvallisesti</string>
-    <string name="help_tip_cloud_nextcloud_login_subtitle">Käytä selainvaltuutusta ja kaksivaiheista tunnistautumista</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_title">Nextcloudin kirjautumiskulku v2</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_desc">ReFra avaa Nextcloud-palvelimesi järjestelmän selaimessa, jossa voit kirjautua sisään ja suorittaa kaksivaiheisen tunnistautumisen. Hyväksynnän jälkeen Nextcloud luo sovelluskohtaisen salasanan, jonka ReFra tallentaa salattuna laitteellesi.</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s1">Lisää Nextcloud-tili ja anna sen palvelimen URL-osoite</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s2">Jatka järjestelmän selaimeen</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s3">Kirjaudu sisään, suorita kaksivaiheinen tunnistautuminen ja hyväksy käyttöoikeus</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s4">Palaa ReFraan, kun yhteyden muodostaminen viimeistellään</string>
-
-    <string name="help_tip_accessibility_remote_settings_title">Siirry asetuksissa ilman kosketusta</string>
-    <string name="help_tip_accessibility_remote_settings_subtitle">Käytä näppäimistöä, suuntaohjainta tai kaukosäädintä kaikissa asetuksissa</string>
-    <string name="help_tip_accessibility_remote_settings_p1_title">Ennakoitava kohdistuksen siirtyminen</string>
-    <string name="help_tip_accessibility_remote_settings_p1_desc">Asetusluettelot, tietonäkymät, valintapainikkeet ja alareunan toiminnot tukevat suunnattua kohdistusta. ReFra korostaa kohdistetun ohjaimen selkeästi ja siirtää kohdistuksen käytettävään kohteeseen näytön avautuessa.</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s1">Siirry ohjainten välillä nuoli- tai suuntaohjainnäppäimillä</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s2">Aktivoi ohjain painamalla Enter- tai keskipainiketta</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s3">Poistu tietonäkymästä Takaisin-toiminnolla</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s4">Jatka korostetusta asetuksesta</string>
     <string name="help_search_hint">Hae ohjeista ja vinkeistä</string>
     <string name="help_search_clear">Tyhjennä haku</string>
     <string name="help_search_no_results">Haulla \"%1$s\" ei löytynyt ohjeita</string>

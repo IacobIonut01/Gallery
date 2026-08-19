@@ -1073,41 +1073,6 @@
     <string name="help_tip_video_fix_black_p1_title">Keep video visible</string>
     <string name="help_tip_video_fix_black_p1_desc">On some devices (notably Samsung) a playing video can black out when the system bars are shown or hidden, even though it keeps playing. Enable Media Viewer › Video Playback › \'Fix black video on hide\' to re-bind the player surface on every bar change. It is on by default for Samsung devices and off elsewhere — turn it off if you don\'t need it.</string>
     <!-- RELEASE NOTES: 5.0.3 -->
-    <string name="help_tip_motion_photo_frames_title">Ekstrak bingkai Foto Bergerak</string>
-    <string name="help_tip_motion_photo_frames_subtitle">Simpan momen yang tepat dari klip tersemat</string>
-    <string name="help_tip_motion_photo_frames_p1_title">Pilih dan ekspor bingkai</string>
-    <string name="help_tip_motion_photo_frames_p1_desc">Buka Foto Bergerak di penampil, lalu ketuk strip filmnya atau pilih Ekstrak bingkai dari lembar tindakan. Geser ke momen yang tepat, pilih satu atau beberapa bingkai, lalu ekspor dalam format gambar pilihan Anda.</string>
-    <string name="help_tip_motion_photo_frames_p1_s1">Buka Foto Bergerak di penampil</string>
-    <string name="help_tip_motion_photo_frames_p1_s2">Ketuk strip film atau pilih Ekstrak bingkai</string>
-    <string name="help_tip_motion_photo_frames_p1_s3">Geser dan pilih momen yang Anda inginkan</string>
-    <string name="help_tip_motion_photo_frames_p1_s4">Pilih format dan ekspor bingkai yang dipilih</string>
-
-    <string name="help_tip_search_ignored_albums_title">Cari album yang diabaikan</string>
-    <string name="help_tip_search_ignored_albums_subtitle">Temukan media tersembunyi tanpa mengembalikannya ke linimasa</string>
-    <string name="help_tip_search_ignored_albums_p1_title">Perluas Pencarian Cerdas dengan aman</string>
-    <string name="help_tip_search_ignored_albums_p1_desc">Sertakan album yang disembunyikan dari linimasa dalam Fitur Cerdas dan Pencarian Cerdas tanpa menampilkannya di linimasa atau tab Album. Opsi ini nonaktif secara default, mengubahnya akan memulai penyegaran penuh, dan album terkunci selalu dikecualikan.</string>
-    <string name="help_tip_search_ignored_albums_p1_s1">Buka Setelan > Fitur cerdas</string>
-    <string name="help_tip_search_ignored_albums_p1_s2">Aktifkan Sertakan album yang diabaikan</string>
-    <string name="help_tip_search_ignored_albums_p1_s3">Tunggu hingga penyegaran penuh Fitur Cerdas selesai</string>
-    <string name="help_tip_search_ignored_albums_p1_s4">Cari media tersembunyi sementara album terkunci tetap privat</string>
-
-    <string name="help_tip_cloud_nextcloud_login_title">Masuk ke Nextcloud dengan aman</string>
-    <string name="help_tip_cloud_nextcloud_login_subtitle">Gunakan otorisasi browser dan autentikasi dua faktor</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_title">Alur Masuk Nextcloud v2</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_desc">ReFra membuka server Nextcloud Anda di browser sistem agar Anda dapat masuk dan menyelesaikan autentikasi dua faktor di sana. Setelah disetujui, Nextcloud membuat kata sandi khusus aplikasi yang disimpan ReFra secara terenkripsi di perangkat Anda.</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s1">Tambahkan akun Nextcloud dan masukkan URL servernya</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s2">Lanjutkan ke browser sistem</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s3">Masuk, selesaikan autentikasi dua faktor, dan setujui akses</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s4">Kembali ke ReFra saat proses koneksi diselesaikan</string>
-
-    <string name="help_tip_accessibility_remote_settings_title">Navigasikan setelan tanpa sentuhan</string>
-    <string name="help_tip_accessibility_remote_settings_subtitle">Gunakan keyboard, D-pad, atau remote di seluruh setelan</string>
-    <string name="help_tip_accessibility_remote_settings_p1_title">Navigasi fokus yang mudah diprediksi</string>
-    <string name="help_tip_accessibility_remote_settings_p1_desc">Daftar setelan, layar detail, kontrol pilihan, dan tindakan bawah mendukung fokus terarah. ReFra menyorot kontrol yang difokuskan dengan jelas dan menempatkan fokus pada item yang dapat ditindaklanjuti saat layar dibuka.</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s1">Gunakan tombol panah atau D-pad untuk berpindah di antara kontrol</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s2">Tekan Enter atau tombol tengah untuk mengaktifkan kontrol</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s3">Gunakan Kembali untuk meninggalkan layar detail</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s4">Lanjutkan dari kontrol setelan yang disorot</string>
     <string name="help_search_hint">Cari bantuan dan tips</string>
     <string name="help_search_clear">Hapus pencarian</string>
     <string name="help_search_no_results">Tidak ada bantuan yang ditemukan untuk \"%1$s\"</string>

@@ -1073,42 +1073,6 @@
     <string name="help_tip_video_fix_black_p1_title">Keep video visible</string>
     <string name="help_tip_video_fix_black_p1_desc">On some devices (notably Samsung) a playing video can black out when the system bars are shown or hidden, even though it keeps playing. Enable Media Viewer › Video Playback › \'Fix black video on hide\' to re-bind the player surface on every bar change. It is on by default for Samsung devices and off elsewhere — turn it off if you don\'t need it.</string>
     <!-- RELEASE NOTES: 5.0.3 -->
-
-    <string name="help_tip_motion_photo_frames_title">استخراج إطارات Motion Photo</string>
-    <string name="help_tip_motion_photo_frames_subtitle">احفظ لحظات محددة من المقطع المضمّن</string>
-    <string name="help_tip_motion_photo_frames_p1_title">اختيار الإطارات وتصديرها</string>
-    <string name="help_tip_motion_photo_frames_p1_desc">افتح Motion Photo في العارض، ثم اضغط على شريط الفيلم الخاص بها أو اختر استخراج الإطارات من ورقة الإجراءات. انتقل إلى لحظة محددة، وحدد إطارًا واحدًا أو أكثر، ثم صدّرها بتنسيق الصور الذي تفضله.</string>
-    <string name="help_tip_motion_photo_frames_p1_s1">افتح Motion Photo في العارض</string>
-    <string name="help_tip_motion_photo_frames_p1_s2">اضغط على شريط الفيلم أو اختر استخراج الإطارات</string>
-    <string name="help_tip_motion_photo_frames_p1_s3">تنقّل في المقطع وحدد اللحظات التي تريدها</string>
-    <string name="help_tip_motion_photo_frames_p1_s4">اختر تنسيقًا وصدّر الإطارات المحددة</string>
-
-    <string name="help_tip_search_ignored_albums_title">البحث في الألبومات المتجاهلة</string>
-    <string name="help_tip_search_ignored_albums_subtitle">اعثر على الوسائط المخفية من دون إعادتها إلى المخطط الزمني</string>
-    <string name="help_tip_search_ignored_albums_p1_title">توسيع Smart Search بأمان</string>
-    <string name="help_tip_search_ignored_albums_p1_desc">ضمّن الألبومات المخفية من المخطط الزمني في Smart Features وSmart Search من دون إظهارها في المخطط الزمني أو علامة تبويب الألبومات. يكون الخيار متوقفًا افتراضيًا، ويؤدي تغييره إلى بدء تحديث كامل، بينما تظل الألبومات المقفلة مستبعدة دائمًا.</string>
-    <string name="help_tip_search_ignored_albums_p1_s1">افتح الإعدادات > Smart Features</string>
-    <string name="help_tip_search_ignored_albums_p1_s2">بدّل خيار تضمين الألبومات المتجاهلة</string>
-    <string name="help_tip_search_ignored_albums_p1_s3">انتظر حتى يكتمل التحديث الكامل لـ Smart Features</string>
-    <string name="help_tip_search_ignored_albums_p1_s4">ابحث في الوسائط المخفية مع إبقاء الألبومات المقفلة خاصة</string>
-
-    <string name="help_tip_cloud_nextcloud_login_title">تسجيل الدخول بأمان إلى Nextcloud</string>
-    <string name="help_tip_cloud_nextcloud_login_subtitle">استخدم التفويض عبر المتصفح والمصادقة الثنائية</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_title">Nextcloud Login Flow v2</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_desc">يفتح ReFra خادم Nextcloud في متصفح النظام حتى تتمكن من تسجيل الدخول وإكمال المصادقة الثنائية هناك. بعد الموافقة، ينشئ Nextcloud كلمة مرور خاصة بالتطبيق يخزنها ReFra مشفرة على جهازك.</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s1">أضف حساب Nextcloud وأدخل عنوان URL لخادمه</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s2">تابع إلى متصفح النظام</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s3">سجّل الدخول وأكمل المصادقة الثنائية ووافق على الوصول</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s4">عُد إلى ReFra بينما يُكمل الاتصال</string>
-
-    <string name="help_tip_accessibility_remote_settings_title">التنقل في الإعدادات من دون لمس</string>
-    <string name="help_tip_accessibility_remote_settings_subtitle">استخدم لوحة مفاتيح أو لوحة اتجاهات أو جهاز تحكم عن بُعد في جميع الإعدادات</string>
-    <string name="help_tip_accessibility_remote_settings_p1_title">تنقل متوقع للتركيز</string>
-    <string name="help_tip_accessibility_remote_settings_p1_desc">تدعم قوائم الإعدادات وشاشات التفاصيل وعناصر التحديد والإجراءات السفلية التركيز الاتجاهي. يبرز ReFra العنصر الذي عليه التركيز بوضوح ويضع التركيز على عنصر قابل للتنفيذ عند فتح الشاشة.</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s1">استخدم مفاتيح الأسهم أو لوحة الاتجاهات للتنقل بين عناصر التحكم</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s2">اضغط على Enter أو الزر الأوسط لتنشيط عنصر تحكم</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s3">استخدم زر الرجوع لمغادرة شاشة التفاصيل</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s4">تابع من عنصر الإعدادات المميز</string>
     <string name="help_search_hint">ابحث في المساعدة والنصائح</string>
     <string name="help_search_clear">مسح البحث</string>
     <string name="help_search_no_results">لم يتم العثور على مساعدة بشأن \"%1$s\"</string>

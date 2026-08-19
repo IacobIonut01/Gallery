@@ -1073,42 +1073,6 @@
     <string name="help_tip_video_fix_black_p1_title">Keep video visible</string>
     <string name="help_tip_video_fix_black_p1_desc">On some devices (notably Samsung) a playing video can black out when the system bars are shown or hidden, even though it keeps playing. Enable Media Viewer › Video Playback › \'Fix black video on hide\' to re-bind the player surface on every bar change. It is on by default for Samsung devices and off elsewhere — turn it off if you don\'t need it.</string>
     <!-- RELEASE NOTES: 5.0.3 -->
-
-    <string name="help_tip_motion_photo_frames_title">Bilder aus Motion Photo extrahieren</string>
-    <string name="help_tip_motion_photo_frames_subtitle">Exakte Momente aus dem eingebetteten Clip speichern</string>
-    <string name="help_tip_motion_photo_frames_p1_title">Bilder auswählen und exportieren</string>
-    <string name="help_tip_motion_photo_frames_p1_desc">Öffne ein Motion Photo im Betrachter und tippe dann auf dessen Filmstreifen oder wähle im Aktionsmenü Bilder extrahieren aus. Navigiere zu einem bestimmten Moment, wähle ein oder mehrere Bilder aus und exportiere sie in deinem bevorzugten Bildformat.</string>
-    <string name="help_tip_motion_photo_frames_p1_s1">Ein Motion Photo im Betrachter öffnen</string>
-    <string name="help_tip_motion_photo_frames_p1_s2">Auf den Filmstreifen tippen oder Bilder extrahieren auswählen</string>
-    <string name="help_tip_motion_photo_frames_p1_s3">Durch den Clip navigieren und die gewünschten Momente auswählen</string>
-    <string name="help_tip_motion_photo_frames_p1_s4">Ein Format auswählen und die ausgewählten Bilder exportieren</string>
-
-    <string name="help_tip_search_ignored_albums_title">Ignorierte Alben durchsuchen</string>
-    <string name="help_tip_search_ignored_albums_subtitle">Ausgeblendete Medien finden, ohne sie wieder auf der Zeitleiste anzuzeigen</string>
-    <string name="help_tip_search_ignored_albums_p1_title">Smart Search sicher erweitern</string>
-    <string name="help_tip_search_ignored_albums_p1_desc">Beziehe auf der Zeitleiste ausgeblendete Alben in Smart Features und Smart Search ein, ohne sie auf der Zeitleiste oder im Tab „Alben“ sichtbar zu machen. Die Option ist standardmäßig deaktiviert, eine Änderung startet eine vollständige Aktualisierung und gesperrte Alben bleiben immer ausgeschlossen.</string>
-    <string name="help_tip_search_ignored_albums_p1_s1">Einstellungen > Smart Features öffnen</string>
-    <string name="help_tip_search_ignored_albums_p1_s2">Ignorierte Alben einbeziehen umschalten</string>
-    <string name="help_tip_search_ignored_albums_p1_s3">Die vollständige Aktualisierung von Smart Features abschließen lassen</string>
-    <string name="help_tip_search_ignored_albums_p1_s4">Ausgeblendete Medien durchsuchen, während gesperrte Alben privat bleiben</string>
-
-    <string name="help_tip_cloud_nextcloud_login_title">Sicher bei Nextcloud anmelden</string>
-    <string name="help_tip_cloud_nextcloud_login_subtitle">Browserautorisierung und Zwei-Faktor-Authentifizierung verwenden</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_title">Nextcloud Login Flow v2</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_desc">ReFra öffnet deinen Nextcloud-Server im Systembrowser, damit du dich dort anmelden und die Zwei-Faktor-Authentifizierung abschließen kannst. Nach der Genehmigung erstellt Nextcloud ein app-spezifisches Passwort, das ReFra verschlüsselt auf deinem Gerät speichert.</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s1">Ein Nextcloud-Konto hinzufügen und dessen Server-URL eingeben</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s2">Im Systembrowser fortfahren</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s3">Anmelden, die Zwei-Faktor-Authentifizierung abschließen und den Zugriff genehmigen</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s4">Zu ReFra zurückkehren, während die Verbindung abgeschlossen wird</string>
-
-    <string name="help_tip_accessibility_remote_settings_title">Ohne Berührung durch die Einstellungen navigieren</string>
-    <string name="help_tip_accessibility_remote_settings_subtitle">In allen Einstellungen Tastatur, Steuerkreuz oder Fernbedienung verwenden</string>
-    <string name="help_tip_accessibility_remote_settings_p1_title">Vorhersehbare Fokusnavigation</string>
-    <string name="help_tip_accessibility_remote_settings_p1_desc">Einstellungslisten, Detailansichten, Auswahlsteuerelemente und untere Aktionen unterstützen die Richtungsnavigation. ReFra hebt das fokussierte Steuerelement deutlich hervor und setzt den Fokus beim Öffnen eines Bildschirms auf ein bedienbares Element.</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s1">Mit Pfeiltasten oder Steuerkreuz zwischen den Steuerelementen wechseln</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s2">Enter oder die mittlere Taste drücken, um ein Steuerelement zu aktivieren</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s3">Mit Zurück eine Detailansicht verlassen</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s4">Vom hervorgehobenen Steuerelement der Einstellungen aus fortfahren</string>
     <string name="help_search_hint">Hilfe und Tipps durchsuchen</string>
     <string name="help_search_clear">Suche löschen</string>
     <string name="help_search_no_results">Keine Hilfe für \"%1$s\" gefunden</string>

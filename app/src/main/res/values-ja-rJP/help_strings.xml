@@ -1073,42 +1073,6 @@
     <string name="help_tip_video_fix_black_p1_title">Keep video visible</string>
     <string name="help_tip_video_fix_black_p1_desc">On some devices (notably Samsung) a playing video can black out when the system bars are shown or hidden, even though it keeps playing. Enable Media Viewer › Video Playback › \'Fix black video on hide\' to re-bind the player surface on every bar change. It is on by default for Samsung devices and off elsewhere — turn it off if you don\'t need it.</string>
     <!-- RELEASE NOTES: 5.0.3 -->
-
-    <string name="help_tip_motion_photo_frames_title">Motion Photoのフレームを抽出</string>
-    <string name="help_tip_motion_photo_frames_subtitle">埋め込み動画から狙った瞬間を保存します</string>
-    <string name="help_tip_motion_photo_frames_p1_title">フレームを選択してエクスポート</string>
-    <string name="help_tip_motion_photo_frames_p1_desc">ビューアーでMotion Photoを開き、フィルムストリップをタップするか、アクションシートから「フレームを抽出」を選択します。目的の瞬間まで移動し、1つ以上のフレームを選択して、任意の画像形式でエクスポートできます。</string>
-    <string name="help_tip_motion_photo_frames_p1_s1">ビューアーでMotion Photoを開く</string>
-    <string name="help_tip_motion_photo_frames_p1_s2">フィルムストリップをタップするか、「フレームを抽出」を選択</string>
-    <string name="help_tip_motion_photo_frames_p1_s3">再生位置を動かして、保存したい瞬間を選択</string>
-    <string name="help_tip_motion_photo_frames_p1_s4">形式を選択し、選択したフレームをエクスポート</string>
-
-    <string name="help_tip_search_ignored_albums_title">除外したアルバムを検索</string>
-    <string name="help_tip_search_ignored_albums_subtitle">タイムラインに戻さずに非表示のメディアを検索します</string>
-    <string name="help_tip_search_ignored_albums_p1_title">スマート検索の対象を安全に拡大</string>
-    <string name="help_tip_search_ignored_albums_p1_desc">タイムラインで非表示にしたアルバムを、タイムラインや「アルバム」タブに表示することなく、スマート機能とスマート検索の対象に含められます。このオプションは初期状態ではオフです。変更すると全体の更新が始まり、ロックされたアルバムは常に対象外となります。</string>
-    <string name="help_tip_search_ignored_albums_p1_s1">「設定」&gt;「スマート機能」を開く</string>
-    <string name="help_tip_search_ignored_albums_p1_s2">「除外したアルバムを含める」を切り替える</string>
-    <string name="help_tip_search_ignored_albums_p1_s3">スマート機能の全体更新が完了するまで待つ</string>
-    <string name="help_tip_search_ignored_albums_p1_s4">ロックされたアルバムを非公開のまま、非表示のメディアを検索</string>
-
-    <string name="help_tip_cloud_nextcloud_login_title">Nextcloudに安全にログイン</string>
-    <string name="help_tip_cloud_nextcloud_login_subtitle">ブラウザー認証と2要素認証を使用します</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_title">Nextcloud Login Flow v2</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_desc">ReFraがシステムブラウザーでNextcloudサーバーを開き、そこでログインと2要素認証を完了できます。承認後、Nextcloudがアプリ専用パスワードを作成し、ReFraが端末上に暗号化して保存します。</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s1">Nextcloudアカウントを追加し、サーバーURLを入力</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s2">システムブラウザーに進む</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s3">ログインして2要素認証を完了し、アクセスを承認</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s4">接続が完了するまでReFraに戻って待つ</string>
-
-    <string name="help_tip_accessibility_remote_settings_title">タッチせずに設定を操作</string>
-    <string name="help_tip_accessibility_remote_settings_subtitle">設定全体をキーボード、D-pad、リモコンで操作できます</string>
-    <string name="help_tip_accessibility_remote_settings_p1_title">予測しやすいフォーカス移動</string>
-    <string name="help_tip_accessibility_remote_settings_p1_desc">設定リスト、詳細画面、選択コントロール、画面下部のアクションは方向キーによるフォーカス移動に対応しています。ReFraはフォーカス中のコントロールを明確に強調し、画面を開くと操作可能な項目にフォーカスを合わせます。</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s1">矢印キーまたはD-padでコントロール間を移動</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s2">Enterキーまたは中央ボタンでコントロールを実行</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s3">戻るボタンで詳細画面を閉じる</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s4">強調表示された設定コントロールから操作を続ける</string>
     <string name="help_search_hint">ヘルプとヒントを検索</string>
     <string name="help_search_clear">検索をクリア</string>
     <string name="help_search_no_results">「%1$s」に一致するヘルプは見つかりませんでした</string>

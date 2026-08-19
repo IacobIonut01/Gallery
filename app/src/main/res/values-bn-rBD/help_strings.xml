@@ -1073,42 +1073,6 @@
     <string name="help_tip_video_fix_black_p1_title">Keep video visible</string>
     <string name="help_tip_video_fix_black_p1_desc">On some devices (notably Samsung) a playing video can black out when the system bars are shown or hidden, even though it keeps playing. Enable Media Viewer › Video Playback › \'Fix black video on hide\' to re-bind the player surface on every bar change. It is on by default for Samsung devices and off elsewhere — turn it off if you don\'t need it.</string>
     <!-- RELEASE NOTES: 5.0.3 -->
-
-    <string name="help_tip_motion_photo_frames_title">Motion Photo-এর ফ্রেম বের করুন</string>
-    <string name="help_tip_motion_photo_frames_subtitle">এম্বেড করা ক্লিপ থেকে নির্দিষ্ট মুহূর্ত সংরক্ষণ করুন</string>
-    <string name="help_tip_motion_photo_frames_p1_title">ফ্রেম বেছে নিয়ে এক্সপোর্ট করুন</string>
-    <string name="help_tip_motion_photo_frames_p1_desc">ভিউয়ারে একটি Motion Photo খুলুন, তারপর সেটির ফিল্মস্ট্রিপে ট্যাপ করুন অথবা অ্যাকশন শিট থেকে ফ্রেম বের করুন বেছে নিন। নির্দিষ্ট মুহূর্তে যান, এক বা একাধিক ফ্রেম নির্বাচন করুন এবং আপনার পছন্দের ছবির ফরম্যাটে সেগুলি এক্সপোর্ট করুন।</string>
-    <string name="help_tip_motion_photo_frames_p1_s1">ভিউয়ারে একটি Motion Photo খুলুন</string>
-    <string name="help_tip_motion_photo_frames_p1_s2">ফিল্মস্ট্রিপে ট্যাপ করুন অথবা ফ্রেম বের করুন বেছে নিন</string>
-    <string name="help_tip_motion_photo_frames_p1_s3">ক্লিপে এগিয়ে-পিছিয়ে আপনার পছন্দের মুহূর্তগুলি নির্বাচন করুন</string>
-    <string name="help_tip_motion_photo_frames_p1_s4">একটি ফরম্যাট বেছে নিয়ে নির্বাচিত ফ্রেমগুলি এক্সপোর্ট করুন</string>
-
-    <string name="help_tip_search_ignored_albums_title">উপেক্ষিত অ্যালবামে খুঁজুন</string>
-    <string name="help_tip_search_ignored_albums_subtitle">টাইমলাইনে না ফিরিয়েই লুকানো মিডিয়া খুঁজুন</string>
-    <string name="help_tip_search_ignored_albums_p1_title">নিরাপদে Smart Search বিস্তৃত করুন</string>
-    <string name="help_tip_search_ignored_albums_p1_desc">টাইমলাইন বা অ্যালবাম ট্যাবে দৃশ্যমান না করেই টাইমলাইন থেকে লুকানো অ্যালবামগুলি Smart Features ও Smart Search-এ অন্তর্ভুক্ত করুন। বিকল্পটি ডিফল্টভাবে বন্ধ থাকে, এটি পরিবর্তন করলে সম্পূর্ণ রিফ্রেশ শুরু হয় এবং লক করা অ্যালবাম সবসময় বাদ থাকে।</string>
-    <string name="help_tip_search_ignored_albums_p1_s1">সেটিংস > Smart Features খুলুন</string>
-    <string name="help_tip_search_ignored_albums_p1_s2">উপেক্ষিত অ্যালবাম অন্তর্ভুক্ত করুন বিকল্পটি টগল করুন</string>
-    <string name="help_tip_search_ignored_albums_p1_s3">Smart Features-এর সম্পূর্ণ রিফ্রেশ শেষ হতে দিন</string>
-    <string name="help_tip_search_ignored_albums_p1_s4">লক করা অ্যালবাম ব্যক্তিগত রেখেই লুকানো মিডিয়া খুঁজুন</string>
-
-    <string name="help_tip_cloud_nextcloud_login_title">Nextcloud-এ নিরাপদে সাইন ইন করুন</string>
-    <string name="help_tip_cloud_nextcloud_login_subtitle">ব্রাউজার অনুমোদন ও দুই-ধাপের প্রমাণীকরণ ব্যবহার করুন</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_title">Nextcloud Login Flow v2</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_desc">ReFra আপনার Nextcloud সার্ভারটি সিস্টেম ব্রাউজারে খোলে, যাতে সেখানে সাইন ইন করে দুই-ধাপের প্রমাণীকরণ সম্পন্ন করতে পারেন। অনুমোদনের পর Nextcloud অ্যাপ-নির্দিষ্ট একটি পাসওয়ার্ড তৈরি করে, যা ReFra আপনার ডিভাইসে এনক্রিপ্ট করা অবস্থায় সংরক্ষণ করে।</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s1">একটি Nextcloud অ্যাকাউন্ট যোগ করে সার্ভারের URL লিখুন</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s2">সিস্টেম ব্রাউজারে এগিয়ে যান</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s3">সাইন ইন করুন, দুই-ধাপের প্রমাণীকরণ সম্পন্ন করুন এবং অ্যাক্সেস অনুমোদন করুন</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s4">সংযোগ সম্পন্ন হওয়ার সময় ReFra-তে ফিরে আসুন</string>
-
-    <string name="help_tip_accessibility_remote_settings_title">স্পর্শ ছাড়াই সেটিংসে নেভিগেট করুন</string>
-    <string name="help_tip_accessibility_remote_settings_subtitle">সেটিংসের সর্বত্র কিবোর্ড, D-pad বা রিমোট ব্যবহার করুন</string>
-    <string name="help_tip_accessibility_remote_settings_p1_title">সহজে অনুমেয় ফোকাস নেভিগেশন</string>
-    <string name="help_tip_accessibility_remote_settings_p1_desc">সেটিংস তালিকা, বিস্তারিত স্ক্রিন, নির্বাচন নিয়ন্ত্রণ ও নিচের অ্যাকশনগুলি দিকনির্দেশক ফোকাস সমর্থন করে। ReFra ফোকাস করা নিয়ন্ত্রণটি স্পষ্টভাবে দেখায় এবং কোনো স্ক্রিন খুললে ব্যবহারযোগ্য আইটেমে ফোকাস রাখে।</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s1">নিয়ন্ত্রণগুলির মধ্যে যেতে তীরচিহ্ন বা D-pad বোতাম ব্যবহার করুন</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s2">কোনো নিয়ন্ত্রণ সক্রিয় করতে Enter বা মাঝের বোতাম চাপুন</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s3">বিস্তারিত স্ক্রিন ছাড়তে ফিরে যান বোতাম ব্যবহার করুন</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s4">হাইলাইট করা সেটিংস নিয়ন্ত্রণ থেকে চালিয়ে যান</string>
     <string name="help_search_hint">সহায়তা ও পরামর্শ খুঁজুন</string>
     <string name="help_search_clear">অনুসন্ধান মুছুন</string>
     <string name="help_search_no_results">\"%1$s\"-এর জন্য কোনো সহায়তা পাওয়া যায়নি</string>

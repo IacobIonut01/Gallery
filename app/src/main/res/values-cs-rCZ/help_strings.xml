@@ -1073,42 +1073,6 @@
     <string name="help_tip_video_fix_black_p1_title">Keep video visible</string>
     <string name="help_tip_video_fix_black_p1_desc">On some devices (notably Samsung) a playing video can black out when the system bars are shown or hidden, even though it keeps playing. Enable Media Viewer › Video Playback › \'Fix black video on hide\' to re-bind the player surface on every bar change. It is on by default for Samsung devices and off elsewhere — turn it off if you don\'t need it.</string>
     <!-- RELEASE NOTES: 5.0.3 -->
-
-    <string name="help_tip_motion_photo_frames_title">Extrahovat snímky z Motion Photo</string>
-    <string name="help_tip_motion_photo_frames_subtitle">Ukládejte přesné okamžiky z vloženého klipu</string>
-    <string name="help_tip_motion_photo_frames_p1_title">Vyberte a exportujte snímky</string>
-    <string name="help_tip_motion_photo_frames_p1_desc">Otevřete Motion Photo v prohlížeči a klepněte na filmový pás nebo na panelu akcí vyberte Extrahovat snímky. Přejděte na přesný okamžik, vyberte jeden či více snímků a exportujte je v upřednostňovaném formátu obrázku.</string>
-    <string name="help_tip_motion_photo_frames_p1_s1">Otevřete Motion Photo v prohlížeči</string>
-    <string name="help_tip_motion_photo_frames_p1_s2">Klepněte na filmový pás nebo vyberte Extrahovat snímky</string>
-    <string name="help_tip_motion_photo_frames_p1_s3">Procházejte klip a vyberte požadované okamžiky</string>
-    <string name="help_tip_motion_photo_frames_p1_s4">Vyberte formát a exportujte vybrané snímky</string>
-
-    <string name="help_tip_search_ignored_albums_title">Hledat v ignorovaných albech</string>
-    <string name="help_tip_search_ignored_albums_subtitle">Najděte skrytá média, aniž by se vrátila na časovou osu</string>
-    <string name="help_tip_search_ignored_albums_p1_title">Bezpečně rozšiřte Smart Search</string>
-    <string name="help_tip_search_ignored_albums_p1_desc">Zahrňte alba skrytá na časové ose do Smart Features a Smart Search, aniž by se zobrazila na časové ose nebo na kartě Alba. Tato možnost je ve výchozím nastavení vypnutá, její změna spustí úplné obnovení a uzamčená alba zůstanou vždy vyloučená.</string>
-    <string name="help_tip_search_ignored_albums_p1_s1">Otevřete Nastavení > Smart Features</string>
-    <string name="help_tip_search_ignored_albums_p1_s2">Přepněte možnost Zahrnout ignorovaná alba</string>
-    <string name="help_tip_search_ignored_albums_p1_s3">Počkejte na dokončení úplného obnovení Smart Features</string>
-    <string name="help_tip_search_ignored_albums_p1_s4">Prohledávejte skrytá média, zatímco uzamčená alba zůstanou soukromá</string>
-
-    <string name="help_tip_cloud_nextcloud_login_title">Bezpečné přihlášení k Nextcloud</string>
-    <string name="help_tip_cloud_nextcloud_login_subtitle">Použijte autorizaci v prohlížeči a dvoufázové ověření</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_title">Nextcloud Login Flow v2</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_desc">ReFra otevře váš server Nextcloud v systémovém prohlížeči, kde se můžete přihlásit a dokončit dvoufázové ověření. Po schválení vytvoří Nextcloud heslo určené pro tuto aplikaci, které ReFra zašifrovaně uloží ve vašem zařízení.</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s1">Přidejte účet Nextcloud a zadejte adresu URL jeho serveru</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s2">Pokračujte do systémového prohlížeče</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s3">Přihlaste se, dokončete dvoufázové ověření a schvalte přístup</string>
-    <string name="help_tip_cloud_nextcloud_login_p1_s4">Vraťte se do ReFra, zatímco se dokončuje připojení</string>
-
-    <string name="help_tip_accessibility_remote_settings_title">Procházejte nastavení bez dotyku</string>
-    <string name="help_tip_accessibility_remote_settings_subtitle">V celém nastavení používejte klávesnici, směrový ovladač nebo dálkový ovladač</string>
-    <string name="help_tip_accessibility_remote_settings_p1_title">Předvídatelný pohyb zaměření</string>
-    <string name="help_tip_accessibility_remote_settings_p1_desc">Seznamy nastavení, obrazovky podrobností, ovládací prvky výběru a dolní akce podporují směrové zaměření. ReFra jasně zvýrazní zaměřený ovládací prvek a po otevření obrazovky zaměří prvek, se kterým lze pracovat.</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s1">Mezi ovládacími prvky se pohybujte šipkami nebo směrovým ovladačem</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s2">Ovládací prvek aktivujte klávesou Enter nebo prostředním tlačítkem</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s3">Obrazovku podrobností opusťte tlačítkem Zpět</string>
-    <string name="help_tip_accessibility_remote_settings_p1_s4">Pokračujte od zvýrazněného ovládacího prvku nastavení</string>
     <string name="help_search_hint">Hledat v nápovědě a tipech</string>
     <string name="help_search_clear">Vymazat hledání</string>
     <string name="help_search_no_results">Pro \"%1$s\" nebyla nalezena žádná nápověda</string>
