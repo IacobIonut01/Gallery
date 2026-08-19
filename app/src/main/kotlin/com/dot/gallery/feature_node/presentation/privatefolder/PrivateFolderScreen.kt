@@ -46,6 +46,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.cellsList
@@ -124,7 +125,7 @@ fun PrivateFolderScreen(
         }
     )
 
-    OnLifecycleEvent { _, event ->
+    OnLifecycleEvent(lifecycleOwner = ProcessLifecycleOwner.get()) { _, event ->
         when (event) {
             Lifecycle.Event.ON_STOP -> {
                 authEpoch += 1

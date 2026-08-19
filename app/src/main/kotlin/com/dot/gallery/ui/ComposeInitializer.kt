@@ -1,5 +1,6 @@
 package com.dot.gallery.ui
 
+import android.annotation.SuppressLint
 import android.content.Context
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
@@ -16,6 +17,7 @@ import com.dot.gallery.core.presentation.components.AppBarContainer
 import com.dot.gallery.core.presentation.components.NavigationComp
 import com.dot.gallery.ui.theme.GalleryTheme
 
+@SuppressLint("EnsureInitializerMetadata")
 class ComposeInitializer : Initializer<Unit> {
     override fun create(context: Context) {
         ComposeView(context).setContent {

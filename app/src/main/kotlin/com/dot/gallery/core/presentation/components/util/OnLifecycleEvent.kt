@@ -9,12 +9,15 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 
 @Composable
-fun OnLifecycleEvent(onEvent: (owner: LifecycleOwner, event: Lifecycle.Event) -> Unit) {
+fun OnLifecycleEvent(
+    lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
+    onEvent: (owner: LifecycleOwner, event: Lifecycle.Event) -> Unit
+) {
     val eventHandler = rememberUpdatedState(onEvent)
-    val lifecycleOwner = rememberUpdatedState(LocalLifecycleOwner.current)
+    val currentLifecycleOwner = rememberUpdatedState(lifecycleOwner)
 
-    DisposableEffect(lifecycleOwner.value) {
-        val lifecycle = lifecycleOwner.value.lifecycle
+    DisposableEffect(currentLifecycleOwner.value) {
+        val lifecycle = currentLifecycleOwner.value.lifecycle
         val observer = LifecycleEventObserver { owner, event ->
             eventHandler.value(owner, event)
         }
