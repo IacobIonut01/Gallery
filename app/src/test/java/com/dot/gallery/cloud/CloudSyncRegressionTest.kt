@@ -7,8 +7,11 @@ package com.dot.gallery.cloud
 
 import com.dot.gallery.cloud.core.ConnectionState
 import com.dot.gallery.cloud.core.ProviderType
+import com.dot.gallery.cloud.core.auth.CloudConnectionErrorKind
+import com.dot.gallery.cloud.core.auth.CloudConnectionException
 import com.dot.gallery.cloud.data.entity.CloudServerConfigEntity
 import com.dot.gallery.cloud.data.entity.CloudUploadPrefEntity
+import com.dot.gallery.cloud.di.retryCloudAuthentication
 import com.dot.gallery.cloud.sync.CloudSyncSchedulePlan
 import com.dot.gallery.cloud.sync.cloudSyncScheduleChanged
 import com.dot.gallery.cloud.sync.cloudSyncSchedulePlan
@@ -29,6 +32,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.IOException
 
 class CloudSyncRegressionTest {
 
@@ -193,6 +197,58 @@ class CloudSyncRegressionTest {
     fun cloudIndexDoesNotStartWhileOffline() {
         assertFalse(shouldStartCloudIndex(effectiveOffline = true))
         assertTrue(shouldStartCloudIndex(effectiveOffline = false))
+    }
+
+    @Test
+    fun persistedAccountAuthenticationRetriesTransientInstallFailure() = runTest {
+        var attempts = 0
+        val retryDelays = mutableListOf<Long>()
+
+        retryCloudAuthentication(
+            delayBeforeRetry = { retryDelays += it }
+        ) {
+            attempts++
+            if (attempts < 3) throw IOException("Network is not ready")
+        }
+
+        assertEquals(3, attempts)
+        assertEquals(listOf(1_000L, 2_000L), retryDelays)
+    }
+
+    @Test
+    fun persistedAccountAuthenticationRetriesClassifiedServerFailure() = runTest {
+        var attempts = 0
+
+        retryCloudAuthentication(delayBeforeRetry = {}) {
+            attempts++
+            if (attempts == 1) {
+                throw CloudConnectionException(
+                    CloudConnectionErrorKind.SERVER,
+                    "Server is starting"
+                )
+            }
+        }
+
+        assertEquals(2, attempts)
+    }
+
+    @Test
+    fun persistedAccountAuthenticationDoesNotRetryCredentialFailure() = runTest {
+        var attempts = 0
+
+        val result = runCatching {
+            retryCloudAuthentication(delayBeforeRetry = {}) {
+                attempts++
+                throw CloudConnectionException(
+                    CloudConnectionErrorKind.AUTHENTICATION,
+                    "Invalid API key",
+                    IOException("Rejected request")
+                )
+            }
+        }
+
+        assertTrue(result.isFailure)
+        assertEquals(1, attempts)
     }
 
     @Test

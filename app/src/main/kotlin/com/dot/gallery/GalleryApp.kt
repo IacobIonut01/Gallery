@@ -254,6 +254,12 @@ class GalleryApp : Application(), SingletonSketch.Factory, Configuration.Provide
 
         // Initialize ML models (copies from assets on withML, checks presence on noML)
         // Auto-configure cloud providers asynchronously (off main thread)
+        val cloudInitialization = appScope.async {
+            runCatching { cloudProviderInitializer.initializeAsync() }
+                .onFailure { if (it is CancellationException) throw it }
+            runCatching { cloudSyncScheduler.reconcile() }
+                .onFailure { if (it is CancellationException) throw it }
+        }
         appScope.launch {
             listOf(
                 "SearchIndexerUpdater",
@@ -272,12 +278,7 @@ class GalleryApp : Application(), SingletonSketch.Factory, Configuration.Provide
                         }
                     }.onFailure { if (it is CancellationException) throw it }
                 },
-                async {
-                    runCatching { cloudProviderInitializer.initializeAsync() }
-                        .onFailure { if (it is CancellationException) throw it }
-                    runCatching { cloudSyncScheduler.reconcile() }
-                        .onFailure { if (it is CancellationException) throw it }
-                }
+                cloudInitialization
             ).awaitAll()
             if (!smartScanScheduler.resumeActiveRun()) {
                 smartScanScheduler.automaticIfNeeded(SmartScanFeature.ALL_MASK)
@@ -300,7 +301,10 @@ class GalleryApp : Application(), SingletonSketch.Factory, Configuration.Provide
         val connectivityManager = getSystemService(ConnectivityManager::class.java) ?: return
         val callback = object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
-                appScope.launch { cloudProviderInitializer.reconfigureActiveProviders() }
+                appScope.launch {
+                    cloudProviderInitializer.retryTransientAuthenticationFailures()
+                    cloudProviderInitializer.reconfigureActiveProviders()
+                }
             }
 
             override fun onLost(network: Network) {
