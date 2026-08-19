@@ -170,10 +170,12 @@ class FileUtils(var context: Context) {
          *     * move to the first row in the Cursor, get the data,
          *     * and display it.
          * */
-        val name = returnCursor!!.use {
-            it.moveToFirst()
-            it.getString(it.getColumnIndex(OpenableColumns.DISPLAY_NAME))
-        }
+        val name = returnCursor?.use { cursor ->
+            if (!cursor.moveToFirst()) return@use null
+            cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                .takeIf { it >= 0 }
+                ?.let(cursor::getString)
+        } ?: uri.lastPathSegment ?: UUID.randomUUID().toString()
         val file = File(context.cacheDir, name)
         try {
             context.contentResolver.openInputStream(uri)!!.use { inputStream ->
@@ -213,10 +215,12 @@ class FileUtils(var context: Context) {
          *     * move to the first row in the Cursor, get the data,
          *     * and display it.
          * */
-        val name = returnCursor!!.use {
-            it.moveToFirst()
-            it.getString(it.getColumnIndex(OpenableColumns.DISPLAY_NAME))
-        }
+        val name = returnCursor?.use { cursor ->
+            if (!cursor.moveToFirst()) return@use null
+            cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                .takeIf { it >= 0 }
+                ?.let(cursor::getString)
+        } ?: uri.lastPathSegment ?: UUID.randomUUID().toString()
         val output: File = if (newDirName != "") {
             val randomCollisionAvoidance = UUID.randomUUID().toString()
             val dir =

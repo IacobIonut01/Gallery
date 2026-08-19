@@ -25,6 +25,7 @@ import com.dot.gallery.feature_node.domain.model.MediaMetadataState
 import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.domain.model.Vault
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
+import com.dot.gallery.feature_node.presentation.location.MapGeoMediaSource
 import com.dot.gallery.feature_node.presentation.util.update
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -48,7 +49,8 @@ class CategoriesViewModel @Inject constructor(
     private val workManager: WorkManager,
     private val modelManager: ModelManager,
     private val smartScanScheduler: SmartScanScheduler,
-    smartScanDao: SmartScanDao
+    smartScanDao: SmartScanDao,
+    mapGeoMediaSource: MapGeoMediaSource,
 ) : ViewModel() {
 
     val modelStatus: StateFlow<ModelStatus> = modelManager.status(ModelGroup.SEARCH)
@@ -56,16 +58,19 @@ class CategoriesViewModel @Inject constructor(
     // ============ Locations ============
     
     /**
-     * Flow of all locations with their media
+     * Local EXIF and account-qualified cloud media with usable coordinates.
      */
-    val locations = distributor.locationsMediaFlow
+    val geoMedia = mapGeoMediaSource.mergedGeoMedia(distributor.geoMediaFlow)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     /**
-     * Flow of all geo-tagged media with GPS coordinates for map display
+     * Flow of named and coordinate-only locations. Entries remain actionable when reverse
+     * geocoding is incomplete, and cached cloud locations stay visible while offline.
      */
-    val geoMedia = distributor.geoMediaFlow
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val locations = mapGeoMediaSource.mergedLocations(
+        localLocations = distributor.locationsMediaFlow,
+        geoMedia = geoMedia,
+    ).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // ============ New Category System ============
     

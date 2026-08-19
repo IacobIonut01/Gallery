@@ -46,7 +46,6 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
@@ -164,11 +163,6 @@ fun CloudAddServerScreen(
         WizardStep.NETWORKING -> !state.autoUrlSwitch || state.localServerUrl.isNotBlank()
         WizardStep.SYNC -> true
         WizardStep.REVIEW -> canSave
-    }
-
-    // Fetch the provider's remote albums the first time the user reaches the sync stage.
-    LaunchedEffect(step) {
-        if (step == WizardStep.SYNC) viewModel.loadRemoteAlbums()
     }
 
     val goBack: () -> Unit = {
@@ -735,17 +729,13 @@ private fun NetworkingStep(
     )
 }
 
-/**
- * Final stage: choose which local folders to back up (upload) and which of the provider's
- * remote albums to pull down into the gallery. Both default to everything selected.
- */
+/** Final stage: choose the local folders whose media will be uploaded to this account. */
 @Composable
 private fun SyncStep(
     state: AddServerUiState,
     localAlbums: List<Album>,
     viewModel: CloudAccountsViewModel
 ) {
-    // --- Local folders to back up ---
     SyncSectionHeader(
         title = stringResource(R.string.cloud_sync_folders_title),
         subtitle = stringResource(R.string.cloud_sync_folders_desc)
@@ -766,47 +756,6 @@ private fun SyncStep(
         }
     }
 
-    Spacer(Modifier.height(8.dp))
-
-    // --- Remote albums to pull down ---
-    SyncSectionHeader(
-        title = stringResource(R.string.cloud_sync_albums_title),
-        subtitle = stringResource(R.string.cloud_sync_albums_desc)
-    )
-    when {
-        state.isLoadingRemoteAlbums ->
-            SyncLoadingRow(stringResource(R.string.cloud_sync_loading_albums))
-
-        state.remoteAlbumsError != null -> {
-            SyncEmptyHint(state.remoteAlbumsError)
-            Spacer(Modifier.height(8.dp))
-            SetupButton(
-                text = stringResource(R.string.cloud_sync_retry),
-                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                contentColor = MaterialTheme.colorScheme.onSurface,
-                applyHorizontalPadding = false,
-                applyBottomPadding = false,
-                applyInsets = false,
-                applyNavigationPadding = false,
-                onClick = { viewModel.loadRemoteAlbums(force = true) }
-            )
-        }
-
-        state.remoteAlbums.isEmpty() ->
-            SyncEmptyHint(stringResource(R.string.cloud_sync_no_remote))
-
-        else -> SelectionCard {
-            state.remoteAlbums.forEach { album ->
-                SelectableRow(
-                    icon = Icons.Outlined.PhotoLibrary,
-                    title = album.name,
-                    subtitle = stringResource(R.string.cloud_sync_item_count, album.assetCount.toLong()),
-                    checked = album.remoteId in state.selectedRemoteAlbumIds,
-                    onToggle = { viewModel.toggleRemoteAlbum(album.remoteId) }
-                )
-            }
-        }
-    }
 }
 
 @Composable
@@ -920,11 +869,6 @@ private fun ReviewStep(
             stringResource(R.string.cloud_review_folders),
             if (state.selectedLocalAlbumIds.isEmpty()) none
             else stringResource(R.string.cloud_sync_count_selected, state.selectedLocalAlbumIds.size)
-        )
-        ReviewRow(
-            stringResource(R.string.cloud_review_albums),
-            if (state.selectedRemoteAlbumIds.isEmpty()) none
-            else stringResource(R.string.cloud_sync_count_selected, state.selectedRemoteAlbumIds.size)
         )
     }
 }

@@ -5,6 +5,8 @@
 
 package com.dot.gallery.core.smart
 
+import com.dot.gallery.cloud.core.ProviderType
+import com.dot.gallery.cloud.data.entity.CloudMediaEntity
 import com.dot.gallery.cloud.data.entity.DetectedFaceEntity
 import com.dot.gallery.feature_node.data.data_source.MediaFeature
 import com.dot.gallery.feature_node.data.data_source.MediaFeatureStateEntity
@@ -32,29 +34,128 @@ class SmartScanPlanTest {
     }
 
     @Test
-    fun phasesAreAlwaysSerializedInCanonicalOrder() {
+    fun independentBranchesRunTogetherAfterSourceSync() {
         assertEquals(
             listOf(
-                SmartScanPhase.SOURCE_SYNC,
-                SmartScanPhase.METADATA,
-                SmartScanPhase.SEARCH_INDEX,
-                SmartScanPhase.CATEGORY_CLASSIFICATION,
-                SmartScanPhase.FACE_INDEX
+                listOf(SmartScanPhase.METADATA),
+                listOf(SmartScanPhase.SEARCH_INDEX, SmartScanPhase.CATEGORY_CLASSIFICATION),
+                listOf(SmartScanPhase.FACE_INDEX)
             ),
-            SmartScanPlan.phasesFor(SmartScanFeature.ALL_MASK)
+            SmartScanPlan.executionBranches(SmartScanFeature.ALL_MASK)
         )
         assertEquals(
-            listOf(SmartScanPhase.SOURCE_SYNC, SmartScanPhase.FACE_INDEX),
-            SmartScanPlan.phasesFor(SmartScanFeature.PERSONS.bit)
+            listOf(listOf(SmartScanPhase.FACE_INDEX)),
+            SmartScanPlan.executionBranches(SmartScanFeature.PERSONS.bit)
         )
     }
 
     @Test
-    fun automaticHeavyStagesRequireChargingButManualStagesDoNot() {
-        assertEquals(false, smartScanConstraintsFor(SmartScanPhase.SOURCE_SYNC, userVisible = false).requiresCharging())
-        assertEquals(true, smartScanConstraintsFor(SmartScanPhase.SEARCH_INDEX, userVisible = false).requiresCharging())
-        assertEquals(true, smartScanConstraintsFor(SmartScanPhase.FACE_INDEX, userVisible = false).requiresBatteryNotLow())
-        assertEquals(false, smartScanConstraintsFor(SmartScanPhase.FACE_INDEX, userVisible = true).requiresCharging())
+    fun categoryClassificationSharesOnlyTheSearchDependencyBranch() {
+        assertEquals(
+            listOf(listOf(SmartScanPhase.SEARCH_INDEX, SmartScanPhase.CATEGORY_CLASSIFICATION)),
+            SmartScanPlan.executionBranches(SmartScanFeature.CATEGORIES.bit)
+        )
+    }
+
+    @Test
+    fun automaticHeavyRunsRequireChargingButManualRunsDoNot() {
+        assertEquals(
+            false,
+            smartScanConstraintsFor(listOf(SmartScanPhase.SOURCE_SYNC, SmartScanPhase.METADATA), userVisible = false)
+                .requiresCharging()
+        )
+        assertEquals(
+            true,
+            smartScanConstraintsFor(SmartScanPlan.phasesFor(SmartScanFeature.ALL_MASK), userVisible = false)
+                .requiresCharging()
+        )
+        assertEquals(
+            true,
+            smartScanConstraintsFor(SmartScanPlan.phasesFor(SmartScanFeature.PERSONS.bit), userVisible = false)
+                .requiresBatteryNotLow()
+        )
+        assertEquals(
+            false,
+            smartScanConstraintsFor(SmartScanPlan.phasesFor(SmartScanFeature.ALL_MASK), userVisible = true)
+                .requiresCharging()
+        )
+    }
+
+    @Test
+    fun automaticPreparationStaysHiddenUntilActualWorkIsFound() {
+        assertEquals(false, SmartScanPlan.shouldShowRun(userVisible = false, totalMedia = 0))
+        assertEquals(true, SmartScanPlan.shouldShowRun(userVisible = false, totalMedia = 1))
+        assertEquals(true, SmartScanPlan.shouldShowRun(userVisible = true, totalMedia = 0))
+    }
+
+    @Test
+    fun currentMediaVersionReusesCachedSourceUnlessFullRefreshWasRequested() {
+        assertEquals(false, shouldRefreshSmartLocalSource(fullRefresh = false, mediaVersionCurrent = true))
+        assertEquals(true, shouldRefreshSmartLocalSource(fullRefresh = false, mediaVersionCurrent = false))
+        assertEquals(true, shouldRefreshSmartLocalSource(fullRefresh = true, mediaVersionCurrent = true))
+    }
+
+    @Test
+    fun terminalSourceFromAnOlderProcessorRevisionIsRequeued() {
+        assertEquals(
+            true,
+            SmartScanPlan.shouldRequeueForRevision(SmartScanStatus.SUCCEEDED, "source-v1", "source-v2")
+        )
+        assertEquals(
+            false,
+            SmartScanPlan.shouldRequeueForRevision(SmartScanStatus.SUCCEEDED, "source-v2", "source-v2")
+        )
+        assertEquals(
+            false,
+            SmartScanPlan.shouldRequeueForRevision(SmartScanStatus.RUNNING, "source-v1", "source-v2")
+        )
+    }
+
+    @Test
+    fun automaticScanIsSkippedOnlyWhenMediaAndProcessorRevisionsAreCurrent() {
+        val expected = mapOf(
+            SmartScanPhase.METADATA to "metadata-v1",
+            SmartScanPhase.SEARCH_INDEX to "clip-v2"
+        )
+
+        assertEquals(true, SmartScanPlan.isAutomaticScanCurrent(true, expected, expected))
+        assertEquals(false, SmartScanPlan.isAutomaticScanCurrent(false, expected, expected))
+        assertEquals(
+            false,
+            SmartScanPlan.isAutomaticScanCurrent(
+                true,
+                expected,
+                expected + (SmartScanPhase.SEARCH_INDEX to "clip-v1")
+            )
+        )
+        assertEquals(
+            false,
+            SmartScanPlan.isAutomaticScanCurrent(
+                true,
+                expected,
+                mapOf(SmartScanPhase.METADATA to "metadata-v1")
+            )
+        )
+    }
+
+    @Test
+    fun phaseCheckpointMustBelongToTheCurrentSourceSnapshot() {
+        assertEquals(
+            true,
+            SmartScanPlan.isPhaseCheckpointCurrent("v2", "v2", "source-2", "source-2")
+        )
+        assertEquals(
+            false,
+            SmartScanPlan.isPhaseCheckpointCurrent("v2", "v2", "source-2", "source-1")
+        )
+        assertEquals(
+            false,
+            SmartScanPlan.isPhaseCheckpointCurrent("v2", "v1", "source-2", "source-2")
+        )
+        assertEquals(
+            false,
+            SmartScanPlan.isPhaseCheckpointCurrent("v2", "v2", null, "source-2")
+        )
     }
 
     @Test
@@ -268,6 +369,42 @@ class SmartScanPlanTest {
     fun largeLibrariesRequireForegroundProcessing() {
         assertEquals(false, SmartScanPlan.requiresForeground(1_000))
         assertEquals(true, SmartScanPlan.requiresForeground(1_001))
+    }
+
+    @Test
+    fun sourceFingerprintIsStableAndDetectsAnyCloudRevisionChange() {
+        val revisions = listOf("id-1:100:image/jpeg:path-a", "id-2:200:image/png:path-b")
+
+        assertEquals(smartSourceFingerprint(revisions), smartSourceFingerprint(revisions.reversed()))
+        assertEquals(
+            false,
+            smartSourceFingerprint(revisions) == smartSourceFingerprint(revisions.dropLast(1) + "id-2:201:image/png:path-b")
+        )
+    }
+
+    @Test
+    fun sourceSnapshotIncludesCloudIdentity() {
+        val first = CloudMediaEntity(
+            remoteId = "asset-a",
+            providerType = ProviderType.IMMICH,
+            serverConfigId = 1L,
+            path = "same.jpg",
+            mimeType = "image/jpeg",
+            timestamp = 1_000L,
+            size = 100L
+        )
+        val second = CloudMediaEntity(
+            remoteId = "asset-b",
+            providerType = ProviderType.IMMICH,
+            serverConfigId = 1L,
+            path = "same.jpg",
+            mimeType = "image/jpeg",
+            timestamp = 1_000L,
+            size = 100L
+        )
+
+        assertEquals(false, smartSourceSnapshot("1/v", emptyList(), listOf(first)) ==
+            smartSourceSnapshot("1/v", emptyList(), listOf(second)))
     }
 
     @Test

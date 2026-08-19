@@ -125,6 +125,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.ScreenRotationAlt
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -267,6 +268,7 @@ fun <T : Media> ZoomablePagerImage(
     onItemClick: () -> Unit,
     onSwipeDown: () -> Unit,
     onSubsamplingLoadingChange: (Boolean) -> Unit = {},
+    onLoadFailed: () -> Unit = {},
     onCutoutStateChanged: (Boolean) -> Unit = {},
     onCutoutController: (CutoutController?) -> Unit = {},
     isSelected: Boolean = true,
@@ -294,6 +296,8 @@ fun <T : Media> ZoomablePagerImage(
     val scope = rememberCoroutineScope()
 
     val context = LocalContext.current
+    val cutoutNoObjectText = stringResource(R.string.cutout_no_object)
+    val cutoutInitFailedText = stringResource(R.string.cutout_init_failed)
     val mediaUri = remember(media) {
         media.getUri().toString()
     }
@@ -396,7 +400,10 @@ fun <T : Media> ZoomablePagerImage(
         }
     }
 
+    var imageRequestAttempt by rememberSaveable(media.id) { mutableIntStateOf(0) }
+
     // Fast low-res preview painter, shown until full image loads
+    val previewImageState = rememberAsyncImageState()
     val previewPainter = rememberAsyncImagePainter(
         request = ComposableImageRequest(mediaUri) {
             resize(width = 600, height = 600, precision = Precision.LESS_PIXELS)
@@ -405,10 +412,12 @@ fun <T : Media> ZoomablePagerImage(
                 setExtra("realMimeType", media.mimeType)
             }
             setExtra(key = "mediaVersion", value = mediaVersion)
+            setExtra(key = "viewerLoadAttempt", value = imageRequestAttempt)
             if (isEncrypted) {
                 setExtra(key = "mediaKeyPreviewEnc", value = media.idLessKey)
             }
         },
+        state = previewImageState,
         contentScale = ContentScale.Fit,
         filterQuality = filterQuality
     )
@@ -431,6 +440,7 @@ fun <T : Media> ZoomablePagerImage(
                 setExtra("realMimeType", media.mimeType)
             }
             setExtra(key = "mediaVersion", value = mediaVersion)
+            setExtra(key = "viewerLoadAttempt", value = imageRequestAttempt)
             if (isEncrypted) {
                 setExtra(key = "mediaKeyPreviewEnc", value = media.idLessKey)
             }
@@ -442,6 +452,16 @@ fun <T : Media> ZoomablePagerImage(
 
     val isFullImageLoaded by rememberedDerivedState(media) {
         fullImageState.painterState is PainterState.Success
+    }
+    val imageLoadFailed by rememberedDerivedState(
+        previewImageState.painterState,
+        fullImageState.painterState,
+    ) {
+        previewImageState.painterState is PainterState.Error &&
+            fullImageState.painterState is PainterState.Error
+    }
+    LaunchedEffect(imageLoadFailed, imageRequestAttempt) {
+        if (imageLoadFailed) onLoadFailed()
     }
 
     // ── Seamless swap after an in-place rotation overwrite ──
@@ -705,11 +725,11 @@ fun <T : Media> ZoomablePagerImage(
                         } else {
                             // No mask found — clean up without touching cutoutState
                             session.close()
-                            Toast.makeText(context, context.getString(R.string.cutout_no_object), Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, cutoutNoObjectText, Toast.LENGTH_SHORT).show()
                         }
                     } else {
                         session.close()
-                        Toast.makeText(context, context.getString(R.string.cutout_init_failed), Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, cutoutInitFailedText, Toast.LENGTH_SHORT).show()
                     }
                 } finally {
                     // Always reset — even on OOM, ONNX crash, or coroutine cancellation
@@ -852,6 +872,21 @@ fun <T : Media> ZoomablePagerImage(
             )
         }
 
+        if (imageLoadFailed) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.92f)),
+                contentAlignment = Alignment.Center,
+            ) {
+                MediaViewActionPill(
+                    icon = Icons.Outlined.Refresh,
+                    label = stringResource(R.string.media_load_failed_tap_to_retry),
+                    onClick = { imageRequestAttempt++ },
+                )
+            }
+        }
+
         // Cutout mask + animated contour + prompt markers (controls live in the screen bottom bar).
         CutoutOverlay(
             state = cutoutState,
@@ -902,6 +937,27 @@ fun <T : Media> ZoomablePagerImage(
                     icon = Icons.Outlined.ScreenRotationAlt,
                     label = stringResource(R.string.rotate),
                     onClick = rotateImage
+                )
+            }
+        } else {
+            // Rotate is the default long-press action, so keep Cutout discoverable without requiring
+            // users to find and change the gesture preference first.
+            AnimatedVisibility(
+                visible = chromeVisible && cutoutEnabled && cutoutSupported,
+                enter = fadeIn(),
+                exit = fadeOut(),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
+                    .padding(bottom = 96.dp)
+            ) {
+                MediaViewActionPill(
+                    icon = Icons.Outlined.AutoAwesome,
+                    label = stringResource(R.string.cutout_action),
+                    onClick = {
+                        val center = zoomState.zoomable.contentDisplayRect.center
+                        startCutoutAt(Offset(center.x.toFloat(), center.y.toFloat()))
+                    }
                 )
             }
         }

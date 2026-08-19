@@ -77,7 +77,6 @@ import com.dot.gallery.feature_node.domain.model.MediaMetadataState
 import com.dot.gallery.feature_node.domain.util.getUri
 import com.dot.gallery.feature_node.presentation.util.GlideInvalidation
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
-import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.feature_node.presentation.util.getDate
 import com.dot.gallery.feature_node.presentation.util.rememberSurfaceCapture
 import com.dot.gallery.feature_node.presentation.util.rememberWindowInsetsController
@@ -136,17 +135,18 @@ internal fun MapLocationsContent(
         windowInsetsController.isAppearanceLightStatusBars = !effectiveMapIsDark
     }
 
-    // Sort + build grid items off the main thread
+    // Sort + build grid items off the main thread. Named entries that lack a complete coordinate
+    // pair remain in the panel and can still open their media directly.
+    val locationsTitle = stringResource(R.string.locations)
     var sortedGeoMedia by remember { mutableStateOf(emptyList<GeoMedia>()) }
     var gridItems by remember { mutableStateOf(emptyList<MapGridItem>()) }
-    LaunchedEffect(geoMedia) {
-        if (geoMedia.isEmpty()) {
-            sortedGeoMedia = emptyList()
-            gridItems = emptyList()
-            return@LaunchedEffect
-        }
+    LaunchedEffect(geoMedia, locations, locationsTitle) {
         withContext(Dispatchers.Default) {
             val sorted = geoMedia.sortedByDescending { it.media.definedTimestamp }
+            val geoIds = sorted.mapTo(HashSet()) { it.mediaId }
+            val locationsWithoutCoordinates = locations
+                .filterNot { it.media.id in geoIds }
+                .sortedByDescending { it.media.definedTimestamp }
             val items = buildList {
                 var lastDateGroup = ""
                 for (item in sorted) {
@@ -162,6 +162,10 @@ internal fun MapLocationsContent(
                         lastDateGroup = dateGroup
                     }
                     add(MapGridItem.MediaCell(item))
+                }
+                if (locationsWithoutCoordinates.isNotEmpty()) {
+                    add(MapGridItem.Header(locationsTitle))
+                    locationsWithoutCoordinates.forEach { add(MapGridItem.LocationCell(it)) }
                 }
             }
             sortedGeoMedia = sorted
@@ -453,24 +457,10 @@ internal fun MapLocationsContent(
         }.toString()
     }
 
-    // Helper: navigate to media viewer for a given media
+    // Keep the map as the viewer's direct back-stack parent. Location routes need a matching
+    // city-timeline parent ViewModel and must not be silently inserted for a map tap.
     fun openMediaViewer(geoMedia: GeoMedia) {
-        val city = geoMedia.locationCity
-        val country = geoMedia.locationCountry
-        if (!city.isNullOrEmpty() && !country.isNullOrEmpty()) {
-            eventHandler.navigate(
-                Screen.LocationTimelineScreen.location(city, country)
-            )
-            eventHandler.navigate(
-                Screen.MediaViewScreen.idAndLocation(
-                    geoMedia.mediaId,
-                    city,
-                    country
-                )
-            )
-        } else {
-            eventHandler.navigate(Screen.MediaViewScreen.idAndAlbum(geoMedia.mediaId, -1L))
-        }
+        eventHandler.navigate(mapMediaViewerRoute(geoMedia.mediaId))
     }
 
     // ── Imperative layer/source management ──
@@ -665,7 +655,10 @@ internal fun MapLocationsContent(
             stringToday = stringToday,
             stringYesterday = stringYesterday,
             selectedMediaId = selectedMediaId,
-            onMediaClick = { geoMedia -> openMediaViewer(geoMedia) }
+            onMediaClick = { geoMedia -> openMediaViewer(geoMedia) },
+            onLocationClick = { locationMedia ->
+                eventHandler.navigate(mapMediaViewerRoute(locationMedia.media.id))
+            },
         )
     }
 
@@ -771,11 +764,7 @@ internal fun MapLocationsContent(
             onDismiss = { clusterSheet = null },
             onMediaClick = { item ->
                 clusterSheet = null
-                selectedMediaId = item.mediaId
-                val index = gridItems.indexOfFirst {
-                    it is MapGridItem.MediaCell && it.geoMedia.mediaId == item.mediaId
-                }
-                if (index >= 0) scope.launch { gridState.animateScrollToItem(index) }
+                openMediaViewer(item)
             },
         )
     }

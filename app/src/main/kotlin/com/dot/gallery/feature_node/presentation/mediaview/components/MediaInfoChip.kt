@@ -4,7 +4,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.isSystemInDarkTheme
+import com.dot.gallery.ui.theme.isDarkTheme
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -32,7 +32,7 @@ fun MediaInfoChip(
                 shape = Shapes.extraLarge
             )
             .then(
-                if (!isSystemInDarkTheme() && outlineInLightTheme) Modifier.border(
+                if (!isDarkTheme() && outlineInLightTheme) Modifier.border(
                     width = 0.5.dp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
                     shape = Shapes.extraLarge

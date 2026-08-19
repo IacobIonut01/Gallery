@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.res.stringResource
 import com.dot.gallery.R
+import com.dot.gallery.cloud.core.ProviderCapability
 import com.dot.gallery.core.Settings
 import com.dot.gallery.core.util.SdkCompat
 import com.dot.gallery.feature_node.domain.model.LibraryIndicatorState
@@ -41,6 +42,16 @@ fun rememberLibraryRuntimeShortcuts(
 ): Map<LibraryShortcut, RuntimeShortcut> {
     val privateFolderUri by Settings.Security.rememberPrivateFolderUri()
     val colorScheme = MaterialTheme.colorScheme
+    val offlineText = stringResource(
+        if (cloudState.hasCachedMedia) R.string.cloud_offline else R.string.cloud_disconnected
+    )
+    val cloudOfflineSubtitle = offlineText.takeIf { cloudState.hasCloud && !cloudState.isConnected }
+    val archiveOfflineSubtitle = offlineText.takeIf {
+        cloudState.hasArchive && ProviderCapability.ARCHIVE !in cloudState.connectedCapabilities
+    }
+    val sharedLinksOfflineSubtitle = offlineText.takeIf {
+        cloudState.hasShareLink && ProviderCapability.SHARE_MANAGE !in cloudState.connectedCapabilities
+    }
 
     val map = LinkedHashMap<LibraryShortcut, RuntimeShortcut>()
 
@@ -105,6 +116,7 @@ fun rememberLibraryRuntimeShortcuts(
             map[LibraryShortcut.CLOUD_ARCHIVE] = RuntimeShortcut(
                 shortcut = LibraryShortcut.CLOUD_ARCHIVE,
                 title = stringResource(R.string.cloud_archive),
+                subtitle = archiveOfflineSubtitle,
                 icon = Icons.Outlined.Archive,
                 contentColor = colorScheme.secondary,
                 useIndicator = true,
@@ -117,6 +129,7 @@ fun rememberLibraryRuntimeShortcuts(
             map[LibraryShortcut.CLOUD_SHARED_LINKS] = RuntimeShortcut(
                 shortcut = LibraryShortcut.CLOUD_SHARED_LINKS,
                 title = stringResource(R.string.cloud_shared_links),
+                subtitle = sharedLinksOfflineSubtitle,
                 icon = Icons.Outlined.Link,
                 contentColor = colorScheme.tertiary,
                 useIndicator = true,
@@ -128,6 +141,7 @@ fun rememberLibraryRuntimeShortcuts(
         map[LibraryShortcut.CLOUD_BACKUP] = RuntimeShortcut(
             shortcut = LibraryShortcut.CLOUD_BACKUP,
             title = stringResource(R.string.cloud_backup_and_sync),
+            subtitle = cloudOfflineSubtitle,
             icon = Icons.Outlined.Backup,
             contentColor = colorScheme.primary,
             useIndicator = false,
@@ -138,6 +152,7 @@ fun rememberLibraryRuntimeShortcuts(
         map[LibraryShortcut.CLOUD_ACCOUNTS] = RuntimeShortcut(
             shortcut = LibraryShortcut.CLOUD_ACCOUNTS,
             title = stringResource(R.string.cloud_accounts),
+            subtitle = cloudOfflineSubtitle,
             icon = Icons.Outlined.Cloud,
             contentColor = colorScheme.onSurface,
             useIndicator = false,

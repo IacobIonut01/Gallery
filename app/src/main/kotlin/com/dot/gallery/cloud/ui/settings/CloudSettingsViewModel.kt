@@ -15,6 +15,8 @@ import com.dot.gallery.cloud.data.entity.CloudServerConfigEntity
 import com.dot.gallery.cloud.di.CloudProviderInitializer
 import com.dot.gallery.cloud.network.ServerUrlResolver
 import com.dot.gallery.cloud.offline.CloudMediaCache
+import com.dot.gallery.cloud.sync.CloudSyncScheduler
+import com.dot.gallery.cloud.sync.cloudSyncScheduleChanged
 import com.github.panpf.sketch.sketch
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -34,7 +36,8 @@ class CloudSettingsViewModel @Inject constructor(
     private val configDao: CloudServerConfigDao,
     private val urlResolver: ServerUrlResolver,
     private val providerInitializer: CloudProviderInitializer,
-    private val cloudMediaCache: CloudMediaCache
+    private val cloudMediaCache: CloudMediaCache,
+    private val syncScheduler: CloudSyncScheduler
 ) : ViewModel() {
 
     private val _cacheClearing = MutableStateFlow(false)
@@ -43,24 +46,49 @@ class CloudSettingsViewModel @Inject constructor(
     private val _config = MutableStateFlow<CloudServerConfigEntity?>(null)
     val config: StateFlow<CloudServerConfigEntity?> = _config.asStateFlow()
 
-    init {
-        loadActiveConfig()
-    }
+    private val _loadState = MutableStateFlow(AccountSettingsLoadState.LOADING)
+    val loadState: StateFlow<AccountSettingsLoadState> = _loadState.asStateFlow()
 
-    private fun loadActiveConfig() {
+    private var globalConfigs: List<CloudServerConfigEntity> = emptyList()
+
+    fun loadConfig(configId: Long, allowGlobal: Boolean = false) {
+        _loadState.value = AccountSettingsLoadState.LOADING
+        _config.value = null
+        globalConfigs = emptyList()
         viewModelScope.launch {
-            val configs = configDao.getAll().first()
-            val active = configs.firstOrNull { it.isActive }
-            _config.value = active
-            CloudRuntimeSettings.apply(active?.toCloudServerConfig())
+            if (configId > 0L) {
+                val selected = configDao.getById(configId)
+                if (selected == null) {
+                    _loadState.value = AccountSettingsLoadState.ERROR
+                } else {
+                    _config.value = selected
+                    CloudRuntimeSettings.apply(selected.toCloudServerConfig())
+                    _loadState.value = AccountSettingsLoadState.READY
+                }
+                return@launch
+            }
+
+            if (!allowGlobal) {
+                _loadState.value = AccountSettingsLoadState.ERROR
+                return@launch
+            }
+            val active = configDao.getAll().first().filter { it.isActive }
+            if (active.isEmpty()) {
+                _loadState.value = AccountSettingsLoadState.ERROR
+            } else {
+                globalConfigs = active
+                CloudRuntimeSettings.applyAll(active.map { it.toCloudServerConfig() })
+                _config.value = active.first()
+                _loadState.value = AccountSettingsLoadState.READY
+            }
         }
     }
 
-    /** The server URL currently in effect for the active config given the current network. */
+    /** The server URL currently in effect for the selected account on the current network. */
     fun effectiveUrl(): String? =
         _config.value?.toCloudServerConfig()?.let { urlResolver.effectiveUrl(it) }
 
-    /** Whether the active config's local URL is currently active (on the configured local network). */
+    /** Whether the selected account's local URL is active on the configured local network. */
     fun isLocalActive(): Boolean {
         val cfg = _config.value?.toCloudServerConfig() ?: return false
         return cfg.autoUrlSwitch && cfg.localServerUrl.isNotBlank() &&
@@ -69,17 +97,24 @@ class CloudSettingsViewModel @Inject constructor(
 
     fun updateConfig(transform: CloudServerConfigEntity.() -> CloudServerConfigEntity) {
         val current = _config.value ?: return
-        val updated = current.transform()
+        val targets = globalConfigs.ifEmpty { listOf(current) }
+        val updates = targets.map { it to it.transform() }
+        val updated = updates.first().second
         _config.value = updated
-        CloudRuntimeSettings.apply(updated.toCloudServerConfig())
+        if (globalConfigs.isNotEmpty()) globalConfigs = updates.map { it.second }
+        updates.forEach { (_, after) ->
+            CloudRuntimeSettings.apply(after.toCloudServerConfig())
+        }
         viewModelScope.launch {
-            configDao.update(updated)
-            // Re-apply the effective URL to the live provider so toggling automatic URL
-            // switching (or editing the local URL/SSID) updates the connection immediately.
-            // Fire-and-forget on the initializer's app-lifetime scope: the re-authentication
-            // must NOT be cancelled if the user leaves this screen (which clears viewModelScope),
-            // otherwise the provider is left half-switched. No-op when the URL is unchanged.
-            providerInitializer.reconfigureAccountAsync(updated.id)
+            updates.forEach { (_, after) ->
+                configDao.update(after)
+                // Re-apply the effective URL to each live provider so networking changes take
+                // effect immediately. This is a no-op for unrelated settings.
+                providerInitializer.reconfigureAccountAsync(after.id)
+            }
+            if (updates.any { (before, after) -> cloudSyncScheduleChanged(before, after) }) {
+                syncScheduler.reconcile()
+            }
         }
     }
 
@@ -105,4 +140,10 @@ class CloudSettingsViewModel @Inject constructor(
             _cacheClearing.value = false
         }
     }
+}
+
+enum class AccountSettingsLoadState {
+    LOADING,
+    READY,
+    ERROR
 }

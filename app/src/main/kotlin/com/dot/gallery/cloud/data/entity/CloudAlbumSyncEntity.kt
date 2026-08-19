@@ -10,7 +10,7 @@ import com.dot.gallery.cloud.core.ProviderType
 
 @Entity(
     tableName = "cloud_album_sync",
-    primaryKeys = ["albumRemoteId", "providerType"]
+    primaryKeys = ["albumRemoteId", "providerType", "serverConfigId"]
 )
 data class CloudAlbumSyncEntity(
     val albumRemoteId: String,

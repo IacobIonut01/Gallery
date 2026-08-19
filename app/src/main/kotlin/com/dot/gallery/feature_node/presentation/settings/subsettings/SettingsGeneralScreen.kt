@@ -108,7 +108,12 @@ fun SettingsGeneralScreen() {
                 title = stringResource(R.string.settings_trash_confirmation_title),
                 isChecked = trashConfirmationEnabled,
                 onCheckedChange = { trashConfirmationEnabled = it },
-                description = stringResource(R.string.trash_confirmation_description),
+                description = if (trashCanEnabled) {
+                    stringResource(R.string.trash_confirmation_description)
+                } else {
+                    stringResource(R.string.trash_confirmation_requires_trash_description)
+                },
+                enabled = trashCanEnabled,
             )
         }
         DETAIL_SECURE -> {
@@ -247,8 +252,16 @@ private fun GeneralListScreen(
 
         val trashConfirmationEnabledPref = rememberSwitchPreference(
             trashConfirmationEnabled,
+            trashCanEnabled,
             title = stringResource(R.string.settings_trash_confirmation_title),
-            summary = stringResource(R.string.settings_trash_confirmation_summary),
+            summary = stringResource(
+                if (trashCanEnabled) {
+                    R.string.settings_trash_confirmation_summary
+                } else {
+                    R.string.settings_trash_confirmation_requires_trash
+                }
+            ),
+            enabled = trashCanEnabled,
             isChecked = trashConfirmationEnabled,
             onCheck = onTrashConfirmChange,
             onClick = { onDetailClick(DETAIL_TRASH_CONFIRM) },

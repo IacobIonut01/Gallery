@@ -36,7 +36,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -156,31 +155,12 @@ suspend fun ContentResolver.overrideImage(
     uri: Uri,
     bitmap: Bitmap,
     format: Bitmap.CompressFormat = Bitmap.CompressFormat.PNG
-): Boolean = withContext(Dispatchers.IO) {
-    runCatching {
-        // Preserve original date metadata so the photo keeps its position in the gallery
-        val originalDates = queryDateColumns(uri)
-
-        update(uri, ContentValues(), null, null)
-        openOutputStream(uri)?.use { out ->
-            if (!bitmap.compress(format, 100, out)) throw IOException("Compression failed")
-        } ?: throw IOException("Stream open failed")
-        update(
-            uri,
-            ContentValues().apply {
-                put(MediaStore.MediaColumns.IS_PENDING, 0)
-                originalDates?.let { (dateTaken, dateAdded) ->
-                    dateTaken?.let { put(MediaStore.Images.Media.DATE_TAKEN, it) }
-                    dateAdded?.let { put(MediaStore.MediaColumns.DATE_ADDED, it) }
-                }
-            },
-            null,
-            null
-        ) > 0
-    }.getOrElse {
-        throw it
-    }
-}
+): Boolean = overrideImage(
+    uri = uri,
+    bitmap = bitmap,
+    format = format,
+    quality = 100,
+)
 
 /**
  * Format-aware save of an edited/rotated [bitmap] as a NEW file, re-encoded in [writeFormat] so the
@@ -249,8 +229,9 @@ suspend fun ContentResolver.saveImageStreaming(
 
 /**
  * In-place overwrite of an existing image [uri] where [write] streams the encoded bytes into its
- * file descriptor. Preserves the original date columns. Returns true on success. The caller is
- * expected to have backed up the original first (this truncates via "rwt").
+ * file descriptor. Preserves the original date columns. Returns true on success. Encoding always
+ * finishes in [stagingFile] before the source is touched. Immediately before replacement, the
+ * original bytes are copied to a rollback file and restored if the replacement write fails.
  */
 suspend fun ContentResolver.overrideImageStreaming(
     uri: Uri,
@@ -269,31 +250,7 @@ suspend fun ContentResolver.overrideImageStreaming(
         }.getOrDefault(false)
         if (!encoded || stagingFile.length() == 0L) return@withContext false
 
-        runCatching {
-            update(uri, ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 1) }, null, null)
-        }
-        val replaced = runCatching {
-            FileInputStream(stagingFile).use { input ->
-                openOutputStream(uri, "rwt")?.use { output ->
-                    input.copyTo(output)
-                    output.flush()
-                } ?: error("Failed to open overwrite stream")
-            }
-        }.isSuccess
-        if (!replaced) {
-            clearPendingQuiet(uri)
-            return@withContext false
-        }
-        runCatching {
-            update(uri, ContentValues().apply {
-                put(MediaStore.MediaColumns.IS_PENDING, 0)
-                originalDates?.let { (dateTaken, dateAdded) ->
-                    dateTaken?.let { put(MediaStore.Images.Media.DATE_TAKEN, it) }
-                    dateAdded?.let { put(MediaStore.MediaColumns.DATE_ADDED, it) }
-                }
-            }, null, null)
-        }
-        true
+        replaceImageFromStaging(uri, stagingFile, originalDates)
     } finally {
         stagingFile.delete()
     }
@@ -311,77 +268,29 @@ suspend fun ContentResolver.overrideImageEncoded(
     config: ImageReencoder.ReencodeConfig,
     keepExif: Boolean = true
 ): Boolean = withContext(Dispatchers.IO) {
-    runCatching {
+    val stagingFile = File.createTempFile("encoded-override-", ".${writeFormat.fileExtension}")
+    try {
         val originalDates = queryDateColumns(uri)
+        val exifData = if (keepExif && writeFormat == ImageReencoder.ImageWriteFormat.JPEG) {
+            runCatching {
+                openInputStream(uri)?.use { input -> copyExifTags(ExifInterface(input)) }
+            }.getOrNull()
+        } else null
 
-        // Capture EXIF only for JPEG (the only format ExifInterface can rewrite here).
-        val exifData: MutableMap<String, String>? =
-            if (keepExif && writeFormat == ImageReencoder.ImageWriteFormat.JPEG) {
-                try {
-                    openInputStream(uri)?.use { input -> copyExifTags(ExifInterface(input)) }
-                } catch (_: Exception) {
-                    null
-                }
-            } else null
-
-        runCatching {
-            update(uri, ContentValues().apply {
-                put(MediaStore.MediaColumns.IS_PENDING, 1)
-            }, null, null)
-        }
-
-        // Encode fully into memory first so we fail before truncating the original file.
-        val encoded = ImageReencoder.encodeToBytes(bitmap, writeFormat, config)
-
-        (openOutputStream(uri, "rwt") ?: openOutputStream(uri)
-            ?: error("Failed to open output stream"))
-            .use { out ->
-                out.write(encoded)
-                out.flush()
-                if (out is FileOutputStream) {
-                    try {
-                        out.fd.sync()
-                    } catch (_: Exception) {
-                    }
-                }
+        val encoded = runCatching {
+            FileOutputStream(stagingFile).use { output ->
+                ImageReencoder.writeToStream(bitmap, writeFormat, config, output)
+                output.flush()
+                output.fd.sync()
             }
+            if (exifData != null) runCatching { applyExifToStaging(stagingFile, exifData) }
+            stagingFile.length() > 0L
+        }.getOrDefault(false)
+        if (!encoded) return@withContext false
 
-        if (exifData != null) {
-            try {
-                val tmp = File.createTempFile("exif_tmp", ".jpg")
-                tmp.outputStream().use { it.write(encoded) }
-                val exif = ExifInterface(tmp.absolutePath)
-                exifData.forEach { (k, v) -> exif.setAttribute(k, v) }
-                exif.setAttribute(
-                    ExifInterface.TAG_ORIENTATION,
-                    ExifInterface.ORIENTATION_NORMAL.toString()
-                )
-                exif.saveAttributes()
-                FileInputStream(tmp).use { updated ->
-                    openOutputStream(uri, "rwt")?.use { finalOut ->
-                        updated.copyTo(finalOut)
-                        finalOut.flush()
-                    }
-                }
-                tmp.delete()
-            } catch (_: Exception) {
-                // Keep the pixels even if EXIF rewrite fails.
-            }
-        }
-
-        runCatching {
-            update(uri, ContentValues().apply {
-                put(MediaStore.MediaColumns.IS_PENDING, 0)
-                originalDates?.let { (dateTaken, dateAdded) ->
-                    dateTaken?.let { put(MediaStore.Images.Media.DATE_TAKEN, it) }
-                    dateAdded?.let { put(MediaStore.MediaColumns.DATE_ADDED, it) }
-                }
-            }, null, null)
-        }
-        true
-    }.getOrElse {
-        clearPendingQuiet(uri)
-        false
+        replaceImageFromStaging(uri, stagingFile, originalDates)
+    } finally {
+        stagingFile.delete()
     }
 }
 
@@ -632,103 +541,79 @@ suspend fun ContentResolver.overrideImage(
     sizeLimitBytes: Long? = null,
     onSizeLimitExceeded: ((Long) -> Unit)? = null
 ): Boolean = withContext(Dispatchers.IO) {
-    runCatching {
-        // 0. Preserve original date metadata so the photo keeps its position in the gallery
+    val stagingFile = File.createTempFile("bitmap-override-", ".tmp")
+    try {
         val originalDates = queryDateColumns(uri)
-
-        // 1. Resolve mime + format
-        val resolvedMime = mimeType
-            ?: getType(uri)
-            ?: "image/jpeg"
-
+        val resolvedMime = mimeType ?: getType(uri) ?: "image/jpeg"
         val compressFormat = format ?: inferCompressFormat(resolvedMime)
+        val exifData = if (keepExif && resolvedMime.contains("jpeg", true)) {
+            runCatching {
+                openInputStream(uri)?.use { input -> copyExifTags(ExifInterface(input)) }
+            }.getOrNull()
+        } else null
 
-        // 2. Capture EXIF (only if JPEG + keepExif)
-        val exifData: MutableMap<String, String>? =
-            if (keepExif && resolvedMime.contains("jpeg", true)) {
-                try {
-                    openInputStream(uri)?.use { input ->
-                        val exif = ExifInterface(input)
-                        copyExifTags(exif)
-                    }
-                } catch (_: Exception) {
-                    null
+        val encoded = runCatching {
+            FileOutputStream(stagingFile).use { output ->
+                if (!bitmap.compress(compressFormat, quality.coerceIn(0, 100), output)) {
+                    throw IOException("Bitmap.compress returned false")
                 }
-            } else null
+                output.flush()
+                output.fd.sync()
+            }
+            if (exifData != null && compressFormat == Bitmap.CompressFormat.JPEG) {
+                runCatching { applyExifToStaging(stagingFile, exifData) }
+            }
+            stagingFile.length() > 0L
+        }.getOrDefault(false)
+        if (!encoded) return@withContext false
 
-        // 3. Mark pending (scoped storage) to reduce race (best effort)
-        runCatching {
-            update(uri, ContentValues().apply {
-                put(MediaStore.MediaColumns.IS_PENDING, 1)
-            }, null, null)
-        }
-
-        // 4. Encode into memory first (atomic style) so we fail early
-        val encoded = ByteArrayOutputStream().use { bos ->
-            if (!bitmap.compress(compressFormat, quality.coerceIn(0, 100), bos))
-                error("Bitmap.compress returned false")
-            bos.toByteArray()
-        }
-
-        // 5. Size limit check
         sizeLimitBytes?.let { limit ->
-            if (encoded.size.toLong() > limit) {
-                onSizeLimitExceeded?.invoke(encoded.size.toLong())
-                clearPendingQuiet(uri)
-                return@runCatching false
+            if (stagingFile.length() > limit) {
+                onSizeLimitExceeded?.invoke(stagingFile.length())
+                return@withContext false
             }
         }
 
-        // 6. Write (truncate + replace)
-        (openOutputStream(uri, "rwt") // "rwt" truncates if supported
-            ?: openOutputStream(uri) // fallback
-            ?: error("Failed to open output stream"))
-            .use { out ->
-                out.write(encoded)
-                out.flush()
-                if (out is FileOutputStream) {
-                    try {
-                        out.fd.sync()
-                    } catch (_: Exception) {
-                    }
-                }
-            }
+        val replaced = replaceImageFromStaging(uri, stagingFile, originalDates)
+        if (replaced && recycleSource) runCatching { bitmap.recycle() }
+        replaced
+    } finally {
+        stagingFile.delete()
+    }
+}
 
-        // 7. Restore EXIF (requires rewrite for JPEG)
-        if (exifData != null && compressFormat == Bitmap.CompressFormat.JPEG) {
-            try {
-                // Re-open and rewrite selected tags
-                openFileDescriptor(uri, "rw")?.use { pfd ->
-                    FileInputStream(pfd.fileDescriptor).use { fis ->
-                        // Need temp file because ExifInterface rewrite requires random access
-                        val tmp = File.createTempFile("exif_tmp", ".jpg")
-                        tmp.outputStream().use { it.write(encoded) }
-                        val exif = ExifInterface(tmp.absolutePath)
-                        exifData.forEach { (k, v) -> exif.setAttribute(k, v) }
-                        // After physical rotation, orientation must be normal
-                        exif.setAttribute(
-                            ExifInterface.TAG_ORIENTATION,
-                            ExifInterface.ORIENTATION_NORMAL.toString()
-                        )
-                        exif.saveAttributes()
-                        // Write back
-                        FileInputStream(tmp).use { updated ->
-                            openOutputStream(uri, "rwt")?.use { finalOut ->
-                                updated.copyTo(finalOut)
-                                finalOut.flush()
-                            }
-                        }
-                        tmp.delete()
-                    }
-                }
-            } catch (_: Exception) {
-                // Silent; keep at least the pixels
-            }
+private fun ContentResolver.replaceImageFromStaging(
+    uri: Uri,
+    stagingFile: File,
+    originalDates: Pair<Long?, Long?>?,
+): Boolean {
+    val backupFile = File.createTempFile(
+        "original-rollback-",
+        ".bak",
+        stagingFile.parentFile,
+    )
+    var pendingWasSet = false
+    var keepBackup = false
+    return try {
+        copyUriToFile(uri, backupFile)
+        runCatching {
+            update(
+                uri,
+                ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 1) },
+                null,
+                null,
+            )
+            pendingWasSet = true
         }
 
-        if (recycleSource) runCatching { bitmap.recycle() }
+        val replaced = replaceWithRollback(stagingFile, backupFile) { source ->
+            copyFileToUri(source, uri)
+        }
+        if (!replaced) {
+            clearPendingQuiet(uri)
+            return false
+        }
 
-        // 8. Clear pending and restore original dates
         runCatching {
             update(uri, ContentValues().apply {
                 put(MediaStore.MediaColumns.IS_PENDING, 0)
@@ -738,12 +623,84 @@ suspend fun ContentResolver.overrideImage(
                 }
             }, null, null)
         }
-
         true
-    }.getOrElse {
-        clearPendingQuiet(uri)
+    } catch (_: SourceRestoreException) {
+        // Keep the row pending and retain the rollback bytes for recovery rather than exposing a
+        // possibly partial source. Normal replacement failures are restored before this point.
+        keepBackup = true
         false
+    } catch (_: Exception) {
+        if (pendingWasSet) clearPendingQuiet(uri)
+        false
+    } finally {
+        if (!keepBackup) backupFile.delete()
     }
+}
+
+/**
+ * Replaces a source from [replacementFile]. If that write throws after truncation, [backupFile] is
+ * written back before this function reports failure. Kept internal so tests can inject a partial
+ * first write without exposing failure hooks in production code.
+ */
+internal fun replaceWithRollback(
+    replacementFile: File,
+    backupFile: File,
+    replaceSource: (File) -> Unit,
+): Boolean = try {
+    replaceSource(replacementFile)
+    true
+} catch (replacementError: Exception) {
+    try {
+        replaceSource(backupFile)
+    } catch (restoreError: Exception) {
+        throw SourceRestoreException(replacementError, restoreError)
+    }
+    false
+}
+
+private class SourceRestoreException(
+    replacementError: Exception,
+    restoreError: Exception,
+) : IOException("Replacement and source restoration failed", restoreError) {
+    init {
+        addSuppressed(replacementError)
+    }
+}
+
+private fun ContentResolver.copyUriToFile(uri: Uri, target: File) {
+    val input = openInputStream(uri) ?: throw IOException("Failed to open source for backup")
+    input.use {
+        FileOutputStream(target).use { output ->
+            it.copyTo(output)
+            output.flush()
+            output.fd.sync()
+        }
+    }
+}
+
+private fun ContentResolver.copyFileToUri(source: File, uri: Uri) {
+    val output = openOutputStream(uri, "rwt")
+        ?: throw IOException("Failed to open source for replacement")
+    FileInputStream(source).use { input ->
+        output.use {
+            input.copyTo(it)
+            it.flush()
+            if (it is FileOutputStream) it.fd.sync()
+        }
+    }
+}
+
+private fun applyExifToStaging(
+    stagingFile: File,
+    exifData: Map<String, String>,
+) {
+    val exif = ExifInterface(stagingFile.absolutePath)
+    exifData.forEach { (key, value) -> exif.setAttribute(key, value) }
+    exif.setAttribute(
+        ExifInterface.TAG_ORIENTATION,
+        ExifInterface.ORIENTATION_NORMAL.toString(),
+    )
+    exif.saveAttributes()
 }
 
 private fun ContentResolver.queryDateColumns(uri: Uri): Pair<Long?, Long?>? {

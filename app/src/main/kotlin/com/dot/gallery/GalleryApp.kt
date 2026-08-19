@@ -20,6 +20,7 @@ import com.dot.gallery.cloud.network.LanBindingSocketFactory
 import com.dot.gallery.cloud.offline.CloudCacheInterceptor
 import com.dot.gallery.cloud.offline.CloudMediaCache
 import com.dot.gallery.cloud.offline.OfflineModeManager
+import com.dot.gallery.cloud.sync.CloudSyncScheduler
 import com.dot.gallery.core.MediaDistributor
 import com.dot.gallery.core.ml.ModelManager
 import com.dot.gallery.core.metadata.MetadataSanitizer
@@ -40,6 +41,7 @@ import com.dot.gallery.core.decoder.supportTiffDecoder
 import com.dot.gallery.core.decoder.supportRawDecoder
 import com.dot.gallery.core.smart.SmartScanScheduler
 import com.dot.gallery.core.workers.TempVaultCleanupWorker
+import com.dot.gallery.feature_node.data.data_source.SmartScanFeature
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.presentation.frameextract.FrameSourceCleanup
 import com.github.panpf.sketch.PlatformContext
@@ -168,6 +170,9 @@ class GalleryApp : Application(), SingletonSketch.Factory, Configuration.Provide
     lateinit var cloudProviderInitializer: CloudProviderInitializer
 
     @Inject
+    lateinit var cloudSyncScheduler: CloudSyncScheduler
+
+    @Inject
     lateinit var localPeopleProvider: com.dot.gallery.cloud.local.LocalPeopleProvider
 
     @Inject
@@ -269,10 +274,12 @@ class GalleryApp : Application(), SingletonSketch.Factory, Configuration.Provide
                 async {
                     runCatching { cloudProviderInitializer.initializeAsync() }
                         .onFailure { if (it is CancellationException) throw it }
+                    runCatching { cloudSyncScheduler.reconcile() }
+                        .onFailure { if (it is CancellationException) throw it }
                 }
             ).awaitAll()
             if (!smartScanScheduler.resumeActiveRun()) {
-                smartScanScheduler.all(userVisible = false)
+                smartScanScheduler.automaticIfNeeded(SmartScanFeature.ALL_MASK)
             }
         }
 

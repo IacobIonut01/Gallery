@@ -64,7 +64,6 @@ import com.dot.gallery.core.presentation.components.EmptyMedia
 import com.dot.gallery.core.presentation.components.NavigationActions
 import com.dot.gallery.core.presentation.components.NavigationButton
 import com.dot.gallery.core.presentation.components.SelectionSheet
-import com.dot.gallery.core.toggleNavigationBar
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
 import com.dot.gallery.feature_node.domain.model.MediaState
@@ -100,7 +99,6 @@ fun <T: Media> MediaScreen(
     allowHeaders: Boolean = true,
     groupMethod: String = Settings.Misc.GROUP_NORMAL,
     enableStickyHeaders: Boolean = true,
-    allowNavBar: Boolean = false,
     customDateHeader: String? = null,
     customViewingNavigation: ((media: T) -> Unit)? = null,
     navActionsContent: @Composable ((expandedDropDown: MutableState<Boolean>, result: ActivityResultLauncher<IntentSenderRequest>) -> Unit),
@@ -143,12 +141,6 @@ fun <T: Media> MediaScreen(
     val selector = LocalMediaSelector.current
     val selectionState = selector.isSelectionActive.collectAsStateWithLifecycle()
     val selectedMedia = selector.selectedMedia.collectAsStateWithLifecycle()
-
-    LaunchedEffect(selectionState.value) {
-        if (allowNavBar) {
-            eventHandler.toggleNavigationBar(!selectionState.value)
-        }
-    }
 
     Box(
         modifier = Modifier

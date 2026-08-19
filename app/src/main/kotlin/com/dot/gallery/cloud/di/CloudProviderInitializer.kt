@@ -19,6 +19,7 @@ import com.dot.gallery.cloud.data.repository.CloudRepository
 import com.dot.gallery.cloud.network.ServerUrlResolver
 import com.dot.gallery.cloud.sync.CloudIndexProgressManager
 import com.dot.gallery.core.Resource
+import com.dot.gallery.core.backup.PendingCloudFavoriteStore
 import com.dot.gallery.core.smart.SmartScanScheduler
 import com.dot.gallery.feature_node.data.data_source.SmartScanFeature
 import com.dot.gallery.feature_node.presentation.util.printDebug
@@ -49,7 +50,8 @@ class CloudProviderInitializer @Inject constructor(
     private val cloudRepository: CloudRepository,
     private val urlResolver: ServerUrlResolver,
     private val indexProgressManager: CloudIndexProgressManager,
-    private val smartScanScheduler: SmartScanScheduler
+    private val smartScanScheduler: SmartScanScheduler,
+    private val pendingCloudFavoriteStore: PendingCloudFavoriteStore
 ) {
 
     private val factoriesByType by lazy { providerFactories.associateBy { it.providerType } }
@@ -78,6 +80,7 @@ class CloudProviderInitializer @Inject constructor(
         prefetchScope.launch {
             indexProgressManager.start(configId, label)
             try {
+                val previousSmartFeatureRevisions = cloudMediaDao.getSmartFeatureRevisions(configId)
                 var page = 0
                 var total = 0
                 while (true) {
@@ -93,8 +96,15 @@ class CloudProviderInitializer @Inject constructor(
                     page++
                     if (page >= MAX_PREFETCH_PAGES) break
                 }
+                pendingCloudFavoriteStore.applyForAccount(
+                    provider.providerType,
+                    configId,
+                    cloudMediaDao
+                )
                 printDebug("CloudProviderInitializer: Cached $total assets for $label")
-                if (total > 0) smartScanScheduler.automatic(SmartScanFeature.ALL_MASK)
+                if (cloudMediaDao.getSmartFeatureRevisions(configId) != previousSmartFeatureRevisions) {
+                    smartScanScheduler.automatic(SmartScanFeature.ALL_MASK)
+                }
             } catch (e: Exception) {
                 printDebug("CloudProviderInitializer: Asset prefetch failed for $label: ${e.message}")
             } finally {
@@ -103,9 +113,13 @@ class CloudProviderInitializer @Inject constructor(
         }
         prefetchScope.launch {
             try {
+                val previousSmartFeatureRevisions = cloudMediaDao.getSmartFeatureRevisions(configId)
                 val trashed = provider.getRemoteTrashed().first()
                 if (trashed is Resource.Success) {
                     trashed.data?.let { cloudMediaDao.insertAll(it) }
+                    if (cloudMediaDao.getSmartFeatureRevisions(configId) != previousSmartFeatureRevisions) {
+                        smartScanScheduler.automatic(SmartScanFeature.ALL_MASK)
+                    }
                 }
             } catch (e: Exception) {
                 printDebug("CloudProviderInitializer: Trash prefetch failed for $label: ${e.message}")
@@ -130,6 +144,7 @@ class CloudProviderInitializer @Inject constructor(
         val entity = configDao.getById(configId)
             ?: return Result.failure(IllegalArgumentException("Cloud account not found"))
         if (!entity.isActive) return Result.failure(IllegalStateException("Cloud account is inactive"))
+        CloudRuntimeSettings.apply(entity.toCloudServerConfig())
         val provider = (registry.getByConfigId(configId) as? RemoteMediaProvider)
             ?: (factoriesByType[entity.providerType]?.create() as? RemoteMediaProvider)
             ?: return Result.failure(IllegalStateException("Cloud provider is unavailable"))
@@ -166,10 +181,9 @@ class CloudProviderInitializer @Inject constructor(
      */
     suspend fun initializeAsync() {
         val activeConfigs = configDao.getAll().first().filter { it.isActive }
-        // Prime the global viewer/advanced preferences snapshot from the active account so
-        // settings like "Verbose logging" take effect from app start, not only after the
-        // user visits the settings screen.
-        CloudRuntimeSettings.apply(activeConfigs.firstOrNull()?.toCloudServerConfig())
+        // Prime every account-qualified viewer/advanced preference before provider auth so UI and
+        // playback never inherit settings from whichever account happened to initialize first.
+        CloudRuntimeSettings.applyAll(activeConfigs.map { it.toCloudServerConfig() })
         for (entity in activeConfigs) {
             val factory = factoriesByType[entity.providerType] ?: continue
             val provider = factory.create() as? RemoteMediaProvider ?: continue
@@ -208,6 +222,21 @@ class CloudProviderInitializer @Inject constructor(
      */
     fun reconfigureAccountAsync(configId: Long) {
         reconfigureScope.launch { reconfigureAccount(configId) }
+    }
+
+    suspend fun applyRestoredAccount(configId: Long) {
+        val entity = configDao.getById(configId) ?: return
+        CloudRuntimeSettings.apply(entity.toCloudServerConfig())
+        if (entity.isActive) {
+            if (registry.getByConfigId(configId) == null) registerAccount(configId)
+            else {
+                lastResolvedUrl.remove(configId)
+                reconfigureAccount(configId)
+            }
+        } else {
+            (registry.getByConfigId(configId) as? com.dot.gallery.cloud.core.Disconnectable)?.disconnect()
+            registry.unregister(configId)
+        }
     }
 
     suspend fun reconfigureAccount(configId: Long) {

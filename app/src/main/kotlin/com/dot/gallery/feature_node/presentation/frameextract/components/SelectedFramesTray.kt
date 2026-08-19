@@ -29,6 +29,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.R
 import com.dot.gallery.feature_node.presentation.frameextract.FrameIdentity
@@ -65,12 +68,26 @@ fun SelectedFramesTray(
         ) {
             items(frames, key = FrameIdentity::encode) { frame ->
                 val thumbnail = thumbnails.firstOrNull { it.identity == frame }
+                val timestampMs = frame.presentationTimeUs / 1000L
+                val frameDescription = if (frame.frameIndex >= 0) {
+                    stringResource(
+                        R.string.frame_picker_frame_accessibility,
+                        frame.frameIndex,
+                        timestampMs,
+                    )
+                } else {
+                    stringResource(R.string.frame_picker_frame_at_time_accessibility, timestampMs)
+                }
                 Box(
                     modifier = Modifier
                         .size(64.dp)
                         .clip(RoundedCornerShape(12.dp))
                         .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                        .clickable { onJump(frame) },
+                        .semantics { contentDescription = frameDescription }
+                        .clickable(
+                            role = Role.Button,
+                            onClick = { onJump(frame) },
+                        ),
                 ) {
                     thumbnail?.let {
                         Image(
@@ -81,7 +98,11 @@ fun SelectedFramesTray(
                         )
                     }
                     Text(
-                        text = if (frame.frameIndex >= 0) "#${frame.frameIndex}" else "${frame.presentationTimeUs / 1000L} ms",
+                        text = if (frame.frameIndex >= 0) {
+                            stringResource(R.string.frame_picker_index_label, frame.frameIndex)
+                        } else {
+                            stringResource(R.string.frame_picker_timestamp_ms, timestampMs)
+                        },
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier
@@ -93,15 +114,23 @@ fun SelectedFramesTray(
                         onClick = { onRemove(frame) },
                         modifier = Modifier
                             .align(Alignment.TopEnd)
-                            .padding(3.dp)
-                            .size(20.dp)
-                            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.72f), CircleShape),
+                            .size(48.dp),
                     ) {
-                        Icon(
-                            Icons.Outlined.Close,
-                            contentDescription = stringResource(R.string.frame_picker_remove_accessibility),
-                            modifier = Modifier.size(13.dp),
-                        )
+                        Box(
+                            modifier = Modifier
+                                .size(24.dp)
+                                .background(
+                                    MaterialTheme.colorScheme.surface.copy(alpha = 0.72f),
+                                    CircleShape,
+                                ),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                Icons.Outlined.Close,
+                                contentDescription = stringResource(R.string.frame_picker_remove_accessibility),
+                                modifier = Modifier.size(13.dp),
+                            )
+                        }
                     }
                 }
             }

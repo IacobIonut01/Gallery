@@ -248,7 +248,7 @@ suspend fun <T : Media> mapMediaToItem(
                         mediaGroupsMap[representative.id] = group.sortedByRepresentative()
                         return@flatMap listOf(
                             MediaItem.MediaViewItem(
-                                key = "media_${representative.id}_${representative.label}",
+                                key = "media_${representative.id}",
                                 media = representative,
                                 stackCount = group.size,
                                 isCloudGroup = groupType == MediaGroupType.CLOUD_LOCAL
@@ -258,12 +258,12 @@ suspend fun <T : Media> mapMediaToItem(
                 }
                 group.fastMap { media ->
                     pagerMediaList.add(media)
-                    MediaItem.MediaViewItem("media_${media.id}_${media.label}", media)
+                    MediaItem.MediaViewItem("media_${media.id}", media)
                 }
             }
         } else {
             data.fastMap {
-                MediaItem.MediaViewItem("media_${it.id}_${it.label}", it)
+                MediaItem.MediaViewItem("media_${it.id}", it)
             }
         }
         if (groupByYear) {

@@ -111,6 +111,27 @@ interface CollectionDao {
     @Query("DELETE FROM collection_albums WHERE collectionId = :collectionId AND albumId = :albumId")
     suspend fun removeAlbumFromCollection(collectionId: Long, albumId: Long)
 
+    @Query("DELETE FROM collection_albums WHERE collectionId = :collectionId")
+    suspend fun removeAllAlbumsFromCollection(collectionId: Long)
+
+    @Query("SELECT albumId FROM collection_albums WHERE collectionId = :collectionId")
+    suspend fun getAlbumIdsInCollectionAsync(collectionId: Long): List<Long>
+
+    @Query("DELETE FROM collection_media WHERE collectionId = :collectionId AND mediaId IN (SELECT id FROM media WHERE albumID IN (:albumIds))")
+    suspend fun removeAlbumMediaFromCollection(collectionId: Long, albumIds: List<Long>)
+
+    @Transaction
+    suspend fun replaceAlbumsInCollection(collectionId: Long, albumIds: List<Long>) {
+        val removedAlbumIds = getAlbumIdsInCollectionAsync(collectionId).filterNot(albumIds::contains)
+        if (removedAlbumIds.isNotEmpty()) {
+            removeAlbumMediaFromCollection(collectionId, removedAlbumIds)
+        }
+        removeAllAlbumsFromCollection(collectionId)
+        if (albumIds.isNotEmpty()) {
+            addAlbumsToCollection(albumIds.map { CollectionAlbum(collectionId, it) })
+        }
+    }
+
     @Query("SELECT DISTINCT albumId FROM collection_albums")
     fun getAllAlbumIdsInCollections(): Flow<List<Long>>
 

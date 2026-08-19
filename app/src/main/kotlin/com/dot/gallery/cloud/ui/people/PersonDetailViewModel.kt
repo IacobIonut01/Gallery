@@ -22,7 +22,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -41,6 +40,7 @@ class PersonDetailViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val personId: String = savedStateHandle["personId"] ?: ""
+    private val configId: Long = savedStateHandle["configId"] ?: Long.MIN_VALUE
 
     private val _uiState = MutableStateFlow(PersonDetailUiState())
     val uiState: StateFlow<PersonDetailUiState> = _uiState.asStateFlow()
@@ -76,9 +76,7 @@ class PersonDetailViewModel @Inject constructor(
         get() = _uiState.value.person?.providerType == com.dot.gallery.cloud.core.ProviderType.LOCAL_PEOPLE
 
     private fun localProvider(): com.dot.gallery.cloud.local.LocalPeopleProvider? =
-        registry.getPeopleProviders()
-            .firstOrNull { it.providerType == com.dot.gallery.cloud.core.ProviderType.LOCAL_PEOPLE }
-                as? com.dot.gallery.cloud.local.LocalPeopleProvider
+        registry.getByConfigId(configId) as? com.dot.gallery.cloud.local.LocalPeopleProvider
 
     fun hidePerson(onDone: () -> Unit) {
         val id = _uiState.value.person?.id ?: return
@@ -113,36 +111,44 @@ class PersonDetailViewModel @Inject constructor(
     }
 
     private fun loadPerson() {
-        if (personId.isBlank()) return
+        if (personId.isBlank() || configId == Long.MIN_VALUE) return
         _uiState.value = _uiState.value.copy(isLoading = true)
 
         viewModelScope.launch {
             repository.getAllPeople().collect { resource ->
                 if (resource is Resource.Success) {
-                    val person = resource.data?.find { it.id == personId }
+                    val person = resource.data?.find {
+                        it.id == personId && it.serverConfigId == configId
+                    }
                     _uiState.value = _uiState.value.copy(person = person)
                     _mergeCandidates.value = resource.data
                         ?.filter {
-                            it.id != personId &&
+                            it.accountKey != person?.accountKey &&
+                                it.serverConfigId == configId &&
                                 it.providerType == com.dot.gallery.cloud.core.ProviderType.LOCAL_PEOPLE
                         } ?: emptyList()
                 }
             }
         }
 
-        // Route to the provider that actually owns this person (local vs a specific cloud account),
-        // instead of assuming the first available people provider.
         viewModelScope.launch {
-            val allPeople = repository.getAllPeople()
-                .mapNotNull { (it as? Resource.Success)?.data }
-                .first()
-            val ownerType = allPeople.find { it.id == personId }?.providerType
-            val providers = registry.getPeopleProviders().filter { it.isAvailable }
-            if (providers.isEmpty()) return@launch
-            val provider = providers.firstOrNull { it.providerType == ownerType }
-                ?: providers.first()
+            val peopleResource = repository.getAllPeople().first { it is Resource.Success }
+            val person = peopleResource.data.orEmpty().find {
+                it.id == personId && it.serverConfigId == configId
+            }
+            if (person == null) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = "Person account not available"
+                )
+                return@launch
+            }
 
-            provider.getPersonMedia(personId).collect { resource ->
+            repository.getPersonMedia(
+                type = person.providerType,
+                configId = person.serverConfigId,
+                personId = person.id
+            ).collect { resource ->
                 when (resource) {
                     is Resource.Success -> {
                         val mediaList = resource.data?.filterIsInstance<Media.UriMedia>() ?: emptyList()
@@ -171,12 +177,15 @@ class PersonDetailViewModel @Inject constructor(
     }
 
     fun updateName(name: String) {
-        if (personId.isBlank()) return
-        val providers = registry.getPeopleProviders().filter { it.isAvailable }
-        if (providers.isEmpty()) return
-        val type = _uiState.value.person?.providerType ?: providers.first().providerType
+        if (personId.isBlank() || configId == Long.MIN_VALUE) return
+        val person = _uiState.value.person ?: return
         viewModelScope.launch {
-            repository.updatePersonName(type, personId, name).onSuccess {
+            repository.updatePersonName(
+                type = person.providerType,
+                configId = person.serverConfigId,
+                personId = person.id,
+                name = name
+            ).onSuccess {
                 _uiState.value = _uiState.value.copy(
                     person = _uiState.value.person?.copy(name = name)
                 )
@@ -185,12 +194,15 @@ class PersonDetailViewModel @Inject constructor(
     }
 
     fun updateBirthDate(birthDate: String) {
-        if (personId.isBlank()) return
-        val providers = registry.getPeopleProviders().filter { it.isAvailable }
-        if (providers.isEmpty()) return
-        val type = providers.first().providerType
+        if (personId.isBlank() || configId == Long.MIN_VALUE) return
+        val person = _uiState.value.person ?: return
         viewModelScope.launch {
-            repository.updatePersonBirthDate(type, personId, birthDate).onSuccess {
+            repository.updatePersonBirthDate(
+                type = person.providerType,
+                configId = person.serverConfigId,
+                personId = person.id,
+                birthDate = birthDate
+            ).onSuccess {
                 _uiState.value = _uiState.value.copy(
                     person = _uiState.value.person?.copy(birthDate = birthDate)
                 )

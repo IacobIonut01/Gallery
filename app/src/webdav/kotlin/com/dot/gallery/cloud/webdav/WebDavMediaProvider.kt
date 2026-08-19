@@ -83,7 +83,7 @@ open class WebDavMediaProvider(
         add(ProviderCapability.REMOTE_ASSETS)
         add(ProviderCapability.REMOTE_ALBUMS)
         add(ProviderCapability.SYNC)
-        if (WebDavFeatureKey.SHARE_LINK in dialect.features) add(ProviderCapability.SHARE_LINK)
+        if (WebDavFeatureKey.SHARE_LINK in dialect.features) add(ProviderCapability.SHARE_CREATE)
         // Server-side favorites (Nextcloud). ownCloud/generic WebDAV don't expose the flag.
         if (WebDavFeatureKey.FAVORITES in dialect.features) add(ProviderCapability.FAVORITE)
         // No ProviderCapability.TRASH: WebDAV trashAsset == deleteAsset (hard-delete, no restore).

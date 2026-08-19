@@ -16,6 +16,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,8 +29,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -70,6 +73,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -106,37 +110,44 @@ fun ImageSearchChip(
     onRemove: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Box(
-        modifier = modifier
-            .padding(end = 8.dp)
-            .size(36.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .clickable(onClick = onClick)
+    Row(
+        modifier = modifier.padding(end = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        GlideImage(
+        Box(
             modifier = Modifier
-                .matchParentSize()
-                .clip(RoundedCornerShape(8.dp)),
-            model = media.getUri(),
-            contentDescription = stringResource(R.string.image_search_preview),
-            contentScale = ContentScale.Crop,
-            requestBuilderTransform = {
-                it.centerCrop().diskCacheStrategy(DiskCacheStrategy.ALL)
-            }
-        )
-        // X button overlay at top-end
-        Icon(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .size(16.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.8f))
-                .clickable(onClick = onRemove)
-                .padding(1.dp),
-            imageVector = Icons.Outlined.Close,
-            contentDescription = stringResource(R.string.remove_image),
-            tint = MaterialTheme.colorScheme.onSurface
-        )
+                .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .clickable(onClick = onClick),
+            contentAlignment = Alignment.Center,
+        ) {
+            GlideImage(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(RoundedCornerShape(8.dp)),
+                model = media.getUri(),
+                contentDescription = stringResource(R.string.image_search_preview),
+                contentScale = ContentScale.Crop,
+                requestBuilderTransform = {
+                    it.centerCrop().diskCacheStrategy(DiskCacheStrategy.ALL)
+                }
+            )
+        }
+        IconButton(
+            onClick = onRemove,
+            modifier = Modifier.size(48.dp),
+        ) {
+            Icon(
+                modifier = Modifier
+                    .size(24.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.8f))
+                    .padding(4.dp),
+                imageVector = Icons.Outlined.Close,
+                contentDescription = stringResource(R.string.remove_image),
+                tint = MaterialTheme.colorScheme.onSurface
+            )
+        }
     }
 }
 
@@ -453,7 +464,7 @@ private fun <T : Media> ImagePickerMediaGrid(
         ) {
             items(
                 items = mediaState.mappedMedia,
-                key = { if (it is MediaItem.MediaViewItem) it.media.toString() else it.key },
+                key = { it.key },
                 contentType = { it.key.startsWith("media_") },
                 span = { item ->
                     GridItemSpan(if (item.key.isHeaderKey) maxLineSpan else 1)
@@ -511,7 +522,7 @@ private fun ImagePickerAlbumsGrid(
     ) {
         items(
             items = albums,
-            key = { it.toString() }
+            key = { it.id }
         ) { album ->
             Column(
                 modifier = Modifier.padding(horizontal = 8.dp)
@@ -558,8 +569,13 @@ private fun RowScope.PickerPillTab(
     Surface(
         modifier = Modifier
             .weight(1f)
+            .heightIn(min = 48.dp)
             .clip(CircleShape)
-            .clickable(onClick = onClick),
+            .selectable(
+                selected = selected,
+                role = Role.Tab,
+                onClick = onClick,
+            ),
         shape = CircleShape,
         color = backgroundColor
     ) {

@@ -83,6 +83,46 @@ class SmartScanDaoTest {
     }
 
     @Test
+    fun latestTerminalPhaseTracksProcessorRevisionAcrossRuns() = runBlocking {
+        dao.upsertRun(SmartScanRunEntity("old", SmartScanTrigger.AUTOMATIC, requestedAt = 10L))
+        dao.upsertRun(SmartScanRunEntity("new", SmartScanTrigger.AUTOMATIC, requestedAt = 20L))
+        dao.upsertRun(SmartScanRunEntity("failed", SmartScanTrigger.AUTOMATIC, requestedAt = 30L))
+        dao.upsertPhase(
+            SmartScanPhaseEntity(
+                runId = "old",
+                phase = SmartScanPhase.SEARCH_INDEX,
+                status = SmartScanStatus.SUCCEEDED,
+                finishedAt = 11L,
+                updatedAt = 11L,
+                processorRevision = "clip-v1"
+            )
+        )
+        dao.upsertPhase(
+            SmartScanPhaseEntity(
+                runId = "new",
+                phase = SmartScanPhase.SEARCH_INDEX,
+                status = SmartScanStatus.BLOCKED,
+                finishedAt = 21L,
+                updatedAt = 21L,
+                processorRevision = "clip-v2"
+            )
+        )
+        dao.upsertPhase(
+            SmartScanPhaseEntity(
+                runId = "failed",
+                phase = SmartScanPhase.SEARCH_INDEX,
+                status = SmartScanStatus.FAILED,
+                finishedAt = 31L,
+                updatedAt = 31L,
+                processorRevision = "clip-v3"
+            )
+        )
+
+        assertEquals("clip-v2", dao.getLatestCurrentPhase(SmartScanPhase.SEARCH_INDEX)?.processorRevision)
+        assertEquals("clip-v1", dao.getLatestSuccessfulPhase(SmartScanPhase.SEARCH_INDEX)?.processorRevision)
+    }
+
+    @Test
     fun existingEmbeddingRevisionCanBeAdoptedWithoutReplacingVector() = runBlocking {
         val embedding = ImageEmbedding(7L, 100L, floatArrayOf(0.6f, 0.8f))
         db.getImageEmbeddingDao().addImageEmbedding(embedding)
@@ -94,6 +134,17 @@ class SmartScanDaoTest {
         assertEquals(true, adopted?.embedding?.contentEquals(embedding.embedding))
         assertEquals(listOf(7L), db.getImageEmbeddingDao().getIds())
         assertEquals("clip-v2", db.getImageEmbeddingDao().getHeaders().single().resultRevision)
+    }
+
+    @Test
+    fun embeddingPreparationReadsAndUpdatesRecordsInBatches() = runBlocking {
+        val embeddingDao = db.getImageEmbeddingDao()
+        embeddingDao.addImageEmbedding(ImageEmbedding(7L, 100L, floatArrayOf(0.6f, 0.8f)))
+        embeddingDao.addImageEmbedding(ImageEmbedding(8L, 100L, floatArrayOf(0.8f, 0.6f)))
+
+        assertEquals(setOf(7L, 8L), embeddingDao.getRecords(listOf(7L, 8L)).mapTo(hashSetOf()) { it.id })
+        assertEquals(2, embeddingDao.updateResultRevisions(listOf(7L, 8L), "clip-v2"))
+        assertEquals(setOf("clip-v2"), embeddingDao.getRecords(listOf(7L, 8L)).mapTo(hashSetOf()) { it.resultRevision })
     }
 
     @Test

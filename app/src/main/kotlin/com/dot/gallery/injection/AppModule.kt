@@ -15,6 +15,8 @@ import androidx.work.WorkManager
 import com.dot.gallery.core.DefaultEventHandler
 import com.dot.gallery.core.EditBackupManager
 import com.dot.gallery.core.encryption.EncryptedDatabaseFactory
+import com.dot.gallery.core.encryption.EncryptionBackendState
+import com.dot.gallery.core.encryption.EncryptionStateMonitor
 import com.dot.gallery.core.metrics.StartupTracer
 import com.dot.gallery.core.metadata.AndroidMetadataSanitizer
 import com.dot.gallery.core.metadata.MetadataSanitizer
@@ -38,6 +40,7 @@ import com.dot.gallery.feature_node.data.data_source.migration.MIGRATION_37_38
 import com.dot.gallery.feature_node.data.data_source.migration.MIGRATION_40_41
 import com.dot.gallery.feature_node.data.data_source.migration.MIGRATION_41_42
 import com.dot.gallery.feature_node.data.data_source.migration.MIGRATION_42_43
+import com.dot.gallery.feature_node.data.data_source.migration.MIGRATION_43_44
 import com.dot.gallery.feature_node.data.repository.MediaRepositoryImpl
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.domain.util.EventHandler
@@ -71,10 +74,12 @@ object AppModule {
     @Singleton
     fun provideDatabase(app: Application): InternalDatabase = StartupTracer.trace("AppModule.provideDatabase") {
         try {
-            EncryptedDatabaseFactory.create(app)
+            EncryptedDatabaseFactory.create(app).also {
+                EncryptionStateMonitor.reportDatabase(EncryptionBackendState.ENCRYPTED)
+            }
         } catch (_: Exception) {
-            // Device doesn't support SQLCipher or hardware-backed keystore —
-            // fall back to plaintext database silently.
+            // Device doesn't support SQLCipher or hardware-backed keystore.
+            // Keep the app usable, but expose the fallback accurately in Security settings.
             StartupTracer.trace("AppModule.provideDatabase.fallbackPlaintext") {
                 Room.databaseBuilder(app, InternalDatabase::class.java, InternalDatabase.NAME)
                     .addMigrations(
@@ -85,11 +90,14 @@ object AppModule {
                         MIGRATION_37_38,
                         MIGRATION_40_41,
                         MIGRATION_41_42,
-                        MIGRATION_42_43
+                        MIGRATION_42_43,
+                        MIGRATION_43_44
                     )
                     .fallbackToDestructiveMigrationOnDowngrade(true)
                     .fallbackToDestructiveMigration(false)
                     .build()
+            }.also {
+                EncryptionStateMonitor.reportDatabase(EncryptionBackendState.PLAINTEXT_FALLBACK)
             }
         }
     }
@@ -106,7 +114,8 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideEventHandler(): EventHandler = DefaultEventHandler()
+    fun provideEventHandler(repository: MediaRepository): EventHandler =
+        DefaultEventHandler(updateDatabase = repository::updateInternalDatabase)
 
     @Provides
     @Singleton

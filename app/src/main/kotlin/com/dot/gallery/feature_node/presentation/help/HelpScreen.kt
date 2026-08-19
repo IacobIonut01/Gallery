@@ -49,6 +49,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
 import com.dot.gallery.core.LocalEventHandler
 import com.dot.gallery.core.Position
@@ -61,6 +62,7 @@ import com.dot.gallery.feature_node.presentation.help.data.HelpRepository
 import com.dot.gallery.feature_node.presentation.help.data.HelpSearchIndex
 import com.dot.gallery.feature_node.presentation.help.data.HelpSearchItem
 import com.dot.gallery.feature_node.presentation.help.data.HelpSearchKind
+import com.dot.gallery.feature_node.presentation.help.data.SettingsSearchRegistry
 import com.dot.gallery.feature_node.presentation.help.data.displayTitle
 import com.dot.gallery.feature_node.presentation.help.data.icon
 import com.dot.gallery.feature_node.presentation.help.search.HelpFuzzyMatcher
@@ -80,9 +82,10 @@ fun HelpScreen() {
     val makeMostCategories = remember { HelpRepository.getMakeMostCategories() }
     val exploreMoreCategories = remember { HelpRepository.getExploreMoreCategories() }
 
-    val searchIndex = remember { HelpSearchIndex.build(context) }
+    val registeredSettings by SettingsSearchRegistry.entries.collectAsStateWithLifecycle()
+    val searchIndex = remember(context, registeredSettings) { HelpSearchIndex.build(context) }
     var query by remember { mutableStateOf("") }
-    val results = remember(query) { HelpFuzzyMatcher.search(searchIndex, query) }
+    val results = remember(query, searchIndex) { HelpFuzzyMatcher.search(searchIndex, query) }
     val isSearching = query.isNotBlank()
 
     Scaffold(

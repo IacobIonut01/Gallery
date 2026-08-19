@@ -66,7 +66,7 @@ import dev.chrisbanes.haze.hazeEffect
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PeopleListScreen(
-    onPersonClick: (String) -> Unit
+    onPersonClick: (PersonInfo) -> Unit
 ) {
     val viewModel = hiltViewModel<PeopleListViewModel>()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -145,7 +145,7 @@ fun PeopleListScreen(
             else -> {
                 // Group people by their provider so each source (on-device, Immich, …) gets its
                 // own labelled section with a divider.
-                val grouped = state.people.groupBy { it.providerType }
+                val grouped = state.people.groupBy { it.providerType to it.serverConfigId }
                 LazyVerticalGrid(
                     columns = GridCells.Adaptive(100.dp),
                     modifier = Modifier.fillMaxSize(),
@@ -158,17 +158,18 @@ fun PeopleListScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    grouped.forEach { (provider, people) ->
+                    grouped.forEach { (account, people) ->
+                        val (provider, configId) = account
                         item(
                             span = { GridItemSpan(maxLineSpan) },
-                            key = "header_${provider.name}"
+                            key = "header_${provider.name}_$configId"
                         ) {
                             ProviderHeader(name = provider.displayName, count = people.size)
                         }
-                        items(people, key = { it.id }) { person ->
+                        items(people, key = { it.accountKey }) { person ->
                             PersonGridItem(
                                 person = person,
-                                onClick = { onPersonClick(person.id) }
+                                onClick = { onPersonClick(person) }
                             )
                         }
                     }

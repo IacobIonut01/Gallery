@@ -76,6 +76,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
 import com.dot.gallery.cloud.core.ConnectionState
+import com.dot.gallery.cloud.sync.CloudUploadWorker
 import com.dot.gallery.cloud.ui.descriptor.ProviderBrandIcon
 import com.dot.gallery.cloud.ui.sync.SyncStatusViewModel
 import com.dot.gallery.core.Position
@@ -215,16 +216,18 @@ fun CloudBackupDashboardScreen(
                 bottom = innerPadding.calculateBottomPadding() + 32.dp
             )
         ) {
-            // Hero health bar with Total / Safe / New summary
+            // Hero health bar with verified / filename-assumed / unknown provenance.
             item(key = "hero") {
                 HeroDashboard(
                     accounts = state.accounts,
                     colorByConfig = colorByConfig,
                     totalAssets = state.totalAssets,
-                    backedUpCount = state.backedUpCount,
-                    remainderCount = state.remainderCount,
+                    verifiedCount = state.verifiedCount,
+                    assumedCount = state.assumedCount,
+                    unknownCount = state.unknownCount,
                     isScanning = state.isScanning,
                     scanProgress = state.scanProgress,
+                    uploadState = uploadState,
                     modifier = cardModifier.padding(bottom = 16.dp)
                 )
             }
@@ -349,19 +352,37 @@ private fun HeroDashboard(
     accounts: List<AccountBackupStatus>,
     colorByConfig: Map<Long, Color>,
     totalAssets: Int,
-    backedUpCount: Int,
-    remainderCount: Int,
+    verifiedCount: Int,
+    assumedCount: Int,
+    unknownCount: Int,
     isScanning: Boolean,
     scanProgress: String,
+    uploadState: UploadDetailsUiState,
     modifier: Modifier = Modifier
 ) {
     val overallPercent = if (totalAssets > 0)
-        (backedUpCount.toFloat() / totalAssets * 100f).roundToInt() else 0
+        (verifiedCount.toFloat() / totalAssets * 100f).roundToInt() else 0
     val reveal by animateFloatAsState(
         targetValue = if (isScanning) 0f else 1f,
         animationSpec = tween(700),
         label = "barReveal"
     )
+    val uploadIsVerifying = uploadState.phase == CloudUploadWorker.PHASE_VERIFYING
+    val heroStatus = when {
+        isScanning -> scanProgress.ifEmpty { stringResource(R.string.cloud_upload_syncing) }
+        uploadState.isWorkerRunning && uploadIsVerifying -> stringResource(
+            R.string.cloud_backup_verifying_count,
+            uploadState.checkedItems,
+            uploadState.totalItems
+        )
+        uploadState.isWorkerRunning && uploadState.totalItems > 0 -> stringResource(
+            R.string.cloud_upload_uploading_count,
+            uploadState.completedItems.coerceAtMost(uploadState.totalItems),
+            uploadState.totalItems
+        )
+        uploadState.isWorkerRunning -> stringResource(R.string.cloud_upload_syncing)
+        else -> "Verified by content hash"
+    }
 
     Column(
         modifier = modifier
@@ -380,13 +401,12 @@ private fun HeroDashboard(
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = if (isScanning) scanProgress.ifEmpty { stringResource(R.string.cloud_upload_syncing) }
-                    else stringResource(R.string.cloud_backup_backed_up),
+                    text = heroStatus,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            if (isScanning) {
+            if (isScanning || uploadState.isWorkerRunning) {
                 CircularProgressIndicator(modifier = Modifier.size(28.dp), strokeWidth = 3.dp)
             }
         }
@@ -402,27 +422,32 @@ private fun HeroDashboard(
                 .height(16.dp)
         )
 
-        // Total / Safe / New stats
         Row(modifier = Modifier.fillMaxWidth()) {
             StatColumn(
-                value = totalAssets,
-                label = stringResource(R.string.cloud_backup_total),
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.weight(1f)
-            )
-            StatColumn(
-                value = backedUpCount,
-                label = stringResource(R.string.cloud_backup_safe),
+                value = verifiedCount,
+                label = "Verified",
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.weight(1f)
             )
             StatColumn(
-                value = remainderCount,
-                label = stringResource(R.string.cloud_backup_new),
+                value = assumedCount,
+                label = "Assumed",
                 color = MaterialTheme.colorScheme.tertiary,
                 modifier = Modifier.weight(1f)
             )
+            StatColumn(
+                value = unknownCount,
+                label = "Unknown",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.weight(1f)
+            )
         }
+        Text(
+            text = "$totalAssets selected · Assumed means filename-only match",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.fillMaxWidth()
+        )
 
         if (accounts.isNotEmpty()) {
             HealthBarLegend(accounts = accounts, colorByConfig = colorByConfig)
@@ -533,8 +558,10 @@ private fun HealthBarLegend(
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    text = if (account.totalAssets > 0)
-                        "${account.backedUpCount} / ${account.totalAssets}" else "—",
+                    text = if (account.totalAssets > 0) {
+                        "${account.verifiedCount} verified · ${account.assumedCount} assumed · " +
+                            "${account.unknownCount} unknown"
+                    } else "—",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -550,8 +577,15 @@ private fun HealthBarLegend(
  */
 @Composable
 private fun ActiveUploadCard(state: UploadDetailsUiState, modifier: Modifier = Modifier) {
+    val isVerifying = state.phase == CloudUploadWorker.PHASE_VERIFYING
+    val progressItems = visibleBackupProgressItems(
+        state.phase,
+        state.checkedItems,
+        state.completedItems,
+        state.failedItems
+    )
     val progress = if (state.totalItems > 0)
-        state.completedItems.toFloat() / state.totalItems else 0f
+        progressItems.toFloat() / state.totalItems else 0f
     val percent = (progress * 100f).roundToInt()
 
     Column(
@@ -582,17 +616,29 @@ private fun ActiveUploadCard(state: UploadDetailsUiState, modifier: Modifier = M
             }
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = stringResource(
-                        R.string.cloud_upload_uploading_count,
-                        (state.completedItems + 1).coerceAtMost(state.totalItems),
-                        state.totalItems
-                    ),
+                    text = if (isVerifying) {
+                        stringResource(R.string.cloud_backup_verifying_existing)
+                    } else {
+                        stringResource(
+                            R.string.cloud_upload_uploading_count,
+                            (state.completedItems + 1).coerceAtMost(state.totalItems),
+                            state.totalItems
+                        )
+                    },
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
                 Text(
-                    text = state.currentFileName.ifEmpty { stringResource(R.string.cloud_upload_syncing) },
+                    text = if (isVerifying) {
+                        stringResource(
+                            R.string.cloud_backup_verifying_count,
+                            state.checkedItems,
+                            state.totalItems
+                        )
+                    } else {
+                        state.currentFileName.ifEmpty { stringResource(R.string.cloud_upload_syncing) }
+                    },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.75f),
                     maxLines = 1,
@@ -789,14 +835,11 @@ private fun ServiceCard(
             text = if (account.enabledAlbumCount == 0) {
                 stringResource(R.string.cloud_backup_no_albums)
             } else {
-                stringResource(
-                    R.string.cloud_backup_account_progress,
-                    account.backedUpCount,
-                    account.totalAssets
-                ) + " · " + stringResource(
-                    R.string.cloud_backup_account_albums,
-                    account.enabledAlbumCount
-                )
+                "${account.verifiedCount} verified · ${account.assumedCount} assumed · " +
+                    "${account.unknownCount} unknown · " + stringResource(
+                        R.string.cloud_backup_account_albums,
+                        account.enabledAlbumCount
+                    )
             },
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant

@@ -19,9 +19,14 @@ import com.dot.gallery.cloud.core.capabilities.SyncCapableProvider
 import com.dot.gallery.cloud.data.dao.CloudMediaDao
 import com.dot.gallery.cloud.data.dao.CloudServerConfigDao
 import com.dot.gallery.cloud.data.dao.CloudUploadPrefDao
+import com.dot.gallery.cloud.data.entity.CloudUploadPrefEntity
 import com.dot.gallery.cloud.di.CloudProviderInitializer
 import com.dot.gallery.cloud.sync.CloudIndexProgressManager
+import com.dot.gallery.cloud.sync.CloudSyncScheduler
 import com.dot.gallery.cloud.sync.CloudUploadWorker
+import com.dot.gallery.cloud.sync.isActiveBackupWork
+import com.dot.gallery.cloud.sync.isBackupRevisionCached
+import com.dot.gallery.cloud.ui.verifiedItemsByIndex
 import com.dot.gallery.core.activeDataStore
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
@@ -30,7 +35,11 @@ import com.dot.gallery.feature_node.domain.util.OrderType
 import com.dot.gallery.feature_node.domain.util.getUri
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -54,7 +63,10 @@ data class AccountBackupStatus(
     val accountLabel: String,
     val enabledAlbumCount: Int,
     val totalAssets: Int,
-    val backedUpCount: Int,
+    /** Content-hash matches confirmed by the provider during the latest scan. */
+    val verifiedCount: Int,
+    /** Filename-only matches from the local cloud index; useful evidence, not proof. */
+    val assumedCount: Int,
     val syncEnabled: Boolean = false,
     /**
      * Live connection state of this account's provider instance. An active, sync-capable
@@ -65,14 +77,20 @@ data class AccountBackupStatus(
     val connectionState: ConnectionState = ConnectionState.CONNECTED
 ) {
     val hasError: Boolean get() = connectionState == ConnectionState.ERROR
-    val remainderCount: Int get() = (totalAssets - backedUpCount).coerceAtLeast(0)
-    // Nothing selected/known yet (totalAssets == 0) is an empty bar, NOT a full one —
-    // otherwise an account with no albums reads as "100% / 0 of 0 backed up".
-    val progress: Float get() = if (totalAssets > 0) backedUpCount.toFloat() / totalAssets else 0f
+    /** Legacy consumers use this as a confirmed count; assumptions must never be called backed up. */
+    val backedUpCount: Int get() = verifiedCount
+    val unknownCount: Int get() = (totalAssets - verifiedCount - assumedCount).coerceAtLeast(0)
+    val remainderCount: Int get() = (totalAssets - verifiedCount).coerceAtLeast(0)
+    // The health bar only treats provider-confirmed content matches as verified. Filename-only
+    // assumptions remain visually distinct and can never produce a misleading full/safe bar.
+    val progress: Float get() = if (totalAssets > 0) verifiedCount.toFloat() / totalAssets else 0f
 }
 
 data class BackupUiState(
     val totalAssets: Int = 0,
+    val verifiedCount: Int = 0,
+    val assumedCount: Int = 0,
+    val unknownCount: Int = 0,
     val backedUpCount: Int = 0,
     val remainderCount: Int = 0,
     val enabledAlbumCount: Int = 0,
@@ -94,11 +112,13 @@ class CloudBackupViewModel @Inject constructor(
     private val registry: ProviderRegistry,
     private val providerInitializer: CloudProviderInitializer,
     private val workManager: WorkManager,
+    private val syncScheduler: CloudSyncScheduler,
     indexProgressManager: CloudIndexProgressManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(BackupUiState())
     val uiState: StateFlow<BackupUiState> = _uiState.asStateFlow()
+    private var scanJob: Job? = null
 
     /**
      * Whether a provider TYPE is sync-capable, resolved from a registered instance if present
@@ -131,25 +151,32 @@ class CloudBackupViewModel @Inject constructor(
     val uploadWorkRunning: StateFlow<Boolean> = MutableStateFlow(false).also { flow ->
         viewModelScope.launch {
             // Track ANY backup run (periodic, "back up all", or per-account) via the shared tag.
+            var wasRunning = false
             workManager.getWorkInfosByTagFlow(CloudUploadWorker.TAG_BACKUP)
                 .collect { workInfos ->
-                    val running = workInfos.any {
-                        it.state == WorkInfo.State.RUNNING || it.state == WorkInfo.State.ENQUEUED
-                    }
+                    val running = workInfos.any { isActiveBackupWork(it.state, it.tags) }
                     flow.value = running
                     _uiState.value = _uiState.value.copy(isUploading = running)
+                    if (wasRunning && !running) scanBackupStatus()
+                    wasRunning = running
                 }
         }
     }
 
     init {
         viewModelScope.launch {
+            var previousStates = emptyMap<Long, ConnectionState>()
             registry.connectionStates.collect { states ->
                 _uiState.value = _uiState.value.copy(
                     accounts = _uiState.value.accounts.map { account ->
                         account.copy(connectionState = states[account.configId] ?: ConnectionState.ERROR)
                     }
                 )
+                val connected = newlyConnectedConfigIds(previousStates, states)
+                if (connected.isNotEmpty() && uploadPrefDao.getEnabledList().any { it.serverConfigId in connected }) {
+                    scanBackupStatus()
+                }
+                previousStates = states
             }
         }
 
@@ -164,7 +191,7 @@ class CloudBackupViewModel @Inject constructor(
         // (loadInitialState already primed the UI); later changes trigger a rescan.
         viewModelScope.launch {
             uploadPrefDao.getEnabled()
-                .map { prefs -> prefs.map { it.albumId }.toSet() }
+                .map(::backupSelectionKeys)
                 .distinctUntilChanged()
                 .drop(1)
                 .collect {
@@ -196,18 +223,25 @@ class CloudBackupViewModel @Inject constructor(
                 // Album count is a cheap DB read, so keep it live even without a scan.
                 enabledAlbumCount = uploadPrefDao.getEnabledByConfigList(cfg.id).size,
                 totalAssets = snapshot?.totalAssets ?: 0,
-                backedUpCount = snapshot?.backedUpCount ?: 0,
+                verifiedCount = snapshot?.verifiedCount ?: 0,
+                // Snapshots written before verification provenance was tracked are assumptions.
+                assumedCount = snapshot?.assumedCount
+                    ?: snapshot?.backedUpCount
+                    ?: 0,
                 syncEnabled = cfg.syncEnabled,
                 connectionState = connectionStateOf(cfg.id)
             )
         }
         publishAccounts(accounts, isScanning = false)
         // Nothing cached yet — compute once so the numbers aren't all zero.
-        if (persisted.isEmpty() && accounts.isNotEmpty()) scanBackupStatus()
+        if (backupScanRequired(accounts.mapTo(mutableSetOf()) { it.configId }, persisted.keys)) {
+            scanBackupStatus()
+        }
     }
 
     fun scanBackupStatus() {
-        viewModelScope.launch {
+        scanJob?.cancel()
+        scanJob = viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isScanning = true, scanProgress = "Loading albums…")
 
             // Resolve every active account backed by a sync-capable provider. We list
@@ -236,14 +270,14 @@ class CloudBackupViewModel @Inject constructor(
             withContext(Dispatchers.IO) {
                 try {
                     val hashByMediaId = HashMap<Long, String>()
-                    fun hashOf(media: com.dot.gallery.feature_node.domain.model.Media): String? =
+                    suspend fun hashOf(media: com.dot.gallery.feature_node.domain.model.Media): String? =
                         hashByMediaId[media.id]
                             ?: computeSha1(media)?.also { hashByMediaId[media.id] = it }
 
-                    // Phase A — cheap, hash-free counts (filename match against the durable
-                    // cache) so the service cards + hero render immediately, then Phase B
-                    // refines with the authoritative hash check for the not-yet-matched
-                    // remainder. Gather each account's candidate media the SAME way the
+                    // Phase A — cheap, hash-free assumptions (filename match against the durable
+                    // cache) so the service cards + hero render immediately. Phase B hashes every
+                    // candidate and promotes only provider-confirmed matches to verified. Gather
+                    // each account's candidate media the SAME way the
                     // upload worker does — per enabled album via getMediaByAlbumId.
                     val scanned = perConfig.map { (cfg, provider, prefs) ->
                         val media = prefs.flatMap { pref ->
@@ -251,9 +285,35 @@ class CloudBackupViewModel @Inject constructor(
                         }.distinctBy { it.id }.filter { it.uri.scheme != "cloud" }
                         // Immich stores the original filename in `label` (remoteId is an
                         // opaque UUID); path-based stores key by remote path — cover both.
-                        val cachedNames: Set<String> = cloudMediaDao.getByServerConfig(cfg.id).first()
+                        val cached = cloudMediaDao.getByServerConfig(cfg.id).first()
+                        val cachedNames = cached
                             .mapNotNull { it.label.ifBlank { it.remoteId.substringAfterLast('/') }.ifBlank { null } }
                             .toSet()
+                        val localRevisions = cached
+                            .filter { it.localCopyPath.isNotBlank() }
+                            .map { "${it.localCopyPath}|${it.size}|${it.timestamp / 1000L}" }
+                            .toSet()
+                        val remoteRevisions = if (provider?.requiresUploadChecksum == true) {
+                            cached
+                                .filter { it.fileId.isNotBlank() && it.lastSyncedAt > 0L }
+                                .map { "${it.fileId}|${it.label}|${it.mimeType}|${it.size}|${it.lastSyncedAt / 1000L}" }
+                                .toSet()
+                        } else {
+                            emptySet()
+                        }
+                        val evidenceByMediaId = media.associate { item ->
+                            item.id to backupMatchEvidence(
+                                uri = item.getUri().toString(),
+                                mediaId = item.id,
+                                label = item.label,
+                                mimeType = item.mimeType,
+                                size = item.size,
+                                timestamp = item.timestamp,
+                                cachedNames = cachedNames,
+                                localRevisions = localRevisions,
+                                remoteRevisions = remoteRevisions
+                            )
+                        }
                         ScannedAccount(
                             config = cfg,
                             provider = provider,
@@ -261,40 +321,72 @@ class CloudBackupViewModel @Inject constructor(
                             enabledAlbumCount = prefs.size,
                             media = media,
                             cachedNames = cachedNames,
-                            nameMatched = media.count { it.label in cachedNames }
+                            nameMatched = evidenceByMediaId.count {
+                                it.value != BackupMatchEvidence.UNKNOWN
+                            }
                         )
                     }
 
                     // Phase A publish: services + provisional counts, still scanning.
-                    publishAccounts(scanned.map { it.toStatus(it.nameMatched) }, isScanning = true)
+                    val refined = scanned.map {
+                        it.toStatus(verified = 0, assumed = it.nameMatched)
+                    }.toMutableList()
+                    publishAccounts(refined, isScanning = true)
+                    var verificationFailed = false
 
-                    // Phase B: only files never seen on this account need the expensive
-                    // SHA-1 + bulkUploadCheck round-trip, so re-scanning a large, already
-                    // synced album is near-instant instead of re-hashing every file.
-                    val refined = scanned.map { s ->
-                        var backedUp = s.nameMatched
-                        // No live provider (errored/not authenticated) — keep the cheap
-                        // filename-cache count; the authoritative network check is skipped.
+                    // Phase B: hash every readable candidate and ask the provider for a content
+                    // match. Filename matches stay assumed unless this check confirms them.
+                    scanned.forEachIndexed { accountIndex, s ->
+                        val verifiedIds = mutableSetOf<Long>()
+                        // No live provider (errored/not authenticated) — retain filename matches
+                        // as assumptions and leave everything else unknown. With a provider, hash
+                        // every candidate so a filename match can be promoted to verified proof.
                         val provider = s.provider
+                        val candidates = s.media
                         if (provider != null) {
-                            val unknown = s.media.filter { it.label !in s.cachedNames }
-                            if (unknown.isNotEmpty()) {
-                                _uiState.value = _uiState.value.copy(scanProgress = "Checking ${unknown.size} new items…")
-                            }
-                            unknown.chunked(500).forEach { chunk ->
-                                val present = try {
-                                    provider.bulkUploadCheck(chunk.map { hashOf(it) ?: "" }).getOrDefault(emptyMap())
-                                } catch (_: Exception) { emptyMap() }
-                                chunk.forEachIndexed { idx, _ ->
-                                    if (present[idx.toString()] == true) backedUp++
+                            candidates.chunked(VERIFICATION_BATCH_SIZE).forEachIndexed { chunkIndex, chunk ->
+                                val checked = (chunkIndex * VERIFICATION_BATCH_SIZE).coerceAtMost(candidates.size)
+                                _uiState.value = _uiState.value.copy(
+                                    scanProgress = "Verifying ${checked + 1}–${(checked + chunk.size).coerceAtMost(candidates.size)} of ${candidates.size} items…"
+                                )
+                                val hashed = chunk.mapNotNull { media ->
+                                    hashOf(media)?.let { hash -> media to hash }
                                 }
+                                if (hashed.isNotEmpty()) {
+                                    val present = try {
+                                        provider.bulkUploadCheck(hashed.map { it.second })
+                                            .onFailure { verificationFailed = true }
+                                            .getOrDefault(emptyMap())
+                                    } catch (e: CancellationException) {
+                                        throw e
+                                    } catch (_: Exception) {
+                                        verificationFailed = true
+                                        emptyMap()
+                                    }
+                                    verifiedIds += verifiedItemsByIndex(hashed, present)
+                                        .map { it.first.id }
+                                }
+                                val assumed = s.media.count {
+                                    it.id !in verifiedIds && it.label in s.cachedNames
+                                }
+                                refined[accountIndex] = s.toStatus(verifiedIds.size, assumed)
+                                publishAccounts(refined, isScanning = true)
                             }
                         }
-                        s.toStatus(backedUp)
+                        val assumed = s.media.count {
+                            it.id !in verifiedIds && it.label in s.cachedNames
+                        }
+                        refined[accountIndex] = s.toStatus(verifiedIds.size, assumed)
                     }
 
                     publishAccounts(refined, isScanning = false)
-                    persistAccounts(refined)
+                    if (verificationFailed) {
+                        _uiState.value = _uiState.value.copy(error = "Some backup items could not be verified")
+                    } else {
+                        persistAccounts(refined)
+                    }
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (e: Exception) {
                     _uiState.value = _uiState.value.copy(
                         isScanning = false,
@@ -315,13 +407,14 @@ class CloudBackupViewModel @Inject constructor(
         val cachedNames: Set<String>,
         val nameMatched: Int
     ) {
-        fun toStatus(backedUp: Int) = AccountBackupStatus(
+        fun toStatus(verified: Int, assumed: Int) = AccountBackupStatus(
             configId = config.id,
             providerType = config.providerType,
             accountLabel = config.displayName.ifBlank { config.providerType.displayName },
             enabledAlbumCount = enabledAlbumCount,
             totalAssets = media.size,
-            backedUpCount = backedUp,
+            verifiedCount = verified,
+            assumedCount = assumed,
             syncEnabled = config.syncEnabled,
             connectionState = connectionState
         )
@@ -330,13 +423,18 @@ class CloudBackupViewModel @Inject constructor(
     /** Pushes an account list to the UI, recomputing the aggregate totals. */
     private fun publishAccounts(accounts: List<AccountBackupStatus>, isScanning: Boolean) {
         val total = accounts.sumOf { it.totalAssets }
-        val safe = accounts.sumOf { it.backedUpCount }
+        val verified = accounts.sumOf { it.verifiedCount }
+        val assumed = accounts.sumOf { it.assumedCount }
+        val unknown = (total - verified - assumed).coerceAtLeast(0)
         _uiState.value = _uiState.value.copy(
             accounts = accounts,
             enabledAlbumCount = accounts.sumOf { it.enabledAlbumCount },
             totalAssets = total,
-            backedUpCount = safe,
-            remainderCount = (total - safe).coerceAtLeast(0),
+            verifiedCount = verified,
+            assumedCount = assumed,
+            unknownCount = unknown,
+            backedUpCount = verified,
+            remainderCount = (total - verified).coerceAtLeast(0),
             isScanning = isScanning,
             scanProgress = if (isScanning) _uiState.value.scanProgress else ""
         )
@@ -354,7 +452,9 @@ class CloudBackupViewModel @Inject constructor(
             PersistedAccountStatus(
                 configId = it.configId,
                 totalAssets = it.totalAssets,
-                backedUpCount = it.backedUpCount
+                backedUpCount = it.backedUpCount,
+                verifiedCount = it.verifiedCount,
+                assumedCount = it.assumedCount
             )
         }
         runCatching {
@@ -389,23 +489,29 @@ class CloudBackupViewModel @Inject constructor(
         viewModelScope.launch {
             val config = configDao.getById(configId) ?: return@launch
             configDao.update(config.copy(syncEnabled = enabled))
+            syncScheduler.reconcile()
             scanBackupStatus()
         }
     }
 
-    private fun computeSha1(media: com.dot.gallery.feature_node.domain.model.Media): String? {
+    private suspend fun computeSha1(media: com.dot.gallery.feature_node.domain.model.Media): String? {
         return try {
             context.contentResolver.openInputStream(media.getUri())?.use { input ->
                 val digest = MessageDigest.getInstance("SHA-1")
                 val buffer = ByteArray(8192)
                 while (true) {
+                    currentCoroutineContext().ensureActive()
                     val read = input.read(buffer)
                     if (read == -1) break
                     digest.update(buffer, 0, read)
                 }
                 digest.digest().joinToString("") { "%02x".format(it) }
             }
-        } catch (_: Exception) { null }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            null
+        }
     }
 
     /** Persisted per-account backup counts so the dashboard opens instantly without a rescan. */
@@ -413,11 +519,64 @@ class CloudBackupViewModel @Inject constructor(
     private data class PersistedAccountStatus(
         val configId: Long,
         val totalAssets: Int,
-        val backedUpCount: Int
+        /** Legacy aggregate retained so older snapshots decode and are treated as assumptions. */
+        val backedUpCount: Int? = null,
+        val verifiedCount: Int? = null,
+        val assumedCount: Int? = null
     )
 
     private companion object {
+        private const val VERIFICATION_BATCH_SIZE = 50
         private val STATUS_KEY = stringPreferencesKey("cloud_backup_status_v1")
         private val statusJson = Json { ignoreUnknownKeys = true }
     }
+}
+
+internal enum class BackupMatchEvidence {
+    ASSUMED_REVISION,
+    ASSUMED_FILENAME,
+    UNKNOWN
+}
+
+internal fun backupMatchEvidence(
+    uri: String,
+    mediaId: Long,
+    label: String,
+    mimeType: String,
+    size: Long,
+    timestamp: Long,
+    cachedNames: Set<String>,
+    localRevisions: Set<String>,
+    remoteRevisions: Set<String>
+): BackupMatchEvidence = when {
+    isBackupRevisionCached(
+        uri = uri,
+        mediaId = mediaId,
+        label = label,
+        mimeType = mimeType,
+        size = size,
+        timestamp = timestamp,
+        localRevisions = localRevisions,
+        remoteRevisions = remoteRevisions
+    ) -> BackupMatchEvidence.ASSUMED_REVISION
+    label in cachedNames -> BackupMatchEvidence.ASSUMED_FILENAME
+    else -> BackupMatchEvidence.UNKNOWN
+}
+
+internal fun backupSelectionKeys(
+    preferences: List<CloudUploadPrefEntity>
+): Set<Pair<Long, Long>> = preferences.mapTo(mutableSetOf()) {
+    it.serverConfigId to it.albumId
+}
+
+internal fun backupScanRequired(
+    activeConfigIds: Set<Long>,
+    persistedConfigIds: Set<Long>
+): Boolean = activeConfigIds.any { it !in persistedConfigIds }
+
+internal fun newlyConnectedConfigIds(
+    previous: Map<Long, ConnectionState>,
+    current: Map<Long, ConnectionState>
+): Set<Long> = current.mapNotNullTo(mutableSetOf()) { (configId, state) ->
+    configId.takeIf { state == ConnectionState.CONNECTED && previous[configId] != ConnectionState.CONNECTED }
 }

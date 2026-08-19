@@ -16,40 +16,57 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.tooling.preview.Preview
 import com.dot.gallery.core.Constants.albumCellsList
 import com.dot.gallery.core.Settings.Album.rememberAlbumGridSize
+import com.dot.gallery.feature_node.presentation.util.PreviewHost
+import com.dot.gallery.ui.theme.ComponentSize
 import com.dot.gallery.ui.theme.Dimens
+import com.dot.gallery.ui.theme.Spacing
 import com.valentinilk.shimmer.shimmer
 
 @Composable
 fun LoadingAlbum(
     modifier: Modifier = Modifier,
-    shouldShimmer: Boolean = true,
-    bottomContent: @Composable (() -> Unit)? = null,
 ) {
     val gridSize by rememberAlbumGridSize()
     val grid = remember(gridSize) { albumCellsList.size - gridSize }
-    val shape = remember { RoundedCornerShape(16.dp) }
     val canShimmer = remember { Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU }
+    LoadingAlbumContent(
+        grid = grid,
+        canShimmer = canShimmer,
+        modifier = modifier,
+    )
+}
+
+@Composable
+internal fun LoadingAlbumContent(
+    grid: Int,
+    canShimmer: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val shape = MaterialTheme.shapes.large
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp)
-            .padding(top = 48.dp)
-            .then(if (shouldShimmer && canShimmer) Modifier.shimmer() else Modifier),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+            .padding(horizontal = Spacing.ScreenHorizontal)
+            .padding(top = ComponentSize.MinimumTouchTarget)
+            .semantics { progressBarRangeInfo = ProgressBarRangeInfo.Indeterminate }
+            .then(if (canShimmer) Modifier.shimmer() else Modifier),
+        verticalArrangement = Arrangement.spacedBy(Spacing.Small),
     ) {
         repeat(2) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.Small),
             ) {
                 repeat(grid) {
                     Box(
@@ -65,30 +82,32 @@ fun LoadingAlbum(
                 }
             }
         }
-        if (shouldShimmer) {
-            repeat(4) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    repeat(grid) {
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .aspectRatio(1f)
-                                .size(Dimens.Album())
-                                .background(
-                                    color = MaterialTheme.colorScheme.surfaceVariant,
-                                    shape = shape
-                                )
-                        )
-                    }
+        repeat(4) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.Small)
+            ) {
+                repeat(grid) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .aspectRatio(1f)
+                            .size(Dimens.Album())
+                            .background(
+                                color = MaterialTheme.colorScheme.surfaceVariant,
+                                shape = shape
+                            )
+                    )
                 }
             }
         }
+    }
+}
 
-        if (bottomContent != null) {
-            bottomContent()
-        }
+@Preview(showBackground = true, name = "Loading albums")
+@Composable
+private fun LoadingAlbumPreview() {
+    PreviewHost {
+        LoadingAlbumContent(grid = 2, canShimmer = false)
     }
 }

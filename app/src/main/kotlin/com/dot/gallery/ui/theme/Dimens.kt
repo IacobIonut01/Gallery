@@ -16,3 +16,24 @@ sealed class Dimens(val size: Dp) {
 
     operator fun invoke(): Dp = size
 }
+
+/** Shared spacing roles for reusable UI rather than one-off numeric values. */
+object Spacing {
+    val Hairline = 1.dp
+    val ExtraSmall = 4.dp
+    val Small = 8.dp
+    val Medium = 16.dp
+    val Large = 24.dp
+    val ExtraLarge = 32.dp
+    val ScreenHorizontal = 16.dp
+    val ContentHorizontal = 24.dp
+}
+
+/** Shared component sizes with accessibility-sensitive minimums. */
+object ComponentSize {
+    val MinimumTouchTarget = 48.dp
+    val ButtonHeight = 64.dp
+    val NavigationBarHeight = 64.dp
+    val NavigationRailWidth = 80.dp
+    val StateIcon = 96.dp
+}

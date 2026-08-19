@@ -24,6 +24,9 @@ interface ImageEmbeddingDao {
     @Query("SELECT * FROM image_embeddings")
     fun getRecords(): Flow<List<ImageEmbedding>>
 
+    @Query("SELECT * FROM image_embeddings WHERE id IN (:ids)")
+    suspend fun getRecords(ids: List<Long>): List<ImageEmbedding>
+
     @Query("SELECT id, date, resultRevision, length(embedding) AS embeddingBytes FROM image_embeddings")
     suspend fun getHeaders(): List<ImageEmbeddingHeader>
 
@@ -35,6 +38,9 @@ interface ImageEmbeddingDao {
 
     @Query("UPDATE image_embeddings SET resultRevision = :revision WHERE id = :id")
     suspend fun updateResultRevision(id: Long, revision: String): Int
+
+    @Query("UPDATE image_embeddings SET resultRevision = :revision WHERE id IN (:ids)")
+    suspend fun updateResultRevisions(ids: List<Long>, revision: String): Int
 
     @Query(
         """

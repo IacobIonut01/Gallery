@@ -11,6 +11,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
@@ -64,8 +65,12 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -80,6 +85,7 @@ import androidx.compose.ui.unit.sp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.dot.gallery.R
 import com.dot.gallery.core.Position
 import com.dot.gallery.core.PreferenceType
 import com.dot.gallery.core.SettingsEntity
@@ -152,6 +158,10 @@ fun SettingsItem(
     var checked by remember(item.isChecked) {
         mutableStateOf(item.isChecked == true)
     }
+    val switchStateDescription = stringResource(
+        if (checked) R.string.enabled else R.string.disabled
+    )
+    val deleteItemDescription = stringResource(R.string.delete_item_cd, item.title)
 
     @Composable
     fun summaryContent() {
@@ -232,15 +242,11 @@ fun SettingsItem(
         Switch(
             modifier = Modifier
                 .padding(start = 16.dp)
-                .focusProperties { canFocus = false },
+                .focusProperties { canFocus = false }
+                .clearAndSetSemantics { },
             checked = checked,
             enabled = item.enabled,
-            onCheckedChange = { isChecked ->
-                item.onCheck?.let {
-                    checked = isChecked
-                    it(isChecked)
-                }
-            },
+            onCheckedChange = null,
         )
     }
 
@@ -352,7 +358,9 @@ fun SettingsItem(
                 color = MaterialTheme.colorScheme.outlineVariant
             )
             Switch(
-                modifier = Modifier.focusProperties { canFocus = item.enabled },
+                modifier = Modifier
+                    .focusProperties { canFocus = item.enabled }
+                    .semantics { stateDescription = switchStateDescription },
                 checked = checked,
                 enabled = item.enabled,
                 onCheckedChange = { isChecked ->
@@ -381,28 +389,35 @@ fun SettingsItem(
         }
     }
     val hasClickAction = remember(item) {
-        (item.onClick != null || item.onLongClick != null) || item.type == PreferenceType.Switch
+        item.onClick != null || item.onLongClick != null
     }
     @OptIn(ExperimentalFoundationApi::class)
-    val clickableModifier =
-        if (item.type != PreferenceType.Seek && !item.isHeader && hasClickAction)
+    val clickableModifier = when {
+        item.type == PreferenceType.Switch && !isSplitSwitch -> Modifier
+            .toggleable(
+                value = checked,
+                enabled = item.enabled && item.onCheck != null,
+                role = Role.Switch,
+                interactionSource = mutableInteractionSource,
+                indication = LocalIndication.current,
+                onValueChange = { isChecked ->
+                    checked = isChecked
+                    item.onCheck?.invoke(isChecked)
+                },
+            )
+            .semantics { stateDescription = switchStateDescription }
+
+        item.type != PreferenceType.Seek && !item.isHeader && hasClickAction ->
             Modifier.combinedClickable(
                 enabled = item.enabled,
                 interactionSource = mutableInteractionSource,
                 indication = LocalIndication.current,
-                onClick = {
-                    if (isSplitSwitch) {
-                        item.onClick?.invoke()
-                    } else if (item.type == PreferenceType.Switch) {
-                        item.onCheck?.let {
-                            checked = !checked
-                            it(checked)
-                        }
-                    } else item.onClick?.invoke()
-                },
-                onLongClick = item.onLongClick
+                onClick = { item.onClick?.invoke() },
+                onLongClick = item.onLongClick,
             )
-        else Modifier
+
+        else -> Modifier
+    }
 
     val settingsContent: @Composable () -> Unit = {
         Box(
@@ -418,6 +433,7 @@ fun SettingsItem(
                             modifier = Modifier.padding(horizontal = 16.dp)
                         )
                         .clip(shape)
+                        .semantics { heading() }
                         .then(clickableModifier)
                         .padding(horizontal = 8.dp)
                         .widthIn(max = 600.dp)
@@ -444,23 +460,6 @@ fun SettingsItem(
                     targetValue = if (item.enabled) 1f else 0.4f,
                     label = "alpha"
                 )
-                val semanticDescription = buildString {
-                    append(item.titleAnnotated?.text ?: item.title)
-                    val summaryText = item.summaryAnnotated?.text ?: item.summary
-                    if (!summaryText.isNullOrEmpty()) {
-                        append(", ")
-                        append(summaryText)
-                    }
-                    val rightTextValue = item.rightTextAnnotated?.text ?: item.rightText
-                    if (!rightTextValue.isNullOrEmpty()) {
-                        append(", ")
-                        append(rightTextValue)
-                    }
-                    if (item.type == PreferenceType.Switch) {
-                        append(", ")
-                        append(if (checked) "enabled" else "disabled")
-                    }
-                }
                 val focusedBackgroundColor by animateColorAsState(
                     targetValue = if (focusState.hasFocus) {
                         MaterialTheme.colorScheme.surfaceContainerHighest
@@ -484,9 +483,6 @@ fun SettingsItem(
                 Column(
                     modifier = modifier
                         .settingsFocusTarget(focusState)
-                        .semantics(mergeDescendants = true) {
-                            contentDescription = semanticDescription
-                        }
                         .then(paddingModifier)
                         .maybeApply(
                             condition = applyPaddings,
@@ -599,7 +595,7 @@ fun SettingsItem(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Delete,
-                        contentDescription = "Delete ${item.title}",
+                        contentDescription = deleteItemDescription,
                         tint = MaterialTheme.colorScheme.error
                     )
                 }

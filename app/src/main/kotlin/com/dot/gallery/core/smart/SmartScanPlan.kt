@@ -65,6 +65,34 @@ object SmartScanPlan {
         }
     }
 
+    fun executionBranches(features: Int): List<List<SmartScanPhase>> {
+        val phases = phasesFor(features).toSet()
+        return listOfNotNull(
+            listOf(SmartScanPhase.METADATA).takeIf { SmartScanPhase.METADATA in phases },
+            buildList {
+                if (SmartScanPhase.SEARCH_INDEX in phases) add(SmartScanPhase.SEARCH_INDEX)
+                if (SmartScanPhase.CATEGORY_CLASSIFICATION in phases) add(SmartScanPhase.CATEGORY_CLASSIFICATION)
+            }.takeIf { it.isNotEmpty() },
+            listOf(SmartScanPhase.FACE_INDEX).takeIf { SmartScanPhase.FACE_INDEX in phases }
+        )
+    }
+
+    fun isAutomaticScanCurrent(
+        mediaCurrent: Boolean,
+        expectedProcessorRevisions: Map<SmartScanPhase, String>,
+        latestProcessorRevisions: Map<SmartScanPhase, String>
+    ): Boolean = mediaCurrent && expectedProcessorRevisions.all { (phase, revision) ->
+        latestProcessorRevisions[phase] == revision
+    }
+
+    fun isPhaseCheckpointCurrent(
+        expectedRevision: String,
+        latestRevision: String?,
+        currentSourceSnapshot: String?,
+        phaseSourceSnapshot: String?
+    ): Boolean = currentSourceSnapshot?.isNotEmpty() == true &&
+        latestRevision == expectedRevision && phaseSourceSnapshot == currentSourceSnapshot
+
     fun aggregate(progress: Iterable<SmartScanProgress>): SmartScanProgress =
         progress.fold(SmartScanProgress.EMPTY, SmartScanProgress::plus)
 
@@ -82,6 +110,15 @@ object SmartScanPlan {
     }
 
     fun requiresForeground(mediaCount: Int): Boolean = mediaCount > FOREGROUND_MEDIA_THRESHOLD
+
+    fun shouldShowRun(userVisible: Boolean, totalMedia: Int): Boolean = userVisible || totalMedia > 0
+
+    fun shouldRequeueForRevision(
+        status: SmartScanStatus,
+        storedRevision: String,
+        expectedRevision: String
+    ): Boolean = status !in setOf(SmartScanStatus.QUEUED, SmartScanStatus.RUNNING) &&
+        storedRevision != expectedRevision
 
     fun overallProgress(phases: List<SmartScanPhaseEntity>): Float {
         if (phases.isEmpty()) return 0f

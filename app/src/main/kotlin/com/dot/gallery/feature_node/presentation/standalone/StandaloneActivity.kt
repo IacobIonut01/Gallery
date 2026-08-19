@@ -6,6 +6,7 @@
 package com.dot.gallery.feature_node.presentation.standalone
 
 import android.app.KeyguardManager
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.compose.BackHandler
@@ -25,7 +26,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import com.dot.gallery.core.DefaultEventHandler
 import com.dot.gallery.core.MediaDistributor
 import com.dot.gallery.core.MediaHandler
@@ -68,6 +71,18 @@ open class StandaloneActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         enableEdgeToEdge()
+        showIntent(intent)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        viewModelStore.clear()
+        showIntent(intent)
+    }
+
+    @OptIn(ExperimentalSharedTransitionApi::class, ExperimentalHazeMaterialsApi::class)
+    private fun showIntent(intent: Intent) {
         val action = intent.action.toString()
         // A review can be "secure" in two ways:
         //  - an explicit ACTION_REVIEW_SECURE action, or
@@ -117,27 +132,26 @@ open class StandaloneActivity : AppCompatActivity() {
                     // here and show the metadata screen inside the AnimatedContent below; when set
                     // (mediaUri to isVideo) the metadata screen is shown instead of the image.
                     var metadataArgs by remember { mutableStateOf<Pair<String, Boolean>?>(null) }
-                    LaunchedEffect(Unit) {
-                        eventHandler.navigateUpAction = { finish() }
-                    }
                     LaunchedEffect(eventHandler) {
-                        eventHandler.updaterFlow.collect { event ->
-                            when (event) {
-                                is UIEvent.NavigationUpEvent -> {
-                                    // Back out of the metadata screen to the image first; only
-                                    // finish the activity when the image itself is showing.
-                                    if (metadataArgs != null) metadataArgs = null else finish()
-                                }
-                                is UIEvent.NavigationRouteEvent -> {
-                                    val route = event.route
-                                    if (route.startsWith(Screen.MetadataViewScreen.route)) {
-                                        val parsed = Uri.parse(route)
-                                        metadataArgs =
-                                            (parsed.getQueryParameter("mediaUri") ?: "") to
-                                                    (parsed.getQueryParameter("isVideo")?.toBoolean() ?: false)
+                        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                            eventHandler.updaterFlow.collect { event ->
+                                when (event) {
+                                    is UIEvent.NavigationUpEvent -> {
+                                        // Back out of the metadata screen to the image first; only
+                                        // finish the activity when the image itself is showing.
+                                        if (metadataArgs != null) metadataArgs = null else finish()
                                     }
+                                    is UIEvent.NavigationRouteEvent -> {
+                                        val route = event.route
+                                        if (route.startsWith(Screen.MetadataViewScreen.route)) {
+                                            val parsed = Uri.parse(route)
+                                            metadataArgs =
+                                                (parsed.getQueryParameter("mediaUri") ?: "") to
+                                                        (parsed.getQueryParameter("isVideo")?.toBoolean() ?: false)
+                                        }
+                                    }
+                                    else -> Unit
                                 }
-                                else -> Unit
                             }
                         }
                     }

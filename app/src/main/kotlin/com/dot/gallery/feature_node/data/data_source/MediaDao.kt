@@ -60,6 +60,9 @@ interface MediaDao {
     @Query("SELECT EXISTS(SELECT * FROM media_version WHERE version = :version) LIMIT 1")
     suspend fun isMediaVersionUpToDate(version: String): Boolean
 
+    @Query("DELETE FROM media_version")
+    suspend fun invalidateMediaVersion()
+
     /** Timeline Settings */
     @Query("SELECT * FROM timeline_settings LIMIT 1")
     fun getTimelineSettings(): Flow<TimelineSettings?>

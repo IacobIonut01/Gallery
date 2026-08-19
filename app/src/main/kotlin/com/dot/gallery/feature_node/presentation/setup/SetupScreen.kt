@@ -34,6 +34,7 @@ import com.dot.gallery.core.Settings
 import com.dot.gallery.core.Settings.Misc.rememberAppLogoAlias
 import com.dot.gallery.core.Settings.Misc.rememberAppNameAlias
 import com.dot.gallery.core.Settings.Misc.rememberSetupCompletedVersion
+import com.dot.gallery.core.presentation.components.util.hasMediaAccess
 import com.dot.gallery.feature_node.presentation.setup.components.LocalSetupAnimatedVisibilityScope
 import com.dot.gallery.feature_node.presentation.setup.components.LocalSetupSharedTransitionScope
 import com.dot.gallery.feature_node.presentation.setup.components.SetupAnimatedBackground
@@ -89,7 +90,13 @@ fun SetupScreen(onComplete: () -> Unit = {}) {
         if (safeIndex > 0) index = safeIndex - 1 else activity?.finish()
         Unit
     }
-    val finish: () -> Unit = {
+    val finish: () -> Unit = finish@{
+        // Permission may have been revoked from system settings while later setup pages were open.
+        // Recheck before persisting completion; selected-photos access is a valid result.
+        if (!context.hasMediaAccess()) {
+            index = pages.indexOf(SetupPage.PERMISSIONS)
+            return@finish
+        }
         setupCompletedVersion = Settings.Misc.CURRENT_SETUP_VERSION
         // Apply the remembered app name + logo now that setup is complete. Restart the app
         // (so the launcher reflects the change immediately) only when it actually differs

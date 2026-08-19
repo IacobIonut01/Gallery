@@ -70,6 +70,14 @@ class CloudMediaCache @Inject constructor(
 
     fun isPinned(key: String): Boolean = pinnedFile(key).let { it.isFile && it.length() > 0 }
 
+    /** Number of requested pinned variants that are present and non-empty. */
+    fun pinnedVariantCount(refs: Collection<CacheAssetRef>, sizeLabels: Collection<String>): Int =
+        refs.sumOf { ref ->
+            sizeLabels.count { size ->
+                isPinned(keyFor(ref.providerType, ref.configId, ref.remoteId, size))
+            }
+        }
+
     /** A unique temp file in the auto tier for write-through teeing. */
     fun newAutoTemp(key: String): File = File(autoDir, "$key.${System.nanoTime()}.tmp")
 
@@ -85,12 +93,22 @@ class CloudMediaCache @Inject constructor(
 
     /** Write bytes straight into the pinned tier (used by the offline download worker). */
     fun storePinned(key: String, bytes: ByteArray, contentType: String? = null): Boolean = runCatching {
+        if (bytes.isEmpty()) return false
         val tmp = File(pinnedDir, "$key.${System.nanoTime()}.tmp")
         tmp.writeBytes(bytes)
         val target = pinnedFile(key)
-        if (target.exists()) tmp.delete() else if (!tmp.renameTo(target)) { tmp.delete(); return false }
+        when {
+            target.isFile && target.length() > 0L -> tmp.delete()
+            else -> {
+                target.delete()
+                if (!tmp.renameTo(target)) {
+                    tmp.delete()
+                    return false
+                }
+            }
+        }
         if (!contentType.isNullOrBlank()) runCatching { pinnedTypeFile(key).writeText(contentType) }
-        true
+        target.isFile && target.length() > 0L
     }.getOrElse { false }
 
     fun autoSizeBytes(): Long = autoDir.listFiles()?.filter { it.isFile }?.sumOf { it.length() } ?: 0L
@@ -160,7 +178,24 @@ class CloudMediaCache @Inject constructor(
         autoDir.listFiles()?.forEach { it.delete() }
     }
 
-    /** Remove pinned entries (e.g. when an account is un-pinned or pins are cleared). */
+    /** Remove only pinned variants for [refs], preserving browsed auto-cache entries. */
+    @Synchronized
+    fun clearPinnedForAssets(refs: Collection<CacheAssetRef>): Long {
+        var freed = 0L
+        for (ref in refs) {
+            for (key in keysForAsset(ref)) {
+                for (file in listOf(pinnedFile(key), pinnedTypeFile(key))) {
+                    if (file.isFile) {
+                        freed += file.length()
+                        file.delete()
+                    }
+                }
+            }
+        }
+        return freed
+    }
+
+    /** Remove pinned entries (e.g. when all pins are cleared). */
     @Synchronized
     fun clearPinned() {
         pinnedDir.listFiles()?.forEach { it.delete() }

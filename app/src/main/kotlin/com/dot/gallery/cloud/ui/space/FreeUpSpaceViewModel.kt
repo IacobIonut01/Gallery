@@ -11,12 +11,12 @@ import com.dot.gallery.R
 import androidx.lifecycle.viewModelScope
 import com.dot.gallery.cloud.core.ProviderRegistry
 import com.dot.gallery.cloud.core.capabilities.SyncCapableProvider
+import com.dot.gallery.cloud.data.dao.CloudUploadPrefDao
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.domain.util.getUri
 import com.dot.gallery.feature_node.domain.util.isFavorite
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia
-import com.dot.gallery.feature_node.presentation.util.printDebug
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -48,7 +48,8 @@ data class FreeUpSpaceUiState(
 class FreeUpSpaceViewModel @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val repository: MediaRepository,
-    private val registry: ProviderRegistry
+    private val registry: ProviderRegistry,
+    private val uploadPrefDao: CloudUploadPrefDao
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(FreeUpSpaceUiState())
@@ -68,12 +69,6 @@ class FreeUpSpaceViewModel @Inject constructor(
     }
 
     fun scan() {
-        val syncProvider = registry.getSyncProviders().firstOrNull()
-        if (syncProvider == null) {
-            _uiState.value = _uiState.value.copy(error = "No sync provider")
-            return
-        }
-
         // "Never" disables removal entirely — surface a clear message and do nothing.
         if (_uiState.value.cutoffDays == NEVER_CUTOFF) {
             _uiState.value = _uiState.value.copy(
@@ -83,76 +78,71 @@ class FreeUpSpaceViewModel @Inject constructor(
             return
         }
 
-        _uiState.value = _uiState.value.copy(isScanning = true, message = "Loading local media…", backedUpItems = emptyList())
+        _uiState.value = _uiState.value.copy(
+            isScanning = true,
+            scannedCount = 0,
+            message = context.getString(R.string.cloud_free_space_loading),
+            backedUpItems = emptyList(),
+            error = null
+        )
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 try {
                     val allMedia = repository.getMediaByType(AllowedMedia.BOTH)
-                        .first().data ?: emptyList()
-                    val localMedia = allMedia.filter { it.uri.scheme != "cloud" }
-
-                    val cutoffMs = System.currentTimeMillis() - (_uiState.value.cutoffDays.toLong() * 86400000L)
-                    val candidates = localMedia.filter { it.timestamp < cutoffMs }
-                        .let { list ->
-                            if (_uiState.value.keepFavorites) list.filter { !it.isFavorite }
-                            else list
+                        .first().data.orEmpty()
+                    val cutoffMs = System.currentTimeMillis() -
+                            (_uiState.value.cutoffDays.toLong() * 86_400_000L)
+                    val candidates = allMedia
+                        .filter { it.uri.scheme != "cloud" && it.definedTimestamp * 1000L < cutoffMs }
+                        .let { items ->
+                            if (_uiState.value.keepFavorites) items.filterNot { it.isFavorite }
+                            else items
                         }
-
-                    _uiState.value = _uiState.value.copy(
-                        totalLocal = candidates.size,
-                        message = "Checking ${candidates.size} items against cloud…"
-                    )
-
-                    val backedUp = mutableListOf<Media.UriMedia>()
-                    candidates.chunked(500).forEach { chunk ->
-                        val hashes = chunk.mapNotNull { computeSha1(it) }
-                        try {
-                            val result = syncProvider.bulkUploadCheck(hashes).getOrDefault(emptyMap())
-                            chunk.forEachIndexed { idx, media ->
-                                if (result[idx.toString()] == true) {
-                                    backedUp.add(media)
-                                }
+                    val preferencesByAlbum = uploadPrefDao.getEnabledList().groupBy { it.albumId }
+                    val hashCache = mutableMapOf<Long, String?>()
+                    val verified = candidates.filterIndexed { index, media ->
+                        val destinations = preferencesByAlbum[media.albumID].orEmpty()
+                        val presentEverywhere = destinations.isNotEmpty() && destinations.all { preference ->
+                            val provider = registry.getByConfigId(preference.serverConfigId)
+                                    as? SyncCapableProvider ?: return@all false
+                            if (provider.requiresUploadChecksum) {
+                                val checksum = hashCache.getOrPut(media.id) { computeSha1(media) }
+                                    ?: return@all false
+                                provider.bulkUploadCheck(listOf(checksum)).getOrNull()?.get("0") == true
+                            } else {
+                                runCatching {
+                                    provider.remoteExists(media, preference.albumLabel.takeIf { it.isNotBlank() })
+                                }.getOrDefault(false)
                             }
-                        } catch (_: Exception) { }
-                        _uiState.value = _uiState.value.copy(
-                            scannedCount = _uiState.value.scannedCount + chunk.size
-                        )
+                        }
+                        _uiState.value = _uiState.value.copy(scannedCount = index + 1)
+                        presentEverywhere
                     }
-
                     _uiState.value = _uiState.value.copy(
                         isScanning = false,
-                        backedUpItems = backedUp,
-                        message = if (backedUp.isEmpty()) "No backed-up items older than ${_uiState.value.cutoffDays} days found"
-                        else "Found ${backedUp.size} items safe to remove"
+                        totalLocal = candidates.size,
+                        backedUpItems = verified,
+                        message = if (verified.isEmpty()) {
+                            context.getString(R.string.cloud_free_space_none_verified)
+                        } else {
+                            context.getString(R.string.cloud_free_space_verified_count, verified.size)
+                        }
                     )
                 } catch (e: Exception) {
-                    _uiState.value = _uiState.value.copy(isScanning = false, error = e.message)
+                    _uiState.value = _uiState.value.copy(
+                        isScanning = false,
+                        error = e.message ?: context.getString(R.string.error_title)
+                    )
                 }
             }
         }
     }
 
     fun deleteLocalCopies() {
-        val items = _uiState.value.backedUpItems
-        if (items.isEmpty()) return
-        _uiState.value = _uiState.value.copy(isDeleting = true, message = "Removing ${items.size} local copies…")
-        viewModelScope.launch(Dispatchers.IO) {
-            var deleted = 0
-            items.forEach { media ->
-                try {
-                    val rows = context.contentResolver.delete(media.getUri(), null, null)
-                    if (rows > 0) deleted++
-                } catch (e: Exception) {
-                    printDebug("FreeUpSpace: Failed to delete ${media.label}: ${e.message}")
-                }
-            }
-            _uiState.value = _uiState.value.copy(
-                isDeleting = false,
-                deletedCount = deleted,
-                backedUpItems = emptyList(),
-                message = "Freed up $deleted items"
-            )
-        }
+        _uiState.value = _uiState.value.copy(
+            isDeleting = false,
+            message = context.getString(R.string.cloud_local_deletion_unavailable)
+        )
     }
 
     private fun computeSha1(media: Media): String? {

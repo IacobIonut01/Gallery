@@ -5,6 +5,7 @@
 
 package com.dot.gallery.cloud.local
 
+import com.dot.gallery.cloud.core.LOCAL_PEOPLE_CONFIG_ID
 import com.dot.gallery.cloud.core.PersonInfo
 import com.dot.gallery.cloud.core.ProviderCapability
 import com.dot.gallery.cloud.core.ProviderType
@@ -57,6 +58,7 @@ class LocalPeopleProvider @Inject constructor(
                         id = p.id,
                         name = p.name,
                         providerType = ProviderType.LOCAL_PEOPLE,
+                        serverConfigId = LOCAL_PEOPLE_CONFIG_ID,
                         thumbnailUrl = p.thumbnailUrl,
                         assetCount = p.faceCount
                     )

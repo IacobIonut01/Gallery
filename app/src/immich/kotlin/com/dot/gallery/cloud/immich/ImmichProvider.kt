@@ -156,7 +156,8 @@ class ImmichProvider @Inject constructor(
         ProviderCapability.PEOPLE,
         ProviderCapability.MAP,
         ProviderCapability.SMART_SEARCH,
-        ProviderCapability.SHARE_LINK,
+        ProviderCapability.SHARE_CREATE,
+        ProviderCapability.SHARE_MANAGE,
         ProviderCapability.ARCHIVE,
         ProviderCapability.MEMORIES,
         ProviderCapability.FAVORITE,
@@ -627,6 +628,7 @@ class ImmichProvider @Inject constructor(
 
     override fun getPeople(): Flow<Resource<List<PersonInfo>>> = flow {
         try {
+            val configId = requireConfigId()
             val response = requireApi().getPeople()
             if (response.isSuccessful) {
                 val people = response.body()?.people?.filter { !it.isHidden }?.map { dto ->
@@ -634,7 +636,8 @@ class ImmichProvider @Inject constructor(
                         id = dto.id,
                         name = dto.name,
                         providerType = ProviderType.IMMICH,
-                        thumbnailUrl = CloudMediaFetcher.buildPersonUri(ProviderType.IMMICH, dto.id, currentConfig?.id ?: -1L),
+                        serverConfigId = configId,
+                        thumbnailUrl = CloudMediaFetcher.buildPersonUri(ProviderType.IMMICH, dto.id, configId),
                         assetCount = 0,
                         birthDate = dto.birthDate
                     )
@@ -851,20 +854,21 @@ class ImmichProvider @Inject constructor(
             authHeaders.forEach { (k, v) -> requestBuilder.addHeader(k, v) }
             val client = com.dot.gallery.cloud.image.CloudFetcherRegistryHolder.okHttpClient
                 ?: return Result.failure(Exception("OkHttpClient not initialized"))
-            val response = client.newCall(requestBuilder.build()).execute()
-            if (!response.isSuccessful) {
-                return Result.failure(Exception("Download failed: ${response.code}"))
+            client.newCall(requestBuilder.build()).execute().use { response ->
+                if (!response.isSuccessful) {
+                    return@use Result.failure(Exception("Download failed: ${response.code}"))
+                }
+                val body = response.body
+                val ext = when {
+                    body.contentType()?.subtype?.contains("jpeg") == true -> ".jpg"
+                    body.contentType()?.subtype?.contains("png") == true -> ".png"
+                    body.contentType()?.subtype?.contains("mp4") == true -> ".mp4"
+                    else -> ""
+                }
+                val cacheFile = File(context.cacheDir, "download_${remoteId.take(12)}$ext")
+                body.byteStream().use { input -> cacheFile.outputStream().use { output -> input.copyTo(output) } }
+                Result.success(cacheFile.toUri())
             }
-            val body = response.body ?: return Result.failure(Exception("Empty response"))
-            val ext = when {
-                body.contentType()?.subtype?.contains("jpeg") == true -> ".jpg"
-                body.contentType()?.subtype?.contains("png") == true -> ".png"
-                body.contentType()?.subtype?.contains("mp4") == true -> ".mp4"
-                else -> ""
-            }
-            val cacheFile = File(context.cacheDir, "download_${remoteId.take(12)}$ext")
-            body.byteStream().use { input -> cacheFile.outputStream().use { output -> input.copyTo(output) } }
-            Result.success(cacheFile.toUri())
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -989,6 +993,7 @@ class ImmichProvider @Inject constructor(
 
     override fun getSharedLinks(): Flow<Resource<List<SharedLinkInfo>>> = flow {
         try {
+            val configId = requireConfigId()
             val response = requireApi().getSharedLinks()
             if (response.isSuccessful) {
                 val links = response.body()?.map { dto ->
@@ -1004,6 +1009,7 @@ class ImmichProvider @Inject constructor(
                         password = dto.password,
                         assetCount = dto.assets.size,
                         providerType = ProviderType.IMMICH,
+                        serverConfigId = configId,
                         createdAt = dto.createdAt?.let { ImmichAssetDto.parseIsoTimestamp(it) } ?: 0L,
                         thumbnailAssetId = dto.album?.albumThumbnailAssetId
                             ?: dto.assets.firstOrNull()?.id,
@@ -1081,6 +1087,7 @@ class ImmichProvider @Inject constructor(
                         year = dto.data?.year ?: 0,
                         assetCount = dto.assets.size,
                         providerType = ProviderType.IMMICH,
+                        serverConfigId = configId,
                         createdAt = dto.createdAt?.let { ImmichAssetDto.parseIsoTimestamp(it) } ?: 0L,
                         seenAt = dto.seenAt?.let { ImmichAssetDto.parseIsoTimestamp(it) },
                         media = assetMedia

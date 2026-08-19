@@ -54,17 +54,17 @@ class OcsApiClient(
     private val credentials = Credentials.basic(username, password)
     private val apiBase = "${baseUrl.trimEnd('/')}/ocs/v2.php"
 
-    fun getCapabilities(): OcsCapabilities {
-        val response = okHttpClient.newCall(buildOcsRequest("$apiBase/cloud/capabilities")).execute()
-        if (!response.isSuccessful) throw Exception("OCS capabilities failed: ${response.code}")
-        return parseCapabilities(response.body?.string() ?: "")
-    }
+    fun getCapabilities(): OcsCapabilities =
+        okHttpClient.newCall(buildOcsRequest("$apiBase/cloud/capabilities")).execute().use { response ->
+            if (!response.isSuccessful) throw Exception("OCS capabilities failed: ${response.code}")
+            parseCapabilities(response.body.string())
+        }
 
-    fun getCurrentUser(): OcsUserInfo {
-        val response = okHttpClient.newCall(buildOcsRequest("$apiBase/cloud/user")).execute()
-        if (!response.isSuccessful) throw Exception("OCS user info failed: ${response.code}")
-        return parseUserInfo(response.body?.string() ?: "")
-    }
+    fun getCurrentUser(): OcsUserInfo =
+        okHttpClient.newCall(buildOcsRequest("$apiBase/cloud/user")).execute().use { response ->
+            if (!response.isSuccessful) throw Exception("OCS user info failed: ${response.code}")
+            parseUserInfo(response.body.string())
+        }
 
     fun createPublicShare(
         path: String,
@@ -84,9 +84,10 @@ class OcsApiClient(
             .header("OCS-APIREQUEST", "true")
             .header("Accept", "application/xml")
             .build()
-        val response = okHttpClient.newCall(request).execute()
-        if (!response.isSuccessful) throw Exception("Create share failed: ${response.code}")
-        return parseShareResponse(response.body?.string() ?: "")
+        return okHttpClient.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) throw Exception("Create share failed: ${response.code}")
+            parseShareResponse(response.body.string())
+        }
     }
 
     private fun buildOcsRequest(url: String): Request = Request.Builder()

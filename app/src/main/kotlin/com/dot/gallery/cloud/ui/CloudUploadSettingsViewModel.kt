@@ -11,6 +11,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
+import com.dot.gallery.R
 import com.dot.gallery.cloud.core.ProviderRegistry
 import com.dot.gallery.cloud.core.capabilities.SyncCapableProvider
 import com.dot.gallery.cloud.data.dao.CloudDeleteLocalPrefDao
@@ -27,7 +28,6 @@ import com.dot.gallery.feature_node.domain.util.MediaOrder
 import com.dot.gallery.feature_node.domain.util.OrderType
 import com.dot.gallery.feature_node.domain.util.getUri
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia
-import com.dot.gallery.feature_node.presentation.util.printDebug
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -177,13 +177,19 @@ class CloudUploadSettingsViewModel @Inject constructor(
 
     fun findDuplicates() {
         viewModelScope.launch {
-            val syncProvider = registry.getSyncProviders().firstOrNull()
+            val configId = effectiveConfigId.value
+            val syncProvider = registry.getByConfigId(configId) as? SyncCapableProvider
             if (syncProvider == null) {
-                _dedupState.value = DedupState(message = "No sync-capable provider configured")
+                _dedupState.value = DedupState(
+                    message = context.getString(R.string.cloud_provider_not_available)
+                )
                 return@launch
             }
 
-            _dedupState.value = DedupState(isScanning = true, message = "Loading local media…")
+            _dedupState.value = DedupState(
+                isScanning = true,
+                message = context.getString(R.string.cloud_free_space_loading)
+            )
 
             withContext(Dispatchers.IO) {
                 try {
@@ -191,14 +197,11 @@ class CloudUploadSettingsViewModel @Inject constructor(
                         AllowedMedia.BOTH
                     ).first().data ?: emptyList()
 
-                    // Filter out cloud media
+                    val selectedAlbumIds = uploadPreferences.value
+                        .filterValues { it }
+                        .keys
                     val localMedia = allMedia.filter {
-                        !it.path.startsWith("Immich") &&
-                                !it.path.startsWith("ownCloud") &&
-                                !it.path.startsWith("Nextcloud") &&
-                                !it.path.startsWith("WebDAV") &&
-                                !it.path.startsWith("SMB") &&
-                                !it.path.startsWith("NFS")
+                        it.uri.scheme != "cloud" && it.albumID in selectedAlbumIds
                     }
                     _dedupState.value = _dedupState.value.copy(
                         totalCount = localMedia.size,
@@ -224,20 +227,23 @@ class CloudUploadSettingsViewModel @Inject constructor(
                         message = "Checking ${mediaWithHashes.size} items against cloud…"
                     )
 
-                    // Check in chunks of 1000
                     val duplicateMedia = mutableListOf<Media.UriMedia>()
-                    mediaWithHashes.chunked(1000).forEach { chunk ->
-                        val hashes = chunk.map { it.second }
-                        try {
-                            val result = syncProvider.bulkUploadCheck(hashes).getOrDefault(emptyMap())
-                            chunk.forEachIndexed { idx, (media, _) ->
-                                val isOnCloud = result[idx.toString()] ?: false
-                                if (isOnCloud) {
-                                    duplicateMedia.add(media)
-                                }
+                    if (syncProvider.requiresUploadChecksum) {
+                        mediaWithHashes.chunked(1000).forEach { chunk ->
+                            val result = syncProvider.bulkUploadCheck(chunk.map { it.second })
+                                .getOrNull().orEmpty()
+                            duplicateMedia += verifiedItemsByIndex(chunk, result).map { it.first }
+                        }
+                    } else {
+                        val albumLabels = localAlbums.value.associate { it.id to it.label }
+                        mediaWithHashes.forEach { (media, _) ->
+                            val targetPath = albumLabels[media.albumID]?.takeIf { it.isNotBlank() }
+                            if (runCatching {
+                                    syncProvider.remoteExists(media, targetPath)
+                                }.getOrDefault(false)
+                            ) {
+                                duplicateMedia += media
                             }
-                        } catch (e: Exception) {
-                            printDebug("Dedup: Bulk check chunk failed: ${e.message}")
                         }
                     }
 
@@ -260,23 +266,10 @@ class CloudUploadSettingsViewModel @Inject constructor(
     }
 
     fun deleteLocalDuplicates() {
-        val dupes = _dedupState.value.duplicates
-        if (dupes.isEmpty()) return
-        _dedupState.value = _dedupState.value.copy(isDeleting = true, message = "Deleting ${dupes.size} local copies…")
-        viewModelScope.launch(Dispatchers.IO) {
-            var deleted = 0
-            dupes.forEach { media ->
-                try {
-                    val rows = context.contentResolver.delete(media.getUri(), null, null)
-                    if (rows > 0) deleted++
-                } catch (e: Exception) {
-                    printDebug("Dedup: Failed to delete ${media.label}: ${e.message}")
-                }
-            }
-            _dedupState.value = DedupState(
-                message = "Deleted $deleted of ${dupes.size} local duplicates"
-            )
-        }
+        _dedupState.value = _dedupState.value.copy(
+            isDeleting = false,
+            message = context.getString(R.string.cloud_local_deletion_unavailable)
+        )
     }
 
     fun clearDedupState() {
@@ -296,8 +289,15 @@ class CloudUploadSettingsViewModel @Inject constructor(
                 }
                 digest.digest().joinToString("") { "%02x".format(it) }
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }
+}
+
+internal fun <T> verifiedItemsByIndex(
+    items: List<T>,
+    verification: Map<String, Boolean>
+): List<T> = items.mapIndexedNotNull { index, item ->
+    item.takeIf { verification[index.toString()] == true }
 }

@@ -129,14 +129,11 @@ import com.dot.gallery.feature_node.presentation.settings.subsettings.SmartScanP
 import com.dot.gallery.cloud.core.ProviderType
 import com.dot.gallery.cloud.ui.CloudAccountsScreen
 import com.dot.gallery.cloud.ui.CloudAddServerScreen
-import com.dot.gallery.cloud.ui.CloudTimelineScreen
 import com.dot.gallery.cloud.ui.CloudUploadSettingsScreen
 import com.dot.gallery.cloud.ui.archive.CloudArchiveScreen
 import com.dot.gallery.cloud.ui.archive.CloudArchiveViewModel
 import com.dot.gallery.cloud.ui.backup.BackupOptionsScreen
-import com.dot.gallery.cloud.ui.backup.CloudBackupAndSyncScreen
 import com.dot.gallery.cloud.ui.backup.CloudBackupDashboardScreen
-import com.dot.gallery.cloud.ui.backup.CloudBackupScreen
 import com.dot.gallery.cloud.ui.backup.UploadDetailsScreen
 import com.dot.gallery.cloud.ui.destinations.CloudDestinationsScreen
 import com.dot.gallery.cloud.ui.memories.MemoriesScreen
@@ -151,7 +148,6 @@ import com.dot.gallery.cloud.ui.offline.OfflineModeScreen
 import com.dot.gallery.cloud.ui.settings.CloudProviderSettingsScreen
 import com.dot.gallery.cloud.ui.settings.CloudViewerSettingsScreen
 import com.dot.gallery.cloud.ui.space.FreeUpSpaceScreen
-import com.dot.gallery.cloud.ui.sync.SyncStatusScreen
 import com.dot.gallery.feature_node.presentation.setup.SetupScreen
 
 import com.dot.gallery.feature_node.presentation.storycards.StoryCardsSettingsScreen
@@ -181,11 +177,10 @@ fun NavigationComp(
     isScrolling: MutableState<Boolean>
 ) {
     val navViewModel = hiltViewModel<NavigationViewModel>()
-    val searchBarActive = rememberSaveable {
-        mutableStateOf(false)
-    }
     val bottomNavEntries = rememberNavigationItems()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val selector = LocalMediaSelector.current
+    val isSelectionActive by selector.isSelectionActive.collectAsStateWithLifecycle()
     val groupTimelineByMonth by rememberTimelineGroupByMonth()
     val groupTimelineByYear by rememberTimelineGroupByYear()
     val context = LocalContext.current
@@ -216,30 +211,21 @@ fun NavigationComp(
         }
     }
 
-    var lastShouldDisplay by rememberSaveable {
-        mutableStateOf(bottomNavEntries.find { item -> item.route == currentDest } != null)
-    }
     val shouldSkipAuth = rememberSaveable {
         mutableStateOf(false)
     }
     val allowBlur by rememberAllowBlur()
 
-    LaunchedEffect(navBackStackEntry) {
-        navBackStackEntry?.destination?.route?.let {
-            val shouldDisplayBottomBar =
-                bottomNavEntries.find { item -> item.route == it } != null && !searchBarActive.value
-            if (lastShouldDisplay != shouldDisplayBottomBar) {
-                bottomBarState.value = shouldDisplayBottomBar
-                lastShouldDisplay = shouldDisplayBottomBar
-            }
-            if (it != Screen.VaultScreen()) {
+    LaunchedEffect(navBackStackEntry, isSelectionActive) {
+        navBackStackEntry?.destination?.route?.let { route ->
+            bottomBarState.value = bottomNavEntries.any { it.route == route } && !isSelectionActive
+            if (route != Screen.VaultScreen()) {
                 shouldSkipAuth.value = false
             }
             systemBarFollowThemeState.value =
-                !((it.contains(Screen.MediaViewScreen.route) && allowBlur) || it.contains(Screen.VaultScreen()))
+                !((route.contains(Screen.MediaViewScreen.route) && allowBlur) || route.contains(Screen.VaultScreen()))
         }
     }
-    val selector = LocalMediaSelector.current
     val eventHandler = LocalEventHandler.current
 
     // Preloaded viewModels
@@ -729,8 +715,8 @@ fun NavigationComp(
                 val albumsViewModel = hiltViewModel<AlbumsViewModel>()
                 CollectionAlbumSelectorScreen(
                     collectionId = collectionId,
-                    onAddAlbumsToCollection = { id, albumIds ->
-                        albumsViewModel.addAlbumsToCollection(id, albumIds)
+                    onReplaceAlbumsInCollection = { id, albumIds ->
+                        albumsViewModel.replaceAlbumsInCollection(id, albumIds)
                         navController.popBackStack()
                     }
                 )
@@ -1305,8 +1291,14 @@ fun NavigationComp(
             composable(Screen.CloudAccountsScreen()) {
                 CloudAccountsScreen()
             }
+            // Legacy/debug-only route: cloud media lives in the unified timeline. Keep old deep
+            // links working without exposing the standalone CloudTimelineScreen in production.
             composable(Screen.CloudTimelineScreen()) {
-                CloudTimelineScreen()
+                LaunchedEffect(Unit) {
+                    navController.navigate(Screen.CloudBackupDashboardScreen()) {
+                        popUpTo(Screen.CloudTimelineScreen()) { inclusive = true }
+                    }
+                }
             }
             composable(
                 route = Screen.CloudAddServerScreen.providerType(),
@@ -1394,35 +1386,27 @@ fun NavigationComp(
             }
 
             composable(Screen.SyncStatusScreen()) {
-                SyncStatusScreen()
+                LaunchedEffect(Unit) {
+                    navController.navigate(Screen.CloudBackupDashboardScreen()) {
+                        popUpTo(Screen.SyncStatusScreen()) { inclusive = true }
+                    }
+                }
             }
 
             composable(Screen.CloudBackupScreen()) {
-                CloudBackupScreen(
-                    onNavigateToAlbumPicker = { configId ->
-                        navController.navigate(Screen.CloudUploadSettingsScreen.configId(configId))
-                    },
-                    onNavigateToBackupOptions = {
-                        navController.navigate(Screen.BackupOptionsScreen())
-                    },
-                    onNavigateToUploadDetails = {
-                        navController.navigate(Screen.UploadDetailsScreen())
+                LaunchedEffect(Unit) {
+                    navController.navigate(Screen.CloudBackupDashboardScreen()) {
+                        popUpTo(Screen.CloudBackupScreen()) { inclusive = true }
                     }
-                )
+                }
             }
 
             composable(Screen.CloudBackupAndSyncScreen()) {
-                CloudBackupAndSyncScreen(
-                    onNavigateToAlbumPicker = { configId ->
-                        navController.navigate(Screen.CloudUploadSettingsScreen.configId(configId))
-                    },
-                    onNavigateToBackupOptions = {
-                        navController.navigate(Screen.BackupOptionsScreen())
-                    },
-                    onNavigateToUploadDetails = {
-                        navController.navigate(Screen.UploadDetailsScreen())
+                LaunchedEffect(Unit) {
+                    navController.navigate(Screen.CloudBackupDashboardScreen()) {
+                        popUpTo(Screen.CloudBackupAndSyncScreen()) { inclusive = true }
                     }
-                )
+                }
             }
 
             composable(Screen.CloudBackupDashboardScreen()) {
@@ -1468,8 +1452,18 @@ fun NavigationComp(
                 )
             }
 
-            composable(Screen.BackupOptionsScreen()) {
-                BackupOptionsScreen()
+            composable(
+                route = Screen.BackupOptionsScreen.configId(),
+                arguments = listOf(
+                    navArgument(name = "configId") {
+                        type = NavType.LongType
+                        defaultValue = -1L
+                    }
+                )
+            ) { backStackEntry ->
+                BackupOptionsScreen(
+                    configId = backStackEntry.arguments?.getLong("configId") ?: -1L
+                )
             }
 
             composable(Screen.UploadDetailsScreen()) {
@@ -1482,8 +1476,10 @@ fun NavigationComp(
 
             composable(Screen.PeopleListScreen()) {
                 PeopleListScreen(
-                    onPersonClick = { personId ->
-                        navController.navigate(Screen.PersonDetailScreen.personId(personId))
+                    onPersonClick = { person ->
+                        navController.navigate(
+                            Screen.PersonDetailScreen.personId(person.serverConfigId, person.id)
+                        )
                     }
                 )
             }
@@ -1491,6 +1487,10 @@ fun NavigationComp(
             composable(
                 route = Screen.PersonDetailScreen.personId(),
                 arguments = listOf(
+                    navArgument("configId") {
+                        type = NavType.LongType
+                        defaultValue = Long.MIN_VALUE
+                    },
                     navArgument("personId") { defaultValue = "" }
                 )
             ) {
@@ -1507,6 +1507,10 @@ fun NavigationComp(
                     navArgument(name = "mediaId") {
                         type = NavType.LongType
                         defaultValue = -1
+                    },
+                    navArgument(name = "configId") {
+                        type = NavType.LongType
+                        defaultValue = Long.MIN_VALUE
                     },
                     navArgument(name = "personId") {
                         type = NavType.StringType
@@ -1548,20 +1552,60 @@ fun NavigationComp(
                 MemoriesScreen()
             }
 
-            composable(Screen.CloudNotificationSettingsScreen()) {
-                CloudNotificationSettingsScreen()
+            composable(
+                route = Screen.CloudNotificationSettingsScreen.configId(),
+                arguments = listOf(
+                    navArgument(name = "configId") {
+                        type = NavType.LongType
+                        defaultValue = -1L
+                    }
+                )
+            ) { backStackEntry ->
+                CloudNotificationSettingsScreen(
+                    configId = backStackEntry.arguments?.getLong("configId") ?: -1L
+                )
             }
 
-            composable(Screen.CloudNetworkingScreen()) {
-                CloudNetworkingScreen()
+            composable(
+                route = Screen.CloudNetworkingScreen.configId(),
+                arguments = listOf(
+                    navArgument(name = "configId") {
+                        type = NavType.LongType
+                        defaultValue = -1L
+                    }
+                )
+            ) { backStackEntry ->
+                CloudNetworkingScreen(
+                    configId = backStackEntry.arguments?.getLong("configId") ?: -1L
+                )
             }
 
-            composable(Screen.CloudViewerSettingsScreen()) {
-                CloudViewerSettingsScreen()
+            composable(
+                route = Screen.CloudViewerSettingsScreen.configId(),
+                arguments = listOf(
+                    navArgument(name = "configId") {
+                        type = NavType.LongType
+                        defaultValue = -1L
+                    }
+                )
+            ) { backStackEntry ->
+                CloudViewerSettingsScreen(
+                    configId = backStackEntry.arguments?.getLong("configId") ?: -1L
+                )
             }
 
-            composable(Screen.CloudAdvancedSettingsScreen()) {
-                CloudAdvancedSettingsScreen()
+            composable(
+                route = Screen.CloudAdvancedSettingsScreen.configId(),
+                arguments = listOf(
+                    navArgument(name = "configId") {
+                        type = NavType.LongType
+                        defaultValue = -1L
+                    }
+                )
+            ) { backStackEntry ->
+                CloudAdvancedSettingsScreen(
+                    configId = backStackEntry.arguments?.getLong("configId") ?: -1L
+                )
             }
 
             composable(Screen.CloudOfflineModeScreen()) {

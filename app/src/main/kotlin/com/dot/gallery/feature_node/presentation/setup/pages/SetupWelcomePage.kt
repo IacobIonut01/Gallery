@@ -75,7 +75,7 @@ fun SetupWelcomePage(onNext: () -> Unit) {
                 .padding(horizontal = 16.dp, vertical = 6.dp)
         ) {
             Text(
-                text = "v${BuildConfig.VERSION_NAME}",
+                text = stringResource(R.string.version_name_format, BuildConfig.VERSION_NAME),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSecondaryContainer,
                 fontWeight = FontWeight.SemiBold

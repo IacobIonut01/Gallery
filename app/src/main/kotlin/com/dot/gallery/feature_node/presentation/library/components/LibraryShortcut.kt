@@ -67,6 +67,7 @@ data class LibraryShortcutPref(
 data class LibraryShortcutItem(
     val shortcut: LibraryShortcut,
     val title: String,
+    val subtitle: String? = null,
     val icon: ImageVector?,
     val contentColor: Color,
     val useIndicator: Boolean,
@@ -121,6 +122,7 @@ fun mergeShortcutPrefs(
 data class RuntimeShortcut(
     val shortcut: LibraryShortcut,
     val title: String,
+    val subtitle: String? = null,
     val icon: ImageVector?,
     val contentColor: Color,
     val useIndicator: Boolean,
@@ -131,6 +133,7 @@ data class RuntimeShortcut(
     fun toItem(pref: LibraryShortcutPref) = LibraryShortcutItem(
         shortcut = shortcut,
         title = title,
+        subtitle = subtitle,
         icon = icon,
         contentColor = contentColor,
         useIndicator = useIndicator,

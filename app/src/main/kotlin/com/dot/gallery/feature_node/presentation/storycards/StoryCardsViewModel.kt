@@ -8,6 +8,7 @@ package com.dot.gallery.feature_node.presentation.storycards
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dot.gallery.R
 import com.dot.gallery.cloud.core.MemoryInfo
 import com.dot.gallery.cloud.core.ProviderRegistry
 import com.dot.gallery.cloud.core.capabilities.MemoriesCapableProvider
@@ -286,7 +287,7 @@ class StoryCardsViewModel @Inject constructor(
                 id = 2_000_000L + album.id,
                 type = StoryCardType.ALBUMS,
                 title = album.label,
-                subtitle = "${album.count} items",
+                subtitle = context.getString(R.string.category_media_count, album.count),
                 thumbnailMedia = thumbnail,
                 mediaList = albumMedia.sortedByDescending { it.definedTimestamp }.take(20),
                 albumId = album.id
@@ -298,8 +299,8 @@ class StoryCardsViewModel @Inject constructor(
         return StoryCard(
             id = 4_000_000L,
             type = StoryCardType.FAVORITES,
-            title = "Favorites",
-            subtitle = "${favorites.size} items",
+            title = context.getString(R.string.favorites),
+            subtitle = context.getString(R.string.category_media_count, favorites.size),
             thumbnailMedia = favorites.firstOrNull(),
             mediaList = favorites.take(20)
         )

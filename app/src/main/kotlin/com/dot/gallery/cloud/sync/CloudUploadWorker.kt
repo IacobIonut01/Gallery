@@ -25,6 +25,7 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ExistingWorkPolicy
 import androidx.work.ForegroundInfo
 import androidx.work.NetworkType
+import androidx.work.WorkInfo
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
@@ -135,6 +136,8 @@ class CloudUploadWorker @AssistedInject constructor(
             // local albums that have been enabled for that account.
             val tasks = mutableListOf<UploadTask>()
             val hashCache = ConcurrentHashMap<String, String>()
+            var verificationTotalItems = 0
+            var verificationCheckedItems = 0
 
             for (config in activeConfigs) {
                 // "Require charging" is a background-only constraint: a user-initiated "Upload now"
@@ -158,18 +161,14 @@ class CloudUploadWorker @AssistedInject constructor(
                 }
 
                 val accountLabel = config.displayName.ifBlank { config.providerType.displayName }
-                val cachedLocalRevisions = cloudMediaDao.getLocalRevisions(config.id)
-                    .map { "${it.localCopyPath}|${it.size}|${it.timestamp / 1000L}" }
-                    .toSet()
-                val cachedRemoteRevisions = if (syncProvider.requiresUploadChecksum) {
-                    cloudMediaDao.getRemoteRevisions(config.id)
-                        .map {
-                            "${it.fileId}|${it.label}|${it.mimeType}|${it.size}|${it.lastSyncedAt / 1000L}"
-                        }
-                        .toSet()
-                } else {
+                val cachedLocalRevisions = if (syncProvider.requiresUploadChecksum) {
                     emptySet()
+                } else {
+                    cloudMediaDao.getLocalRevisions(config.id)
+                        .map { "${it.localCopyPath}|${it.size}|${it.timestamp / 1000L}" }
+                        .toSet()
                 }
+                val cachedRemoteRevisions = emptySet<String>()
 
                 for (pref in enabledPrefs) {
                     // Path-based stores (WebDAV/ownCloud/Nextcloud/SMB/NFS) mirror each
@@ -182,10 +181,10 @@ class CloudUploadWorker @AssistedInject constructor(
                         .first().data ?: continue
                     if (allAlbumMedia.isEmpty()) continue
 
-                    // On a metered (cellular) network, drop photos/videos the account opted out of.
-                    // On unmetered networks (Wi-Fi/Ethernet) both toggles are irrelevant.
-                    val albumMedia = if (!isMetered) allAlbumMedia else allAlbumMedia.filter { m ->
-                        if (m.mimeType.startsWith("video/")) config.cellularVideos else config.cellularPhotos
+                    // Apply the same authoritative policy used to choose the WorkManager network
+                    // constraint. On unmetered networks every enabled item remains eligible.
+                    val albumMedia = if (!isMetered) allAlbumMedia else allAlbumMedia.filter { media ->
+                        CloudCellularPolicy.allowsUpload(config, media.mimeType)
                     }
                     if (albumMedia.isEmpty()) {
                         printDebug("CloudUploadWorker: [$accountLabel] album ${pref.albumLabel} skipped on metered network (cellular disabled)")
@@ -230,7 +229,17 @@ class CloudUploadWorker @AssistedInject constructor(
                         continue
                     }
 
-                    notPresent.chunked(BULK_CHECK_SIZE).forEach chunkLoop@ { chunk ->
+                    verificationTotalItems += notPresent.size
+                    setProgress(workDataOf(
+                        KEY_PHASE to PHASE_VERIFYING,
+                        KEY_TOTAL_ITEMS to verificationTotalItems,
+                        KEY_CHECKED_ITEMS to verificationCheckedItems,
+                        KEY_COMPLETED_ITEMS to 0,
+                        KEY_FAILED_ITEMS to 0,
+                        KEY_CURRENT_FILE to pref.albumLabel,
+                        KEY_CURRENT_ACCOUNT to accountLabel
+                    ))
+                    notPresent.chunked(BULK_CHECK_SIZE).forEach { chunk ->
                         val hashed = mapWorkerPool(
                             items = chunk,
                             maxConcurrency = syncProvider.maxConcurrentUploads
@@ -241,16 +250,28 @@ class CloudUploadWorker @AssistedInject constructor(
                         val mediaWithHashes = hashed.mapNotNull { (media, hash) ->
                             hash?.let { media to it }
                         }
-                        if (mediaWithHashes.isEmpty()) return@chunkLoop
-                        val alreadyUploaded = syncProvider.bulkUploadCheck(mediaWithHashes.map { it.second })
-                            .getOrElse { error ->
-                                printDebug("CloudUploadWorker: Bulk check failed for $accountLabel: ${error.message}")
-                                mediaWithHashes.forEach { queue(it.first, null) }
-                                return@chunkLoop
-                            }
-                        mediaWithHashes.forEachIndexed { idx, (media, hash) ->
-                            if (alreadyUploaded[idx.toString()] != true) queue(media, hash)
+                        if (mediaWithHashes.isNotEmpty()) {
+                            syncProvider.bulkUploadCheck(mediaWithHashes.map { it.second })
+                                .onSuccess { alreadyUploaded ->
+                                    mediaWithHashes.forEachIndexed { idx, (media, hash) ->
+                                        if (alreadyUploaded[idx.toString()] != true) queue(media, hash)
+                                    }
+                                }
+                                .onFailure { error ->
+                                    printDebug("CloudUploadWorker: Bulk check failed for $accountLabel: ${error.message}")
+                                    mediaWithHashes.forEach { queue(it.first, null) }
+                                }
                         }
+                        verificationCheckedItems += chunk.size
+                        setProgress(workDataOf(
+                            KEY_PHASE to PHASE_VERIFYING,
+                            KEY_TOTAL_ITEMS to verificationTotalItems,
+                            KEY_CHECKED_ITEMS to verificationCheckedItems,
+                            KEY_COMPLETED_ITEMS to 0,
+                            KEY_FAILED_ITEMS to 0,
+                            KEY_CURRENT_FILE to pref.albumLabel,
+                            KEY_CURRENT_ACCOUNT to accountLabel
+                        ))
                     }
                 }
             }
@@ -269,7 +290,9 @@ class CloudUploadWorker @AssistedInject constructor(
             val notifyFailures = activeConfigs.any { it.notifyBackupFailures }
 
             setProgress(workDataOf(
+                KEY_PHASE to PHASE_UPLOADING,
                 KEY_TOTAL_ITEMS to totalItems,
+                KEY_CHECKED_ITEMS to totalItems,
                 KEY_COMPLETED_ITEMS to 0,
                 KEY_FAILED_ITEMS to 0,
                 KEY_CURRENT_FILE to ""
@@ -312,7 +335,9 @@ class CloudUploadWorker @AssistedInject constructor(
                                         printDebug("CloudUploadWorker: [${task.accountLabel}] upload failed for ${task.media.label}: ${e.message}")
                                     }
                                     setProgress(workDataOf(
+                                        KEY_PHASE to PHASE_UPLOADING,
                                         KEY_TOTAL_ITEMS to totalItems,
+                                        KEY_CHECKED_ITEMS to totalItems,
                                         KEY_COMPLETED_ITEMS to completedItems,
                                         KEY_FAILED_ITEMS to failedItems,
                                         KEY_CURRENT_FILE to task.media.label,
@@ -341,7 +366,9 @@ class CloudUploadWorker @AssistedInject constructor(
             if (isStopped) return Result.retry()
 
             setProgress(workDataOf(
+                KEY_PHASE to PHASE_COMPLETE,
                 KEY_TOTAL_ITEMS to totalItems,
+                KEY_CHECKED_ITEMS to totalItems,
                 KEY_COMPLETED_ITEMS to completedItems,
                 KEY_FAILED_ITEMS to failedItems,
                 KEY_CURRENT_FILE to "",
@@ -615,7 +642,9 @@ class CloudUploadWorker @AssistedInject constructor(
 
         const val KEY_CURRENT_FILE = "current_file"
         const val KEY_CURRENT_ACCOUNT = "current_account"
+        const val KEY_PHASE = "phase"
         const val KEY_TOTAL_ITEMS = "total_items"
+        const val KEY_CHECKED_ITEMS = "checked_items"
         const val KEY_COMPLETED_ITEMS = "completed_items"
         const val KEY_FAILED_ITEMS = "failed_items"
         const val KEY_COMPLETED_FILES = "completed_files"
@@ -630,10 +659,15 @@ class CloudUploadWorker @AssistedInject constructor(
          * regardless of its unique work name.
          */
         const val TAG_BACKUP = "cloud_upload_backup"
+        const val TAG_PERIODIC_BACKUP = "cloud_upload_periodic"
+        const val TAG_MANUAL_BACKUP = "cloud_upload_manual"
+        const val PHASE_VERIFYING = "verifying"
+        const val PHASE_UPLOADING = "uploading"
+        const val PHASE_COMPLETE = "complete"
         private const val MAX_TRACKED_FILES = 50
         private const val HASH_BUFFER_SIZE = 64 * 1024
         private const val HASH_FAILED = ""
-        private const val BULK_CHECK_SIZE = 500
+        private const val BULK_CHECK_SIZE = 50
 
         // Backup notification channels + ids.
         private const val CHANNEL_PROGRESS = "cloud_backup_progress"
@@ -658,6 +692,7 @@ class CloudUploadWorker @AssistedInject constructor(
             )
                 .setConstraints(constraints)
                 .addTag(TAG_BACKUP)
+                .addTag(TAG_PERIODIC_BACKUP)
                 .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 5, TimeUnit.MINUTES)
                 .build()
 
@@ -682,6 +717,7 @@ class CloudUploadWorker @AssistedInject constructor(
                 .setConstraints(constraints)
                 .setInputData(workDataOf(KEY_MANUAL to true, KEY_CONFIG_ID to configId))
                 .addTag(TAG_BACKUP)
+                .addTag(TAG_MANUAL_BACKUP)
             val uniqueName = if (configId > 0L) "${WORK_NAME_ONCE}_$configId" else WORK_NAME_ONCE
             if (configId > 0L) {
                 builder.addTag(TAG_ACCOUNT_BACKUP)
@@ -699,6 +735,10 @@ class CloudUploadWorker @AssistedInject constructor(
         }
     }
 }
+
+internal fun isActiveBackupWork(state: WorkInfo.State, tags: Set<String>): Boolean =
+    state == WorkInfo.State.RUNNING ||
+        state == WorkInfo.State.ENQUEUED && CloudUploadWorker.TAG_MANUAL_BACKUP in tags
 
 internal fun backupDestinationConfigIds(
     albumId: Long,

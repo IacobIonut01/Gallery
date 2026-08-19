@@ -14,12 +14,12 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -35,6 +35,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.feature_node.presentation.settings.components.rememberSettingsFocusState
+import com.dot.gallery.ui.theme.ComponentSize
+import com.dot.gallery.ui.theme.Spacing
 import com.dot.gallery.feature_node.presentation.settings.components.settingsFocusTarget
 import com.dot.gallery.feature_node.presentation.util.maybeApply
 
@@ -46,7 +48,7 @@ fun SetupButton(
     applyInsets: Boolean = true,
     applyNavigationPadding: Boolean = true,
     enabled: Boolean = true,
-    shape: Shape = RoundedCornerShape(24.dp),
+    shape: Shape = MaterialTheme.shapes.extraLarge,
     contentColor: Color = MaterialTheme.colorScheme.onPrimary,
     containerColor: Color = MaterialTheme.colorScheme.primary,
     text: String,
@@ -86,13 +88,14 @@ fun SetupButton(
                 )
                 .maybeApply(
                     condition = applyBottomPadding,
-                    modifier = Modifier.padding(bottom = 32.dp)
+                    modifier = Modifier.padding(bottom = Spacing.ExtraLarge)
                 )
                 .maybeApply(
                     condition = applyHorizontalPadding,
-                    modifier = Modifier.padding(horizontal = 24.dp)
+                    modifier = Modifier.padding(horizontal = Spacing.ContentHorizontal)
                 )
-                .height(64.dp)
+                .defaultMinSize(minHeight = ComponentSize.MinimumTouchTarget)
+                .heightIn(min = ComponentSize.ButtonHeight)
                 .border(focusBorderWidth, focusBorderColor, shape),
             onClick = onClick,
             shape = shape,

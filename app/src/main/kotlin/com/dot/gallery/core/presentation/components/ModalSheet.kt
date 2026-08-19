@@ -19,13 +19,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.paneTitle
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
+import com.dot.gallery.ui.theme.Spacing
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -40,12 +41,14 @@ fun ModalSheet(
     dragHandle: @Composable (() -> Unit)? = { DragHandle() },
     containerColor: Color = BottomSheetDefaults.ContainerColor,
     tonalElevation: Dp = 0.dp,
-    shape: Shape = BottomSheetDefaults.ExpandedShape,
+    shape: Shape = MaterialTheme.shapes.extraLarge,
 ) {
     val scope = rememberCoroutineScope()
     if (sheetState.isVisible) {
         ModalBottomSheet(
-            modifier = modifier,
+            modifier = modifier.semantics {
+                title?.let { paneTitle = it }
+            },
             sheetState = sheetState.sheetState,
             onDismissRequest = {
                 scope.launch {
@@ -56,53 +59,45 @@ fun ModalSheet(
             dragHandle = dragHandle?.let { { it() } },
             containerColor = containerColor,
             tonalElevation = tonalElevation,
-            shape = shape
+            shape = shape,
         ) {
             Column(
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(Spacing.Medium),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 32.dp, vertical = 16.dp)
-                    .navigationBarsPadding()
+                    .padding(horizontal = Spacing.ExtraLarge, vertical = Spacing.Medium)
+                    .navigationBarsPadding(),
             ) {
-                title?.let {
-                    Text(
-                        text = buildAnnotatedString {
-                            withStyle(
-                                style = SpanStyle(
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    fontStyle = MaterialTheme.typography.titleLarge.fontStyle,
-                                    fontSize = MaterialTheme.typography.titleLarge.fontSize,
-                                    letterSpacing = MaterialTheme.typography.titleLarge.letterSpacing
-                                )
-                            ) {
-                                append(title)
-                            }
-                            subtitle?.let {
-                                append("\n")
-                                withStyle(
-                                    style = SpanStyle(
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        fontStyle = MaterialTheme.typography.bodyMedium.fontStyle,
-                                        fontSize = MaterialTheme.typography.bodyMedium.fontSize,
-                                        letterSpacing = MaterialTheme.typography.bodyMedium.letterSpacing
-                                    )
-                                ) {
-                                    append(it)
-                                }
-                            }
-                        },
-                        textAlign = TextAlign.Center,
+                if (title != null || subtitle != null) {
+                    Column(
                         modifier = Modifier
-                            .padding(24.dp)
                             .fillMaxWidth()
-                    )
+                            .padding(Spacing.Large),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(Spacing.Small),
+                    ) {
+                        title?.let {
+                            Text(
+                                text = it,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                style = MaterialTheme.typography.titleLarge,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.semantics { heading() },
+                            )
+                        }
+                        subtitle?.let {
+                            Text(
+                                text = it,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.bodyMedium,
+                                textAlign = TextAlign.Center,
+                            )
+                        }
+                    }
                 }
-
                 content()
-
             }
         }
     }

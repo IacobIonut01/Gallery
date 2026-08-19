@@ -5,53 +5,89 @@
 
 package com.dot.gallery.cloud.core
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
+
+/** Runtime-only viewer and advanced preferences for one cloud account. */
+data class CloudAccountRuntimeSettings(
+    val verboseLogging: Boolean = false,
+    val preferRemoteImages: Boolean = false,
+    val readOnlyMode: Boolean = false,
+    val loadPreviewImage: Boolean = true,
+    val loadOriginalImage: Boolean = false,
+    val autoPlayVideos: Boolean = true,
+    val loopVideos: Boolean = false,
+    val forceOriginalVideo: Boolean = false,
+)
+
 /**
- * Process-wide snapshot of the user's cloud viewer/advanced preferences.
+ * Process-wide, account-qualified runtime view of cloud preferences.
  *
- * These preferences are stored per-account on [CloudServerConfig], but the settings screens
- * only ever edit the single active account, so a lightweight global snapshot (populated from
- * the active config on startup and whenever the settings change) is enough for the pipeline
- * to consult cheaply from any thread — without threading a `configId` through every
- * image/log call site.
- *
- * Only [verboseLogging] is consumed today (via [CloudTrace]); the remaining fields are kept
- * here so future consumption is a one-line read rather than another plumbing pass.
+ * The persisted fields remain on [CloudServerConfig] for serialization compatibility. Runtime
+ * consumers must resolve the `cfg` carried by a cloud media URI and then read only that account's
+ * entry. A missing or legacy `cfg` receives defaults; it never inherits another account's values.
  */
 object CloudRuntimeSettings {
 
-    @Volatile
-    var verboseLogging: Boolean = false
+    private val _settingsByConfigId =
+        MutableStateFlow<Map<Long, CloudAccountRuntimeSettings>>(emptyMap())
 
-    @Volatile
-    var preferRemoteImages: Boolean = false
+    val settingsByConfigId: StateFlow<Map<Long, CloudAccountRuntimeSettings>> =
+        _settingsByConfigId.asStateFlow()
 
-    @Volatile
-    var readOnlyMode: Boolean = false
-
-    @Volatile
-    var loadPreviewImage: Boolean = true
-
-    @Volatile
-    var loadOriginalImage: Boolean = false
-
-    @Volatile
-    var autoPlayVideos: Boolean = true
-
-    @Volatile
-    var loopVideos: Boolean = false
-
-    @Volatile
-    var forceOriginalVideo: Boolean = false
-
-    /** Applies the given config's preferences to the global snapshot. Null resets to defaults. */
-    fun apply(config: CloudServerConfig?) {
-        verboseLogging = config?.verboseLogging ?: false
-        preferRemoteImages = config?.preferRemoteImages ?: false
-        readOnlyMode = config?.readOnlyMode ?: false
-        loadPreviewImage = config?.loadPreviewImage ?: true
-        loadOriginalImage = config?.loadOriginalImage ?: false
-        autoPlayVideos = config?.autoPlayVideos ?: true
-        loopVideos = config?.loopVideos ?: false
-        forceOriginalVideo = config?.forceOriginalVideo ?: false
+    /** Replaces the runtime map, normally with every active config read during app startup. */
+    fun applyAll(configs: Iterable<CloudServerConfig>) {
+        _settingsByConfigId.value = configs
+            .filter { it.id > 0L }
+            .associate { it.id to it.toRuntimeSettings() }
     }
+
+    /** Adds or updates one account without disturbing any other account's preferences. */
+    fun apply(config: CloudServerConfig) {
+        if (config.id <= 0L) return
+        _settingsByConfigId.update { current ->
+            current + (config.id to config.toRuntimeSettings())
+        }
+    }
+
+    fun remove(configId: Long) {
+        _settingsByConfigId.update { it - configId }
+    }
+
+    fun settingsFor(
+        configId: Long,
+        settings: Map<Long, CloudAccountRuntimeSettings> = _settingsByConfigId.value,
+    ): CloudAccountRuntimeSettings = settings[configId] ?: CloudAccountRuntimeSettings()
+
+    fun settingsForCloudUri(
+        uriString: String,
+        settings: Map<Long, CloudAccountRuntimeSettings> = _settingsByConfigId.value,
+    ): CloudAccountRuntimeSettings {
+        val configId = CloudUri.parse(uriString)?.configId?.takeIf { it > 0L }
+        return configId?.let { settings[it] } ?: CloudAccountRuntimeSettings()
+    }
+
+    fun observe(configId: Long): Flow<CloudAccountRuntimeSettings> = settingsByConfigId
+        .map { settingsFor(configId, it) }
+        .distinctUntilChanged()
+
+    /** Global diagnostics are enabled when any configured account requests verbose logging. */
+    val verboseLoggingEnabled: Boolean
+        get() = _settingsByConfigId.value.values.any { it.verboseLogging }
 }
+
+private fun CloudServerConfig.toRuntimeSettings() = CloudAccountRuntimeSettings(
+    verboseLogging = verboseLogging,
+    preferRemoteImages = preferRemoteImages,
+    readOnlyMode = readOnlyMode,
+    loadPreviewImage = loadPreviewImage,
+    loadOriginalImage = loadOriginalImage,
+    autoPlayVideos = autoPlayVideos,
+    loopVideos = loopVideos,
+    forceOriginalVideo = forceOriginalVideo,
+)

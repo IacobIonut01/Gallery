@@ -15,12 +15,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
 import com.dot.gallery.cloud.core.CloudRuntimeSettings
 import com.dot.gallery.cloud.ui.CloudSelectionViewModel
 import com.dot.gallery.core.LocalEventHandler
 import com.dot.gallery.core.LocalMediaHandler
 import com.dot.gallery.feature_node.presentation.mediaview.LocalMediaViewerVisualPolicy
+import com.dot.gallery.feature_node.presentation.mediaview.viewerActionCapabilities
 import com.dot.gallery.core.Settings.Misc.rememberShowFavoriteButton
 import com.dot.gallery.core.util.SdkCompat
 import com.dot.gallery.core.setFollowTheme
@@ -65,6 +67,7 @@ fun <T : Media> MediaViewQuickBottomBar(
 ) {
     val handler = LocalMediaHandler.current
     val cloudSelectionViewModel = hiltViewModel<CloudSelectionViewModel>()
+    val cloudSettingsByConfigId by CloudRuntimeSettings.settingsByConfigId.collectAsStateWithLifecycle()
     val allowBlur = LocalMediaViewerVisualPolicy.current.allowBlur
     val isVideo by rememberedDerivedState(currentMedia) {
         currentMedia?.isVideo ?: false
@@ -88,59 +91,72 @@ fun <T : Media> MediaViewQuickBottomBar(
     }
     CompositionLocalProvider(LocalContentColor provides contentColor) {
     if (currentMedia != null) {
+        val isPrivateFolder = currentMedia.albumID == PrivateFolderViewModel.PRIVATE_FOLDER_ALBUM_ID
+        val providerSupportsFavorite = currentMedia.isCloud &&
+            cloudSelectionViewModel.supportsFavorite(listOf(currentMedia))
+        val providerSupportsTrash = currentMedia.isCloud &&
+            cloudSelectionViewModel.supportsTrash(listOf(currentMedia))
+        val capabilities = currentMedia.viewerActionCapabilities(
+            settingsByConfigId = cloudSettingsByConfigId,
+            providerSupportsFavorite = providerSupportsFavorite,
+            providerSupportsTrash = providerSupportsTrash,
+            platformSupportsFavorite = SdkCompat.supportsFavorites,
+            sourceAllowsDelete = showDeleteButton &&
+                (currentMedia.canMakeActions || currentMedia.isCloud || isPrivateFolder ||
+                    currentMedia.isEncrypted),
+            vaultRestoreAvailable = currentVault != null && restoreMedia != null,
+            vaultDeleteAvailable = currentVault != null && deleteMedia != null,
+        )
         if (currentMedia.isTrashed) {
             val scope = rememberCoroutineScope()
             val restoreSheetState = rememberAppBottomSheetState()
             val deleteSheetState = rememberAppBottomSheetState()
             val result = rememberActivityResult(onResultOk = onTrashConfirmed)
-            // Restore Component
-            MediaViewButton(
-                currentMedia = currentMedia,
-                imageVector = Icons.Outlined.RestoreFromTrash,
-                title = stringResource(id = R.string.trash_restore),
-                followTheme = followTheme,
-                enabled = enabled
-            ) {
-                scope.launch { restoreSheetState.show() }
-            }
-            // Delete Component
-            MediaViewButton(
-                currentMedia = currentMedia,
-                imageVector = Icons.Outlined.DeleteOutline,
-                title = stringResource(id = R.string.action_delete_permanently),
-                enabled = enabled
-            ) {
-                scope.launch { deleteSheetState.show() }
-            }
-            TrashDialog(
-                appBottomSheetState = restoreSheetState,
-                data = listOf(currentMedia),
-                action = TrashDialogAction.RESTORE
-            ) {
-                handler.trashMedia(result = result, mediaList = it, trash = false)
-                if (currentMedia.isCloud) onTrashConfirmed()
-            }
-            TrashDialog(
-                appBottomSheetState = deleteSheetState,
-                data = listOf(currentMedia),
-                action = TrashDialogAction.DELETE
-            ) {
-                handler.deleteMedia(result = result, mediaList = it)
-                if (currentMedia.isCloud || !SdkCompat.supportsMediaStoreRequests) onTrashConfirmed()
+            if (capabilities.trash) {
+                MediaViewButton(
+                    currentMedia = currentMedia,
+                    imageVector = Icons.Outlined.RestoreFromTrash,
+                    title = stringResource(id = R.string.trash_restore),
+                    followTheme = followTheme,
+                    enabled = enabled
+                ) {
+                    scope.launch { restoreSheetState.show() }
+                }
+                MediaViewButton(
+                    currentMedia = currentMedia,
+                    imageVector = Icons.Outlined.DeleteOutline,
+                    title = stringResource(id = R.string.action_delete_permanently),
+                    enabled = enabled
+                ) {
+                    scope.launch { deleteSheetState.show() }
+                }
+                TrashDialog(
+                    appBottomSheetState = restoreSheetState,
+                    data = listOf(currentMedia),
+                    action = TrashDialogAction.RESTORE
+                ) {
+                    handler.trashMedia(result = result, mediaList = it, trash = false)
+                    if (currentMedia.isCloud) onTrashConfirmed()
+                }
+                TrashDialog(
+                    appBottomSheetState = deleteSheetState,
+                    data = listOf(currentMedia),
+                    action = TrashDialogAction.DELETE
+                ) {
+                    handler.deleteMedia(result = result, mediaList = it)
+                    if (currentMedia.isCloud || !SdkCompat.supportsMediaStoreRequests) onTrashConfirmed()
+                }
             }
         } else {
-            // Read-only mode (cloud Advanced setting): hide all write/share actions for cloud
-            // media so it can be browsed but never modified, shared, edited or deleted.
-            val readOnly = currentMedia.isCloud && CloudRuntimeSettings.readOnlyMode
-            // Share Component
-            if (!readOnly) {
+            if (capabilities.share) {
                 ShareButton(
                     media = currentMedia,
                     enabled = enabled,
                     followTheme = followTheme,
                     currentVault = currentVault
                 )
-                // Copy to Clipboard
+            }
+            if (capabilities.copyToClipboard) {
                 CopyToClipboardButton(
                     media = currentMedia,
                     enabled = enabled,
@@ -150,14 +166,14 @@ fun <T : Media> MediaViewQuickBottomBar(
             }
             // Favorite Component
             val showFavoriteButton by rememberShowFavoriteButton()
-            if (!readOnly && showFavoriteButton && (currentMedia.canMakeActions && SdkCompat.supportsFavorites || currentMedia.isCloud)) {
+            if (showFavoriteButton && capabilities.favorite) {
                 FavoriteButton(
                     media = currentMedia,
                     enabled = enabled,
                     followTheme = followTheme
                 )
             }
-            if (currentMedia.readUriOnly) {
+            if (currentMedia.readUriOnly && capabilities.openExternally) {
                 OpenAsButton(
                     media = currentMedia,
                     enabled = enabled,
@@ -165,7 +181,7 @@ fun <T : Media> MediaViewQuickBottomBar(
                 )
             }
             // Restore
-            if (currentMedia.isEncrypted && restoreMedia != null && currentVault != null) {
+            if (capabilities.restoreFromVault && restoreMedia != null && currentVault != null) {
                 RestoreButton(
                     media = currentMedia,
                     currentVault = currentVault,
@@ -174,7 +190,7 @@ fun <T : Media> MediaViewQuickBottomBar(
                 )
             }
             // Download (cloud only)
-            if (currentMedia.isCloud) {
+            if (capabilities.download) {
                 DownloadButton(
                     media = currentMedia,
                     enabled = enabled,
@@ -182,7 +198,7 @@ fun <T : Media> MediaViewQuickBottomBar(
                 )
             }
             // Develop RAW (native LibRaw): only for RAW media when the native lib is available.
-            if (currentMedia.isRaw && !currentMedia.isEncrypted && !readOnly &&
+            if (currentMedia.isRaw && capabilities.edit &&
                 com.dot.gallery.core.decoder.NativeRawDecoder.isAvailable
             ) {
                 com.dot.gallery.feature_node.presentation.mediaview.components.rawdevelop.RawDevelopButton(
@@ -192,7 +208,7 @@ fun <T : Media> MediaViewQuickBottomBar(
                 )
             }
             // Edit
-            if (!currentMedia.isEncrypted && !readOnly) {
+            if (capabilities.edit) {
                 EditButton(
                     media = currentMedia,
                     enabled = enabled,
@@ -200,7 +216,7 @@ fun <T : Media> MediaViewQuickBottomBar(
                 )
             }
             // Trash Component
-            if (showDeleteButton && !readOnly) {
+            if (capabilities.trash) {
                 // Private-folder items are SAF documents; deleting them via a
                 // MediaStore request crashes (#1015). Route them through a
                 // SAF-only delete instead of the regular TrashButton.

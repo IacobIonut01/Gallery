@@ -56,18 +56,25 @@ class CredentialEncryptor @Inject constructor() {
         return Base64.encodeToString(combined, Base64.NO_WRAP)
     }
 
-    fun decrypt(encoded: String): String {
+    /**
+     * Decrypts a stored credential, returning an empty value when authentication fails.
+     * Undecryptable ciphertext must never be passed to a provider as if it were plaintext.
+     */
+    fun decrypt(encoded: String): String = decryptOrNull(encoded).orEmpty()
+
+    /** Returns null for malformed, corrupted, or ciphertext produced by another Keystore key. */
+    fun decryptOrNull(encoded: String): String? {
         if (encoded.isBlank()) return ""
         return try {
             val combined = Base64.decode(encoded, Base64.NO_WRAP)
+            require(combined.size >= GCM_IV_LENGTH + GCM_TAG_LENGTH_BYTES)
             val iv = combined.copyOfRange(0, GCM_IV_LENGTH)
             val ciphertext = combined.copyOfRange(GCM_IV_LENGTH, combined.size)
             val cipher = Cipher.getInstance(TRANSFORMATION)
             cipher.init(Cipher.DECRYPT_MODE, secretKey, GCMParameterSpec(GCM_TAG_LENGTH, iv))
             String(cipher.doFinal(ciphertext), Charsets.UTF_8)
         } catch (_: Exception) {
-            // Decryption failed — possibly old unencrypted data
-            encoded
+            null
         }
     }
 
@@ -77,5 +84,6 @@ class CredentialEncryptor @Inject constructor() {
         private const val TRANSFORMATION = "AES/GCM/NoPadding"
         private const val GCM_IV_LENGTH = 12
         private const val GCM_TAG_LENGTH = 128
+        private const val GCM_TAG_LENGTH_BYTES = GCM_TAG_LENGTH / 8
     }
 }

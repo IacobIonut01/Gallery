@@ -15,7 +15,10 @@
     <!-- Required to access videos for SDK 33+ -->
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
 
-    <!-- Required to access GPS Data of Media -->
+    <!-- Required to retain Android 14+ selected-photos access between sessions -->
+    <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
+
+    <!-- Optional: allows reading GPS Data embedded in Media -->
     <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION" />
 
     <!-- Required to download Map Preview for Media and FCast media serving -->

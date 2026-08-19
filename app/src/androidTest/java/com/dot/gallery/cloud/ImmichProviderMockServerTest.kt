@@ -254,7 +254,7 @@ class ImmichProviderMockServerTest {
         assertNotNull(caps)
         listOf(
             "REMOTE_ASSETS", "REMOTE_ALBUMS", "SYNC", "PEOPLE", "MAP",
-            "SMART_SEARCH", "SHARE_LINK", "ARCHIVE", "MEMORIES"
+            "SMART_SEARCH", "SHARE_CREATE", "SHARE_MANAGE", "ARCHIVE", "MEMORIES"
         ).forEach { assertTrue("Immich must declare $it", it in caps) }
     }
 }

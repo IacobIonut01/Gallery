@@ -6,6 +6,7 @@
 package com.dot.gallery.cloud.sync
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
@@ -102,6 +103,7 @@ class CloudIndexProgressManager @Inject constructor(
                 context, Manifest.permission.POST_NOTIFICATIONS
             ) == PackageManager.PERMISSION_GRANTED
 
+    @SuppressLint("MissingPermission")
     private fun postNotification() {
         if (!hasPostPermission()) return
         val state = _state.value

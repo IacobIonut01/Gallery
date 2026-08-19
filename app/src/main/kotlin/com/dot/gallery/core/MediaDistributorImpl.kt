@@ -4,7 +4,6 @@ import android.content.Context
 import android.net.Uri
 import android.media.MediaScannerConnection
 import androidx.compose.runtime.compositionLocalOf
-import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import com.dot.gallery.core.Settings.Misc.DEFAULT_DATE_FORMAT
 import com.dot.gallery.core.Settings.Misc.EXTENDED_DATE_FORMAT
@@ -45,12 +44,14 @@ import com.dot.gallery.feature_node.data.data_source.SmartScanDao
 import com.dot.gallery.feature_node.data.data_source.SmartScanFeature
 import com.dot.gallery.cloud.core.CloudAlbum
 import com.dot.gallery.cloud.core.ConnectionState
+import com.dot.gallery.cloud.core.ProviderType
 import com.dot.gallery.cloud.core.SyncState
 import com.dot.gallery.cloud.core.cloudAlbumId
 import com.dot.gallery.cloud.core.stableIdHash
 import com.dot.gallery.cloud.data.entity.CloudMediaEntity
 import com.dot.gallery.cloud.data.repository.CloudRepository
 import com.dot.gallery.cloud.sync.CloudUploadWorker
+import com.dot.gallery.cloud.sync.isActiveBackupWork
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.domain.util.EventHandler
 import com.dot.gallery.feature_node.domain.util.MediaOrder
@@ -92,6 +93,8 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
@@ -307,7 +310,13 @@ class MediaDistributorImpl @Inject constructor(
     // === Cloud integration at distributor level ===
 
     private val _cloudAlbumsFlow = MutableStateFlow<List<CloudAlbum>>(emptyList())
-    private val _cloudAlbumMemberRemoteIds = MutableStateFlow<Set<String>>(emptySet())
+    private data class CloudAlbumMemberId(
+        val providerType: ProviderType,
+        val serverConfigId: Long,
+        val remoteId: String
+    )
+    private val _cloudAlbumMemberIds = MutableStateFlow<Set<CloudAlbumMemberId>>(emptySet())
+    private val cloudRefreshMutex = Mutex()
 
     companion object {
         private const val UNSORTED_ALBUM_SENTINEL = "__unsorted__"
@@ -372,9 +381,7 @@ class MediaDistributorImpl @Inject constructor(
         appScope.launch {
             var wasRunning = false
             workManager.getWorkInfosByTagFlow(CloudUploadWorker.TAG_BACKUP).collect { infos ->
-                val running = infos.any {
-                    it.state == WorkInfo.State.RUNNING || it.state == WorkInfo.State.ENQUEUED
-                }
+                val running = infos.any { isActiveBackupWork(it.state, it.tags) }
                 if (!running && wasRunning && cloudRepository.hasConfiguredProviders) {
                     refreshCloudData()
                 }
@@ -383,7 +390,7 @@ class MediaDistributorImpl @Inject constructor(
         }
     }
 
-    private suspend fun refreshCloudData() {
+    private suspend fun refreshCloudData() = cloudRefreshMutex.withLock {
         try {
             cloudRepository.getAllRemoteAlbums().collect { resource ->
                 when (resource) {
@@ -399,13 +406,21 @@ class MediaDistributorImpl @Inject constructor(
         // real item count.
         try {
             val albums = _cloudAlbumsFlow.value
-            val memberIds = HashSet<String>()
+            val memberIds = HashSet<CloudAlbumMemberId>()
             val enriched = ArrayList<CloudAlbum>(albums.size)
             var didEnrich = false
             for (album in albums) {
-                val resource = cloudRepository.getAlbumMedia(album.providerType, album.remoteId).first()
+                val resource = cloudRepository.getAlbumMedia(
+                    album.providerType,
+                    album.serverConfigId,
+                    album.remoteId
+                ).first()
                 val media = if (resource is Resource.Success) resource.data ?: emptyList() else emptyList()
-                media.forEach { memberIds.add(it.remoteId) }
+                media.forEach {
+                    memberIds.add(
+                        CloudAlbumMemberId(it.providerType, it.serverConfigId, it.remoteId)
+                    )
+                }
                 var updated = album
                 if (updated.thumbnailAssetId == null) {
                     // Cover with the album's NEWEST asset (max timestamp), not whatever the
@@ -428,7 +443,7 @@ class MediaDistributorImpl @Inject constructor(
                 if (updated !== album) didEnrich = true
                 enriched.add(updated)
             }
-            _cloudAlbumMemberRemoteIds.value = memberIds
+            _cloudAlbumMemberIds.value = memberIds
             if (didEnrich) _cloudAlbumsFlow.value = enriched
         } catch (_: Exception) { }
         // Fetch trashed items into cache so the trash screen has cloud data
@@ -466,7 +481,7 @@ class MediaDistributorImpl @Inject constructor(
      */
     private val _unsortedCloudAlbumsFlow: StateFlow<List<Album>> = combine(
         _cloudCachedMedia,
-        _cloudAlbumMemberRemoteIds
+        _cloudAlbumMemberIds
     ) { cachedMedia, memberIds ->
         if (cachedMedia.isEmpty()) return@combine emptyList()
         // Group cached media by provider (derive provider from URI authority)
@@ -481,8 +496,11 @@ class MediaDistributorImpl @Inject constructor(
                 // remoteId may contain slashes (SMB/NFS/WebDAV paths like "Photos/IMG.jpg");
                 // pathSegments.first() would truncate it to the first folder and never match the
                 // full remoteIds in memberIds — making every item look "unsorted". Use the whole path.
-                val remoteId = media.getUri().path?.trimStart('/')?.takeIf { it.isNotEmpty() }
-                remoteId != null && remoteId !in memberIds
+                val uri = media.getUri()
+                val remoteId = uri.path?.trimStart('/')?.takeIf { it.isNotEmpty() }
+                val configId = uri.getQueryParameter("cfg")?.toLongOrNull()
+                remoteId != null && configId != null &&
+                    CloudAlbumMemberId(providerType, configId, remoteId) !in memberIds
             }
             if (unsortedMedia.isEmpty()) return@mapNotNull null
             val thumbUri = unsortedMedia.maxByOrNull { it.definedTimestamp }
@@ -793,7 +811,11 @@ class MediaDistributorImpl @Inject constructor(
                     flowOf(MediaState<Media.UriMedia>(error = "Cloud album not found"))
                 } else {
                     combine(
-                        cloudRepository.getAlbumMedia(cloudAlbum.providerType, cloudAlbum.remoteId),
+                        cloudRepository.getAlbumMedia(
+                            cloudAlbum.providerType,
+                            cloudAlbum.serverConfigId,
+                            cloudAlbum.remoteId
+                        ),
                         settingsFlow,
                         dateFormatsFlow,
                         albumMediaSortFlow,
@@ -838,19 +860,22 @@ class MediaDistributorImpl @Inject constructor(
     private fun unsortedCloudAlbumTimelineMediaFlow(albumId: Long): StateFlow<MediaState<Media.UriMedia>> =
         combine(
             _cloudCachedMedia,
-            _cloudAlbumMemberRemoteIds,
+            _cloudAlbumMemberIds,
             settingsFlow,
             dateFormatsFlow,
             albumMediaSortFlow
         ) { cachedMedia, memberIds, settings, dateFormats, albumSort ->
             // Scope to the provider this unsorted album belongs to — otherwise opening one
             // provider's "unsorted" album would show the merged cloud media of every provider.
-            val providerName = unsortedAlbumProviderType(albumId)?.name
+            val providerType = unsortedAlbumProviderType(albumId)
             val unsortedMedia = cachedMedia.filter { media ->
-                if (providerName != null && media.getUri().authority != providerName) return@filter false
+                val uri = media.getUri()
+                if (providerType != null && uri.authority != providerType.name) return@filter false
                 // Full path: remoteId may contain slashes (see the _unsortedCloudAlbumsFlow filter).
-                val remoteId = media.getUri().path?.trimStart('/')?.takeIf { it.isNotEmpty() }
-                remoteId != null && remoteId !in memberIds
+                val remoteId = uri.path?.trimStart('/')?.takeIf { it.isNotEmpty() }
+                val configId = uri.getQueryParameter("cfg")?.toLongOrNull()
+                remoteId != null && configId != null && providerType != null &&
+                    CloudAlbumMemberId(providerType, configId, remoteId) !in memberIds
             }
             val (defaultDateFormat, extendedDateFormat, weeklyDateFormat) = dateFormats
             val sorter = when (albumSort.kind) {
@@ -1177,6 +1202,7 @@ class MediaDistributorImpl @Inject constructor(
     ) { metadata, timelineState ->
         val mediaById = HashMap<Long, Media.UriMedia>(timelineState.media.size)
         for (m in timelineState.media) { mediaById[m.id] = m }
+        val metadataById = metadata.associateBy { it.mediaId }
 
         val locationGroupMap = LinkedHashMap<String, Media.UriMedia>()
         val geoList = ArrayList<GeoMedia>(metadata.size / 2)
@@ -1207,7 +1233,15 @@ class MediaDistributorImpl @Inject constructor(
         }
 
         val locations = locationGroupMap.entries
-            .map { (location, media) -> LocationMedia(media = media, location = location) }
+            .map { (location, media) ->
+                val mediaMetadata = metadataById[media.id]
+                LocationMedia(
+                    media = media,
+                    location = location,
+                    city = mediaMetadata?.gpsLocationNameCity,
+                    country = mediaMetadata?.gpsLocationNameCountry,
+                )
+            }
             .sortedBy { it.location }
 
         Pair(locations, geoList.sortedByDescending { it.media.definedTimestamp })

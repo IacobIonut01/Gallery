@@ -17,7 +17,8 @@ import java.util.concurrent.TimeUnit
 
 /**
  * Periodically deletes orphaned decrypted temp files created for large encrypted media streaming.
- * Files targeted: cacheDir/vault_stream_*.tmp older than [maxAgeHours].
+ * Files targeted: managed vault_stream_, vault_dec_, and decrypted shared_ exports older than
+ * [maxAgeHours].
  */
 @HiltWorker
 class TempVaultCleanupWorker @AssistedInject constructor(
@@ -30,23 +31,19 @@ class TempVaultCleanupWorker @AssistedInject constructor(
         val cutoff = System.currentTimeMillis() - TimeUnit.HOURS.toMillis(maxAgeHours)
         val cacheDir = appContext.cacheDir ?: return@runCatching Result.success()
         var deletedCount = 0
-        // Clean vault_stream_*.tmp and vault_dec_*.tmp from cacheDir
+        // Clean every worker-managed decrypted/export file from cacheDir. shared_ files preserve
+        // their media extension so they intentionally do not end in .tmp.
         cacheDir.listFiles()?.forEach { f ->
-            if (f.isFile && f.name.endsWith(".tmp") &&
-                (f.name.startsWith(TEMP_PREFIX) || f.name.startsWith(TEMP_DEC_PREFIX))) {
-                if (f.lastModified() < cutoff) {
-                    if (f.delete()) deletedCount++
-                }
+            if (isManagedDecryptedTempFile(f) && f.lastModified() < cutoff) {
+                if (f.delete()) deletedCount++
             }
         }
-        // Also clean any leftover vault_dec_*.tmp from filesDir (legacy location before fix)
+        // Also clean any leftover managed files from filesDir (legacy location before fix).
         val filesDir = appContext.filesDir
         if (filesDir != null) {
             filesDir.listFiles()?.forEach { f ->
-                if (f.isFile && f.name.startsWith(TEMP_DEC_PREFIX) && f.name.endsWith(".tmp")) {
-                    if (f.lastModified() < cutoff) {
-                        if (f.delete()) deletedCount++
-                    }
+                if (isManagedDecryptedTempFile(f) && f.lastModified() < cutoff) {
+                    if (f.delete()) deletedCount++
                 }
             }
         }
@@ -76,11 +73,19 @@ class TempVaultCleanupWorker @AssistedInject constructor(
     companion object {
         private const val TEMP_PREFIX = "vault_stream_"
         private const val TEMP_DEC_PREFIX = "vault_dec_"
+        private const val SHARED_DECRYPTED_PREFIX = "shared_"
         private const val DEFAULT_MAX_AGE_HOURS = 12L
         private const val UNIQUE_WORK = "TempVaultCleanup"
         private const val PREFS_NAME = "vault_cleanup_prefs"
         private const val KEY_LEGACY_CLEANUP_DONE = "legacy_filesdir_cleanup_done"
         const val KEY_MAX_AGE_HOURS = "maxAgeHours"
+
+        internal fun isManagedDecryptedTempFile(file: File): Boolean = file.isFile && when {
+            file.name.startsWith(SHARED_DECRYPTED_PREFIX) -> true
+            file.name.startsWith(TEMP_PREFIX) -> file.name.endsWith(".tmp")
+            file.name.startsWith(TEMP_DEC_PREFIX) -> file.name.endsWith(".tmp")
+            else -> false
+        }
 
         fun schedule(workManager: WorkManager, maxAgeHours: Long = DEFAULT_MAX_AGE_HOURS) {
             val req = PeriodicWorkRequestBuilder<TempVaultCleanupWorker>(12, TimeUnit.HOURS)
@@ -112,7 +117,7 @@ class TempVaultCleanupWorker @AssistedInject constructor(
             var deletedCount = 0
             var freedBytes = 0L
             filesDir.listFiles()?.forEach { f ->
-                if (f.isFile && f.name.startsWith(TEMP_DEC_PREFIX) && f.name.endsWith(".tmp")) {
+                if (isManagedDecryptedTempFile(f)) {
                     freedBytes += f.length()
                     if (f.delete()) deletedCount++
                 }
@@ -121,7 +126,7 @@ class TempVaultCleanupWorker @AssistedInject constructor(
             filesDir.listFiles()?.forEach { dir ->
                 if (dir.isDirectory) {
                     dir.listFiles()?.forEach { f ->
-                        if (f.isFile && f.name.startsWith(TEMP_DEC_PREFIX) && f.name.endsWith(".tmp")) {
+                        if (isManagedDecryptedTempFile(f)) {
                             freedBytes += f.length()
                             if (f.delete()) deletedCount++
                         }

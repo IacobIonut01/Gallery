@@ -27,7 +27,7 @@ object CloudTrace {
      * Enabled on non-release builds, or whenever the user turns on "Verbose logging" in the
      * cloud Advanced settings (so release builds can be diagnosed on demand).
      */
-    val enabled: Boolean get() = buildEnabled || CloudRuntimeSettings.verboseLogging
+    val enabled: Boolean get() = buildEnabled || CloudRuntimeSettings.verboseLoggingEnabled
 
     fun d(message: String) {
         if (enabled) Log.d(TAG, message)

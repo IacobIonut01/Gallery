@@ -1,6 +1,7 @@
 package com.dot.gallery.feature_node.presentation.library
 
 import androidx.compose.ui.graphics.Color
+import com.dot.gallery.cloud.core.ProviderCapability
 import com.dot.gallery.feature_node.presentation.library.components.LibraryShortcut
 import com.dot.gallery.feature_node.presentation.library.components.LibraryShortcutPref
 import com.dot.gallery.feature_node.presentation.library.components.LibraryShortcutSpan
@@ -57,6 +58,39 @@ class LibraryShortcutTest {
         assertEquals(3, merged.size)
         assertEquals(LibraryShortcutSpan.FULL, merged.first().span)
         assertEquals(1, merged.count { it.shortcut == LibraryShortcut.TRASH })
+    }
+
+    @Test
+    fun cachedRowsDoNotFabricateProviderCapabilities() {
+        val availability = resolveCloudLibraryAvailability(
+            hasConfiguredAccounts = true,
+            configuredCapabilities = emptySet(),
+            isConnected = false,
+        )
+
+        assertTrue(availability.hasCloud)
+        assertFalse(availability.hasArchive)
+        assertFalse(availability.hasMemories)
+        assertFalse(availability.hasPeople)
+        assertFalse(availability.hasMap)
+    }
+
+    @Test
+    fun configuredCapabilitiesRemainVisibleWhileDisconnected() {
+        val availability = resolveCloudLibraryAvailability(
+            hasConfiguredAccounts = true,
+            configuredCapabilities = setOf(
+                ProviderCapability.ARCHIVE,
+                ProviderCapability.MAP,
+                ProviderCapability.SHARE_MANAGE,
+            ),
+            isConnected = false,
+        )
+
+        assertFalse(availability.isConnected)
+        assertTrue(availability.hasArchive)
+        assertTrue(availability.hasMap)
+        assertTrue(availability.hasShareLink)
     }
 
     private fun runtimeShortcut(shortcut: LibraryShortcut) = RuntimeShortcut(

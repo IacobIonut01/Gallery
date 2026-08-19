@@ -35,13 +35,47 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
+enum class OfflineAvailabilityStatus {
+    NOT_PINNED,
+    PINNED,
+    QUEUED,
+    DOWNLOADING,
+    PARTIAL,
+    COMPLETE,
+    FAILED
+}
+
+enum class OfflineDownloadWorkState { IDLE, QUEUED, RUNNING, SUCCEEDED, FAILED }
+
+data class OfflineCoverage(val downloadedVariants: Int = 0, val totalVariants: Int = 0)
+
 data class OfflineAccount(
     val configId: Long,
     val label: String,
     val providerType: ProviderType,
     val pinned: Boolean,
+    val availabilityStatus: OfflineAvailabilityStatus = OfflineAvailabilityStatus.NOT_PINNED,
+    val downloadedVariants: Int = 0,
+    val totalVariants: Int = 0,
     val cacheBytes: Long = 0L
 )
+
+internal fun offlineAvailabilityStatus(
+    pinned: Boolean,
+    coverage: OfflineCoverage,
+    workState: OfflineDownloadWorkState
+): OfflineAvailabilityStatus = when {
+    !pinned -> OfflineAvailabilityStatus.NOT_PINNED
+    coverage.totalVariants == 0 -> OfflineAvailabilityStatus.PINNED
+    coverage.downloadedVariants >= coverage.totalVariants -> OfflineAvailabilityStatus.COMPLETE
+    workState == OfflineDownloadWorkState.FAILED -> OfflineAvailabilityStatus.FAILED
+    workState == OfflineDownloadWorkState.QUEUED && coverage.downloadedVariants == 0 ->
+        OfflineAvailabilityStatus.QUEUED
+    workState == OfflineDownloadWorkState.RUNNING && coverage.downloadedVariants == 0 ->
+        OfflineAvailabilityStatus.DOWNLOADING
+    coverage.downloadedVariants > 0 -> OfflineAvailabilityStatus.PARTIAL
+    else -> OfflineAvailabilityStatus.PINNED
+}
 
 /** On-disk cache usage for one album of an account (populated from a network album fetch). */
 data class AlbumCacheEntry(
@@ -87,9 +121,9 @@ class OfflineModeViewModel @Inject constructor(
     private val workManager: WorkManager
 ) : ViewModel() {
 
-    /** auto bytes, pinned bytes, per-account cache bytes keyed by configId. */
+    /** auto bytes, pinned bytes, per-account cache bytes and pinned coverage keyed by configId. */
     private val _sizes = MutableStateFlow(CacheSizes())
-    private val _downloadInfo = MutableStateFlow(Triple(false, 0, 0)) // running, done, total
+    private val _downloadInfo = MutableStateFlow(DownloadInfo())
 
     private val _accountSheet = MutableStateFlow<AccountCacheSheetState?>(null)
     val accountSheet: StateFlow<AccountCacheSheetState?> = _accountSheet.asStateFlow()
@@ -121,17 +155,23 @@ class OfflineModeViewModel @Inject constructor(
             autoCacheBytes = sizes.auto,
             pinnedBytes = sizes.pinned,
             accounts = configs.filter { it.isActive }.map { c ->
+                val pinned = c.id in pinnedIds
+                val coverage = sizes.coverage[c.id] ?: OfflineCoverage()
                 OfflineAccount(
                     configId = c.id,
                     label = c.displayName.ifBlank { c.providerType.displayName },
                     providerType = c.providerType,
-                    pinned = c.id in pinnedIds,
+                    pinned = pinned,
+                    availabilityStatus = offlineAvailabilityStatus(pinned, coverage, dl.state),
+                    downloadedVariants = coverage.downloadedVariants,
+                    totalVariants = coverage.totalVariants,
                     cacheBytes = sizes.perAccount[c.id] ?: 0L
                 )
             },
-            downloading = dl.first,
-            downloadDone = dl.second,
-            downloadTotal = dl.third
+            downloading = dl.state == OfflineDownloadWorkState.QUEUED ||
+                dl.state == OfflineDownloadWorkState.RUNNING,
+            downloadDone = dl.done,
+            downloadTotal = dl.total
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), OfflineModeUiState())
 
@@ -143,10 +183,18 @@ class OfflineModeViewModel @Inject constructor(
     fun refreshSizes() {
         viewModelScope.launch {
             _sizes.value = withContext(Dispatchers.IO) {
-                val perAccount = cloudMediaDao.getAllAsync()
-                    .groupBy { it.serverConfigId }
-                    .mapValues { (_, list) -> cache.sizeForAssets(list.map { it.toRef() }) }
-                CacheSizes(cache.autoSizeBytes(), cache.pinnedSizeBytes(), perAccount)
+                val mediaByAccount = cloudMediaDao.getAllAsync().groupBy { it.serverConfigId }
+                val perAccount = mediaByAccount.mapValues { (_, list) ->
+                    cache.sizeForAssets(list.map { it.toRef() })
+                }
+                val coverage = mediaByAccount.mapValues { (_, list) ->
+                    val refs = list.map { it.toRef() }
+                    OfflineCoverage(
+                        downloadedVariants = cache.pinnedVariantCount(refs, OFFLINE_SIZE_LABELS),
+                        totalVariants = refs.size * OFFLINE_SIZE_LABELS.size
+                    )
+                }
+                CacheSizes(cache.autoSizeBytes(), cache.pinnedSizeBytes(), perAccount, coverage)
             }
         }
     }
@@ -154,12 +202,25 @@ class OfflineModeViewModel @Inject constructor(
     private fun observeDownload() {
         viewModelScope.launch {
             workManager.getWorkInfosForUniqueWorkFlow(CloudOfflineDownloadWorker.WORK_NAME).collect { infos ->
-                val info = infos.firstOrNull()
-                val running = info?.state == WorkInfo.State.RUNNING || info?.state == WorkInfo.State.ENQUEUED
-                val done = info?.progress?.getInt(CloudOfflineDownloadWorker.KEY_DONE, 0) ?: 0
-                val total = info?.progress?.getInt(CloudOfflineDownloadWorker.KEY_TOTAL, 0) ?: 0
-                _downloadInfo.value = Triple(running, done, total)
-                if (info?.state == WorkInfo.State.SUCCEEDED) refreshSizes()
+                val info = infos.firstOrNull {
+                    it.state == WorkInfo.State.ENQUEUED || it.state == WorkInfo.State.RUNNING ||
+                        it.state == WorkInfo.State.BLOCKED
+                } ?: infos.lastOrNull()
+                val data = if (info?.state?.isFinished == true) info.outputData else info?.progress
+                _downloadInfo.value = DownloadInfo(
+                    state = when (info?.state) {
+                        WorkInfo.State.ENQUEUED, WorkInfo.State.BLOCKED -> OfflineDownloadWorkState.QUEUED
+                        WorkInfo.State.RUNNING -> OfflineDownloadWorkState.RUNNING
+                        WorkInfo.State.SUCCEEDED -> OfflineDownloadWorkState.SUCCEEDED
+                        WorkInfo.State.FAILED -> OfflineDownloadWorkState.FAILED
+                        else -> OfflineDownloadWorkState.IDLE
+                    },
+                    done = data?.getInt(CloudOfflineDownloadWorker.KEY_DONE, 0) ?: 0,
+                    total = data?.getInt(CloudOfflineDownloadWorker.KEY_TOTAL, 0) ?: 0,
+                    failed = data?.getInt(CloudOfflineDownloadWorker.KEY_FAILED, 0) ?: 0,
+                    error = data?.getString(CloudOfflineDownloadWorker.KEY_ERROR)?.ifBlank { null }
+                )
+                refreshSizes()
             }
         }
     }
@@ -173,21 +234,38 @@ class OfflineModeViewModel @Inject constructor(
         refreshSizes()
     }
 
-    fun setAccountPinned(configId: Long, label: String, enabled: Boolean) {
+    fun pinAccount(configId: Long, label: String) {
         viewModelScope.launch {
             val config = configDao.getById(configId) ?: return@launch
-            if (enabled) {
-                pinDao.upsert(
-                    CloudOfflinePinEntity(
-                        serverConfigId = configId,
-                        providerType = config.providerType,
-                        label = label
-                    )
+            pinDao.upsert(
+                CloudOfflinePinEntity(
+                    serverConfigId = configId,
+                    providerType = config.providerType,
+                    label = label
                 )
-                CloudOfflineDownloadWorker.triggerNow(workManager, manager.cacheWifiOnlyNow)
-            } else {
-                pinDao.deleteByConfig(configId)
+            )
+            CloudOfflineDownloadWorker.triggerNow(workManager, manager.cacheWifiOnlyNow)
+        }
+    }
+
+    fun unpinAccount(configId: Long, removeDownloadedData: Boolean) {
+        viewModelScope.launch {
+            pinDao.deleteByConfig(configId)
+            withContext(Dispatchers.IO) {
+                workManager.cancelUniqueWork(CloudOfflineDownloadWorker.WORK_NAME).result.get()
             }
+            if (removeDownloadedData) {
+                val refs = withContext(Dispatchers.IO) {
+                    cloudMediaDao.getByServerConfig(configId).first().map { it.toRef() }
+                }
+                withContext(Dispatchers.IO) { cache.clearPinnedForAssets(refs) }
+            }
+            // Continue any remaining accounts after cancelling the worker that may still have held
+            // this account in its initial target snapshot.
+            if (pinDao.getAllAsync().isNotEmpty()) {
+                CloudOfflineDownloadWorker.triggerNow(workManager, manager.cacheWifiOnlyNow)
+            }
+            refreshSizes()
         }
     }
 
@@ -199,8 +277,13 @@ class OfflineModeViewModel @Inject constructor(
     }
 
     fun clearAllCache() = viewModelScope.launch {
-        withContext(Dispatchers.IO) { cache.clearAll() }
         pinDao.getAllAsync().forEach { pinDao.deleteByConfig(it.serverConfigId) }
+        withContext(Dispatchers.IO) {
+            runCatching {
+                workManager.cancelUniqueWork(CloudOfflineDownloadWorker.WORK_NAME).result.get()
+            }
+            cache.clearAll()
+        }
         refreshSizes()
     }
 
@@ -301,6 +384,19 @@ class OfflineModeViewModel @Inject constructor(
     data class CacheSizes(
         val auto: Long = 0L,
         val pinned: Long = 0L,
-        val perAccount: Map<Long, Long> = emptyMap()
+        val perAccount: Map<Long, Long> = emptyMap(),
+        val coverage: Map<Long, OfflineCoverage> = emptyMap()
     )
+
+    data class DownloadInfo(
+        val state: OfflineDownloadWorkState = OfflineDownloadWorkState.IDLE,
+        val done: Int = 0,
+        val total: Int = 0,
+        val failed: Int = 0,
+        val error: String? = null
+    )
+
+    private companion object {
+        val OFFLINE_SIZE_LABELS = listOf("thumbnail", "preview")
+    }
 }

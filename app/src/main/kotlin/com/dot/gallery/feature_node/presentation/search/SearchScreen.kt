@@ -90,6 +90,7 @@ import com.dot.gallery.core.SettingsEntity
 import com.dot.gallery.core.navigate
 import com.dot.gallery.core.navigateUp
 import com.dot.gallery.core.presentation.components.EmptyMedia
+import com.dot.gallery.core.presentation.components.Error
 import com.dot.gallery.core.presentation.components.SelectionSheet
 import com.dot.gallery.feature_node.data.data_source.SmartScanStatus
 import com.dot.gallery.feature_node.domain.model.Media
@@ -117,6 +118,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 
+internal fun shouldClearSearchOnBack(query: String, hasSelectedImage: Boolean): Boolean =
+    query.isNotEmpty() || hasSelectedImage
+
 @OptIn(
     ExperimentalSharedTransitionApi::class, ExperimentalMaterial3ExpressiveApi::class,
     ExperimentalFoundationApi::class
@@ -136,7 +140,12 @@ fun SearchScreen(
     val selectedImageMedia by viewModel.selectedImageMedia.collectAsStateWithLifecycle()
     val isModelAvailable by viewModel.isModelAvailable.collectAsStateWithLifecycle()
     val searchableMediaIds by viewModel.searchableMediaIds.collectAsStateWithLifecycle()
+    val shouldClearOnBack = shouldClearSearchOnBack(query, selectedImageMedia != null)
     var searchHistory by rememberSearchHistory()
+
+    BackHandler(enabled = shouldClearOnBack) {
+        viewModel.clearQuery()
+    }
 
     // Image-to-image search UI state
     var showPickerSheet by rememberSaveable { mutableStateOf(false) }
@@ -223,7 +232,7 @@ fun SearchScreen(
                                     shape = CircleShape
                                 ),
                             onClick = {
-                                if (query.isNotEmpty() || selectedImageMedia != null) {
+                                if (shouldClearOnBack) {
                                     viewModel.clearQuery()
                                 } else {
                                     eventHandler.navigateUp()
@@ -551,7 +560,8 @@ fun SearchScreen(
                     }
                 }
                 AnimatedVisibility(
-                    visible = !searchResults.isSearching
+                    visible = searchResults.results.error.isEmpty()
+                            && !searchResults.isSearching
                             && searchResults.results.media.isNotEmpty()
                             && searchResults.hasSearched,
                     enter = enterAnimation,
@@ -583,16 +593,12 @@ fun SearchScreen(
                         }
                     }
 
-                    BackHandler {
-                        viewModel.clearQuery()
-                    }
-
                     val dateGroupedState = rememberedDerivedState { searchResults.results }
                     val relevanceOrderedState = rememberedDerivedState(searchResults.results) {
                         val results = searchResults.results
                         val flatMapped = results.media.map { media ->
                             MediaItem.MediaViewItem<Media.UriMedia>(
-                                key = "media_${media.id}_${media.label}",
+                                key = "media_${media.id}",
                                 media = media
                             )
                         }
@@ -712,6 +718,7 @@ fun SearchScreen(
                                 emptyContent = { EmptyMedia() },
                                 sharedTransitionScope = sharedTransitionScope,
                                 animatedContentScope = animatedContentScope,
+                                onRetry = viewModel::retrySearch,
                                 onMediaClick = {
                                     eventHandler.navigate(Screen.MediaViewScreen.idAndQuery(it.id))
                                 },
@@ -743,7 +750,8 @@ fun SearchScreen(
                                 isScrolling = isScrolling,
                                 emptyContent = { EmptyMedia() },
                                 sharedTransitionScope = sharedTransitionScope,
-                                animatedContentScope = animatedContentScope
+                                animatedContentScope = animatedContentScope,
+                                onRetry = viewModel::retrySearch,
                             ) {
                                 eventHandler.navigate(Screen.MediaViewScreen.idAndQuery(it.id))
                             }
@@ -751,7 +759,18 @@ fun SearchScreen(
                     }
                 }
                 AnimatedVisibility(
-                    visible = !searchResults.isSearching
+                    visible = searchResults.results.error.isNotEmpty(),
+                    enter = enterAnimation,
+                    exit = exitAnimation,
+                ) {
+                    Error(
+                        errorMessage = searchResults.results.error,
+                        onRetry = viewModel::retrySearch,
+                    )
+                }
+                AnimatedVisibility(
+                    visible = searchResults.results.error.isEmpty()
+                            && !searchResults.isSearching
                             && (query.isNotEmpty() || selectedImageMedia != null)
                             && searchResults.results.media.isEmpty()
                             && searchResults.hasSearched,
@@ -769,7 +788,7 @@ fun SearchScreen(
                         }
                         item(key = "empty_results") {
                             EmptyMedia(
-                                title = "No results found",
+                                title = stringResource(R.string.no_results_found),
                             )
                         }
                     }

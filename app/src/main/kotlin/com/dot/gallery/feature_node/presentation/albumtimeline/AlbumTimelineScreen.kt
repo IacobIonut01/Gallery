@@ -30,8 +30,6 @@ import androidx.compose.foundation.lazy.layout.LazyLayoutCacheWindow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.CloudOff
-import androidx.compose.material.icons.outlined.CloudSync
 import androidx.compose.material.icons.outlined.Slideshow
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -80,9 +78,9 @@ import com.dot.gallery.core.Constants.cellsList
 import com.dot.gallery.core.LocalEventHandler
 import com.dot.gallery.core.LocalMediaDistributor
 import com.dot.gallery.core.LocalMediaSelector
+import com.dot.gallery.core.Settings.Album.rememberAlbumGroupByDate
 import com.dot.gallery.core.Settings.Album.rememberAlbumMediaSort
 import com.dot.gallery.core.Settings
-import com.dot.gallery.core.Settings.Album.rememberHideTimelineOnAlbum
 import com.dot.gallery.core.Settings.Misc.rememberAlbumsGroupMethod
 import com.dot.gallery.core.Settings.Misc.rememberGridSize
 import com.dot.gallery.core.Settings.Misc.rememberMosaicGridSize
@@ -108,7 +106,6 @@ import com.dot.gallery.feature_node.presentation.common.components.TwoLinedDateT
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
 import com.dot.gallery.feature_node.presentation.util.Screen
-import com.dot.gallery.cloud.ui.CloudMediaViewModel
 import com.dot.gallery.feature_node.presentation.util.selectedMedia
 import dev.chrisbanes.haze.LocalHazeStyle
 import dev.chrisbanes.haze.hazeEffect
@@ -132,20 +129,6 @@ fun AlbumTimelineScreen(
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
 ) {
-    val cloudMediaViewModel: CloudMediaViewModel = hiltViewModel()
-    val cloudUiState by cloudMediaViewModel.uiState.collectAsStateWithLifecycle()
-    val cloudAlbum = remember(cloudUiState.albums, albumId) {
-        if (albumId < 0) cloudMediaViewModel.findCloudAlbumByComputedId(albumId) else null
-    }
-    val isCloudAlbum = cloudAlbum != null
-    val albumSyncPrefs by cloudMediaViewModel.albumSyncPreferences.collectAsStateWithLifecycle()
-    val isSyncEnabled = remember(cloudAlbum, albumSyncPrefs) {
-        if (cloudAlbum == null) true
-        else albumSyncPrefs.find { it.albumRemoteId == cloudAlbum.remoteId }?.syncEnabled ?: true
-    }
-    val onToggleSync: ((Boolean) -> Unit)? = if (cloudAlbum != null) {
-        { enabled -> cloudMediaViewModel.toggleAlbumSync(cloudAlbum, enabled) }
-    } else null
     var canScroll by rememberSaveable { mutableStateOf(true) }
     var lastCellIndex by rememberGridSize()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -240,22 +223,6 @@ fun AlbumTimelineScreen(
                         )
                     },
                     actions = {
-                        if (isCloudAlbum && onToggleSync != null) {
-                            IconButton(onClick = {
-                                val newEnabled = !isSyncEnabled
-                                onToggleSync(newEnabled)
-                                refreshScope.launch {
-                                    snackbarHostState.showSnackbar(
-                                        message = if (newEnabled) context.getString(R.string.cloud_sync_enabled_toast) else context.getString(R.string.cloud_sync_disabled_toast)
-                                    )
-                                }
-                            }) {
-                                Icon(
-                                    imageVector = if (isSyncEnabled) Icons.Outlined.CloudSync else Icons.Outlined.CloudOff,
-                                    contentDescription = if (isSyncEnabled) stringResource(R.string.cloud_sync_disable) else stringResource(R.string.cloud_sync_enable)
-                                )
-                            }
-                        }
                         IconButton(onClick = {
                             slideshowScope.launch { slideshowSheetState.show() }
                         }) {
@@ -282,10 +249,10 @@ fun AlbumTimelineScreen(
                 isRefreshing = isRefreshing,
                 onRefresh = { refreshScope.launch { distributor.invalidate() } },
             ) {
-            val hideTimelineOnAlbum by rememberHideTimelineOnAlbum()
+            val albumGroupByDate by rememberAlbumGroupByDate()
             val albumsGroupMethod by rememberAlbumsGroupMethod()
             val timelineLayoutType by rememberTimelineLayoutType()
-            val isMosaicLayout = timelineLayoutType == Settings.Misc.LAYOUT_MOSAIC && !hideTimelineOnAlbum
+            val isMosaicLayout = timelineLayoutType == Settings.Misc.LAYOUT_MOSAIC
             if (isMosaicLayout) {
                 var lastMosaicCellIndex by rememberMosaicGridSize()
                 val mosaicPinchState = rememberMosaicPinchZoomState(
@@ -300,12 +267,16 @@ fun AlbumTimelineScreen(
                     lastMosaicCellIndex = mosaicPinchState.currentColumnsIndex
                 }
 
-                val mappedData by remember(mediaState, albumsGroupMethod) {
+                val mappedData by remember(mediaState, albumsGroupMethod, albumGroupByDate) {
                     derivedStateOf {
-                        when (albumsGroupMethod) {
-                            Settings.Misc.GROUP_MONTHLY -> mediaState.value.mappedMediaWithMonthly
-                            Settings.Misc.GROUP_YEARLY -> mediaState.value.mappedMediaWithYearly
-                            else -> mediaState.value.mappedMedia
+                        if (!albumGroupByDate) {
+                            mediaState.value.mappedMedia
+                        } else {
+                            when (albumsGroupMethod) {
+                                Settings.Misc.GROUP_MONTHLY -> mediaState.value.mappedMediaWithMonthly
+                                Settings.Misc.GROUP_YEARLY -> mediaState.value.mappedMediaWithYearly
+                                else -> mediaState.value.mappedMedia
+                            }
                         }.toMutableStateList()
                     }
                 }
@@ -330,7 +301,7 @@ fun AlbumTimelineScreen(
                     segments = rememberMosaicMonthSegments(
                         mappedData = mappedData,
                         columns = currentColumns,
-                        allowHeaders = true,
+                        allowHeaders = albumGroupByDate,
                         leadingItemCount = if (showMergeContent) 1 else 0,
                     ),
                     headers = headers,
@@ -346,7 +317,7 @@ fun AlbumTimelineScreen(
                         paddingValues = mosaicPaddingValues,
                         allowSelection = true,
                         canScroll = !mosaicPinchState.isZooming,
-                        allowHeaders = true,
+                        allowHeaders = albumGroupByDate,
                         aboveGridContent = if (showMergeContent) {
                             {
                                 AlbumsMergedBanner(
@@ -382,14 +353,14 @@ fun AlbumTimelineScreen(
                         metadataState = metadataState,
                         allowSelection = true,
                         showSearchBar = false,
-                        enableStickyHeaders = !hideTimelineOnAlbum,
-                        groupMethod = if (!hideTimelineOnAlbum) albumsGroupMethod else Settings.Misc.GROUP_NORMAL,
+                        enableStickyHeaders = albumGroupByDate,
+                        groupMethod = if (albumGroupByDate) albumsGroupMethod else Settings.Misc.GROUP_NORMAL,
                         paddingValues = PaddingValues(
                             top = it.calculateTopPadding(),
                             bottom = paddingValues.calculateBottomPadding() + 128.dp
                         ),
                         canScroll = canScroll,
-                        allowHeaders = !hideTimelineOnAlbum,
+                        allowHeaders = albumGroupByDate,
                         aboveGridContent = if (showMergeContent) {
                             {
                                 AlbumsMergedBanner(

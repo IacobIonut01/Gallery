@@ -52,6 +52,7 @@ fun SetupPermissionItem(
     modifier: Modifier = Modifier,
     optional: Boolean = false,
     granted: Boolean = false,
+    statusLabel: String? = null,
     grantActionLabel: String? = null,
     onGrant: (() -> Unit)? = null
 ) {
@@ -91,9 +92,10 @@ fun SetupPermissionItem(
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold
                 )
-                if (optional) {
+                if (optional || statusLabel != null) {
                     Text(
-                        text = stringResource(if (granted) R.string.granted else R.string.optional),
+                        text = statusLabel
+                            ?: stringResource(if (granted) R.string.granted else R.string.optional),
                         style = MaterialTheme.typography.labelSmall,
                         color = if (granted) MaterialTheme.colorScheme.primary
                         else MaterialTheme.colorScheme.onSurfaceVariant

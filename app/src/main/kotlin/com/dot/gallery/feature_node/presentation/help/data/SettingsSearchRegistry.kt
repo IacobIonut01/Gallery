@@ -5,33 +5,35 @@
 
 package com.dot.gallery.feature_node.presentation.help.data
 
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+
 /**
- * Process-lifetime registry of settings toggles discovered at runtime.
+ * Process-lifetime registry of settings titles discovered at runtime.
  *
- * Settings sub-screens build their preference lists imperatively inside Compose
- * (titles come from `stringResource`, values from `remember` state hooks), so there
- * is no static list to read. Instead, [com.dot.gallery.feature_node.presentation.settings.components.BaseSettingsScreen]
- * registers the titles it renders here (keyed by the owning screen route) whenever a
- * settings screen is composed. [HelpSearchIndex] then merges these entries so search
- * covers every toggle the user has seen — including ones added in the future — without
- * hand-maintaining a list.
- *
- * The curated [HelpSearchIndex.toggleItems] catalog remains the always-available
- * fallback for screens the user has not opened yet this session.
+ * [HelpSearchIndex] also has an always-available static catalog for settings that have not been
+ * visited. This registry supplements that catalog and is observable, so newly rendered settings
+ * become searchable immediately rather than only after the Help screen is recreated.
  */
 object SettingsSearchRegistry {
 
-    private val byRoute = LinkedHashMap<String, List<String>>()
+    private val _entries = MutableStateFlow<Map<String, List<String>>>(emptyMap())
+    val entries: StateFlow<Map<String, List<String>>> = _entries.asStateFlow()
 
-    /** Replace the known toggle titles for [route]. Empty titles clear the entry. */
+    /** Replace the known setting titles for [route]. Empty titles clear the entry. */
     fun register(route: String, titles: List<String>) {
-        if (titles.isEmpty()) {
-            byRoute.remove(route)
-        } else {
-            byRoute[route] = titles
+        val normalized = titles.filter(String::isNotBlank).distinct()
+        _entries.update { current ->
+            if (normalized.isEmpty()) {
+                current - route
+            } else {
+                current + (route to normalized)
+            }
         }
     }
 
-    /** Immutable snapshot of route → toggle titles for index building. */
-    fun snapshot(): Map<String, List<String>> = LinkedHashMap(byRoute)
+    /** Immutable snapshot of route → setting titles for synchronous index building. */
+    fun snapshot(): Map<String, List<String>> = entries.value
 }

@@ -6,16 +6,8 @@
 package com.dot.gallery.cloud.ui.space
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.CleaningServices
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,7 +15,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -37,20 +28,45 @@ import com.dot.gallery.feature_node.presentation.settings.components.BaseSetting
 fun FreeUpSpaceScreen() {
     val viewModel = hiltViewModel<FreeUpSpaceViewModel>()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val context = LocalContext.current
 
     // "Never" (sentinel -1) is listed first and is the default so nothing is ever
     // removed until the user explicitly opts into an age range.
     val cutoffOptions = listOf(FreeUpSpaceViewModel.NEVER_CUTOFF, 30, 60, 90, 180, 365)
+    val keepFavoritesTitle = stringResource(R.string.cloud_free_space_keep_favorites)
+    val keepFavoritesSummary = stringResource(R.string.cloud_free_space_keep_favorites_summary)
+    val cutoffHeader = stringResource(R.string.cloud_free_space_cutoff)
+    val cutoffLabels = mapOf(
+        FreeUpSpaceViewModel.NEVER_CUTOFF to stringResource(R.string.cloud_free_space_never),
+        30 to stringResource(R.string.cloud_free_space_30d),
+        60 to stringResource(R.string.cloud_free_space_60d),
+        90 to stringResource(R.string.cloud_free_space_90d),
+        180 to stringResource(R.string.cloud_free_space_6m),
+        365 to stringResource(R.string.cloud_free_space_1y),
+    )
+    val scanningTitle = stringResource(R.string.cloud_free_space_scanning)
+    val scanTitle = stringResource(R.string.cloud_free_space_scan)
+    val resourceStrings = listOf(
+        keepFavoritesTitle,
+        keepFavoritesSummary,
+        cutoffHeader,
+        scanningTitle,
+        scanTitle,
+    ) + cutoffLabels.values
 
-    val settingsList = remember(state.keepFavorites, state.cutoffDays) {
+    val settingsList = remember(
+        state.keepFavorites,
+        state.cutoffDays,
+        state.isScanning,
+        state.isDeleting,
+        resourceStrings,
+    ) {
         buildList {
             // Options
             add(SettingsEntity.Header(title = ""))
             add(
                 SettingsEntity.SwitchPreference(
-                    title = context.getString(R.string.cloud_free_space_keep_favorites),
-                    summary = context.getString(R.string.cloud_free_space_keep_favorites_summary),
+                    title = keepFavoritesTitle,
+                    summary = keepFavoritesSummary,
                     isChecked = state.keepFavorites,
                     onCheck = { viewModel.setKeepFavorites(it) },
                     screenPosition = Position.Alone
@@ -58,17 +74,8 @@ fun FreeUpSpaceScreen() {
             )
 
             // Cutoff period
-            add(SettingsEntity.Header(title = context.getString(R.string.cloud_free_space_cutoff)))
+            add(SettingsEntity.Header(title = cutoffHeader))
             cutoffOptions.forEachIndexed { index, days ->
-                val label = when (days) {
-                    FreeUpSpaceViewModel.NEVER_CUTOFF -> context.getString(R.string.cloud_free_space_never)
-                    30 -> context.getString(R.string.cloud_free_space_30d)
-                    60 -> context.getString(R.string.cloud_free_space_60d)
-                    90 -> context.getString(R.string.cloud_free_space_90d)
-                    180 -> context.getString(R.string.cloud_free_space_6m)
-                    365 -> context.getString(R.string.cloud_free_space_1y)
-                    else -> "$days days"
-                }
                 val pos = when {
                     cutoffOptions.size == 1 -> Position.Alone
                     index == 0 -> Position.Top
@@ -77,7 +84,7 @@ fun FreeUpSpaceScreen() {
                 }
                 add(
                     SettingsEntity.Preference(
-                        title = label,
+                        title = cutoffLabels.getValue(days),
                         rightText = if (state.cutoffDays == days) "✓" else null,
                         onClick = { viewModel.setCutoffDays(days) },
                         screenPosition = pos
@@ -89,8 +96,7 @@ fun FreeUpSpaceScreen() {
             add(SettingsEntity.Header(title = ""))
             add(
                 SettingsEntity.Preference(
-                    title = if (state.isScanning) context.getString(R.string.cloud_free_space_scanning)
-                    else context.getString(R.string.cloud_free_space_scan),
+                    title = if (state.isScanning) scanningTitle else scanTitle,
                     enabled = !state.isScanning && !state.isDeleting,
                     onClick = { viewModel.scan() },
                     screenPosition = Position.Alone
@@ -125,27 +131,12 @@ fun FreeUpSpaceScreen() {
                     )
                 }
                 if (state.backedUpItems.isNotEmpty()) {
-                    Button(
-                        onClick = { viewModel.deleteLocalCopies() },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = !state.isDeleting,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.error
-                        )
-                    ) {
-                        if (state.isDeleting) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(18.dp),
-                                strokeWidth = 2.dp,
-                                color = MaterialTheme.colorScheme.onError
-                            )
-                            Spacer(modifier = Modifier.size(8.dp))
-                        } else {
-                            Icon(Icons.Outlined.CleaningServices, null, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.size(8.dp))
-                        }
-                        Text(stringResource(R.string.cloud_free_space_remove_count, state.backedUpItems.size))
-                    }
+                    Text(
+                        text = stringResource(R.string.cloud_local_deletion_unavailable),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
                 }
                 state.error?.let {
                     Text(

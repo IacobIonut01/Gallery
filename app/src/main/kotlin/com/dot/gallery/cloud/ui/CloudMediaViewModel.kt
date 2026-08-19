@@ -10,8 +10,6 @@ import androidx.lifecycle.viewModelScope
 import com.dot.gallery.cloud.core.CloudAlbum
 import com.dot.gallery.cloud.core.ProviderType
 import com.dot.gallery.cloud.core.cloudAlbumId
-import com.dot.gallery.cloud.data.dao.CloudAlbumSyncDao
-import com.dot.gallery.cloud.data.entity.CloudAlbumSyncEntity
 import com.dot.gallery.cloud.data.entity.CloudMediaEntity
 import com.dot.gallery.cloud.data.repository.CloudRepository
 import com.dot.gallery.core.Resource
@@ -39,8 +37,7 @@ data class CloudMediaUiState(
 
 @HiltViewModel
 class CloudMediaViewModel @Inject constructor(
-    private val repository: CloudRepository,
-    private val albumSyncDao: CloudAlbumSyncDao
+    private val repository: CloudRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CloudMediaUiState())
@@ -132,10 +129,10 @@ class CloudMediaViewModel @Inject constructor(
         }
     }
 
-    fun loadAlbumMedia(type: ProviderType, albumId: String) {
+    fun loadAlbumMedia(type: ProviderType, configId: Long, albumId: String) {
         _uiState.value = _uiState.value.copy(isLoading = true, error = null)
         viewModelScope.launch {
-            repository.getAlbumMedia(type, albumId).collect { resource ->
+            repository.getAlbumMedia(type, configId, albumId).collect { resource ->
                 when (resource) {
                     is Resource.Success -> {
                         _uiState.value = _uiState.value.copy(
@@ -180,7 +177,11 @@ class CloudMediaViewModel @Inject constructor(
                 )
                 return@launch
             }
-            repository.getAlbumMedia(cloudAlbum.providerType, cloudAlbum.remoteId).collect { resource ->
+            repository.getAlbumMedia(
+                cloudAlbum.providerType,
+                cloudAlbum.serverConfigId,
+                cloudAlbum.remoteId
+            ).collect { resource ->
                 when (resource) {
                     is Resource.Success -> {
                         val media = resource.data?.map { it.toUriMedia() } ?: emptyList()
@@ -197,22 +198,5 @@ class CloudMediaViewModel @Inject constructor(
 
     suspend fun search(query: String): List<CloudMediaEntity> {
         return repository.search(query).getOrDefault(emptyList())
-    }
-
-    val albumSyncPreferences: StateFlow<List<CloudAlbumSyncEntity>> = albumSyncDao.getAll()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-    fun toggleAlbumSync(album: CloudAlbum, enabled: Boolean) {
-        viewModelScope.launch {
-            albumSyncDao.upsert(
-                CloudAlbumSyncEntity(
-                    albumRemoteId = album.remoteId,
-                    providerType = album.providerType,
-                    serverConfigId = album.serverConfigId,
-                    albumName = album.name,
-                    syncEnabled = enabled
-                )
-            )
-        }
     }
 }

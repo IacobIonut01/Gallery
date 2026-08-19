@@ -1073,4 +1073,187 @@
     <string name="help_tip_video_fix_black_p1_title">Keep video visible</string>
     <string name="help_tip_video_fix_black_p1_desc">On some devices (notably Samsung) a playing video can black out when the system bars are shown or hidden, even though it keeps playing. Enable Media Viewer › Video Playback › \'Fix black video on hide\' to re-bind the player surface on every bar change. It is on by default for Samsung devices and off elsewhere — turn it off if you don\'t need it.</string>
     <!-- RELEASE NOTES: 5.0.3 -->
+    <string name="help_tip_motion_photo_frames_title">मोशन फ़ोटो से फ़्रेम निकालें</string>
+    <string name="help_tip_motion_photo_frames_subtitle">एम्बेड किए गए क्लिप से सटीक पलों को सहेजें</string>
+    <string name="help_tip_motion_photo_frames_p1_title">फ़्रेम चुनें और एक्सपोर्ट करें</string>
+    <string name="help_tip_motion_photo_frames_p1_desc">व्यूअर में कोई मोशन फ़ोटो खोलें, फिर उसकी फ़िल्मस्ट्रिप पर टैप करें या एक्शन शीट से फ़्रेम निकालें चुनें। बिल्कुल सही पल तक स्क्रब करें, एक या अधिक फ़्रेम चुनें और उन्हें अपने पसंदीदा इमेज फ़ॉर्मैट में एक्सपोर्ट करें।</string>
+    <string name="help_tip_motion_photo_frames_p1_s1">व्यूअर में कोई मोशन फ़ोटो खोलें</string>
+    <string name="help_tip_motion_photo_frames_p1_s2">फ़िल्मस्ट्रिप पर टैप करें या फ़्रेम निकालें चुनें</string>
+    <string name="help_tip_motion_photo_frames_p1_s3">स्क्रब करके अपने मनचाहे पल चुनें</string>
+    <string name="help_tip_motion_photo_frames_p1_s4">फ़ॉर्मैट चुनें और चुने गए फ़्रेम एक्सपोर्ट करें</string>
+
+    <string name="help_tip_search_ignored_albums_title">अनदेखे एल्बम में खोजें</string>
+    <string name="help_tip_search_ignored_albums_subtitle">छिपे हुए मीडिया को टाइमलाइन पर वापस लाए बिना खोजें</string>
+    <string name="help_tip_search_ignored_albums_p1_title">स्मार्ट खोज को सुरक्षित ढंग से विस्तृत करें</string>
+    <string name="help_tip_search_ignored_albums_p1_desc">टाइमलाइन से छिपे एल्बम को स्मार्ट सुविधाओं और स्मार्ट खोज में शामिल करें, लेकिन उन्हें टाइमलाइन या एल्बम टैब में दिखाई न दें। यह विकल्प डिफ़ॉल्ट रूप से बंद रहता है, इसे बदलने पर पूर्ण रीफ़्रेश शुरू होता है और लॉक किए गए एल्बम हमेशा बाहर रहते हैं।</string>
+    <string name="help_tip_search_ignored_albums_p1_s1">सेटिंग > स्मार्ट सुविधाएँ खोलें</string>
+    <string name="help_tip_search_ignored_albums_p1_s2">अनदेखे एल्बम शामिल करें को टॉगल करें</string>
+    <string name="help_tip_search_ignored_albums_p1_s3">स्मार्ट सुविधाओं का पूर्ण रीफ़्रेश पूरा होने दें</string>
+    <string name="help_tip_search_ignored_albums_p1_s4">लॉक किए गए एल्बम को निजी रखते हुए छिपा मीडिया खोजें</string>
+
+    <string name="help_tip_cloud_nextcloud_login_title">Nextcloud में सुरक्षित रूप से साइन इन करें</string>
+    <string name="help_tip_cloud_nextcloud_login_subtitle">ब्राउज़र प्राधिकरण और दो-कारक प्रमाणीकरण का उपयोग करें</string>
+    <string name="help_tip_cloud_nextcloud_login_p1_title">Nextcloud लॉगिन फ़्लो v2</string>
+    <string name="help_tip_cloud_nextcloud_login_p1_desc">ReFra आपके Nextcloud सर्वर को सिस्टम ब्राउज़र में खोलता है, जहाँ आप साइन इन करके दो-कारक प्रमाणीकरण पूरा कर सकते हैं। स्वीकृति के बाद Nextcloud ऐप-विशिष्ट पासवर्ड बनाता है, जिसे ReFra आपके डिवाइस पर एन्क्रिप्ट करके सहेजता है।</string>
+    <string name="help_tip_cloud_nextcloud_login_p1_s1">Nextcloud खाता जोड़ें और उसके सर्वर का URL दर्ज करें</string>
+    <string name="help_tip_cloud_nextcloud_login_p1_s2">सिस्टम ब्राउज़र में आगे बढ़ें</string>
+    <string name="help_tip_cloud_nextcloud_login_p1_s3">साइन इन करें, दो-कारक प्रमाणीकरण पूरा करें और एक्सेस स्वीकृत करें</string>
+    <string name="help_tip_cloud_nextcloud_login_p1_s4">कनेक्शन पूरा होते समय ReFra पर वापस आएँ</string>
+
+    <string name="help_tip_accessibility_remote_settings_title">बिना स्पर्श के सेटिंग में नेविगेट करें</string>
+    <string name="help_tip_accessibility_remote_settings_subtitle">सभी सेटिंग में कीबोर्ड, डी-पैड या रिमोट का उपयोग करें</string>
+    <string name="help_tip_accessibility_remote_settings_p1_title">पूर्वानुमेय फ़ोकस नेविगेशन</string>
+    <string name="help_tip_accessibility_remote_settings_p1_desc">सेटिंग सूचियाँ, विवरण स्क्रीन, चयन नियंत्रण और नीचे की कार्रवाइयाँ दिशात्मक फ़ोकस का समर्थन करती हैं। ReFra फ़ोकस किए गए नियंत्रण को स्पष्ट रूप से हाइलाइट करता है और स्क्रीन खुलने पर फ़ोकस को किसी उपयोग योग्य आइटम पर रखता है।</string>
+    <string name="help_tip_accessibility_remote_settings_p1_s1">नियंत्रणों के बीच जाने के लिए तीर या डी-पैड कुंजियों का उपयोग करें</string>
+    <string name="help_tip_accessibility_remote_settings_p1_s2">नियंत्रण सक्रिय करने के लिए Enter या बीच वाला बटन दबाएँ</string>
+    <string name="help_tip_accessibility_remote_settings_p1_s3">विवरण स्क्रीन से बाहर निकलने के लिए वापस जाएँ का उपयोग करें</string>
+    <string name="help_tip_accessibility_remote_settings_p1_s4">हाइलाइट किए गए सेटिंग नियंत्रण से आगे बढ़ें</string>
+    <string name="help_search_hint">सहायता और सुझाव खोजें</string>
+    <string name="help_search_clear">खोज साफ़ करें</string>
+    <string name="help_search_no_results">\"%1$s\" के लिए कोई सहायता नहीं मिली</string>
+    <string name="help_search_section_tips">सुझाव और निर्देश</string>
+    <string name="help_search_section_settings">सेटिंग</string>
+    <string name="help_search_section_actions">त्वरित कार्रवाइयाँ</string>
+    <string name="help_search_section_changelog">नया क्या है</string>
+    <string name="help_search_see_all">सभी %1$d परिणाम देखें</string>
+    <string name="help_tips_section_title">सहायता और सुझाव</string>
+    <string name="help_quick_actions">त्वरित कार्रवाइयाँ</string>
+    <string name="help_qa_open_timeline">समयरेखा खोलें</string>
+    <string name="help_qa_open_albums">एल्बम खोलें</string>
+    <string name="help_qa_open_search">खोज खोलें</string>
+    <string name="help_qa_open_categories">श्रेणियाँ खोलें</string>
+    <string name="help_qa_open_vault">तिजोरी खोलें</string>
+    <string name="help_qa_open_trash">कचरा पेटी खोलें</string>
+    <string name="help_qa_open_favorites">पसंदीदा खोलें</string>
+    <string name="help_qa_open_locations">स्थान खोलें</string>
+    <string name="help_qa_open_library">लाइब्रेरी खोलें</string>
+    <string name="help_qa_open_color_palette">रंग पैलेट खोलें</string>
+    <string name="help_qa_open_appearance">दिखावट की सेटिंग खोलें</string>
+    <string name="help_tip_view_cutout_title">किसी विषय को काटें</string>
+    <string name="help_tip_view_cutout_subtitle">पृष्ठभूमि से किसी व्यक्ति या वस्तु को उठाएँ</string>
+    <string name="help_tip_view_cutout_p1_title">पहचाने गए विषय को उठाएँ</string>
+    <string name="help_tip_view_cutout_p1_desc">व्यूअर में, ReFra डिवाइस पर मुख्य विषय का पता लगा सकता है और हाइलाइट किया गया सुझाव दिखा सकता है। मास्क को परिष्कृत करने के लिए इसे खोलें, फिर पारदर्शी कटआउट को कॉपी, साझा या सहेजें। आप मीडिया व्यूअर सेटिंग्स से लंबा-प्रेस करके कटआउट भी शुरू कर सकते हैं।</string>
+    <string name="help_tip_view_cutout_p1_s1">एक स्पष्ट विषय वाली फोटो खोलें</string>
+    <string name="help_tip_view_cutout_p1_s2">कट आउट सब्जेक्ट सुझाव टैप करें</string>
+    <string name="help_tip_view_cutout_p1_s3">शामिल या बाहर करने वाले बिंदुओं के साथ रूपरेखा को परिष्कृत करें</string>
+    <string name="help_tip_view_cutout_p1_s4">कटआउट को कॉपी, साझा या सहेजें</string>
+
+    <string name="help_tip_slideshow_play_title">स्लाइडशो चलाएँ</string>
+    <string name="help_tip_slideshow_play_subtitle">पूर्ण स्क्रीन पर एल्बम के माध्यम से स्वतः आगे बढ़ें</string>
+    <string name="help_tip_slideshow_play_p1_title">व्यूअर से शुरू करें</string>
+    <string name="help_tip_slideshow_play_p1_desc">कोई भी फोटो खोलें, फिर विकल्प मेनू से स्लाइडशो चुनें ताकि पूर्ण स्क्रीन पर एल्बम के माध्यम से स्वतः आगे बढ़ सके।</string>
+    <string name="help_tip_slideshow_play_p1_s1">अल्बम में एक फोटो खोलें</string>
+    <string name="help_tip_slideshow_play_p1_s2">विकल्प मेनू खोलें</string>
+    <string name="help_tip_slideshow_play_p1_s3">शुरू करने के लिए स्लाइडशो टैप करें</string>
+
+    <string name="help_tip_settings_slideshow_title">स्लाइडशो सेटिंग्स</string>
+    <string name="help_tip_settings_slideshow_subtitle">अंतराल, क्रम और लूपिंग सेट करें</string>
+    <string name="help_tip_settings_slideshow_p1_title">प्लेबैक समायोजित करें</string>
+    <string name="help_tip_settings_slideshow_p1_desc">निर्धारित करें कि प्रत्येक आइटम कितनी देर तक दिखेगा, क्या प्लेबैक लूप होगा, और आइटम किस क्रम में दिखाई देंगे।</string>
+    <string name="help_tip_settings_slideshow_p1_s1">स्लाइडशो सेटिंग्स खोलें</string>
+    <string name="help_tip_settings_slideshow_p1_s2">प्रति-आइटम अंतराल सेट करें</string>
+    <string name="help_tip_settings_slideshow_p1_s3">क्रम और लूपिंग चुनें</string>
+
+    <string name="help_tip_settings_date_format_title">तिथि प्रारूप</string>
+    <string name="help_tip_settings_date_format_subtitle">निर्धारित करें कि तिथियाँ कैसे दिखाई दें</string>
+    <string name="help_tip_settings_date_format_p1_title">अपना प्रारूप चुनें</string>
+    <string name="help_tip_settings_date_format_p1_desc">ReFra डिफ़ॉल्ट रूप से आपके सिस्टम की तिथि और 12/24-घंटे की प्राथमिकताओं का पालन करता है। केवल तब कस्टम पैटर्न सेट करें जब आप चाहते हों, और समर्थित प्रारूप प्रतीकों की समीक्षा करने के लिए सूचना बटन का उपयोग करें।</string>
+    <string name="help_tip_settings_date_format_p1_s1">तिथि प्रारूप खोलें</string>
+    <string name="help_tip_settings_date_format_p1_s2">सिस्टम का पालन रखें या कस्टम पैटर्न दर्ज करें</string>
+    <string name="help_tip_settings_date_format_p1_s3">परिणाम का पूर्वावलोकन करें और आवश्यकता होने पर फ़ॉर्मेट मार्गदर्शन खोलें</string>
+
+    <string name="help_tip_basics_setup_title">पहली बार सेटअप</string>
+    <string name="help_tip_basics_setup_subtitle">एक्सेस दें और अपनी डिफ़ॉल्ट सेटिंग्स चुनें</string>
+    <string name="help_tip_basics_setup_p1_title">शुरू करना</string>
+    <string name="help_tip_basics_setup_p1_desc">पहली बार लॉन्च पर ReFra आपको अनुमतियाँ, उपस्थिति, AI मॉडल, क्लाउड अकाउंट और उपयोगी टिप्स के माध्यम से मार्गदर्शन करता है। आप किसी भी समय सेटअप को दोबारा देख सकते हैं।</string>
+
+    <string name="help_tip_albums_ignored_manage_title">इग्नोर किए गए एल्बम प्रबंधित करें</string>
+    <string name="help_tip_albums_ignored_manage_subtitle">छिपी हुई फ़ोल्डर्स की समीक्षा और पुनर्स्थापना करें</string>
+    <string name="help_tip_albums_ignored_manage_p1_title">अवहेलित एल्बम सूची</string>
+    <string name="help_tip_albums_ignored_manage_p1_desc">टाइमलाइन से आपने जिन एल्बमों को छुपाया है उन्हें सभी एक जगह देखें और किसी को भी पुनर्स्थापित करें।</string>
+    <string name="help_tip_albums_ignored_manage_p1_s1">अवहेलित एल्बम खोलें</string>
+    <string name="help_tip_albums_ignored_manage_p1_s2">छिपे हुए फोल्डरों की समीक्षा करें</string>
+    <string name="help_tip_albums_ignored_manage_p1_s3">जो चाहें उन्हें वापस पुनर्स्थापित करें</string>
+
+    <string name="help_tip_cloud_add_server_title">सर्वर जोड़ें</string>
+    <string name="help_tip_cloud_add_server_subtitle">Immich, WebDAV, SMB और अन्य से कनेक्ट करें</string>
+    <string name="help_tip_cloud_add_server_p1_title">सेटअप विज़ार्ड</string>
+    <string name="help_tip_cloud_add_server_p1_desc">एक क्रमबद्ध विज़ार्ड आपको सर्वर पते, प्रमाणपत्र, नेटवर्किंग और सिंक विकल्पों के माध्यम से कदम दर कदम मार्गदर्शन करता है।</string>
+    <string name="help_tip_cloud_add_server_p1_s1">एक प्रदाता प्रकार चुनें</string>
+    <string name="help_tip_cloud_add_server_p1_s2">सर्वर और प्रमाणपत्र दर्ज करें</string>
+    <string name="help_tip_cloud_add_server_p1_s3">नेटवर्किंग और सिंक सेट करें</string>
+    <string name="help_tip_cloud_add_server_p1_s4">समीक्षा करें और सहेजें</string>
+
+    <string name="help_tip_cloud_destinations_title">बैकअप गंतव्य</string>
+    <string name="help_tip_cloud_destinations_subtitle">प्रत्येक एल्बम को एक या अधिक क्लाउड में मैप करें</string>
+    <string name="help_tip_cloud_destinations_p1_title">गंतव्य मैट्रिक्स</string>
+    <string name="help_tip_cloud_destinations_p1_desc">एक सरल मैट्रिक्स का उपयोग करके चुनें कि कौन से एल्बम किस जुड़े खाते में बैक अप होंगे।</string>
+
+    <string name="help_tip_cloud_provider_settings_title">खाता सेटिंग्स</string>
+    <string name="help_tip_cloud_provider_settings_subtitle">एक जुड़े खाते का प्रबंधन करें</string>
+    <string name="help_tip_cloud_provider_settings_p1_title">प्रति-खाता विकल्प</string>
+    <string name="help_tip_cloud_provider_settings_p1_desc">प्रत्येक जुड़े खाते के लिए नेटवर्किंग, बैकअप एल्बम और सिंक व्यवहार को स्वतंत्र रूप से संपादित करें।</string>
+
+    <string name="help_tip_cloud_shared_links_title">साझा लिंक</string>
+    <string name="help_tip_cloud_shared_links_subtitle">वे लिंक प्रबंधित करें जिन्हें आपने साझा किया है</string>
+    <string name="help_tip_cloud_shared_links_p1_title">साझा लिंक की समीक्षा करें</string>
+    <string name="help_tip_cloud_shared_links_p1_desc">अपने जुड़े सर्वरों पर बनाए गए सार्वजनिक लिंक देखें और रद्द करें।</string>
+
+    <string name="help_tip_cloud_sync_status_title">सिंक स्थिति</string>
+    <string name="help_tip_cloud_sync_status_subtitle">अपलोड और डाउनलोड ट्रैक करें</string>
+    <string name="help_tip_cloud_sync_status_p1_title">लाइव प्रगति</string>
+    <string name="help_tip_cloud_sync_status_p1_desc">बैकअप प्रगति देखें और क्या कतारबद्ध है, क्या चल रहा है या क्या विफल हुआ है।</string>
+
+    <string name="help_tip_cloud_people_title">लोग</string>
+    <string name="help_tip_cloud_people_subtitle">अपने सर्वर से चेहरे ब्राउज़ करें</string>
+    <string name="help_tip_cloud_people_p1_title">चेहरा समूह बनाना</string>
+    <string name="help_tip_cloud_people_p1_desc">अपने क्लाउड सर्वर द्वारा पहचाने गए लोगों का पता लगाएँ और प्रत्येक व्यक्ति की फ़ोटो खोलें।</string>
+
+    <string name="help_tip_cloud_free_up_space_title">जगह खाली करें</string>
+    <string name="help_tip_cloud_free_up_space_subtitle">सुरक्षित रूप से बैकअप की गई स्थानीय प्रतियां हटाएँ</string>
+    <string name="help_tip_cloud_free_up_space_p1_title">स्टोरेज फिर से प्राप्त करें</string>
+    <string name="help_tip_cloud_free_up_space_p1_desc">डिवाइस पर मौजूद मीडिया की प्रतियों को हटाएँ जो पहले ही क्लाउड पर सुरक्षित रूप से बैकअप हो चुकी हैं।</string>
+
+    <string name="help_tip_media_type_albums_title">मीडिया प्रकार के अनुसार ब्राउज़ करें</string>
+    <string name="help_tip_media_type_albums_subtitle">फोटो, वीडियो, GIF और RAW फ़ाइलों के लिए स्वचालित एल्बम</string>
+    <string name="help_tip_media_type_albums_p1_title">मीडिया-प्रकार एल्बम</string>
+    <string name="help_tip_media_type_albums_p1_desc">ReFra आपके एकीकृत लाइब्रेरी से वर्चुअल एल्बम बनाता है ताकि आप सभी फोटो, वीडियो, GIF या RAW फ़ाइलों को एक साथ खोल सकें। उनकी दृश्यता Timeline &amp; Albums सेटिंग्स से नियंत्रित की जाती है।</string>
+    <string name="help_tip_media_type_albums_p1_s1">एल्बम खोलें और मीडिया प्रकार तक स्क्रॉल करें</string>
+    <string name="help_tip_media_type_albums_p1_s2">मेल खाने वाले मीडिया को ब्राउज़ करने के लिए किसी प्रकार को खोलें</string>
+    <string name="help_tip_media_type_albums_p1_s3">सेक्शन को दिखाने या छुपाने के लिए Timeline &amp; Albums सेटिंग्स का उपयोग करें</string>
+
+    <string name="help_tip_raw_develop_title">RAW फोटो को डिवेलप करें</string>
+    <string name="help_tip_raw_develop_subtitle">एक्सपोर्ट करने से पहले सेंसर डेटा समायोजित करें</string>
+    <string name="help_tip_raw_develop_p1_title">Develop कंट्रोल्स का उपयोग करें</string>
+    <string name="help_tip_raw_develop_p1_desc">सपोर्टेड RAW फोटो को एडिटर में खोलें ताकि व्हाइट बैलेंस, एक्सपोज़र, हाइलाइट्स, आउटपुट कलर और डेमोसाइकिंग समायोजित कर सकें। ReFra पूर्ण-रिज़ॉल्यूशन आउटपुट को सुरक्षित रखते हुए मेमोरी-सुरक्षित प्रीव्यू का उपयोग करता है।</string>
+    <string name="help_tip_raw_develop_p1_s1">RAW फोटो खोलें और Edit पर टैप करें</string>
+    <string name="help_tip_raw_develop_p1_s2">Develop टैब में विकल्प चुनें</string>
+    <string name="help_tip_raw_develop_p1_s3">किसी भी अतिरिक्त क्रॉप, फ़िल्टर या मार्कअप को लागू करें</string>
+    <string name="help_tip_raw_develop_p1_s4">कॉपी सहेजें या JPEG, PNG या TIFF में निर्यात करें</string>
+
+    <string name="help_tip_people_grouping_title">डिवाइस पर लोगों को समूहित करें</string>
+    <string name="help_tip_people_grouping_subtitle">अपनी लाइब्रेरी अपलोड किए बिना चेहरे खोजें</string>
+    <string name="help_tip_people_grouping_p1_title">लोगों को स्कैन और व्यवस्थित करें</string>
+    <string name="help_tip_people_grouping_p1_desc">चेहरे का मॉडल इंस्टॉल होने के बाद, ReFra स्थानीय रूप से लोगों को स्कैन और समूहित करता है। आप लोग अनुभाग से नया स्कैन शुरू कर सकते हैं, किसी व्यक्ति को छिपा सकते हैं, समूहों को मिला सकते हैं और जब गोपनीयता महत्वपूर्ण हो तो धुंधली प्रतियां बना सकते हैं।</string>
+    <string name="help_tip_people_grouping_p1_s1">चहरे का पता लगाने वाला मॉडल इंस्टॉल करें</string>
+    <string name="help_tip_people_grouping_p1_s2">लाइब्रेरी खोलें, फिर लोग</string>
+    <string name="help_tip_people_grouping_p1_s3">लोगों के लिए स्कैन पर टैप करें और इंडेक्सिंग का इंतजार करें</string>
+    <string name="help_tip_people_grouping_p1_s4">समूह को प्रबंधित करने या चेहरों को धुंधला करने के लिए किसी व्यक्ति को खोलें</string>
+
+    <string name="help_tip_album_cover_title">एक एल्बम कवर चुनें</string>
+    <string name="help_tip_album_cover_subtitle">थंबनेल के रूप में कोई भी स्थानीय फोटो उपयोग करें</string>
+    <string name="help_tip_album_cover_p1_title">कस्टम कवर सेट करें</string>
+    <string name="help_tip_album_cover_p1_desc">स्थानीय, गैर-एन्क्रिप्टेड फोटो के लिए असली एल्बम में, व्यूवर क्रियाओं को खोलें और \'एल्बम कवर के रूप में उपयोग करें\' चुनें। आप इसे कॉन्फ़िगर करने योग्य चयन शीट में भी प्रदर्शित कर सकते हैं।</string>
+    <string name="help_tip_album_cover_p1_s1">अपने एल्बम से जो फोटो आप खोलना चाहते हैं वह खोलें</string>
+    <string name="help_tip_album_cover_p1_s2">क्रियाओं को खोलें, फिर \'के रूप में उपयोग करें\'</string>
+    <string name="help_tip_album_cover_p1_s3">\'एल्बम कवर के रूप में उपयोग करें\' चुनें</string>
+
+    <string name="help_tip_metadata_sanitize_title">संवेदनशील मेटाडेटा हटाएँ</string>
+    <string name="help_tip_metadata_sanitize_subtitle">पिक्सेल को पुनः संपीड़न किए बिना समर्थित फ़ाइलों को साफ़ करें</string>
+    <string name="help_tip_metadata_sanitize_p1_title">हटाने के लिए क्या चुनें</string>
+    <string name="help_tip_metadata_sanitize_p1_desc">किसी फोटो के विवरण से, \'मेटाडेटा हटाएँ\' चुनें और केवल स्थान, विवरणात्मक फ़ील्ड या सभी समर्थित मेटाडेटा चुनें। ReFra मूल को बदलने से पहले एक हानि रहित साफ़ की हुई प्रति लिखता और सत्यापन करता है।</string>
+    <string name="help_tip_metadata_sanitize_p1_s1">एक समर्थित स्थानीय फोटो खोलें</string>
+    <string name="help_tip_metadata_sanitize_p1_s2">इसके विवरण का विस्तार करें और \'मेटाडेटा हटाएँ\' टैप करें</string>
+    <string name="help_tip_metadata_sanitize_p1_s3">सैनिटाइजेशन स्तर चुनें</string>
+    <string name="help_tip_metadata_sanitize_p1_s4">सिर्फ़ प्रतिस्थापन चेतावनी की समीक्षा करने के बाद ही पुष्टि करें</string>
 </resources>

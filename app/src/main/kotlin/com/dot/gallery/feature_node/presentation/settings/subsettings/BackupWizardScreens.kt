@@ -611,20 +611,35 @@ fun SettingsBackupImportScreen(navigateUp: () -> Unit) {
 
             is BackupRestoreViewModel.ImportPhase.Done -> {
                 val r = current.result
+                fun restoredValue(restored: Int, skipped: Int): String =
+                    if (skipped == 0) "$restored" else "$restored/${restored + skipped}"
+
+                val pendingFavoritesNote = if (r.pendingLocalFavoriteUris.isNotEmpty()) {
+                    stringResource(R.string.backup_import_pending_favorites, r.pendingLocalFavoriteUris.size)
+                } else null
+                val authenticationNote = if (r.cloudConfigsRequiringAuthentication > 0) {
+                    stringResource(R.string.backup_include_cloud_configs_summary)
+                } else null
+                val issueNote = r.issues.takeIf { it.isNotEmpty() }?.joinToString("\n") {
+                    "${it.item}: ${it.message}"
+                }
                 BackupStatusContent(
                     padding = padding,
-                    success = true,
+                    success = r.issues.isEmpty(),
                     title = stringResource(R.string.backup_result_imported),
                     rows = listOf(
-                        stringResource(R.string.backup_include_settings) to "${r.settingsRestored}",
-                        stringResource(R.string.backup_include_cloud_favorites) to "${r.cloudFavoritesRestored}",
-                        stringResource(R.string.backup_include_cloud_configs) to "${r.cloudConfigsRestored}",
+                        stringResource(R.string.backup_include_settings) to
+                            restoredValue(r.settingsRestored, r.settingsSkipped),
+                        stringResource(R.string.backup_include_cloud_favorites) to
+                            restoredValue(r.cloudFavoritesRestored, r.cloudFavoritesSkipped),
+                        stringResource(R.string.backup_include_cloud_configs) to
+                            restoredValue(r.cloudConfigsRestored, r.cloudConfigsSkipped),
                         stringResource(R.string.backup_include_vaults) to
                             stringResource(R.string.backup_vaults_value, r.vaultsRestored, r.vaultMediaRestored)
                     ),
-                    note = if (r.pendingLocalFavoriteUris.isNotEmpty()) {
-                        stringResource(R.string.backup_import_pending_favorites, r.pendingLocalFavoriteUris.size)
-                    } else null,
+                    note = listOfNotNull(pendingFavoritesNote, authenticationNote, issueNote)
+                        .joinToString("\n")
+                        .ifEmpty { null },
                     onDone = navigateUp
                 )
             }

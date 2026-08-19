@@ -17,6 +17,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.core.view.WindowCompat
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants
+import com.dot.gallery.core.DefaultEventHandler
 import com.dot.gallery.core.MediaDistributor
 import com.dot.gallery.core.MediaHandler
 import com.dot.gallery.core.MediaSelector
@@ -32,19 +33,17 @@ import com.dot.gallery.feature_node.presentation.widget.data.WidgetType
 import com.dot.gallery.ui.theme.GalleryTheme
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class WidgetConfigActivity : FragmentActivity() {
 
-    @Inject
-    lateinit var eventHandler: EventHandler
+    private val eventHandler: EventHandler = DefaultEventHandler()
 
     @Inject
     lateinit var mediaDistributor: MediaDistributor
@@ -102,19 +101,24 @@ class WidgetConfigActivity : FragmentActivity() {
         }
 
         setContent {
-            LaunchedEffect(Unit) {
-                eventHandler.navigateUpAction = { finish() }
-            }
             LaunchedEffect(eventHandler) {
-                withContext(Dispatchers.Main.immediate) {
-                    eventHandler.updaterFlow.collectLatest { event ->
-                        when (event) {
-                            UIEvent.UpdateDatabase -> {}
-                            UIEvent.NavigationUpEvent -> eventHandler.navigateUpAction()
-                            is UIEvent.NavigationRouteEvent -> eventHandler.navigateAction(event.route)
-                            is UIEvent.ToggleNavigationBarEvent -> eventHandler.toggleNavigationBarAction(event.isVisible)
-                            is UIEvent.SetFollowThemeEvent -> eventHandler.setFollowThemeAction(event.followTheme)
+                lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    val navigateUpAction: () -> Unit = { finish() }
+                    eventHandler.navigateUpAction = navigateUpAction
+                    try {
+                        eventHandler.updaterFlow.collect { event ->
+                            when (event) {
+                                UIEvent.UpdateDatabase -> Unit
+                                UIEvent.NavigationUpEvent -> eventHandler.navigateUpAction()
+                                is UIEvent.NavigationRouteEvent -> eventHandler.navigateAction(event.route)
+                                is UIEvent.ToggleNavigationBarEvent ->
+                                    eventHandler.toggleNavigationBarAction(event.isVisible)
+                                is UIEvent.SetFollowThemeEvent ->
+                                    eventHandler.setFollowThemeAction(event.followTheme)
+                            }
                         }
+                    } finally {
+                        eventHandler.navigateUpAction = {}
                     }
                 }
             }

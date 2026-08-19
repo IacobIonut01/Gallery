@@ -51,22 +51,24 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
+import com.dot.gallery.cloud.core.CloudRuntimeSettings
+import com.dot.gallery.cloud.ui.CloudSelectionViewModel
 import com.dot.gallery.core.LocalMediaHandler
 import com.dot.gallery.core.Settings
 import com.dot.gallery.feature_node.presentation.mediaview.LocalMediaViewerVisualPolicy
+import com.dot.gallery.feature_node.presentation.mediaview.viewerActionCapabilities
 import com.dot.gallery.core.util.SdkCompat
 import com.dot.gallery.feature_node.data.data_source.KeychainHolder
 import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.Vault
 import com.dot.gallery.feature_node.domain.model.VaultState
-import com.dot.gallery.feature_node.domain.util.canMakeActions
 import com.dot.gallery.feature_node.domain.util.getUri
 import com.dot.gallery.feature_node.domain.util.isCloud
 import com.dot.gallery.feature_node.domain.util.isEncrypted
 import com.dot.gallery.feature_node.domain.util.isImage
-import com.dot.gallery.feature_node.domain.util.isLocalContent
 import com.dot.gallery.feature_node.domain.util.isVideo
 import com.dot.gallery.feature_node.domain.util.MotionPhotoHelper
 import com.dot.gallery.feature_node.presentation.collection.CollectionViewModel
@@ -144,18 +146,37 @@ fun <T : Media> MediaViewSheetActions(
     val exportSuccessText = stringResource(R.string.motion_photo_export_success)
     val exportFailedText = stringResource(R.string.motion_photo_export_failed)
     val extractFramesText = stringResource(R.string.frame_picker_extract_frames)
+    val createFirstText = stringResource(R.string.vault_create_first)
     val handler = LocalMediaHandler.current
+    val cloudSelectionViewModel = hiltViewModel<CloudSelectionViewModel>()
+    val cloudSettingsByConfigId by CloudRuntimeSettings.settingsByConfigId.collectAsStateWithLifecycle()
+    val providerSupportsFavorite = media.isCloud &&
+        cloudSelectionViewModel.supportsFavorite(listOf(media))
+    val providerSupportsTrash = media.isCloud &&
+        cloudSelectionViewModel.supportsTrash(listOf(media))
+    val capabilities = media.viewerActionCapabilities(
+        settingsByConfigId = cloudSettingsByConfigId,
+        providerSupportsFavorite = providerSupportsFavorite,
+        providerSupportsTrash = providerSupportsTrash,
+        platformSupportsFavorite = SdkCompat.supportsFavorites,
+        vaultRestoreAvailable = currentVault != null && restoreMedia != null,
+    )
     // Lazily create a single KeychainHolder for encrypted operations
     val keychainHolder = remember(currentVault) {
         if (currentVault != null) lazy { KeychainHolder(context) } else null
     }
 
     // "Use as album cover" is offered for local, non-encrypted media that live in a real album.
-    val canSetAlbumCover = remember(media) {
-        media.isLocalContent && media.canMakeActions && media.albumID > 0 && !media.isEncrypted
+    val canSetAlbumCover = remember(media, capabilities) {
+        capabilities.setAlbumCover && media.albumID > 0
     }
     // Options shown when tapping "Use as" for an album-cover-capable item.
-    val useAsOptions = remember(media, useAsAlbumCoverText, moreOptionsText) {
+    val useAsOptions = remember(
+        media,
+        useAsAlbumCoverText,
+        albumCoverUpdatedText,
+        moreOptionsText,
+    ) {
         listOf(
             OptionItem(
                 icon = Icons.Outlined.Wallpaper,
@@ -189,43 +210,63 @@ fun <T : Media> MediaViewSheetActions(
         vaults.value,
         currentVault,
         isMotionPhoto,
+        capabilities,
         canSetAlbumCover,
+        shareText,
+        copyToClipboardText,
+        hideText,
+        restoreText,
+        openWithText,
+        useAsText,
+        copyText,
+        moveText,
+        editText,
+        addToCollectionText,
+        downloadText,
+        downloadingText,
+        downloadCompleteText,
+        downloadFailedText,
+        exportVideoText,
+        exportingText,
+        exportSuccessText,
+        exportFailedText,
         extractFramesText,
+        createFirstText,
         onOpenFramePicker,
     ) {
         buildList<ActionGridItem> {
-            // Share
-            add(ActionGridItem(
-                icon = Icons.Outlined.Share,
-                text = shareText,
-                onClick = {
-                    scope.launch {
-                        if (media.isEncrypted && currentVault != null && keychainHolder != null) {
-                            context.shareEncryptedMedia(media, currentVault, keychainHolder.value)
-                        } else {
-                            context.shareMedia(media)
+            if (capabilities.share) {
+                add(ActionGridItem(
+                    icon = Icons.Outlined.Share,
+                    text = shareText,
+                    onClick = {
+                        scope.launch {
+                            if (media.isEncrypted && currentVault != null && keychainHolder != null) {
+                                context.shareEncryptedMedia(media, currentVault, keychainHolder.value)
+                            } else {
+                                context.shareMedia(media)
+                            }
                         }
                     }
-                }
-            ))
-            // Copy to Clipboard
-            add(ActionGridItem(
-                icon = Icons.Outlined.ContentCopy,
-                text = copyToClipboardText,
-                onClick = {
-                    scope.launch {
-                        if (media.isEncrypted && currentVault != null && keychainHolder != null) {
-                            context.copyEncryptedMediaToClipboard(media, keychainHolder.value)
-                        } else {
-                            context.copyMediaToClipboard(media)
+                ))
+            }
+            if (capabilities.copyToClipboard) {
+                add(ActionGridItem(
+                    icon = Icons.Outlined.ContentCopy,
+                    text = copyToClipboardText,
+                    onClick = {
+                        scope.launch {
+                            if (media.isEncrypted && currentVault != null && keychainHolder != null) {
+                                context.copyEncryptedMediaToClipboard(media, keychainHolder.value)
+                            } else {
+                                context.copyMediaToClipboard(media)
+                            }
                         }
                     }
-                }
-            ))
-            // Hide
-            if (media.isLocalContent) {
+                ))
+            }
+            if (capabilities.hideInVault) {
                 val noVaults = vaults.value.vaults.isEmpty()
-                val createFirstText = context.getString(R.string.vault_create_first)
                 add(ActionGridItem(
                     icon = Icons.Outlined.Lock,
                     text = hideText,
@@ -239,7 +280,7 @@ fun <T : Media> MediaViewSheetActions(
                 ))
             }
             // Restore
-            if (media.isEncrypted && restoreMedia != null && currentVault != null) {
+            if (capabilities.restoreFromVault && restoreMedia != null && currentVault != null) {
                 add(ActionGridItem(
                     icon = Icons.Outlined.Restore,
                     text = restoreText,
@@ -249,21 +290,23 @@ fun <T : Media> MediaViewSheetActions(
             // Open As / Use As — when the item is a local, non-encrypted media in a real album,
             // tapping opens a sub-sheet offering "Use as album cover" plus "More options" (the
             // system chooser). Otherwise it falls back to launching the system chooser directly.
-            add(ActionGridItem(
-                icon = Icons.AutoMirrored.Outlined.OpenInNew,
-                text = if (media.isVideo) openWithText else useAsText,
-                onClick = {
-                    if (canSetAlbumCover) {
-                        scope.launch { useAsSheetState.show() }
-                    } else {
-                        scope.launch {
-                            if (media.isVideo) context.launchOpenWithIntent(media)
-                            else context.launchUseAsIntent(media)
+            if (capabilities.openExternally) {
+                add(ActionGridItem(
+                    icon = Icons.AutoMirrored.Outlined.OpenInNew,
+                    text = if (media.isVideo) openWithText else useAsText,
+                    onClick = {
+                        if (canSetAlbumCover) {
+                            scope.launch { useAsSheetState.show() }
+                        } else {
+                            scope.launch {
+                                if (media.isVideo) context.launchOpenWithIntent(media)
+                                else context.launchUseAsIntent(media)
+                            }
                         }
                     }
-                }
-            ))
-            if (media.isVideo || isMotionPhoto) {
+                ))
+            }
+            if (capabilities.extractFrames && (media.isVideo || isMotionPhoto)) {
                 add(ActionGridItem(
                     icon = Icons.Outlined.Image,
                     text = extractFramesText,
@@ -271,7 +314,7 @@ fun <T : Media> MediaViewSheetActions(
                 ))
             }
             // Save Motion Photo embedded video as a standalone file
-            if (isMotionPhoto && !media.isCloud && !media.isEncrypted) {
+            if (isMotionPhoto && capabilities.exportMotionVideo) {
                 add(ActionGridItem(
                     icon = Icons.Outlined.MovieCreation,
                     text = exportVideoText,
@@ -293,7 +336,7 @@ fun <T : Media> MediaViewSheetActions(
                 ))
             }
             // Copy & Move
-            if (albumsState.value.albums.isNotEmpty() && media.canMakeActions) {
+            if (albumsState.value.albums.isNotEmpty() && capabilities.copyOrMove) {
                 add(ActionGridItem(
                     icon = Icons.Outlined.CopyAll,
                     text = copyText,
@@ -306,7 +349,7 @@ fun <T : Media> MediaViewSheetActions(
                 ))
             }
             // Edit
-            if (!media.isEncrypted) {
+            if (capabilities.edit) {
                 add(ActionGridItem(
                     icon = Icons.Outlined.Edit,
                     text = editText,
@@ -324,7 +367,7 @@ fun <T : Media> MediaViewSheetActions(
                 ))
             }
             // Add to Collection
-            if (media.isLocalContent && media.canMakeActions) {
+            if (capabilities.addToCollection) {
                 add(ActionGridItem(
                     icon = Icons.Outlined.Collections,
                     text = addToCollectionText,
@@ -332,7 +375,7 @@ fun <T : Media> MediaViewSheetActions(
                 ))
             }
             // Download (cloud only)
-            if (media.isCloud) {
+            if (capabilities.download) {
                 add(ActionGridItem(
                     icon = Icons.Outlined.Download,
                     text = downloadText,
@@ -403,7 +446,7 @@ fun <T : Media> MediaViewSheetActions(
     }
 
     // Hide (vault selection)
-    if (media.isLocalContent) {
+    if (capabilities.hideInVault) {
         val vaultViewModel = hiltViewModel<VaultViewModel>()
         var vaultEncryptBehavior by Settings.Vault.rememberVaultEncryptBehavior()
         val addToVaultSheetState = rememberAppBottomSheetState()
@@ -480,7 +523,7 @@ fun <T : Media> MediaViewSheetActions(
     }
 
     // Copy & Move sheets
-    if (albumsState.value.albums.isNotEmpty() && media.canMakeActions) {
+    if (albumsState.value.albums.isNotEmpty() && capabilities.copyOrMove) {
         CopyMediaSheet(
             sheetState = copySheetState,
             mediaList = listOf(media),
@@ -496,7 +539,7 @@ fun <T : Media> MediaViewSheetActions(
     }
 
     // Add to Collection sheet
-    if (media.isLocalContent && media.canMakeActions) {
+    if (capabilities.addToCollection) {
         val collectionViewModel = hiltViewModel<CollectionViewModel>()
         AddToCollectionSheet(
             visible = showCollectionSheet,

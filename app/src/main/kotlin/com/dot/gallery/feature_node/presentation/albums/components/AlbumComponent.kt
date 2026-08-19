@@ -427,15 +427,21 @@ fun AlbumOptionSheet(
         }
     }
 
-    val changeThumbnailOptions = remember(hasThumbnail) {
+    val selectThumbnailTitle = stringResource(R.string.select_new_thumbnail)
+    val restoreThumbnailTitle = stringResource(R.string.change_to_default)
+    val changeThumbnailOptions = remember(
+        hasThumbnail,
+        selectThumbnailTitle,
+        restoreThumbnailTitle,
+    ) {
         listOf(
             OptionItem(
-                text = "Select a new thumbnail",
+                text = selectThumbnailTitle,
                 icon = Icons.Outlined.FileOpen,
                 onClick = { pickerLauncher.launch(Unit) }
             ),
             OptionItem(
-                text = "Change to default",
+                text = restoreThumbnailTitle,
                 icon = Icons.Outlined.Restore,
                 enabled = hasThumbnail,
                 onClick = {

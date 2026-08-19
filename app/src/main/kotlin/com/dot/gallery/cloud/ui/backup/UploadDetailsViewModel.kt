@@ -14,16 +14,21 @@ import androidx.work.WorkManager
 import com.dot.gallery.cloud.core.ProviderRegistry
 import com.dot.gallery.cloud.core.ProviderType
 import com.dot.gallery.cloud.core.capabilities.SyncCapableProvider
-import com.dot.gallery.cloud.data.dao.CloudMediaDao
 import com.dot.gallery.cloud.data.dao.CloudServerConfigDao
 import com.dot.gallery.cloud.data.dao.CloudUploadPrefDao
 import com.dot.gallery.cloud.sync.CloudUploadWorker
+import com.dot.gallery.cloud.sync.isActiveBackupWork
+import com.dot.gallery.cloud.ui.verifiedItemsByIndex
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.domain.util.getUri
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -53,8 +58,10 @@ data class UploadGroup(
 
 data class UploadDetailsUiState(
     val isWorkerRunning: Boolean = false,
+    val phase: String = "",
     val currentFileName: String = "",
     val totalItems: Int = 0,
+    val checkedItems: Int = 0,
     val completedItems: Int = 0,
     val failedItems: Int = 0,
     // Pending-queue preview (grouped by provider + album), with size estimate.
@@ -70,13 +77,13 @@ class UploadDetailsViewModel @Inject constructor(
     private val workManager: WorkManager,
     private val configDao: CloudServerConfigDao,
     private val uploadPrefDao: CloudUploadPrefDao,
-    private val cloudMediaDao: CloudMediaDao,
     private val registry: ProviderRegistry,
     private val repository: MediaRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(UploadDetailsUiState())
     val uiState: StateFlow<UploadDetailsUiState> = _uiState.asStateFlow()
+    private var refreshJob: Job? = null
 
     init {
         observeWorkProgress()
@@ -91,9 +98,8 @@ class UploadDetailsViewModel @Inject constructor(
             var wasRunning = false
             workManager.getWorkInfosByTagFlow(CloudUploadWorker.TAG_BACKUP)
                 .collect { workInfos ->
-                    val active = workInfos.firstOrNull {
-                        it.state == WorkInfo.State.RUNNING || it.state == WorkInfo.State.ENQUEUED
-                    }
+                    val active = workInfos.firstOrNull { it.state == WorkInfo.State.RUNNING }
+                        ?: workInfos.firstOrNull { isActiveBackupWork(it.state, it.tags) }
                     if (active == null) {
                         _uiState.value = _uiState.value.copy(isWorkerRunning = false)
                         // A run just finished — the pending set changed, so recompute it.
@@ -107,8 +113,10 @@ class UploadDetailsViewModel @Inject constructor(
                     val progress = active.progress
                     _uiState.value = _uiState.value.copy(
                         isWorkerRunning = true,
+                        phase = progress.getString(CloudUploadWorker.KEY_PHASE) ?: "",
                         currentFileName = progress.getString(CloudUploadWorker.KEY_CURRENT_FILE) ?: "",
                         totalItems = progress.getInt(CloudUploadWorker.KEY_TOTAL_ITEMS, 0),
+                        checkedItems = progress.getInt(CloudUploadWorker.KEY_CHECKED_ITEMS, 0),
                         completedItems = progress.getInt(CloudUploadWorker.KEY_COMPLETED_ITEMS, 0),
                         failedItems = progress.getInt(CloudUploadWorker.KEY_FAILED_ITEMS, 0)
                     )
@@ -122,16 +130,17 @@ class UploadDetailsViewModel @Inject constructor(
      * on that cloud. Grouped by (account × album) with a total-size estimate.
      */
     fun refreshQueue() {
-        viewModelScope.launch {
+        refreshJob?.cancel()
+        refreshJob = viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isScanning = true)
             val activeConfigs = configDao.getAll().first().filter { it.isActive }
             val perConfig = activeConfigs.mapNotNull { cfg ->
-                val provider = registry.get(cfg.providerType) as? SyncCapableProvider ?: return@mapNotNull null
+                val provider = registry.getByConfigId(cfg.id) as? SyncCapableProvider ?: return@mapNotNull null
                 Triple(cfg, provider, uploadPrefDao.getEnabledByConfigList(cfg.id))
             }
             withContext(Dispatchers.IO) {
                 val hashByMediaId = HashMap<Long, String>()
-                fun hashOf(media: Media): String? =
+                suspend fun hashOf(media: Media): String? =
                     hashByMediaId[media.id] ?: computeSha1(media)?.also { hashByMediaId[media.id] = it }
 
                 val groups = mutableListOf<UploadGroup>()
@@ -141,23 +150,23 @@ class UploadDetailsViewModel @Inject constructor(
                         val media = (repository.getMediaByAlbumId(pref.albumId, skipBatching = true).first().data ?: emptyList())
                             .filter { it.uri.scheme != "cloud" }
                         if (media.isEmpty()) continue
-                        // Filename set from the durable cache. Immich stores the original
-                        // filename in `label` (remoteId is an opaque UUID); path-based stores
-                        // key by remote path — cover both. A live per-file stat can transiently
-                        // fail and wrongly re-list already-uploaded files, so we trust the cache.
-                        val cachedNames: Set<String> = cloudMediaDao.getByServerConfig(cfg.id).first()
-                            .mapNotNull { it.label.ifBlank { it.remoteId.substringAfterLast('/') }.ifBlank { null } }
-                            .toSet()
-                        // Only files we've never seen on this account need the expensive SHA-1 +
-                        // bulkUploadCheck round-trip. Cached filenames are treated as present,
-                        // so re-opening this screen for a large synced album is near-instant.
-                        val unknown = media.filter { it.label !in cachedNames }
-                        val present = if (unknown.isEmpty()) emptyMap() else try {
-                            provider.bulkUploadCheck(unknown.map { hashOf(it) ?: "" }).getOrDefault(emptyMap())
-                        } catch (_: Exception) { emptyMap() }
-                        val pending = unknown.filterIndexed { idx, _ ->
-                            present[idx.toString()] != true
+                        // Hash every readable item so filename or metadata matches never suppress
+                        // a pending upload without provider-confirmed content evidence.
+                        val hashed = media.mapNotNull { item ->
+                            hashOf(item)?.let { hash -> item to hash }
                         }
+                        // Unreadable items remain pending rather than sending an invalid empty hash.
+                        val present = if (hashed.isEmpty()) emptyMap() else try {
+                            provider.bulkUploadCheck(hashed.map { it.second }).getOrDefault(emptyMap())
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (_: Exception) {
+                            emptyMap()
+                        }
+                        val verifiedIds = verifiedItemsByIndex(hashed, present).mapTo(mutableSetOf()) {
+                            it.first.id
+                        }
+                        val pending = media.filterNot { it.id in verifiedIds }
                         if (pending.isEmpty()) continue
                         val items = pending.map {
                             UploadQueueItem(it.id, it.getUri(), it.label, it.size)
@@ -182,18 +191,34 @@ class UploadDetailsViewModel @Inject constructor(
         }
     }
 
-    private fun computeSha1(media: Media): String? {
+    private suspend fun computeSha1(media: Media): String? {
         return try {
             context.contentResolver.openInputStream(media.getUri())?.use { input ->
                 val digest = MessageDigest.getInstance("SHA-1")
                 val buffer = ByteArray(8192)
                 while (true) {
+                    currentCoroutineContext().ensureActive()
                     val read = input.read(buffer)
                     if (read == -1) break
                     digest.update(buffer, 0, read)
                 }
                 digest.digest().joinToString("") { "%02x".format(it) }
             }
-        } catch (_: Exception) { null }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            null
+        }
     }
+}
+
+internal fun visibleBackupProgressItems(
+    phase: String,
+    checkedItems: Int,
+    completedItems: Int,
+    failedItems: Int
+): Int = if (phase == CloudUploadWorker.PHASE_VERIFYING) {
+    checkedItems
+} else {
+    completedItems + failedItems
 }

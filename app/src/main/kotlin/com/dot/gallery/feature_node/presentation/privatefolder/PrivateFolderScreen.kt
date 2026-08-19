@@ -45,6 +45,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.cellsList
@@ -57,6 +58,7 @@ import com.dot.gallery.core.navigateUp
 import com.dot.gallery.core.presentation.components.EmptyMedia
 import com.dot.gallery.core.presentation.components.NavigationButton
 import com.dot.gallery.core.presentation.components.SelectionSheet
+import com.dot.gallery.core.presentation.components.util.OnLifecycleEvent
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
 import com.dot.gallery.feature_node.presentation.common.components.GridPinchZoomLayout
@@ -69,6 +71,7 @@ import com.dot.gallery.feature_node.presentation.util.selectedMedia
 import com.dot.gallery.feature_node.presentation.vault.components.VaultPasswordUnlockDialog
 import com.dot.gallery.feature_node.presentation.vault.utils.GateMode
 import com.dot.gallery.feature_node.presentation.vault.utils.VaultAuthType
+import com.dot.gallery.feature_node.presentation.vault.utils.VaultCredentialStatus
 import com.dot.gallery.feature_node.presentation.vault.utils.VaultPasswordManager
 import com.dot.gallery.feature_node.presentation.vault.utils.VerifyResult
 import com.dot.gallery.feature_node.presentation.vault.utils.rememberBiometricState
@@ -94,10 +97,15 @@ fun PrivateFolderScreen(
     val eventHandler = LocalEventHandler.current
     val scope = rememberCoroutineScope()
 
-    var isAuthenticated by rememberSaveable { mutableStateOf(false) }
+    // Authorization is intentionally memory-only and is revoked when the app stops.
+    var isAuthenticated by remember { mutableStateOf(false) }
     var authType by remember { mutableStateOf<VaultAuthType?>(null) }
     var showPasswordDialog by remember { mutableStateOf(false) }
     var passwordError by remember { mutableStateOf<String?>(null) }
+    var authEpoch by remember { mutableStateOf(0) }
+    var authRequest by remember { mutableStateOf(0) }
+    var reauthenticateOnStart by remember { mutableStateOf(false) }
+    var deviceAuthPending by remember { mutableStateOf(false) }
 
     val wrongPasswordStr = stringResource(R.string.vault_wrong_password_attempts)
     val lockedOutStr = stringResource(R.string.vault_locked_out)
@@ -105,30 +113,64 @@ fun PrivateFolderScreen(
     val biometricState = rememberBiometricState(
         title = stringResource(R.string.private_folder_unlock),
         subtitle = stringResource(R.string.private_folder_unlock_subtitle),
-        onSuccess = { isAuthenticated = true },
-        onFailed = { eventHandler.navigateUp() }
+        onSuccess = {
+            if (deviceAuthPending) isAuthenticated = true
+            deviceAuthPending = false
+        },
+        onFailed = {
+            val wasPending = deviceAuthPending
+            deviceAuthPending = false
+            if (wasPending) eventHandler.navigateUp()
+        }
     )
 
-    LaunchedEffect(Unit) {
+    OnLifecycleEvent { _, event ->
+        when (event) {
+            Lifecycle.Event.ON_STOP -> {
+                authEpoch += 1
+                isAuthenticated = false
+                deviceAuthPending = false
+                showPasswordDialog = false
+                passwordError = null
+                authType = null
+                biometricState.cancelAuthentication()
+                reauthenticateOnStart = true
+            }
+            Lifecycle.Event.ON_START -> {
+                if (reauthenticateOnStart) {
+                    reauthenticateOnStart = false
+                    authRequest += 1
+                }
+            }
+            else -> Unit
+        }
+    }
+
+    LaunchedEffect(authRequest) {
         if (isAuthenticated) return@LaunchedEffect
+        val attemptEpoch = authEpoch
         when (VaultPasswordManager.getPrivateFolderMode(context)) {
-            GateMode.NONE -> isAuthenticated = true
+            GateMode.NONE -> isAuthenticated = attemptEpoch == authEpoch
             GateMode.DEVICE -> {
-                if (biometricState.isSupported) {
+                if (biometricState.isSupported && attemptEpoch == authEpoch) {
+                    deviceAuthPending = true
                     biometricState.authenticate()
                 } else {
-                    isAuthenticated = true
+                    eventHandler.navigateUp()
                 }
             }
             GateMode.CUSTOM -> {
-                val type = VaultPasswordManager.getAuthType(
+                val status = VaultPasswordManager.getCredentialStatus(
                     context, VaultPasswordManager.PRIVATE_FOLDER_UUID
                 )
-                if (type != null) {
-                    authType = type
-                    showPasswordDialog = true
-                } else {
-                    isAuthenticated = true
+                if (attemptEpoch != authEpoch) return@LaunchedEffect
+                when (status) {
+                    is VaultCredentialStatus.Valid -> {
+                        authType = status.authType
+                        showPasswordDialog = true
+                    }
+                    VaultCredentialStatus.Missing,
+                    VaultCredentialStatus.Corrupt -> eventHandler.navigateUp()
                 }
             }
         }
@@ -148,10 +190,12 @@ fun PrivateFolderScreen(
                     eventHandler.navigateUp()
                 },
                 onSubmit = { secret ->
+                    val attemptEpoch = authEpoch
                     scope.launch {
                         val result = VaultPasswordManager.verifyPassword(
                             context, VaultPasswordManager.PRIVATE_FOLDER_UUID, secret
                         )
+                        if (attemptEpoch != authEpoch || !showPasswordDialog) return@launch
                         when (result) {
                             is VerifyResult.Success -> {
                                 showPasswordDialog = false

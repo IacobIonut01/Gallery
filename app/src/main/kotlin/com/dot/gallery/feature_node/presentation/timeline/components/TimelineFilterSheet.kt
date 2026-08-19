@@ -8,13 +8,14 @@ package com.dot.gallery.feature_node.presentation.timeline.components
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -36,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.R
@@ -92,17 +94,17 @@ fun TimelineFilterSheet(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier.padding(bottom = 16.dp)
                     ) {
-                        FilterChip(
+                        TimelineFilterChip(
                             label = stringResource(R.string.filter_all),
                             selected = filter.mediaType == MediaTypeFilter.ALL,
                             onClick = { filter = filter.copy(mediaType = MediaTypeFilter.ALL) }
                         )
-                        FilterChip(
+                        TimelineFilterChip(
                             label = stringResource(R.string.photos),
                             selected = filter.mediaType == MediaTypeFilter.PHOTOS,
                             onClick = { filter = filter.copy(mediaType = MediaTypeFilter.PHOTOS) }
                         )
-                        FilterChip(
+                        TimelineFilterChip(
                             label = stringResource(R.string.videos),
                             selected = filter.mediaType == MediaTypeFilter.VIDEOS,
                             onClick = { filter = filter.copy(mediaType = MediaTypeFilter.VIDEOS) }
@@ -116,7 +118,7 @@ fun TimelineFilterSheet(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier.padding(bottom = 16.dp)
                     ) {
-                        FilterChip(
+                        TimelineFilterChip(
                             label = stringResource(R.string.favorites),
                             selected = filter.favoritesOnly,
                             onClick = { filter = filter.copy(favoritesOnly = !filter.favoritesOnly) }
@@ -132,7 +134,7 @@ fun TimelineFilterSheet(
                             modifier = Modifier.padding(bottom = 16.dp)
                         ) {
                             availableYears.forEach { year ->
-                                FilterChip(
+                                TimelineFilterChip(
                                     label = year.toString(),
                                     selected = year in filter.selectedYears,
                                     onClick = {
@@ -154,7 +156,7 @@ fun TimelineFilterSheet(
                             modifier = Modifier.padding(bottom = 16.dp)
                         ) {
                             availableAlbums.forEach { album ->
-                                FilterChip(
+                                TimelineFilterChip(
                                     label = album.label,
                                     selected = album.id in filter.selectedAlbumIds,
                                     onClick = {
@@ -216,7 +218,7 @@ private fun FilterSectionHeader(title: String) {
 }
 
 @Composable
-private fun FilterChip(
+internal fun TimelineFilterChip(
     label: String,
     selected: Boolean,
     onClick: () -> Unit,
@@ -243,10 +245,15 @@ private fun FilterChip(
         style = MaterialTheme.typography.bodyMedium,
         color = contentColor,
         modifier = Modifier
+            .heightIn(min = 48.dp)
             .clip(shape)
             .background(backgroundColor, shape)
             .border(1.dp, borderColor, shape)
-            .clickable(onClick = onClick)
+            .selectable(
+                selected = selected,
+                role = Role.Checkbox,
+                onClick = onClick,
+            )
             .padding(horizontal = 16.dp, vertical = 8.dp)
     )
 }

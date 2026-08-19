@@ -49,7 +49,6 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -82,41 +81,107 @@ fun CloudBackupAndSyncScreen(
     val remoteOnly by syncViewModel.remoteOnlyMedia.collectAsStateWithLifecycle()
     val pendingUpload by syncViewModel.pendingUploadMedia.collectAsStateWithLifecycle()
 
-    val context = LocalContext.current
+    val perAccountHeader = stringResource(R.string.cloud_backup_per_account)
+    val accountSummaries = mutableMapOf<Long, String>()
+    backupState.accounts.forEach { account ->
+        accountSummaries[account.configId] = stringResource(
+            R.string.cloud_backup_account_progress,
+            account.backedUpCount,
+            account.totalAssets,
+        ) + " · " + stringResource(
+            R.string.cloud_backup_account_albums,
+            account.enabledAlbumCount,
+        )
+    }
+    val backupHeader = stringResource(R.string.cloud_backup)
+    val selectAlbumsTitle = stringResource(R.string.cloud_backup_select_albums)
+    val noAlbumsSummary = stringResource(R.string.cloud_backup_no_albums)
+    val albumsCountSummary = stringResource(
+        R.string.cloud_backup_albums_count,
+        backupState.enabledAlbumCount,
+    )
+    val optionsTitle = stringResource(R.string.cloud_backup_options)
+    val optionsSummary = stringResource(R.string.cloud_backup_options_summary)
+    val actionsHeader = stringResource(R.string.cloud_backup_actions)
+    val syncingTitle = stringResource(R.string.cloud_upload_syncing)
+    val startTitle = stringResource(R.string.cloud_backup_start)
+    val startSummary = stringResource(R.string.cloud_backup_start_summary)
+    val rescanTitle = stringResource(R.string.cloud_backup_rescan)
+    val rescanSummary = stringResource(R.string.cloud_backup_rescan_summary)
+    val uploadDetailsTitle = stringResource(R.string.cloud_upload_details)
+    val uploadDetailsSummary = stringResource(R.string.cloud_upload_details_idle)
+    val syncStatusHeader = stringResource(R.string.cloud_sync_status)
+    val totalCachedTitle = stringResource(R.string.cloud_sync_total_cached)
+    val totalCachedSummary = stringResource(R.string.cloud_sync_items_count, syncState.totalCached)
+    val syncedTitle = stringResource(R.string.cloud_sync_synced)
+    val syncedSummary = stringResource(R.string.cloud_sync_synced_count, synced.size)
+    val remoteOnlyTitle = stringResource(R.string.cloud_sync_remote_only)
+    val remoteOnlySummary = stringResource(R.string.cloud_sync_remote_count, remoteOnly.size)
+    val pendingUploadTitle = stringResource(R.string.cloud_sync_pending_upload)
+    val pendingUploadSummary = stringResource(R.string.cloud_sync_pending_count, pendingUpload.size)
+    val syncNowTitle = stringResource(R.string.cloud_sync_now)
+    val syncNowSummary = stringResource(R.string.cloud_sync_now_summary)
+    val resourceStrings = listOf(
+        perAccountHeader,
+        backupHeader,
+        selectAlbumsTitle,
+        noAlbumsSummary,
+        albumsCountSummary,
+        optionsTitle,
+        optionsSummary,
+        actionsHeader,
+        syncingTitle,
+        startTitle,
+        startSummary,
+        rescanTitle,
+        rescanSummary,
+        uploadDetailsTitle,
+        uploadDetailsSummary,
+        syncStatusHeader,
+        totalCachedTitle,
+        totalCachedSummary,
+        syncedTitle,
+        syncedSummary,
+        remoteOnlyTitle,
+        remoteOnlySummary,
+        pendingUploadTitle,
+        pendingUploadSummary,
+        syncNowTitle,
+        syncNowSummary,
+    )
 
     val settingsList: SnapshotStateList<SettingsEntity> = remember(
-        backupState, syncState, synced.size, remoteOnly.size, pendingUpload.size
+        backupState,
+        syncState,
+        synced.size,
+        remoteOnly.size,
+        pendingUpload.size,
+        accountSummaries,
+        resourceStrings,
     ) {
         buildList {
             // === BACKUP SECTION ===
             // Album selection is per-account: each cloud picks the local albums it
             // backs up, so destinations are never ambiguous.
             if (backupState.accounts.isNotEmpty()) {
-                add(SettingsEntity.Header(title = context.getString(R.string.cloud_backup_per_account)))
+                add(SettingsEntity.Header(title = perAccountHeader))
                 backupState.accounts.forEachIndexed { index, account ->
                     add(
                         SettingsEntity.Preference(
                             title = account.accountLabel,
-                            summary = context.getString(
-                                R.string.cloud_backup_account_progress,
-                                account.backedUpCount,
-                                account.totalAssets
-                            ) + " · " + context.getString(
-                                R.string.cloud_backup_account_albums,
-                                account.enabledAlbumCount
-                            ),
+                            summary = accountSummaries.getValue(account.configId),
                             onClick = { onNavigateToAlbumPicker(account.configId) },
                             screenPosition = if (index == 0) Position.Top else Position.Middle
                         )
                     )
                 }
             } else {
-                add(SettingsEntity.Header(title = context.getString(R.string.cloud_backup)))
+                add(SettingsEntity.Header(title = backupHeader))
                 add(
                     SettingsEntity.Preference(
-                        title = context.getString(R.string.cloud_backup_select_albums),
-                        summary = if (backupState.enabledAlbumCount == 0) context.getString(R.string.cloud_backup_no_albums)
-                        else context.getString(R.string.cloud_backup_albums_count, backupState.enabledAlbumCount),
+                        title = selectAlbumsTitle,
+                        summary = if (backupState.enabledAlbumCount == 0) noAlbumsSummary
+                        else albumsCountSummary,
                         onClick = { onNavigateToAlbumPicker(-1L) },
                         screenPosition = Position.Top
                     )
@@ -124,20 +189,19 @@ fun CloudBackupAndSyncScreen(
             }
             add(
                 SettingsEntity.Preference(
-                    title = context.getString(R.string.cloud_backup_options),
-                    summary = context.getString(R.string.cloud_backup_options_summary),
+                    title = optionsTitle,
+                    summary = optionsSummary,
                     onClick = onNavigateToBackupOptions,
                     screenPosition = Position.Bottom
                 )
             )
 
             // Backup actions
-            add(SettingsEntity.Header(title = context.getString(R.string.cloud_backup_actions)))
+            add(SettingsEntity.Header(title = actionsHeader))
             add(
                 SettingsEntity.Preference(
-                    title = if (backupState.isUploading) context.getString(R.string.cloud_upload_syncing)
-                    else context.getString(R.string.cloud_backup_start),
-                    summary = context.getString(R.string.cloud_backup_start_summary),
+                    title = if (backupState.isUploading) syncingTitle else startTitle,
+                    summary = startSummary,
                     enabled = !backupState.isUploading && backupState.enabledAlbumCount > 0,
                     onClick = { backupViewModel.triggerBackup() },
                     screenPosition = Position.Top
@@ -145,8 +209,8 @@ fun CloudBackupAndSyncScreen(
             )
             add(
                 SettingsEntity.Preference(
-                    title = context.getString(R.string.cloud_backup_rescan),
-                    summary = context.getString(R.string.cloud_backup_rescan_summary),
+                    title = rescanTitle,
+                    summary = rescanSummary,
                     enabled = !backupState.isScanning,
                     onClick = { backupViewModel.scanBackupStatus() },
                     screenPosition = Position.Middle
@@ -154,40 +218,40 @@ fun CloudBackupAndSyncScreen(
             )
             add(
                 SettingsEntity.Preference(
-                    title = context.getString(R.string.cloud_upload_details),
-                    summary = context.getString(R.string.cloud_upload_details_idle),
+                    title = uploadDetailsTitle,
+                    summary = uploadDetailsSummary,
                     onClick = onNavigateToUploadDetails,
                     screenPosition = Position.Bottom
                 )
             )
 
             // === SYNC STATUS SECTION ===
-            add(SettingsEntity.Header(title = context.getString(R.string.cloud_sync_status)))
+            add(SettingsEntity.Header(title = syncStatusHeader))
             add(
                 SettingsEntity.Preference(
-                    title = context.getString(R.string.cloud_sync_total_cached),
-                    summary = context.getString(R.string.cloud_sync_items_count, syncState.totalCached),
+                    title = totalCachedTitle,
+                    summary = totalCachedSummary,
                     screenPosition = Position.Top
                 )
             )
             add(
                 SettingsEntity.Preference(
-                    title = context.getString(R.string.cloud_sync_synced),
-                    summary = context.getString(R.string.cloud_sync_synced_count, synced.size),
+                    title = syncedTitle,
+                    summary = syncedSummary,
                     screenPosition = Position.Middle
                 )
             )
             add(
                 SettingsEntity.Preference(
-                    title = context.getString(R.string.cloud_sync_remote_only),
-                    summary = context.getString(R.string.cloud_sync_remote_count, remoteOnly.size),
+                    title = remoteOnlyTitle,
+                    summary = remoteOnlySummary,
                     screenPosition = Position.Middle
                 )
             )
             add(
                 SettingsEntity.Preference(
-                    title = context.getString(R.string.cloud_sync_pending_upload),
-                    summary = context.getString(R.string.cloud_sync_pending_count, pendingUpload.size),
+                    title = pendingUploadTitle,
+                    summary = pendingUploadSummary,
                     screenPosition = Position.Bottom
                 )
             )
@@ -196,9 +260,8 @@ fun CloudBackupAndSyncScreen(
             add(SettingsEntity.Header(title = ""))
             add(
                 SettingsEntity.Preference(
-                    title = if (syncState.isLoading) context.getString(R.string.cloud_upload_syncing)
-                    else context.getString(R.string.cloud_sync_now),
-                    summary = context.getString(R.string.cloud_sync_now_summary),
+                    title = if (syncState.isLoading) syncingTitle else syncNowTitle,
+                    summary = syncNowSummary,
                     enabled = !syncState.isLoading,
                     onClick = { syncViewModel.triggerSync() },
                     screenPosition = Position.Alone

@@ -94,7 +94,6 @@ fun CloudAccountsScreen(
         }
     }
 
-    val configuredTypes = remember(configs) { configs.map { it.providerType }.toSet() }
     val remoteProviderTypes = remember { ProviderType.availableRemoteTypes() }
 
     val emptySettingsList = remember { mutableStateListOf<SettingsEntity>() }
@@ -142,11 +141,20 @@ fun CloudAccountsScreen(
                     onSync = { viewModel.triggerSync(config.id) }
                 )
             }
-            // Placeholder cards for unconfigured remote providers, grouped by the category
-            // declared in each ProviderUiDescriptor (standalone, ownCloud variants, network shares).
-            val unconfigured = remoteProviderTypes.filterNot { it in configuredTypes }
-            val byCategory = remember(unconfigured) {
-                unconfigured.groupBy { ProviderUiDescriptors.forType(it).category }
+            // Keep every provider available after the first account is configured. Accounts are
+            // keyed by configId, so hiding a type here incorrectly prevented same-provider accounts.
+            if (configs.isNotEmpty()) {
+                Text(
+                    text = stringResource(R.string.cloud_add_another_account),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 32.dp, vertical = 12.dp)
+                )
+            }
+            val byCategory = remember(remoteProviderTypes) {
+                remoteProviderTypes.groupBy { ProviderUiDescriptors.forType(it).category }
             }
             val addProvider: (ProviderType) -> Unit = { providerType ->
                 eventHandler.navigate(
@@ -547,7 +555,8 @@ private fun capabilityLabelRes(capability: ProviderCapability): Int? = when (cap
     ProviderCapability.REMOTE_ASSETS -> R.string.cloud_cap_remote_assets
     ProviderCapability.REMOTE_ALBUMS -> R.string.cloud_cap_remote_albums
     ProviderCapability.SYNC -> R.string.cloud_cap_sync
-    ProviderCapability.SHARE_LINK -> R.string.cloud_cap_share_link
+    ProviderCapability.SHARE_CREATE -> R.string.cloud_cap_share_link
+    ProviderCapability.SHARE_MANAGE -> null
     ProviderCapability.PEOPLE -> R.string.cloud_cap_people
     ProviderCapability.MAP -> R.string.cloud_cap_map
     ProviderCapability.SMART_SEARCH -> R.string.cloud_cap_smart_search

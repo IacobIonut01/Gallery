@@ -220,6 +220,9 @@ fun <T : Media> MediaViewSheetDetails(
                 val scope = rememberCoroutineScope()
 
                 val metadataRemovalSheetState = rememberAppBottomSheetState()
+                val metadataRemovalSuccessText = stringResource(R.string.remove_metadata_success)
+                val metadataRemovalRolledBackText = stringResource(R.string.remove_metadata_rolled_back)
+                val metadataRemovalFailedText = stringResource(R.string.remove_metadata_failed)
                 var pendingRemovalMode by rememberSaveable(currentMedia.id) {
                     mutableStateOf(MetadataRemovalMode.LOCATION)
                 }
@@ -241,7 +244,13 @@ fun <T : Media> MediaViewSheetDetails(
                 val metadataRemovalPermissionResult = rememberActivityResult(
                     onResultOk = doMetadataRemoval
                 )
-                LaunchedEffect(metadataSanitizationState, currentMedia.id) {
+                LaunchedEffect(
+                    metadataSanitizationState,
+                    currentMedia.id,
+                    metadataRemovalSuccessText,
+                    metadataRemovalRolledBackText,
+                    metadataRemovalFailedText,
+                ) {
                     when (metadataSanitizationState) {
                         is MediaViewViewModel.MetadataSanitizationUiState.Ready -> {
                             if (metadataSanitizationState.mediaId == currentMedia.id) {
@@ -252,15 +261,15 @@ fun <T : Media> MediaViewSheetDetails(
                             if (metadataSanitizationState.mediaId == currentMedia.id) {
                                 val result = metadataSanitizationState.result
                                 val message = when (result) {
-                                    is SanitizationResult.Success -> R.string.remove_metadata_success
+                                    is SanitizationResult.Success -> metadataRemovalSuccessText
                                     is SanitizationResult.CommitFailed -> if (result.rolledBack) {
-                                        R.string.remove_metadata_rolled_back
+                                        metadataRemovalRolledBackText
                                     } else {
-                                        R.string.remove_metadata_failed
+                                        metadataRemovalFailedText
                                     }
-                                    else -> R.string.remove_metadata_failed
+                                    else -> metadataRemovalFailedText
                                 }
-                                Toast.makeText(context, context.getString(message), Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                                 if (result is SanitizationResult.Success) metadataRemovalSheetState.hide()
                                 resetMetadataSanitization()
                             }

@@ -184,10 +184,10 @@ fun SettingsMediaViewerScreen() {
         }
         DETAIL_EDITOR -> {
             BackHandler { detailKey = null }
-            val editorOptions = remember(defaultEditor, editApps) {
-                val builtinLabel = context.getString(R.string.default_image_editor_builtin)
+            val builtinEditorLabel = stringResource(R.string.default_image_editor_builtin)
+            val editorOptions = remember(defaultEditor, editApps, builtinEditorLabel, context) {
                 val options = mutableListOf(
-                    PreferenceOption(Settings.Misc.EDITOR_BUILTIN, builtinLabel, defaultEditor == Settings.Misc.EDITOR_BUILTIN)
+                    PreferenceOption(Settings.Misc.EDITOR_BUILTIN, builtinEditorLabel, defaultEditor == Settings.Misc.EDITOR_BUILTIN)
                 )
                 editApps.forEach { app ->
                     val pkg = app.activityInfo.packageName
@@ -317,8 +317,9 @@ private fun MediaViewerListScreen(
         val context = LocalContext.current
         val eventHandler = LocalEventHandler.current
 
-        val viewingHeader = remember(context) {
-            SettingsEntity.Header(title = context.getString(R.string.media_view))
+        val viewingHeaderTitle = stringResource(R.string.media_view)
+        val viewingHeader = remember(viewingHeaderTitle) {
+            SettingsEntity.Header(title = viewingHeaderTitle)
         }
 
         val fullBrightnessViewPref = rememberSwitchPreference(
@@ -351,13 +352,14 @@ private fun MediaViewerListScreen(
             screenPosition = Position.Middle
         )
 
-        val editorSummary = remember(defaultEditor, editApps) {
+        val builtinEditorLabel = stringResource(R.string.default_image_editor_builtin)
+        val editorSummary = remember(defaultEditor, editApps, builtinEditorLabel, context) {
             if (defaultEditor == Settings.Misc.EDITOR_BUILTIN) {
-                context.getString(R.string.default_image_editor_builtin)
+                builtinEditorLabel
             } else {
                 editApps.find { it.activityInfo.packageName == defaultEditor }
                     ?.loadLabel(context.packageManager)?.toString()
-                    ?: context.getString(R.string.default_image_editor_builtin)
+                    ?: builtinEditorLabel
             }
         }
         val defaultEditorPref = rememberPreference(
@@ -388,18 +390,21 @@ private fun MediaViewerListScreen(
             screenPosition = Position.Middle
         )
 
-        val slideshowPref = remember(context) {
+        val slideshowTitle = stringResource(R.string.slideshow)
+        val slideshowSummary = stringResource(R.string.slideshow_settings_summary)
+        val slideshowPref = remember(slideshowTitle, slideshowSummary, eventHandler) {
             SettingsEntity.Preference(
-                title = context.getString(R.string.slideshow),
-                summary = context.getString(R.string.slideshow_settings_summary),
+                title = slideshowTitle,
+                summary = slideshowSummary,
                 onClick = { eventHandler.navigate(Screen.SlideshowSettingsScreen()) },
                 screenPosition = Position.Bottom
             )
         }
 
         // ── Save quality (format-preserving overwrite) ──
-        val saveQualityHeader = remember(context) {
-            SettingsEntity.Header(title = context.getString(R.string.reencode_quality_title))
+        val saveQualityHeaderTitle = stringResource(R.string.reencode_quality_title)
+        val saveQualityHeader = remember(saveQualityHeaderTitle) {
+            SettingsEntity.Header(title = saveQualityHeaderTitle)
         }
         val isManualQuality = reencodeMode == Settings.Misc.REENCODE_MODE_MANUAL
         val manualQualityPref = rememberSwitchPreference(
@@ -439,8 +444,9 @@ private fun MediaViewerListScreen(
             screenPosition = Position.Bottom
         )
 
-        val videoPlaybackHeader = remember(context) {
-            SettingsEntity.Header(title = context.getString(R.string.video_playback))
+        val videoPlaybackHeaderTitle = stringResource(R.string.video_playback)
+        val videoPlaybackHeader = remember(videoPlaybackHeaderTitle) {
+            SettingsEntity.Header(title = videoPlaybackHeaderTitle)
         }
 
         val autoHideOnVideoPlayPref = rememberSwitchPreference(
@@ -474,10 +480,10 @@ private fun MediaViewerListScreen(
         )
 
         return remember(
-            fullBrightnessViewPref, showMediaDateHeaderPref, showFavoriteButtonPref,
+            viewingHeader, fullBrightnessViewPref, showMediaDateHeaderPref, showFavoriteButtonPref,
             defaultEditorPref, disableSmoothingPref, longPressCutoutPref, slideshowPref,
             saveQualityHeader, manualQualityPref, lossyQualityPref, jxlEffortPref, isManualQuality,
-            autoHideOnVideoPlayPref, autoPlayVideoPref, videoSurfaceRebindPref
+            videoPlaybackHeader, autoHideOnVideoPlayPref, autoPlayVideoPref, videoSurfaceRebindPref
         ) {
             mutableStateListOf<SettingsEntity>().apply {
                 add(viewingHeader)

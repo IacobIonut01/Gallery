@@ -5,6 +5,7 @@
 
 package com.dot.gallery.core.smart
 
+import android.content.Context
 import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequest
@@ -12,6 +13,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import com.dot.gallery.core.workers.SmartScanWorker
+import com.dot.gallery.feature_node.data.data_source.InternalDatabase
 import com.dot.gallery.feature_node.data.data_source.SmartScanDao
 import com.dot.gallery.feature_node.data.data_source.SmartScanFeature
 import com.dot.gallery.feature_node.data.data_source.SmartScanPhase
@@ -20,18 +22,23 @@ import com.dot.gallery.feature_node.data.data_source.SmartScanRunEntity
 import com.dot.gallery.feature_node.data.data_source.SmartScanScheduleResult
 import com.dot.gallery.feature_node.data.data_source.SmartScanStatus
 import com.dot.gallery.feature_node.data.data_source.SmartScanTrigger
+import com.dot.gallery.feature_node.presentation.util.mediaStoreVersion
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.util.UUID
 import javax.inject.Inject
+import javax.inject.Provider
 import javax.inject.Singleton
 
-internal fun smartScanConstraintsFor(phase: SmartScanPhase, userVisible: Boolean): Constraints =
+internal fun smartScanConstraintsFor(phases: Collection<SmartScanPhase>, userVisible: Boolean): Constraints =
     Constraints.Builder()
         .setRequiresStorageNotLow(true)
         .setRequiresBatteryNotLow(!userVisible)
-        .setRequiresCharging(!userVisible && phase in SMART_SCAN_HEAVY_PHASES)
+        .setRequiresCharging(!userVisible && phases.any(SMART_SCAN_HEAVY_PHASES::contains))
         .build()
 
 private val SMART_SCAN_HEAVY_PHASES = setOf(
@@ -43,12 +50,52 @@ private val SMART_SCAN_HEAVY_PHASES = setOf(
 @Singleton
 class SmartScanScheduler @Inject constructor(
     private val workManager: WorkManager,
-    private val dao: SmartScanDao
+    private val dao: SmartScanDao,
+    private val database: InternalDatabase,
+    private val processors: Provider<SmartScanProcessorRegistry>,
+    @ApplicationContext private val appContext: Context
 ) {
     private val schedulingMutex = Mutex()
 
     suspend fun automatic(features: Int): SmartScanScheduleResult =
         schedule(features, SmartScanTrigger.AUTOMATIC, userVisible = false, fullRefresh = false)
+
+    suspend fun automaticIfNeeded(features: Int): SmartScanScheduleResult? = schedulingMutex.withLock {
+        val expanded = SmartScanPlan.expandedFeatures(features)
+        val phases = SmartScanPlan.phasesFor(expanded)
+        val featurePhases = phases.filterNot { it == SmartScanPhase.SOURCE_SYNC }
+        val registry = processors.get()
+        val expectedRevisions = featurePhases.associateWith { registry.processorFor(it).revision }
+        val latestSourcePhase = dao.getLatestSuccessfulPhase(SmartScanPhase.SOURCE_SYNC)
+        val currentSourceSnapshot = latestSourcePhase?.let { dao.getRun(it.runId)?.sourceSnapshot }
+        val latestRevisions = buildMap {
+            featurePhases.forEach { phase ->
+                val latest = dao.getLatestCurrentPhase(phase)
+                val latestRevision = latest?.processorRevision
+                val phaseSourceSnapshot = latest?.let { dao.getRun(it.runId)?.sourceSnapshot }
+                if (SmartScanPlan.isPhaseCheckpointCurrent(
+                        expectedRevisions.getValue(phase),
+                        latestRevision,
+                        currentSourceSnapshot,
+                        phaseSourceSnapshot
+                    )
+                ) {
+                    put(phase, requireNotNull(latestRevision))
+                }
+            }
+        }
+        val mediaVersion = appContext.mediaStoreVersion
+        val latestSourceSnapshot = coroutineScope {
+            val media = async { database.getMediaDao().getMedia() }
+            val cloud = async { database.getCloudMediaDao().getAllCachedAsync() }
+            smartSourceSnapshot(mediaVersion, media.await(), cloud.await())
+        }
+        val mediaCurrent = database.getMediaDao().isMediaVersionUpToDate(mediaVersion) &&
+            latestSourcePhase?.processorRevision == registry.processorFor(SmartScanPhase.SOURCE_SYNC).revision &&
+            currentSourceSnapshot == latestSourceSnapshot
+        if (SmartScanPlan.isAutomaticScanCurrent(mediaCurrent, expectedRevisions, latestRevisions)) null
+        else scheduleLocked(expanded, SmartScanTrigger.AUTOMATIC, userVisible = false, fullRefresh = false)
+    }
 
     suspend fun manual(features: Int): SmartScanScheduleResult =
         schedule(features, SmartScanTrigger.MANUAL, userVisible = true, fullRefresh = false)
@@ -76,7 +123,7 @@ class SmartScanScheduler @Inject constructor(
         if (!dao.prepareRunRecovery(run.runId, UUID.randomUUID().toString(), System.currentTimeMillis())) {
             return@withLock false
         }
-        return@withLock enqueueNextPhaseLocked(run.runId, replace = true)
+        return@withLock enqueueRunLocked(run.runId, replace = true)
     }
 
     suspend fun retryFailed(runId: String? = null): SmartScanScheduleResult? {
@@ -116,11 +163,11 @@ class SmartScanScheduler @Inject constructor(
         require(features and SmartScanFeature.ALL_MASK.inv() == 0) { "Unknown Smart Scan feature bits" }
 
         val expanded = SmartScanPlan.expandedFeatures(features)
+        val plannedPhases = SmartScanPlan.phasesFor(expanded)
         val previousActiveWorkId = dao.getActiveRun()?.workId
         val now = System.currentTimeMillis()
         val runId = UUID.randomUUID().toString()
-        val firstPhase = SmartScanPlan.phasesFor(expanded).first()
-        val work = workRequest(runId, firstPhase, userVisible)
+        val work = workRequest(runId, plannedPhases, userVisible)
         val run = SmartScanRunEntity(
             runId = runId,
             trigger = trigger,
@@ -131,23 +178,27 @@ class SmartScanScheduler @Inject constructor(
             requestedAt = now,
             updatedAt = now
         )
-        val phases = SmartScanPlan.phasesFor(expanded).map { phase ->
+        val phases = plannedPhases.map { phase ->
             SmartScanPhaseEntity(runId = runId, phase = phase, updatedAt = now)
         }
         val scheduled = dao.coalesceOrCreate(run, phases)
         val scheduledWorkId = UUID.fromString(requireNotNull(scheduled.workId))
         val existingWork = workManager.getWorkInfoByIdFlow(scheduledWorkId).first()
         if (existingWork != null && !existingWork.state.isFinished) return scheduled
-        val scheduledUserVisible = dao.getRun(scheduled.runId)?.userVisible ?: userVisible
-        val scheduledPhase = nextRunnablePhase(scheduled.runId) ?: firstPhase
+        val scheduledRun = requireNotNull(dao.getRun(scheduled.runId))
         val actualWorkId = if (existingWork?.state?.isFinished == true) UUID.randomUUID() else scheduledWorkId
         if (actualWorkId != scheduledWorkId) {
             dao.attachWork(scheduled.runId, actualWorkId.toString(), System.currentTimeMillis())
         }
-        val actualWork = if (scheduled.runId == runId && actualWorkId == work.id && scheduledPhase == firstPhase) {
+        val actualWork = if (scheduled.runId == runId && actualWorkId == work.id) {
             work
         } else {
-            workRequest(scheduled.runId, scheduledPhase, scheduledUserVisible, actualWorkId)
+            workRequest(
+                scheduled.runId,
+                SmartScanPlan.phasesFor(scheduledRun.requestedFeatures),
+                scheduledRun.userVisible,
+                actualWorkId
+            )
         }
         val promoted = scheduled.runId != runId && actualWorkId == work.id
         if (promoted) {
@@ -155,73 +206,40 @@ class SmartScanScheduler @Inject constructor(
                 runCatching { workManager.cancelWorkById(UUID.fromString(value)) }
             }
         }
-        val policy = if (promoted) ExistingWorkPolicy.REPLACE else ExistingWorkPolicy.KEEP
         workManager.enqueueUniqueWork(
-            phaseWorkName(scheduled.runId, scheduledPhase),
-            policy,
+            runWorkName(scheduled.runId),
+            if (promoted) ExistingWorkPolicy.REPLACE else ExistingWorkPolicy.KEEP,
             actualWork
         )
         return scheduled
     }
 
-    suspend fun enqueueNextPhase(
-        runId: String,
-        replace: Boolean = false,
-        completedWorkId: String? = null
-    ): Boolean = schedulingMutex.withLock {
-        enqueueNextPhaseLocked(runId, replace, completedWorkId)
-    }
-
-    private suspend fun enqueueNextPhaseLocked(
-        runId: String,
-        replace: Boolean,
-        completedWorkId: String? = null
-    ): Boolean {
+    private suspend fun enqueueRunLocked(runId: String, replace: Boolean): Boolean {
         val run = dao.getRun(runId) ?: return false
-        val phase = nextRunnablePhase(runId) ?: return false
-        val existingId = run.workId?.let { runCatching { UUID.fromString(it) }.getOrNull() }
-        val existing = existingId?.let { workManager.getWorkInfoByIdFlow(it).first() }
-        if (!replace && existingId?.toString() != completedWorkId && existing != null && !existing.state.isFinished) {
-            return true
-        }
-        val work = workRequest(runId, phase, run.userVisible)
+        val work = workRequest(runId, SmartScanPlan.phasesFor(run.requestedFeatures), run.userVisible)
         if (dao.attachWork(runId, work.id.toString(), System.currentTimeMillis()) != 1) return false
         workManager.enqueueUniqueWork(
-            phaseWorkName(runId, phase, work.id),
+            runWorkName(runId),
             if (replace) ExistingWorkPolicy.REPLACE else ExistingWorkPolicy.KEEP,
             work
         )
         return true
     }
 
-    private suspend fun nextRunnablePhase(runId: String): SmartScanPhase? {
-        val run = dao.getRun(runId) ?: return null
-        val phases = dao.getPhases(runId).associateBy { it.phase }
-        return SmartScanPlan.phasesFor(run.requestedFeatures).firstOrNull {
-            phases[it]?.status in setOf(SmartScanStatus.QUEUED, SmartScanStatus.RUNNING)
-        }
-    }
-
     private fun workRequest(
         runId: String,
-        phase: SmartScanPhase,
+        phases: Collection<SmartScanPhase>,
         userVisible: Boolean,
         id: UUID = UUID.randomUUID()
     ): OneTimeWorkRequest = OneTimeWorkRequestBuilder<SmartScanWorker>()
         .setId(id)
-        .setInputData(
-            workDataOf(
-                SmartScanWorker.KEY_RUN_ID to runId,
-                SmartScanWorker.KEY_PHASE to phase.storedValue
-            )
-        )
-        .setConstraints(smartScanConstraintsFor(phase, userVisible))
+        .setInputData(workDataOf(SmartScanWorker.KEY_RUN_ID to runId))
+        .setConstraints(smartScanConstraintsFor(phases, userVisible))
         .addTag(SmartScanWorker.WORK_NAME)
         .addTag(SmartScanWorker.runTag(runId))
         .build()
 
-    private fun phaseWorkName(runId: String, phase: SmartScanPhase, workId: UUID? = null): String =
-        "$WORK_NAME:$runId:${phase.storedValue}${workId?.let { ":$it" }.orEmpty()}"
+    private fun runWorkName(runId: String): String = "$WORK_NAME:$runId"
 
     companion object {
         const val WORK_NAME = "smart_scan_dispatcher"

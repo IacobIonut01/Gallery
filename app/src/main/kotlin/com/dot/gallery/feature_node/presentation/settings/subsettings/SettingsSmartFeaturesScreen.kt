@@ -64,7 +64,13 @@ fun SettingsSmartFeaturesScreen(
         // Resolve strings outside the non-composable settings{} DSL
         val smartFeaturesHeader = stringResource(R.string.ai_category)
         val includeIgnoredAlbumsTitle = stringResource(R.string.smart_features_include_ignored_albums)
-        val includeIgnoredAlbumsSummary = stringResource(R.string.smart_features_include_ignored_albums_summary)
+        val includeIgnoredAlbumsSummary = stringResource(
+            if (activeSmartScan == null) {
+                R.string.smart_features_include_ignored_albums_summary
+            } else {
+                R.string.smart_features_include_ignored_albums_scan_running
+            }
+        )
         val aiModelsManagerTitle = if (aiAvailable) stringResource(R.string.ai_models_manager) else ""
         val modelSummary = if (aiAvailable) when (modelStatus) {
             ModelStatus.READY -> stringResource(R.string.ai_models_ready_summary)
@@ -82,8 +88,7 @@ fun SettingsSmartFeaturesScreen(
         } else ""
         val databaseHeader = stringResource(R.string.database)
         val scanManagerTitle = stringResource(R.string.smart_scan_manager_title)
-        val activePhase = activeSmartScanPhases.firstOrNull { it.phase == activeSmartScan?.currentPhase }
-            ?: activeSmartScanPhases.firstOrNull { it.status == SmartScanStatus.RUNNING }
+        val activePhase = activeSmartScanPhases.firstOrNull { it.status == SmartScanStatus.RUNNING }
             ?: activeSmartScanPhases.firstOrNull { it.status == SmartScanStatus.QUEUED }
         val activePhaseLabel = activePhase?.phase?.label().orEmpty()
         val smartScanSummary = activeSmartScan?.let {

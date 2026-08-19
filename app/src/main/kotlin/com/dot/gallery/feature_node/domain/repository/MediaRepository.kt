@@ -373,6 +373,8 @@ interface MediaRepository {
 
     suspend fun removeAlbumFromCollection(collectionId: Long, albumId: Long)
 
+    suspend fun replaceAlbumsInCollection(collectionId: Long, albumIds: List<Long>)
+
     fun getAllAlbumIdsInCollections(): Flow<List<Long>>
 
     fun getAlbumIdsInCollection(collectionId: Long): Flow<List<Long>>

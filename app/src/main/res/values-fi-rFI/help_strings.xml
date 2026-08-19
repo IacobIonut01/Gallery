@@ -1073,4 +1073,187 @@
     <string name="help_tip_video_fix_black_p1_title">Keep video visible</string>
     <string name="help_tip_video_fix_black_p1_desc">On some devices (notably Samsung) a playing video can black out when the system bars are shown or hidden, even though it keeps playing. Enable Media Viewer › Video Playback › \'Fix black video on hide\' to re-bind the player surface on every bar change. It is on by default for Samsung devices and off elsewhere — turn it off if you don\'t need it.</string>
     <!-- RELEASE NOTES: 5.0.3 -->
+    <string name="help_tip_motion_photo_frames_title">Poimi kuvia liikevalokuvasta</string>
+    <string name="help_tip_motion_photo_frames_subtitle">Tallenna tarkat hetket upotetusta leikkeestä</string>
+    <string name="help_tip_motion_photo_frames_p1_title">Valitse ja vie kuvia</string>
+    <string name="help_tip_motion_photo_frames_p1_desc">Avaa liikevalokuva katselimessa ja napauta sitten sen filminauhaa tai valitse toimintovalikosta Poimi kuvia. Siirry tarkkaan hetkeen, valitse yksi tai useampi kuva ja vie ne haluamassasi kuvamuodossa.</string>
+    <string name="help_tip_motion_photo_frames_p1_s1">Avaa liikevalokuva katselimessa</string>
+    <string name="help_tip_motion_photo_frames_p1_s2">Napauta filminauhaa tai valitse Poimi kuvia</string>
+    <string name="help_tip_motion_photo_frames_p1_s3">Selaa leikettä ja valitse haluamasi hetket</string>
+    <string name="help_tip_motion_photo_frames_p1_s4">Valitse muoto ja vie valitut kuvat</string>
+
+    <string name="help_tip_search_ignored_albums_title">Hae ohitetuista albumeista</string>
+    <string name="help_tip_search_ignored_albums_subtitle">Etsi piilotettua mediaa palauttamatta sitä aikajanalle</string>
+    <string name="help_tip_search_ignored_albums_p1_title">Laajenna älykästä hakua turvallisesti</string>
+    <string name="help_tip_search_ignored_albums_p1_desc">Sisällytä aikajanalta piilotetut albumit Älykkäisiin ominaisuuksiin ja älykkääseen hakuun näyttämättä niitä aikajanalla tai Albumit-välilehdellä. Asetus on oletuksena pois käytöstä, sen muuttaminen käynnistää täyden päivityksen ja lukitut albumit jätetään aina pois.</string>
+    <string name="help_tip_search_ignored_albums_p1_s1">Avaa Asetukset > Älykkäät ominaisuudet</string>
+    <string name="help_tip_search_ignored_albums_p1_s2">Ota Sisällytä ohitetut albumit käyttöön</string>
+    <string name="help_tip_search_ignored_albums_p1_s3">Anna Älykkäiden ominaisuuksien täyden päivityksen valmistua</string>
+    <string name="help_tip_search_ignored_albums_p1_s4">Hae piilotettua mediaa lukittujen albumien pysyessä yksityisinä</string>
+
+    <string name="help_tip_cloud_nextcloud_login_title">Kirjaudu Nextcloudiin turvallisesti</string>
+    <string name="help_tip_cloud_nextcloud_login_subtitle">Käytä selainvaltuutusta ja kaksivaiheista tunnistautumista</string>
+    <string name="help_tip_cloud_nextcloud_login_p1_title">Nextcloudin kirjautumiskulku v2</string>
+    <string name="help_tip_cloud_nextcloud_login_p1_desc">ReFra avaa Nextcloud-palvelimesi järjestelmän selaimessa, jossa voit kirjautua sisään ja suorittaa kaksivaiheisen tunnistautumisen. Hyväksynnän jälkeen Nextcloud luo sovelluskohtaisen salasanan, jonka ReFra tallentaa salattuna laitteellesi.</string>
+    <string name="help_tip_cloud_nextcloud_login_p1_s1">Lisää Nextcloud-tili ja anna sen palvelimen URL-osoite</string>
+    <string name="help_tip_cloud_nextcloud_login_p1_s2">Jatka järjestelmän selaimeen</string>
+    <string name="help_tip_cloud_nextcloud_login_p1_s3">Kirjaudu sisään, suorita kaksivaiheinen tunnistautuminen ja hyväksy käyttöoikeus</string>
+    <string name="help_tip_cloud_nextcloud_login_p1_s4">Palaa ReFraan, kun yhteyden muodostaminen viimeistellään</string>
+
+    <string name="help_tip_accessibility_remote_settings_title">Siirry asetuksissa ilman kosketusta</string>
+    <string name="help_tip_accessibility_remote_settings_subtitle">Käytä näppäimistöä, suuntaohjainta tai kaukosäädintä kaikissa asetuksissa</string>
+    <string name="help_tip_accessibility_remote_settings_p1_title">Ennakoitava kohdistuksen siirtyminen</string>
+    <string name="help_tip_accessibility_remote_settings_p1_desc">Asetusluettelot, tietonäkymät, valintapainikkeet ja alareunan toiminnot tukevat suunnattua kohdistusta. ReFra korostaa kohdistetun ohjaimen selkeästi ja siirtää kohdistuksen käytettävään kohteeseen näytön avautuessa.</string>
+    <string name="help_tip_accessibility_remote_settings_p1_s1">Siirry ohjainten välillä nuoli- tai suuntaohjainnäppäimillä</string>
+    <string name="help_tip_accessibility_remote_settings_p1_s2">Aktivoi ohjain painamalla Enter- tai keskipainiketta</string>
+    <string name="help_tip_accessibility_remote_settings_p1_s3">Poistu tietonäkymästä Takaisin-toiminnolla</string>
+    <string name="help_tip_accessibility_remote_settings_p1_s4">Jatka korostetusta asetuksesta</string>
+    <string name="help_search_hint">Hae ohjeista ja vinkeistä</string>
+    <string name="help_search_clear">Tyhjennä haku</string>
+    <string name="help_search_no_results">Haulla \"%1$s\" ei löytynyt ohjeita</string>
+    <string name="help_search_section_tips">Vinkit ja ohjeet</string>
+    <string name="help_search_section_settings">Asetukset</string>
+    <string name="help_search_section_actions">Pikatoiminnot</string>
+    <string name="help_search_section_changelog">Uutta</string>
+    <string name="help_search_see_all">Näytä kaikki %1$d tulosta</string>
+    <string name="help_tips_section_title">Ohjeet ja vinkit</string>
+    <string name="help_quick_actions">Pikatoiminnot</string>
+    <string name="help_qa_open_timeline">Avaa aikajana</string>
+    <string name="help_qa_open_albums">Avaa albumit</string>
+    <string name="help_qa_open_search">Avaa haku</string>
+    <string name="help_qa_open_categories">Avaa luokat</string>
+    <string name="help_qa_open_vault">Avaa holvi</string>
+    <string name="help_qa_open_trash">Avaa roskakori</string>
+    <string name="help_qa_open_favorites">Avaa suosikit</string>
+    <string name="help_qa_open_locations">Avaa sijainnit</string>
+    <string name="help_qa_open_library">Avaa kirjasto</string>
+    <string name="help_qa_open_color_palette">Avaa väripaletti</string>
+    <string name="help_qa_open_appearance">Avaa ulkoasuasetukset</string>
+    <string name="help_tip_view_cutout_title">Leikkaa kohde</string>
+    <string name="help_tip_view_cutout_subtitle">Nosta henkilö tai esine taustasta</string>
+    <string name="help_tip_view_cutout_p1_title">Nosta havaittu kohde</string>
+    <string name="help_tip_view_cutout_p1_desc">Katselussa ReFra voi tunnistaa pääkohteen laitteessa ja näyttää korostetun ehdotuksen. Avaa se tarkentaaksesi maskia, sitten voit kopioida, jakaa tai tallentaa läpinäkyvän leikkeen. Voit myös aloittaa leikkauksen pitkäpainalluksella Media Viewer -asetuksista.</string>
+    <string name="help_tip_view_cutout_p1_s1">Avaa valokuva, jossa on selkeä kohde</string>
+    <string name="help_tip_view_cutout_p1_s2">Napauta Leikkaa kohde -ehdotusta</string>
+    <string name="help_tip_view_cutout_p1_s3">Tarkenna ääriviivaa lisäämällä tai poistamalla pisteitä</string>
+    <string name="help_tip_view_cutout_p1_s4">Kopioi, jaa tai tallenna leikattu kuva</string>
+
+    <string name="help_tip_slideshow_play_title">Toista diaesitys</string>
+    <string name="help_tip_slideshow_play_subtitle">Siirry automaattisesti albumin läpi koko näytössä</string>
+    <string name="help_tip_slideshow_play_p1_title">Aloita katselusta</string>
+    <string name="help_tip_slideshow_play_p1_desc">Avaa mikä tahansa valokuva, sitten valitse Diaesitys valikkovaihtoehdoista toistaaksesi albumin automaattisesti koko näytössä.</string>
+    <string name="help_tip_slideshow_play_p1_s1">Avaa valokuva albumissa</string>
+    <string name="help_tip_slideshow_play_p1_s2">Avaa valikkovaihtoehdot</string>
+    <string name="help_tip_slideshow_play_p1_s3">Napauta Diaesitys aloittaaksesi</string>
+
+    <string name="help_tip_settings_slideshow_title">Diaesityksen asetukset</string>
+    <string name="help_tip_settings_slideshow_subtitle">Aseta väli, järjestys ja silmukka</string>
+    <string name="help_tip_settings_slideshow_p1_title">Säädä toistoa</string>
+    <string name="help_tip_settings_slideshow_p1_desc">Säädä kuinka kauan kukin kohde näkyy, toistuuko toisto silmukassa ja missä järjestyksessä kohteet näkyvät.</string>
+    <string name="help_tip_settings_slideshow_p1_s1">Avaa diaesityksen asetukset</string>
+    <string name="help_tip_settings_slideshow_p1_s2">Aseta kohdekohtainen väli</string>
+    <string name="help_tip_settings_slideshow_p1_s3">Valitse järjestys ja silmukka</string>
+
+    <string name="help_tip_settings_date_format_title">Päivämäärän muoto</string>
+    <string name="help_tip_settings_date_format_subtitle">Valitse kuinka päivämäärät näkyvät</string>
+    <string name="help_tip_settings_date_format_p1_title">Valitse muodoksi</string>
+    <string name="help_tip_settings_date_format_p1_desc">ReFra seuraa järjestelmäsi päivämäärä- ja 12/24-tunnin asetuksia oletuksena. Aseta ohitus vain, kun haluat mukautetun kaavan, ja käytä tietopainiketta tarkistaaksesi tuetut muotosymbolit.</string>
+    <string name="help_tip_settings_date_format_p1_s1">Avaa päivämäärän muoto</string>
+    <string name="help_tip_settings_date_format_p1_s2">Pidä Järjestelmän mukainen tai syötä mukautettu kaava</string>
+    <string name="help_tip_settings_date_format_p1_s3">Esikatsele tulos ja avaa muoto-ohje tarvittaessa</string>
+
+    <string name="help_tip_basics_setup_title">Ensimmäisen käyttökerran asennus</string>
+    <string name="help_tip_basics_setup_subtitle">Myönnä käyttöoikeudet ja valitse oletukset</string>
+    <string name="help_tip_basics_setup_p1_title">Aloittaminen</string>
+    <string name="help_tip_basics_setup_p1_desc">Ensimmäisellä käynnistyksellä ReFra opastaa sinua käyttöoikeuksien, ulkoasun, tekoälymallien, pilvitilien ja hyödyllisten vinkkien läpi. Voit palata asennukseen milloin tahansa.</string>
+
+    <string name="help_tip_albums_ignored_manage_title">Hallitse ohitettuja albumeita</string>
+    <string name="help_tip_albums_ignored_manage_subtitle">Tarkista ja palauta piilotetut kansiot</string>
+    <string name="help_tip_albums_ignored_manage_p1_title">Ohitettujen albumien lista</string>
+    <string name="help_tip_albums_ignored_manage_p1_desc">Näe kaikki albumit, jotka olet piilottanut aikajanasta, ja palauta niistä mikä tahansa yhdestä paikasta.</string>
+    <string name="help_tip_albums_ignored_manage_p1_s1">Avaa ohitetut albumit</string>
+    <string name="help_tip_albums_ignored_manage_p1_s2">Tarkista piilotetut kansiot</string>
+    <string name="help_tip_albums_ignored_manage_p1_s3">Palauta haluamasi</string>
+
+    <string name="help_tip_cloud_add_server_title">Lisää palvelin</string>
+    <string name="help_tip_cloud_add_server_subtitle">Yhdistä Immichiin, WebDAViin, SMB:hen ja muihin</string>
+    <string name="help_tip_cloud_add_server_p1_title">Asennusvelho</string>
+    <string name="help_tip_cloud_add_server_p1_desc">Vaiheittainen opas ohjaa sinut palvelimen osoitteen, kirjautumistietojen, verkkoasetusten ja synkronointivaihtoehtojen läpi.</string>
+    <string name="help_tip_cloud_add_server_p1_s1">Valitse palveluntarjoajan tyyppi</string>
+    <string name="help_tip_cloud_add_server_p1_s2">Syötä palvelin ja tunnistetiedot</string>
+    <string name="help_tip_cloud_add_server_p1_s3">Aseta verkkoyhteys ja synkronointi</string>
+    <string name="help_tip_cloud_add_server_p1_s4">Tarkista ja tallenna</string>
+
+    <string name="help_tip_cloud_destinations_title">Varmuuskopiointikohteet</string>
+    <string name="help_tip_cloud_destinations_subtitle">Yhdistä jokainen albumi yhteen tai useampaan pilveen</string>
+    <string name="help_tip_cloud_destinations_p1_title">Kohteiden matriisi</string>
+    <string name="help_tip_cloud_destinations_p1_desc">Valitse tarkasti, mitkä albumit varmuuskopioidaan mihinkin yhdistettyyn tiliin käyttämällä yksinkertaista matriisia.</string>
+
+    <string name="help_tip_cloud_provider_settings_title">Tilin asetukset</string>
+    <string name="help_tip_cloud_provider_settings_subtitle">Hallinnoi yhdistettyä tiliä</string>
+    <string name="help_tip_cloud_provider_settings_p1_title">Tilikohtaiset asetukset</string>
+    <string name="help_tip_cloud_provider_settings_p1_desc">Muokkaa verkkoyhteyttä, varmuuskopioitavia albumeja ja synkronointikäyttäytymistä itsenäisesti kutakin yhdistettyä tiliä varten.</string>
+
+    <string name="help_tip_cloud_shared_links_title">Jaetut linkit</string>
+    <string name="help_tip_cloud_shared_links_subtitle">Hallinnoi jakamiasi linkkejä</string>
+    <string name="help_tip_cloud_shared_links_p1_title">Tarkista jaetut linkit</string>
+    <string name="help_tip_cloud_shared_links_p1_desc">Katso ja peruuttaa julkiset linkit, jotka on luotu yhdistetyillä palvelimillasi.</string>
+
+    <string name="help_tip_cloud_sync_status_title">Synkronointitila</string>
+    <string name="help_tip_cloud_sync_status_subtitle">Seuraa latauksia ja latauksia</string>
+    <string name="help_tip_cloud_sync_status_p1_title">Live-tilanne</string>
+    <string name="help_tip_cloud_sync_status_p1_desc">Seuraa varmuuskopion etenemistä ja katso, mitä on jonossa, käynnissä tai epäonnistunut.</string>
+
+    <string name="help_tip_cloud_people_title">Henkilöt</string>
+    <string name="help_tip_cloud_people_subtitle">Selaa kasvoja palvelimeltasi</string>
+    <string name="help_tip_cloud_people_p1_title">Kasvojen ryhmittely</string>
+    <string name="help_tip_cloud_people_p1_desc">Tutki pilvipalvelimesi havaitsemia henkilöitä ja avaa kunkin henkilön valokuvat.</string>
+
+    <string name="help_tip_cloud_free_up_space_title">Vapauta tilaa</string>
+    <string name="help_tip_cloud_free_up_space_subtitle">Poista paikalliset kopiot, jotka on turvallisesti varmuuskopioitu</string>
+    <string name="help_tip_cloud_free_up_space_p1_title">Palauta tallennustilaa</string>
+    <string name="help_tip_cloud_free_up_space_p1_desc">Poista laitteesta kopiot mediatiedostoista, jotka on jo turvallisesti varmuuskopioitu pilveen.</string>
+
+    <string name="help_tip_media_type_albums_title">Selaa mediaryhmittäin</string>
+    <string name="help_tip_media_type_albums_subtitle">Automaattiset albumit valokuville, videoille, GIF-tiedostoille ja RAW-tiedostoille</string>
+    <string name="help_tip_media_type_albums_p1_title">Mediatyypin albumit</string>
+    <string name="help_tip_media_type_albums_p1_desc">ReFra luo virtuaaliset albumit yhdistetystä kirjastostasi, jotta voit avata kaikki valokuvat, videot, GIF-tiedostot tai RAW-tiedostot yhdessä. Niiden näkyvyyttä hallitaan Aikajana &amp; Albumit -asetuksista.</string>
+    <string name="help_tip_media_type_albums_p1_s1">Avaa Albumit ja vieritä kohtaan Mediatyypit</string>
+    <string name="help_tip_media_type_albums_p1_s2">Avaa tyyppi selataksesi vastaavia medioita</string>
+    <string name="help_tip_media_type_albums_p1_s3">Käytä Aikajana- ja Albumiasetuksia näyttääksesi tai piilottaaksesi osion</string>
+
+    <string name="help_tip_raw_develop_title">Kehitä RAW-valokuvia</string>
+    <string name="help_tip_raw_develop_subtitle">Säädä kennotietoja ennen vientiä</string>
+    <string name="help_tip_raw_develop_p1_title">Käytä Kehitys-säätimiä</string>
+    <string name="help_tip_raw_develop_p1_desc">Avaa tuettu RAW-valokuva editorissa säätääksesi valkotasapainoa, valotusta, kohokohtia, lähtövärejä ja demosaikkausta. ReFra käyttää muistisuojaa esikatseluun säilyttäen täysteräväpiirtotuotteen.</string>
+    <string name="help_tip_raw_develop_p1_s1">Avaa RAW-valokuva ja napauta Muokkaa</string>
+    <string name="help_tip_raw_develop_p1_s2">Valitse vaihtoehtoja Kehitys-välilehdessä</string>
+    <string name="help_tip_raw_develop_p1_s3">Tee tarvittaessa lisäleikkaus, suodatin tai merkintä</string>
+    <string name="help_tip_raw_develop_p1_s4">Tallenna kopio tai vie JPEG-, PNG- tai TIFF-muodossa</string>
+
+    <string name="help_tip_people_grouping_title">Ryhmittele ihmisiä laitteessa</string>
+    <string name="help_tip_people_grouping_subtitle">Löydä kasvot lataamatta kirjastoa</string>
+    <string name="help_tip_people_grouping_p1_title">Skannaa ja järjestä ihmisiä</string>
+    <string name="help_tip_people_grouping_p1_desc">Kun kasvomalli on asennettu, ReFra skannaa ja ryhmittelee ihmisiä paikallisesti. Voit aloittaa uuden skannauksen kohdasta Ihmiset, piilottaa henkilön, yhdistää ryhmiä ja luoda sumeita kopioita, kun yksityisyys on tärkeää.</string>
+    <string name="help_tip_people_grouping_p1_s1">Asenna Kasvojentunnistusmalli</string>
+    <string name="help_tip_people_grouping_p1_s2">Avaa Kirjasto, sitten Ihmiset</string>
+    <string name="help_tip_people_grouping_p1_s3">Napauta Skannaa ihmisiä ja odota indeksointia</string>
+    <string name="help_tip_people_grouping_p1_s4">Avaa henkilö hallitaksesi ryhmää tai sumentaaksesi kasvot</string>
+
+    <string name="help_tip_album_cover_title">Valitse albumin kansi</string>
+    <string name="help_tip_album_cover_subtitle">Käytä mitä tahansa paikallista kuvaa pikkukuvana</string>
+    <string name="help_tip_album_cover_p1_title">Aseta mukautettu kansi</string>
+    <string name="help_tip_album_cover_p1_desc">Paikalliselle, salaamattomalle kuvalle oikeassa albumissa, avaa katselutoiminnot ja valitse Käytä albumin kansena. Voit myös näyttää toiminnon konfiguroitavassa valintalevyssä.</string>
+    <string name="help_tip_album_cover_p1_s1">Avaa haluamasi kuva sen albumista</string>
+    <string name="help_tip_album_cover_p1_s2">Avaa toiminnot, sitten Käytä</string>
+    <string name="help_tip_album_cover_p1_s3">Valitse Käytä albumin kansena</string>
+
+    <string name="help_tip_metadata_sanitize_title">Poista arkaluontoiset metatiedot</string>
+    <string name="help_tip_metadata_sanitize_subtitle">Puhdista tuetut tiedostot ilman pikseleiden uudelleenpakkaamista</string>
+    <string name="help_tip_metadata_sanitize_p1_title">Valitse, mitä poistaa</string>
+    <string name="help_tip_metadata_sanitize_p1_desc">Valokuvan tiedoista valitse Poista metatiedot ja valitse vain sijainti, kuvailevat kentät tai kaikki tuetut metatiedot. ReFra kirjoittaa ja tarkistaa häviöttömän puhdistetun kopion ennen alkuperäisen korvaamista.</string>
+    <string name="help_tip_metadata_sanitize_p1_s1">Avaa tuettu paikallinen valokuva</string>
+    <string name="help_tip_metadata_sanitize_p1_s2">Laajenna sen tiedot ja napauta Poista metatiedot</string>
+    <string name="help_tip_metadata_sanitize_p1_s3">Valitse puhdistustaso</string>
+    <string name="help_tip_metadata_sanitize_p1_s4">Vahvista vasta, kun olet tarkistanut korvausvaroituksen</string>
 </resources>

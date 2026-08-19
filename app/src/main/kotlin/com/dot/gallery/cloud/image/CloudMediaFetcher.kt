@@ -100,23 +100,27 @@ class CloudMediaFetcher private constructor(
             val response = CloudTrace.time("Sketch.fetch[$providerType] $sizeParam '$remoteId' HTTP") {
                 client.newCall(requestBuilder.build()).execute()
             }
-            if (!response.isSuccessful) {
-                CloudTrace.w("Sketch.fetch[$providerType] $sizeParam '$remoteId' -> HTTP ${response.code}")
-                return@withContext Result.failure(Exception("HTTP ${response.code}: ${response.message}"))
-            }
+            response.use {
+                if (!it.isSuccessful) {
+                    CloudTrace.w("Sketch.fetch[$providerType] $sizeParam '$remoteId' -> HTTP ${it.code}")
+                    return@withContext Result.failure(Exception("HTTP ${it.code}: ${it.message}"))
+                }
 
-            val bytes = response.body?.bytes()
-                ?: return@withContext Result.failure(Exception("Empty response body"))
+                val bytes = it.body.bytes()
+                if (bytes.isEmpty()) {
+                    return@withContext Result.failure(Exception("Empty response body"))
+                }
 
-            val mimeType = response.header("Content-Type")
-            CloudTrace.d("Sketch.fetch[$providerType] $sizeParam '$remoteId' <- ${CloudTrace.bytes(bytes.size.toLong())} ($mimeType)")
+                val mimeType = it.header("Content-Type")
+                CloudTrace.d("Sketch.fetch[$providerType] $sizeParam '$remoteId' <- ${CloudTrace.bytes(bytes.size.toLong())} ($mimeType)")
 
-            Result.success(
-                FetchResult(
-                    dataSource = ByteArrayDataSource(bytes, DataFrom.NETWORK),
-                    mimeType = mimeType
+                Result.success(
+                    FetchResult(
+                        dataSource = ByteArrayDataSource(bytes, DataFrom.NETWORK),
+                        mimeType = mimeType
+                    )
                 )
-            )
+            }
         } catch (e: Exception) {
             CloudTrace.w("Sketch.fetch[$providerType] $sizeParam '$remoteId' failed: ${e.message}")
             Result.failure(e)

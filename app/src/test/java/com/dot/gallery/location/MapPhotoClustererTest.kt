@@ -1,10 +1,15 @@
 package com.dot.gallery.location
 
+import com.dot.gallery.cloud.core.CloudMapMarker
+import com.dot.gallery.cloud.core.ProviderType
+import com.dot.gallery.feature_node.presentation.location.AccountCloudMapMarker
 import com.dot.gallery.feature_node.presentation.location.MapGeoBounds
 import com.dot.gallery.feature_node.presentation.location.MapPhotoClusterer
 import com.dot.gallery.feature_node.presentation.location.MapPhotoPoint
+import com.dot.gallery.feature_node.presentation.location.mapMediaViewerRoute
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -106,6 +111,29 @@ class MapPhotoClustererTest {
         )
         assertEquals(listOf(1L), visible.map { it.representativeMediaId })
         assertFalse(visible.single().isCluster)
+    }
+
+    @Test
+    fun cloudMarkerKeysIncludeOwningAccount() {
+        val marker = CloudMapMarker(
+            latitude = 46.77,
+            longitude = 23.59,
+            assetId = "shared-asset-id",
+            providerType = ProviderType.IMMICH,
+        )
+
+        assertNotEquals(
+            AccountCloudMapMarker(configId = 11L, marker = marker).key,
+            AccountCloudMapMarker(configId = 22L, marker = marker).key,
+        )
+    }
+
+    @Test
+    fun mapMediaRouteOpensViewerWithoutLocationTimelineParent() {
+        val route = mapMediaViewerRoute(-42L)
+
+        assertEquals("media_screen?mediaId=-42&albumId=-1&slideshow=false", route)
+        assertFalse(route.contains("location_timeline_screen"))
     }
 
     private fun point(id: Long, latitude: Double, longitude: Double, timestamp: Long) =

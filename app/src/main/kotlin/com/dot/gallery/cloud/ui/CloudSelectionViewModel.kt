@@ -8,10 +8,10 @@ package com.dot.gallery.cloud.ui
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import androidx.lifecycle.ViewModel
+import com.dot.gallery.cloud.core.CloudUri
 import com.dot.gallery.cloud.core.MediaCapabilityProvider
 import com.dot.gallery.cloud.core.ProviderCapability
 import com.dot.gallery.cloud.core.ProviderRegistry
-import com.dot.gallery.cloud.core.ProviderType
 import com.dot.gallery.core.MediaHandler
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.util.getUri
@@ -57,13 +57,12 @@ class CloudSelectionViewModel @Inject constructor(
     fun supportsTrash(media: List<Media>): Boolean =
         ProviderCapability.TRASH in capabilitiesFor(media)
 
-    /** Resolve the account-specific provider for a cloud media item (by `cfg`, else by type). */
+    /** Resolve only the exact account carried by the media URI; actions never cross accounts. */
     private fun providerFor(media: Media): MediaCapabilityProvider? {
-        val uri = media.getUri()
-        val type = runCatching { ProviderType.valueOf(uri.authority ?: "") }.getOrNull()
-        val configId = uri.getQueryParameter("cfg")?.toLongOrNull() ?: -1L
-        return (if (configId > 0L) registry.getByConfigId(configId) else null)
-            ?: type?.let { registry.get(it) }
+        val cloudUri = CloudUri.parse(media.getUri().toString()) ?: return null
+        if (cloudUri.configId <= 0L) return null
+        return registry.getByConfigId(cloudUri.configId)
+            ?.takeIf { it.providerType == cloudUri.providerType }
     }
 
     // === Actions (thin delegations to the shared MediaHandler) ===

@@ -35,7 +35,8 @@ sealed class Screen(val route: String) {
 
         fun idAndCategory() = "$route?mediaId={mediaId}&category={category}"
 
-        fun idAndCategory(id: Long, category: String) = "$route?mediaId=$id&category=$category"
+        fun idAndCategory(id: Long, category: String) =
+            "$route?mediaId=$id&category=${Uri.encode(category)}"
         
         // New ID-based category navigation
         fun idAndCategoryId() = "$route?mediaId={mediaId}&categoryId={categoryId}"
@@ -46,20 +47,25 @@ sealed class Screen(val route: String) {
 
         fun idAndCollection(id: Long, collectionId: Long) = "$route?mediaId=$id&collectionId=$collectionId"
 
-        fun idAndPerson() = "$route?mediaId={mediaId}&personId={personId}"
+        fun idAndPerson() = "$route?mediaId={mediaId}&configId={configId}&personId={personId}"
 
-        fun idAndPerson(id: Long, personId: String) = "$route?mediaId=$id&personId=$personId"
+        fun idAndPerson(id: Long, configId: Long, personId: String) =
+            "$route?mediaId=$id&configId=$configId&personId=${Uri.encode(personId)}"
 
         fun idAndLocation() = "$route?mediaId={mediaId}&gpsLocationNameCity={gpsLocationNameCity}&gpsLocationNameCountry={gpsLocationNameCountry}"
 
-        fun idAndLocation(id: Long, gpsLocationNameCity: String, gpsLocationNameCountry: String) = "$route?mediaId=$id&gpsLocationNameCity=$gpsLocationNameCity&gpsLocationNameCountry=$gpsLocationNameCountry"
+        fun idAndLocation(id: Long, gpsLocationNameCity: String, gpsLocationNameCountry: String) =
+            "$route?mediaId=$id&gpsLocationNameCity=${Uri.encode(gpsLocationNameCity)}" +
+                    "&gpsLocationNameCountry=${Uri.encode(gpsLocationNameCountry)}"
     }
 
     data object LocationTimelineScreen : Screen("location_timeline_screen") {
 
         fun location() = "$route?gpsLocationNameCity={gpsLocationNameCity}&gpsLocationNameCountry={gpsLocationNameCountry}"
 
-        fun location(gpsLocationNameCity: String, gpsLocationNameCountry: String) = "$route?gpsLocationNameCity=$gpsLocationNameCity&gpsLocationNameCountry=$gpsLocationNameCountry"
+        fun location(gpsLocationNameCity: String, gpsLocationNameCountry: String) =
+            "$route?gpsLocationNameCity=${Uri.encode(gpsLocationNameCity)}" +
+                    "&gpsLocationNameCountry=${Uri.encode(gpsLocationNameCountry)}"
 
     }
 
@@ -110,7 +116,7 @@ sealed class Screen(val route: String) {
 
         fun category() = "$route?category={category}"
 
-        fun category(string: String) = "$route?category=$string"
+        fun category(string: String) = "$route?category=${Uri.encode(string)}"
         
         // New ID-based routing for the new category system
         fun categoryId() = "$route?categoryId={categoryId}"
@@ -166,7 +172,7 @@ sealed class Screen(val route: String) {
 
         fun collectionName() = "$route?collectionName={collectionName}"
 
-        fun collectionName(name: String) = "$route?collectionName=$name"
+        fun collectionName(name: String) = "$route?collectionName=${Uri.encode(name)}"
 
         fun collectionId() = "$route?collectionId={collectionId}"
 
@@ -183,19 +189,19 @@ sealed class Screen(val route: String) {
         fun uriAndType() = "$route?mediaUri={mediaUri}&isVideo={isVideo}"
 
         fun uriAndType(mediaUri: String, isVideo: Boolean) =
-            "$route?mediaUri=${android.net.Uri.encode(mediaUri)}&isVideo=$isVideo"
+            "$route?mediaUri=${Uri.encode(mediaUri)}&isVideo=$isVideo"
     }
 
     data object HelpScreen : Screen("help_screen")
 
     data object TutorialCategoryScreen : Screen("tutorial_category_screen") {
         fun category() = "$route?category={category}"
-        fun category(category: String) = "$route?category=$category"
+        fun category(category: String) = "$route?category=${Uri.encode(category)}"
     }
 
     data object TutorialDetailScreen : Screen("tutorial_detail_screen") {
         fun tipId() = "$route?tipId={tipId}"
-        fun tipId(id: String) = "$route?tipId=$id"
+        fun tipId(id: String) = "$route?tipId=${Uri.encode(id)}"
     }
 
     data object WhatsNewScreen : Screen("whats_new_screen")
@@ -211,7 +217,7 @@ sealed class Screen(val route: String) {
     data object CloudTimelineScreen : Screen("cloud_timeline_screen")
     data object CloudAddServerScreen : Screen("cloud_add_server_screen") {
         fun providerType() = "$route?providerType={providerType}"
-        fun providerType(type: String) = "$route?providerType=$type"
+        fun providerType(type: String) = "$route?providerType=${Uri.encode(type)}"
     }
     data object CloudEditServerScreen : Screen("cloud_edit_server_screen") {
         fun configId() = "$route?configId={configId}"
@@ -231,7 +237,10 @@ sealed class Screen(val route: String) {
     // Phase 3 – Backup
     data object CloudBackupScreen : Screen("cloud_backup_screen")
     data object BackupAlbumPickerScreen : Screen("backup_album_picker_screen")
-    data object BackupOptionsScreen : Screen("backup_options_screen")
+    data object BackupOptionsScreen : Screen("backup_options_screen") {
+        fun configId() = "$route?configId={configId}"
+        fun configId(id: Long) = "$route?configId=$id"
+    }
     data object UploadDetailsScreen : Screen("upload_details_screen")
 
     // Phase 3+4 – Merged Backup & Sync
@@ -251,10 +260,16 @@ sealed class Screen(val route: String) {
     data object SyncStatusScreen : Screen("sync_status_screen")
 
     // Phase 5 – Notifications
-    data object CloudNotificationSettingsScreen : Screen("cloud_notification_settings_screen")
+    data object CloudNotificationSettingsScreen : Screen("cloud_notification_settings_screen") {
+        fun configId() = "$route?configId={configId}"
+        fun configId(id: Long) = "$route?configId=$id"
+    }
 
     // Phase 6 – Networking
-    data object CloudNetworkingScreen : Screen("cloud_networking_screen")
+    data object CloudNetworkingScreen : Screen("cloud_networking_screen") {
+        fun configId() = "$route?configId={configId}"
+        fun configId(id: Long) = "$route?configId=$id"
+    }
 
     // Phase 7 – Archive
     data object CloudArchiveScreen : Screen("cloud_archive_screen")
@@ -268,21 +283,29 @@ sealed class Screen(val route: String) {
     // Phase 10 – Places (uses the shared LocationsScreen)
     data object PlaceDetailScreen : Screen("place_detail_screen") {
         fun city() = "$route?city={city}&country={country}"
-        fun city(city: String, country: String) = "$route?city=$city&country=$country"
+        fun city(city: String, country: String) =
+            "$route?city=${Uri.encode(city)}&country=${Uri.encode(country)}"
     }
 
     // Phase 11 – Person Detail
     data object PersonDetailScreen : Screen("person_detail_screen") {
-        fun personId() = "$route?personId={personId}"
-        fun personId(id: String) = "$route?personId=$id"
+        fun personId() = "$route?configId={configId}&personId={personId}"
+        fun personId(configId: Long, id: String) =
+            "$route?configId=$configId&personId=${Uri.encode(id)}"
     }
     data object PeopleListScreen : Screen("people_list_screen")
 
     // Phase 12 – Viewer Settings
-    data object CloudViewerSettingsScreen : Screen("cloud_viewer_settings_screen")
+    data object CloudViewerSettingsScreen : Screen("cloud_viewer_settings_screen") {
+        fun configId() = "$route?configId={configId}"
+        fun configId(id: Long) = "$route?configId=$id"
+    }
 
     // Phase 13 – Advanced Settings
-    data object CloudAdvancedSettingsScreen : Screen("cloud_advanced_settings_screen")
+    data object CloudAdvancedSettingsScreen : Screen("cloud_advanced_settings_screen") {
+        fun configId() = "$route?configId={configId}"
+        fun configId(id: Long) = "$route?configId=$id"
+    }
 
     // Offline & Cache
     data object CloudOfflineModeScreen : Screen("cloud_offline_mode_screen")

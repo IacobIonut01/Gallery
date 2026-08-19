@@ -51,22 +51,25 @@ fun SupportSheet(
         mutableStateOf(false)
     }
     val clipboard = LocalClipboardManager.current
-    val mainOptions = remember {
+    val paypalTitle = stringResource(R.string.support_paypal)
+    val revolutTitle = stringResource(R.string.support_revolut)
+    val cryptoTitle = stringResource(R.string.support_crypto)
+    val mainOptions = remember(paypalTitle, revolutTitle, cryptoTitle) {
         listOf(
             OptionItem(
-                text = "PayPal",
+                text = paypalTitle,
                 onClick = {
                     uriHandler.openUri("https://www.paypal.com/paypalme/iacobionut01")
                 }
             ),
             OptionItem(
-                text = "Revolut",
+                text = revolutTitle,
                 onClick = {
                     uriHandler.openUri("https://revolut.me/somaldoaca")
                 }
             ),
             OptionItem(
-                text = "Crypto",
+                text = cryptoTitle,
                 onClick = {
                     showCryptoOptions = true
                 }

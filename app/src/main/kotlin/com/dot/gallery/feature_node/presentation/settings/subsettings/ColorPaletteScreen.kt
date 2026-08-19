@@ -155,8 +155,12 @@ fun ColorPaletteScreen() {
                 title = stringResource(R.string.amoled_mode_title),
                 isChecked = amoledModeValue,
                 onCheckedChange = { amoledModeValue = it },
-                description = stringResource(R.string.amoled_mode_description),
+                description = stringResource(
+                    if (isDark) R.string.amoled_mode_description
+                    else R.string.amoled_mode_requires_dark_description
+                ),
                 preview = { checked -> AmoledPreview(checked) },
+                enabled = isDark,
             )
             return
         }
@@ -307,21 +311,31 @@ fun ColorPaletteScreen() {
         )
         val amoledModePref = rememberSwitchPreference(
             amoledModeValue,
+            isDark,
             title = stringResource(R.string.amoled_mode_title),
-            summary = stringResource(R.string.amoled_mode_summary),
+            summary = stringResource(
+                if (isDark) R.string.amoled_mode_summary
+                else R.string.amoled_mode_requires_dark
+            ),
+            enabled = isDark,
             isChecked = amoledModeValue,
             onCheck = { amoledModeValue = it },
             onClick = { detailKey = DETAIL_AMOLED },
             screenPosition = Position.Bottom
         )
 
-        val effectsHeader = remember {
-            SettingsEntity.Header(title = "Visual Effects")
+        val effectsHeaderTitle = stringResource(R.string.settings_visual_effects_header)
+        val effectsHeader = remember(effectsHeaderTitle) {
+            SettingsEntity.Header(title = effectsHeaderTitle)
         }
         val allowBlurPref = rememberSwitchPreference(
             allowBlur,
+            shouldAllowBlur,
             title = stringResource(R.string.fancy_blur),
-            summary = stringResource(R.string.fancy_blur_summary),
+            summary = stringResource(
+                if (shouldAllowBlur) R.string.fancy_blur_summary
+                else R.string.fancy_blur_requires_android_12
+            ),
             isChecked = allowBlur,
             onCheck = { allowBlur = it },
             onClick = { detailKey = DETAIL_BLUR },
@@ -347,8 +361,9 @@ fun ColorPaletteScreen() {
             screenPosition = Position.Bottom
         )
 
-        val fontHeader = remember {
-            SettingsEntity.Header(title = "Font")
+        val fontHeaderTitle = stringResource(R.string.settings_font_header)
+        val fontHeader = remember(fontHeaderTitle) {
+            SettingsEntity.Header(title = fontHeaderTitle)
         }
         val useSystemFontPref = rememberSwitchPreference(
             useSystemFont,
@@ -836,7 +851,7 @@ private fun PortraitPreviewContent() {
 
         // "Today" header
         Text(
-            text = "Today",
+            text = stringResource(R.string.header_today),
             fontSize = 8.sp,
             fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.onBackground,

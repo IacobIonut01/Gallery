@@ -12,11 +12,12 @@ import com.dot.gallery.cloud.core.CloudServerConfig
 import com.dot.gallery.cloud.core.CloudServerInfo
 import com.dot.gallery.cloud.core.CloudTrace
 import com.dot.gallery.cloud.core.ConnectionState
+import com.dot.gallery.cloud.core.MediaCapabilityProvider
 import com.dot.gallery.cloud.core.MemoryInfo
 import com.dot.gallery.cloud.core.PersonInfo
+import com.dot.gallery.cloud.core.ProviderCapability
 import com.dot.gallery.cloud.core.ProviderRegistry
 import com.dot.gallery.cloud.core.ProviderType
-import com.dot.gallery.cloud.core.resolveRemote
 import com.dot.gallery.cloud.core.SharedLinkInfo
 import com.dot.gallery.cloud.core.capabilities.MapCapableProvider
 import com.dot.gallery.cloud.core.capabilities.MemoriesCapableProvider
@@ -44,6 +45,36 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
 import javax.inject.Singleton
+
+internal inline fun <reified T : MediaCapabilityProvider> resolveProviderAccount(
+    registry: ProviderRegistry,
+    type: ProviderType,
+    configId: Long,
+    capabilityName: String
+): Result<T> {
+    val provider = registry.getByConfigId(configId)
+        ?: return Result.failure(Exception("Provider account $configId not available"))
+    if (provider.providerType != type) {
+        return Result.failure(Exception("Provider account $configId type mismatch"))
+    }
+    return (provider as? T)?.let { Result.success(it) }
+        ?: Result.failure(Exception("Provider account $configId does not support $capabilityName"))
+}
+
+internal fun getRemoteAlbumMediaForAccount(
+    registry: ProviderRegistry,
+    type: ProviderType,
+    configId: Long,
+    albumId: String
+): Flow<Resource<List<CloudMediaEntity>>> {
+    val provider = resolveProviderAccount<RemoteMediaProvider>(
+        registry = registry,
+        type = type,
+        configId = configId,
+        capabilityName = "remote albums"
+    ).getOrElse { return flowOf(Resource.Error(it.message ?: "Provider account not available")) }
+    return provider.getRemoteAlbumMedia(albumId)
+}
 
 @Singleton
 class CloudRepositoryImpl @Inject constructor(
@@ -148,15 +179,12 @@ class CloudRepositoryImpl @Inject constructor(
 
     override fun getAlbumMedia(
         type: ProviderType,
+        configId: Long,
         albumId: String
-    ): Flow<Resource<List<CloudMediaEntity>>> {
-        val provider = registry.get(type) as? RemoteMediaProvider
-            ?: return flowOf(Resource.Error("Provider not available"))
-        CloudTrace.d("Repo.getAlbumMedia[$type] '$albumId'")
-        return provider.getRemoteAlbumMedia(albumId).onEach {
-            CloudTrace.d("Repo.getAlbumMedia[$type] '$albumId' -> ${if (it is Resource.Error) "ERROR ${it.message}" else "${it.data?.size ?: 0} items"}")
+    ): Flow<Resource<List<CloudMediaEntity>>> =
+        getRemoteAlbumMediaForAccount(registry, type, configId, albumId).onEach {
+            CloudTrace.d("Repo.getAlbumMedia[$type/$configId] '$albumId' -> ${if (it is Resource.Error) "ERROR ${it.message}" else "${it.data?.size ?: 0} items"}")
         }
-    }
 
     // === People ===
 
@@ -168,10 +196,15 @@ class CloudRepositoryImpl @Inject constructor(
 
     override fun getPersonMedia(
         type: ProviderType,
+        configId: Long,
         personId: String
     ): Flow<Resource<List<Media>>> {
-        val provider = registry.get(type) as? PeopleCapableProvider
-            ?: return flowOf(Resource.Error("Provider not available"))
+        val provider = resolveProviderAccount<PeopleCapableProvider>(
+            registry = registry,
+            type = type,
+            configId = configId,
+            capabilityName = "people"
+        ).getOrElse { return flowOf(Resource.Error(it.message ?: "Provider account not available")) }
         return provider.getPersonMedia(personId)
     }
 
@@ -199,11 +232,19 @@ class CloudRepositoryImpl @Inject constructor(
 
     override suspend fun createShareLink(
         type: ProviderType,
+        configId: Long,
         assetIds: List<String>,
         expiresAt: Long?
     ): Result<String> {
-        val provider = registry.get(type) as? ShareLinkCapableProvider
-            ?: return Result.failure(Exception("Provider does not support sharing"))
+        val provider = resolveProviderAccount<ShareLinkCapableProvider>(
+            registry = registry,
+            type = type,
+            configId = configId,
+            capabilityName = "sharing"
+        ).getOrElse { return Result.failure(it) }
+        if (ProviderCapability.SHARE_CREATE !in provider.capabilities) {
+            return Result.failure(Exception("Provider does not support creating share links"))
+        }
         return provider.createShareLink(assetIds, expiresAt)
     }
 
@@ -253,8 +294,9 @@ class CloudRepositoryImpl @Inject constructor(
         configId: Long,
         remoteId: String
     ): Result<Unit> {
-        val provider = registry.resolveRemote(type, configId)
-            ?: return Result.failure(Exception("Provider $type not available"))
+        val provider = (registry.getByConfigId(configId) as? RemoteMediaProvider)
+            ?.takeIf { it.providerType == type }
+            ?: return Result.failure(Exception("Provider account $configId not available"))
         val result = provider.deleteAsset(remoteId)
         if (result.isSuccess) {
             // Drop from the local cache so the timeline/backup sheet update reactively.
@@ -267,17 +309,35 @@ class CloudRepositoryImpl @Inject constructor(
 
     override suspend fun toggleArchive(
         type: ProviderType,
+        configId: Long,
         remoteId: String,
         archived: Boolean
     ): Result<Unit> {
-        val provider = registry.get(type) as? RemoteMediaProvider
-            ?: return Result.failure(Exception("Provider not available"))
+        val provider = resolveProviderAccount<RemoteMediaProvider>(
+            registry = registry,
+            type = type,
+            configId = configId,
+            capabilityName = "archive"
+        ).getOrElse { return Result.failure(it) }
+        if (ProviderCapability.ARCHIVE !in provider.capabilities) {
+            return Result.failure(Exception("Provider account $configId does not support archive"))
+        }
         return provider.toggleArchive(remoteId, archived)
     }
 
-    override fun getRemoteArchived(type: ProviderType): Flow<Resource<List<CloudMediaEntity>>> {
-        val provider = registry.get(type) as? RemoteMediaProvider
-            ?: return flowOf(Resource.Error("Provider not available"))
+    override fun getRemoteArchived(
+        type: ProviderType,
+        configId: Long
+    ): Flow<Resource<List<CloudMediaEntity>>> {
+        val provider = resolveProviderAccount<RemoteMediaProvider>(
+            registry = registry,
+            type = type,
+            configId = configId,
+            capabilityName = "archive"
+        ).getOrElse { return flowOf(Resource.Error(it.message ?: "Provider account not available")) }
+        if (ProviderCapability.ARCHIVE !in provider.capabilities) {
+            return flowOf(Resource.Error("Provider account $configId does not support archive"))
+        }
         return provider.getRemoteArchived()
     }
 
@@ -287,24 +347,65 @@ class CloudRepositoryImpl @Inject constructor(
     // === Shared Links Management ===
 
     override fun getSharedLinks(type: ProviderType): Flow<Resource<List<SharedLinkInfo>>> {
-        val provider = registry.get(type) as? ShareLinkCapableProvider
-            ?: return flowOf(Resource.Error("Provider does not support sharing"))
+        val providers = registry.getAllForType(type)
+            .filterIsInstance<ShareLinkCapableProvider>()
+            .filter {
+                it.isAvailable && ProviderCapability.SHARE_MANAGE in it.capabilities
+            }
+        if (providers.isEmpty()) {
+            return flowOf(Resource.Error("Provider does not support shared-link management"))
+        }
+        return combineResources(providers.map { it.getSharedLinks() })
+    }
+
+    override fun getSharedLinks(
+        type: ProviderType,
+        configId: Long
+    ): Flow<Resource<List<SharedLinkInfo>>> {
+        val provider = resolveProviderAccount<ShareLinkCapableProvider>(
+            registry = registry,
+            type = type,
+            configId = configId,
+            capabilityName = "sharing"
+        ).getOrElse { return flowOf(Resource.Error(it.message ?: "Provider account not available")) }
+        if (ProviderCapability.SHARE_MANAGE !in provider.capabilities) {
+            return flowOf(Resource.Error("Provider account $configId does not support shared-link management"))
+        }
         return provider.getSharedLinks()
     }
 
-    override suspend fun deleteSharedLink(type: ProviderType, linkId: String): Result<Unit> {
-        val provider = registry.get(type) as? ShareLinkCapableProvider
-            ?: return Result.failure(Exception("Provider does not support sharing"))
+    override suspend fun deleteSharedLink(
+        type: ProviderType,
+        configId: Long,
+        linkId: String
+    ): Result<Unit> {
+        val provider = resolveProviderAccount<ShareLinkCapableProvider>(
+            registry = registry,
+            type = type,
+            configId = configId,
+            capabilityName = "sharing"
+        ).getOrElse { return Result.failure(it) }
+        if (ProviderCapability.SHARE_MANAGE !in provider.capabilities) {
+            return Result.failure(Exception("Provider account $configId does not support shared-link management"))
+        }
         return provider.deleteSharedLink(linkId)
     }
 
     override suspend fun updateSharedLink(
         type: ProviderType,
+        configId: Long,
         linkId: String,
         updates: Map<String, Any>
     ): Result<Unit> {
-        val provider = registry.get(type) as? ShareLinkCapableProvider
-            ?: return Result.failure(Exception("Provider does not support sharing"))
+        val provider = resolveProviderAccount<ShareLinkCapableProvider>(
+            registry = registry,
+            type = type,
+            configId = configId,
+            capabilityName = "sharing"
+        ).getOrElse { return Result.failure(it) }
+        if (ProviderCapability.SHARE_MANAGE !in provider.capabilities) {
+            return Result.failure(Exception("Provider account $configId does not support shared-link management"))
+        }
         return provider.updateSharedLink(linkId, updates)
     }
 
@@ -312,11 +413,16 @@ class CloudRepositoryImpl @Inject constructor(
 
     override suspend fun updatePersonName(
         type: ProviderType,
+        configId: Long,
         personId: String,
         name: String
     ): Result<Unit> {
-        val provider = registry.get(type) as? PeopleCapableProvider
-            ?: return Result.failure(Exception("Provider does not support people"))
+        val provider = resolveProviderAccount<PeopleCapableProvider>(
+            registry = registry,
+            type = type,
+            configId = configId,
+            capabilityName = "people"
+        ).getOrElse { return Result.failure(it) }
         return provider.updatePersonName(personId, name).also { result ->
             if (result.isSuccess) _peopleInvalidation.tryEmit(Unit)
         }
@@ -324,11 +430,16 @@ class CloudRepositoryImpl @Inject constructor(
 
     override suspend fun updatePersonBirthDate(
         type: ProviderType,
+        configId: Long,
         personId: String,
         birthDate: String
     ): Result<Unit> {
-        val provider = registry.get(type) as? PeopleCapableProvider
-            ?: return Result.failure(Exception("Provider does not support people"))
+        val provider = resolveProviderAccount<PeopleCapableProvider>(
+            registry = registry,
+            type = type,
+            configId = configId,
+            capabilityName = "people"
+        ).getOrElse { return Result.failure(it) }
         return provider.updatePersonBirthDate(personId, birthDate)
     }
 
@@ -348,9 +459,16 @@ class CloudRepositoryImpl @Inject constructor(
 
     // === Memories ===
 
-    override fun getMemories(type: ProviderType): Flow<Resource<List<MemoryInfo>>> {
-        val provider = registry.get(type) as? MemoriesCapableProvider
-            ?: return flowOf(Resource.Error("Provider does not support memories"))
+    override fun getMemories(
+        type: ProviderType,
+        configId: Long
+    ): Flow<Resource<List<MemoryInfo>>> {
+        val provider = resolveProviderAccount<MemoriesCapableProvider>(
+            registry = registry,
+            type = type,
+            configId = configId,
+            capabilityName = "memories"
+        ).getOrElse { return flowOf(Resource.Error(it.message ?: "Provider account not available")) }
         return provider.getMemories()
     }
 

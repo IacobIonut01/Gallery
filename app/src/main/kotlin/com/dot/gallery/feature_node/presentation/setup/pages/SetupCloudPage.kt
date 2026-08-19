@@ -260,7 +260,8 @@ private fun capabilityLabel(capability: ProviderCapability): Int? = when (capabi
     ProviderCapability.MAP -> R.string.setup_cap_map
     ProviderCapability.SMART_SEARCH -> R.string.setup_cap_smart_search
     ProviderCapability.TEXT_SEARCH -> R.string.setup_cap_text_search
-    ProviderCapability.SHARE_LINK -> R.string.setup_cap_share_link
+    ProviderCapability.SHARE_CREATE -> R.string.setup_cap_share_link
+    ProviderCapability.SHARE_MANAGE -> null
     ProviderCapability.OCR -> R.string.setup_cap_ocr
     ProviderCapability.ARCHIVE -> R.string.setup_cap_archive
     ProviderCapability.MEMORIES -> R.string.setup_cap_memories
@@ -277,7 +278,8 @@ private fun defaultCapabilitiesFor(type: ProviderType): Set<ProviderCapability> 
         ProviderCapability.PEOPLE,
         ProviderCapability.MAP,
         ProviderCapability.SMART_SEARCH,
-        ProviderCapability.SHARE_LINK,
+        ProviderCapability.SHARE_CREATE,
+        ProviderCapability.SHARE_MANAGE,
         ProviderCapability.ARCHIVE,
         ProviderCapability.MEMORIES
     )
@@ -285,7 +287,7 @@ private fun defaultCapabilitiesFor(type: ProviderType): Set<ProviderCapability> 
         ProviderCapability.REMOTE_ASSETS,
         ProviderCapability.REMOTE_ALBUMS,
         ProviderCapability.SYNC,
-        ProviderCapability.SHARE_LINK
+        ProviderCapability.SHARE_CREATE
     )
     ProviderType.SMB, ProviderType.NFS -> setOf(
         ProviderCapability.REMOTE_ASSETS,

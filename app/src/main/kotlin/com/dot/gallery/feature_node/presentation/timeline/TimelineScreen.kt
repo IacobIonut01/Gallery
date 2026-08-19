@@ -47,6 +47,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.produceState
 
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -87,7 +88,7 @@ import com.dot.gallery.core.Settings.Misc.rememberTimelineLayoutType
 import com.dot.gallery.core.navigate
 import com.dot.gallery.core.presentation.components.EmptyMedia
 import com.dot.gallery.core.presentation.components.SelectionSheet
-import com.dot.gallery.core.toggleNavigationBar
+import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
 import com.dot.gallery.feature_node.domain.model.MediaState
@@ -115,6 +116,7 @@ import com.dot.gallery.feature_node.presentation.timeline.components.TimelineFil
 import com.dot.gallery.feature_node.presentation.timeline.components.TimelineNavActions
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
 import com.dot.gallery.feature_node.presentation.util.Screen
+import com.dot.gallery.feature_node.presentation.util.mapMediaToItem
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.rememberBottomBarInset
 import com.dot.gallery.feature_node.presentation.util.roundSpToPx
@@ -123,6 +125,43 @@ import dev.chrisbanes.haze.hazeSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+
+internal fun resolveTimelineAlbumSourceIds(
+    selectedAlbumIds: Set<Long>,
+    sourceIdsByAlbumId: Map<Long, Set<Long>>,
+): Set<Long> = selectedAlbumIds.flatMapTo(hashSetOf()) { albumId ->
+    sourceIdsByAlbumId[albumId].orEmpty()
+}
+
+internal fun <T> filterTimelineItems(
+    items: List<T>,
+    filter: TimelineFilter,
+    selectedAlbumSourceIds: Set<Long>,
+    isImage: (T) -> Boolean,
+    isVideo: (T) -> Boolean,
+    isFavorite: (T) -> Boolean,
+    timestampSeconds: (T) -> Long,
+    albumId: (T) -> Long,
+): List<T> = items.filter { item ->
+    val typeMatch = when (filter.mediaType) {
+        MediaTypeFilter.ALL -> true
+        MediaTypeFilter.PHOTOS -> isImage(item)
+        MediaTypeFilter.VIDEOS -> isVideo(item)
+    }
+    val favoriteMatch = !filter.favoritesOnly || isFavorite(item)
+    val yearMatch = filter.selectedYears.isEmpty() || run {
+        val calendar = java.util.Calendar.getInstance()
+        calendar.timeInMillis = timestampSeconds(item) * 1000L
+        calendar.get(java.util.Calendar.YEAR) in filter.selectedYears
+    }
+    val albumMatch = filter.selectedAlbumIds.isEmpty() ||
+        selectedAlbumSourceIds.isEmpty() || albumId(item) in selectedAlbumSourceIds
+    typeMatch && favoriteMatch && yearMatch && albumMatch
+}
+
+private fun List<Album>.filterableOnTimeline(): List<Album> = filterNot { album ->
+    album.isLocked || album.relativePath.startsWith("cloud/")
+}
 
 @OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3Api::class,
     ExperimentalFoundationApi::class
@@ -147,7 +186,15 @@ fun TimelineScreen(
 
     val albumsState = distributor.albumsFlow.collectAsStateWithLifecycle()
     val availableAlbums by rememberedDerivedState(albumsState.value) {
-        albumsState.value.albums.sortedBy { it.label }
+        albumsState.value.albums.filterableOnTimeline().sortedBy { it.label }
+    }
+
+    LaunchedEffect(availableAlbums) {
+        val supportedIds = availableAlbums.mapTo(hashSetOf()) { it.id }
+        val supportedSelection = timelineFilter.selectedAlbumIds.intersect(supportedIds)
+        if (supportedSelection != timelineFilter.selectedAlbumIds) {
+            timelineFilter = timelineFilter.copy(selectedAlbumIds = supportedSelection)
+        }
     }
 
     val availableYears by rememberedDerivedState(mediaState.value) {
@@ -158,53 +205,61 @@ fun TimelineScreen(
         }.sortedDescending()
     }
 
-    val filteredMediaState: State<MediaState<Media.UriMedia>> = remember(mediaState, timelineFilter) {
-        derivedStateOf {
-            val state = mediaState.value
-            if (!timelineFilter.isActive) return@derivedStateOf state
-
-            val filtered = state.media.filter { media ->
-                val typeMatch = when (timelineFilter.mediaType) {
-                    MediaTypeFilter.ALL -> true
-                    MediaTypeFilter.PHOTOS -> media.isImage
-                    MediaTypeFilter.VIDEOS -> media.isVideo
-                }
-                val favMatch = if (timelineFilter.favoritesOnly) media.isFavorite else true
-                val yearMatch = if (timelineFilter.selectedYears.isNotEmpty()) {
-                    val cal = java.util.Calendar.getInstance()
-                    cal.timeInMillis = media.definedTimestamp * 1000L
-                    cal.get(java.util.Calendar.YEAR) in timelineFilter.selectedYears
-                } else true
-                val albumMatch = if (timelineFilter.selectedAlbumIds.isNotEmpty()) {
-                    media.albumID in timelineFilter.selectedAlbumIds
-                } else true
-                typeMatch && favMatch && yearMatch && albumMatch
-            }
-            val filteredIds = filtered.mapTo(HashSet(filtered.size)) { it.id }
-            state.copy(
-                media = filtered,
-                pagerMedia = state.pagerMedia.filter { it.id in filteredIds },
-                mappedMedia = state.mappedMedia.filter { item ->
-                    when (item) {
-                        is com.dot.gallery.feature_node.domain.model.MediaItem.MediaViewItem -> item.media.id in filteredIds
-                        is com.dot.gallery.feature_node.domain.model.MediaItem.Header -> item.data.any { it in filteredIds }
-                    }
-                },
-                mappedMediaWithMonthly = state.mappedMediaWithMonthly.filter { item ->
-                    when (item) {
-                        is com.dot.gallery.feature_node.domain.model.MediaItem.MediaViewItem -> item.media.id in filteredIds
-                        is com.dot.gallery.feature_node.domain.model.MediaItem.Header -> item.data.any { it in filteredIds }
-                    }
-                },
-                mappedMediaWithYearly = state.mappedMediaWithYearly.filter { item ->
-                    when (item) {
-                        is com.dot.gallery.feature_node.domain.model.MediaItem.MediaViewItem -> item.media.id in filteredIds
-                        is com.dot.gallery.feature_node.domain.model.MediaItem.Header -> item.data.any { it in filteredIds }
-                    }
-                },
-                headers = state.headers.filter { header -> header.data.any { it in filteredIds } }
+    val dateFormats by distributor.dateFormatsFlow.collectAsStateWithLifecycle()
+    val timelineSettings by distributor.settingsFlow.collectAsStateWithLifecycle()
+    val groupSimilarMedia by distributor.groupSimilarMedia.collectAsStateWithLifecycle()
+    val enabledGroupTypes by distributor.enabledGroupTypes.collectAsStateWithLifecycle()
+    val albumSourceIdsById = remember(availableAlbums) {
+        availableAlbums.associate { album -> album.id to album.sourceAlbumIds.toSet() }
+    }
+    val filteredMediaState: State<MediaState<Media.UriMedia>> = produceState(
+        initialValue = if (timelineFilter.isActive) {
+            MediaState(
+                error = mediaState.value.error,
+                isLoading = mediaState.value.error.isEmpty(),
             )
+        } else mediaState.value,
+        mediaState.value,
+        timelineFilter,
+        albumSourceIdsById,
+        dateFormats,
+        timelineSettings,
+        groupSimilarMedia,
+        enabledGroupTypes,
+    ) {
+        val source = mediaState.value
+        if (!timelineFilter.isActive) {
+            value = source
+            return@produceState
         }
+        val selectedAlbumSourceIds = resolveTimelineAlbumSourceIds(
+            selectedAlbumIds = timelineFilter.selectedAlbumIds,
+            sourceIdsByAlbumId = albumSourceIdsById,
+        )
+        val filtered = filterTimelineItems(
+            items = source.media,
+            filter = timelineFilter,
+            selectedAlbumSourceIds = selectedAlbumSourceIds,
+            isImage = { it.isImage },
+            isVideo = { it.isVideo },
+            isFavorite = { it.isFavorite },
+            timestampSeconds = { it.definedTimestamp },
+            albumId = { it.albumID },
+        )
+        val filteredIds = filtered.mapTo(HashSet(filtered.size)) { it.id }
+        value = mapMediaToItem(
+            data = filtered,
+            error = source.error,
+            albumId = -1L,
+            groupByMonth = timelineSettings?.groupTimelineByMonth == true,
+            groupByYear = timelineSettings?.groupTimelineByYear == true,
+            groupSimilarMedia = groupSimilarMedia,
+            enabledGroupTypes = enabledGroupTypes,
+            cloudBackups = source.cloudBackups.filterKeys { it in filteredIds },
+            defaultDateFormat = dateFormats.first,
+            extendedDateFormat = dateFormats.second,
+            weeklyDateFormat = dateFormats.third,
+        ).copy(isLoading = source.isLoading)
     }
     var lastSeenVersion by rememberLastSeenVersion()
     val showWhatsNew = remember(lastSeenVersion) { lastSeenVersion != BuildConfig.VERSION_NAME }
@@ -254,10 +309,6 @@ fun TimelineScreen(
     val selector = LocalMediaSelector.current
     val selectionState = selector.isSelectionActive.collectAsStateWithLifecycle()
     val selectedMedia = selector.selectedMedia.collectAsStateWithLifecycle()
-
-    LaunchedEffect(selectionState.value) {
-        eventHandler.toggleNavigationBar(!selectionState.value)
-    }
 
     Box(
         modifier = Modifier
@@ -323,6 +374,7 @@ fun TimelineScreen(
                         eventHandler.navigate(Screen.MediaViewScreen.idAndAlbum(it.id, -1L))
                     },
                     emptyContent = { EmptyMedia() },
+                    onRetry = { refreshScope.launch { distributor.invalidate() } },
                     scrollToTopRoute = Screen.TimelineScreen.route,
                 )
             }

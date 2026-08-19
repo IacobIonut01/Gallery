@@ -5,20 +5,24 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.input.InputMode
 import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.platform.LocalInputModeManager
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotFocused
+import androidx.compose.ui.test.assertIsOff
+import androidx.compose.ui.test.assertIsOn
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.core.Position
@@ -52,7 +56,9 @@ class SettingsFocusNavigationTest {
             }
         }
 
-        composeRule.onNodeWithTag("setting-0").assertIsFocused()
+        composeRule.onNodeWithTag("setting-0")
+            .performSemanticsAction(SemanticsActions.RequestFocus)
+            .assertIsFocused()
         repeat(11) {
             composeRule.onNodeWithTag("setting-$it").performKeyInput {
                 pressKey(Key.DirectionDown)
@@ -87,14 +93,58 @@ class SettingsFocusNavigationTest {
             }
         }
 
-        composeRule.onNodeWithTag("setting-0").assertIsFocused().performKeyInput {
-            pressKey(Key.Enter)
-        }
+        composeRule.onNodeWithTag("setting-0")
+            .performSemanticsAction(SemanticsActions.RequestFocus)
+            .assertIsFocused()
+            .assertIsOff()
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Switch))
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Disabled"))
+            .assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.ContentDescription))
+            .performKeyInput {
+                pressKey(Key.Enter)
+            }
         assertEquals(1, toggleCount)
-        composeRule.onNodeWithTag("setting-0").performKeyInput {
+        composeRule.onNodeWithTag("setting-0")
+            .assertIsOn()
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Enabled"))
+            .performKeyInput {
             pressKey(Key.DirectionDown)
         }
         composeRule.onNodeWithTag("setting-1").assertIsFocused()
+    }
+
+    @Test
+    fun splitSwitchKeepsRowAndToggleAsSeparateActions() {
+        var rowActivationCount = 0
+        var toggleCount = 0
+        composeRule.setContent {
+            GalleryTheme {
+                FocusedSettingsList(
+                    items = listOf(
+                        SettingsEntity.SwitchPreference(
+                            title = "Split switch",
+                            isChecked = false,
+                            onClick = { rowActivationCount++ },
+                            onCheck = { toggleCount++ },
+                            screenPosition = Position.Alone,
+                        )
+                    )
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag("setting-0")
+            .assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Role))
+            .performClick()
+        assertEquals(1, rowActivationCount)
+        assertEquals(0, toggleCount)
+
+        composeRule.onAllNodes(
+            SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Switch),
+            useUnmergedTree = true,
+        ).assertCountEquals(1)[0].performClick()
+        assertEquals(1, rowActivationCount)
+        assertEquals(1, toggleCount)
     }
 
     @Test
@@ -125,30 +175,22 @@ class SettingsFocusNavigationTest {
             }
         }
 
-        composeRule.onNodeWithTag("setting-0").performKeyInput {
+        composeRule.onNodeWithTag("setting-0")
+            .performSemanticsAction(SemanticsActions.RequestFocus)
+            .performKeyInput {
             pressKey(Key.DirectionDown)
         }
-        composeRule.onNodeWithTag("setting-1").assertIsNotFocused()
-        composeRule.onNodeWithTag("setting-2").assertIsNotFocused()
         composeRule.onNodeWithTag("setting-3").assertIsFocused()
     }
 
     @Composable
     private fun FocusedSettingsList(items: List<SettingsEntity>) {
-        val inputModeManager = LocalInputModeManager.current
-        val focusRequester = remember { FocusRequester() }
-        LaunchedEffect(Unit) {
-            inputModeManager.requestInputMode(InputMode.Keyboard)
-            focusRequester.requestFocus()
-        }
         Box(modifier = Modifier.height(240.dp)) {
             LazyColumn(modifier = Modifier.settingsFocusGroup()) {
                 itemsIndexed(items) { index, item ->
                     SettingsItem(
                         item = item,
-                        modifier = Modifier
-                            .then(if (index == 0) Modifier.focusRequester(focusRequester) else Modifier)
-                            .testTag("setting-$index"),
+                        modifier = Modifier.testTag("setting-$index"),
                     )
                 }
             }

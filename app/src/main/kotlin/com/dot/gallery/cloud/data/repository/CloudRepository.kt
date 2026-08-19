@@ -41,11 +41,19 @@ interface CloudRepository {
 
     // Albums from all providers
     fun getAllRemoteAlbums(): Flow<Resource<List<CloudAlbum>>>
-    fun getAlbumMedia(type: ProviderType, albumId: String): Flow<Resource<List<CloudMediaEntity>>>
+    fun getAlbumMedia(
+        type: ProviderType,
+        configId: Long,
+        albumId: String
+    ): Flow<Resource<List<CloudMediaEntity>>>
 
     // People from all providers
     fun getAllPeople(): Flow<Resource<List<PersonInfo>>>
-    fun getPersonMedia(type: ProviderType, personId: String): Flow<Resource<List<Media>>>
+    fun getPersonMedia(
+        type: ProviderType,
+        configId: Long,
+        personId: String
+    ): Flow<Resource<List<Media>>>
 
     // Map markers from all providers
     fun getAllMapMarkers(): Flow<Resource<List<CloudMapMarker>>>
@@ -54,7 +62,12 @@ interface CloudRepository {
     suspend fun smartSearch(query: String): Result<List<Media>>
 
     // Share links
-    suspend fun createShareLink(type: ProviderType, assetIds: List<String>, expiresAt: Long? = null): Result<String>
+    suspend fun createShareLink(
+        type: ProviderType,
+        configId: Long,
+        assetIds: List<String>,
+        expiresAt: Long? = null
+    ): Result<String>
 
     // Sync
     suspend fun uploadAsset(type: ProviderType, localMedia: Media, targetPath: String? = null): Result<CloudMediaEntity>
@@ -68,25 +81,55 @@ interface CloudRepository {
     suspend fun deleteAsset(type: ProviderType, configId: Long, remoteId: String): Result<Unit>
 
     // Archive
-    suspend fun toggleArchive(type: ProviderType, remoteId: String, archived: Boolean): Result<Unit>
-    fun getRemoteArchived(type: ProviderType): Flow<Resource<List<CloudMediaEntity>>>
+    suspend fun toggleArchive(
+        type: ProviderType,
+        configId: Long,
+        remoteId: String,
+        archived: Boolean
+    ): Result<Unit>
+    fun getRemoteArchived(
+        type: ProviderType,
+        configId: Long
+    ): Flow<Resource<List<CloudMediaEntity>>>
     suspend fun getCachedArchivedAsync(): List<CloudMediaEntity>
 
     // Shared links management
     fun getSharedLinks(type: ProviderType): Flow<Resource<List<SharedLinkInfo>>>
-    suspend fun deleteSharedLink(type: ProviderType, linkId: String): Result<Unit>
-    suspend fun updateSharedLink(type: ProviderType, linkId: String, updates: Map<String, Any>): Result<Unit>
+    fun getSharedLinks(
+        type: ProviderType,
+        configId: Long
+    ): Flow<Resource<List<SharedLinkInfo>>>
+    suspend fun deleteSharedLink(type: ProviderType, configId: Long, linkId: String): Result<Unit>
+    suspend fun updateSharedLink(
+        type: ProviderType,
+        configId: Long,
+        linkId: String,
+        updates: Map<String, Any>
+    ): Result<Unit>
 
     // People editing
-    suspend fun updatePersonName(type: ProviderType, personId: String, name: String): Result<Unit>
-    suspend fun updatePersonBirthDate(type: ProviderType, personId: String, birthDate: String): Result<Unit>
+    suspend fun updatePersonName(
+        type: ProviderType,
+        configId: Long,
+        personId: String,
+        name: String
+    ): Result<Unit>
+    suspend fun updatePersonBirthDate(
+        type: ProviderType,
+        configId: Long,
+        personId: String,
+        birthDate: String
+    ): Result<Unit>
 
     // Trash bulk operations
     suspend fun emptyTrash(type: ProviderType): Result<Unit>
     suspend fun restoreAllTrash(type: ProviderType): Result<Unit>
 
     // Memories
-    fun getMemories(type: ProviderType): Flow<Resource<List<MemoryInfo>>>
+    fun getMemories(
+        type: ProviderType,
+        configId: Long
+    ): Flow<Resource<List<MemoryInfo>>>
 
     // Cache
     fun getCachedMedia(): Flow<List<CloudMediaEntity>>

@@ -92,6 +92,8 @@ class BiometricState(
     private val promptInfo: PromptInfo,
     private val callback: BiometricPrompt.AuthenticationCallback
 ) {
+    private var prompt: BiometricPrompt? = null
+
     val isSupported by mutableStateOf(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             biometricManager.canAuthenticate(BIOMETRIC_STRONG or DEVICE_CREDENTIAL) == BIOMETRIC_SUCCESS
@@ -106,9 +108,15 @@ class BiometricState(
             // Create a fresh BiometricPrompt each time to avoid stale internal
             // BiometricFragment state that silently swallows subsequent callbacks.
             val executor = ContextCompat.getMainExecutor(activity)
-            val prompt = BiometricPrompt(activity, executor, callback)
-            prompt.authenticate(promptInfo)
+            prompt = BiometricPrompt(activity, executor, callback).also {
+                it.authenticate(promptInfo)
+            }
         }
+    }
+
+    fun cancelAuthentication() {
+        prompt?.cancelAuthentication()
+        prompt = null
     }
 
 }

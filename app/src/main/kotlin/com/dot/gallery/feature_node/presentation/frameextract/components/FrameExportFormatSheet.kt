@@ -34,13 +34,13 @@ fun FrameExportFormatSheet(
         text = {
             Column {
                 FormatRow(
-                    title = "JPEG",
+                    title = stringResource(R.string.frame_picker_format_jpeg),
                     description = stringResource(R.string.frame_picker_format_jpeg_description),
                     selected = selected == FrameExportFormat.JPEG,
                     onClick = { onSelect(FrameExportFormat.JPEG) },
                 )
                 FormatRow(
-                    title = "PNG",
+                    title = stringResource(R.string.frame_picker_format_png),
                     description = stringResource(R.string.frame_picker_format_png_description),
                     selected = selected == FrameExportFormat.PNG,
                     onClick = { onSelect(FrameExportFormat.PNG) },

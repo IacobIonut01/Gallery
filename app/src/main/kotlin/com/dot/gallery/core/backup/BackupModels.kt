@@ -26,10 +26,92 @@ data class BackupManifest(
     val vaults: List<VaultEntry> = emptyList(),
 ) {
     companion object {
-        const val SCHEMA_VERSION = 1
+        const val MIN_SUPPORTED_SCHEMA_VERSION = 1
+        const val SCHEMA_VERSION = 2
         const val MANIFEST_NAME = "manifest.json"
         const val VAULTS_DIR = "vaults"
+
+        fun requireSupportedSchema(schemaVersion: Int) {
+            if (schemaVersion !in MIN_SUPPORTED_SCHEMA_VERSION..SCHEMA_VERSION) {
+                throw UnsupportedBackupSchemaException(schemaVersion)
+            }
+        }
     }
+}
+
+class UnsupportedBackupSchemaException(val schemaVersion: Int) : Exception(
+    "Unsupported backup schema $schemaVersion; supported versions are " +
+        "${BackupManifest.MIN_SUPPORTED_SCHEMA_VERSION}-${BackupManifest.SCHEMA_VERSION}"
+)
+
+/** Stable backup-local identity for records owned by a source cloud account. */
+fun backupSourceAccountId(providerType: String, sourceConfigId: Long): String =
+    "$providerType:$sourceConfigId"
+
+/** Source-account to destination-database mapping built during import. */
+data class BackupAccountMappings(
+    val bySourceAccount: Map<String, Long> = emptyMap(),
+    val destinationIdsByProvider: Map<String, Set<Long>> = emptyMap()
+) {
+    fun mergedWith(other: BackupAccountMappings): BackupAccountMappings = BackupAccountMappings(
+        bySourceAccount = other.bySourceAccount + bySourceAccount,
+        destinationIdsByProvider = (destinationIdsByProvider.keys + other.destinationIdsByProvider.keys)
+            .associateWith { provider ->
+                destinationIdsByProvider[provider].orEmpty() +
+                    other.destinationIdsByProvider[provider].orEmpty()
+            }
+    )
+
+    fun resolveDestination(sourceAccountId: String, providerType: String): Long? =
+        bySourceAccount[sourceAccountId] ?: destinationIdsByProvider[providerType]?.singleOrNull()
+}
+
+internal data class BackupCloudAccountIdentity(
+    val providerType: String,
+    val serverUrl: String,
+    val username: String
+)
+
+internal fun backupCloudAccountIdentity(
+    providerType: String,
+    serverUrl: String,
+    username: String?
+): BackupCloudAccountIdentity = BackupCloudAccountIdentity(
+    providerType = providerType,
+    serverUrl = serverUrl.trim().trimEnd('/'),
+    username = username.orEmpty()
+)
+
+internal fun <T> findUnambiguousCloudAccount(
+    target: BackupCloudAccountIdentity,
+    existing: List<T>,
+    identity: (T) -> BackupCloudAccountIdentity
+): T? = existing.filter { identity(it) == target }.singleOrNull()
+
+/** A cloud favorite awaiting the first indexed row for its destination account. */
+@Serializable
+internal data class PendingCloudFavorite(
+    val providerType: String,
+    val serverConfigId: Long,
+    val remoteId: String
+)
+
+internal data class PendingFavoriteApplyResult(
+    val applied: Set<PendingCloudFavorite>,
+    val remaining: Set<PendingCloudFavorite>
+)
+
+internal suspend fun applyPendingFavorites(
+    pending: Set<PendingCloudFavorite>,
+    providerType: String,
+    serverConfigId: Long,
+    apply: suspend (PendingCloudFavorite) -> Boolean
+): PendingFavoriteApplyResult {
+    val applicable = pending.filter {
+        it.providerType == providerType && it.serverConfigId == serverConfigId
+    }
+    val applied = applicable.filterTo(mutableSetOf()) { apply(it) }
+    return PendingFavoriteApplyResult(applied = applied, remaining = pending - applied)
 }
 
 /**
@@ -44,6 +126,173 @@ data class SettingValue(
     val type: String,
     val value: String
 )
+
+/** Primitive type expected for a portable user preference. */
+internal enum class PortableSettingType(val code: String) {
+    BOOLEAN("b"),
+    INT("i"),
+    LONG("l"),
+    FLOAT("f"),
+    DOUBLE("d"),
+    STRING("s"),
+    STRING_SET("ss")
+}
+
+internal data class DecodedPortableSetting(
+    val type: PortableSettingType,
+    val value: Any
+)
+
+/**
+ * Explicit allowlist for preferences that represent portable user choices.
+ *
+ * Anything not listed here is deliberately excluded. In particular, this prevents backups from
+ * carrying vault credentials and lockout state, setup/operational markers, search history, or
+ * keys introduced later without an explicit portability review.
+ */
+internal object PortableBackupSettings {
+    private val booleanNames = setOf(
+        "hide_timeline_on_album",
+        "album_group_by_date",
+        "merge_albums_by_name",
+        "album_sections_enabled",
+        "pinned_albums_as_grid",
+        "show_media_type_albums",
+        "slideshow_random_order",
+        "slideshow_reverse_order",
+        "slideshow_include_gifs",
+        "slideshow_include_videos",
+        "slideshow_loop",
+        "slideshow_ken_burns",
+        "smart_features_include_ignored_albums",
+        "enable_trashcan",
+        "enable_trashcan_confirmation",
+        "force_theme",
+        "dark_mode",
+        "amoled_mode",
+        "secure_mode",
+        "timeline_group_by_month",
+        "timeline_group_by_year",
+        "group_similar_media",
+        "group_raw_jpg",
+        "group_edited_copies",
+        "group_burst_sequences",
+        "group_cloud_local",
+        "use_system_font",
+        "allow_blur",
+        "auto_contrast",
+        "disable_smoothing",
+        "long_press_cutout",
+        "old_navbar",
+        "allow_vibrations",
+        "auto_hide_searchbar",
+        "auto_hide_navigationbar",
+        "full_brightness_view",
+        "auto_hide_on_video_play",
+        "no_classification",
+        "video_autoplay",
+        "video_surface_rebind",
+        "shared_elements",
+        "media_view_date_header",
+        "selection_titles",
+        "show_favorite_button",
+        "show_searchbar_favorite_button",
+        "show_filter_button",
+        "favorites_group_by_date",
+        "timeline_group_by_date",
+        "vault_group_by_date",
+        "cloud_archive_group_by_date",
+        "location_group_by_date",
+        "allow_gif_animation",
+        "story_viewer_auto_advance",
+        "sandboxed_decode",
+        "cloud_offline_cache_on_view",
+        "cloud_offline_cache_wifi_only"
+    )
+
+    private val intNames = setOf(
+        "slideshow_interval_seconds",
+        "reencode_lossy_quality",
+        "reencode_jxl_effort",
+        "cloud_offline_budget_mb"
+    )
+
+    private val stringNames = setOf(
+        "album_last_sort_obj",
+        "album_last_view_obj",
+        "album_media_sort_obj",
+        "slideshow_transition",
+        "library_shortcuts_layout",
+        "theme_color_seed",
+        "reencode_quality_mode",
+        "frame_export_format",
+        "date_header_format",
+        "extended_date_header_format",
+        "exif_date_format",
+        "extended_date_format",
+        "default_date_format",
+        "weekly_date_format",
+        "selection_sheet_config",
+        "app_name_alias",
+        "app_logo_alias",
+        "favorite_icon_position",
+        "timeline_group_method",
+        "albums_group_method",
+        "favorites_group_method",
+        "vault_group_method",
+        "cloud_archive_group_method",
+        "location_group_method",
+        "map_appearance",
+        "timeline_layout_type",
+        "default_image_editor",
+        "story_cards_config",
+        "story_viewer_duration_seconds",
+        "metadata_isolation_mode",
+        "vault_encrypt_behavior"
+    )
+
+    private val allowedTypes: Map<String, PortableSettingType> = buildMap {
+        booleanNames.forEach { put(it, PortableSettingType.BOOLEAN) }
+        intNames.forEach { put(it, PortableSettingType.INT) }
+        stringNames.forEach { put(it, PortableSettingType.STRING) }
+    }
+
+    fun typeFor(name: String): PortableSettingType? = allowedTypes[name]
+
+    fun encode(name: String, value: Any): SettingValue? = when (typeFor(name)) {
+        PortableSettingType.BOOLEAN -> (value as? Boolean)?.let { SettingValue("b", it.toString()) }
+        PortableSettingType.INT -> (value as? Int)?.let { SettingValue("i", it.toString()) }
+        PortableSettingType.LONG -> (value as? Long)?.let { SettingValue("l", it.toString()) }
+        PortableSettingType.FLOAT -> (value as? Float)?.takeIf { it.isFinite() }
+            ?.let { SettingValue("f", it.toString()) }
+        PortableSettingType.DOUBLE -> (value as? Double)?.takeIf { it.isFinite() }
+            ?.let { SettingValue("d", it.toString()) }
+        PortableSettingType.STRING -> (value as? String)?.let { SettingValue("s", it) }
+        PortableSettingType.STRING_SET -> null
+        null -> null
+    }
+
+    fun decode(name: String, setting: SettingValue): DecodedPortableSetting? {
+        val expectedType = typeFor(name) ?: return null
+        if (setting.type != expectedType.code) return null
+        val decoded = when (expectedType) {
+            PortableSettingType.BOOLEAN -> when (setting.value) {
+                "true" -> true
+                "false" -> false
+                else -> return null
+            }
+            PortableSettingType.INT -> setting.value.toIntOrNull() ?: return null
+            PortableSettingType.LONG -> setting.value.toLongOrNull() ?: return null
+            PortableSettingType.FLOAT -> setting.value.toFloatOrNull()?.takeIf { it.isFinite() }
+                ?: return null
+            PortableSettingType.DOUBLE -> setting.value.toDoubleOrNull()?.takeIf { it.isFinite() }
+                ?: return null
+            PortableSettingType.STRING -> setting.value
+            PortableSettingType.STRING_SET -> return null
+        }
+        return DecodedPortableSetting(expectedType, decoded)
+    }
+}
 
 /**
  * A local (MediaStore) favorite. Local favorites live in the system MediaStore
@@ -64,6 +313,9 @@ data class LocalFavoriteEntry(
 data class CloudFavoriteEntry(
     val providerType: String,
     val remoteId: String,
+    /** Stable identity within the source backup. Preferred over the device-local database id. */
+    val sourceAccountId: String = "",
+    /** Legacy schema-v1 account reference. Never use directly as a destination database id. */
     val serverConfigId: Long = 0L
 )
 
@@ -72,6 +324,12 @@ data class CloudFavoriteEntry(
 data class CloudConfigEntry(
     val providerType: String,
     val serverUrl: String,
+    /** Source database id retained only to link records inside this backup. */
+    val sourceConfigId: Long = 0L,
+    /** Stable identity used to associate favorites with this source account during import. */
+    val sourceAccountId: String = "",
+    /** Credentials are omitted from new backups because Android Keystore ciphertext is not portable. */
+    val requiresReauthentication: Boolean = true,
     val apiKey: String? = null,
     val username: String? = null,
     val encryptedPassword: String? = null,
@@ -133,7 +391,11 @@ data class VaultMediaEntry(
     val trashed: Int,
     val size: Long,
     val duration: String? = null,
-    val fileName: String
+    val fileName: String,
+    /** Plaintext payload size in the archive. Required for schema v2 and newer. */
+    val archiveSize: Long = -1L,
+    /** Lower-case SHA-256 of the plaintext archive payload. Required for schema v2 and newer. */
+    val sha256: String = ""
 )
 
 /**

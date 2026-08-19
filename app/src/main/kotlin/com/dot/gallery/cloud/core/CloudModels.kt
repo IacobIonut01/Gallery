@@ -12,6 +12,8 @@ import com.dot.gallery.feature_node.domain.model.Media
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 
+const val LOCAL_PEOPLE_CONFIG_ID = -1000L
+
 enum class SyncState {
     REMOTE_ONLY,
     DOWNLOADING,
@@ -141,10 +143,14 @@ data class PersonInfo(
     val id: String,
     val name: String,
     val providerType: ProviderType,
+    val serverConfigId: Long,
     val thumbnailUrl: String? = null,
     val assetCount: Int = 0,
     val birthDate: String? = null
-)
+) {
+    val accountKey: String
+        get() = "${providerType.name}/$serverConfigId/$id"
+}
 
 @Serializable
 data class DetectedFace(
@@ -187,11 +193,15 @@ data class SharedLinkInfo(
     val password: String? = null,
     val assetCount: Int = 0,
     val providerType: ProviderType,
+    val serverConfigId: Long,
     val createdAt: Long = 0L,
     val thumbnailAssetId: String? = null,
     val albumId: String? = null,
     val albumName: String? = null
 ) {
+    val accountKey: String
+        get() = "${providerType.name}/$serverConfigId/$id"
+
     fun shareUrl(baseUrl: String): String = "$baseUrl/share/$key"
 
     val displayTitle: String
@@ -211,11 +221,15 @@ data class MemoryInfo(
     val year: Int = 0,
     val assetCount: Int = 0,
     val providerType: ProviderType,
+    val serverConfigId: Long,
     val createdAt: Long = 0L,
     val seenAt: Long? = null,
     @Transient
     val media: List<Media.UriMedia> = emptyList()
-)
+) {
+    val accountKey: String
+        get() = "${providerType.name}/$serverConfigId/$id"
+}
 
 @Serializable
 data class OcrResult(

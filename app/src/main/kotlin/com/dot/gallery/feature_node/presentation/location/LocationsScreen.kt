@@ -51,6 +51,7 @@ import com.dot.gallery.core.navigate
 import com.dot.gallery.core.presentation.components.NavigationBackButton
 import com.dot.gallery.feature_node.domain.model.GeoMedia
 import com.dot.gallery.feature_node.domain.model.LocationMedia
+import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
 import com.dot.gallery.feature_node.domain.util.getUri
 import com.dot.gallery.feature_node.domain.util.isCloud
@@ -68,7 +69,11 @@ import dev.chrisbanes.haze.hazeEffect
 internal sealed interface MapGridItem {
     data class Header(val date: String) : MapGridItem
     data class MediaCell(val geoMedia: GeoMedia) : MapGridItem
+    data class LocationCell(val locationMedia: LocationMedia) : MapGridItem
 }
+
+internal fun mapMediaViewerRoute(mediaId: Long): String =
+    Screen.MediaViewScreen.idAndAlbum(mediaId, -1L)
 
 @Composable
 fun LocationsScreen(
@@ -146,15 +151,16 @@ internal fun ListLocationsContent(
                     items = grouped.entries.toList(),
                     key = { it.key }
                 ) { (location, mediaList) ->
-                    val parts = location.split(",").map { it.trim() }
-                    val city = parts.getOrElse(0) { "" }
-                    val country = parts.getOrElse(1) { "" }
+                    val representative = mediaList.maxByOrNull { it.media.definedTimestamp }
                     LibrarySmallItem(
-                        modifier = Modifier.clickable {
-                            if (city.isNotEmpty() && country.isNotEmpty()) {
-                                eventHandler.navigate(
-                                    Screen.LocationTimelineScreen.location(city, country)
-                                )
+                        modifier = Modifier.clickable(enabled = representative != null) {
+                            val item = representative ?: return@clickable
+                            val city = item.city
+                            val country = item.country
+                            if (!item.media.isCloud && !city.isNullOrBlank() && !country.isNullOrBlank()) {
+                                eventHandler.navigate(Screen.LocationTimelineScreen.location(city, country))
+                            } else {
+                                eventHandler.navigate(Screen.MediaViewScreen.idAndAlbum(item.media.id, -1L))
                             }
                         },
                         title = location,
@@ -196,6 +202,7 @@ internal fun MediaGridPanel(
     stringYesterday: String,
     selectedMediaId: Long,
     onMediaClick: (GeoMedia) -> Unit,
+    onLocationClick: (LocationMedia) -> Unit,
 ) {
     LazyVerticalGrid(
         state = gridState,
@@ -211,6 +218,7 @@ internal fun MediaGridPanel(
                 when (item) {
                     is MapGridItem.Header -> "header_${item.date}"
                     is MapGridItem.MediaCell -> "media_${item.geoMedia.mediaId}"
+                    is MapGridItem.LocationCell -> "location_${item.locationMedia.media.id}"
                 }
             },
             span = { item ->
@@ -218,6 +226,7 @@ internal fun MediaGridPanel(
                     when (item) {
                         is MapGridItem.Header -> maxLineSpan
                         is MapGridItem.MediaCell -> 1
+                        is MapGridItem.LocationCell -> 1
                     }
                 )
             },
@@ -225,6 +234,7 @@ internal fun MediaGridPanel(
                 when (item) {
                     is MapGridItem.Header -> "header"
                     is MapGridItem.MediaCell -> "media"
+                    is MapGridItem.LocationCell -> "location"
                 }
             }
         ) { item ->
@@ -249,46 +259,67 @@ internal fun MediaGridPanel(
                 }
 
                 is MapGridItem.MediaCell -> {
-                    Box(
-                        modifier = Modifier
-                            .aspectRatio(1f)
-                            .clickable { onMediaClick(item.geoMedia) }
-                            .then(
-                                if (item.geoMedia.mediaId == selectedMediaId) {
-                                    Modifier.border(3.dp, MaterialTheme.colorScheme.primary)
-                                } else Modifier
-                            )
-                    ) {
-                        GlideImage(
-                            model = item.geoMedia.media.getUri(),
-                            contentDescription = item.geoMedia.media.label,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize(),
-                            requestBuilderTransform = {
-                                it.centerCrop()
-                                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                                    .signature(GlideInvalidation.signature(item.geoMedia.media))
-                            }
-                        )
-                        if (item.geoMedia.media.isCloud) {
-                            Icon(
-                                modifier = Modifier
-                                    .align(Alignment.BottomStart)
-                                    .padding(6.dp)
-                                    .size(10.dp)
-                                    .advancedShadow(
-                                        cornersRadius = 5.dp,
-                                        shadowBlurRadius = 4.dp,
-                                        alpha = 0.3f
-                                    ),
-                                imageVector = Icons.Outlined.Cloud,
-                                contentDescription = null,
-                                tint = Color.White.copy(alpha = 0.7f)
-                            )
-                        }
-                    }
+                    MapMediaCell(
+                        media = item.geoMedia.media,
+                        selected = item.geoMedia.mediaId == selectedMediaId,
+                        onClick = { onMediaClick(item.geoMedia) },
+                    )
+                }
+
+                is MapGridItem.LocationCell -> {
+                    MapMediaCell(
+                        media = item.locationMedia.media,
+                        selected = false,
+                        onClick = { onLocationClick(item.locationMedia) },
+                    )
                 }
             }
+        }
+    }
+}
+
+@OptIn(ExperimentalGlideComposeApi::class)
+@Composable
+private fun MapMediaCell(
+    media: Media,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .aspectRatio(1f)
+            .clickable(onClick = onClick)
+            .then(
+                if (selected) Modifier.border(3.dp, MaterialTheme.colorScheme.primary)
+                else Modifier
+            )
+    ) {
+        GlideImage(
+            model = media.getUri(),
+            contentDescription = media.label,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize(),
+            requestBuilderTransform = {
+                it.centerCrop()
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .signature(GlideInvalidation.signature(media))
+            }
+        )
+        if (media.isCloud) {
+            Icon(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(6.dp)
+                    .size(10.dp)
+                    .advancedShadow(
+                        cornersRadius = 5.dp,
+                        shadowBlurRadius = 4.dp,
+                        alpha = 0.3f
+                    ),
+                imageVector = Icons.Outlined.Cloud,
+                contentDescription = null,
+                tint = Color.White.copy(alpha = 0.7f)
+            )
         }
     }
 }

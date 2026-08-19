@@ -19,6 +19,7 @@ import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSiz
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
@@ -48,6 +49,8 @@ import com.dot.gallery.core.decoder.format.ImageReencoder
 import com.dot.gallery.feature_node.presentation.util.SystemDateFormatField
 import com.dot.gallery.feature_node.presentation.util.systemDateTimePattern
 import com.dot.gallery.core.encryption.EncryptedDataStoreProvider
+import com.dot.gallery.core.encryption.EncryptionBackendState
+import com.dot.gallery.core.encryption.EncryptionStateMonitor
 import com.dot.gallery.core.metrics.StartupTracer
 import com.dot.gallery.core.presentation.components.FilterKind
 import com.dot.gallery.core.security.AdvancedProtectionMonitor
@@ -85,11 +88,14 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = PRE
 val Context.activeDataStore: DataStore<Preferences>
     get() {
         return try {
-            EncryptedDataStoreProvider.getOrCreate(this)
+            EncryptedDataStoreProvider.getOrCreate(this).also {
+                EncryptionStateMonitor.reportSettings(EncryptionBackendState.ENCRYPTED)
+            }
         } catch (_: Exception) {
-            // Device doesn't support hardware-backed keystore or encryption failed —
-            // fall back to plaintext silently.
+            // Device doesn't support hardware-backed keystore or encryption failed.
+            // Keep the app usable, but expose the fallback accurately in Security settings.
             StartupTracer.trace("activeDataStore.fallbackPlaintext") { }
+            EncryptionStateMonitor.reportSettings(EncryptionBackendState.PLAINTEXT_FALLBACK)
             dataStore
         }
     }
@@ -197,10 +203,37 @@ object Settings {
         }
 
         private val HIDE_TIMELINE_ON_ALBUM = booleanPreferencesKey("hide_timeline_on_album")
+        private val ALBUM_GROUP_BY_DATE = booleanPreferencesKey("album_group_by_date")
 
         @Composable
         fun rememberHideTimelineOnAlbum() =
             rememberPreference(key = HIDE_TIMELINE_ON_ALBUM, defaultValue = false)
+
+        /**
+         * Dedicated album grouping preference. The one-time, idempotent migration preserves the
+         * previous inverse `hide_timeline_on_album` behavior without coupling the two settings.
+         */
+        fun resolveAlbumGroupByDate(
+            storedValue: Boolean?,
+            legacyHideTimeline: Boolean,
+        ): Boolean = storedValue ?: !legacyHideTimeline
+
+        @Composable
+        fun rememberAlbumGroupByDate(): MutableState<Boolean> {
+            val context = LocalContext.current
+            val state = rememberPreference(key = ALBUM_GROUP_BY_DATE, defaultValue = true)
+            LaunchedEffect(context) {
+                context.activeDataStore.edit { preferences ->
+                    if (!preferences.contains(ALBUM_GROUP_BY_DATE)) {
+                        preferences[ALBUM_GROUP_BY_DATE] = resolveAlbumGroupByDate(
+                            storedValue = null,
+                            legacyHideTimeline = preferences[HIDE_TIMELINE_ON_ALBUM] ?: false,
+                        )
+                    }
+                }
+            }
+            return state
+        }
 
         val MERGE_ALBUMS_BY_NAME = booleanPreferencesKey("merge_albums_by_name")
 

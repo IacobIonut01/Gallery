@@ -3,11 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+@file:androidx.annotation.OptIn(markerClass = [androidx.media3.common.util.UnstableApi::class])
+
 package com.dot.gallery.feature_node.presentation.help.previews
 
 import android.graphics.Color as AndroidColor
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.core.graphics.createBitmap
+import androidx.media3.common.util.UnstableApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -335,6 +338,7 @@ private fun CategoriesPreviewMini(modifier: Modifier = Modifier) {
     }
 }
 
+@UnstableApi
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun ViewerScreenMock() {

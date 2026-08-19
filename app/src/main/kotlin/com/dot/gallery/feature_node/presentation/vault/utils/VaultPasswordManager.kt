@@ -20,6 +20,13 @@ enum class VaultAuthType { PIN, PATTERN, PASSWORD }
 /** How the vault selector screen is protected (gate). */
 enum class GateMode { NONE, DEVICE, CUSTOM }
 
+/** Whether stored custom authentication can be safely challenged. */
+sealed interface VaultCredentialStatus {
+    data object Missing : VaultCredentialStatus
+    data object Corrupt : VaultCredentialStatus
+    data class Valid(val authType: VaultAuthType) : VaultCredentialStatus
+}
+
 /** Result of a [VaultPasswordManager.verifyPassword] call. */
 sealed interface VerifyResult {
     /** Secret matched. */
@@ -90,13 +97,19 @@ object VaultPasswordManager {
         return context.activeDataStore.data.map { prefs -> prefs[key] != null }.first()
     }
 
-    /** Returns the auth type for the given vault, or null if none is set. */
-    suspend fun getAuthType(context: Context, vaultUuid: UUID): VaultAuthType? {
+    /** Returns whether the stored credential is present and structurally valid. */
+    suspend fun getCredentialStatus(
+        context: Context,
+        vaultUuid: UUID
+    ): VaultCredentialStatus {
         val key = keyFor(vaultUuid)
-        val stored = context.activeDataStore.data.map { prefs -> prefs[key] }.first() ?: return null
-        val typePart = stored.substringBefore(":")
-        return runCatching { VaultAuthType.valueOf(typePart) }.getOrNull()
+        val stored = context.activeDataStore.data.map { prefs -> prefs[key] }.first()
+        return credentialStatusForStoredValue(stored)
     }
+
+    /** Returns the auth type for a valid credential, or null if it is missing or corrupt. */
+    suspend fun getAuthType(context: Context, vaultUuid: UUID): VaultAuthType? =
+        (getCredentialStatus(context, vaultUuid) as? VaultCredentialStatus.Valid)?.authType
 
     /** Sets custom authentication for the vault with the given [type] and [secret]. */
     suspend fun setPassword(
@@ -126,6 +139,46 @@ object VaultPasswordManager {
         return (lockoutUntil - System.currentTimeMillis()).coerceAtLeast(0L)
     }
 
+    internal fun credentialStatusForStoredValue(stored: String?): VaultCredentialStatus {
+        if (stored == null) return VaultCredentialStatus.Missing
+        val credential = parseStoredCredential(stored) ?: return VaultCredentialStatus.Corrupt
+        return VaultCredentialStatus.Valid(credential.authType)
+    }
+
+    private data class StoredCredential(
+        val authType: VaultAuthType,
+        val salt: ByteArray,
+        val expectedHash: ByteArray,
+        val isPbkdf2: Boolean
+    )
+
+    private fun parseStoredCredential(stored: String): StoredCredential? {
+        val parts = stored.split(":")
+        val authType = parts.firstOrNull()
+            ?.let { runCatching { VaultAuthType.valueOf(it) }.getOrNull() }
+            ?: return null
+        val isPbkdf2: Boolean
+        val saltPart: String
+        val hashPart: String
+        when {
+            parts.size == 4 && parts[1] == HASH_ALGORITHM -> {
+                isPbkdf2 = true
+                saltPart = parts[2]
+                hashPart = parts[3]
+            }
+            parts.size == 3 -> {
+                isPbkdf2 = false
+                saltPart = parts[1]
+                hashPart = parts[2]
+            }
+            else -> return null
+        }
+        val salt = saltPart.hexToBytesOrNull() ?: return null
+        val expectedHash = hashPart.hexToBytesOrNull() ?: return null
+        if (salt.size != SALT_LENGTH || expectedHash.size != PBKDF2_KEY_LENGTH / 8) return null
+        return StoredCredential(authType, salt, expectedHash, isPbkdf2)
+    }
+
     /** Verifies the entered [secret] against the stored hash.
      *  Returns [VerifyResult.LockedOut] if too many failures, [VerifyResult.Failed] on mismatch,
      *  or [VerifyResult.Success] on match.
@@ -140,45 +193,20 @@ object VaultPasswordManager {
         val key = keyFor(vaultUuid)
         val stored = context.activeDataStore.data.map { prefs -> prefs[key] }.first()
             ?: return VerifyResult.Failed(MAX_ATTEMPTS)
-        val parts = stored.split(":")
-        // New format: type:pbkdf2:salt:hash (4 parts)
-        // Legacy format: type:salt:hash (3 parts) or salt:hash (2 parts)
-        val salt: ByteArray
-        val expectedHash: ByteArray
-        val isPbkdf2: Boolean
-        val authType: VaultAuthType?
-        when {
-            parts.size == 4 && parts[1] == HASH_ALGORITHM -> {
-                // New PBKDF2 format
-                authType = runCatching { VaultAuthType.valueOf(parts[0]) }.getOrNull()
-                salt = parts[2].hexToBytes()
-                expectedHash = parts[3].hexToBytes()
-                isPbkdf2 = true
-            }
-            parts.size == 3 -> {
-                // Legacy: type:salt:hash (SHA-256)
-                authType = runCatching { VaultAuthType.valueOf(parts[0]) }.getOrNull()
-                salt = parts[1].hexToBytes()
-                expectedHash = parts[2].hexToBytes()
-                isPbkdf2 = false
-            }
-            parts.size == 2 -> {
-                // Legacy: salt:hash (SHA-256, no type)
-                authType = null
-                salt = parts[0].hexToBytes()
-                expectedHash = parts[1].hexToBytes()
-                isPbkdf2 = false
-            }
-            else -> return VerifyResult.Failed(MAX_ATTEMPTS)
-        }
+        val credential = parseStoredCredential(stored)
+            ?: return VerifyResult.Failed(MAX_ATTEMPTS)
 
-        val actualHash = if (isPbkdf2) pbkdf2Hash(secret, salt) else legacySha256Hash(secret, salt)
-        val matches = MessageDigest.isEqual(expectedHash, actualHash)
+        val actualHash = if (credential.isPbkdf2) {
+            pbkdf2Hash(secret, credential.salt)
+        } else {
+            legacySha256Hash(secret, credential.salt)
+        }
+        val matches = MessageDigest.isEqual(credential.expectedHash, actualHash)
 
         if (matches) {
             // Transparently upgrade legacy SHA-256 hashes to PBKDF2
-            if (!isPbkdf2) {
-                setPassword(context, vaultUuid, secret, authType ?: VaultAuthType.PASSWORD)
+            if (!credential.isPbkdf2) {
+                setPassword(context, vaultUuid, secret, credential.authType)
             }
             resetAttempts(context, vaultUuid)
             return VerifyResult.Success
@@ -231,6 +259,10 @@ object VaultPasswordManager {
 
     private fun ByteArray.toHex(): String = joinToString("") { "%02x".format(it) }
 
-    private fun String.hexToBytes(): ByteArray =
-        chunked(2).map { it.toInt(16).toByte() }.toByteArray()
+    private fun String.hexToBytesOrNull(): ByteArray? {
+        if (isEmpty() || length % 2 != 0) return null
+        return runCatching {
+            chunked(2).map { it.toInt(16).toByte() }.toByteArray()
+        }.getOrNull()
+    }
 }

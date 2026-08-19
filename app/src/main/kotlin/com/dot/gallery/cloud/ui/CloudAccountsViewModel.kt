@@ -7,7 +7,8 @@ package com.dot.gallery.cloud.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.dot.gallery.cloud.core.CloudAlbum
+import androidx.work.WorkManager
+import com.dot.gallery.cloud.core.CloudRuntimeSettings
 import com.dot.gallery.cloud.core.CloudServerConfig
 import com.dot.gallery.cloud.core.CloudStorageInfo
 import com.dot.gallery.cloud.core.ConnectionState
@@ -23,21 +24,28 @@ import com.dot.gallery.cloud.core.auth.InteractiveAuthPollResult
 import com.dot.gallery.cloud.core.capabilities.RemoteMediaProvider
 import com.dot.gallery.cloud.data.dao.CloudAlbumSyncDao
 import com.dot.gallery.cloud.data.dao.CloudMediaDao
+import com.dot.gallery.cloud.data.dao.CloudOfflinePinDao
 import com.dot.gallery.cloud.data.dao.CloudServerConfigDao
 import com.dot.gallery.cloud.data.dao.CloudUploadPrefDao
-import com.dot.gallery.cloud.data.entity.CloudAlbumSyncEntity
+import com.dot.gallery.cloud.data.dao.SyncStateDao
 import com.dot.gallery.cloud.data.entity.CloudServerConfigEntity
 import com.dot.gallery.cloud.data.entity.CloudUploadPrefEntity
 import com.dot.gallery.cloud.data.repository.CloudRepository
 import com.dot.gallery.cloud.di.CloudProviderInitializer
 import com.dot.gallery.cloud.network.ServerUrlResolver
-import com.dot.gallery.core.Resource
+import com.dot.gallery.cloud.offline.CacheAssetRef
+import com.dot.gallery.cloud.offline.CloudMediaCache
+import com.dot.gallery.cloud.sync.CloudOfflineDownloadWorker
+import com.dot.gallery.cloud.sync.CloudSyncScheduler
+import com.dot.gallery.cloud.sync.cloudSyncScheduleChanged
+import com.dot.gallery.core.backup.PendingCloudFavoriteStore
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.domain.util.MediaOrder
 import com.dot.gallery.feature_node.domain.util.OrderType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -47,6 +55,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 data class CloudAccountUiState(
@@ -92,13 +102,8 @@ data class AddServerUiState(
     val isSaving: Boolean = false,
     val savedConfigId: Long? = null,
     val error: String? = null,
-    // Final sync stage: which local folders to back up and which remote albums to pull.
+    // Final sync stage: local folders selected as upload sources for this account.
     val selectedLocalAlbumIds: Set<Long> = emptySet(),
-    val remoteAlbums: List<CloudAlbum> = emptyList(),
-    val selectedRemoteAlbumIds: Set<String> = emptySet(),
-    val isLoadingRemoteAlbums: Boolean = false,
-    val remoteAlbumsLoaded: Boolean = false,
-    val remoteAlbumsError: String? = null,
     val authenticationState: CloudAuthenticationState = CloudAuthenticationState.Idle,
     val browserLaunchEvent: BrowserLaunchEvent? = null
 )
@@ -107,6 +112,11 @@ data class AddServerUiState(
 class CloudAccountsViewModel @Inject constructor(
     private val configDao: CloudServerConfigDao,
     private val cloudMediaDao: CloudMediaDao,
+    private val offlinePinDao: CloudOfflinePinDao,
+    private val cloudMediaCache: CloudMediaCache,
+    private val workManager: WorkManager,
+    private val syncStateDao: SyncStateDao,
+    private val pendingCloudFavoriteStore: PendingCloudFavoriteStore,
     private val registry: ProviderRegistry,
     private val providerInitializer: CloudProviderInitializer,
     private val credentialEncryptor: CredentialEncryptor,
@@ -115,6 +125,7 @@ class CloudAccountsViewModel @Inject constructor(
     private val albumSyncDao: CloudAlbumSyncDao,
     private val mediaRepository: MediaRepository,
     private val cloudRepository: CloudRepository,
+    private val syncScheduler: CloudSyncScheduler,
     interactiveAuthHandlers: Set<@JvmSuppressWildcards CloudInteractiveAuthHandler>
 ) : ViewModel() {
 
@@ -276,63 +287,6 @@ class CloudAccountsViewModel @Inject constructor(
         )
     }
 
-    fun toggleRemoteAlbum(remoteId: String) {
-        val current = _addServerState.value.selectedRemoteAlbumIds
-        _addServerState.value = _addServerState.value.copy(
-            selectedRemoteAlbumIds = if (remoteId in current) current - remoteId else current + remoteId
-        )
-    }
-
-    /**
-     * Fetches the provider's remote albums using the credentials entered so far so the user can
-     * pick which ones to pull down. Configures + authenticates the provider on the fly (the
-     * config is not persisted until [saveServer]). All albums are selected by default.
-     */
-    fun loadRemoteAlbums(force: Boolean = false) {
-        val state = _addServerState.value
-        if (state.isLoadingRemoteAlbums) return
-        if (state.remoteAlbumsLoaded && !force) return
-        _addServerState.value = state.copy(isLoadingRemoteAlbums = true, remoteAlbumsError = null)
-        viewModelScope.launch {
-            try {
-                val provider = providerInitializer.createTransientProvider(state.providerType) as? RemoteMediaProvider
-                if (provider == null) {
-                    _addServerState.value = _addServerState.value.copy(
-                        isLoadingRemoteAlbums = false,
-                        remoteAlbumsLoaded = true,
-                        remoteAlbumsError = "Provider not available"
-                    )
-                    return@launch
-                }
-                val config = urlResolver.resolve(buildConfig(state))
-                provider.configure(config)
-                provider.authenticate(config).getOrThrow()
-                var albums: List<CloudAlbum> = emptyList()
-                provider.getRemoteAlbums().collect { resource ->
-                    if (resource is Resource.Success) albums = resource.data ?: emptyList()
-                    else if (resource is Resource.Error) {
-                        _addServerState.value = _addServerState.value.copy(
-                            remoteAlbumsError = resource.message
-                        )
-                    }
-                }
-                _addServerState.value = _addServerState.value.copy(
-                    isLoadingRemoteAlbums = false,
-                    remoteAlbumsLoaded = true,
-                    remoteAlbums = albums,
-                    // Default: pull everything unless the user deselects.
-                    selectedRemoteAlbumIds = albums.map { it.remoteId }.toSet()
-                )
-            } catch (e: Exception) {
-                _addServerState.value = _addServerState.value.copy(
-                    isLoadingRemoteAlbums = false,
-                    remoteAlbumsLoaded = true,
-                    remoteAlbumsError = e.message ?: "Failed to load albums"
-                )
-            }
-        }
-    }
-
     fun initEditServer(configId: Long) {
         viewModelScope.launch {
             configDao.getById(configId)?.let { entity ->
@@ -473,22 +427,10 @@ class CloudAccountsViewModel @Inject constructor(
             var savedId: Long? = null
             try {
                 if (!isCurrentCandidateVerified(state)) verifyCandidate(state)
-                val entity = CloudServerConfigEntity(
-                    id = state.savedConfigId ?: 0L,
-                    providerType = state.providerType,
-                    serverUrl = state.serverUrl.trimEnd('/'),
-                    apiKey = state.apiKey.ifBlank { null }?.let(credentialEncryptor::encrypt),
-                    username = state.username.ifBlank { null },
-                    encryptedPassword = state.password.ifBlank { null }?.let(credentialEncryptor::encrypt),
-                    displayName = state.displayName.ifBlank { "${state.providerType.displayName} Server" },
-                    isActive = true,
-                    syncEnabled = state.syncEnabled ||
-                        state.selectedLocalAlbumIds.isNotEmpty() ||
-                        state.selectedRemoteAlbumIds.isNotEmpty(),
-                    wifiOnly = state.wifiOnly,
-                    autoUrlSwitch = state.autoUrlSwitch,
-                    localWifiSsid = state.localWifiSsid.trim(),
-                    localServerUrl = state.localServerUrl.trim().trimEnd('/')
+                val entity = mergeCloudServerConfig(
+                    oldEntity = oldEntity,
+                    state = state,
+                    encrypt = credentialEncryptor::encrypt
                 )
                 val id = configDao.insert(entity)
                 savedId = id
@@ -497,6 +439,7 @@ class CloudAccountsViewModel @Inject constructor(
                 if (oldEntity != null && credentialsChanged(oldEntity, state)) {
                     revokeBestEffort(oldEntity)
                 }
+                syncScheduler.reconcile()
                 _addServerState.value = _addServerState.value.copy(
                     isSaving = false,
                     savedConfigId = id
@@ -512,6 +455,7 @@ class CloudAccountsViewModel @Inject constructor(
                         uploadPrefDao.deleteByConfig(id)
                         albumSyncDao.deleteByServer(id)
                         configDao.deleteById(id)
+                        CloudRuntimeSettings.remove(id)
                     } else {
                         configDao.insert(oldEntity)
                         providerInitializer.registerAccount(oldEntity.id)
@@ -531,11 +475,24 @@ class CloudAccountsViewModel @Inject constructor(
     fun deleteServer(configId: Long) {
         viewModelScope.launch {
             val entity = configDao.getById(configId) ?: return@launch
-            revokeBestEffort(entity)
+            val cachedAssets = cloudMediaDao.getByServerConfig(configId).first()
+            runCatching { revokeBestEffort(entity) }
+            withContext(Dispatchers.IO) {
+                workManager.cancelUniqueWork(CloudOfflineDownloadWorker.WORK_NAME).result.get()
+            }
+            offlinePinDao.deleteByConfig(configId)
+            cloudMediaCache.clearForAssets(
+                cachedAssets.map {
+                    CacheAssetRef(it.providerType, it.serverConfigId, it.remoteId)
+                }
+            )
+            syncStateDao.deleteByConfig(configId)
+            pendingCloudFavoriteStore.removeForAccount(configId)
             cloudMediaDao.deleteByServerConfig(configId)
             uploadPrefDao.deleteByConfig(configId)
             albumSyncDao.deleteByServer(configId)
             configDao.deleteById(configId)
+            CloudRuntimeSettings.remove(configId)
             val provider = registry.getByConfigId(configId)
             if (provider is Disconnectable) {
                 provider.disconnect()
@@ -548,6 +505,7 @@ class CloudAccountsViewModel @Inject constructor(
             if (registry.getAllForType(entity.providerType).isEmpty()) {
                 cloudRepository.disconnect(entity.providerType)
             }
+            syncScheduler.reconcile()
         }
     }
 
@@ -574,6 +532,7 @@ class CloudAccountsViewModel @Inject constructor(
             val entity = configDao.getById(configId) ?: return@launch
             val updated = entity.transform()
             configDao.update(updated)
+            if (cloudSyncScheduleChanged(entity, updated)) syncScheduler.reconcile()
         }
     }
 
@@ -688,17 +647,6 @@ class CloudAccountsViewModel @Inject constructor(
                 )
             )
         }
-        state.remoteAlbums.forEach { album ->
-            albumSyncDao.upsert(
-                CloudAlbumSyncEntity(
-                    albumRemoteId = album.remoteId,
-                    providerType = state.providerType,
-                    serverConfigId = configId,
-                    albumName = album.name,
-                    syncEnabled = album.remoteId in state.selectedRemoteAlbumIds
-                )
-            )
-        }
     }
 
     private fun buildConfig(state: AddServerUiState) = CloudServerConfig(
@@ -714,5 +662,46 @@ class CloudAccountsViewModel @Inject constructor(
         autoUrlSwitch = state.autoUrlSwitch,
         localWifiSsid = state.localWifiSsid.trim(),
         localServerUrl = state.localServerUrl.trim().trimEnd('/')
+    )
+}
+
+internal fun mergeCloudServerConfig(
+    oldEntity: CloudServerConfigEntity?,
+    state: AddServerUiState,
+    encrypt: (String) -> String
+): CloudServerConfigEntity {
+    val apiKey = state.apiKey.ifBlank { null }?.let(encrypt)
+    val password = state.password.ifBlank { null }?.let(encrypt)
+    val syncEnabled = state.syncEnabled || state.selectedLocalAlbumIds.isNotEmpty()
+    val displayName = state.displayName.ifBlank { "${state.providerType.displayName} Server" }
+    val serverUrl = state.serverUrl.trimEnd('/')
+    val localServerUrl = state.localServerUrl.trim().trimEnd('/')
+    return oldEntity?.copy(
+        providerType = state.providerType,
+        serverUrl = serverUrl,
+        apiKey = apiKey,
+        username = state.username.ifBlank { null },
+        encryptedPassword = password,
+        displayName = displayName,
+        isActive = true,
+        syncEnabled = syncEnabled,
+        wifiOnly = state.wifiOnly,
+        autoUrlSwitch = state.autoUrlSwitch,
+        localWifiSsid = state.localWifiSsid.trim(),
+        localServerUrl = localServerUrl
+    ) ?: CloudServerConfigEntity(
+        id = state.savedConfigId ?: 0L,
+        providerType = state.providerType,
+        serverUrl = serverUrl,
+        apiKey = apiKey,
+        username = state.username.ifBlank { null },
+        encryptedPassword = password,
+        displayName = displayName,
+        isActive = true,
+        syncEnabled = syncEnabled,
+        wifiOnly = state.wifiOnly,
+        autoUrlSwitch = state.autoUrlSwitch,
+        localWifiSsid = state.localWifiSsid.trim(),
+        localServerUrl = localServerUrl
     )
 }

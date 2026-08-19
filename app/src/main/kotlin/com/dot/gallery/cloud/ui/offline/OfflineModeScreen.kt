@@ -67,6 +67,8 @@ import com.dot.gallery.core.SettingsEntity
 import com.dot.gallery.core.presentation.components.SetupButton
 import com.dot.gallery.feature_node.presentation.settings.components.BaseSettingsScreen
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import com.dot.gallery.R
 
 @Composable
 fun OfflineModeScreen(
@@ -76,17 +78,87 @@ fun OfflineModeScreen(
     val context = LocalContext.current
     var showBudgetDialog by remember { mutableStateOf(false) }
     var showClearDialog by remember { mutableStateOf(false) }
+    var accountToUnpin by remember { mutableStateOf<OfflineAccount?>(null) }
 
-    val items: SnapshotStateList<SettingsEntity> = remember(state) {
+    val offlineModeHeader = stringResource(R.string.cloud_offline_mode_header)
+    val forceOfflineTitle = stringResource(R.string.cloud_offline_force)
+    val forceOfflineSummary = stringResource(R.string.cloud_offline_force_summary)
+    val noNetworkSummary = stringResource(R.string.cloud_offline_no_network)
+    val automaticCacheHeader = stringResource(R.string.cloud_offline_automatic_cache)
+    val cacheBrowsingTitle = stringResource(R.string.cloud_offline_cache_browsing)
+    val cacheBrowsingSummary = stringResource(R.string.cloud_offline_cache_browsing_summary)
+    val wifiOnlyTitle = stringResource(R.string.cloud_offline_wifi_only)
+    val wifiOnlySummary = stringResource(R.string.cloud_offline_wifi_only_summary)
+    val cacheLimitTitle = stringResource(R.string.cloud_offline_cache_limit)
+    val cacheLimitSummary = stringResource(R.string.cloud_offline_cache_limit_summary)
+    val availableOfflineHeader = stringResource(R.string.cloud_offline_available_header)
+    val cachedByAccountHeader = stringResource(R.string.cloud_offline_cached_by_account)
+    val budgetText = stringResource(R.string.cloud_offline_megabytes, state.budgetMb)
+    val accountStatusSummaries = mutableMapOf<Long, String>()
+    val accountManagementSummaries = mutableMapOf<Long, String>()
+    state.accounts.forEach { account ->
+        accountStatusSummaries[account.configId] = when (account.availabilityStatus) {
+            OfflineAvailabilityStatus.NOT_PINNED ->
+                stringResource(R.string.cloud_offline_status_not_pinned)
+            OfflineAvailabilityStatus.PINNED ->
+                stringResource(R.string.cloud_offline_status_pinned)
+            OfflineAvailabilityStatus.QUEUED ->
+                stringResource(R.string.cloud_offline_status_queued)
+            OfflineAvailabilityStatus.DOWNLOADING ->
+                stringResource(R.string.cloud_offline_status_downloading)
+            OfflineAvailabilityStatus.PARTIAL ->
+                stringResource(
+                    R.string.cloud_offline_status_partial,
+                    account.downloadedVariants,
+                    account.totalVariants,
+                )
+            OfflineAvailabilityStatus.COMPLETE ->
+                stringResource(
+                    R.string.cloud_offline_status_complete,
+                    account.downloadedVariants,
+                    account.totalVariants,
+                )
+            OfflineAvailabilityStatus.FAILED ->
+                stringResource(
+                    R.string.cloud_offline_status_failed,
+                    account.downloadedVariants,
+                    account.totalVariants,
+                )
+        }
+        accountManagementSummaries[account.configId] = stringResource(
+            R.string.cloud_offline_manage_account,
+            account.providerType.displayName,
+        )
+    }
+
+    val items: SnapshotStateList<SettingsEntity> = remember(
+        state,
+        offlineModeHeader,
+        forceOfflineTitle,
+        forceOfflineSummary,
+        noNetworkSummary,
+        automaticCacheHeader,
+        cacheBrowsingTitle,
+        cacheBrowsingSummary,
+        wifiOnlyTitle,
+        wifiOnlySummary,
+        cacheLimitTitle,
+        cacheLimitSummary,
+        availableOfflineHeader,
+        cachedByAccountHeader,
+        budgetText,
+        accountStatusSummaries,
+        accountManagementSummaries,
+        context,
+    ) {
         buildList {
             // === Offline mode ===
-            add(SettingsEntity.Header(title = "Offline mode"))
+            add(SettingsEntity.Header(title = offlineModeHeader))
             add(
                 SettingsEntity.SwitchPreference(
                     icon = Icons.Outlined.CloudOff,
-                    title = "Force offline mode",
-                    summary = if (!state.connected) "No network — already offline"
-                    else "Serve only cached media; don't use the network",
+                    title = forceOfflineTitle,
+                    summary = if (!state.connected) noNetworkSummary else forceOfflineSummary,
                     isChecked = state.forceOffline,
                     onCheck = { viewModel.setForceOffline(it) },
                     screenPosition = Position.Alone
@@ -94,12 +166,12 @@ fun OfflineModeScreen(
             )
 
             // === Cache-on-view ===
-            add(SettingsEntity.Header(title = "Automatic cache"))
+            add(SettingsEntity.Header(title = automaticCacheHeader))
             add(
                 SettingsEntity.SwitchPreference(
                     icon = Icons.Outlined.Sync,
-                    title = "Cache while browsing",
-                    summary = "Keep recently viewed cloud media for offline use",
+                    title = cacheBrowsingTitle,
+                    summary = cacheBrowsingSummary,
                     isChecked = state.cacheOnView,
                     onCheck = { viewModel.setCacheOnView(it) },
                     screenPosition = Position.Top
@@ -108,8 +180,8 @@ fun OfflineModeScreen(
             add(
                 SettingsEntity.SwitchPreference(
                     icon = Icons.Outlined.Wifi,
-                    title = "Cache on Wi-Fi only",
-                    summary = "Don't write to the cache on metered connections",
+                    title = wifiOnlyTitle,
+                    summary = wifiOnlySummary,
                     isChecked = state.cacheWifiOnly,
                     onCheck = { viewModel.setCacheWifiOnly(it) },
                     screenPosition = Position.Middle
@@ -118,9 +190,9 @@ fun OfflineModeScreen(
             add(
                 SettingsEntity.Preference(
                     icon = Icons.Outlined.SdStorage,
-                    title = "Cache size limit",
-                    summary = "Oldest cached items are removed past this limit",
-                    rightText = "${state.budgetMb} MB",
+                    title = cacheLimitTitle,
+                    summary = cacheLimitSummary,
+                    rightText = budgetText,
                     onClick = { showBudgetDialog = true },
                     screenPosition = Position.Bottom
                 )
@@ -128,28 +200,31 @@ fun OfflineModeScreen(
 
             // === Per-account offline ===
             if (state.accounts.isNotEmpty()) {
-                add(SettingsEntity.Header(title = "Available offline"))
+                add(SettingsEntity.Header(title = availableOfflineHeader))
                 state.accounts.forEachIndexed { index, account ->
                     add(
                         SettingsEntity.SwitchPreference(
                             icon = Icons.Outlined.CloudDownload,
                             title = account.label,
-                            summary = if (account.pinned) "Downloaded for offline access" else "Tap to download for offline",
+                            summary = accountStatusSummaries.getValue(account.configId),
                             isChecked = account.pinned,
-                            onCheck = { viewModel.setAccountPinned(account.configId, account.label, it) },
+                            onCheck = { enabled ->
+                                if (enabled) viewModel.pinAccount(account.configId, account.label)
+                                else accountToUnpin = account
+                            },
                             screenPosition = positionFor(index, state.accounts.size)
                         )
                     )
                 }
 
                 // === Per-account cached-data management ===
-                add(SettingsEntity.Header(title = "Cached data by account"))
+                add(SettingsEntity.Header(title = cachedByAccountHeader))
                 state.accounts.forEachIndexed { index, account ->
                     add(
                         SettingsEntity.Preference(
                             icon = Icons.Outlined.Storage,
                             title = account.label,
-                            summary = "${account.providerType.displayName} • tap to manage albums",
+                            summary = accountManagementSummaries.getValue(account.configId),
                             rightText = Formatter.formatShortFileSize(context, account.cacheBytes),
                             onClick = { viewModel.openAccountCache(account.configId, account.label) },
                             screenPosition = positionFor(index, state.accounts.size)
@@ -163,7 +238,7 @@ fun OfflineModeScreen(
     val accountSheet by viewModel.accountSheet.collectAsStateWithLifecycle()
 
     BaseSettingsScreen(
-        title = "Offline & Cache",
+        title = stringResource(R.string.cloud_offline_title),
         topContent = {
             StorageUsageCard(
                 autoBytes = state.autoCacheBytes,
@@ -185,7 +260,11 @@ fun OfflineModeScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 SetupButton(
-                    text = if (state.downloading) "Downloading…" else "Download pinned now",
+                    text = if (state.downloading) {
+                        stringResource(R.string.cloud_offline_downloading)
+                    } else {
+                        stringResource(R.string.cloud_offline_download_now)
+                    },
                     enabled = !state.downloading && state.accounts.any { it.pinned },
                     applyHorizontalPadding = false,
                     applyBottomPadding = false,
@@ -193,7 +272,7 @@ fun OfflineModeScreen(
                     onClick = { viewModel.downloadNow() }
                 )
                 SetupButton(
-                    text = "Clear cached data",
+                    text = stringResource(R.string.cloud_offline_clear_data),
                     containerColor = MaterialTheme.colorScheme.errorContainer,
                     contentColor = MaterialTheme.colorScheme.onErrorContainer,
                     applyHorizontalPadding = false,
@@ -216,22 +295,56 @@ fun OfflineModeScreen(
         )
     }
 
+    accountToUnpin?.let { account ->
+        AlertDialog(
+            onDismissRequest = { accountToUnpin = null },
+            title = {
+                Text(stringResource(R.string.cloud_offline_unpin_title, account.label))
+            },
+            text = {
+                Text(stringResource(R.string.cloud_offline_unpin_message))
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    accountToUnpin = null
+                    viewModel.unpinAccount(account.configId, removeDownloadedData = true)
+                }) {
+                    Text(
+                        stringResource(R.string.cloud_offline_remove_downloads),
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    accountToUnpin = null
+                    viewModel.unpinAccount(account.configId, removeDownloadedData = false)
+                }) { Text(stringResource(R.string.cloud_offline_keep_cached)) }
+            }
+        )
+    }
+
     if (showClearDialog) {
         AlertDialog(
             onDismissRequest = { showClearDialog = false },
-            title = { Text("Clear cached data?") },
-            text = { Text("This removes browsed (auto) cache and downloaded offline copies. Your accounts and timeline are not affected.") },
+            title = { Text(stringResource(R.string.cloud_offline_clear_title)) },
+            text = { Text(stringResource(R.string.cloud_offline_clear_message)) },
             confirmButton = {
                 TextButton(onClick = {
                     showClearDialog = false
                     viewModel.clearAllCache()
-                }) { Text("Clear all", color = MaterialTheme.colorScheme.error) }
+                }) {
+                    Text(
+                        stringResource(R.string.cloud_offline_clear_all),
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
             },
             dismissButton = {
                 TextButton(onClick = {
                     showClearDialog = false
                     viewModel.clearAutoCache()
-                }) { Text("Auto cache only") }
+                }) { Text(stringResource(R.string.cloud_offline_auto_only)) }
             }
         )
     }
@@ -269,14 +382,17 @@ private fun AccountCacheSheet(
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "${formatBytes(state.totalBytes)} cached",
+                text = stringResource(
+                    R.string.cloud_offline_cached_size,
+                    formatBytes(state.totalBytes),
+                ),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(Modifier.height(12.dp))
             SetupButton(
-                text = "Clear all cache for this account",
+                text = stringResource(R.string.cloud_offline_clear_account),
                 enabled = state.totalBytes > 0L,
                 containerColor = MaterialTheme.colorScheme.errorContainer,
                 contentColor = MaterialTheme.colorScheme.onErrorContainer,
@@ -288,7 +404,7 @@ private fun AccountCacheSheet(
 
             Spacer(Modifier.height(16.dp))
             Text(
-                text = "By album",
+                text = stringResource(R.string.cloud_offline_by_album),
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -314,13 +430,16 @@ private fun AccountCacheSheet(
                     ) {
                         CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
                         Spacer(Modifier.width(12.dp))
-                        Text("Loading albums…", style = MaterialTheme.typography.bodyMedium)
+                        Text(
+                            stringResource(R.string.cloud_offline_loading_albums),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
                     }
                 }
 
                 state.albums.isEmpty() -> {
                     Text(
-                        text = "No albums found for this account.",
+                        text = stringResource(R.string.cloud_offline_no_albums),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(vertical = 16.dp)
@@ -391,7 +510,10 @@ private fun AlbumCacheRow(
             )
 
             album.cacheBytes > 0L -> TextButton(onClick = onClear) {
-                Text("Clear", color = MaterialTheme.colorScheme.error)
+                Text(
+                    stringResource(R.string.cloud_offline_clear),
+                    color = MaterialTheme.colorScheme.error,
+                )
             }
 
             else -> Icon(
@@ -428,7 +550,7 @@ private fun StorageUsageCard(
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "cached for offline use",
+                text = stringResource(R.string.cloud_offline_cached_content_note),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -455,9 +577,21 @@ private fun StorageUsageCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                StorageLegendItem(color = autoColor, label = "Auto", value = formatBytes(autoBytes))
-                StorageLegendItem(color = pinnedColor, label = "Pinned", value = formatBytes(pinnedBytes))
-                StorageLegendItem(color = freeColor, label = "Free", value = formatBytes(freeBytes))
+                StorageLegendItem(
+                    color = autoColor,
+                    label = stringResource(R.string.cloud_offline_auto),
+                    value = formatBytes(autoBytes),
+                )
+                StorageLegendItem(
+                    color = pinnedColor,
+                    label = stringResource(R.string.cloud_offline_pinned),
+                    value = formatBytes(pinnedBytes),
+                )
+                StorageLegendItem(
+                    color = freeColor,
+                    label = stringResource(R.string.cloud_offline_free),
+                    value = formatBytes(freeBytes),
+                )
             }
             if (downloading) {
                 val p = if (downloadTotal > 0) downloadDone.toFloat() / downloadTotal else 0f
@@ -468,7 +602,11 @@ private fun StorageUsageCard(
                         .padding(top = 12.dp)
                 )
                 Text(
-                    "Downloading offline copies $downloadDone / $downloadTotal",
+                    stringResource(
+                        R.string.cloud_offline_download_progress,
+                        downloadDone,
+                        downloadTotal,
+                    ),
                     style = MaterialTheme.typography.labelMedium,
                     modifier = Modifier.padding(top = 4.dp)
                 )
@@ -532,9 +670,14 @@ private fun StorageLegendItem(color: Color, label: String, value: String) {
 @Composable
 private fun BudgetDialog(currentMb: Int, onDismiss: () -> Unit, onSelect: (Int) -> Unit) {
     val options = listOf(256, 512, 1024, 2048, 5120)
+    val gigabyteUnit = stringResource(R.string.gb)
+    val optionLabels = options.associateWith { mb ->
+        if (mb >= 1024) "${mb / 1024} $gigabyteUnit"
+        else stringResource(R.string.cloud_offline_megabytes, mb)
+    }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Cache size limit") },
+        title = { Text(stringResource(R.string.cloud_offline_cache_limit)) },
         text = {
             Column {
                 options.forEach { mb ->
@@ -547,14 +690,18 @@ private fun BudgetDialog(currentMb: Int, onDismiss: () -> Unit, onSelect: (Int) 
                     ) {
                         RadioButton(selected = mb == currentMb, onClick = { onSelect(mb) })
                         Text(
-                            text = if (mb >= 1024) "${mb / 1024} GB" else "$mb MB",
+                            text = optionLabels.getValue(mb),
                             modifier = Modifier.padding(start = 8.dp)
                         )
                     }
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Done") } }
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cloud_offline_done))
+            }
+        }
     )
 }
 

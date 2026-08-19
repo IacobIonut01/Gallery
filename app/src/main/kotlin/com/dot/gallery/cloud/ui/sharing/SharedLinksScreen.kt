@@ -107,6 +107,7 @@ fun SharedLinksScreen() {
         state = rememberTopAppBarState()
     )
     val context = LocalContext.current
+    val linkCopiedText = stringResource(R.string.cloud_shared_links_link_copied)
 
     var linkToDelete by remember { mutableStateOf<SharedLinkInfo?>(null) }
     var linkToEdit by remember { mutableStateOf<SharedLinkInfo?>(null) }
@@ -170,7 +171,7 @@ fun SharedLinksScreen() {
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                         )
                     }
-                    items(state.filteredLinks, key = { it.id }) { link ->
+                    items(state.filteredLinks, key = { it.accountKey }) { link ->
                         SharedLinkItem(
                             link = link,
                             accountLabel = if (state.hasMultipleProviders)
@@ -182,7 +183,7 @@ fun SharedLinksScreen() {
                                 clipboard.setPrimaryClip(ClipData.newPlainText("Shared Link", url))
                                 Toast.makeText(
                                     context,
-                                    context.getString(R.string.cloud_shared_links_link_copied),
+                                    linkCopiedText,
                                     Toast.LENGTH_SHORT
                                 ).show()
                             },
@@ -331,7 +332,8 @@ private fun SharedLinkItem(
                 val thumbnailUri = CloudMediaFetcher.buildUri(
                     providerType = link.providerType,
                     remoteId = link.thumbnailAssetId,
-                    size = ThumbnailSize.THUMBNAIL
+                    size = ThumbnailSize.THUMBNAIL,
+                    configId = link.serverConfigId
                 )
                 AsyncImage(
                     request = ComposableImageRequest(thumbnailUri),

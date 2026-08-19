@@ -239,6 +239,7 @@ fun <T : Media> MosaicMediaGrid(
     emptyContent: @Composable () -> Unit,
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
+    onRetry: (() -> Unit)? = null,
     onMediaClick: @DisallowComposableCalls (media: T) -> Unit
 ) {
     LaunchedEffect(gridState.isScrollInProgress) {
@@ -254,36 +255,28 @@ fun <T : Media> MosaicMediaGrid(
         buildMosaicDisplayItems(items, safeColumns)
     }
 
-    val bottomContent: @Composable () -> Unit = {
+    val contentState = mediaContentState(
+        isLoading = mediaState.value.isLoading,
+        error = mediaState.value.error,
+        isEmpty = mediaState.value.media.isEmpty(),
+    )
+    if (contentState != MediaContentState.CONTENT) {
         Column(
             modifier = Modifier.padding(paddingValues).fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
         ) {
-            if (aboveGridContent != null) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .drawWithContent { }
-                ) {
-                    aboveGridContent()
-                }
-            }
-            Column(
-                modifier = Modifier.weight(1f).fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                AnimatedVisibility(visible = mediaState.value.isLoading, enter = enterAnimation, exit = exitAnimation) {
-                    LoadingMedia()
-                }
-                AnimatedVisibility(visible = mediaState.value.media.isEmpty() && !mediaState.value.isLoading, enter = enterAnimation, exit = exitAnimation) {
-                    emptyContent()
-                }
-                AnimatedVisibility(visible = mediaState.value.error.isNotEmpty()) {
-                    Error(errorMessage = mediaState.value.error)
-                }
+            when (contentState) {
+                MediaContentState.ERROR -> Error(
+                    errorMessage = mediaState.value.error,
+                    onRetry = onRetry,
+                )
+                MediaContentState.LOADING -> LoadingMedia()
+                MediaContentState.EMPTY -> emptyContent()
+                MediaContentState.CONTENT -> Unit
             }
         }
+        return
     }
 
     val scope = rememberCoroutineScope()
@@ -383,7 +376,6 @@ fun <T : Media> MosaicMediaGrid(
     }
 
     Box {
-        bottomContent()
         val favoriteIconPosition by rememberFavoriteIconPosition()
         val cloudSyncStates by LocalMediaDistributor.current.cloudSyncStates.collectAsStateWithLifecycle()
         val cellState = remember(isSelectionActive, selectedMedia.value, favoriteIconPosition, cloudSyncStates) {

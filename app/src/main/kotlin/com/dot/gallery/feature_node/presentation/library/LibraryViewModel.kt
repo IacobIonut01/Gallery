@@ -2,9 +2,11 @@ package com.dot.gallery.feature_node.presentation.library
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dot.gallery.cloud.core.ConnectionState
 import com.dot.gallery.cloud.core.PersonInfo
 import com.dot.gallery.cloud.core.ProviderCapability
 import com.dot.gallery.cloud.core.ProviderRegistry
+import com.dot.gallery.cloud.core.capabilities.RemoteMediaProvider
 import com.dot.gallery.cloud.data.dao.CloudMediaDao
 import com.dot.gallery.cloud.data.dao.CloudServerConfigDao
 import com.dot.gallery.cloud.data.repository.CloudRepository
@@ -22,15 +24,15 @@ import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.domain.util.MediaOrder
+import com.dot.gallery.feature_node.presentation.location.MapGeoMediaSource
 import dagger.hilt.android.lifecycle.HiltViewModel
-import com.dot.gallery.cloud.core.ConnectionState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -47,6 +49,9 @@ data class CategoryMedia(
 
 data class CloudLibraryState(
     val hasCloud: Boolean = false,
+    val isConnected: Boolean = false,
+    val connectedCapabilities: Set<ProviderCapability> = emptySet(),
+    val hasCachedMedia: Boolean = false,
     val archivedCount: Int = 0,
     val sharedLinkCount: Int = 0,
     val totalCloudCount: Int = 0,
@@ -58,6 +63,30 @@ data class CloudLibraryState(
     val hasMap: Boolean = false
 )
 
+internal data class CloudLibraryAvailability(
+    val hasCloud: Boolean,
+    val isConnected: Boolean,
+    val hasArchive: Boolean,
+    val hasMemories: Boolean,
+    val hasShareLink: Boolean,
+    val hasPeople: Boolean,
+    val hasMap: Boolean,
+)
+
+internal fun resolveCloudLibraryAvailability(
+    hasConfiguredAccounts: Boolean,
+    configuredCapabilities: Set<ProviderCapability>,
+    isConnected: Boolean,
+): CloudLibraryAvailability = CloudLibraryAvailability(
+    hasCloud = hasConfiguredAccounts,
+    isConnected = isConnected,
+    hasArchive = ProviderCapability.ARCHIVE in configuredCapabilities,
+    hasMemories = ProviderCapability.MEMORIES in configuredCapabilities,
+    hasShareLink = ProviderCapability.SHARE_MANAGE in configuredCapabilities,
+    hasPeople = ProviderCapability.PEOPLE in configuredCapabilities,
+    hasMap = ProviderCapability.MAP in configuredCapabilities,
+)
+
 @HiltViewModel
 class LibraryViewModel @Inject constructor(
     private val repository: MediaRepository,
@@ -67,7 +96,8 @@ class LibraryViewModel @Inject constructor(
     private val cloudRepository: CloudRepository,
     private val providerRegistry: ProviderRegistry,
     private val cloudMediaDao: CloudMediaDao,
-    private val cloudServerConfigDao: CloudServerConfigDao
+    private val cloudServerConfigDao: CloudServerConfigDao,
+    mapGeoMediaSource: MapGeoMediaSource,
 ) : ViewModel() {
 
     val areAiFeaturesAvailable: Boolean get() = modelManager.areAiFeaturesAvailable
@@ -79,25 +109,22 @@ class LibraryViewModel @Inject constructor(
     val cloudState: StateFlow<CloudLibraryState> = _cloudState.asStateFlow()
     private var peopleJob: Job? = null
     private var sharedLinksJob: Job? = null
+    private var activeAccountCount: Int = 0
 
     init {
-        // Pre-load cloud state from Room cache before auth completes
+        // Configuration, advertised capabilities and connectivity are separate facts. In
+        // particular, disconnecting an account must not make its supported features disappear.
         viewModelScope.launch {
-            preloadCachedCloudState()
+            cloudServerConfigDao.getActive().collect { activeConfigs ->
+                activeAccountCount = activeConfigs.size
+                _cloudState.value = _cloudState.value.copy(hasCloud = activeConfigs.isNotEmpty())
+                refreshCachedCloudState()
+                refreshCloudState()
+            }
         }
-        // React to connection state changes so cloud items appear as soon as providers connect
         viewModelScope.launch {
-            cloudRepository.connectionStates.collect { states ->
-                val hasConnected = states.any { it.value == ConnectionState.CONNECTED }
-                if (hasConnected) {
-                    refreshCloudState()
-                } else if (states.isNotEmpty()) {
-                    _cloudState.value = _cloudState.value.copy(
-                        hasCloud = false, hasArchive = false, hasMemories = false,
-                        hasShareLink = false, hasMap = false,
-                        archivedCount = 0, sharedLinkCount = 0, totalCloudCount = 0
-                    )
-                }
+            providerRegistry.connectionStates.collect {
+                refreshCloudState()
             }
         }
         // Re-fetch people when a name changes
@@ -123,62 +150,46 @@ class LibraryViewModel @Inject constructor(
         refreshCloudState()
     }
 
-    private suspend fun preloadCachedCloudState() {
+    private suspend fun refreshCachedCloudState() {
         try {
-            val activeConfigs = cloudServerConfigDao.getActive().firstOrNull()
-                ?: emptyList()
-            if (activeConfigs.isEmpty()) return
             val cached = cloudMediaDao.countCached()
             val archived = cloudMediaDao.countArchived()
-            if (cached > 0 || archived > 0) {
-                _cloudState.value = _cloudState.value.copy(
-                    hasCloud = true,
-                    hasArchive = true,
-                    hasMemories = true,
-                    hasShareLink = true,
-                    hasPeople = true,
-                    hasMap = true,
-                    archivedCount = archived,
-                    totalCloudCount = cached
-                )
-            }
+            _cloudState.value = _cloudState.value.copy(
+                hasCachedMedia = cached > 0 || archived > 0,
+                archivedCount = archived,
+                totalCloudCount = cached,
+            )
         } catch (_: Exception) { }
     }
 
     fun refreshCloudState() {
-        val providers = providerRegistry.getRemoteProviders()
-        val hasCloud = providers.any { it.isAvailable }
-        if (!hasCloud) {
-            // Don't reset cached state if we have pre-loaded data and providers are still initializing
-            if (!_cloudState.value.hasCloud) {
-                _cloudState.value = _cloudState.value.copy(
-                    hasCloud = false, hasArchive = false, hasMemories = false,
-                    hasShareLink = false, hasMap = false,
-                    archivedCount = 0, sharedLinkCount = 0, totalCloudCount = 0
-                )
-            }
-            return
-        }
-        val allCaps = providers.flatMap { it.capabilities }.toSet()
-        _cloudState.value = _cloudState.value.copy(
-            hasCloud = true,
-            hasArchive = ProviderCapability.ARCHIVE in allCaps,
-            hasMemories = ProviderCapability.MEMORIES in allCaps,
-            hasShareLink = ProviderCapability.SHARE_LINK in allCaps,
-            hasPeople = _cloudState.value.hasPeople || ProviderCapability.PEOPLE in allCaps,
-            hasMap = ProviderCapability.MAP in allCaps
+        // getRemoteProviders() intentionally returns only currently available providers. Library
+        // feature availability instead comes from every registered/configured remote provider.
+        val providers = providerRegistry.getAll().filterIsInstance<RemoteMediaProvider>()
+        val allCaps = providers.flatMapTo(LinkedHashSet()) { it.capabilities }
+        val connectedCaps = providers.asSequence()
+            .filter { it.isAvailable }
+            .flatMap { it.capabilities.asSequence() }
+            .toSet()
+        val availability = resolveCloudLibraryAvailability(
+            hasConfiguredAccounts = activeAccountCount > 0 || providers.isNotEmpty(),
+            configuredCapabilities = allCaps,
+            isConnected = providerRegistry.connectionStates.value.values.any {
+                it == ConnectionState.CONNECTED || it == ConnectionState.SYNCING
+            },
         )
-        viewModelScope.launch {
-            try {
-                val archived = cloudMediaDao.countArchived()
-                val total = cloudMediaDao.countCached()
-                _cloudState.value = _cloudState.value.copy(
-                    archivedCount = archived,
-                    totalCloudCount = total
-                )
-            } catch (_: Exception) { }
-        }
-        if (ProviderCapability.PEOPLE in allCaps) {
+        _cloudState.value = _cloudState.value.copy(
+            hasCloud = availability.hasCloud,
+            isConnected = availability.isConnected,
+            connectedCapabilities = connectedCaps,
+            hasArchive = availability.hasArchive,
+            hasMemories = availability.hasMemories,
+            hasShareLink = availability.hasShareLink,
+            hasPeople = _cloudState.value.people.isNotEmpty() || availability.hasPeople,
+            hasMap = availability.hasMap,
+        )
+        viewModelScope.launch { refreshCachedCloudState() }
+        if (availability.isConnected && ProviderCapability.PEOPLE in allCaps) {
             peopleJob?.cancel()
             peopleJob = viewModelScope.launch {
                 cloudRepository.getAllPeople().collect { resource ->
@@ -190,26 +201,40 @@ class LibraryViewModel @Inject constructor(
                 }
             }
         }
-        if (ProviderCapability.SHARE_LINK in allCaps) {
-            val type = providers.first { it.isAvailable }.providerType
+        if (providers.any {
+                it.isAvailable && ProviderCapability.SHARE_MANAGE in it.capabilities
+            }
+        ) {
             sharedLinksJob?.cancel()
             sharedLinksJob = viewModelScope.launch {
-                cloudRepository.getSharedLinks(type).collect { resource ->
-                    if (resource is Resource.Success) {
-                        _cloudState.value = _cloudState.value.copy(
-                            sharedLinkCount = resource.data?.size ?: 0
-                        )
+                val accounts = cloudServerConfigDao.getActive().first().filter { config ->
+                    val provider = providerRegistry.getByConfigId(config.id)
+                    provider?.isAvailable == true &&
+                            ProviderCapability.SHARE_MANAGE in provider.capabilities
+                }
+                if (accounts.isEmpty()) return@launch
+                combine(
+                    accounts.map { config ->
+                        cloudRepository.getSharedLinks(config.providerType, config.id)
                     }
+                ) { resources ->
+                    resources.sumOf { resource ->
+                        (resource as? Resource.Success)?.data?.size ?: 0
+                    }
+                }.collect { count ->
+                    _cloudState.value = _cloudState.value.copy(sharedLinkCount = count)
                 }
             }
         }
     }
 
-    val locations = mediaDistributor.locationsMediaFlow
+    val geoMedia = mapGeoMediaSource.mergedGeoMedia(mediaDistributor.geoMediaFlow)
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
-    val geoMedia = mediaDistributor.geoMediaFlow
-        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    val locations = mapGeoMediaSource.mergedLocations(
+        localLocations = mediaDistributor.locationsMediaFlow,
+        geoMedia = geoMedia,
+    ).stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val indicatorState = combine(
         if (SdkCompat.supportsTrash) mediaDistributor.trashMediaFlow else flowOf(MediaState()),

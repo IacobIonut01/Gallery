@@ -46,6 +46,7 @@ import com.dot.gallery.core.workers.copyMedia
 import com.dot.gallery.core.smart.SmartScanScheduler
 import com.dot.gallery.feature_node.data.data_source.CategoryWithMediaCount
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
+import com.dot.gallery.feature_node.data.data_source.SmartScanFeature
 import com.dot.gallery.feature_node.data.data_source.KeychainHolder
 import com.dot.gallery.feature_node.data.data_source.mediastore.queries.AlbumsFlow
 import com.dot.gallery.feature_node.data.data_source.mediastore.queries.MediaFlow
@@ -149,7 +150,7 @@ class MediaRepositoryImpl(
         if (!updateDatabaseMutex.isLocked) {
             updateDatabaseMutex.withLock {
                 delay(5000) // Delay to ensure the database is not updated too frequently
-                smartScanScheduler.all(userVisible = false)
+                smartScanScheduler.automaticIfNeeded(SmartScanFeature.ALL_MASK)
             }
         }
         //workManager.scheduleMediaMigrationCheck()
@@ -243,29 +244,46 @@ class MediaRepositoryImpl(
     override fun getPinnedAlbums(): Flow<List<PinnedAlbum>> =
         database.getPinnedDao().getPinnedAlbums()
 
-    override suspend fun insertLockedAlbum(lockedAlbum: LockedAlbum) =
+    override suspend fun insertLockedAlbum(lockedAlbum: LockedAlbum) {
         database.getLockedAlbumDao().insertLockedAlbum(lockedAlbum)
+        database.getMediaDao().invalidateMediaVersion()
+        smartScanScheduler.automatic(SmartScanFeature.ALL_MASK)
+    }
 
-    override suspend fun insertLockedAlbums(lockedAlbums: List<LockedAlbum>) =
+    override suspend fun insertLockedAlbums(lockedAlbums: List<LockedAlbum>) {
         database.getLockedAlbumDao().insertLockedAlbums(lockedAlbums)
+        database.getMediaDao().invalidateMediaVersion()
+        smartScanScheduler.automatic(SmartScanFeature.ALL_MASK)
+    }
 
-    override suspend fun removeLockedAlbum(lockedAlbum: LockedAlbum) =
+    override suspend fun removeLockedAlbum(lockedAlbum: LockedAlbum) {
         database.getLockedAlbumDao().removeLockedAlbum(lockedAlbum)
+        database.getMediaDao().invalidateMediaVersion()
+        smartScanScheduler.automatic(SmartScanFeature.ALL_MASK)
+    }
 
     override suspend fun removeLockedAlbums(albumIds: List<Long>) {
         albumIds.chunked(SQLITE_BIND_CHUNK_SIZE).forEach {
             database.getLockedAlbumDao().removeLockedAlbums(it)
         }
+        database.getMediaDao().invalidateMediaVersion()
+        smartScanScheduler.automatic(SmartScanFeature.ALL_MASK)
     }
 
     override fun getLockedAlbums(): Flow<List<LockedAlbum>> =
         database.getLockedAlbumDao().getLockedAlbums()
 
-    override suspend fun addBlacklistedAlbum(ignoredAlbum: IgnoredAlbum) =
+    override suspend fun addBlacklistedAlbum(ignoredAlbum: IgnoredAlbum) {
         database.getBlacklistDao().addBlacklistedAlbum(ignoredAlbum)
+        database.getMediaDao().invalidateMediaVersion()
+        smartScanScheduler.automatic(SmartScanFeature.ALL_MASK)
+    }
 
-    override suspend fun removeBlacklistedAlbum(ignoredAlbum: IgnoredAlbum) =
+    override suspend fun removeBlacklistedAlbum(ignoredAlbum: IgnoredAlbum) {
         database.getBlacklistDao().removeBlacklistedAlbum(ignoredAlbum)
+        database.getMediaDao().invalidateMediaVersion()
+        smartScanScheduler.automatic(SmartScanFeature.ALL_MASK)
+    }
 
     override fun getBlacklistedAlbums(): Flow<List<IgnoredAlbum>> =
         database.getBlacklistDao().getBlacklistedAlbums()
@@ -1344,6 +1362,9 @@ class MediaRepositoryImpl(
 
     override suspend fun removeAlbumFromCollection(collectionId: Long, albumId: Long) =
         collectionDao.removeAlbumFromCollection(collectionId, albumId)
+
+    override suspend fun replaceAlbumsInCollection(collectionId: Long, albumIds: List<Long>) =
+        collectionDao.replaceAlbumsInCollection(collectionId, albumIds)
 
     override fun getAllAlbumIdsInCollections(): Flow<List<Long>> =
         collectionDao.getAllAlbumIdsInCollections()

@@ -10,6 +10,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -30,6 +31,7 @@ import com.dot.gallery.feature_node.presentation.edit.components.develop.RawExpo
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.feature_node.presentation.edit.adjustments.Crop
+import com.dot.gallery.core.decoder.RawDevelopParams
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
 import com.dot.gallery.R
 import com.dot.gallery.feature_node.presentation.util.printError
@@ -85,17 +87,18 @@ class EditActivity : ComponentActivity() {
                     var showRestorePrompt by remember { mutableStateOf(false) }
                     LaunchedEffect(Unit) {
                         viewModel.loadFailed.collect { hasBackup ->
-                            if (hasBackup) {
-                                // The current file can't be opened but a backed-up original exists —
-                                // offer to restore it instead of just closing.
-                                showRestorePrompt = true
-                            } else {
-                                Toast.makeText(
-                                    this@EditActivity,
-                                    R.string.edit_load_failed,
-                                    Toast.LENGTH_LONG
-                                ).show()
-                                finish()
+                            when (hasBackup) {
+                                true -> showRestorePrompt = true
+                                false -> {
+                                    viewModel.clearLoadFailure()
+                                    Toast.makeText(
+                                        this@EditActivity,
+                                        R.string.edit_load_failed,
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                    finish()
+                                }
+                                null -> Unit
                             }
                         }
                     }
@@ -139,6 +142,7 @@ class EditActivity : ComponentActivity() {
 
                     var showOverwriteFallback by remember { mutableStateOf(false) }
                     var showRawExportSheet by remember { mutableStateOf(false) }
+                    var showDirtyExitPrompt by remember { mutableStateOf(false) }
                     // A cut-out (background-removal) edit produces transparency: before saving we ask
                     // the user for PNG vs flatten. `cutoutSavePendingOverride` records whether the
                     // triggering action was an overwrite (true) or a copy (false).
@@ -302,7 +306,7 @@ class EditActivity : ComponentActivity() {
                         viewModel.revertToOriginal(
                             onSuccess = {
                                 intent.data?.let { data ->
-                                    viewModel.setSourceData(this@EditActivity, data)
+                                    viewModel.setSourceData(this@EditActivity, data, forceReload = true)
                                 }
                             },
                             onFail = {
@@ -330,10 +334,48 @@ class EditActivity : ComponentActivity() {
                         onResultOk = doRestoreAndReload
                     )
 
+                    val hasUnsavedChanges = appliedAdjustments.isNotEmpty() ||
+                        (isRawEdit && rawDevelopParams != null && rawDevelopParams != RawDevelopParams.AUTO)
+                    val requestEditorClose: () -> Unit = {
+                        if (!isSaving) {
+                            if (hasUnsavedChanges) showDirtyExitPrompt = true else finish()
+                        }
+                    }
+
+                    if (showDirtyExitPrompt) {
+                        AlertDialog(
+                            onDismissRequest = { showDirtyExitPrompt = false },
+                            title = { Text(stringResource(R.string.editor_unsaved_title)) },
+                            text = { Text(stringResource(R.string.editor_unsaved_message)) },
+                            confirmButton = {
+                                TextButton(onClick = {
+                                    showDirtyExitPrompt = false
+                                    if (isRawEdit) showRawExportSheet = true else doSaveCopy()
+                                }) {
+                                    Text(stringResource(R.string.save_copy))
+                                }
+                            },
+                            dismissButton = {
+                                Row {
+                                    TextButton(onClick = { showDirtyExitPrompt = false }) {
+                                        Text(stringResource(R.string.keep_editing))
+                                    }
+                                    TextButton(onClick = {
+                                        showDirtyExitPrompt = false
+                                        finish()
+                                    }) {
+                                        Text(stringResource(R.string.action_discard))
+                                    }
+                                }
+                            },
+                        )
+                    }
+
                     if (showRestorePrompt) {
                         AlertDialog(
                             onDismissRequest = {
                                 showRestorePrompt = false
+                                viewModel.clearLoadFailure()
                                 finish()
                             },
                             title = { Text(stringResource(R.string.edit_load_failed_restore_title)) },
@@ -341,6 +383,7 @@ class EditActivity : ComponentActivity() {
                             confirmButton = {
                                 TextButton(onClick = {
                                     showRestorePrompt = false
+                                    viewModel.clearLoadFailure()
                                     scope.launch {
                                         uri?.let { u ->
                                             restoreRequest.launchWriteRequest(
@@ -356,6 +399,7 @@ class EditActivity : ComponentActivity() {
                             dismissButton = {
                                 TextButton(onClick = {
                                     showRestorePrompt = false
+                                    viewModel.clearLoadFailure()
                                     finish()
                                 }) {
                                     Text(stringResource(R.string.action_cancel))
@@ -388,9 +432,7 @@ class EditActivity : ComponentActivity() {
                         drawType = drawType,
                         currentPathProperty = currentPathProperty,
                         currentPath = currentPath,
-                        onClose = {
-                            finish()
-                        },
+                        onClose = requestEditorClose,
                         onOverride = {
                             scope.launch {
                                 uri?.let { uri ->

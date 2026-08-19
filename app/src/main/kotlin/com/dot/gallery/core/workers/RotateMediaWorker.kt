@@ -7,6 +7,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
+import android.os.ParcelFileDescriptor
 import android.provider.MediaStore
 import androidx.annotation.IntDef
 import androidx.core.net.toUri
@@ -18,13 +19,14 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.awxkee.jxlcoder.JxlCoder
+import com.dot.gallery.cloud.core.CloudUri
 import com.dot.gallery.cloud.core.ProviderRegistry
-import com.dot.gallery.cloud.core.ProviderType
 import com.dot.gallery.cloud.core.capabilities.SyncCapableProvider
 import com.dot.gallery.cloud.util.CloudMediaDownloader
 import com.dot.gallery.core.Settings
 import com.dot.gallery.core.decoder.format.ImageReencoder
 import com.dot.gallery.core.decoder.format.SourceQualityProbe
+import com.dot.gallery.core.util.ext.overrideImageStreaming
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.util.getUri
 import com.github.panpf.sketch.util.rotate
@@ -33,8 +35,8 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.File
 import java.io.InputStream
-import java.io.OutputStream
 import java.util.UUID
 
 /**
@@ -62,6 +64,31 @@ fun WorkManager.rotateImage(
     return work.id
 }
 
+internal data class CloudRotationTarget(
+    val cloudUri: CloudUri,
+    val provider: SyncCapableProvider,
+)
+
+/** Resolves the exact account encoded in a cloud URI. Rotation never uses the type fallback. */
+internal fun resolveCloudRotationTarget(
+    registry: ProviderRegistry,
+    uriString: String,
+): Result<CloudRotationTarget> = runCatching {
+    val cloudUri = CloudUri.parse(uriString)
+        ?: throw IllegalArgumentException("Invalid cloud media Uri")
+    if (cloudUri.configId <= 0L) {
+        throw IllegalArgumentException("Cloud media Uri is missing its account config")
+    }
+    val accountProvider = registry.getByConfigId(cloudUri.configId)
+        ?: throw IllegalStateException("Cloud account ${cloudUri.configId} is unavailable")
+    if (accountProvider.providerType != cloudUri.providerType) {
+        throw IllegalStateException("Cloud account provider does not match the media Uri")
+    }
+    val syncProvider = accountProvider as? SyncCapableProvider
+        ?: throw IllegalStateException("Cloud account does not support upload")
+    CloudRotationTarget(cloudUri, syncProvider)
+}
+
 @HiltWorker
 class RotateMediaWorker @AssistedInject constructor(
     @Assisted private val appContext: Context,
@@ -83,7 +110,12 @@ class RotateMediaWorker @AssistedInject constructor(
         val mime = inputData.getString(KEY_MIME_TYPE)
             ?: (cr.getType(sourceUri) ?: "image/jpeg")
 
-        val isCloud = sourceUri.scheme == "cloud"
+        val isCloud = sourceUri.scheme == CloudUri.SCHEME
+        val cloudTarget = if (isCloud) {
+            resolveCloudRotationTarget(registry, uriStr).getOrElse { error ->
+                return@withContext failure(error.message ?: "Invalid cloud account")
+            }
+        } else null
         try {
             update(Status.DECODING, "Decoding original")
             val original = if (isCloud) {
@@ -112,41 +144,40 @@ class RotateMediaWorker @AssistedInject constructor(
                 rotated.recycle()
                 if (localUri == null) return@withContext failure("Save failed")
 
-                // Upload back to cloud
+                // Upload back to the exact account carried by cfg. Resolution happened before
+                // decode/save, so a missing or mismatched account cannot create an orphaned copy.
                 update(Status.UPLOADING, "Uploading to cloud")
-                val providerName = sourceUri.authority
-                val providerType = providerName?.let {
-                    try { ProviderType.valueOf(it) } catch (_: Exception) { null }
+                val target = requireNotNull(cloudTarget)
+                val tempMedia = Media.UriMedia(
+                    id = 0,
+                    label = copyDisplayName(label, writeFormat),
+                    uri = localUri,
+                    path = localUri.toString(),
+                    relativePath = "Pictures",
+                    albumID = 0,
+                    albumLabel = "",
+                    timestamp = System.currentTimeMillis() / 1000,
+                    expiryTimestamp = null,
+                    takenTimestamp = null,
+                    fullDate = "",
+                    mimeType = writeFormat.mimeType,
+                    favorite = 0,
+                    trashed = 0,
+                    size = 0,
+                    duration = null,
+                )
+                val uploadResult = target.provider.uploadAsset(tempMedia)
+                val uploaded = uploadResult.getOrElse { error ->
+                    // Keep the generated local copy when upload is not confirmed.
+                    return@withContext failure("Upload failed: ${error.message}")
                 }
-                val syncProvider = providerType?.let { registry.get(it) as? SyncCapableProvider }
-                if (syncProvider != null) {
-                    val tempMedia = Media.UriMedia(
-                        id = 0,
-                        label = copyDisplayName(label, writeFormat),
-                        uri = localUri,
-                        path = localUri.toString(),
-                        relativePath = "Pictures",
-                        albumID = 0,
-                        albumLabel = "",
-                        timestamp = System.currentTimeMillis() / 1000,
-                        expiryTimestamp = null,
-                        takenTimestamp = null,
-                        fullDate = "",
-                        mimeType = writeFormat.mimeType,
-                        favorite = 0,
-                        trashed = 0,
-                        size = 0,
-                        duration = null,
-                    )
-                    val uploadResult = syncProvider.uploadAsset(tempMedia)
-                    // Delete local copy regardless of upload success
-                    try { cr.delete(localUri, null, null) } catch (_: Exception) {}
-                    if (uploadResult.isFailure) {
-                        return@withContext failure("Upload failed: ${uploadResult.exceptionOrNull()?.message}")
-                    }
-                } else {
-                    // No sync provider available, keep local copy
+                if (uploaded.providerType != target.cloudUri.providerType ||
+                    uploaded.serverConfigId != target.cloudUri.configId
+                ) {
+                    // An ambiguous terminal result is not safe enough to delete the only local copy.
+                    return@withContext failure("Upload account confirmation mismatch")
                 }
+                runCatching { cr.delete(localUri, null, null) }
             } else if (forceCopy) {
                 // Source can't be overwritten in place — write a new (PNG) copy instead.
                 val newUri = saveRotatedAsNewLocalUri(rotated, writeFormat, config, label)
@@ -181,27 +212,25 @@ class RotateMediaWorker @AssistedInject constructor(
         writeFormat: ImageReencoder.ImageWriteFormat,
         config: ImageReencoder.ReencodeConfig
     ): Boolean = withContext(Dispatchers.IO) {
-        try {
-            // Encode fully into memory first so we fail before truncating the original file.
-            val encoded = ImageReencoder.encodeToBytes(rotated, writeFormat, config)
-            cr.openOutputStream(sourceUri, "wt")?.use { out: OutputStream ->
-                out.write(encoded)
-                out.flush()
-            } ?: throw RuntimeException("Stream failed")
-
-            // Touch date_modified so MediaStore picks up the change
-            val values = ContentValues().apply {
-                put(
-                    MediaStore.MediaColumns.DATE_MODIFIED,
-                    System.currentTimeMillis() / 1000
-                )
+        val stagingFile = File.createTempFile("rotate-override-", ".tmp", appContext.cacheDir)
+        val saved = cr.overrideImageStreaming(sourceUri, stagingFile) { fd ->
+            ParcelFileDescriptor.AutoCloseOutputStream(ParcelFileDescriptor.fromFd(fd)).use { output ->
+                ImageReencoder.writeToStream(rotated, writeFormat, config, output)
+                output.flush()
+                true
             }
-            cr.update(sourceUri, values, null, null)
-            true
-        } catch (e: Exception) {
-            e.printStackTrace()
-            false
         }
+        if (saved) {
+            cr.update(
+                sourceUri,
+                ContentValues().apply {
+                    put(MediaStore.MediaColumns.DATE_MODIFIED, System.currentTimeMillis() / 1000)
+                },
+                null,
+                null,
+            )
+        }
+        saved
     }
 
     /** Reads a header prefix and estimates the JPEG source quality (or null). */
@@ -235,8 +264,9 @@ class RotateMediaWorker @AssistedInject constructor(
         config: ImageReencoder.ReencodeConfig,
         label: String
     ): Uri? {
-        try {
-            val targetUri = cr.insert(
+        var targetUri: Uri? = null
+        return try {
+            targetUri = cr.insert(
                 MediaStore.Images.Media.getContentUri("external"),
                 ContentValues().apply {
                     put(MediaStore.MediaColumns.DISPLAY_NAME, copyDisplayName(label, writeFormat))
@@ -244,21 +274,27 @@ class RotateMediaWorker @AssistedInject constructor(
                     put(MediaStore.MediaColumns.RELATIVE_PATH, "Pictures")
                     put(MediaStore.MediaColumns.IS_PENDING, 1)
                 }
-            ) ?: return null
+            ) ?: throw IllegalStateException("Failed to create rotated copy")
 
-            cr.openOutputStream(targetUri)?.use { out ->
-                ImageReencoder.writeToStream(rotated, writeFormat, config, out)
-            } ?: return null
+            cr.openOutputStream(targetUri)?.use { output ->
+                ImageReencoder.writeToStream(rotated, writeFormat, config, output)
+                output.flush()
+            } ?: throw IllegalStateException("Failed to open rotated copy")
 
-            val updateValues = ContentValues().apply {
-                put(MediaStore.MediaColumns.IS_PENDING, 0)
-                put(MediaStore.MediaColumns.DATE_MODIFIED, System.currentTimeMillis() / 1000)
-            }
-            cr.update(targetUri, updateValues, null, null)
-            return targetUri
+            cr.update(
+                targetUri,
+                ContentValues().apply {
+                    put(MediaStore.MediaColumns.IS_PENDING, 0)
+                    put(MediaStore.MediaColumns.DATE_MODIFIED, System.currentTimeMillis() / 1000)
+                },
+                null,
+                null,
+            )
+            targetUri
         } catch (e: Exception) {
             e.printStackTrace()
-            return null
+            targetUri?.let { runCatching { cr.delete(it, null, null) } }
+            null
         }
     }
 

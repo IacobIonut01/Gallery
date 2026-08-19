@@ -685,21 +685,21 @@ object HelpRepository {
             ), sinceVersion = "5.0.0"),
         HelpTip(id = "cloud_backup", title = R.string.help_tip_cloud_backup_title, subtitle = R.string.help_tip_cloud_backup_subtitle,
             icon = HelpIcon.ofVector(Icons.Outlined.CloudUpload), category = HelpCategory.CLOUD_SYNC,
-            deepLink = Screen.CloudBackupScreen(),
+            deepLink = Screen.CloudBackupDashboardScreen(),
             pages = listOf(
                 TutorialPage(title = R.string.help_tip_cloud_backup_p1_title, description = R.string.help_tip_cloud_backup_p1_desc),
                 TutorialPage(title = R.string.help_tip_cloud_backup_p2_title, description = R.string.help_tip_cloud_backup_p2_desc, steps = listOf(R.string.help_tip_cloud_backup_p2_s1, R.string.help_tip_cloud_backup_p2_s2, R.string.help_tip_cloud_backup_p2_s3, R.string.help_tip_cloud_backup_p2_s4))
             ), sinceVersion = "5.0.0"),
         HelpTip(id = "cloud_explore", title = R.string.help_tip_cloud_explore_title, subtitle = R.string.help_tip_cloud_explore_subtitle,
             icon = HelpIcon.ofVector(Icons.Outlined.Hub), category = HelpCategory.CLOUD_SYNC,
-            deepLink = Screen.CloudTimelineScreen(),
+            deepLink = Screen.CloudBackupDashboardScreen(),
             pages = listOf(
                 TutorialPage(title = R.string.help_tip_cloud_explore_p1_title, description = R.string.help_tip_cloud_explore_p1_desc),
                 TutorialPage(title = R.string.help_tip_cloud_explore_p2_title, description = R.string.help_tip_cloud_explore_p2_desc)
             ), sinceVersion = "5.0.0"),
         HelpTip(id = "cloud_add_server", title = R.string.help_tip_cloud_add_server_title, subtitle = R.string.help_tip_cloud_add_server_subtitle,
             icon = HelpIcon.ofVector(Icons.Outlined.Cloud), category = HelpCategory.CLOUD_SYNC,
-            deepLink = Screen.CloudAddServerScreen(),
+            deepLink = Screen.CloudAccountsScreen(),
             pages = listOf(
                 TutorialPage(title = R.string.help_tip_cloud_add_server_p1_title, description = R.string.help_tip_cloud_add_server_p1_desc, steps = listOf(R.string.help_tip_cloud_add_server_p1_s1, R.string.help_tip_cloud_add_server_p1_s2, R.string.help_tip_cloud_add_server_p1_s3, R.string.help_tip_cloud_add_server_p1_s4))
             ), sinceVersion = "5.1.0"),
@@ -709,7 +709,7 @@ object HelpRepository {
             pages = listOf(TutorialPage(title = R.string.help_tip_cloud_destinations_p1_title, description = R.string.help_tip_cloud_destinations_p1_desc)), sinceVersion = "5.1.0"),
         HelpTip(id = "cloud_provider_settings", title = R.string.help_tip_cloud_provider_settings_title, subtitle = R.string.help_tip_cloud_provider_settings_subtitle,
             icon = HelpIcon.ofVector(Icons.Outlined.Cloud), category = HelpCategory.CLOUD_SYNC,
-            deepLink = Screen.CloudProviderSettingsScreen(),
+            deepLink = Screen.CloudBackupDashboardScreen(),
             pages = listOf(TutorialPage(title = R.string.help_tip_cloud_provider_settings_p1_title, description = R.string.help_tip_cloud_provider_settings_p1_desc)), sinceVersion = "5.1.0"),
         HelpTip(id = "cloud_shared_links", title = R.string.help_tip_cloud_shared_links_title, subtitle = R.string.help_tip_cloud_shared_links_subtitle,
             icon = HelpIcon.ofVector(Icons.Outlined.Hub), category = HelpCategory.CLOUD_SYNC,
@@ -717,7 +717,7 @@ object HelpRepository {
             pages = listOf(TutorialPage(title = R.string.help_tip_cloud_shared_links_p1_title, description = R.string.help_tip_cloud_shared_links_p1_desc)), sinceVersion = "5.1.0"),
         HelpTip(id = "cloud_sync_status", title = R.string.help_tip_cloud_sync_status_title, subtitle = R.string.help_tip_cloud_sync_status_subtitle,
             icon = HelpIcon.ofVector(Icons.Outlined.CloudDone), category = HelpCategory.CLOUD_SYNC,
-            deepLink = Screen.SyncStatusScreen(),
+            deepLink = Screen.CloudBackupDashboardScreen(),
             pages = listOf(TutorialPage(title = R.string.help_tip_cloud_sync_status_p1_title, description = R.string.help_tip_cloud_sync_status_p1_desc)), sinceVersion = "5.1.0"),
         HelpTip(id = "cloud_people", title = R.string.help_tip_cloud_people_title, subtitle = R.string.help_tip_cloud_people_subtitle,
             icon = HelpIcon.ofVector(Icons.Outlined.Collections), category = HelpCategory.CLOUD_SYNC,

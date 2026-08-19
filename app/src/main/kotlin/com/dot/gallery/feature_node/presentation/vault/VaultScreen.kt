@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -47,6 +48,7 @@ import com.dot.gallery.core.LocalEventHandler
 import com.dot.gallery.core.Settings.Misc.rememberForceTheme
 import com.dot.gallery.core.Settings.Misc.rememberIsDarkMode
 import com.dot.gallery.core.navigateUp
+import com.dot.gallery.core.presentation.components.util.OnLifecycleEvent
 import com.dot.gallery.feature_node.domain.model.UIEvent
 import com.dot.gallery.feature_node.domain.model.Vault
 import com.dot.gallery.feature_node.presentation.mediaview.MediaViewScreenRoute
@@ -54,6 +56,7 @@ import com.dot.gallery.feature_node.presentation.util.SecureWindow
 import com.dot.gallery.feature_node.presentation.vault.components.VaultPasswordUnlockDialog
 import com.dot.gallery.feature_node.presentation.vault.utils.GateMode
 import com.dot.gallery.feature_node.presentation.vault.utils.VaultAuthType
+import com.dot.gallery.feature_node.presentation.vault.utils.VaultCredentialStatus
 import com.dot.gallery.feature_node.presentation.vault.utils.VaultPasswordManager
 import com.dot.gallery.feature_node.presentation.vault.utils.VerifyResult
 import com.dot.gallery.feature_node.presentation.vault.utils.rememberBiometricState
@@ -65,7 +68,7 @@ import kotlinx.coroutines.launch
 fun VaultScreen(
     paddingValues: PaddingValues,
     toggleRotate: () -> Unit,
-    shouldSkipAuth: MutableState<Boolean>,
+    @Suppress("UNUSED_PARAMETER") shouldSkipAuth: MutableState<Boolean>,
     allowBlur: Boolean
 ) = SecureWindow {
     val globalEventHandler = LocalEventHandler.current
@@ -105,19 +108,25 @@ fun VaultScreen(
         val metadataState = viewModel.metadataState.collectAsStateWithLifecycle()
         val vaultState = viewModel.vaultState.collectAsStateWithLifecycle()
 
-        var isAuthenticated by rememberSaveable { mutableStateOf(shouldSkipAuth.value) }
-        var isGateAuthenticated by rememberSaveable { mutableStateOf(shouldSkipAuth.value) }
+        // Authorization is intentionally memory-only and is revoked when the app stops.
+        var isAuthenticated by remember { mutableStateOf(false) }
+        var isGateAuthenticated by remember { mutableStateOf(false) }
+        var authEpoch by remember { mutableStateOf(0) }
+        var gateAuthRequest by remember { mutableStateOf(0) }
+        var reauthenticateOnStart by remember { mutableStateOf(false) }
+        var isInitialSetupFlow by remember { mutableStateOf(false) }
 
         // Per-vault auth state
         var showPasswordDialog by remember { mutableStateOf(false) }
         var passwordError by remember { mutableStateOf<String?>(null) }
         var detectedAuthType by remember { mutableStateOf<VaultAuthType?>(null) }
-        var pendingAuthVault by rememberSaveable { mutableStateOf<Vault?>(null) }
+        var pendingAuthVault by remember { mutableStateOf<Vault?>(null) }
 
         // Gate auth state
         var showGatePasswordDialog by remember { mutableStateOf(false) }
         var gatePasswordError by remember { mutableStateOf<String?>(null) }
         var gateAuthType by remember { mutableStateOf<VaultAuthType?>(null) }
+        var gateDeviceAuthPending by remember { mutableStateOf(false) }
 
         val wrongPasswordAttemptsStr = stringResource(R.string.vault_wrong_password_attempts)
         val lockedOutStr = stringResource(R.string.vault_locked_out)
@@ -125,6 +134,7 @@ fun VaultScreen(
 
         /** Navigate to VaultDisplay after successful per-vault auth */
         fun onVaultAuthSuccess(vault: Vault) {
+            if (!isGateAuthenticated) return
             isAuthenticated = true
             viewModel.currentVault.value = vault
             viewModel.setVault(
@@ -152,26 +162,36 @@ fun VaultScreen(
             onFailed = { pendingAuthVault = null }
         )
 
-        /** Authenticate a specific vault: custom password dialog or device biometric. */
+        /** Authenticate a specific vault: custom password dialog or device security. */
         fun authenticateVault(vault: Vault) {
+            val attemptEpoch = authEpoch
             scope.launch {
                 pendingAuthVault = vault
-                val authType = VaultPasswordManager.getAuthType(context, vault.uuid)
-                if (authType != null) {
-                    detectedAuthType = authType
-                    showPasswordDialog = true
-                } else if (biometricState.isSupported) {
-                    detectedAuthType = null
-                    biometricState.authenticate()
-                } else {
-                    onVaultAuthSuccess(vault)
-                    pendingAuthVault = null
-                    detectedAuthType = null
+                val status = VaultPasswordManager.getCredentialStatus(context, vault.uuid)
+                if (attemptEpoch != authEpoch || !isGateAuthenticated) return@launch
+                when (status) {
+                    is VaultCredentialStatus.Valid -> {
+                        detectedAuthType = status.authType
+                        showPasswordDialog = true
+                    }
+                    VaultCredentialStatus.Missing -> {
+                        detectedAuthType = null
+                        if (biometricState.isSupported) {
+                            biometricState.authenticate()
+                        } else {
+                            pendingAuthVault = null
+                        }
+                    }
+                    VaultCredentialStatus.Corrupt -> {
+                        detectedAuthType = null
+                        pendingAuthVault = null
+                    }
                 }
             }
         }
 
         fun onGateAuthSuccess() {
+            isInitialSetupFlow = false
             isGateAuthenticated = true
             showGatePasswordDialog = false
             gatePasswordError = null
@@ -185,35 +205,83 @@ fun VaultScreen(
         val gateBiometricState = rememberBiometricState(
             title = stringResource(R.string.biometric_authentication),
             subtitle = stringResource(R.string.verify_identity),
-            onSuccess = { onGateAuthSuccess() },
-            onFailed = { globalEventHandler.navigateUp() }
+            onSuccess = {
+                if (gateDeviceAuthPending) onGateAuthSuccess()
+                gateDeviceAuthPending = false
+            },
+            onFailed = {
+                val wasPending = gateDeviceAuthPending
+                gateDeviceAuthPending = false
+                if (wasPending) globalEventHandler.navigateUp()
+            }
         )
 
         /** Trigger gate authentication based on stored GateMode */
         fun triggerGateAuth() {
+            val attemptEpoch = authEpoch
             scope.launch {
-                when (VaultPasswordManager.getGateMode(context)) {
+                val gateMode = VaultPasswordManager.getGateMode(context)
+                if (attemptEpoch != authEpoch) return@launch
+                when (gateMode) {
                     GateMode.NONE -> onGateAuthSuccess()
                     GateMode.DEVICE -> {
                         if (gateBiometricState.isSupported) {
+                            gateDeviceAuthPending = true
                             gateBiometricState.authenticate()
                         } else {
-                            onGateAuthSuccess()
+                            gateDeviceAuthPending = false
+                            globalEventHandler.navigateUp()
                         }
                     }
                     GateMode.CUSTOM -> {
-                        val authType = VaultPasswordManager.getAuthType(
+                        val status = VaultPasswordManager.getCredentialStatus(
                             context, VaultPasswordManager.GATE_UUID
                         )
-                        if (authType != null) {
-                            gateAuthType = authType
-                            showGatePasswordDialog = true
-                        } else {
-                            // Custom auth was set but credentials are missing — fallback
-                            onGateAuthSuccess()
+                        if (attemptEpoch != authEpoch) return@launch
+                        when (status) {
+                            is VaultCredentialStatus.Valid -> {
+                                gateAuthType = status.authType
+                                showGatePasswordDialog = true
+                            }
+                            VaultCredentialStatus.Missing,
+                            VaultCredentialStatus.Corrupt -> globalEventHandler.navigateUp()
                         }
                     }
                 }
+            }
+        }
+
+        OnLifecycleEvent { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_STOP -> {
+                    authEpoch += 1
+                    isAuthenticated = false
+                    isGateAuthenticated = false
+                    gateDeviceAuthPending = false
+                    showPasswordDialog = false
+                    showGatePasswordDialog = false
+                    passwordError = null
+                    gatePasswordError = null
+                    detectedAuthType = null
+                    gateAuthType = null
+                    pendingAuthVault = null
+                    if (!isInitialSetupFlow) viewModel.currentVault.value = null
+                    biometricState.cancelAuthentication()
+                    gateBiometricState.cancelAuthentication()
+                    reauthenticateOnStart =
+                        vaultState.value.vaults.isNotEmpty() && !isInitialSetupFlow
+                }
+                Lifecycle.Event.ON_START -> {
+                    if (reauthenticateOnStart) {
+                        reauthenticateOnStart = false
+                        gateAuthRequest += 1
+                        navController.navigate(VaultScreens.VaultGateAuth) {
+                            popUpTo<VaultScreens.VaultSelect> { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                }
+                else -> Unit
             }
         }
 
@@ -260,6 +328,7 @@ fun VaultScreen(
                     LaunchedEffect(vaultState.value.isLoading) {
                         if (!vaultState.value.isLoading) {
                             val dest = if (vaultState.value.vaults.isEmpty()) {
+                                isInitialSetupFlow = true
                                 VaultScreens.VaultSetup
                             } else {
                                 VaultScreens.VaultGateAuth
@@ -276,7 +345,7 @@ fun VaultScreen(
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator()
                     }
-                    LaunchedEffect(Unit) {
+                    LaunchedEffect(gateAuthRequest) {
                         if (isGateAuthenticated) {
                             navController.navigate(VaultScreens.VaultSelect) {
                                 popUpTo<VaultScreens.VaultGateAuth> { inclusive = true }
@@ -289,106 +358,144 @@ fun VaultScreen(
                 }
 
                 composable<VaultScreens.VaultSelect> {
-                    VaultSelectScreen(
-                        vaultState = vaultState,
-                        onVaultSelected = { vault -> authenticateVault(vault) },
-                        onCreateVault = {
-                            addNewVault = true
-                            navController.navigate(VaultScreens.VaultSetup) {
+                    if (isGateAuthenticated) {
+                        VaultSelectScreen(
+                            vaultState = vaultState,
+                            onVaultSelected = { vault -> authenticateVault(vault) },
+                            onCreateVault = {
+                                addNewVault = true
+                                navController.navigate(VaultScreens.VaultSetup) {
+                                    launchSingleTop = true
+                                }
+                            },
+                            onChangeGateSecurity = {
+                                navController.navigate(VaultScreens.VaultGateSetup) {
+                                    launchSingleTop = true
+                                }
+                            },
+                            onNavigateUp = globalEventHandler::navigateUp
+                        )
+                    } else {
+                        LaunchedEffect(Unit) {
+                            navController.navigate(VaultScreens.VaultGateAuth) {
+                                popUpTo<VaultScreens.VaultSelect> { inclusive = true }
                                 launchSingleTop = true
                             }
-                        },
-                        onChangeGateSecurity = {
-                            navController.navigate(VaultScreens.VaultGateSetup) {
-                                launchSingleTop = true
-                            }
-                        },
-                        onNavigateUp = globalEventHandler::navigateUp
-                    )
+                        }
+                    }
                 }
 
                 composable<VaultScreens.VaultSetup> {
-                    VaultSetup(
-                        navigateUp = {
-                            addNewVault = false
-                            if (vaultState.value.vaults.isEmpty()) globalEventHandler.navigateUp() else localEventHandler.navigateUp()
-                        },
-                        onCreate = {
-                            navController.navigate(VaultScreens.VaultPasswordSetup) {
+                    if (vaultState.value.vaults.isEmpty() || isInitialSetupFlow || isGateAuthenticated) {
+                        VaultSetup(
+                            navigateUp = {
+                                addNewVault = false
+                                if (vaultState.value.vaults.isEmpty()) globalEventHandler.navigateUp() else localEventHandler.navigateUp()
+                            },
+                            onCreate = {
+                                navController.navigate(VaultScreens.VaultPasswordSetup) {
+                                    popUpTo<VaultScreens.VaultSetup> { inclusive = true }
+                                    launchSingleTop = true
+                                }
+                            },
+                            vm = viewModel
+                        )
+                    } else {
+                        LaunchedEffect(Unit) {
+                            navController.navigate(VaultScreens.VaultGateAuth) {
                                 popUpTo<VaultScreens.VaultSetup> { inclusive = true }
                                 launchSingleTop = true
                             }
-                        },
-                        vm = viewModel
-                    )
-                }
-                composable<VaultScreens.VaultPasswordSetup> {
-                    val currentVaultValue by viewModel.currentVault.collectAsStateWithLifecycle()
-                    val isFirstVault = vaultState.value.vaults.isEmpty()
-
-                    fun afterPasswordSetup() {
-                        addNewVault = false
-                        val vault = currentVaultValue ?: return
-                        val first = isFirstVault
-                        viewModel.setVault(
-                            vault = vault,
-                            onFailed = { /* name was already validated in VaultSetup */ },
-                            onSuccess = {
-                                if (first) {
-                                    navController.navigate(VaultScreens.VaultGateSetup) {
-                                        popUpTo<VaultScreens.VaultPasswordSetup> { inclusive = true }
-                                        launchSingleTop = true
-                                    }
-                                } else {
-                                    navController.navigate(VaultScreens.VaultSelect) {
-                                        popUpTo<VaultScreens.VaultPasswordSetup> { inclusive = true }
-                                        launchSingleTop = true
-                                    }
-                                }
-                            }
-                        )
-                    }
-
-                    VaultPasswordSetupScreen(
-                        vault = currentVaultValue,
-                        onSkip = { afterPasswordSetup() },
-                        onComplete = { afterPasswordSetup() }
-                    )
-                }
-                composable<VaultScreens.VaultGateSetup> {
-                    fun afterGateSetup() {
-                        isGateAuthenticated = true
-                        navController.navigate(VaultScreens.VaultSelect) {
-                            popUpTo<VaultScreens.VaultGateSetup> { inclusive = true }
-                            launchSingleTop = true
                         }
                     }
+                }
+                composable<VaultScreens.VaultPasswordSetup> {
+                    if (isInitialSetupFlow || isGateAuthenticated) {
+                        val currentVaultValue by viewModel.currentVault.collectAsStateWithLifecycle()
+                        val isFirstVault = vaultState.value.vaults.isEmpty()
 
-                    VaultGateSetupScreen(
-                        onBack = if (navController.previousBackStackEntry != null) {
-                            { navController.popBackStack() }
-                        } else null,
-                        onNone = { afterGateSetup() },
-                        onDeviceSecurity = { afterGateSetup() },
-                        onCustomComplete = { afterGateSetup() }
-                    )
+                        fun afterPasswordSetup() {
+                            addNewVault = false
+                            val vault = currentVaultValue ?: return
+                            val first = isFirstVault
+                            viewModel.setVault(
+                                vault = vault,
+                                onFailed = { /* name was already validated in VaultSetup */ },
+                                onSuccess = {
+                                    if (first) {
+                                        navController.navigate(VaultScreens.VaultGateSetup) {
+                                            popUpTo<VaultScreens.VaultPasswordSetup> { inclusive = true }
+                                            launchSingleTop = true
+                                        }
+                                    } else {
+                                        navController.navigate(VaultScreens.VaultSelect) {
+                                            popUpTo<VaultScreens.VaultPasswordSetup> { inclusive = true }
+                                            launchSingleTop = true
+                                        }
+                                    }
+                                }
+                            )
+                        }
+
+                        VaultPasswordSetupScreen(
+                            vault = currentVaultValue,
+                            onSkip = { afterPasswordSetup() },
+                            onComplete = { afterPasswordSetup() }
+                        )
+                    } else {
+                        LaunchedEffect(Unit) {
+                            navController.navigate(VaultScreens.VaultGateAuth) {
+                                popUpTo<VaultScreens.VaultPasswordSetup> { inclusive = true }
+                                launchSingleTop = true
+                            }
+                        }
+                    }
+                }
+                composable<VaultScreens.VaultGateSetup> {
+                    if (isInitialSetupFlow || isGateAuthenticated) {
+                        fun afterGateSetup() {
+                            isInitialSetupFlow = false
+                            isGateAuthenticated = true
+                            navController.navigate(VaultScreens.VaultSelect) {
+                                popUpTo<VaultScreens.VaultGateSetup> { inclusive = true }
+                                launchSingleTop = true
+                            }
+                        }
+
+                        VaultGateSetupScreen(
+                            onBack = if (navController.previousBackStackEntry != null) {
+                                { navController.popBackStack() }
+                            } else null,
+                            onNone = { afterGateSetup() },
+                            onDeviceSecurity = { afterGateSetup() },
+                            onCustomComplete = { afterGateSetup() }
+                        )
+                    } else {
+                        LaunchedEffect(Unit) {
+                            navController.navigate(VaultScreens.VaultGateAuth) {
+                                popUpTo<VaultScreens.VaultGateSetup> { inclusive = true }
+                                launchSingleTop = true
+                            }
+                        }
+                    }
                 }
                 composable<VaultScreens.VaultDisplay> {
                     // If user reaches VaultDisplay without being authenticated
                     // (e.g., back navigation), send them back to VaultSelect
-                    LaunchedEffect(isAuthenticated, vaultState) {
-                        if (!isAuthenticated && !addNewVault && vaultState.value.vaults.isNotEmpty()) {
+                    LaunchedEffect(isGateAuthenticated, isAuthenticated, vaultState) {
+                        if (!isGateAuthenticated && vaultState.value.vaults.isNotEmpty()) {
+                            navController.navigate(VaultScreens.VaultGateAuth) {
+                                popUpTo<VaultScreens.VaultDisplay> { inclusive = true }
+                                launchSingleTop = true
+                            }
+                        } else if (!isAuthenticated && !addNewVault && vaultState.value.vaults.isNotEmpty()) {
                             navController.navigate(VaultScreens.VaultSelect) {
                                 popUpTo<VaultScreens.VaultDisplay> { inclusive = true }
                                 launchSingleTop = true
                             }
                         }
                     }
-                    AnimatedVisibility(
-                        visible = isAuthenticated,
-                        enter = enterAnimation,
-                        exit = exitAnimation
-                    ) {
+                    if (isGateAuthenticated && isAuthenticated) {
                         VaultDisplay(
                             globalNavigateUp = {
                                 // When leaving VaultDisplay, revoke authentication
@@ -429,27 +536,36 @@ fun VaultScreen(
                 }
 
                 composable<VaultScreens.EncryptedMediaViewScreen> { backStackEntry ->
-                    val args = backStackEntry.toRoute<VaultScreens.EncryptedMediaViewScreen>()
-                    val mediaId = args.mediaId
-                    val currentVaultValue by viewModel.currentVault.collectAsStateWithLifecycle()
-                    val mediaState = remember(currentVaultValue) {
-                        viewModel.createMediaState(currentVaultValue)
-                    }.collectAsStateWithLifecycle()
-                    MediaViewScreenRoute(
-                        toggleRotate = toggleRotate,
-                        paddingValues = paddingValues,
-                        mediaId = mediaId,
-                        mediaState = mediaState,
-                        vaultState = vaultState,
-                        albumsState = albumState,
-                        metadataState = metadataState,
-                        currentVault = currentVaultValue,
-                        restoreMedia = viewModel::restoreMedia,
-                        deleteMedia = viewModel::deleteMedia,
-                        allowBlur = allowBlur,
-                        sharedTransitionScope = this@SharedTransitionLayout,
-                        animatedContentScope = this@composable
-                    )
+                    if (isGateAuthenticated && isAuthenticated) {
+                        val args = backStackEntry.toRoute<VaultScreens.EncryptedMediaViewScreen>()
+                        val mediaId = args.mediaId
+                        val currentVaultValue by viewModel.currentVault.collectAsStateWithLifecycle()
+                        val mediaState = remember(currentVaultValue) {
+                            viewModel.createMediaState(currentVaultValue)
+                        }.collectAsStateWithLifecycle()
+                        MediaViewScreenRoute(
+                            toggleRotate = toggleRotate,
+                            paddingValues = paddingValues,
+                            mediaId = mediaId,
+                            mediaState = mediaState,
+                            vaultState = vaultState,
+                            albumsState = albumState,
+                            metadataState = metadataState,
+                            currentVault = currentVaultValue,
+                            restoreMedia = viewModel::restoreMedia,
+                            deleteMedia = viewModel::deleteMedia,
+                            allowBlur = allowBlur,
+                            sharedTransitionScope = this@SharedTransitionLayout,
+                            animatedContentScope = this@composable
+                        )
+                    } else {
+                        LaunchedEffect(Unit) {
+                            navController.navigate(VaultScreens.VaultGateAuth) {
+                                popUpTo<VaultScreens.VaultSelect> { inclusive = true }
+                                launchSingleTop = true
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -468,7 +584,7 @@ fun VaultScreen(
 
         // Gate password/PIN/pattern dialog
         AnimatedVisibility(
-            visible = showGatePasswordDialog,
+            visible = showGatePasswordDialog && !isGateAuthenticated,
             enter = enterAnimation,
             exit = exitAnimation
         ) {
@@ -490,12 +606,15 @@ fun VaultScreen(
                         globalEventHandler.navigateUp()
                     },
                     onSubmit = { secret ->
+                        val attemptEpoch = authEpoch
                         scope.launch {
-                            when (val result = VaultPasswordManager.verifyPassword(
+                            val result = VaultPasswordManager.verifyPassword(
                                 context,
                                 VaultPasswordManager.GATE_UUID,
                                 secret
-                            )) {
+                            )
+                            if (attemptEpoch != authEpoch) return@launch
+                            when (result) {
                                 is VerifyResult.Success -> onGateAuthSuccess()
 
                                 is VerifyResult.Failed -> {
@@ -519,7 +638,7 @@ fun VaultScreen(
 
         // Per-vault password/PIN/pattern dialog
         AnimatedVisibility(
-            visible = showPasswordDialog,
+            visible = showPasswordDialog && isGateAuthenticated && !isAuthenticated,
             enter = enterAnimation,
             exit = exitAnimation
         ) {
@@ -543,12 +662,17 @@ fun VaultScreen(
                     onSubmit = { secret ->
                         val vault = pendingAuthVault
                         if (vault != null) {
+                            val attemptEpoch = authEpoch
                             scope.launch {
-                                when (val result = VaultPasswordManager.verifyPassword(
+                                val result = VaultPasswordManager.verifyPassword(
                                     context,
                                     vault.uuid,
                                     secret
-                                )) {
+                                )
+                                if (attemptEpoch != authEpoch || pendingAuthVault != vault) {
+                                    return@launch
+                                }
+                                when (result) {
                                     is VerifyResult.Success -> {
                                         showPasswordDialog = false
                                         passwordError = null

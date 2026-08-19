@@ -6,10 +6,10 @@
 package com.dot.gallery.cloud.ui.settings
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.toMutableStateList
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -19,86 +19,33 @@ import com.dot.gallery.core.SettingsEntity
 import com.dot.gallery.feature_node.presentation.settings.components.BaseSettingsScreen
 
 @Composable
-fun CloudViewerSettingsScreen() {
+fun CloudViewerSettingsScreen(configId: Long) {
     val settingsVm = hiltViewModel<CloudSettingsViewModel>()
     val config by settingsVm.config.collectAsStateWithLifecycle()
-    val context = LocalContext.current
-    val loadPreview = config?.loadPreviewImage ?: true
-    val loadOriginal = config?.loadOriginalImage ?: false
-    val autoPlayVideos = config?.autoPlayVideos ?: true
+    val loadState by settingsVm.loadState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(configId) { settingsVm.loadConfig(configId) }
+    if (config == null) {
+        AccountSettingsStateScreen(stringResource(R.string.cloud_viewer), loadState)
+        return
+    }
     val loopVideos = config?.loopVideos ?: false
-    val forceOriginalVideo = config?.forceOriginalVideo ?: false
+    val videosHeader = stringResource(R.string.cloud_viewer_videos)
+    val loopTitle = stringResource(R.string.cloud_viewer_loop)
+    val loopSummary = stringResource(R.string.cloud_viewer_loop_summary)
 
-    val settingsList = remember(loadPreview, loadOriginal, autoPlayVideos, loopVideos, forceOriginalVideo) {
+    val settingsList = remember(loopVideos, videosHeader, loopTitle, loopSummary) {
         buildList {
-            // Photos section
-            add(SettingsEntity.Header(title = context.getString(R.string.cloud_viewer_photos)))
+            // Looping is currently the only per-cloud viewer option consumed by playback. The
+            // preview/original/autoplay/force-original controls were removed rather than presenting
+            // switches that did not affect either Sketch or ExoPlayer.
+            add(SettingsEntity.Header(title = videosHeader))
             add(
                 SettingsEntity.SwitchPreference(
-                    title = context.getString(R.string.cloud_viewer_load_preview),
-                    summary = context.getString(R.string.cloud_viewer_load_preview_summary),
-                    isChecked = loadPreview,
-                    onCheck = { settingsVm.updateConfig { copy(loadPreviewImage = it) } },
-                    screenPosition = Position.Top
-                )
-            )
-            add(
-                SettingsEntity.SwitchPreference(
-                    title = context.getString(R.string.cloud_viewer_load_original),
-                    summary = context.getString(R.string.cloud_viewer_load_original_summary),
-                    isChecked = loadOriginal,
-                    onCheck = { settingsVm.updateConfig { copy(loadOriginalImage = it) } },
-                    screenPosition = Position.Bottom
-                )
-            )
-
-            // Videos section
-            add(SettingsEntity.Header(title = context.getString(R.string.cloud_viewer_videos)))
-            add(
-                SettingsEntity.SwitchPreference(
-                    title = context.getString(R.string.cloud_viewer_autoplay),
-                    summary = context.getString(R.string.cloud_viewer_autoplay_summary),
-                    isChecked = autoPlayVideos,
-                    onCheck = { settingsVm.updateConfig { copy(autoPlayVideos = it) } },
-                    screenPosition = Position.Top
-                )
-            )
-            add(
-                SettingsEntity.SwitchPreference(
-                    title = context.getString(R.string.cloud_viewer_loop),
-                    summary = context.getString(R.string.cloud_viewer_loop_summary),
+                    title = loopTitle,
+                    summary = loopSummary,
                     isChecked = loopVideos,
                     onCheck = { settingsVm.updateConfig { copy(loopVideos = it) } },
-                    screenPosition = Position.Middle
-                )
-            )
-            add(
-                SettingsEntity.SwitchPreference(
-                    title = context.getString(R.string.cloud_viewer_force_original),
-                    summary = context.getString(R.string.cloud_viewer_force_original_summary),
-                    isChecked = forceOriginalVideo,
-                    onCheck = { settingsVm.updateConfig { copy(forceOriginalVideo = it) } },
-                    screenPosition = Position.Bottom
-                )
-            )
-
-            // Recommended preset — one tap to sensible defaults.
-            add(SettingsEntity.Header(title = ""))
-            add(
-                SettingsEntity.Preference(
-                    title = context.getString(R.string.cloud_viewer_recommended),
-                    summary = context.getString(R.string.cloud_viewer_recommended_summary),
-                    onClick = {
-                        settingsVm.updateConfig {
-                            copy(
-                                loadPreviewImage = true,
-                                loadOriginalImage = false,
-                                autoPlayVideos = true,
-                                loopVideos = false,
-                                forceOriginalVideo = false
-                            )
-                        }
-                    },
                     screenPosition = Position.Alone
                 )
             )

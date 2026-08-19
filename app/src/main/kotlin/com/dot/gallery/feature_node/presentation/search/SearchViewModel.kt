@@ -1,21 +1,17 @@
 package com.dot.gallery.feature_node.presentation.search
 
 import android.content.Context
-import android.graphics.BitmapFactory
 import androidx.compose.runtime.Stable
+import com.bumptech.glide.Glide
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dot.gallery.R
 import com.dot.gallery.core.MediaDistributor
 import com.dot.gallery.core.Settings
-import com.dot.gallery.core.smart.SmartScanPlan
 import com.dot.gallery.core.ml.ModelGroup
 import com.dot.gallery.core.ml.ModelManager
 import com.dot.gallery.core.ml.ModelStatus
 import com.dot.gallery.feature_node.data.data_source.SmartScanDao
-import com.dot.gallery.feature_node.data.data_source.SmartScanFeature
-import com.dot.gallery.feature_node.data.data_source.SmartScanPhase
-import com.dot.gallery.feature_node.data.data_source.SmartScanStatus
 import com.dot.gallery.feature_node.domain.model.LocationMedia
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaMetadata
@@ -31,7 +27,6 @@ import com.dot.gallery.feature_node.presentation.help.data.HelpSearchIndex
 import com.dot.gallery.feature_node.presentation.help.data.HelpSearchItem
 import com.dot.gallery.feature_node.presentation.help.search.HelpFuzzyMatcher
 import com.dot.gallery.feature_node.presentation.library.CategoryMedia
-import com.dot.gallery.feature_node.presentation.search.util.centerCrop
 import com.dot.gallery.feature_node.presentation.util.mapMediaToItem
 import com.frosch2010.fuzzywuzzy_kotlin.FuzzySearch
 import com.frosch2010.fuzzywuzzy_kotlin.ToStringFunction
@@ -40,6 +35,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -58,6 +54,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
+private const val VISUAL_SEARCH_INPUT_SIZE = 224
+
 @Stable
 data class SearchResultsState(
     val hasSearched: Boolean = false,
@@ -66,6 +64,15 @@ data class SearchResultsState(
     val progress: Float = 0f,
     val results: MediaState<Media.UriMedia> = MediaState(isLoading = false)
 )
+
+internal fun <T, K> reconcileSearchResults(
+    previousResults: List<T>,
+    currentMedia: List<T>,
+    identity: (T) -> K,
+): List<T> {
+    val currentById = currentMedia.associateBy(identity)
+    return previousResults.mapNotNull { currentById[identity(it)] }
+}
 
 internal fun <T, K> smartSearchMediaPool(
     timelineMedia: List<T>,
@@ -365,36 +372,8 @@ class SearchViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     val searchIndexerState = smartScanDao.observeActiveRun()
         .flatMapLatest { run ->
-            if (run == null || run.requestedFeatures and SmartScanFeature.EMBEDDINGS.bit == 0) {
-                flowOf(SearchIndexerState())
-            } else {
-                smartScanDao.observePhases(run.runId).map { phases ->
-                    val planned = SmartScanPlan.phasesFor(run.requestedFeatures)
-                    val searchPhase = phases.firstOrNull { it.phase == SmartScanPhase.SEARCH_INDEX }
-                    if (searchPhase == null ||
-                        searchPhase.status != SmartScanStatus.QUEUED &&
-                        searchPhase.status != SmartScanStatus.RUNNING
-                    ) SearchIndexerState() else SearchIndexerState(
-                        isIndexing = true,
-                        status = searchPhase.status,
-                        progress = if (searchPhase.totalMedia <= 0) 0f else
-                            (searchPhase.processedMedia.toFloat() / searchPhase.totalMedia).coerceIn(0f, 1f),
-                        processed = searchPhase.processedMedia,
-                        total = searchPhase.totalMedia,
-                        stageNumber = planned.indexOf(SmartScanPhase.SEARCH_INDEX) + 1,
-                        stageCount = planned.size,
-                        estimatedRemainingMillis = if (searchPhase.status == SmartScanStatus.RUNNING) {
-                            SmartScanPlan.estimatedRemainingMillis(
-                                searchPhase.totalMedia,
-                                searchPhase.processedMedia,
-                                searchPhase.startedAt
-                            )
-                        } else {
-                            null
-                        }
-                    )
-                }
-            }
+            if (run == null) flowOf(SearchIndexerState())
+            else smartScanDao.observePhases(run.runId).map { phases -> deriveSearchIndexerState(run, phases) }
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, SearchIndexerState())
 
@@ -426,6 +405,14 @@ class SearchViewModel @Inject constructor(
             removingHistoryJob = viewModelScope.launch {
                 Settings.Search.removeImageHistory(context, mediaId)
             }
+        }
+    }
+
+    fun retrySearch() {
+        val selectedMedia = _selectedImageMedia.value
+        when {
+            selectedMedia != null -> searchByImage(selectedMedia)
+            _query.value.isNotEmpty() -> setQuery(_query.value)
         }
     }
 
@@ -469,20 +456,13 @@ class SearchViewModel @Inject constructor(
             )
             try {
                 val uri = media.getUri()
-                val contentResolver = context.contentResolver
-                val bitmap = contentResolver.openInputStream(uri)?.use { inputStream ->
-                    BitmapFactory.decodeStream(inputStream)
-                } ?: run {
-                    _searchResultsState.tryEmit(
-                        SearchResultsState(
-                            hasSearched = true,
-                            isSearching = false,
-                            progress = 1f,
-                            results = MediaState(error = "Could not load image", isLoading = false)
-                        )
-                    )
-                    return@launch
-                }
+                val bitmap = Glide.with(context.applicationContext)
+                    .asBitmap()
+                    .load(uri)
+                    .centerCrop()
+                    .override(VISUAL_SEARCH_INPUT_SIZE, VISUAL_SEARCH_INPUT_SIZE)
+                    .submit()
+                    .get()
 
                 if (!searchHelper.isAvailable) {
                     _searchResultsState.tryEmit(
@@ -495,9 +475,8 @@ class SearchViewModel @Inject constructor(
                     )
                     return@launch
                 }
-                val croppedBitmap = centerCrop(bitmap, 224)
                 searchHelper.setupVisionSession().use { session ->
-                    val imageEmbedding = searchHelper.getImageEmbedding(session, croppedBitmap)
+                    val imageEmbedding = searchHelper.getImageEmbedding(session, bitmap)
                     val searchResultsPair = searchHelper.sortByCosineDistance(
                         searchEmbedding = imageEmbedding,
                         imageEmbeddingsList = imageRecords.value.map { it.embedding },
@@ -527,13 +506,18 @@ class SearchViewModel @Inject constructor(
                         )
                     )
                 }
-            } catch (e: Exception) {
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
                 _searchResultsState.tryEmit(
                     SearchResultsState(
                         hasSearched = true,
                         isSearching = false,
                         progress = 1f,
-                        results = MediaState(error = e.message ?: "Search failed", isLoading = false)
+                        results = MediaState(
+                            error = context.getString(R.string.visual_search_failed),
+                            isLoading = false,
+                        )
                     )
                 )
             }
@@ -545,38 +529,51 @@ class SearchViewModel @Inject constructor(
         return media.mapNotNull { currentMedia[it.id] }
     }
 
-    private fun updateQueriedMedia(newMediaState: MediaState<Media.UriMedia>) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val selectedMedia = _selectedImageMedia.value
-            if (selectedMedia != null && newMediaState.media.none { it.id == selectedMedia.id }) {
-                searchJob?.cancel()
-                _selectedImageMedia.value = null
-                _searchResultsState.tryEmit(SearchResultsState())
-                return@launch
-            }
-            val query = _query.value
-            if (query.isEmpty()) return@launch
-            val resultsState = _searchResultsState.value
-            if (resultsState.hasSearched && !resultsState.isSearching) {
-                // Check resultsState and update any media that has changed based on the new MediaState
-                // If is deleted, remove it from results
-                // If is updated, update it in results
-                val updatedResults = resultsState.results.media.mapNotNull { mediaItem ->
-                    newMediaState.media.find { it.id == mediaItem.id }
-                }
-                if (updatedResults != resultsState.results.media) {
-                    _searchResultsState.tryEmit(
-                        resultsState.copy(
-                            results = MediaState(
-                                media = updatedResults,
-                                isLoading = false,
-                                error = resultsState.results.error
-                            )
+    private suspend fun updateQueriedMedia(newMediaState: MediaState<Media.UriMedia>) {
+        val resultsState = _searchResultsState.value
+        if (newMediaState.error.isNotEmpty()) {
+            if (resultsState.hasSearched) {
+                _searchResultsState.emit(
+                    resultsState.copy(
+                        isSearching = false,
+                        results = resultsState.results.copy(
+                            error = newMediaState.error,
+                            isLoading = false,
                         )
                     )
-                }
+                )
             }
+            return
         }
+
+        val selectedMedia = _selectedImageMedia.value
+        if (selectedMedia != null && newMediaState.media.none { it.id == selectedMedia.id }) {
+            searchJob?.cancel()
+            _selectedImageMedia.value = null
+            _searchResultsState.emit(SearchResultsState())
+            return
+        }
+        if (_query.value.isEmpty() && selectedMedia == null) return
+        if (!resultsState.hasSearched || resultsState.isSearching) return
+
+        val updatedResults = reconcileSearchResults(
+            previousResults = resultsState.results.media,
+            currentMedia = newMediaState.media,
+            identity = { it.id },
+        )
+        val updatedIds = updatedResults.mapTo(hashSetOf()) { it.id }
+        val formats = dateFormats.value
+        val rebuiltResults = mapMediaToItem(
+            data = updatedResults,
+            error = resultsState.results.error,
+            albumId = -1L,
+            groupSimilarMedia = resultsState.results.mediaGroups.isNotEmpty(),
+            cloudBackups = resultsState.results.cloudBackups.filterKeys { it in updatedIds },
+            defaultDateFormat = formats.first,
+            extendedDateFormat = formats.second,
+            weeklyDateFormat = formats.third,
+        ).copy(isLoading = false)
+        _searchResultsState.emit(resultsState.copy(results = rebuiltResults))
     }
 
     fun setMimeTypeQuery(mimeType: String, hideExplicitQuery: Boolean = false) {
@@ -723,6 +720,7 @@ class SearchViewModel @Inject constructor(
     fun setQuery(query: String, apply: Boolean = true) {
         searchJob?.cancel()
         searchJob = viewModelScope.launch(Dispatchers.IO) {
+            try {
             _query.tryEmit(query)
             if (query.isEmpty() || !apply) {
                 _searchResultsState.tryEmit(SearchResultsState())
@@ -827,13 +825,18 @@ class SearchViewModel @Inject constructor(
                     )
                 )
             )
-            if (results.isEmpty()) {
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
                 _searchResultsState.tryEmit(
                     SearchResultsState(
                         hasSearched = true,
                         isSearching = false,
                         progress = 1f,
-                        results = MediaState(error = "No results found", isLoading = false)
+                        results = MediaState(
+                            error = context.getString(R.string.search_failed),
+                            isLoading = false,
+                        )
                     )
                 )
             }

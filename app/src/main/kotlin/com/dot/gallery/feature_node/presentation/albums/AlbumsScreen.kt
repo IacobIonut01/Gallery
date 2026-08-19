@@ -40,7 +40,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -86,6 +85,8 @@ import com.dot.gallery.feature_node.presentation.albums.components.AlbumGroupCom
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumGroupRowComponent
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumRowComponent
 import com.dot.gallery.feature_node.presentation.albums.components.CarouselPinnedAlbums
+import com.dot.gallery.feature_node.presentation.common.components.MediaContentState
+import com.dot.gallery.feature_node.presentation.common.components.mediaContentState
 import com.dot.gallery.feature_node.presentation.collection.components.CollectionComponent
 import com.dot.gallery.feature_node.presentation.collection.components.CollectionRowComponent
 import com.dot.gallery.feature_node.presentation.collection.components.CreateCollectionComponent
@@ -155,16 +156,16 @@ fun AlbumsScreen(
 
     // Virtual "albums" grouping the whole library by media type (Videos/Photos/GIFs/Raw).
     // Derived from the already-collected timeline media; empty types are dropped.
-    val context = LocalContext.current
+    val mediaTypeLabels = MediaTypeAlbum.entries.associateWith { stringResource(it.labelRes) }
     val showMediaTypeAlbums by rememberShowMediaTypeAlbums()
-    val mediaTypeAlbums = remember(mediaState.value.media, showMediaTypeAlbums) {
+    val mediaTypeAlbums = remember(mediaState.value.media, showMediaTypeAlbums, mediaTypeLabels) {
         if (!showMediaTypeAlbums) emptyList()
         else MediaTypeAlbum.entries.mapNotNull { type ->
             val matches = mediaState.value.media.filter { type.matches(it) }
             if (matches.isEmpty()) return@mapNotNull null
             Album(
                 id = type.albumId,
-                label = context.getString(type.labelRes),
+                label = mediaTypeLabels.getValue(type),
                 uri = matches.first().getUri(),
                 pathToThumbnail = "",
                 relativePath = "",
@@ -225,7 +226,18 @@ fun AlbumsScreen(
             )
         }
     ) { innerPaddingValues ->
-        CompositionLocalProvider(LocalThumbnailMotion provides thumbnailMotion) {
+        when (mediaContentState(
+            isLoading = albumsState.value.isLoading,
+            error = albumsState.value.error,
+            isEmpty = albumsState.value.albums.isEmpty() && albumsState.value.collections.isEmpty(),
+        )) {
+            MediaContentState.ERROR -> Error(
+                modifier = Modifier.padding(innerPaddingValues),
+                errorMessage = albumsState.value.error,
+            )
+            MediaContentState.LOADING -> LoadingAlbum()
+            MediaContentState.EMPTY -> EmptyAlbum()
+            MediaContentState.CONTENT -> CompositionLocalProvider(LocalThumbnailMotion provides thumbnailMotion) {
         when (viewType) {
             Settings.Album.ViewType.GRID -> {
                 with(sharedTransitionScope) {
@@ -371,13 +383,13 @@ fun AlbumsScreen(
                                 if (sectionWithAlbums.section.isExpanded) {
                                     items(
                                         items = sectionWithAlbums.albums,
-                                        key = { item -> "section_${sectionWithAlbums.section.id}_${item}" }
+                                        key = { item -> "section_${sectionWithAlbums.section.id}_${item.id}" }
                                     ) { item ->
                                         val trashResult = rememberActivityResult()
                                         with(sharedTransitionScope) {
                                             AlbumComponent(
                                                 modifier = Modifier
-                                                    .pinchItem(key = "section_${sectionWithAlbums.section.id}_${item}")
+                                                    .pinchItem(key = "section_${sectionWithAlbums.section.id}_${item.id}")
                                                     .animateItem(),
                                                 thumbnailModifier = Modifier
                                                     .mediaSharedElement(
@@ -407,13 +419,13 @@ fun AlbumsScreen(
                             // Unpinned albums (flat list, when sections are disabled)
                             items(
                                 items = albumsState.value.albumsUnpinned,
-                                key = { item -> item.toString() }
+                                key = { item -> "album_${item.id}" }
                             ) { item ->
                                 val trashResult = rememberActivityResult()
                                 with(sharedTransitionScope) {
                                     AlbumComponent(
                                         modifier = Modifier
-                                            .pinchItem(key = item.toString())
+                                            .pinchItem(key = "album_${item.id}")
                                             .animateItem(),
                                         thumbnailModifier = Modifier
                                             .mediaSharedElement(
@@ -728,7 +740,7 @@ fun AlbumsScreen(
                             if (sectionWithAlbums.section.isExpanded) {
                                 items(
                                     items = sectionWithAlbums.albums,
-                                    key = { item -> "section_${sectionWithAlbums.section.id}_${item}" }
+                                    key = { item -> "section_${sectionWithAlbums.section.id}_${item.id}" }
                                 ) { item ->
                                     val trashResult = rememberActivityResult()
                                     with(sharedTransitionScope) {
@@ -763,7 +775,7 @@ fun AlbumsScreen(
                         // Unpinned albums (flat list, when sections are disabled) - LIST view
                         items(
                             items = albumsState.value.albumsUnpinned,
-                            key = { it.toString() }
+                            key = { "album_list_${it.id}" }
                         ) { item ->
                             val trashResult = rememberActivityResult()
                             with(sharedTransitionScope) {
@@ -931,15 +943,7 @@ fun AlbumsScreen(
         }
         }
     }
-    /** Error State Handling Block **/
-    AnimatedVisibility(
-        visible = albumsState.value.error.isNotEmpty(),
-        enter = enterAnimation,
-        exit = exitAnimation
-    ) {
-        Error(errorMessage = albumsState.value.error)
-    }
-    /** ************ **/
+}
 }
 
 /**

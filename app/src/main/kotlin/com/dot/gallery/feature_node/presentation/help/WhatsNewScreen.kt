@@ -129,7 +129,7 @@ private fun ReleaseCard(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    text = "v${release.versionName}",
+                    text = stringResource(R.string.version_name_format, release.versionName),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )

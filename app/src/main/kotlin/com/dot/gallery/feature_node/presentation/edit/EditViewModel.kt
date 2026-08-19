@@ -76,11 +76,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.delay
@@ -322,20 +321,6 @@ class EditViewModel @Inject constructor(
         Toast.makeText(context, context.getString(resId), Toast.LENGTH_SHORT).show()
     }
 
-    /**
-     * Composite the current (transparent) working image onto a solid [color] and push it as a
-     * [FlattenBackground] checkpoint so a cut-out edit can be saved in an alpha-less format.
-     */
-    private fun appendFlatten(color: Int) {
-        val base = lastRealBitmap() ?: return
-        val adj = FlattenBackground(color)
-        val flattened = adj.apply(base)
-        _appliedAdjustments.value = _appliedAdjustments.value + adj
-        bitmaps.add(flattened to adj)
-        _currentBitmap.value = flattened
-        _targetBitmap.value = flattened
-    }
-
     private val _originalBitmap = MutableStateFlow<Bitmap?>(null)
     val originalBitmap = _originalBitmap.asStateFlow()
 
@@ -363,6 +348,9 @@ class EditViewModel @Inject constructor(
     val appliedAdjustments = _appliedAdjustments.asStateFlow()
 
     private val activeMedia = MutableStateFlow<UriMedia?>(null)
+    private val sourceInitializationMutex = Mutex()
+    private var initializedSource: Uri? = null
+    private val saveGuard = EditorSaveGuard()
 
     private val _isSaving = MutableStateFlow(true)
     val isSaving = _isSaving.asStateFlow()
@@ -382,8 +370,8 @@ class EditViewModel @Inject constructor(
      * failed load never leaves the editor stuck on the loading overlay (which is gated on
      * [isSaving]).
      */
-    private val _loadFailed = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
-    val loadFailed = _loadFailed.asSharedFlow()
+    private val _loadFailed = MutableStateFlow<Boolean?>(null)
+    val loadFailed = _loadFailed.asStateFlow()
 
     /**
      * Emits [loadFailed] with whether a recoverable original backup exists for the active media, so
@@ -392,7 +380,11 @@ class EditViewModel @Inject constructor(
      */
     private suspend fun emitLoadFailed() {
         val hasBackup = activeMedia.value?.id?.let { editBackupManager.hasOriginalBackup(it) } ?: false
-        _loadFailed.tryEmit(hasBackup)
+        _loadFailed.value = hasBackup
+    }
+
+    fun clearLoadFailure() {
+        _loadFailed.value = null
     }
 
     private val _canOverride = MutableStateFlow(false)
@@ -426,6 +418,33 @@ class EditViewModel @Inject constructor(
         get() = _isRawEdit.value && _rawDevelopParams.value?.let { it != RawDevelopParams.AUTO } == true
 
     private var rawToneJob: Job? = null
+
+    private data class SaveSnapshot(
+        val media: UriMedia,
+        val adjustments: List<Adjustment>,
+        val proxyOriginal: Bitmap?,
+        val liveResult: Bitmap?,
+        val isRawEdit: Boolean,
+        val rawBytes: ByteArray?,
+        val rawParams: RawDevelopParams?,
+        val rawUserFlip: Int,
+    )
+
+    private fun captureSaveSnapshot(flattenColor: Int? = null): SaveSnapshot? {
+        val media = activeMedia.value ?: return null
+        val flatten = flattenColor?.let(::FlattenBackground)
+        val liveResult = lastRealBitmap()
+        return SaveSnapshot(
+            media = media,
+            adjustments = _appliedAdjustments.value.toList() + listOfNotNull(flatten),
+            proxyOriginal = _originalBitmap.value,
+            liveResult = flatten?.apply(liveResult ?: return null) ?: liveResult,
+            isRawEdit = _isRawEdit.value,
+            rawBytes = rawBytes,
+            rawParams = _rawDevelopParams.value,
+            rawUserFlip = rawUserFlip,
+        )
+    }
 
     private val _uri = MutableStateFlow<Uri?>(null)
     val uri = _uri.asStateFlow()
@@ -547,21 +566,10 @@ class EditViewModel @Inject constructor(
     }
 
     /**
-     * The write format matching the source image's format (JXL→JXL, AVIF→AVIF, HEIC→HEIC, …), or
-     * `null` when the source format has no Android encoder (RAW/TIFF/PSD/JP2/SVG/animated) and
-     * therefore cannot be overwritten in place.
-     */
-    private fun sourceWriteFormat(): ImageReencoder.ImageWriteFormat? {
-        val media = activeMedia.value ?: return null
-        return ImageReencoder.formatForMime(media.mimeType, media.label)
-    }
-
-    /**
      * Builds the re-encode config from settings, folding in a best-effort estimate of the source's
      * original quality (JPEG only) so overwrites in AUTO mode match the original fidelity.
      */
-    private fun reencodeConfigForSource(): ImageReencoder.ReencodeConfig {
-        val media = activeMedia.value
+    private fun reencodeConfigForSource(media: UriMedia? = activeMedia.value): ImageReencoder.ReencodeConfig {
         val detected = media?.let { m ->
             runCatching {
                 val prefix = context.contentResolver.openInputStream(m.uri)?.use { input ->
@@ -721,36 +729,54 @@ class EditViewModel @Inject constructor(
         _drawMode.value = DrawMode.Draw
     }
 
-    fun setSourceData(context: Context, uri: Uri) {
+    fun setSourceData(context: Context, uri: Uri, forceReload: Boolean = false) {
         viewModelScope.launch(Dispatchers.IO) {
-            try {
-                _uri.value = uri
-                val mediaList =
-                    repository.getMediaListByUris(listOf(uri), reviewMode = false, onlyMatching = true).firstOrNull()?.data
-                        ?: emptyList()
-                _canOverride.value = mediaList.isNotEmpty()
-                if (mediaList.isNotEmpty()) {
-                    activeMedia.value = mediaList.first()
-                    _hasOriginalBackup.value = editBackupManager.hasOriginalBackup(mediaList.first().id)
-                } else {
-                    activeMedia.value = Media.createFromUri(context, uri)
-                }
+            sourceInitializationMutex.withLock {
+                // The activity composition is recreated on configuration changes while this ViewModel
+                // survives. Do not reinstall the same base: RAW's installBase clears its recipe and the
+                // normal path would prepend another base beneath the existing recipe.
+                if (!forceReload && initializedSource == uri) return@withLock
+                initializedSource = null
+                _loadFailed.value = null
+                _isSaving.value = true
+                _saveProgress.value = null
+                rawToneJob?.cancel()
+                rawBytes = null
+                rawBaseBitmap = null
+                rawUserFlip = -1
+                _rawDevelopParams.value = null
+                _isRawEdit.value = false
+                try {
+                    _uri.value = uri
+                    val mediaList =
+                        repository.getMediaListByUris(listOf(uri), reviewMode = false, onlyMatching = true).firstOrNull()?.data
+                            ?: emptyList()
+                    _canOverride.value = mediaList.isNotEmpty()
+                    if (mediaList.isNotEmpty()) {
+                        activeMedia.value = mediaList.first()
+                        _hasOriginalBackup.value = editBackupManager.hasOriginalBackup(mediaList.first().id)
+                    } else {
+                        activeMedia.value = Media.createFromUri(context, uri)
+                        _hasOriginalBackup.value = false
+                    }
 
-                setOriginalBitmap(context)
-            } catch (e: Exception) {
-                printError("Editor failed to load source: ${e.message}")
-                _isSaving.value = false
-                emitLoadFailed()
+                    if (setOriginalBitmap(context)) initializedSource = uri
+                } catch (e: Exception) {
+                    initializedSource = null
+                    printError("Editor failed to load source: ${e.message}")
+                    _isSaving.value = false
+                    emitLoadFailed()
+                }
             }
         }
     }
 
-    private suspend fun setOriginalBitmap(context: Context) {
-        try {
+    private suspend fun setOriginalBitmap(context: Context): Boolean {
+        return try {
             // RAW: demosaic a bounded base and develop it in-editor instead of loading the
             // embedded JPEG preview. Falls through to the Glide path when native RAW is
             // unavailable or the decode fails.
-            if (setupRawBase()) return
+            if (setupRawBase()) return true
             val mediaUri = activeMedia.value?.uri
                 ?: throw IllegalStateException("No media uri to load")
             // Decode a memory-safe PROXY (bounded to the screen) for interactive editing instead of
@@ -773,17 +799,13 @@ class EditViewModel @Inject constructor(
             } else {
                 result
             }
-            _originalBitmap.value = bitmap
-            _targetBitmap.value = bitmap
-            if (_currentBitmap.value == null) {
-                _currentBitmap.value = bitmap
-            }
-            bitmaps.add(0, bitmap to null)
-            _isSaving.value = false
+            installBase(bitmap)
+            true
         } catch (e: Exception) {
             printError("Editor failed to decode bitmap: ${e.message}")
             _isSaving.value = false
             emitLoadFailed()
+            false
         }
     }
 
@@ -924,16 +946,6 @@ class EditViewModel @Inject constructor(
     }
 
     /**
-     * Full-resolution developed source for the RAW bake: a single native demosaic that bakes the
-     * whole recipe (base + tone) at full res, matching the live preview exactly.
-     */
-    private fun rawFullResSource(): Bitmap? {
-        val bytes = rawBytes ?: return null
-        val params = _rawDevelopParams.value ?: return null
-        return NativeRawDecoder.demosaic(bytes, params, rawUserFlip)
-    }
-
-    /**
      * Accurate cached thumbnail of the current RAW developed with [params] (used by the Develop tab
      * to preview each option). Returns null for non-RAW sessions or when the decode fails.
      */
@@ -955,10 +967,10 @@ class EditViewModel @Inject constructor(
      * exactly. The fidelity guard shared by every full-res save path: a `false` means the recipe is
      * incomplete and we must fail safe rather than write a different-looking file.
      */
-    private fun recipeIsFaithful(): Boolean {
-        val proxyOriginal = _originalBitmap.value ?: return true
-        val liveResult = lastRealBitmap() ?: return true
-        return EditReplay.matchesLiveResult(proxyOriginal, _appliedAdjustments.value, liveResult)
+    private fun recipeIsFaithful(snapshot: SaveSnapshot): Boolean {
+        val proxyOriginal = snapshot.proxyOriginal ?: return true
+        val liveResult = snapshot.liveResult ?: return true
+        return EditReplay.matchesLiveResult(proxyOriginal, snapshot.adjustments, liveResult)
     }
 
     /** The native scanline (JPEG/PNG) streaming format for [writeFormat], or null. */
@@ -984,13 +996,14 @@ class EditViewModel @Inject constructor(
      * faithful (proxy parity), and a geometry-free, normal-EXIF, tiled-decodable source.
      */
     private fun streamingWriter(
+        snapshot: SaveSnapshot,
         writeFormat: ImageReencoder.ImageWriteFormat,
         config: ImageReencoder.ReencodeConfig,
     ): ((Int) -> Boolean)? {
-        if (_isRawEdit.value) return null // RAW has no source encoder / tiled decode; use bakeFullRes
-        val mediaUri = activeMedia.value?.uri ?: return null
-        val adjustments = _appliedAdjustments.value
-        if (!recipeIsFaithful()) return null
+        if (snapshot.isRawEdit) return null // RAW has no source encoder / tiled decode; use bakeFullRes
+        val mediaUri = snapshot.media.uri
+        val adjustments = snapshot.adjustments
+        if (!recipeIsFaithful(snapshot)) return null
         if (!TiledBakeEngine.isStreamEligible(context, mediaUri, adjustments)) return null
 
         val onProgress: (Float) -> Unit = { _saveProgress.value = it }
@@ -1016,22 +1029,24 @@ class EditViewModel @Inject constructor(
         return null
     }
 
-    private suspend fun bakeFullRes(context: Context): Bitmap? {
+    private suspend fun bakeFullRes(context: Context, snapshot: SaveSnapshot): Bitmap? {
         // RAW: demosaic the full recipe (base + tone) at full resolution, then replay the
         // crop/filter/markup recipe on top. RAW isn't tiled-decodable, so this is the only path.
-        if (_isRawEdit.value) {
-            val src = rawFullResSource() ?: return null
+        if (snapshot.isRawEdit) {
+            val bytes = snapshot.rawBytes ?: return null
+            val params = snapshot.rawParams ?: return null
+            val src = NativeRawDecoder.demosaic(bytes, params, snapshot.rawUserFlip) ?: return null
             return try {
-                EditReplay.replay(src, _appliedAdjustments.value)
+                EditReplay.replay(src, snapshot.adjustments)
             } catch (e: Exception) {
                 printError("Full-res RAW bake replay failed: ${e.message}")
                 if (!src.isRecycled) src.recycle()
                 null
             }
         }
-        val mediaUri = activeMedia.value?.uri ?: return null
-        val adjustments = _appliedAdjustments.value
-        if (!recipeIsFaithful()) {
+        val mediaUri = snapshot.media.uri
+        val adjustments = snapshot.adjustments
+        if (!recipeIsFaithful(snapshot)) {
             printError("Full-res bake aborted: recorded recipe does not match the live proxy result")
             return null
         }
@@ -1476,67 +1491,81 @@ class EditViewModel @Inject constructor(
         }
     }
 
+    private fun launchSingleFlightSave(
+        onSuccess: () -> Unit,
+        onFail: () -> Unit,
+        operation: suspend () -> Boolean,
+    ) {
+        // Acquire and publish the blocked UI state synchronously, closing the tap/edit race before
+        // the IO coroutine starts. A concurrent request is consumed rather than queued.
+        if (!saveGuard.tryAcquire()) return
+        _isSaving.value = true
+        _saveProgress.value = null
+        viewModelScope.launch(Dispatchers.IO) {
+            val succeeded = try {
+                operation()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                printError("Editor save failed: ${e.message}")
+                false
+            } finally {
+                // Every exit path (success, failure or cancellation) restores the complete save UI
+                // state and opens the gate for a deliberate retry.
+                _saveProgress.value = null
+                _isSaving.value = false
+                saveGuard.release()
+            }
+            if (succeeded) onSuccess() else onFail()
+        }
+    }
+
     fun saveCopy(
         forcePng: Boolean = false,
         flattenColor: Int? = null,
         onSuccess: () -> Unit = {},
         onFail: () -> Unit = {}
     ) {
-        viewModelScope.launch(Dispatchers.IO) {
-            _isSaving.value = true
-            _saveProgress.value = null
-            // A transparent cut-out edit either forces PNG (alpha preserved) or is flattened onto a
-            // solid colour (keeps the source format). Otherwise match the source format; non-encodable
-            // sources (RAW/TIFF/PSD/…) fall back to PNG so the new copy is lossless.
-            val writeFormat = if (forcePng) ImageReencoder.ImageWriteFormat.PNG
-            else sourceWriteFormat() ?: ImageReencoder.ImageWriteFormat.PNG
-            val config = reencodeConfigForSource()
-            // Flatten any pending matrix adjustments into the bitmap before saving
+        launchSingleFlightSave(onSuccess, onFail) {
+            // Flatten pending previews before taking one immutable recipe/source snapshot for every
+            // branch of this save. UI input is blocked while this operation owns the save guard.
             flattenComposedMatrix()
-            if (flattenColor != null) appendFlatten(flattenColor)
-            val media = activeMedia.value!!
-            // Fast path: stream the full-res result straight into a native tiled/scanline encoder
-            // (JPEG/PNG/HEIC/AVIF) so the whole output bitmap is never held in RAM. Falls through to
-            // the bitmap path otherwise.
-            val streamWriter = streamingWriter(writeFormat, config)
+            val snapshot = captureSaveSnapshot(flattenColor) ?: return@launchSingleFlightSave false
+            val output = EditorOutputPolicy.copy(
+                sourceMime = snapshot.media.mimeType,
+                sourceLabel = snapshot.media.label,
+                forcePng = forcePng,
+            )
+            val writeFormat = output.writeFormat
+            val config = reencodeConfigForSource(snapshot.media)
+            val relativePath = Environment.DIRECTORY_PICTURES + "/Edited"
+
+            // Fast path: stream the full-res result straight into a native tiled/scanline encoder.
+            val streamWriter = streamingWriter(snapshot, writeFormat, config)
             if (streamWriter != null) {
                 val streamedUri = context.contentResolver.saveImageStreaming(
                     mimeType = writeFormat.mimeType,
-                    relativePath = Environment.DIRECTORY_PICTURES + "/Edited",
-                    displayName = media.label,
+                    relativePath = relativePath,
+                    displayName = output.displayName,
                     write = streamWriter,
                 )
-                if (streamedUri != null) {
-                    onSuccess().also { _isSaving.value = false }
-                    return@launch
-                }
-                // Streaming ineligible/failed → fall back to the whole-bitmap (indeterminate) bake.
+                if (streamedUri != null) return@launchSingleFlightSave true
                 _saveProgress.value = null
             }
-            // Bake the edit onto the full-resolution original (no downsampling). Null = the recipe
-            // couldn't be reproduced or decode failed → fail safe rather than write a wrong file.
-            bakeFullRes(context)?.let { bitmap ->
-                try {
-                    if (mediaHandler.saveImage(
-                            bitmap = bitmap,
-                            writeFormat = writeFormat,
-                            config = config,
-                            relativePath = Environment.DIRECTORY_PICTURES + "/Edited",
-                            displayName = media.label,
-                            mimeType = writeFormat.mimeType
-                        ) != null
-                    ) {
-                        onSuccess().also { _isSaving.value = false }
-                    } else {
-                        onFail().also { _isSaving.value = false }
-                    }
-                } catch (_: Exception) {
-                    _isSaving.value = false
-                    onFail().also { _isSaving.value = false }
-                } finally {
-                    if (!bitmap.isRecycled) bitmap.recycle()
-                }
-            } ?: onFail().also { _isSaving.value = false }
+
+            val bitmap = bakeFullRes(context, snapshot) ?: return@launchSingleFlightSave false
+            try {
+                mediaHandler.saveImage(
+                    bitmap = bitmap,
+                    writeFormat = writeFormat,
+                    config = config,
+                    relativePath = relativePath,
+                    displayName = output.displayName,
+                    mimeType = writeFormat.mimeType,
+                ) != null
+            } finally {
+                if (!bitmap.isRecycled) bitmap.recycle()
+            }
         }
     }
 
@@ -1551,64 +1580,50 @@ class EditViewModel @Inject constructor(
         onSuccess: () -> Unit = {},
         onFail: () -> Unit = {},
     ) {
-        viewModelScope.launch(Dispatchers.IO) {
-            _isSaving.value = true
-            _saveProgress.value = null
-            val media = activeMedia.value
-            val bytes = rawBytes
-            val params = _rawDevelopParams.value
-            if (media == null || bytes == null || params == null) {
-                onFail().also { _isSaving.value = false }
-                return@launch
-            }
+        launchSingleFlightSave(onSuccess, onFail) {
+            flattenComposedMatrix()
+            val snapshot = captureSaveSnapshot() ?: return@launchSingleFlightSave false
+            val bytes = snapshot.rawBytes ?: return@launchSingleFlightSave false
+            val params = snapshot.rawParams ?: return@launchSingleFlightSave false
+            val displayName = EditorOutputPolicy.rawCopy(snapshot.media.label, format)
             val relativePath = Environment.DIRECTORY_PICTURES + "/Edited"
 
             if (format.isTiff) {
-                val base = media.label.substringBeforeLast('.').ifBlank { "developed" }
-                val displayName = "${base}_developed.${format.ext}"
-                val out = runCatching {
-                    context.contentResolver.saveImageStreaming(
-                        mimeType = format.mimeType,
-                        relativePath = relativePath,
-                        displayName = displayName,
-                    ) { fd ->
-                        NativeRawDecoder.exportTiff(bytes, params, fd, bits = format.bits, userFlip = rawUserFlip)
-                    }
-                }.getOrNull()
-                if (out != null) onSuccess().also { _isSaving.value = false }
-                else onFail().also { _isSaving.value = false }
-                return@launch
+                return@launchSingleFlightSave context.contentResolver.saveImageStreaming(
+                    mimeType = format.mimeType,
+                    relativePath = relativePath,
+                    displayName = displayName,
+                ) { fd ->
+                    NativeRawDecoder.exportTiff(
+                        bytes,
+                        params,
+                        fd,
+                        bits = format.bits,
+                        userFlip = snapshot.rawUserFlip,
+                    )
+                } != null
             }
 
             // JPEG/PNG: bake the full recipe (develop + crop/filters/markup) onto the full-res image.
-            flattenComposedMatrix()
             val writeFormat = if (format == RawSaveFormat.JPEG) {
                 ImageReencoder.ImageWriteFormat.JPEG
             } else {
                 ImageReencoder.ImageWriteFormat.PNG
             }
-            val config = reencodeConfigForSource()
-            bakeFullRes(context)?.let { bitmap ->
-                try {
-                    if (mediaHandler.saveImage(
-                            bitmap = bitmap,
-                            writeFormat = writeFormat,
-                            config = config,
-                            relativePath = relativePath,
-                            displayName = media.label,
-                            mimeType = writeFormat.mimeType,
-                        ) != null
-                    ) {
-                        onSuccess().also { _isSaving.value = false }
-                    } else {
-                        onFail().also { _isSaving.value = false }
-                    }
-                } catch (_: Exception) {
-                    onFail().also { _isSaving.value = false }
-                } finally {
-                    if (!bitmap.isRecycled) bitmap.recycle()
-                }
-            } ?: onFail().also { _isSaving.value = false }
+            val config = reencodeConfigForSource(snapshot.media)
+            val bitmap = bakeFullRes(context, snapshot) ?: return@launchSingleFlightSave false
+            try {
+                mediaHandler.saveImage(
+                    bitmap = bitmap,
+                    writeFormat = writeFormat,
+                    config = config,
+                    relativePath = relativePath,
+                    displayName = displayName,
+                    mimeType = writeFormat.mimeType,
+                ) != null
+            } finally {
+                if (!bitmap.isRecycled) bitmap.recycle()
+            }
         }
     }
 
@@ -1623,101 +1638,69 @@ class EditViewModel @Inject constructor(
         onSuccess: () -> Unit = {},
         onFail: () -> Unit = {}
     ) {
-        val writeFormat = sourceWriteFormat()
-        if (writeFormat == null) {
+        if (_isSaving.value) return
+        val initialMedia = activeMedia.value ?: return
+        if (ImageReencoder.formatForMime(initialMedia.mimeType, initialMedia.label) == null) {
             // Source format can't be re-encoded in place — defer to the copy fallback flow.
             onNeedsCopyFallback()
             return
         }
-        viewModelScope.launch(Dispatchers.IO) {
-            _isSaving.value = true
-            _saveProgress.value = null
-            val config = reencodeConfigForSource()
-            // Flatten any pending matrix adjustments into the bitmap before saving
+        launchSingleFlightSave(onSuccess, onFail) {
             flattenComposedMatrix()
-            // A cut-out overwrite keeps the source format, so flatten the transparency onto a solid
-            // colour (an alpha-less format like JPEG would otherwise turn transparent pixels black).
-            if (flattenColor != null) appendFlatten(flattenColor)
-            val media = activeMedia.value!!
-            // Fast path: stream the full-res result straight into a native tiled/scanline encoder
-            // (JPEG/PNG/HEIC/AVIF) so the whole output bitmap is never held in RAM. Falls through to
-            // the bitmap path otherwise.
-            val streamWriter = streamingWriter(writeFormat, config)
+            val snapshot = captureSaveSnapshot(flattenColor) ?: return@launchSingleFlightSave false
+            val media = snapshot.media
+            val writeFormat = ImageReencoder.formatForMime(media.mimeType, media.label)
+                ?: return@launchSingleFlightSave false
+            val config = reencodeConfigForSource(media)
+
+            // Fast path: encode to a cache staging file, then replace only after a successful,
+            // non-empty encode. The source remains readable throughout the encode.
+            val streamWriter = streamingWriter(snapshot, writeFormat, config)
             if (streamWriter != null) {
-                // Backup original before overwriting (preserves first original).
                 val backedUp = editBackupManager.backupOriginal(
-                    mediaId = media.id, uri = media.uri, mimeType = media.mimeType
+                    mediaId = media.id,
+                    uri = media.uri,
+                    mimeType = media.mimeType,
                 )
-                if (!backedUp) {
-                    onFail().also { _isSaving.value = false }
-                    return@launch
-                }
+                if (!backedUp) return@launchSingleFlightSave false
                 val stagingFile = runCatching {
-                    java.io.File.createTempFile(
-                        "edit_override_",
-                        ".tmp",
-                        context.cacheDir,
-                    )
-                }.getOrElse {
-                    onFail().also { _isSaving.value = false }
-                    return@launch
-                }
-                val streamed = context.contentResolver.overrideImageStreaming(
-                    media.uri,
-                    stagingFile,
-                    streamWriter,
-                )
-                if (streamed) {
+                    java.io.File.createTempFile("edit_override_", ".tmp", context.cacheDir)
+                }.getOrNull() ?: return@launchSingleFlightSave false
+                if (context.contentResolver.overrideImageStreaming(media.uri, stagingFile, streamWriter)) {
                     _hasOriginalBackup.value = true
                     evictImageCaches(media.uri)
-                    onSuccess().also { _isSaving.value = false }
-                    return@launch
+                    return@launchSingleFlightSave true
                 }
-                // Streaming ineligible/failed → fall back to the whole-bitmap (indeterminate) bake.
                 _saveProgress.value = null
             }
-            // Bake the edit onto the full-resolution original (no downsampling). Null = the recipe
-            // couldn't be reproduced or decode failed → fail safe rather than overwrite with a
-            // wrong-looking file.
-            bakeFullRes(context)?.let { bitmap ->
-                try {
-                    // Backup original before overriding (preserves first original)
-                    val backedUp = editBackupManager.backupOriginal(
-                        mediaId = media.id,
-                        uri = media.uri,
-                        mimeType = media.mimeType
-                    )
-                    if (!backedUp) {
-                        onFail().also { _isSaving.value = false }
-                        return@launch
-                    }
 
-                    if (mediaHandler.overrideImage(
-                            uri = media.uri,
-                            bitmap = bitmap,
-                            writeFormat = writeFormat,
-                            config = config,
-                            relativePath = Environment.DIRECTORY_PICTURES + "/Edited",
-                            displayName = media.label,
-                            mimeType = writeFormat.mimeType
-                        )
-                    ) {
-                        _hasOriginalBackup.value = true
-                        // The overwritten file keeps the same URI, so any decoded bitmap already
-                        // held in Sketch's memory cache (base painter + zoom tiles) would keep
-                        // being served as the stale original in the media viewer. Evict every
-                        // cache entry for this URI so the next load re-decodes the new pixels (#1004).
-                        evictImageCaches(media.uri)
-                        onSuccess().also { _isSaving.value = false }
-                    } else {
-                        onFail().also { _isSaving.value = false }
-                    }
-                } catch (e: Exception) {
-                    onFail().also { _isSaving.value = false }
-                } finally {
-                    if (!bitmap.isRecycled) bitmap.recycle()
+            val bitmap = bakeFullRes(context, snapshot) ?: return@launchSingleFlightSave false
+            try {
+                // Backup original before overriding (preserves the first original).
+                val backedUp = editBackupManager.backupOriginal(
+                    mediaId = media.id,
+                    uri = media.uri,
+                    mimeType = media.mimeType,
+                )
+                if (!backedUp) return@launchSingleFlightSave false
+
+                val overridden = mediaHandler.overrideImage(
+                    uri = media.uri,
+                    bitmap = bitmap,
+                    writeFormat = writeFormat,
+                    config = config,
+                    relativePath = Environment.DIRECTORY_PICTURES + "/Edited",
+                    displayName = media.label,
+                    mimeType = writeFormat.mimeType,
+                )
+                if (overridden) {
+                    _hasOriginalBackup.value = true
+                    evictImageCaches(media.uri)
                 }
-            } ?: onFail().also { _isSaving.value = false }
+                overridden
+            } finally {
+                if (!bitmap.isRecycled) bitmap.recycle()
+            }
         }
     }
 

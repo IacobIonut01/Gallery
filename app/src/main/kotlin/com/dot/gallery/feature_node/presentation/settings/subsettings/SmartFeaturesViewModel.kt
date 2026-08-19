@@ -64,11 +64,13 @@ class SmartFeaturesViewModel @Inject constructor(
         initialValue = false
     )
 
-    val activeSmartScan: StateFlow<SmartScanRunEntity?> = smartScanDao.observeActiveRun().stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = null
-    )
+    val activeSmartScan: StateFlow<SmartScanRunEntity?> = smartScanDao.observeActiveRun()
+        .map { run -> run?.takeIf { SmartScanPlan.shouldShowRun(it.userVisible, it.totalMedia) } }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
+        )
 
     val latestSmartScan: StateFlow<SmartScanRunEntity?> = smartScanDao.observeLatestRun().stateIn(
         scope = viewModelScope,

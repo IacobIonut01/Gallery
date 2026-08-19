@@ -95,6 +95,7 @@ fun <T : Media> VideoPlayer(
     onZoomChange: (Boolean) -> Unit = {},
     captureBlur: Boolean = true,
     slideshowActive: Boolean = false,
+    onLoadFailed: () -> Unit = {},
     onVideoEnded: () -> Unit = {}
 ) {
     // Acquire or create the ViewModel for this media id
@@ -108,6 +109,10 @@ fun <T : Media> VideoPlayer(
 
     val playback by vm.state.collectAsStateWithLifecycle()
     val currentPlayer by vm.playerFlow.collectAsStateWithLifecycle()
+
+    LaunchedEffect(playback.playbackFailed) {
+        if (playback.playbackFailed) onLoadFailed()
+    }
 
     // Adapter states to satisfy legacy videoController signature
     val isPlayingState = rememberSaveable(media.id) { mutableStateOf(playback.isPlaying) }
@@ -171,11 +176,11 @@ fun <T : Media> VideoPlayer(
     // host so it can advance to the next item when playback ends.
     val updatedOnVideoEnded by rememberUpdatedState(onVideoEnded)
     DisposableEffect(currentPlayer, slideshowActive) {
+        vm.setSlideshowActive(slideshowActive)
         if (!slideshowActive) {
             return@DisposableEffect onDispose { }
         }
         if (!currentPlayer.isReleased) {
-            currentPlayer.repeatMode = Player.REPEAT_MODE_OFF
             currentPlayer.volume = 0f
         }
         val listener = object : Player.Listener {
@@ -187,6 +192,7 @@ fun <T : Media> VideoPlayer(
         }
         currentPlayer.addListener(listener)
         onDispose {
+            vm.setSlideshowActive(false)
             if (!currentPlayer.isReleased) {
                 currentPlayer.removeListener(listener)
             }
@@ -492,7 +498,7 @@ fun <T : Media> VideoPlayer(
     }
 
     // Loading & decrypt states
-    if (!playback.ready && !playback.decryptFailed) {
+    if (!playback.ready && !playback.decryptFailed && !playback.playbackFailed) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
             if (playback.isDecrypting) {
@@ -504,15 +510,21 @@ fun <T : Media> VideoPlayer(
         }
     }
 
-    if (playback.decryptFailed) {
+    if (playback.decryptFailed || playback.playbackFailed) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(
-                text = stringResource(R.string.decrypt_failed_tap_to_retry),
+                text = stringResource(
+                    if (playback.decryptFailed) R.string.decrypt_failed_tap_to_retry
+                    else R.string.media_load_failed_tap_to_retry
+                ),
                 modifier = Modifier
                     .combinedClickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
-                        onClick = { vm.retryDecryption() }
+                        onClick = {
+                            if (playback.decryptFailed) vm.retryDecryption()
+                            else vm.retryPlayback()
+                        }
                     )
             )
         }

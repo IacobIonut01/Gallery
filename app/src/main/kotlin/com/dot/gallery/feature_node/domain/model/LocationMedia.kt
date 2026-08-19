@@ -7,5 +7,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class LocationMedia(
     val media: Media,
-    val location: String
+    val location: String,
+    val city: String? = null,
+    val country: String? = null,
 )

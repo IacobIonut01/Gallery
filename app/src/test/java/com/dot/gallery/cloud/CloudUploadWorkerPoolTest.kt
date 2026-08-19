@@ -5,9 +5,15 @@
 
 package com.dot.gallery.cloud
 
+import androidx.work.WorkInfo
+import com.dot.gallery.cloud.sync.CloudUploadWorker
 import com.dot.gallery.cloud.sync.backupDestinationConfigIds
+import com.dot.gallery.cloud.sync.isActiveBackupWork
 import com.dot.gallery.cloud.sync.isBackupRevisionCached
 import com.dot.gallery.cloud.sync.mapWorkerPool
+import com.dot.gallery.cloud.ui.backup.BackupMatchEvidence
+import com.dot.gallery.cloud.ui.backup.backupMatchEvidence
+import com.dot.gallery.cloud.ui.backup.visibleBackupProgressItems
 import com.dot.gallery.cloud.sync.runWorkerPool
 import com.dot.gallery.cloud.sync.shouldDeferChecksumCheck
 import com.dot.gallery.cloud.immich.data.dto.ImmichAssetDto
@@ -21,6 +27,50 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 
 class CloudUploadWorkerPoolTest {
+
+    @Test
+    fun dormantPeriodicWorkIsNotReportedAsAnActiveUpload() {
+        assertTrue(
+            !isActiveBackupWork(
+                WorkInfo.State.ENQUEUED,
+                setOf(CloudUploadWorker.TAG_BACKUP, CloudUploadWorker.TAG_PERIODIC_BACKUP)
+            )
+        )
+        assertTrue(
+            isActiveBackupWork(
+                WorkInfo.State.ENQUEUED,
+                setOf(CloudUploadWorker.TAG_BACKUP, CloudUploadWorker.TAG_MANUAL_BACKUP)
+            )
+        )
+        assertTrue(
+            isActiveBackupWork(
+                WorkInfo.State.RUNNING,
+                setOf(CloudUploadWorker.TAG_BACKUP, CloudUploadWorker.TAG_PERIODIC_BACKUP)
+            )
+        )
+    }
+
+    @Test
+    fun checksumVerificationUsesCheckedItemsInsteadOfStayingAtZero() {
+        assertEquals(
+            40,
+            visibleBackupProgressItems(
+                phase = CloudUploadWorker.PHASE_VERIFYING,
+                checkedItems = 40,
+                completedItems = 0,
+                failedItems = 0
+            )
+        )
+        assertEquals(
+            7,
+            visibleBackupProgressItems(
+                phase = CloudUploadWorker.PHASE_UPLOADING,
+                checkedItems = 40,
+                completedItems = 5,
+                failedItems = 2
+            )
+        )
+    }
 
     @Test
     fun processesEveryItemWithBoundedConcurrency() = runBlocking {
@@ -100,7 +150,7 @@ class CloudUploadWorkerPoolTest {
     }
 
     @Test
-    fun cachedRemoteRevisionSkipsPreviouslyUploadedImmichAsset() {
+    fun remoteRevisionCanBeDetectedButMustNotBeUsedForImmichChecksumBypass() {
         val remoteRevisions = setOf("42|photo.jpg|image/jpeg|1234|100")
 
         assertTrue(
@@ -125,6 +175,38 @@ class CloudUploadWorkerPoolTest {
                 timestamp = 101L,
                 localRevisions = emptySet(),
                 remoteRevisions = remoteRevisions
+            )
+        )
+    }
+
+    @Test
+    fun sameAppRemoteRevisionRemainsAnAssumptionUntilContentIsChecked() {
+        assertEquals(
+            BackupMatchEvidence.ASSUMED_REVISION,
+            backupMatchEvidence(
+                uri = "content://media/42",
+                mediaId = 42L,
+                label = "photo.jpg",
+                mimeType = "image/jpeg",
+                size = 1234L,
+                timestamp = 100L,
+                cachedNames = setOf("photo.jpg"),
+                localRevisions = emptySet(),
+                remoteRevisions = setOf("42|photo.jpg|image/jpeg|1234|100")
+            )
+        )
+        assertEquals(
+            BackupMatchEvidence.ASSUMED_FILENAME,
+            backupMatchEvidence(
+                uri = "content://media/99",
+                mediaId = 99L,
+                label = "photo.jpg",
+                mimeType = "image/jpeg",
+                size = 1234L,
+                timestamp = 100L,
+                cachedNames = setOf("photo.jpg"),
+                localRevisions = emptySet(),
+                remoteRevisions = setOf("42|photo.jpg|image/jpeg|1234|100")
             )
         )
     }

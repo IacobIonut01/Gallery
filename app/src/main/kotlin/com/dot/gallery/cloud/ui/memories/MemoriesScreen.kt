@@ -103,7 +103,7 @@ fun MemoriesScreen() {
                     ),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(state.memories, key = { it.id }) { memory ->
+                    items(state.memories, key = { it.accountKey }) { memory ->
                         MemoryCard(memory = memory)
                     }
                 }

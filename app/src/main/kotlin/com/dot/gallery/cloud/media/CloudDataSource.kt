@@ -91,19 +91,25 @@ class CloudDataSource private constructor(
             throw java.io.IOException("HTTP ${response.code}: ${response.message}")
         }
 
-        val body = response.body
-            ?: throw java.io.IOException("Empty response body from $url")
+        return try {
+            val body = response.body
+            inputStream = body.byteStream()
+            val contentLength = body.contentLength()
+            CloudTrace.d("Video[$providerType] '$remoteId' streaming ${CloudTrace.bytes(contentLength)}")
+            bytesRemaining = if (contentLength > 0) contentLength else Long.MAX_VALUE
 
-        inputStream = body.byteStream()
-        val contentLength = body.contentLength()
-        CloudTrace.d("Video[$providerType] '$remoteId' streaming ${CloudTrace.bytes(contentLength)}")
-        bytesRemaining = if (contentLength > 0) contentLength else Long.MAX_VALUE
-        openedCloudStream = true
+            transferInitializing(dataSpec)
+            transferStarted(dataSpec)
+            openedCloudStream = true
 
-        transferInitializing(dataSpec)
-        transferStarted(dataSpec)
-
-        return if (contentLength > 0) contentLength else androidx.media3.common.C.LENGTH_UNSET.toLong()
+            if (contentLength > 0) contentLength else androidx.media3.common.C.LENGTH_UNSET.toLong()
+        } catch (t: Throwable) {
+            response.close()
+            inputStream = null
+            activeCall = null
+            bytesRemaining = 0L
+            throw t
+        }
     }
 
     override fun read(buffer: ByteArray, offset: Int, length: Int): Int {

@@ -101,11 +101,12 @@ class WebDavClient(
             .header("Depth", depth.toString())
             .build()
 
-        val response = okHttpClient.newCall(request).execute()
-        if (!response.isSuccessful) {
-            throw WebDavException("PROPFIND", response.code, response.message)
+        return okHttpClient.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) {
+                throw WebDavException("PROPFIND", response.code, response.message)
+            }
+            parsePropFindResponse(response.body.string())
         }
-        return parsePropFindResponse(response.body?.string() ?: "")
     }
 
     fun download(remotePath: String): ByteArray {
@@ -114,9 +115,10 @@ class WebDavClient(
             .get()
             .header("Authorization", credentials)
             .build()
-        val response = okHttpClient.newCall(request).execute()
-        if (!response.isSuccessful) throw WebDavException("Download", response.code, response.message)
-        return response.body?.bytes() ?: ByteArray(0)
+        return okHttpClient.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) throw WebDavException("Download", response.code, response.message)
+            response.body.bytes()
+        }
     }
 
     fun upload(remotePath: String, file: File, contentType: String = "application/octet-stream") {
@@ -125,8 +127,9 @@ class WebDavClient(
             .put(file.asRequestBody(contentType.toMediaType()))
             .header("Authorization", credentials)
             .build()
-        val response = okHttpClient.newCall(request).execute()
-        if (!response.isSuccessful) throw WebDavException("Upload", response.code, response.message)
+        okHttpClient.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) throw WebDavException("Upload", response.code, response.message)
+        }
     }
 
     fun mkdir(remotePath: String) {
@@ -135,9 +138,10 @@ class WebDavClient(
             .method("MKCOL", null)
             .header("Authorization", credentials)
             .build()
-        val response = okHttpClient.newCall(request).execute()
-        if (!response.isSuccessful && response.code != 405) { // 405 = already exists
-            throw WebDavException("MKCOL", response.code, response.message)
+        okHttpClient.newCall(request).execute().use { response ->
+            if (!response.isSuccessful && response.code != 405) { // 405 = already exists
+                throw WebDavException("MKCOL", response.code, response.message)
+            }
         }
     }
 
@@ -164,8 +168,9 @@ class WebDavClient(
             .delete()
             .header("Authorization", credentials)
             .build()
-        val response = okHttpClient.newCall(request).execute()
-        if (!response.isSuccessful) throw WebDavException("DELETE", response.code, response.message)
+        okHttpClient.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) throw WebDavException("DELETE", response.code, response.message)
+        }
     }
 
     /** Toggle a favorite flag via PROPPATCH (`oc:favorite`). Supported by ownCloud/Nextcloud. */
@@ -183,8 +188,9 @@ class WebDavClient(
             .method("PROPPATCH", body.toRequestBody("application/xml".toMediaType()))
             .header("Authorization", credentials)
             .build()
-        val response = okHttpClient.newCall(request).execute()
-        if (!response.isSuccessful) throw WebDavException("PROPPATCH", response.code, response.message)
+        okHttpClient.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) throw WebDavException("PROPPATCH", response.code, response.message)
+        }
     }
 
     fun checkConnection() {

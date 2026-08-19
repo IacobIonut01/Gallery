@@ -1073,4 +1073,187 @@
     <string name="help_tip_video_fix_black_p1_title">Keep video visible</string>
     <string name="help_tip_video_fix_black_p1_desc">On some devices (notably Samsung) a playing video can black out when the system bars are shown or hidden, even though it keeps playing. Enable Media Viewer › Video Playback › \'Fix black video on hide\' to re-bind the player surface on every bar change. It is on by default for Samsung devices and off elsewhere — turn it off if you don\'t need it.</string>
     <!-- RELEASE NOTES: 5.0.3 -->
+    <string name="help_tip_motion_photo_frames_title">Extraer fotogramas dunha Foto en movemento</string>
+    <string name="help_tip_motion_photo_frames_subtitle">Garda momentos exactos do clip integrado</string>
+    <string name="help_tip_motion_photo_frames_p1_title">Escolle e exporta fotogramas</string>
+    <string name="help_tip_motion_photo_frames_p1_desc">Abre unha Foto en movemento no visor e toca a súa tira de película ou escolle Extraer fotogramas na folla de accións. Desprázate ata un momento exacto, selecciona un ou varios fotogramas e expórtaos no formato de imaxe que prefiras.</string>
+    <string name="help_tip_motion_photo_frames_p1_s1">Abre unha Foto en movemento no visor</string>
+    <string name="help_tip_motion_photo_frames_p1_s2">Toca a tira de película ou escolle Extraer fotogramas</string>
+    <string name="help_tip_motion_photo_frames_p1_s3">Desprázate e selecciona os momentos que queiras</string>
+    <string name="help_tip_motion_photo_frames_p1_s4">Escolle un formato e exporta os fotogramas seleccionados</string>
+
+    <string name="help_tip_search_ignored_albums_title">Buscar nos álbums ignorados</string>
+    <string name="help_tip_search_ignored_albums_subtitle">Atopa contido oculto sen devolvelo á cronoloxía</string>
+    <string name="help_tip_search_ignored_albums_p1_title">Amplía a Busca intelixente con seguridade</string>
+    <string name="help_tip_search_ignored_albums_p1_desc">Inclúe os álbums ocultos da cronoloxía nas Funcións intelixentes e na Busca intelixente sen facelos visibles na cronoloxía nin na lapela Álbums. A opción está desactivada de forma predeterminada; cambiala inicia unha actualización completa e os álbums bloqueados quedan sempre excluídos.</string>
+    <string name="help_tip_search_ignored_albums_p1_s1">Abre Axustes > Funcións intelixentes</string>
+    <string name="help_tip_search_ignored_albums_p1_s2">Activa Incluír álbums ignorados</string>
+    <string name="help_tip_search_ignored_albums_p1_s3">Agarda a que remate a actualización completa das Funcións intelixentes</string>
+    <string name="help_tip_search_ignored_albums_p1_s4">Busca contido oculto mentres os álbums bloqueados seguen sendo privados</string>
+
+    <string name="help_tip_cloud_nextcloud_login_title">Inicia sesión en Nextcloud de forma segura</string>
+    <string name="help_tip_cloud_nextcloud_login_subtitle">Usa a autorización do navegador e a autenticación de dous factores</string>
+    <string name="help_tip_cloud_nextcloud_login_p1_title">Fluxo de inicio de sesión v2 de Nextcloud</string>
+    <string name="help_tip_cloud_nextcloud_login_p1_desc">ReFra abre o teu servidor Nextcloud no navegador do sistema para que inicies sesión e completes alí a autenticación de dous factores. Tras aprobar o acceso, Nextcloud crea un contrasinal específico da aplicación que ReFra garda cifrado no teu dispositivo.</string>
+    <string name="help_tip_cloud_nextcloud_login_p1_s1">Engade unha conta de Nextcloud e introduce o URL do seu servidor</string>
+    <string name="help_tip_cloud_nextcloud_login_p1_s2">Continúa no navegador do sistema</string>
+    <string name="help_tip_cloud_nextcloud_login_p1_s3">Inicia sesión, completa a autenticación de dous factores e aproba o acceso</string>
+    <string name="help_tip_cloud_nextcloud_login_p1_s4">Volve a ReFra mentres remata de conectarse</string>
+
+    <string name="help_tip_accessibility_remote_settings_title">Navega polos axustes sen usar a pantalla táctil</string>
+    <string name="help_tip_accessibility_remote_settings_subtitle">Usa un teclado, unha cruceta ou un mando en todos os axustes</string>
+    <string name="help_tip_accessibility_remote_settings_p1_title">Navegación de foco predicible</string>
+    <string name="help_tip_accessibility_remote_settings_p1_desc">As listas de axustes, as pantallas de detalles, os controis de selección e as accións inferiores admiten o foco direccional. ReFra destaca claramente o control enfocado e sitúa o foco nun elemento accionable ao abrir unha pantalla.</string>
+    <string name="help_tip_accessibility_remote_settings_p1_s1">Usa as frechas ou a cruceta para moverte entre os controis</string>
+    <string name="help_tip_accessibility_remote_settings_p1_s2">Preme Intro ou o botón central para activar un control</string>
+    <string name="help_tip_accessibility_remote_settings_p1_s3">Usa Atrás para saír dunha pantalla de detalles</string>
+    <string name="help_tip_accessibility_remote_settings_p1_s4">Continúa desde o control de axustes destacado</string>
+    <string name="help_search_hint">Buscar na axuda e nos consellos</string>
+    <string name="help_search_clear">Borrar a busca</string>
+    <string name="help_search_no_results">Non se atopou axuda para \"%1$s\"</string>
+    <string name="help_search_section_tips">Consellos e guías</string>
+    <string name="help_search_section_settings">Axustes</string>
+    <string name="help_search_section_actions">Accións rápidas</string>
+    <string name="help_search_section_changelog">Novidades</string>
+    <string name="help_search_see_all">Ver os %1$d resultados</string>
+    <string name="help_tips_section_title">Axuda e consellos</string>
+    <string name="help_quick_actions">Accións rápidas</string>
+    <string name="help_qa_open_timeline">Abrir a cronoloxía</string>
+    <string name="help_qa_open_albums">Abrir os álbums</string>
+    <string name="help_qa_open_search">Abrir a busca</string>
+    <string name="help_qa_open_categories">Abrir as categorías</string>
+    <string name="help_qa_open_vault">Abrir a caixa forte</string>
+    <string name="help_qa_open_trash">Abrir a papeleira</string>
+    <string name="help_qa_open_favorites">Abrir os favoritos</string>
+    <string name="help_qa_open_locations">Abrir as localizacións</string>
+    <string name="help_qa_open_library">Abrir a biblioteca</string>
+    <string name="help_qa_open_color_palette">Abrir a paleta de cores</string>
+    <string name="help_qa_open_appearance">Abrir os axustes de aparencia</string>
+    <string name="help_tip_view_cutout_title">Recortar un suxeito</string>
+    <string name="help_tip_view_cutout_subtitle">Levantar a unha persoa ou obxecto do fondo</string>
+    <string name="help_tip_view_cutout_p1_title">Levantar o suxeito detectado</string>
+    <string name="help_tip_view_cutout_p1_desc">No visor, ReFra pode detectar o suxeito principal no dispositivo e mostrar unha suxestión resaltada. Ábreo para refinar a máscara e logo copiar, compartir ou gardar un recorte transparente. Tamén podes facer que un toque prolongado comece o recorte desde os axustes do Visor de Medios.</string>
+    <string name="help_tip_view_cutout_p1_s1">Abrir unha foto con un suxeito claro</string>
+    <string name="help_tip_view_cutout_p1_s2">Toca a suxestión Recortar suxeito</string>
+    <string name="help_tip_view_cutout_p1_s3">Refina o contorno con puntos de incluír ou excluir</string>
+    <string name="help_tip_view_cutout_p1_s4">Copiar, compartir ou gardar o recorte</string>
+
+    <string name="help_tip_slideshow_play_title">Reproducir unha presentación</string>
+    <string name="help_tip_slideshow_play_subtitle">Avanzar automaticamente por un álbum a pantalla completa</string>
+    <string name="help_tip_slideshow_play_p1_title">Comezar desde o visor</string>
+    <string name="help_tip_slideshow_play_p1_desc">Abrir calquera foto, logo escoller Presentación no menú de opcións para avanzar automaticamente polo álbum a pantalla completa.</string>
+    <string name="help_tip_slideshow_play_p1_s1">Abrir unha foto nun álbum</string>
+    <string name="help_tip_slideshow_play_p1_s2">Abrir o menú de opcións</string>
+    <string name="help_tip_slideshow_play_p1_s3">Premer en Presentación de diapositivas para comezar</string>
+
+    <string name="help_tip_settings_slideshow_title">Axustes da presentación de diapositivas</string>
+    <string name="help_tip_settings_slideshow_subtitle">Establecer intervalo, orde e repetición</string>
+    <string name="help_tip_settings_slideshow_p1_title">Axustar a reprodución</string>
+    <string name="help_tip_settings_slideshow_p1_desc">Axustar canto tempo se mostra cada elemento, se a reprodución se repite e a orde na que aparecen os elementos.</string>
+    <string name="help_tip_settings_slideshow_p1_s1">Abrir axustes da presentación de diapositivas</string>
+    <string name="help_tip_settings_slideshow_p1_s2">Establecer o intervalo por elemento</string>
+    <string name="help_tip_settings_slideshow_p1_s3">Escoller orde e repetición</string>
+
+    <string name="help_tip_settings_date_format_title">Formato de data</string>
+    <string name="help_tip_settings_date_format_subtitle">Escoller como se mostran as datas</string>
+    <string name="help_tip_settings_date_format_p1_title">Escoller o teu formato</string>
+    <string name="help_tip_settings_date_format_p1_desc">ReFra segue por defecto as preferencias de data do sistema e o formato de 12/24 horas. Establece unha substitución só cando queiras un patrón personalizado e usa o botón de información para revisar os símbolos de formato soportados.</string>
+    <string name="help_tip_settings_date_format_p1_s1">Abrir formato de data</string>
+    <string name="help_tip_settings_date_format_p1_s2">Manter Seguir sistema ou introducir un patrón personalizado</string>
+    <string name="help_tip_settings_date_format_p1_s3">Previsualiza o resultado e abre a guía de formato se é necesario</string>
+
+    <string name="help_tip_basics_setup_title">Configuración inicial</string>
+    <string name="help_tip_basics_setup_subtitle">Concede acceso e escolle os teus valores predeterminados</string>
+    <string name="help_tip_basics_setup_p1_title">Comezando</string>
+    <string name="help_tip_basics_setup_p1_desc">No primeiro inicio ReFra guíache a través dos permisos, a aparencia, os modelos de IA, as contas na nube e consellos útiles. Podes volver á configuración en calquera momento.</string>
+
+    <string name="help_tip_albums_ignored_manage_title">Xestionar álbums ignorados</string>
+    <string name="help_tip_albums_ignored_manage_subtitle">Revisar e restaurar cartafoles ocultos</string>
+    <string name="help_tip_albums_ignored_manage_p1_title">Lista de álbums ignorados</string>
+    <string name="help_tip_albums_ignored_manage_p1_desc">Vexa todos os álbums que ocultou da liña de tempo e restaura calquera deles nun único lugar.</string>
+    <string name="help_tip_albums_ignored_manage_p1_s1">Abrir álbums ignorados</string>
+    <string name="help_tip_albums_ignored_manage_p1_s2">Revisar os cartafoles ocultos</string>
+    <string name="help_tip_albums_ignored_manage_p1_s3">Restaura calquera que queiras recuperar</string>
+
+    <string name="help_tip_cloud_add_server_title">Engadir un servidor</string>
+    <string name="help_tip_cloud_add_server_subtitle">Conecta Immich, WebDAV, SMB e máis</string>
+    <string name="help_tip_cloud_add_server_p1_title">Asistente de configuración</string>
+    <string name="help_tip_cloud_add_server_p1_desc">Un asistente paso a paso guíache a través da dirección do servidor, as credenciais, a rede e as opcións de sincronización.</string>
+    <string name="help_tip_cloud_add_server_p1_s1">Elixe un tipo de provedor</string>
+    <string name="help_tip_cloud_add_server_p1_s2">Introduce o servidor e as credenciais</string>
+    <string name="help_tip_cloud_add_server_p1_s3">Configura a rede e a sincronización</string>
+    <string name="help_tip_cloud_add_server_p1_s4">Revisa e garda</string>
+
+    <string name="help_tip_cloud_destinations_title">Destinos de copia de seguridade</string>
+    <string name="help_tip_cloud_destinations_subtitle">Asocia cada álbum a unha ou máis nubes</string>
+    <string name="help_tip_cloud_destinations_p1_title">Matriz de destinos</string>
+    <string name="help_tip_cloud_destinations_p1_desc">Escolla exactamente que álbums facer copia de seguridade en que contas conectadas usando unha matriz sinxela.</string>
+
+    <string name="help_tip_cloud_provider_settings_title">Axustes de conta</string>
+    <string name="help_tip_cloud_provider_settings_subtitle">Xestiona unha conta conectada</string>
+    <string name="help_tip_cloud_provider_settings_p1_title">Opcións por conta</string>
+    <string name="help_tip_cloud_provider_settings_p1_desc">Edita a rede, álbums de copia de seguridade e o comportamento de sincronización de forma independente para cada conta conectada.</string>
+
+    <string name="help_tip_cloud_shared_links_title">Enlaces compartidos</string>
+    <string name="help_tip_cloud_shared_links_subtitle">Xestiona os enlaces que compartiches</string>
+    <string name="help_tip_cloud_shared_links_p1_title">Revisa os enlaces compartidos</string>
+    <string name="help_tip_cloud_shared_links_p1_desc">Vexa e revoga os enlaces públicos creados nos teus servidores conectados.</string>
+
+    <string name="help_tip_cloud_sync_status_title">Estado de sincronización</string>
+    <string name="help_tip_cloud_sync_status_subtitle">Seguir cargas e descargas</string>
+    <string name="help_tip_cloud_sync_status_p1_title">Progreso en directo</string>
+    <string name="help_tip_cloud_sync_status_p1_desc">Vexa o progreso das copias de seguridade e comprobe o que está en cola, en execución ou fallido.</string>
+
+    <string name="help_tip_cloud_people_title">Persoas</string>
+    <string name="help_tip_cloud_people_subtitle">Explorar caras desde o seu servidor</string>
+    <string name="help_tip_cloud_people_p1_title">Agrupamento de caras</string>
+    <string name="help_tip_cloud_people_p1_desc">Explorar persoas detectadas polo seu servidor na nube e abrir as fotos de cada persoa.</string>
+
+    <string name="help_tip_cloud_free_up_space_title">Liberar espazo</string>
+    <string name="help_tip_cloud_free_up_space_subtitle">Eliminar copias locais que estean almacenadas de forma segura</string>
+    <string name="help_tip_cloud_free_up_space_p1_title">Recuperar almacenamento</string>
+    <string name="help_tip_cloud_free_up_space_p1_desc">Eliminar copias no dispositivo de medios que xa están seguramentente gardados na nube.</string>
+
+    <string name="help_tip_media_type_albums_title">Explorar por tipo de medio</string>
+    <string name="help_tip_media_type_albums_subtitle">Álbums automáticos para fotos, vídeos, GIFs e arquivos RAW</string>
+    <string name="help_tip_media_type_albums_p1_title">Álbums por tipo de medio</string>
+    <string name="help_tip_media_type_albums_p1_desc">ReFra crea álbums virtuais a partir da túa biblioteca unificada para que poidas abrir todas as fotos, vídeos, GIFs ou ficheiros RAW xuntos. A súa visibilidade está controlada desde as configuracións de Liña de tempo e Álbums.</string>
+    <string name="help_tip_media_type_albums_p1_s1">Abre Álbums e desprazate ata Tipos de medios</string>
+    <string name="help_tip_media_type_albums_p1_s2">Abre un tipo para explorar os medios que coincidan</string>
+    <string name="help_tip_media_type_albums_p1_s3">Usa as configuracións de Liña de tempo e Álbums para amosar ou ocultar a sección</string>
+
+    <string name="help_tip_raw_develop_title">Procesa fotos RAW</string>
+    <string name="help_tip_raw_develop_subtitle">Axusta os datos do sensor antes de exportar</string>
+    <string name="help_tip_raw_develop_p1_title">Usa os controis de Procesamento</string>
+    <string name="help_tip_raw_develop_p1_desc">Abre unha foto RAW compatible no editor para axustar o balance de brancos, a exposición, as luces, a cor de saída e o demosaico. ReFra usa unha vista previa segura para a memoria mentres preserva a saída en resolución completa.</string>
+    <string name="help_tip_raw_develop_p1_s1">Abre unha foto RAW e toca Editar</string>
+    <string name="help_tip_raw_develop_p1_s2">Elixe opcións na pestana Procesamento</string>
+    <string name="help_tip_raw_develop_p1_s3">Aplica calquera recorte, filtro ou marca adicional</string>
+    <string name="help_tip_raw_develop_p1_s4">Garda unha copia ou exporta en JPEG, PNG ou TIFF</string>
+
+    <string name="help_tip_people_grouping_title">Agrupa persoas no dispositivo</string>
+    <string name="help_tip_people_grouping_subtitle">Atopa caras sen subir a túa biblioteca</string>
+    <string name="help_tip_people_grouping_p1_title">Escanea e organiza persoas</string>
+    <string name="help_tip_people_grouping_p1_desc">Co modelo de caras instalado, ReFra escanea e agrupa persoas localmente. Podes iniciar un escaneo novo desde Persoas, ocultar a unha persoa, combinar grupos e crear copias difuminadas cando a privacidade importa.</string>
+    <string name="help_tip_people_grouping_p1_s1">Instala o modelo de detección de caras</string>
+    <string name="help_tip_people_grouping_p1_s2">Abre Biblioteca e logo Persoas</string>
+    <string name="help_tip_people_grouping_p1_s3">Toca Escanear persoas e agarda á indexación</string>
+    <string name="help_tip_people_grouping_p1_s4">Abre unha persoa para xestionar o grupo ou difuminar caras</string>
+
+    <string name="help_tip_album_cover_title">Elixe unha portada de álbum</string>
+    <string name="help_tip_album_cover_subtitle">Usa calquera foto local como miniatura</string>
+    <string name="help_tip_album_cover_p1_title">Establece unha portada personalizada</string>
+    <string name="help_tip_album_cover_p1_desc">Para unha foto local, non codificada, nun álbum real, abre as accións do visor e escolle Usar como portada do álbum. Tamén podes expoñer a acción na folla de selección configurable.</string>
+    <string name="help_tip_album_cover_p1_s1">Abre a foto que queiras desde o seu álbum</string>
+    <string name="help_tip_album_cover_p1_s2">Abre accións e logo escolle Usar como</string>
+    <string name="help_tip_album_cover_p1_s3">Escolle Usar como portada do álbum</string>
+
+    <string name="help_tip_metadata_sanitize_title">Eliminar metadatos sensibles</string>
+    <string name="help_tip_metadata_sanitize_subtitle">Sanitiza arquivos admitidos sen recomprimir píxeles</string>
+    <string name="help_tip_metadata_sanitize_p1_title">Escolle que eliminar</string>
+    <string name="help_tip_metadata_sanitize_p1_desc">Desde os detalles dunha foto, escolle Eliminar metadatos e selecciona só ubicación, campos descriptivos ou todos os metadatos soportados. ReFra escribe e verifica unha copia sanitizada sen perdas antes de substituír o orixinal.</string>
+    <string name="help_tip_metadata_sanitize_p1_s1">Abre unha foto local admitida</string>
+    <string name="help_tip_metadata_sanitize_p1_s2">Expande os seus detalles e toca Eliminar metadatos</string>
+    <string name="help_tip_metadata_sanitize_p1_s3">Escolle o nivel de sanitización</string>
+    <string name="help_tip_metadata_sanitize_p1_s4">Confirma só despois de revisar a advertencia de substitución</string>
 </resources>

@@ -181,7 +181,7 @@ fun MediaViewAppBar(
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                        contentDescription = "Go back",
+                        contentDescription = stringResource(R.string.back_cd),
                         tint = contentColor,
                         modifier = Modifier.height(48.dp)
                     )
@@ -250,7 +250,7 @@ fun MediaViewAppBar(
                         IconButton(onClick = onShowInfo) {
                             Icon(
                                 imageVector = Icons.Outlined.Info,
-                                contentDescription = "info",
+                                contentDescription = stringResource(R.string.media_info),
                                 tint = contentColor,
                                 modifier = Modifier.height(48.dp)
                             )

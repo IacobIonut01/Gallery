@@ -195,6 +195,8 @@ fun PickerScreen(
 
     // Private folder auth state
     val context = LocalContext.current
+    val pickerPrepareFailedText = stringResource(R.string.picker_prepare_failed)
+    val addMediaContentDescription = stringResource(R.string.add_media)
     var showPrivateFolder by remember { mutableStateOf(false) }
     var showPrivateFolderPasswordDialog by remember { mutableStateOf(false) }
     var privateFolderAuthType by remember { mutableStateOf<VaultAuthType?>(null) }
@@ -695,9 +697,14 @@ fun PickerScreen(
                             ExtendedFloatingActionButton(
                                 text = {
                                     if (allowSelection)
-                                        Text(text = "Add (${selectedMedia.value.size})")
+                                        Text(
+                                            text = stringResource(
+                                                R.string.action_add_count,
+                                                selectedMedia.value.size,
+                                            )
+                                        )
                                     else
-                                        Text(text = "Add")
+                                        Text(text = stringResource(R.string.action_add))
                                 },
                                 icon = {
                                     Icon(
@@ -722,7 +729,7 @@ fun PickerScreen(
                                             if (uris.isEmpty()) {
                                                 Toast.makeText(
                                                     context,
-                                                    context.getString(R.string.picker_prepare_failed),
+                                                    pickerPrepareFailedText,
                                                     Toast.LENGTH_SHORT
                                                 ).show()
                                             } else {
@@ -734,7 +741,7 @@ fun PickerScreen(
                                 },
                                 modifier = Modifier
                                     .semantics {
-                                        contentDescription = "Add media"
+                                        contentDescription = addMediaContentDescription
                                     }
                             )
                             BackHandler(selectedMedia.value.isNotEmpty()) {

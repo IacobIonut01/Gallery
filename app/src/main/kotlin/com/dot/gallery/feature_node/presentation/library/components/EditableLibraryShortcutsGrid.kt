@@ -13,11 +13,12 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -29,6 +30,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -68,7 +70,7 @@ import com.dot.gallery.R
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
-private val TILE_HEIGHT = 64.dp
+private val TILE_HEIGHT = 56.dp
 private val TILE_SPACING = 16.dp
 
 private data class Slot(val x: Float, val y: Float, val width: Float)
@@ -116,7 +118,7 @@ private fun computeSlots(
  * [working] is the controlled list of every AVAILABLE shortcut (visible +
  * hidden), in order. Mutations are reported via [onChange]; the caller persists.
  */
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalLayoutApi::class)
 @Composable
 fun EditableLibraryShortcutsGrid(
     working: List<LibraryShortcutPref>,
@@ -131,6 +133,7 @@ fun EditableLibraryShortcutsGrid(
     val view = LocalView.current
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
+    val tileHeight = TILE_HEIGHT
 
     val tiles = remember { mutableStateListOf<LibraryShortcutPref>() }
     var draggingId by remember { mutableStateOf<String?>(null) }
@@ -231,7 +234,7 @@ fun EditableLibraryShortcutsGrid(
         val visibleTiles = tiles.filter { it.visible }
         BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
             val spacingPx = with(density) { TILE_SPACING.toPx() }
-            val tileHeightPx = with(density) { TILE_HEIGHT.toPx() }
+            val tileHeightPx = with(density) { tileHeight.toPx() }
             val maxWidthPx = with(density) { maxWidth.toPx() }
             val unitPx = (maxWidthPx - spacingPx) / 2f
 
@@ -256,7 +259,9 @@ fun EditableLibraryShortcutsGrid(
                     // active drag the moment a tile collided with another).
                     key(pref.id) {
                     val target = Offset(slot.x, slot.y)
-                    val anim = offsets.getOrPut(pref.id) { Animatable(target, Offset.VectorConverter) }
+                    val anim = remember(pref.id) {
+                        offsets.getOrPut(pref.id) { Animatable(target, Offset.VectorConverter) }
+                    }
                     val isDragging = draggingId == pref.id
 
                     // Non-dragged tiles reflow to their slot. The dragged tile is
@@ -291,7 +296,7 @@ fun EditableLibraryShortcutsGrid(
                                 translationY = renderOffset.y
                             }
                             .width(widthDp)
-                            .height(TILE_HEIGHT)
+                            .height(tileHeight)
                             .then(
                                 if (editMode) Modifier.pointerInput(pref.id) {
                                     detectDragGestures(
@@ -335,51 +340,51 @@ fun EditableLibraryShortcutsGrid(
                                             reorderByHover(cx, cy, pref.id)
                                         }
                                     )
-                                } else Modifier.pointerInput(pref.id) {
-                                    detectTapGestures(
-                                        onLongPress = {
-                                            onEnterEditMode()
-                                            view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
-                                        },
-                                        onTap = { onClick(data.route) }
-                                    )
-                                }
+                                } else Modifier.combinedClickable(
+                                    onClick = { onClick(data.route) },
+                                    onLongClick = {
+                                        onEnterEditMode()
+                                        view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                                    },
+                                )
                             )
                     ) {
                         ShortcutTile(
                             data = data,
                             highlighted = editMode,
                             showIndicator = !editMode,
-                            modifier = Modifier.fillMaxWidth().height(TILE_HEIGHT)
+                            modifier = Modifier.fillMaxWidth().height(tileHeight)
                         )
                         if (editMode) {
                             // Remove badge (top-start)
                             Box(
                                 modifier = Modifier
                                     .align(Alignment.TopStart)
-                                    .padding(8.dp)
-                                    .size(24.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.error)
+                                    .size(48.dp)
                                     .clickable { setVisible(pref.id, false) },
                                 contentAlignment = Alignment.Center
                             ) {
-                                Icon(
-                                    imageVector = Icons.Filled.Close,
-                                    contentDescription = stringResource(R.string.library_shortcut_hide),
-                                    tint = MaterialTheme.colorScheme.onError,
-                                    modifier = Modifier.size(14.dp)
-                                )
+                                Box(
+                                    modifier = Modifier
+                                        .size(24.dp)
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.error),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Close,
+                                        contentDescription = stringResource(R.string.library_shortcut_hide),
+                                        tint = MaterialTheme.colorScheme.onError,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                }
                             }
                             // Resize handle (center-end): a clear vertical grabber.
                             // Drag horizontally to resize, or tap to toggle.
                             Box(
                                 modifier = Modifier
                                     .align(Alignment.CenterEnd)
-                                    .padding(end = 10.dp)
-                                    .size(width = 20.dp, height = 38.dp)
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(MaterialTheme.colorScheme.primaryContainer)
+                                    .size(width = 48.dp, height = tileHeight)
                                     .pointerInput(pref.id, pref.span) {
                                         var dx = 0f
                                         val threshold = geo.unitPx * 0.35f
@@ -407,14 +412,28 @@ fun EditableLibraryShortcutsGrid(
                                     },
                                 contentAlignment = Alignment.Center
                             ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.UnfoldMore,
-                                    contentDescription = stringResource(R.string.library_shortcut_size_half),
-                                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                Box(
                                     modifier = Modifier
-                                        .size(18.dp)
-                                        .graphicsLayer { rotationZ = 90f }
-                                )
+                                        .size(width = 20.dp, height = 38.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(MaterialTheme.colorScheme.primaryContainer),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.UnfoldMore,
+                                        contentDescription = stringResource(
+                                            if (pref.span == LibraryShortcutSpan.FULL) {
+                                                R.string.library_shortcut_size_half
+                                            } else {
+                                                R.string.library_shortcut_size_full
+                                            }
+                                        ),
+                                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        modifier = Modifier
+                                            .size(18.dp)
+                                            .graphicsLayer { rotationZ = 90f }
+                                    )
+                                }
                             }
                         }
                     }
@@ -441,6 +460,7 @@ fun EditableLibraryShortcutsGrid(
                         val data = LibraryShortcut.fromId(pref.id)?.let { runtime[it] } ?: return@forEach
                         Row(
                             modifier = Modifier
+                                .sizeIn(minHeight = 48.dp)
                                 .clip(RoundedCornerShape(50))
                                 .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                                 .clickable { setVisible(pref.id, true) }
@@ -486,11 +506,12 @@ private fun ShortcutTile(
     Box(modifier = modifier.clip(RoundedCornerShape(16.dp)).then(borderMod)) {
         LibrarySmallItem(
             title = data.title,
+            subtitle = data.subtitle,
             icon = data.icon,
             contentColor = data.contentColor,
             useIndicator = data.useIndicator && showIndicator,
             indicatorCounter = data.indicatorCounter,
-            modifier = Modifier.fillMaxWidth().height(TILE_HEIGHT)
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }

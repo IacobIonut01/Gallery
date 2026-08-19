@@ -44,7 +44,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -79,7 +78,6 @@ fun CloudProviderSettingsScreen(
     val serverVersions by viewModel.serverVersions.collectAsStateWithLifecycle()
     val syncProgressMap by viewModel.syncProgress.collectAsStateWithLifecycle()
     val eventHandler = LocalEventHandler.current
-    val context = LocalContext.current
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showIntervalDialog by remember { mutableStateOf(false) }
 
@@ -90,24 +88,92 @@ fun CloudProviderSettingsScreen(
         viewModel.loadServerVersions()
     }
 
-    if (config == null) return
+    if (config == null) {
+        AccountSettingsStateScreen(
+            title = stringResource(R.string.cloud_provider_settings),
+            state = AccountSettingsLoadState.ERROR
+        )
+        return
+    }
 
     val connState = connectionStates[config.id] ?: ConnectionState.DISCONNECTED
     val storage = storageInfoMap[config.id]
     val version = serverVersions[config.id]
     val syncProgress = syncProgressMap[config.id]
     val isSyncing = syncProgress?.isSyncing == true
+    val syncHeader = stringResource(R.string.cloud_sync_header)
+    val syncNowSyncingTitle = stringResource(R.string.cloud_sync_now_syncing)
+    val syncNowTitle = stringResource(R.string.cloud_sync_now)
+    val syncNowSummary = stringResource(R.string.cloud_sync_now_summary)
+    val autoSyncTitle = stringResource(R.string.cloud_auto_sync)
+    val autoSyncSummary = stringResource(R.string.cloud_auto_sync_summary)
+    val autoSyncIntervalTitle = stringResource(R.string.cloud_auto_sync_interval)
+    val syncIntervalSummary = syncIntervalLabel(config.syncIntervalMinutes)
+    val wifiOnlyTitle = stringResource(R.string.cloud_sync_wifi_only)
+    val wifiOnlySummary = stringResource(R.string.cloud_wifi_only_summary)
+    val backupAlbumsTitle = stringResource(R.string.cloud_backup_albums)
+    val selectAlbumsSummary = stringResource(R.string.cloud_backup_select_albums)
+    val backupOptionsTitle = stringResource(R.string.cloud_backup_options)
+    val backupOptionsSummary = stringResource(R.string.cloud_backup_options_summary)
+    val connectionHeader = stringResource(R.string.cloud_connection_header)
+    val credentialsTitle = stringResource(R.string.cloud_credentials)
+    val credentialsSummary = stringResource(R.string.cloud_credentials_summary)
+    val networkingTitle = stringResource(R.string.cloud_networking)
+    val networkingSummary = stringResource(R.string.cloud_net_auto_url_summary)
+    val freeSpaceTitle = stringResource(R.string.cloud_free_space)
+    val freeSpaceSummary = stringResource(R.string.cloud_free_space_description)
+    val moreHeader = stringResource(R.string.cloud_settings_more_header)
+    val notificationsTitle = stringResource(R.string.cloud_notifications)
+    val notificationsSummary = stringResource(R.string.cloud_notif_background_backup)
+    val viewerTitle = stringResource(R.string.cloud_viewer)
+    val viewerSummary = stringResource(R.string.cloud_viewer_load_preview)
+    val offlineTitle = stringResource(R.string.cloud_offline_title)
+    val offlineSummary = stringResource(R.string.cloud_offline_summary)
+    val advancedTitle = stringResource(R.string.cloud_advanced)
+    val advancedSummary = stringResource(R.string.cloud_adv_troubleshooting)
+    val resourceStrings = listOf(
+        syncHeader,
+        syncNowSyncingTitle,
+        syncNowTitle,
+        syncNowSummary,
+        autoSyncTitle,
+        autoSyncSummary,
+        autoSyncIntervalTitle,
+        syncIntervalSummary,
+        wifiOnlyTitle,
+        wifiOnlySummary,
+        backupAlbumsTitle,
+        selectAlbumsSummary,
+        backupOptionsTitle,
+        backupOptionsSummary,
+        connectionHeader,
+        credentialsTitle,
+        credentialsSummary,
+        networkingTitle,
+        networkingSummary,
+        freeSpaceTitle,
+        freeSpaceSummary,
+        moreHeader,
+        notificationsTitle,
+        notificationsSummary,
+        viewerTitle,
+        viewerSummary,
+        offlineTitle,
+        offlineSummary,
+        advancedTitle,
+        advancedSummary,
+    )
 
-    val settingsList = remember(config, isSyncing, connState, version) {
+    val settingsList = remember(config, isSyncing, connState, version, resourceStrings) {
         val items = mutableStateListOf<SettingsEntity>()
 
         // Sync section
-        items.add(SettingsEntity.Header(title = context.getString(R.string.cloud_sync_header)))
+        items.add(SettingsEntity.Header(title = syncHeader))
 
         items.add(
             SettingsEntity.Preference(
-                title = if (isSyncing) context.getString(R.string.cloud_sync_now_syncing) else context.getString(R.string.cloud_sync_now),
-                summary = if (isSyncing) (syncProgress.message ?: "") else context.getString(R.string.cloud_sync_now_summary),
+                title = if (isSyncing) syncNowSyncingTitle else syncNowTitle,
+                summary = if (isSyncing) (syncProgress.message ?: "") else syncNowSummary,
                 enabled = !isSyncing,
                 onClick = { viewModel.triggerSync(config.id) },
                 screenPosition = Position.Top
@@ -115,8 +181,8 @@ fun CloudProviderSettingsScreen(
         )
         items.add(
             SettingsEntity.SwitchPreference(
-                title = context.getString(R.string.cloud_auto_sync),
-                summary = context.getString(R.string.cloud_auto_sync_summary),
+                title = autoSyncTitle,
+                summary = autoSyncSummary,
                 isChecked = config.syncEnabled,
                 onCheck = { checked ->
                     viewModel.updateConfigById(configId) { copy(syncEnabled = checked) }
@@ -127,16 +193,16 @@ fun CloudProviderSettingsScreen(
         if (config.syncEnabled) {
             items.add(
                 SettingsEntity.Preference(
-                    title = context.getString(R.string.cloud_auto_sync_interval),
-                    summary = formatSyncInterval(context, config.syncIntervalMinutes),
+                    title = autoSyncIntervalTitle,
+                    summary = syncIntervalSummary,
                     onClick = { showIntervalDialog = true },
                     screenPosition = Position.Middle
                 )
             )
             items.add(
                 SettingsEntity.SwitchPreference(
-                    title = context.getString(R.string.cloud_sync_wifi_only),
-                    summary = context.getString(R.string.cloud_wifi_only_summary),
+                    title = wifiOnlyTitle,
+                    summary = wifiOnlySummary,
                     isChecked = config.wifiOnly,
                     onCheck = { checked ->
                         viewModel.updateConfigById(configId) { copy(wifiOnly = checked) }
@@ -149,23 +215,33 @@ fun CloudProviderSettingsScreen(
         // Backup albums for THIS account
         items.add(
             SettingsEntity.Preference(
-                title = context.getString(R.string.cloud_backup_albums),
-                summary = context.getString(R.string.cloud_backup_select_albums),
+                title = backupAlbumsTitle,
+                summary = selectAlbumsSummary,
                 onClick = {
                     eventHandler.navigate(
                         Screen.CloudUploadSettingsScreen.configId(configId)
                     )
                 },
-                screenPosition = Position.Alone
+                screenPosition = Position.Top
+            )
+        )
+        items.add(
+            SettingsEntity.Preference(
+                title = backupOptionsTitle,
+                summary = backupOptionsSummary,
+                onClick = {
+                    eventHandler.navigate(Screen.BackupOptionsScreen.configId(configId))
+                },
+                screenPosition = Position.Bottom
             )
         )
 
         // Connection section
-        items.add(SettingsEntity.Header(title = context.getString(R.string.cloud_connection_header)))
+        items.add(SettingsEntity.Header(title = connectionHeader))
         items.add(
             SettingsEntity.Preference(
-                title = context.getString(R.string.cloud_credentials),
-                summary = context.getString(R.string.cloud_credentials_summary),
+                title = credentialsTitle,
+                summary = credentialsSummary,
                 onClick = {
                     eventHandler.navigate(
                         Screen.CloudEditServerScreen.configId(configId)
@@ -176,55 +252,57 @@ fun CloudProviderSettingsScreen(
         )
         items.add(
             SettingsEntity.Preference(
-                title = context.getString(R.string.cloud_networking),
-                summary = context.getString(R.string.cloud_net_auto_url_summary),
-                onClick = { eventHandler.navigate(Screen.CloudNetworkingScreen()) },
+                title = networkingTitle,
+                summary = networkingSummary,
+                onClick = { eventHandler.navigate(Screen.CloudNetworkingScreen.configId(configId)) },
                 screenPosition = Position.Bottom
             )
         )
 
         // Features section
-        items.add(SettingsEntity.Header(title = context.getString(R.string.cloud_free_space)))
+        items.add(SettingsEntity.Header(title = freeSpaceTitle))
         items.add(
             SettingsEntity.Preference(
-                title = context.getString(R.string.cloud_free_space),
-                summary = context.getString(R.string.cloud_free_space_description),
+                title = freeSpaceTitle,
+                summary = freeSpaceSummary,
                 onClick = { eventHandler.navigate(Screen.FreeUpSpaceScreen()) },
                 screenPosition = Position.Alone
             )
         )
 
         // Settings section
-        items.add(SettingsEntity.Header(title = context.getString(R.string.cloud_settings_more_header)))
+        items.add(SettingsEntity.Header(title = moreHeader))
         items.add(
             SettingsEntity.Preference(
-                title = context.getString(R.string.cloud_notifications),
-                summary = context.getString(R.string.cloud_notif_background_backup),
-                onClick = { eventHandler.navigate(Screen.CloudNotificationSettingsScreen()) },
+                title = notificationsTitle,
+                summary = notificationsSummary,
+                onClick = {
+                    eventHandler.navigate(Screen.CloudNotificationSettingsScreen.configId(configId))
+                },
                 screenPosition = Position.Top
             )
         )
         items.add(
             SettingsEntity.Preference(
-                title = context.getString(R.string.cloud_viewer),
-                summary = context.getString(R.string.cloud_viewer_load_preview),
-                onClick = { eventHandler.navigate(Screen.CloudViewerSettingsScreen()) },
+                title = viewerTitle,
+                summary = viewerSummary,
+                onClick = { eventHandler.navigate(Screen.CloudViewerSettingsScreen.configId(configId)) },
                 screenPosition = Position.Middle
             )
         )
         items.add(
             SettingsEntity.Preference(
-                title = "Offline & cache",
-                summary = "Cache media for offline use and manage storage",
+                title = offlineTitle,
+                summary = offlineSummary,
                 onClick = { eventHandler.navigate(Screen.CloudOfflineModeScreen()) },
                 screenPosition = Position.Middle
             )
         )
         items.add(
             SettingsEntity.Preference(
-                title = context.getString(R.string.cloud_advanced),
-                summary = context.getString(R.string.cloud_adv_troubleshooting),
-                onClick = { eventHandler.navigate(Screen.CloudAdvancedSettingsScreen()) },
+                title = advancedTitle,
+                summary = advancedSummary,
+                onClick = { eventHandler.navigate(Screen.CloudAdvancedSettingsScreen.configId(configId)) },
                 screenPosition = Position.Bottom
             )
         )
@@ -478,14 +556,15 @@ private fun SettingsStorageBar(storage: CloudStorageInfo?) {
 
 private val syncIntervalOptions = listOf(15, 30, 60, 360, 720, 1440)
 
-private fun formatSyncInterval(context: android.content.Context, minutes: Int): String = when (minutes) {
-    15 -> context.getString(R.string.cloud_sync_interval_15min)
-    30 -> context.getString(R.string.cloud_sync_interval_30min)
-    60 -> context.getString(R.string.cloud_sync_interval_1hr)
-    360 -> context.getString(R.string.cloud_sync_interval_6hr)
-    720 -> context.getString(R.string.cloud_sync_interval_12hr)
-    1440 -> context.getString(R.string.cloud_sync_interval_24hr)
-    else -> context.getString(R.string.cloud_sync_interval_6hr)
+@Composable
+private fun syncIntervalLabel(minutes: Int): String = when (minutes) {
+    15 -> stringResource(R.string.cloud_sync_interval_15min)
+    30 -> stringResource(R.string.cloud_sync_interval_30min)
+    60 -> stringResource(R.string.cloud_sync_interval_1hr)
+    360 -> stringResource(R.string.cloud_sync_interval_6hr)
+    720 -> stringResource(R.string.cloud_sync_interval_12hr)
+    1440 -> stringResource(R.string.cloud_sync_interval_24hr)
+    else -> stringResource(R.string.cloud_sync_interval_6hr)
 }
 
 @Composable
@@ -515,7 +594,7 @@ private fun SyncIntervalDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = formatSyncInterval(LocalContext.current, minutes),
+                            text = syncIntervalLabel(minutes),
                             style = MaterialTheme.typography.bodyLarge,
                             color = if (minutes == currentMinutes)
                                 MaterialTheme.colorScheme.onPrimaryContainer

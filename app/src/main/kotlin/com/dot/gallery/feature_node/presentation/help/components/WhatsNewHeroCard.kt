@@ -110,7 +110,7 @@ fun WhatsNewHeroCard(
                 modifier = Modifier.size(32.dp)
             )
             Text(
-                text = "v$versionName",
+                text = stringResource(R.string.version_name_format, versionName),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier

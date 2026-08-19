@@ -157,6 +157,26 @@ interface SmartScanDao {
     @Query("SELECT * FROM smart_scan_phases WHERE runId = :runId AND phase = :phase LIMIT 1")
     suspend fun getPhase(runId: String, phase: SmartScanPhase): SmartScanPhaseEntity?
 
+    @Query(
+        """
+        SELECT * FROM smart_scan_phases
+        WHERE phase = :phase AND status IN ('succeeded', 'blocked')
+        ORDER BY COALESCE(finishedAt, updatedAt) DESC
+        LIMIT 1
+        """
+    )
+    suspend fun getLatestCurrentPhase(phase: SmartScanPhase): SmartScanPhaseEntity?
+
+    @Query(
+        """
+        SELECT * FROM smart_scan_phases
+        WHERE phase = :phase AND status = 'succeeded'
+        ORDER BY COALESCE(finishedAt, updatedAt) DESC
+        LIMIT 1
+        """
+    )
+    suspend fun getLatestSuccessfulPhase(phase: SmartScanPhase): SmartScanPhaseEntity?
+
     @Query("SELECT * FROM media_feature_state WHERE mediaId = :mediaId AND feature = :feature LIMIT 1")
     suspend fun getFeatureState(mediaId: Long, feature: MediaFeature): MediaFeatureStateEntity?
 

@@ -16,6 +16,7 @@ import com.dot.gallery.cloud.core.ProviderType
 import com.dot.gallery.cloud.data.dao.DetectedFaceDao
 import com.dot.gallery.cloud.data.dao.DetectedFaceHeader
 import com.dot.gallery.cloud.data.dao.PersonDao
+import com.dot.gallery.cloud.data.entity.CloudMediaEntity
 import com.dot.gallery.cloud.data.entity.DetectedFaceEntity
 import com.dot.gallery.cloud.data.entity.FaceClusterEntity
 import com.dot.gallery.cloud.data.entity.PersonEntity
@@ -184,8 +185,7 @@ abstract class MediaPhaseProcessor(
     protected suspend fun media(): List<Media.UriMedia> =
         database.getMediaDao().getMedia() + database.getCloudMediaDao().getAllCachedAsync().map { it.toUriMedia() }
 
-    protected fun sourceRevision(media: Media): String =
-        "${media.timestamp}:${media.size}:${media.mimeType}:${media.path}"
+    protected fun sourceRevision(media: Media): String = smartMediaSourceRevision(media)
 
     protected suspend fun progress(
         context: SmartScanPhaseContext,
@@ -212,39 +212,69 @@ internal fun <T> smartFeatureMediaPool(
     isLocked: (T) -> Boolean
 ): List<T> = media.filterNot { isLocked(it) || !includeIgnoredAlbums && isIgnored(it) }
 
+internal fun shouldRefreshSmartLocalSource(fullRefresh: Boolean, mediaVersionCurrent: Boolean): Boolean =
+    fullRefresh || !mediaVersionCurrent
+
+internal fun smartMediaSourceRevision(media: Media): String =
+    "${media.timestamp}:${media.size}:${media.mimeType}:${media.path}"
+
+internal fun smartCloudSourceRevision(media: CloudMediaEntity): String {
+    val displayName = media.providerType.displayName
+    val displayPath = if (media.path.isNotBlank()) "$displayName/${media.path}" else "$displayName/${media.label}"
+    return "${media.timestamp / 1000L}:${media.size}:${media.mimeType}:$displayPath"
+}
+
+internal fun smartSourceSnapshot(
+    mediaStoreVersion: String,
+    media: List<Media.UriMedia>,
+    cloud: List<CloudMediaEntity>
+): String {
+    val cloudFingerprint = smartSourceFingerprint(cloud.map {
+        "${it.providerType.name}/${it.serverConfigId}/${it.remoteId}:${smartCloudSourceRevision(it)}"
+    })
+    return "$mediaStoreVersion:${media.size}:${cloud.size}:" +
+        "${media.maxOfOrNull { it.timestamp } ?: 0L}:${cloud.maxOfOrNull { it.timestamp } ?: 0L}:$cloudFingerprint"
+}
+
 class SourceSyncProcessor @Inject constructor(
     repository: MediaRepository,
     database: InternalDatabase,
     @ApplicationContext private val appContext: Context
 ) : MediaPhaseProcessor(repository, database) {
     override val phase = SmartScanPhase.SOURCE_SYNC
-    override val revision = "source-v1"
+    override val revision = "source-v2"
 
     override suspend fun process(context: SmartScanPhaseContext): SmartScanPhaseResult {
+        val mediaStoreVersion = appContext.mediaStoreVersion
+        val mediaDao = database.getMediaDao()
+        val existingMedia = mediaDao.getMedia()
+        val mediaVersionCurrent = mediaDao.isMediaVersionUpToDate(mediaStoreVersion)
+        val localSource = if (shouldRefreshSmartLocalSource(context.fullRefresh, mediaVersionCurrent)) {
+            localMedia()
+        } else {
+            existingMedia
+        }
         val ignoredAlbums = repository.getBlacklistedAlbumsAsync()
         val lockedAlbumIds = repository.getLockedAlbums().first().mapTo(hashSetOf()) { it.id }
         val media = smartFeatureMediaPool(
-            media = localMedia(),
+            media = localSource,
             includeIgnoredAlbums = Settings.SmartFeatures.includeIgnoredAlbums(appContext).first(),
             isIgnored = { item -> ignoredAlbums.any { it.matchesMedia(item) } },
             isLocked = { item -> item.albumID in lockedAlbumIds }
         )
         val cloud = database.getCloudMediaDao().getAllCachedAsync()
-        val total = media.size + cloud.size
-        progress(context, total, 0, 0, 0, 0)
-        val mediaStoreVersion = appContext.mediaStoreVersion
-        val mediaDao = database.getMediaDao()
-        val existing = mediaDao.getMedia().associateBy { it.id }
+        val existing = existingMedia.associateBy { it.id }
         val changed = media.filter { existing[it.id] != it }
         val currentIds = media.mapTo(hashSetOf()) { it.id }
         val removedIds = existing.keys.filterNot(currentIds::contains)
+        val total = changed.size + removedIds.size
+        progress(context, total, 0, 0, 0, 0)
         database.withTransaction {
             if (changed.isNotEmpty()) mediaDao.addMediaList(changed)
             removedIds.chunked(MEDIA_DELETE_BATCH_SIZE).forEach { mediaDao.deleteMediaByIds(it) }
             mediaDao.setMediaVersion(MediaVersion(mediaStoreVersion))
         }
-        val snapshot = "$mediaStoreVersion:${media.size}:${cloud.size}:" +
-            "${media.maxOfOrNull { it.timestamp } ?: 0L}:${cloud.maxOfOrNull { it.timestamp } ?: 0L}"
+        val snapshot = smartSourceSnapshot(mediaStoreVersion, media, cloud)
         val summary = progress(context, total, total, total, 0, 0)
         return SmartScanPhaseResult.Completed(summary, snapshot)
     }
@@ -367,8 +397,18 @@ class MetadataPhaseProcessor @Inject constructor(
 }
 
 private const val MEDIA_DELETE_BATCH_SIZE = 500
+private const val PREPARATION_BATCH_SIZE = 500
 private const val SEARCH_EMBEDDING_DIMENSION = 512
 private const val FACE_EMBEDDING_DIMENSION = 512
+
+internal fun smartSourceFingerprint(revisions: Iterable<String>): String {
+    var hash = -3750763034362895579L
+    revisions.sorted().forEach { revision ->
+        revision.forEach { value -> hash = (hash xor value.code.toLong()) * 1099511628211L }
+        hash = (hash xor 0xffffL) * 1099511628211L
+    }
+    return hash.toULong().toString(16)
+}
 
 internal fun isValidEmbeddingVector(values: FloatArray, expectedSize: Int): Boolean {
     if (values.size != expectedSize || values.any { !it.isFinite() }) return false
@@ -404,61 +444,79 @@ class SearchIndexPhaseProcessor @Inject constructor(
         val states = scanDao.getFeatureStates(MediaFeature.SEARCH_EMBEDDING).associateBy { it.mediaId }
         val headers = imageEmbeddingDao.getHeaders().associateBy { it.id }
         val statesToPersist = mutableListOf<MediaFeatureStateEntity>()
-        val candidates = media().filter { it.mimeType.startsWith("image/") }.filter { item ->
-            val source = sourceRevision(item)
-            val state = states[item.id]
-            val header = headers[item.id]
-            val activeLease = state?.status == MediaFeatureStatus.PROCESSING &&
-                state.leaseExpiresAt?.let { it > now } == true
-            val outputPresent = header?.embeddingBytes == SEARCH_EMBEDDING_DIMENSION * Float.SIZE_BYTES
-            val current = !context.fullRefresh && outputPresent && header.date == item.timestamp &&
-                header.resultRevision == revision && state?.status == MediaFeatureStatus.SUCCEEDED &&
-                state.sourceRevision == source && state.resultRevision == revision
-            if (activeLease || current) {
-                false
-            } else if (!context.fullRefresh && header?.date == item.timestamp &&
-                canAdoptExistingSearchEmbedding(repository.getRecord(item.id), item.timestamp, revision)
-            ) {
-                database.withTransaction {
-                    check(imageEmbeddingDao.updateResultRevision(item.id, revision) == 1)
-                    scanDao.upsertFeatureState(
-                        state?.copy(
-                            status = MediaFeatureStatus.SUCCEEDED,
-                            sourceRevision = source,
-                            resultRevision = revision,
-                            updatedAt = now,
-                            nextRetryAt = null,
-                            leaseOwner = null,
-                            leaseExpiresAt = null,
-                            runId = null,
-                            lastErrorCode = null
-                        ) ?: MediaFeatureStateEntity(
-                            mediaId = item.id,
-                            feature = MediaFeature.SEARCH_EMBEDDING,
-                            status = MediaFeatureStatus.SUCCEEDED,
-                            sourceRevision = source,
-                            resultRevision = revision,
-                            updatedAt = now
-                        )
+        val adoptedIds = mutableListOf<Long>()
+        val candidates = mutableListOf<Media.UriMedia>()
+        val searchMedia = media().filter { it.mimeType.startsWith("image/") }
+        searchMedia.chunked(PREPARATION_BATCH_SIZE).forEach { batch ->
+            val adoptionIds = if (context.fullRefresh) emptyList() else batch.mapNotNull { item ->
+                val source = sourceRevision(item)
+                val state = states[item.id]
+                val header = headers[item.id]
+                val outputPresent = header?.embeddingBytes == SEARCH_EMBEDDING_DIMENSION * Float.SIZE_BYTES
+                val activeLease = state?.status == MediaFeatureStatus.PROCESSING &&
+                    state.leaseExpiresAt?.let { it > now } == true
+                val current = outputPresent && header.date == item.timestamp &&
+                    header.resultRevision == revision && state?.status == MediaFeatureStatus.SUCCEEDED &&
+                    state.sourceRevision == source && state.resultRevision == revision
+                item.id.takeIf { !activeLease && !current && header?.date == item.timestamp }
+            }
+            val adoptionRecords = if (adoptionIds.isEmpty()) emptyMap()
+            else imageEmbeddingDao.getRecords(adoptionIds).associateBy { it.id }
+            batch.forEach { item ->
+                val source = sourceRevision(item)
+                val state = states[item.id]
+                val header = headers[item.id]
+                val activeLease = state?.status == MediaFeatureStatus.PROCESSING &&
+                    state.leaseExpiresAt?.let { it > now } == true
+                val outputPresent = header?.embeddingBytes == SEARCH_EMBEDDING_DIMENSION * Float.SIZE_BYTES
+                val current = !context.fullRefresh && outputPresent && header.date == item.timestamp &&
+                    header.resultRevision == revision && state?.status == MediaFeatureStatus.SUCCEEDED &&
+                    state.sourceRevision == source && state.resultRevision == revision
+                if (activeLease || current) return@forEach
+                if (!context.fullRefresh && header?.date == item.timestamp &&
+                    canAdoptExistingSearchEmbedding(adoptionRecords[item.id], item.timestamp, revision)
+                ) {
+                    adoptedIds += item.id
+                    statesToPersist += state?.copy(
+                        status = MediaFeatureStatus.SUCCEEDED,
+                        sourceRevision = source,
+                        resultRevision = revision,
+                        updatedAt = now,
+                        nextRetryAt = null,
+                        leaseOwner = null,
+                        leaseExpiresAt = null,
+                        runId = null,
+                        lastErrorCode = null
+                    ) ?: MediaFeatureStateEntity(
+                        mediaId = item.id,
+                        feature = MediaFeature.SEARCH_EMBEDDING,
+                        status = MediaFeatureStatus.SUCCEEDED,
+                        sourceRevision = source,
+                        resultRevision = revision,
+                        updatedAt = now
                     )
+                } else {
+                    val decision = prepareFeatureWork(
+                        state,
+                        item.id,
+                        MediaFeature.SEARCH_EMBEDDING,
+                        source,
+                        revision,
+                        context.fullRefresh,
+                        now,
+                        terminalOutputPresent = outputPresent
+                    )
+                    decision.stateToPersist?.let(statesToPersist::add)
+                    if (decision.shouldProcess) candidates += item
                 }
-                false
-            } else {
-                val decision = prepareFeatureWork(
-                    state,
-                    item.id,
-                    MediaFeature.SEARCH_EMBEDDING,
-                    source,
-                    revision,
-                    context.fullRefresh,
-                    now,
-                    terminalOutputPresent = outputPresent
-                )
-                decision.stateToPersist?.let(statesToPersist::add)
-                decision.shouldProcess
             }
         }
-        if (statesToPersist.isNotEmpty()) scanDao.upsertFeatureStates(statesToPersist)
+        database.withTransaction {
+            adoptedIds.chunked(PREPARATION_BATCH_SIZE).forEach { ids ->
+                check(imageEmbeddingDao.updateResultRevisions(ids, revision) == ids.size)
+            }
+            if (statesToPersist.isNotEmpty()) scanDao.upsertFeatureStates(statesToPersist)
+        }
         var succeeded = 0
         var skipped = 0
         var failed = 0

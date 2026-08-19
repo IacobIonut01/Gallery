@@ -30,6 +30,37 @@ data class SlideshowConfig(
 }
 
 private const val GIF_MIME = "image/gif"
+const val FAILED_MEDIA_DWELL_MILLIS = 1_500L
+
+sealed interface SlideshowAdvance {
+    data class Page(val index: Int) : SlideshowAdvance
+    data object Hold : SlideshowAdvance
+    data object Exit : SlideshowAdvance
+}
+
+/** Resolves the next action without ever producing an invalid pager index. */
+fun resolveSlideshowAdvance(
+    itemCount: Int,
+    currentIndex: Int,
+    loop: Boolean,
+): SlideshowAdvance {
+    if (itemCount <= 0) return SlideshowAdvance.Exit
+    val safeIndex = currentIndex.coerceIn(0, itemCount - 1)
+    if (safeIndex + 1 < itemCount) return SlideshowAdvance.Page(safeIndex + 1)
+    if (!loop) return SlideshowAdvance.Exit
+    return if (itemCount > 1) SlideshowAdvance.Page(0) else SlideshowAdvance.Hold
+}
+
+/** Images use the configured dwell; failed media gets a short readable error dwell before skip. */
+fun slideshowDwellMillis(
+    config: SlideshowConfig,
+    isVideo: Boolean,
+    loadFailed: Boolean,
+): Long? = when {
+    loadFailed -> FAILED_MEDIA_DWELL_MILLIS
+    isVideo -> null
+    else -> config.intervalMillis
+}
 
 /**
  * Returns true if [media] should be shown for the given [config] type filters.

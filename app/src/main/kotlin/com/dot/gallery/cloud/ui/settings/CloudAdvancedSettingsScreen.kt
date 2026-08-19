@@ -6,10 +6,10 @@
 package com.dot.gallery.cloud.ui.settings
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.toMutableStateList
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -19,22 +19,54 @@ import com.dot.gallery.core.SettingsEntity
 import com.dot.gallery.feature_node.presentation.settings.components.BaseSettingsScreen
 
 @Composable
-fun CloudAdvancedSettingsScreen() {
+fun CloudAdvancedSettingsScreen(configId: Long) {
     val settingsVm = hiltViewModel<CloudSettingsViewModel>()
     val config by settingsVm.config.collectAsStateWithLifecycle()
+    val loadState by settingsVm.loadState.collectAsStateWithLifecycle()
     val cacheClearing by settingsVm.cacheClearing.collectAsStateWithLifecycle()
-    val context = LocalContext.current
+
+    LaunchedEffect(configId) { settingsVm.loadConfig(configId) }
+    if (config == null) {
+        AccountSettingsStateScreen(stringResource(R.string.cloud_advanced), loadState)
+        return
+    }
     val troubleshooting = config?.verboseLogging ?: false
     val readOnlyMode = config?.readOnlyMode ?: false
+    val troubleshootingHeader = stringResource(R.string.cloud_adv_troubleshooting)
+    val verboseTitle = stringResource(R.string.cloud_adv_verbose)
+    val verboseSummary = stringResource(R.string.cloud_adv_verbose_summary)
+    val displayHeader = stringResource(R.string.cloud_adv_display)
+    val readOnlyTitle = stringResource(R.string.cloud_adv_readonly)
+    val readOnlySummary = stringResource(R.string.cloud_adv_readonly_summary)
+    val cacheHeader = stringResource(R.string.cloud_global) + " · " +
+        stringResource(R.string.cloud_adv_cache)
+    val clearingCacheTitle = stringResource(R.string.cloud_adv_clearing_cache)
+    val clearCacheTitle = stringResource(R.string.cloud_adv_clear_cache)
+    val resourceStrings = listOf(
+        troubleshootingHeader,
+        verboseTitle,
+        verboseSummary,
+        displayHeader,
+        readOnlyTitle,
+        readOnlySummary,
+        cacheHeader,
+        clearingCacheTitle,
+        clearCacheTitle,
+    )
 
-    val settingsList = remember(troubleshooting, readOnlyMode, cacheClearing) {
+    val settingsList = remember(
+        troubleshooting,
+        readOnlyMode,
+        cacheClearing,
+        resourceStrings,
+    ) {
         buildList {
             // Troubleshooting section
-            add(SettingsEntity.Header(title = context.getString(R.string.cloud_adv_troubleshooting)))
+            add(SettingsEntity.Header(title = troubleshootingHeader))
             add(
                 SettingsEntity.SwitchPreference(
-                    title = context.getString(R.string.cloud_adv_verbose),
-                    summary = context.getString(R.string.cloud_adv_verbose_summary),
+                    title = verboseTitle,
+                    summary = verboseSummary,
                     isChecked = troubleshooting,
                     onCheck = { settingsVm.updateConfig { copy(verboseLogging = it) } },
                     screenPosition = Position.Alone
@@ -42,11 +74,11 @@ fun CloudAdvancedSettingsScreen() {
             )
 
             // Display section
-            add(SettingsEntity.Header(title = context.getString(R.string.cloud_adv_display)))
+            add(SettingsEntity.Header(title = displayHeader))
             add(
                 SettingsEntity.SwitchPreference(
-                    title = context.getString(R.string.cloud_adv_readonly),
-                    summary = context.getString(R.string.cloud_adv_readonly_summary),
+                    title = readOnlyTitle,
+                    summary = readOnlySummary,
                     isChecked = readOnlyMode,
                     onCheck = { settingsVm.updateConfig { copy(readOnlyMode = it) } },
                     screenPosition = Position.Alone
@@ -54,11 +86,10 @@ fun CloudAdvancedSettingsScreen() {
             )
 
             // Cache section
-            add(SettingsEntity.Header(title = context.getString(R.string.cloud_adv_cache)))
+            add(SettingsEntity.Header(title = cacheHeader))
             add(
                 SettingsEntity.Preference(
-                    title = if (cacheClearing) context.getString(R.string.cloud_adv_clearing_cache)
-                    else context.getString(R.string.cloud_adv_clear_cache),
+                    title = if (cacheClearing) clearingCacheTitle else clearCacheTitle,
                     enabled = !cacheClearing,
                     onClick = { settingsVm.clearImageCache() },
                     screenPosition = Position.Alone

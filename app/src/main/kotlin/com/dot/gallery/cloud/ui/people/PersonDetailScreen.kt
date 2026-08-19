@@ -114,9 +114,15 @@ fun PersonDetailScreen(
         mediaState = mediaState,
         metadataState = metadataState,
         target = "person_${state.person?.id}",
-        customViewingNavigation = state.person?.id?.let { personId ->
+        customViewingNavigation = state.person?.let { person ->
             { media ->
-                eventHandler.navigate(Screen.MediaViewScreen.idAndPerson(media.id, personId))
+                eventHandler.navigate(
+                    Screen.MediaViewScreen.idAndPerson(
+                        id = media.id,
+                        configId = person.serverConfigId,
+                        personId = person.id
+                    )
+                )
             }
         },
         navActionsContent = { _, _ -> },
@@ -284,7 +290,7 @@ fun PersonDetailScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(mergeCandidates, key = { it.id }) { candidate ->
+                    items(mergeCandidates, key = { it.accountKey }) { candidate ->
                         Column(
                             modifier = Modifier
                                 .clip(MaterialTheme.shapes.medium)

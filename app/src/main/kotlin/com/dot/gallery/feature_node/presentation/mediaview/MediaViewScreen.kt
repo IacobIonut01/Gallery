@@ -93,6 +93,7 @@ import com.composables.core.SheetDetent.Companion.FullyExpanded
 import com.composables.core.rememberBottomSheetState
 import com.composeunstyled.LocalTextStyle
 import com.dot.gallery.R
+import com.dot.gallery.cloud.core.CloudRuntimeSettings
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION
@@ -142,7 +143,10 @@ import com.dot.gallery.feature_node.presentation.mediaview.components.media.Medi
 import com.dot.gallery.feature_node.presentation.mediaview.components.media.MotionPhotoFilmstrip
 import com.dot.gallery.feature_node.presentation.mediaview.components.media.MotionPhotoState
 import com.dot.gallery.feature_node.presentation.mediaview.components.SlideshowControls
+import com.dot.gallery.feature_node.presentation.mediaview.slideshow.SlideshowAdvance
 import com.dot.gallery.feature_node.presentation.mediaview.slideshow.buildSlideshowOrder
+import com.dot.gallery.feature_node.presentation.mediaview.slideshow.resolveSlideshowAdvance
+import com.dot.gallery.feature_node.presentation.mediaview.slideshow.slideshowDwellMillis
 import com.dot.gallery.feature_node.presentation.mediaview.components.video.SubtitleBottomSheet
 import com.dot.gallery.feature_node.presentation.mediaview.components.video.VideoPlayerController
 import com.dot.gallery.feature_node.presentation.util.FullBrightnessWindow
@@ -302,6 +306,7 @@ fun <T : Media> MediaViewScreen(
     ProvideInsets {
     val eventHandler = LocalEventHandler.current
     val context = LocalContext.current
+    val rotateFailedText = stringResource(R.string.rotate_failed)
     val metadataSanitizationUiState by metadataSanitizationState.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val windowInsetsController = rememberWindowInsetsController()
@@ -333,6 +338,7 @@ fun <T : Media> MediaViewScreen(
     var slideshowControlsVisible by rememberSaveable { mutableStateOf(false) }
     // Signals emitted (with a media id) when a video finishes playing in slideshow mode.
     val videoEndedFlow = remember { MutableSharedFlow<Long>(extraBufferCapacity = 4) }
+    var failedMediaIds by rememberSaveable { mutableStateOf(emptySet<Long>()) }
 
     // FCast
     val fcastVm: FCastViewModel = hiltViewModel()
@@ -483,7 +489,15 @@ fun <T : Media> MediaViewScreen(
         slideshowActive
     ) { currentMedia?.isVideo == true && (canAutoPlay || slideshowActive) }
     val isReadOnly by rememberedDerivedState { currentMedia?.readUriOnly == true }
-    val showInfo by rememberedDerivedState { currentMedia?.trashed == 0 && !isReadOnly }
+    val cloudSettingsByConfigId by CloudRuntimeSettings.settingsByConfigId.collectAsStateWithLifecycle()
+    val currentCapabilities by rememberedDerivedState(currentMedia, cloudSettingsByConfigId) {
+        currentMedia?.viewerActionCapabilities(
+            settingsByConfigId = cloudSettingsByConfigId,
+        )
+    }
+    // URI-only items still have immutable filename/type/size details even though metadata mutation
+    // and all source writes are unavailable.
+    val showInfo by rememberedDerivedState { currentMedia?.trashed == 0 }
 
     var showUI by rememberSaveable { mutableStateOf(true) }
     val navigationChromeVisible = !animatedContentScope.transition.isRunning
@@ -561,6 +575,10 @@ fun <T : Media> MediaViewScreen(
         windowInsetsController.toggleSystemBars(show = true)
     }
     BackHandler(slideshowActive) { exitSlideshow() }
+
+    LaunchedEffect(slideshowActive, pagerItems.isEmpty()) {
+        if (slideshowActive && pagerItems.isEmpty()) exitSlideshow()
+    }
 
     // Hide all chrome and keep the screen awake while the slideshow is running.
     val slideshowView = LocalView.current
@@ -812,7 +830,7 @@ fun <T : Media> MediaViewScreen(
         }
     }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(uiEvents, rotateFailedText) {
         uiEvents.collect { event ->
             when (event) {
                 MediaViewEvent.ScrollToFirstPage -> pagerState.animateScrollToPage(0)
@@ -842,7 +860,7 @@ fun <T : Media> MediaViewScreen(
                 is MediaViewEvent.RotationFailed -> {
                     Toast.makeText(
                         context,
-                        event.message ?: context.getString(R.string.rotate_failed),
+                        event.message ?: rotateFailedText,
                         Toast.LENGTH_SHORT
                     ).show()
                 }
@@ -850,38 +868,40 @@ fun <T : Media> MediaViewScreen(
         }
     }
 
-    // Slideshow auto-advance: images dwell for the configured interval, videos play through once
-    // (advancing when they end). At the end of the list it loops or stops per the config.
-    LaunchedEffect(slideshowActive, slideshowPaused, currentPage, currentMedia?.id, initialPageSetup) {
+    // Slideshow auto-advance: images dwell for the configured interval, videos play through once,
+    // and failed media remains readable briefly before being skipped. The pure edge policy below
+    // prevents invalid page requests for empty/single-item playlists.
+    val currentMediaFailed = currentMedia?.id in failedMediaIds
+    LaunchedEffect(
+        slideshowActive,
+        slideshowPaused,
+        currentPage,
+        currentMedia?.id,
+        currentMediaFailed,
+        initialPageSetup,
+    ) {
         val cfg = slideshowConfig
         if (!slideshowActive || slideshowPaused || !initialPageSetup || cfg == null) {
             return@LaunchedEffect
         }
         val media = currentMedia ?: return@LaunchedEffect
-        val size = pagerItems.size
-        if (size <= 1 && !cfg.loop) return@LaunchedEffect
-
-        if (media.isVideo) {
-            // Wait for this specific video to report that it finished playing.
-            videoEndedFlow.first { it == media.id }
+        val dwellMillis = slideshowDwellMillis(cfg, media.isVideo, currentMediaFailed)
+        if (dwellMillis != null) {
+            delay(dwellMillis)
         } else {
-            delay(cfg.intervalMillis)
+            videoEndedFlow.first { it == media.id }
         }
         if (!slideshowActive || slideshowPaused) return@LaunchedEffect
 
-        val next = currentPage + 1
         // The scroll MUST run in an external scope, not this effect: pagerState.currentPage flips
         // to the target at the half-way point of the animation, which mutates this effect's
-        // `currentPage` key and would cancel animateScrollToPage mid-flight, leaving the pager
-        // stuck at ~50% (half-old/half-new visible). Launching in `scope` lets it finish.
-        if (next >= size) {
-            if (cfg.loop) {
-                if (size > 1) scope.launch { pagerState.animateScrollToPage(0) }
-            } else {
-                exitSlideshow()
+        // `currentPage` key and would cancel animateScrollToPage mid-flight.
+        when (val advance = resolveSlideshowAdvance(pagerItems.size, currentPage, cfg.loop)) {
+            is SlideshowAdvance.Page -> scope.launch {
+                pagerState.animateScrollToPage(advance.index)
             }
-        } else {
-            scope.launch { pagerState.animateScrollToPage(next) }
+            SlideshowAdvance.Exit -> exitSlideshow()
+            SlideshowAdvance.Hold -> Unit
         }
     }
 
@@ -1013,6 +1033,10 @@ fun <T : Media> MediaViewScreen(
                                 uiEnabled = showUI,
                                 playWhenReady = canPlay,
                                 slideshowActive = slideshowActive,
+                                cutoutEnabled = currentCapabilities?.cutout == true,
+                                onLoadFailed = {
+                                    media?.id?.let { failedMediaIds = failedMediaIds + it }
+                                },
                                 onVideoEnded = {
                                     media?.id?.let { videoEndedFlow.tryEmit(it) }
                                 },
@@ -1033,7 +1057,7 @@ fun <T : Media> MediaViewScreen(
                                 isMotionPhoto = mediaMetadata?.isMotionPhoto == true,
                                 motionPhotoState = motionPhotoState,
                                 currentVault = currentVault,
-                                rotationDisabled = isLocked,
+                                rotationDisabled = isLocked || currentCapabilities?.rotate != true,
                                 onImageRotated = { newRotation ->
                                     // Reduce the accumulated rotation to the 0..359 range so that
                                     // every full turn (360, 720, ...) is treated as "no rotation".
@@ -1300,9 +1324,12 @@ fun <T : Media> MediaViewScreen(
                 // doesn't float on top of / overlap the metadata sheet (#963).
                 showRotationHelper = rememberedDerivedState(
                     showRotationHelper.value,
-                    sheetState.currentDetent
+                    sheetState.currentDetent,
+                    currentCapabilities,
                 ) {
-                    showRotationHelper.value && sheetState.currentDetent == imageOnlyDetent
+                    showRotationHelper.value &&
+                        currentCapabilities?.rotate == true &&
+                        sheetState.currentDetent == imageOnlyDetent
                 },
                 // Fade the top-bar extras out as the info sheet is dragged up, fully hidden at
                 // full expand. Read inside a lambda so it re-evaluates per frame without

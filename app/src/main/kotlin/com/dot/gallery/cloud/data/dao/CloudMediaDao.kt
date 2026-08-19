@@ -40,6 +40,15 @@ data class CloudMediaRemoteRevision(
     val lastSyncedAt: Long
 )
 
+data class CloudMediaSmartFeatureRevision(
+    val remoteId: String,
+    val path: String,
+    val label: String,
+    val mimeType: String,
+    val timestamp: Long,
+    val size: Long
+)
+
 @Dao
 interface CloudMediaDao {
 
@@ -66,6 +75,15 @@ interface CloudMediaDao {
         """
     )
     suspend fun getRemoteRevisions(configId: Long): List<CloudMediaRemoteRevision>
+
+    @Query(
+        """
+        SELECT remoteId, path, label, mimeType, timestamp, size FROM cloud_media
+        WHERE serverConfigId = :configId AND trashed = 0 AND archived = 0
+        ORDER BY remoteId
+        """
+    )
+    suspend fun getSmartFeatureRevisions(configId: Long): List<CloudMediaSmartFeatureRevision>
 
     @Query(
         """
@@ -209,6 +227,20 @@ interface CloudMediaDao {
         serverConfigId: Long,
         favorite: Boolean
     )
+
+    /** Same scoped mutation with Room's matched-row count for import result reporting. */
+    @Query(
+        """
+        UPDATE cloud_media SET favorite = :favorite
+        WHERE remoteId = :remoteId AND providerType = :providerType AND serverConfigId = :serverConfigId
+        """
+    )
+    suspend fun updateFavoriteAndCount(
+        remoteId: String,
+        providerType: ProviderType,
+        serverConfigId: Long,
+        favorite: Boolean
+    ): Int
 
     @Query(
         """

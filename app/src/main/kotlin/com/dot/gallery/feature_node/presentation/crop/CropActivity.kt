@@ -44,7 +44,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
@@ -299,7 +298,7 @@ private fun CropContent(
     triggerCrop: Boolean,
     onCropRect: (RectF) -> Unit
 ) {
-    val context = LocalContext.current
+    val cropDescription = stringResource(R.string.editor_crop)
     val previewBitmap = remember(source) {
         resizeForPreview(source, PREVIEW_MAX_DIMENSION).asImageBitmap()
     }
@@ -321,7 +320,7 @@ private fun CropContent(
     ImageCropper(
         modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface),
         imageBitmap = previewBitmap,
-        contentDescription = context.getString(R.string.editor_crop),
+        contentDescription = cropDescription,
         cropStyle = CropDefaults.style(
             handleColor = MaterialTheme.colorScheme.tertiary,
             strokeWidth = 1.dp

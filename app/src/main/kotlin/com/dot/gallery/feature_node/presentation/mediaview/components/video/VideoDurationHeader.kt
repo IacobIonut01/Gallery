@@ -21,7 +21,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.dot.gallery.R
 import com.dot.gallery.core.presentation.components.util.advancedShadow
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
@@ -61,7 +63,7 @@ fun VideoDurationHeader(modifier: Modifier = Modifier, media: Media) {
                 ),
             imageVector = Icons.Rounded.PlayCircle,
             colorFilter = ColorFilter.tint(color = Color.White),
-            contentDescription = "Video"
+            contentDescription = stringResource(R.string.video)
         )
     }
 }

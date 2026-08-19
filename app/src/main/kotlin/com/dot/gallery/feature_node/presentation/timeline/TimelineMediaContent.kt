@@ -7,7 +7,7 @@ import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
+import com.dot.gallery.ui.theme.isDarkTheme
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -86,6 +86,7 @@ fun TimelineMediaContent(
     animatedContentScope: AnimatedContentScope,
     onMediaClick: (Media.UriMedia) -> Unit,
     emptyContent: @Composable () -> Unit,
+    onRetry: (() -> Unit)? = null,
     scrollToTopRoute: String? = null,
 ) {
     var canScroll by rememberSaveable { mutableStateOf(true) }
@@ -142,6 +143,7 @@ fun TimelineMediaContent(
                 sharedTransitionScope = sharedTransitionScope,
                 animatedContentScope = animatedContentScope,
                 onMediaClick = onMediaClick,
+                onRetry = onRetry,
             )
         }
         return
@@ -198,7 +200,7 @@ fun TimelineMediaContent(
             }
             AnimatedVisibility(visible = show, enter = enterAnimation, exit = exitAnimation) {
                 val text by rememberedDerivedState(stickyHeaderItem) { stickyHeaderItem ?: "" }
-                val darkTheme = isSystemInDarkTheme()
+                val darkTheme = isDarkTheme()
                 Text(
                     text = text,
                     style = MaterialTheme.typography.titleMedium.let { style ->
@@ -262,6 +264,7 @@ fun TimelineMediaContent(
                     sharedTransitionScope = sharedTransitionScope,
                     animatedContentScope = animatedContentScope,
                     onMediaClick = onMediaClick,
+                    onRetry = onRetry,
                 )
             }
         }

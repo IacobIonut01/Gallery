@@ -74,6 +74,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntSize
@@ -328,7 +329,7 @@ fun EditScreen2(
     // MarkupPainter is still composed to consume the request. A raw back gesture
     // otherwise disposes the painter first, leaving requestMarkupApply with nothing
     // to handle it and the blur/loading overlay stuck forever (#955).
-    BackHandler(enabled = isMarkupDrawing) {
+    BackHandler(enabled = isMarkupDrawing && !isSaving) {
         if (paths.isNotEmpty() || textAnnotations.isNotEmpty()) {
             requestMarkupApply = true
         } else {
@@ -347,8 +348,14 @@ fun EditScreen2(
     }
 
     // Back while cutting out exits to the Smart selector; the exit effect bakes the mask.
-    BackHandler(enabled = isCutoutEditing) {
+    BackHandler(enabled = isCutoutEditing && !isSaving) {
         navController.popBackStack()
+    }
+
+    // Toolbar close and system back share the same top-level exit policy. Detail destinations still
+    // pop locally, so leaving the editor itself is the only action that can trigger the dirty prompt.
+    BackHandler(enabled = !isMarkupDrawing && !isCutoutEditing && !isSaving) {
+        if (showingEditorScreen || isOnTopLevelTab) onClose() else navController.popBackStack()
     }
 
     // Top-bar undo/redo drive the recipe and are hidden while cutting out (the cut-out selection has
@@ -399,6 +406,7 @@ fun EditScreen2(
                             if (showingEditorScreen || isOnTopLevelTab) onClose()
                             else navController.popBackStack()
                         },
+                        enabled = !isSaving,
                         modifier = Modifier.size(40.dp)
                     ) {
                         Icon(
@@ -417,6 +425,7 @@ fun EditScreen2(
                     ) {
                         IconButton(
                             onClick = effectiveUndo,
+                            enabled = !isSaving,
                             modifier = Modifier.size(40.dp)
                         ) {
                             Icon(
@@ -435,6 +444,7 @@ fun EditScreen2(
                     ) {
                         IconButton(
                             onClick = effectiveRedo,
+                            enabled = !isSaving,
                             modifier = Modifier.size(40.dp)
                         ) {
                             Icon(
@@ -454,7 +464,7 @@ fun EditScreen2(
                 ) {
                     Button(
                         onClick = onSaveCopy,
-                        enabled = isChanged && canSave && !isProcessing,
+                        enabled = isChanged && canSave && !isProcessing && !isSaving,
                         shape = CircleShape,
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                         colors = ButtonDefaults.buttonColors(
@@ -487,7 +497,7 @@ fun EditScreen2(
                     Box {
                         IconButton(
                             onClick = { showMenu = true },
-                            enabled = !isProcessing,
+                            enabled = !isProcessing && !isSaving,
                             modifier = Modifier.size(40.dp)
                         ) {
                             Icon(
@@ -1200,7 +1210,14 @@ fun EditScreen2(
             Box(
                 modifier = Modifier
                     .background(color = Color.Black.copy(alpha = 0.4f))
-                    .fillMaxSize(),
+                    .fillMaxSize()
+                    .pointerInput(isSaving, isReverting, requestMarkupApply) {
+                        awaitPointerEventScope {
+                            while (true) {
+                                awaitPointerEvent().changes.forEach { it.consume() }
+                            }
+                        }
+                    },
                 contentAlignment = Alignment.Center,
             ) {
                 val progress = saveProgress
@@ -1271,5 +1288,8 @@ fun EditScreen2(
                 }
             )
         }
+
+        // Registered last so no nested editor/back handler can close or mutate the session mid-save.
+        BackHandler(enabled = isSaving || isReverting) {}
     }
 }

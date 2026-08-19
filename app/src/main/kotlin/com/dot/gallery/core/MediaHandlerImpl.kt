@@ -11,6 +11,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import androidx.compose.runtime.compositionLocalOf
 import androidx.work.WorkManager
+import com.dot.gallery.cloud.core.CloudUri
 import com.dot.gallery.cloud.core.ProviderRegistry
 import com.dot.gallery.cloud.core.ProviderType
 import com.dot.gallery.cloud.core.capabilities.RemoteMediaProvider
@@ -47,23 +48,15 @@ class MediaHandlerImpl @Inject constructor(
 
     private fun <T : Media> extractCloudInfo(media: T): Triple<String, String, Long>? {
         if (!media.isCloud) return null
-        val uri = media.getUri()
-        val providerName = uri.authority ?: return null
-        // remoteId may contain slashes (SMB/NFS/WebDAV paths like "Photos/IMG.jpg"); pathSegments
-        // .first() would truncate it to the first folder.
-        val remoteId = uri.path?.trimStart('/')?.takeIf { it.isNotEmpty() } ?: return null
-        // Account identity: cloud URIs carry the owning account's config id (cfg). Without it,
-        // provider resolution falls back to the first account of the type, which addresses the
-        // wrong server when several accounts of the same provider type are configured.
-        val configId = uri.getQueryParameter("cfg")?.toLongOrNull() ?: -1L
-        return Triple(providerName, remoteId, configId)
+        val cloudUri = CloudUri.parse(media.getUri().toString()) ?: return null
+        if (cloudUri.configId <= 0L) return null
+        return Triple(cloudUri.providerType.name, cloudUri.remoteId, cloudUri.configId)
     }
 
-    private fun getCloudProvider(providerName: String, configId: Long = -1L): RemoteMediaProvider? {
-        val providerType = try { ProviderType.valueOf(providerName) } catch (_: Exception) { return null }
-        val provider = (if (configId > 0L) providerRegistry.getByConfigId(configId) else null)
-            ?: providerRegistry.get(providerType)
-        return provider as? RemoteMediaProvider
+    private fun getCloudProvider(providerName: String, configId: Long): RemoteMediaProvider? {
+        val providerType = runCatching { ProviderType.valueOf(providerName) }.getOrNull() ?: return null
+        return (providerRegistry.getByConfigId(configId) as? RemoteMediaProvider)
+            ?.takeIf { it.providerType == providerType }
     }
 
     override suspend fun <T : Media> toggleFavorite(
@@ -248,8 +241,8 @@ class MediaHandlerImpl @Inject constructor(
                 } catch (_: Exception) {
                     continue
                 }
-                val provider = (if (configId > 0L) providerRegistry.getByConfigId(configId) else null)
-                    ?: providerRegistry.get(providerType)
+                val provider = providerRegistry.getByConfigId(configId)
+                    ?.takeIf { it.providerType == providerType }
                 val syncProvider = provider as? SyncCapableProvider ?: continue
 
                 val downloadResult = syncProvider.downloadAsset(remoteId)

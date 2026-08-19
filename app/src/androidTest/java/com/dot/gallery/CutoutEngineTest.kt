@@ -20,6 +20,7 @@ import com.dot.gallery.feature_node.domain.model.Media
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -35,7 +36,7 @@ class CutoutEngineTest {
         modelManager.initializeModels()
         
         // Ensure models are downloaded/ready (for withML builds they should be ready)
-        assertTrue("ModelManager should be ready", modelManager.isReady)
+        assumeTrue("Cutout models are unavailable in this build", modelManager.isReady)
 
         // 2. Create and insert a dummy image into MediaStore
         val testMedia = createAndInsertTestImage(appContext)

@@ -19,10 +19,9 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import com.dot.gallery.core.Settings
@@ -100,14 +99,16 @@ private val DarkColors = darkColorScheme(
     scrim = md_theme_dark_scrim,
 )
 
+private val LocalGalleryDarkTheme = compositionLocalOf<Boolean?> { null }
+
+/** Returns the effective theme, including explicit app and preview overrides. */
 @Composable
 fun isDarkTheme(): Boolean {
-    val isSystemInDarkTheme = isSystemInDarkTheme()
+    LocalGalleryDarkTheme.current?.let { return it }
+    val systemDarkTheme = isSystemInDarkTheme()
     val forceThemeValue by rememberForceTheme()
     val isDarkMode by rememberIsDarkMode()
-    return rememberSaveable(isSystemInDarkTheme, forceThemeValue, isDarkMode) {
-        if (forceThemeValue) isDarkMode else isSystemInDarkTheme
-    }
+    return if (forceThemeValue) isDarkMode else systemDarkTheme
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -123,12 +124,17 @@ fun GalleryTheme(
 ) {
     val forceThemeValue by rememberForceTheme()
     val isDarkMode by rememberIsDarkMode()
-    val forcedDarkTheme by remember(ignoreUserPreference, forceThemeValue, darkTheme, isDarkMode) {
-        mutableStateOf(if (!ignoreUserPreference && forceThemeValue) isDarkMode else darkTheme)
+    val forcedDarkTheme = if (!ignoreUserPreference && forceThemeValue) isDarkMode else darkTheme
+    val preferredAmoledMode by rememberIsAmoledMode()
+    val preferredThemeColorSeed by rememberThemeColorSeed()
+    val preferredSystemFont by rememberUseSystemFont()
+    val isAmoledMode = !ignoreUserPreference && preferredAmoledMode
+    val themeColorSeed = if (ignoreUserPreference) {
+        Settings.Misc.THEME_SEED_SYSTEM
+    } else {
+        preferredThemeColorSeed
     }
-    val isAmoledMode by rememberIsAmoledMode()
-    val themeColorSeed by rememberThemeColorSeed()
-    val useSystemFont by rememberUseSystemFont()
+    val useSystemFont = !ignoreUserPreference && preferredSystemFont
     val context = LocalContext.current
     val colorScheme = remember(dynamicColor, forcedDarkTheme, isAmoledMode, themeColorSeed) {
         if (themeColorSeed == Settings.Misc.THEME_SEED_NEUTRAL) {
@@ -149,10 +155,12 @@ fun GalleryTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
+        shapes = Shapes,
         typography = if (useSystemFont) SystemTypography else Typography
     ) {
         CompositionLocalProvider(
-            value = LocalOverscrollFactory provides null,
+            LocalGalleryDarkTheme provides forcedDarkTheme,
+            LocalOverscrollFactory provides null,
             content = content
         )
     }

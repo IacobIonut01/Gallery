@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -72,7 +73,11 @@ fun SettingsAppHeader(
 ) {
 
     val appName = stringResource(id = R.string.app_name)
-    val appVersion = remember { "v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})" }
+    val appVersion = stringResource(
+        R.string.version_build_format,
+        BuildConfig.VERSION_NAME,
+        BuildConfig.VERSION_CODE,
+    )
     val appDeveloper = stringResource(R.string.app_dev, stringResource(R.string.app_dev_name))
 
     val donateImage = painterResource(id = R.drawable.ic_donate)
@@ -252,7 +257,7 @@ fun SettingsAppHeader(
                     shape = RoundedCornerShape(8.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(52.dp)
+                        .heightIn(min = 52.dp)
                         .weight(1f)
                         .semantics {
                             contentDescription = donateContentDesc
@@ -274,7 +279,7 @@ fun SettingsAppHeader(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
-                        .height(52.dp)
+                        .heightIn(min = 52.dp)
                         .semantics {
                             contentDescription = githubContentDesc
                         }
@@ -308,7 +313,11 @@ fun SettingsAppHeaderCompact(
 
     SupportSheet(state = supportState)
 
-    val appVersion = remember { "v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})" }
+    val appVersion = stringResource(
+        R.string.version_build_format,
+        BuildConfig.VERSION_NAME,
+        BuildConfig.VERSION_CODE,
+    )
 
     val restoreSheetState = rememberAppBottomSheetState()
     val restoreTitle = stringResource(R.string.restore_banner_title)
@@ -399,7 +408,7 @@ fun SettingsAppHeaderCompact(
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
                         .weight(1f)
-                        .height(44.dp)
+                        .heightIn(min = 48.dp)
                         .semantics {
                             contentDescription = donateContentDesc
                         }
@@ -417,7 +426,7 @@ fun SettingsAppHeaderCompact(
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
                         .weight(1f)
-                        .height(44.dp)
+                        .heightIn(min = 48.dp)
                         .semantics {
                             contentDescription = githubContentDesc
                         }

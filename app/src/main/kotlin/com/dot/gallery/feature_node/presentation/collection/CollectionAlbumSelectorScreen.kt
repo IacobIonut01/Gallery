@@ -29,7 +29,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -41,10 +43,12 @@ import com.dot.gallery.core.LocalMediaDistributor
 import com.dot.gallery.core.presentation.components.NavigationBackButton
 import com.dot.gallery.feature_node.presentation.settings.components.SettingsItem
 import com.dot.gallery.feature_node.presentation.settings.components.settings
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 /**
  * Create mode: pass collectionName, onCreateWithAlbums, onSkip.
- * Edit mode:   pass collectionId, onAddAlbumsToCollection.
+ * Edit mode:   pass collectionId, onReplaceAlbumsInCollection.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,19 +57,26 @@ fun CollectionAlbumSelectorScreen(
     collectionId: Long = -1L,
     onCreateWithAlbums: ((String, List<Long>) -> Unit)? = null,
     onSkip: ((String) -> Unit)? = null,
-    onAddAlbumsToCollection: ((Long, List<Long>) -> Unit)? = null,
+    onReplaceAlbumsInCollection: ((Long, List<Long>) -> Unit)? = null,
 ) {
     val isEditMode = collectionId > 0L
     val distributor = LocalMediaDistributor.current
     val albumsState by distributor.albumsFlow.collectAsStateWithLifecycle()
-    val selectedAlbumIds = remember { mutableStateListOf<Long>() }
+    val selectedAlbumIds = remember(collectionId) { mutableStateListOf<Long>() }
+    var selectionInitialized by remember(collectionId) { mutableStateOf(!isEditMode) }
 
     if (isEditMode) {
-        val collectionAlbumIds by distributor.collectionAlbumIdsInCollection(collectionId)
-            .collectAsStateWithLifecycle(initialValue = emptyList())
+        val collectionAlbumIdsFlow = remember(distributor, collectionId) {
+            val flow: Flow<List<Long>?> = distributor.collectionAlbumIdsInCollection(collectionId)
+                .map { albumIds -> albumIds.filter(::isSelectableCollectionAlbumId) }
+            flow
+        }
+        val collectionAlbumIds by collectionAlbumIdsFlow
+            .collectAsStateWithLifecycle(initialValue = null)
         LaunchedEffect(collectionAlbumIds) {
-            if (collectionAlbumIds.isNotEmpty() && selectedAlbumIds.isEmpty()) {
-                selectedAlbumIds.addAll(collectionAlbumIds)
+            if (!selectionInitialized && collectionAlbumIds != null) {
+                selectedAlbumIds.addAll(collectionAlbumIds.orEmpty())
+                selectionInitialized = true
             }
         }
     }
@@ -99,13 +110,13 @@ fun CollectionAlbumSelectorScreen(
                 if (isEditMode) {
                     SetupButton(
                         onClick = {
-                            onAddAlbumsToCollection?.invoke(collectionId, selectedAlbumIds.toList())
+                            onReplaceAlbumsInCollection?.invoke(collectionId, selectedAlbumIds.toList())
                         },
-                        enabled = selectedAlbumIds.isNotEmpty(),
+                        enabled = selectionInitialized,
                         applyHorizontalPadding = false,
                         applyBottomPadding = false,
                         applyInsets = false,
-                        text = stringResource(R.string.add_selected)
+                        text = stringResource(R.string.save)
                     )
                 } else {
                     SetupButton(
@@ -162,7 +173,7 @@ fun CollectionAlbumSelectorScreen(
                 }
             ) {
                 Header(subtitleText)
-                for (album in albumsState.albums) {
+                for (album in albumsState.albums.filter { isSelectableCollectionAlbumId(it.id) }) {
                     Preference(
                         title = album.label,
                         icon = album.uri.toString(),
@@ -181,3 +192,5 @@ fun CollectionAlbumSelectorScreen(
         }
     }
 }
+
+internal fun isSelectableCollectionAlbumId(albumId: Long): Boolean = albumId >= 0L

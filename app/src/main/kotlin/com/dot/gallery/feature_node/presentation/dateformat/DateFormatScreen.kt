@@ -96,6 +96,8 @@ import dev.chrisbanes.haze.materials.HazeMaterials
 import java.text.SimpleDateFormat
 import java.util.Locale
 
+internal fun dateFormatEditorText(rawFormat: String): String = rawFormat
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class,
     ExperimentalHazeMaterialsApi::class
 )
@@ -251,7 +253,7 @@ fun DateFormatScreen() {
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                            contentDescription = "Go back",
+                            contentDescription = stringResource(R.string.back_cd),
                             tint = contentColor,
                             modifier = Modifier.height(48.dp)
                         )
@@ -278,7 +280,7 @@ fun DateFormatScreen() {
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.Info,
-                            contentDescription = "info",
+                            contentDescription = stringResource(R.string.date_format_info_action),
                             tint = contentColor,
                             modifier = Modifier.height(48.dp)
                         )
@@ -375,7 +377,7 @@ fun DateFormatScreen() {
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                            contentDescription = "Go back",
+                            contentDescription = stringResource(R.string.back_cd),
                             tint = contentColor,
                             modifier = Modifier.height(48.dp)
                         )
@@ -402,7 +404,7 @@ fun DateFormatScreen() {
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.Info,
-                            contentDescription = "info",
+                            contentDescription = stringResource(R.string.date_format_info_action),
                             tint = contentColor,
                             modifier = Modifier.height(48.dp)
                         )
@@ -674,12 +676,15 @@ fun DateFormatPreview(
         var isDateHeaderFormatError by rememberSaveable {
             mutableStateOf(false)
         }
-        var textFieldValue by remember { mutableStateOf(TextFieldValue(dateFormat)) }
-        LaunchedEffect(dateFormat) {
-            if (dateFormat != textFieldValue.text) {
+        var textFieldValue by remember {
+            mutableStateOf(TextFieldValue(dateFormatEditorText(rawFormat)))
+        }
+        LaunchedEffect(rawFormat) {
+            val editorText = dateFormatEditorText(rawFormat)
+            if (editorText != textFieldValue.text) {
                 textFieldValue = TextFieldValue(
-                    text = dateFormat,
-                    selection = TextRange(dateFormat.length)
+                    text = editorText,
+                    selection = TextRange(editorText.length)
                 )
             }
         }
@@ -694,6 +699,12 @@ fun DateFormatPreview(
                 } catch (_: IllegalArgumentException) {
                     isDateHeaderFormatError = true
                 }
+            },
+            placeholder = {
+                Text(
+                    text = dateFormat,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             },
             modifier = Modifier
                 .fillMaxWidth()

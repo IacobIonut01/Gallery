@@ -14,8 +14,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -25,7 +24,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -49,15 +47,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
@@ -75,15 +75,22 @@ import com.dot.gallery.feature_node.presentation.util.NavigationItem
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.feature_node.presentation.util.rememberBottomBarInset
 import com.dot.gallery.ui.core.icons.Albums
+import com.dot.gallery.ui.theme.ComponentSize
+import com.dot.gallery.ui.theme.Spacing
 import dev.chrisbanes.haze.LocalHazeStyle
+
+internal fun navigationRailSlideOffset(
+    fullWidth: Int,
+    layoutDirection: LayoutDirection,
+): Int = if (layoutDirection == LayoutDirection.Ltr) -2 * fullWidth else 2 * fullWidth
 
 @Composable
 fun rememberNavigationItems(): List<NavigationItem> {
     val timelineTitle = stringResource(R.string.nav_timeline)
     val albumsTitle = stringResource(R.string.nav_albums)
     val libraryTitle = stringResource(R.string.library)
-    return remember {
-        mutableListOf(
+    return remember(timelineTitle, albumsTitle, libraryTitle) {
+        listOf(
             NavigationItem(
                 name = timelineTitle,
                 route = Screen.TimelineScreen.route,
@@ -114,35 +121,36 @@ fun AppBarContainer(
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
+    val layoutDirection = LocalLayoutDirection.current
     val windowSizeClass = calculateWindowSizeClass(context as Activity)
     val backStackEntry by navController.currentBackStackEntryAsState()
     val scrollToTop = LocalScrollToTop.current
     val bottomNavItems = rememberNavigationItems()
-    val useNavRail by remember(windowSizeClass) {
-        mutableStateOf(windowSizeClass.widthSizeClass > WindowWidthSizeClass.Compact)
-    }
+    val useNavRail = windowSizeClass.widthSizeClass > WindowWidthSizeClass.Compact
     val useOldNavbar by rememberOldNavbar()
     val hideNavBarSetting by rememberAutoHideNavBar()
-    val anySelectedRoute = remember(backStackEntry) {
-        bottomNavItems.any { it.route == navController.currentDestination?.route }
+    val anySelectedRoute = remember(backStackEntry, bottomNavItems) {
+        bottomNavItems.any { it.route == backStackEntry?.destination?.route }
     }
 
-    // The classic nav rail only applies in the old-navbar layout on wide screens.
-    val showNavRail by remember(useOldNavbar, useNavRail, bottomBarState, anySelectedRoute) {
-        derivedStateOf { useOldNavbar && useNavRail && bottomBarState && anySelectedRoute }
+    // Wide windows use a rail for both navigation styles. Keeping a compact floating bar on a
+    // tablet left content underneath the bar and made the primary destinations hard to reach.
+    val showNavRail by remember(useNavRail, bottomBarState, anySelectedRoute) {
+        derivedStateOf { useNavRail && bottomBarState && anySelectedRoute }
     }
     val showClassicNavbar by remember(useOldNavbar, useNavRail, bottomBarState, isScrolling, hideNavBarSetting, anySelectedRoute) {
         derivedStateOf {
             useOldNavbar && !useNavRail && bottomBarState && (!isScrolling || !hideNavBarSetting) && anySelectedRoute
         }
     }
-    val showMaterialNavbar by remember(useOldNavbar, bottomBarState, isScrolling, hideNavBarSetting, anySelectedRoute) {
+    val showMaterialNavbar by remember(useOldNavbar, useNavRail, bottomBarState, isScrolling, hideNavBarSetting, anySelectedRoute) {
         derivedStateOf {
-            !useOldNavbar && bottomBarState && (!isScrolling || !hideNavBarSetting) && anySelectedRoute
+            !useOldNavbar && !useNavRail && bottomBarState &&
+                (!isScrolling || !hideNavBarSetting) && anySelectedRoute
         }
     }
     val animatedPadding by animateDpAsState(
-        targetValue = if (showNavRail) 80.dp else 0.dp,
+        targetValue = if (showNavRail) ComponentSize.NavigationRailWidth else 0.dp,
         label = "animatedPadding"
     )
 
@@ -154,11 +162,15 @@ fun AppBarContainer(
         Box(modifier = Modifier.padding(start = animatedPadding)) {
             content()
         }
-        // Old-navbar layout: classic rail (wide) or classic bottom bar (compact)
+        // Adaptive rail (wide) or the selected compact bottom-bar style.
         AnimatedVisibility(
             visible = showNavRail,
-            enter = slideInHorizontally { it * -2 },
-            exit = slideOutHorizontally { it * -2 }
+            enter = slideInHorizontally {
+                navigationRailSlideOffset(it, layoutDirection)
+            },
+            exit = slideOutHorizontally {
+                navigationRailSlideOffset(it, layoutDirection)
+            }
         ) {
             ClassicNavigationRail(
                 backStackEntry = backStackEntry,
@@ -188,12 +200,8 @@ fun AppBarContainer(
             enter = slideInVertically { it * 2 },
             exit = slideOutVertically { it * 2 },
             content = {
-                val modifier = remember(useNavRail) {
-                    if (useNavRail) Modifier.requiredWidth((110 * bottomNavItems.size).dp)
-                    else Modifier.fillMaxWidth()
-                }
                 GalleryNavBar(
-                    modifier = modifier,
+                    modifier = Modifier.fillMaxWidth(),
                     backStackEntry = backStackEntry,
                     navigationItems = bottomNavItems,
                     onClick = { onNavItemClick(navController, it, scrollToTop) }
@@ -242,11 +250,12 @@ fun GalleryNavBar(
 ) {
     val allowBlur by rememberAllowBlur()
     val surfaceColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
-    val backgroundModifier = remember (allowBlur) {
+    val navigationShape = MaterialTheme.shapes.extraLarge
+    val backgroundModifier = remember(allowBlur, surfaceColor, navigationShape) {
         if (!allowBlur) {
             Modifier.background(
                 color = surfaceColor,
-                shape = RoundedCornerShape(100)
+                shape = navigationShape,
             )
         } else {
             Modifier
@@ -254,10 +263,10 @@ fun GalleryNavBar(
     }
     Row(
         modifier = Modifier
-            .padding(horizontal = 32.dp, vertical = 32.dp)
+            .padding(horizontal = Spacing.ExtraLarge, vertical = Spacing.ExtraLarge)
             .then(modifier)
-            .height(64.dp)
-            .clip(RoundedCornerShape(100))
+            .height(ComponentSize.NavigationBarHeight)
+            .clip(navigationShape)
             .then(backgroundModifier)
             .hazeEffectScaled(
                 state = LocalHazeState.current,
@@ -355,7 +364,6 @@ fun RowScope.GalleryNavBarItem(
     isSelected: Boolean,
     onClick: (route: String) -> Unit,
 ) {
-    val mutableInteraction = remember { MutableInteractionSource() }
     val selectedColor by animateColorAsState(
         targetValue = if (isSelected) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent,
         label = "selectedColor"
@@ -366,33 +374,29 @@ fun RowScope.GalleryNavBarItem(
     )
     Box(
         modifier = Modifier
-            .height(64.dp)
+            .height(ComponentSize.NavigationBarHeight)
             .weight(1f)
-            // Dummy clickable to intercept clicks from passing under the container
-            .clickable(
-                indication = null,
-                interactionSource = mutableInteraction,
-                onClick = {}
+            .selectable(
+                selected = isSelected,
+                role = Role.Tab,
+                onClick = { onClick(navItem.route) },
             ),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         Box(
             modifier = Modifier
                 .height(32.dp)
-                .width(64.dp)
+                .width(ComponentSize.NavigationBarHeight)
                 .background(
                     color = selectedColor,
-                    shape = RoundedCornerShape(percent = 100)
-                )
-                .clip(RoundedCornerShape(100))
-                .clickable { onClick(navItem.route) },
+                    shape = RoundedCornerShape(percent = 100),
+                ),
         )
         Icon(
-            modifier = Modifier
-                .size(22.dp),
+            modifier = Modifier.size(22.dp),
             imageVector = navItem.icon,
             contentDescription = navItem.name,
-            tint = selectedIconColor
+            tint = selectedIconColor,
         )
     }
 }

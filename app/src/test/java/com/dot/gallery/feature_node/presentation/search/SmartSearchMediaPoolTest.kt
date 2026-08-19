@@ -10,6 +10,22 @@ import org.junit.Test
 
 class SmartSearchMediaPoolTest {
     @Test
+    fun refreshedResultsKeepOrderReplaceChangedItemsAndDropDeletedItems() {
+        val oldFirst = TestMedia(id = 1L, timestamp = 1L)
+        val oldSecond = TestMedia(id = 2L, timestamp = 2L)
+        val updatedSecond = oldSecond.copy(timestamp = 20L)
+
+        assertEquals(
+            listOf(updatedSecond),
+            reconcileSearchResults(
+                previousResults = listOf(oldSecond, oldFirst),
+                currentMedia = listOf(updatedSecond, TestMedia(id = 3L)),
+                identity = TestMedia::id,
+            )
+        )
+    }
+
+    @Test
     fun disabledSettingKeepsTimelinePoolUnchanged() {
         val timeline = listOf(TestMedia(id = 1L))
 

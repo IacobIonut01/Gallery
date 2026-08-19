@@ -147,6 +147,15 @@ object HelpSearchIndex {
             Toggle(R.string.change_app_name, Screen.SettingsGeneralScreen(), HelpCategory.SETTINGS_GENERAL),
             Toggle(R.string.change_app_logo, Screen.SettingsGeneralScreen(), HelpCategory.SETTINGS_GENERAL),
             Toggle(R.string.vault_encrypt_behavior, Screen.SettingsGeneralScreen(), HelpCategory.SETTINGS_GENERAL),
+            // Appearance and color
+            Toggle(R.string.settings_follow_system_theme_title, Screen.ColorPaletteScreen(), HelpCategory.SETTINGS_APPEARANCE),
+            Toggle(R.string.settings_dark_mode_title, Screen.ColorPaletteScreen(), HelpCategory.SETTINGS_APPEARANCE),
+            Toggle(R.string.amoled_mode_title, Screen.ColorPaletteScreen(), HelpCategory.SETTINGS_APPEARANCE),
+            Toggle(R.string.fancy_blur, Screen.ColorPaletteScreen(), HelpCategory.SETTINGS_APPEARANCE),
+            Toggle(R.string.auto_contrast, Screen.ColorPaletteScreen(), HelpCategory.SETTINGS_APPEARANCE),
+            Toggle(R.string.shared_elements, Screen.ColorPaletteScreen(), HelpCategory.SETTINGS_APPEARANCE),
+            Toggle(R.string.use_system_font_title, Screen.ColorPaletteScreen(), HelpCategory.SETTINGS_APPEARANCE),
+            Toggle(R.string.map_appearance_title, Screen.ColorPaletteScreen(), HelpCategory.SETTINGS_APPEARANCE),
             // Navigation
             Toggle(R.string.set_default_screen, Screen.SettingsNavigationScreen(), HelpCategory.SETTINGS_NAVIGATION),
             Toggle(R.string.old_navbar, Screen.SettingsNavigationScreen(), HelpCategory.SETTINGS_NAVIGATION),
@@ -176,6 +185,12 @@ object HelpSearchIndex {
             Toggle(R.string.group_edited_copies_title, Screen.SettingsTimelineAlbumsScreen(), HelpCategory.TIMELINE_ALBUMS),
             Toggle(R.string.group_burst_sequences_title, Screen.SettingsTimelineAlbumsScreen(), HelpCategory.TIMELINE_ALBUMS),
             Toggle(R.string.group_cloud_local_title, Screen.SettingsTimelineAlbumsScreen(), HelpCategory.TIMELINE_ALBUMS),
+            Toggle(R.string.merge_albums_by_name, Screen.SettingsTimelineAlbumsScreen(), HelpCategory.TIMELINE_ALBUMS),
+            Toggle(R.string.album_sections_title, Screen.SettingsTimelineAlbumsScreen(), HelpCategory.TIMELINE_ALBUMS),
+            Toggle(R.string.pinned_albums_as_grid_title, Screen.SettingsTimelineAlbumsScreen(), HelpCategory.TIMELINE_ALBUMS),
+            Toggle(R.string.media_type_albums_setting_title, Screen.SettingsTimelineAlbumsScreen(), HelpCategory.TIMELINE_ALBUMS),
+            Toggle(R.string.date_headers_title, Screen.SettingsTimelineAlbumsScreen(), HelpCategory.TIMELINE_ALBUMS),
+            Toggle(R.string.group_method_title, Screen.SettingsTimelineAlbumsScreen(), HelpCategory.TIMELINE_ALBUMS),
             Toggle(R.string.date_header, Screen.DateFormatScreen(), HelpCategory.TIMELINE_ALBUMS),
             // Slideshow
             Toggle(R.string.slideshow_interval, Screen.SlideshowSettingsScreen(), HelpCategory.SETTINGS_GENERAL),
@@ -187,6 +202,10 @@ object HelpSearchIndex {
             Toggle(R.string.slideshow_include_gifs, Screen.SlideshowSettingsScreen(), HelpCategory.SETTINGS_GENERAL),
             Toggle(R.string.slideshow_include_videos, Screen.SlideshowSettingsScreen(), HelpCategory.SETTINGS_GENERAL),
             // Smart features
+            Toggle(R.string.smart_features_include_ignored_albums, Screen.SettingsSmartFeaturesScreen(), HelpCategory.SETTINGS_SMART),
+            Toggle(R.string.ai_models_manager, Screen.SettingsSmartFeaturesScreen(), HelpCategory.SETTINGS_SMART),
+            Toggle(R.string.categories, Screen.SettingsSmartFeaturesScreen(), HelpCategory.SETTINGS_SMART),
+            Toggle(R.string.smart_scan_manager_title, Screen.SettingsSmartFeaturesScreen(), HelpCategory.SETTINGS_SMART),
             Toggle(R.string.refresh_metadata, Screen.SettingsSmartFeaturesScreen(), HelpCategory.SETTINGS_SMART),
             Toggle(R.string.edit_backups, Screen.SettingsSmartFeaturesScreen(), HelpCategory.SETTINGS_SMART),
             // Backup
@@ -263,7 +282,7 @@ object HelpSearchIndex {
             HelpSearchItem(
                 kind = HelpSearchKind.CHANGELOG,
                 id = "release_${release.versionCode}",
-                title = "v${release.versionName}",
+                title = context.getString(R.string.version_name_format, release.versionName),
                 subtitle = release.releaseDate,
                 keywords = release.searchKeywords(),
                 icon = Icons.Outlined.NewReleases,

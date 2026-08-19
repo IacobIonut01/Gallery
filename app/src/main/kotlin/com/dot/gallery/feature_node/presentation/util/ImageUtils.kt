@@ -266,7 +266,7 @@ suspend fun <T : Media> Context.copyEncryptedMediaToClipboard(
     keychainHolder: KeychainHolder
 ) = withContext(Dispatchers.IO) {
     try {
-        val tempFile = createDecryptedTempFile(media, keychainHolder)
+        val tempFile = createDecryptedTempFile(media, keychainHolder, cacheDir)
         val tempUri = FileProvider.getUriForFile(
             this@copyEncryptedMediaToClipboard,
             BuildConfig.CONTENT_AUTHORITY,
@@ -276,7 +276,7 @@ suspend fun <T : Media> Context.copyEncryptedMediaToClipboard(
             val clipboardManager = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
             val clip = ClipData.newUri(contentResolver, media.label, tempUri)
             clip.description.extras = PersistableBundle().apply {
-                putString("android.content.extra.IS_SENSITIVE", "false")
+                putBoolean("android.content.extra.IS_SENSITIVE", true)
             }
             clipboardManager.setPrimaryClip(clip)
             if (!SdkCompat.showsClipboardConfirmation) {
@@ -340,7 +340,7 @@ suspend fun <T : Media> Context.shareEncryptedMedia(
 ) = withContext(Dispatchers.IO) {
     try {
         // Create temporary file for decrypted content
-        val tempFile = createDecryptedTempFile(media, keychainHolder)
+        val tempFile = createDecryptedTempFile(media, keychainHolder, cacheDir)
         
         // Create content URI for the temp file
         val tempUri = FileProvider.getUriForFile(
@@ -387,7 +387,7 @@ suspend fun <T : Media> Context.shareMediaWithVaultSupport(
             if (media.isEncrypted && currentVault != null && keychainHolder != null) {
                 // Handle encrypted media by creating temp decrypted file
                 try {
-                    val tempFile = createDecryptedTempFile(media, keychainHolder)
+                    val tempFile = createDecryptedTempFile(media, keychainHolder, cacheDir)
                     val tempUri = FileProvider.getUriForFile(
                         this@shareMediaWithVaultSupport,
                         BuildConfig.CONTENT_AUTHORITY,
@@ -440,7 +440,8 @@ suspend fun <T : Media> Context.shareMediaWithVaultSupport(
  */
 internal fun <T : Media> createDecryptedTempFile(
     media: T,
-    keychainHolder: KeychainHolder
+    keychainHolder: KeychainHolder,
+    tempDirectory: File = keychainHolder.filesDir,
 ): File {
     // Get the encrypted file
     val encryptedFile = media.getUri().toFile()
@@ -467,18 +468,25 @@ internal fun <T : Media> createDecryptedTempFile(
         else -> ".mp4"
     }
     
-    val tempFile = File.createTempFile(
-        "shared_${media.label.replace("[^a-zA-Z0-9]".toRegex(), "_")}_",
-        extension
-    )
-    
-    // Write decrypted content to temp file (streaming for large files)
-    decryptedMedia.openStream().use { input ->
-        FileOutputStream(tempFile).use { outputStream ->
-            input.copyTo(outputStream)
+    var tempFile: File? = null
+    return try {
+        val createdFile = File.createTempFile(
+            "shared_${media.label.replace("[^a-zA-Z0-9]".toRegex(), "_")}_",
+            extension,
+            tempDirectory,
+        )
+        tempFile = createdFile
+        // Write decrypted content to a worker-managed cache file (streaming for large files).
+        decryptedMedia.openStream().use { input ->
+            FileOutputStream(createdFile).use { outputStream ->
+                input.copyTo(outputStream)
+            }
         }
+        createdFile
+    } catch (error: Throwable) {
+        tempFile?.delete()
+        throw error
+    } finally {
+        decryptedMedia.cleanup()
     }
-    decryptedMedia.cleanup()
-    
-    return tempFile
 }

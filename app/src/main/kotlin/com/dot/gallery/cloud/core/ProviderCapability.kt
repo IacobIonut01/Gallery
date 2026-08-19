@@ -10,7 +10,10 @@ enum class ProviderCapability {
     MAP,
     SMART_SEARCH,
     TEXT_SEARCH,
-    SHARE_LINK,
+    /** Can create a public link for selected remote assets. */
+    SHARE_CREATE,
+    /** Can list, edit, and revoke previously created share links. */
+    SHARE_MANAGE,
     SYNC,
     REMOTE_ALBUMS,
     REMOTE_ASSETS,

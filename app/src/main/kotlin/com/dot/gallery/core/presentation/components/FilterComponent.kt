@@ -36,6 +36,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.dot.gallery.R
 import com.dot.gallery.core.Settings
 import com.dot.gallery.core.Settings.Album.rememberLastSort
 import com.dot.gallery.feature_node.domain.util.MediaOrder
@@ -75,7 +76,7 @@ fun FilterButton(
             ) {
                 Icon(
                     imageVector = if (viewType == Settings.Album.ViewType.GRID) Icons.Outlined.GridView else Icons.Outlined.HorizontalSplit,
-                    contentDescription = "Toggle View Type",
+                    contentDescription = stringResource(R.string.toggle_view_type),
                     tint = MaterialTheme.colorScheme.primary
                 )
             }

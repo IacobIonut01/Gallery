@@ -6,7 +6,7 @@
 package com.dot.gallery.feature_node.presentation.mediaview.components
 
 import android.net.Uri
-import androidx.compose.foundation.isSystemInDarkTheme
+import com.dot.gallery.ui.theme.isDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -62,7 +62,7 @@ fun LocationDetailSheet(
 ) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
-    val isDark = isSystemInDarkTheme()
+    val isDark = isDarkTheme()
 
     val mapTileUrl = remember(locationData.latitude, locationData.longitude, isDark) {
         val zoom = 14

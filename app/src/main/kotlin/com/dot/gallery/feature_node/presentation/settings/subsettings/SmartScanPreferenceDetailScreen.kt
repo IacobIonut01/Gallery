@@ -188,8 +188,7 @@ private fun SmartScanDetailContent(
 
 @Composable
 private fun ScanProgressCard(run: SmartScanRunEntity, phases: List<SmartScanPhaseEntity>) {
-    val current = phases.firstOrNull { it.phase == run.currentPhase }
-        ?: phases.firstOrNull { it.status == SmartScanStatus.RUNNING }
+    val current = phases.firstOrNull { it.status == SmartScanStatus.RUNNING }
         ?: phases.firstOrNull { it.status == SmartScanStatus.QUEUED }
     val overallProgress = SmartScanPlan.overallProgress(phases)
     val stageNumber = phases.indexOf(current).takeIf { it >= 0 }?.plus(1) ?: 0

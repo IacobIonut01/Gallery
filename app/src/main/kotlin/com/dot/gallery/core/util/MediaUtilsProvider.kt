@@ -3,6 +3,8 @@ package com.dot.gallery.core.util
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import com.dot.gallery.core.Settings
@@ -12,8 +14,12 @@ import androidx.core.graphics.drawable.toDrawable
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.bumptech.glide.integration.compose.placeholder
+import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.load.resource.gif.GifDrawable
+import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.target.Target
 import com.bumptech.glide.signature.ObjectKey
 import com.dot.gallery.core.LocalEventHandler
 import com.dot.gallery.core.LocalMediaDistributor
@@ -23,7 +29,10 @@ import com.dot.gallery.core.MediaDistributor
 import com.dot.gallery.core.MediaHandler
 import com.dot.gallery.core.MediaSelector
 import com.dot.gallery.core.image.thumbnail.LocalThumbnailMotion
+import com.dot.gallery.core.image.thumbnail.RefinedThumbnailKey
+import com.dot.gallery.core.image.thumbnail.RefinedThumbnailLoadTracker
 import com.dot.gallery.core.image.thumbnail.ThumbnailTelemetry
+import com.dot.gallery.core.image.thumbnail.shouldUseMotionThumbnail
 import com.dot.gallery.core.presentation.components.LocalMediaImageRenderer
 import com.dot.gallery.core.presentation.components.MediaImageRenderer
 import com.dot.gallery.feature_node.domain.util.EventHandler
@@ -42,6 +51,27 @@ private val HEAVY_CODEC_EXTENSIONS = listOf(
  * enough to avoid obvious blur on dense grids. Reused as the REFINED request's placeholder.
  */
 private const val THUMBNAIL_MOTION_PX = 256
+private val refinedThumbnailLoadTracker = RefinedThumbnailLoadTracker(capacity = 2_048)
+
+private fun refinedThumbnailListener(onLoaded: () -> Unit) = object : RequestListener<Drawable> {
+    override fun onLoadFailed(
+        e: GlideException?,
+        model: Any?,
+        target: Target<Drawable>,
+        isFirstResource: Boolean
+    ): Boolean = false
+
+    override fun onResourceReady(
+        resource: Drawable,
+        model: Any?,
+        target: Target<Drawable>?,
+        dataSource: DataSource,
+        isFirstResource: Boolean
+    ): Boolean {
+        onLoaded()
+        return false
+    }
+}
 
 /**
  * Default [MediaImageRenderer] that uses GlideImage with full caching,
@@ -62,9 +92,22 @@ val GlideMediaImageRenderer = object : MediaImageRenderer {
         signature: Any?
     ) {
         val allowGifAnimation by Settings.Misc.rememberAllowGifAnimation()
-        // Phase 3 (#1076): scroll-aware tier. Null (surfaces without motion state) => idle/refined.
+        // Phase 3 (#1076): scroll-aware tier. Completed refined loads never downgrade during motion.
         val isMoving = LocalThumbnailMotion.current?.value == true
         val signatureStr = signature?.toString() ?: ""
+        val thumbnailKey = remember(model, signatureStr) {
+            RefinedThumbnailKey(model = model, signature = signatureStr)
+        }
+        val hasLoadedRefined = remember(thumbnailKey) {
+            mutableStateOf(refinedThumbnailLoadTracker.hasLoaded(thumbnailKey))
+        }
+        val refinedLoadListener = remember(thumbnailKey) {
+            refinedThumbnailListener {
+                refinedThumbnailLoadTracker.markLoaded(thumbnailKey)
+                hasLoadedRefined.value = true
+            }
+        }
+        val useMotionThumbnail = shouldUseMotionThumbnail(isMoving, hasLoadedRefined.value)
         // Animated formats stay static during motion; they may animate only once the list is idle.
         val isGif = allowGifAnimation && !isMoving && signatureStr.contains(".gif", ignoreCase = true)
         val isAnimatable = allowGifAnimation && !isMoving && (
@@ -74,7 +117,7 @@ val GlideMediaImageRenderer = object : MediaImageRenderer {
         // Heavy software codecs (no hardware decode) are expensive to decode. The idle refined pass
         // skips the extra thumbnail sub-request for them so they decode once, not twice.
         val isHeavyCodec = HEAVY_CODEC_EXTENSIONS.any { signatureStr.contains(it, ignoreCase = true) }
-        val tier = if (isMoving) "MOTION" else "REFINED"
+        val tier = if (useMotionThumbnail) "MOTION" else "REFINED"
         GlideImage(
             modifier = modifier,
             model = model,
@@ -90,12 +133,13 @@ val GlideMediaImageRenderer = object : MediaImageRenderer {
                 var motion = base.clone().override(THUMBNAIL_MOTION_PX)
                 if (signature != null) motion = motion.signature(ObjectKey(signatureStr))
 
-                var request = if (isMoving) {
-                    // Moving: load only the cheap tier — no full-size sibling, no animation.
+                var request = if (useMotionThumbnail) {
+                    // Moving and not yet refined: load only the cheap tier.
                     motion
                 } else {
                     var refined = base
                     if (signature != null) refined = refined.signature(ObjectKey(signatureStr))
+                    refined = refined.addListener(refinedLoadListener)
                     // Show the cached motion bitmap instantly while the refined image decodes.
                     if (!isHeavyCodec) refined = refined.thumbnail(motion)
                     refined

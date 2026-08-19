@@ -15,10 +15,47 @@ import com.dot.gallery.core.metrics.StartupTracer
 import com.dot.gallery.feature_node.presentation.util.printDebug
 import com.dot.gallery.feature_node.presentation.util.printWarning
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import java.io.File
+
+enum class EncryptionBackendState {
+    UNKNOWN,
+    ENCRYPTED,
+    PLAINTEXT_FALLBACK,
+}
+
+data class EncryptionRuntimeState(
+    val settings: EncryptionBackendState = EncryptionBackendState.UNKNOWN,
+    val database: EncryptionBackendState = EncryptionBackendState.UNKNOWN,
+) {
+    val hasPlaintextFallback: Boolean
+        get() = settings == EncryptionBackendState.PLAINTEXT_FALLBACK ||
+            database == EncryptionBackendState.PLAINTEXT_FALLBACK
+
+    val fullyEncrypted: Boolean
+        get() = settings == EncryptionBackendState.ENCRYPTED &&
+            database == EncryptionBackendState.ENCRYPTED
+}
+
+/** Runtime source of truth for what the app actually opened, not what it intended to open. */
+object EncryptionStateMonitor {
+    private val _state = MutableStateFlow(EncryptionRuntimeState())
+    val state: StateFlow<EncryptionRuntimeState> = _state.asStateFlow()
+
+    fun reportSettings(state: EncryptionBackendState) {
+        _state.update { it.copy(settings = state) }
+    }
+
+    fun reportDatabase(state: EncryptionBackendState) {
+        _state.update { it.copy(database = state) }
+    }
+}
 
 /**
  * Manages the encrypted DataStore lifecycle.

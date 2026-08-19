@@ -101,7 +101,7 @@ import com.dot.gallery.feature_node.domain.util.Converters
         SmartScanPhaseEntity::class,
         MediaFeatureStateEntity::class
     ],
-    version = 43,
+    version = 44,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
@@ -150,6 +150,7 @@ import com.dot.gallery.feature_node.domain.util.Converters
         // Migration 40 to 41 is handled manually in SmartScanMigration.kt
         // Migration 41 to 42 is handled manually in MergedSubfolderMigration.kt
         // Migration 42 to 43 is handled manually in SmartScanMigration.kt
+        // Migration 43 to 44 is handled manually in CloudAlbumSyncPkMigration.kt
     ]
 )
 @TypeConverters(Converters::class, CloudConverters::class, SmartScanConverters::class)

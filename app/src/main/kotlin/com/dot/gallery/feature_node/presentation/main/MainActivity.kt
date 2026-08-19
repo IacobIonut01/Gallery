@@ -25,7 +25,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.compose.rememberNavController
 import com.dot.gallery.core.Constants
 import com.dot.gallery.core.MediaDistributor
@@ -42,7 +44,6 @@ import com.dot.gallery.core.presentation.components.AppBarContainer
 import com.dot.gallery.core.presentation.components.NavigationComp
 import com.dot.gallery.core.util.SetupMediaProviders
 import com.dot.gallery.feature_node.domain.model.UIEvent
-import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.domain.util.EventHandler
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
 import com.dot.gallery.feature_node.presentation.util.toggleOrientation
@@ -54,11 +55,8 @@ import dev.chrisbanes.haze.LocalHazeStyle
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 import dev.chrisbanes.haze.rememberHazeState
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -66,8 +64,6 @@ class MainActivity : AppCompatActivity() {
 
     @Inject
     lateinit var eventHandler: EventHandler
-    @Inject
-    lateinit var repository: MediaRepository
     @Inject
     lateinit var mediaDistributor: MediaDistributor
     @Inject
@@ -115,39 +111,41 @@ class MainActivity : AppCompatActivity() {
                     mutableStateOf(if (forcedTheme) localDarkTheme else systemDarkTheme)
                 }
                 LaunchedEffect(eventHandler, navController) {
-                    eventHandler.navigateAction = {
-                        navController.navigate(it) {
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    }
-                    eventHandler.toggleNavigationBarAction = { isVisible ->
-                        bottomBarState.value = isVisible
-                    }
-                    eventHandler.navigateUpAction = navController::navigateUp
-                    eventHandler.setFollowThemeAction = { followTheme ->
-                        systemBarFollowThemeState.value = followTheme
-                    }
-                }
-                LaunchedEffect(eventHandler) {
-                    withContext(Dispatchers.Main.immediate) {
-                        eventHandler.updaterFlow.collectLatest { event ->
-                            when (event) {
-                                UIEvent.UpdateDatabase -> {
-                                    delay(1000L)
-                                    repository.updateInternalDatabase()
-                                }
-
-                                UIEvent.NavigationUpEvent -> eventHandler.navigateUpAction()
-                                is UIEvent.NavigationRouteEvent -> eventHandler.navigateAction(event.route)
-                                is UIEvent.ToggleNavigationBarEvent -> eventHandler.toggleNavigationBarAction(
-                                    event.isVisible
-                                )
-
-                                is UIEvent.SetFollowThemeEvent -> eventHandler.setFollowThemeAction(
-                                    event.followTheme
-                                )
+                    lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                        val navigateAction: (String) -> Unit = { route ->
+                            navController.navigate(route) {
+                                launchSingleTop = true
+                                restoreState = true
                             }
+                        }
+                        val toggleNavigationBarAction: (Boolean) -> Unit = { isVisible ->
+                            bottomBarState.value = isVisible
+                        }
+                        val navigateUpAction: () -> Unit = { navController.navigateUp() }
+                        val setFollowThemeAction: (Boolean) -> Unit = { followTheme ->
+                            systemBarFollowThemeState.value = followTheme
+                        }
+                        eventHandler.navigateAction = navigateAction
+                        eventHandler.toggleNavigationBarAction = toggleNavigationBarAction
+                        eventHandler.navigateUpAction = navigateUpAction
+                        eventHandler.setFollowThemeAction = setFollowThemeAction
+                        try {
+                            eventHandler.updaterFlow.collect { event ->
+                                when (event) {
+                                    UIEvent.UpdateDatabase -> Unit
+                                    UIEvent.NavigationUpEvent -> eventHandler.navigateUpAction()
+                                    is UIEvent.NavigationRouteEvent -> eventHandler.navigateAction(event.route)
+                                    is UIEvent.ToggleNavigationBarEvent ->
+                                        eventHandler.toggleNavigationBarAction(event.isVisible)
+                                    is UIEvent.SetFollowThemeEvent ->
+                                        eventHandler.setFollowThemeAction(event.followTheme)
+                                }
+                            }
+                        } finally {
+                            eventHandler.navigateAction = {}
+                            eventHandler.toggleNavigationBarAction = {}
+                            eventHandler.navigateUpAction = {}
+                            eventHandler.setFollowThemeAction = {}
                         }
                     }
                 }

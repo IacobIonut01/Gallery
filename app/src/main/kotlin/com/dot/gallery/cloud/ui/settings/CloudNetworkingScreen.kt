@@ -33,6 +33,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,7 +43,6 @@ import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -69,10 +69,16 @@ private fun serializeExternalUrls(urls: List<String>): String {
 }
 
 @Composable
-fun CloudNetworkingScreen() {
+fun CloudNetworkingScreen(configId: Long) {
     val settingsVm = hiltViewModel<CloudSettingsViewModel>()
     val config by settingsVm.config.collectAsStateWithLifecycle()
-    val context = LocalContext.current
+    val loadState by settingsVm.loadState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(configId) { settingsVm.loadConfig(configId) }
+    if (config == null) {
+        AccountSettingsStateScreen(stringResource(R.string.cloud_networking), loadState)
+        return
+    }
     val autoUrlSwitch = config?.autoUrlSwitch ?: false
     val serverUrl = config?.serverUrl ?: ""
     val wifiSsid = config?.localWifiSsid ?: ""
@@ -88,38 +94,60 @@ fun CloudNetworkingScreen() {
 
     var showLocalUrlDialog by remember { mutableStateOf(false) }
     var showAddExternalDialog by remember { mutableStateOf(false) }
+    val localHeader = stringResource(R.string.cloud_net_local)
+    val wifiNameTitle = stringResource(R.string.cloud_net_wifi_name)
+    val wifiBlankSummary = stringResource(R.string.cloud_net_wifi_blank_summary)
+    val localUrlTitle = stringResource(R.string.cloud_net_local_url)
+    val notConfiguredSummary = stringResource(R.string.cloud_net_not_configured)
+    val externalHeader = stringResource(R.string.cloud_net_external)
+    val addExternalTitle = stringResource(R.string.cloud_net_add_external)
+    val noExternalSummary = stringResource(R.string.cloud_net_no_external)
+    val resourceStrings = listOf(
+        localHeader,
+        wifiNameTitle,
+        wifiBlankSummary,
+        localUrlTitle,
+        notConfiguredSummary,
+        externalHeader,
+        addExternalTitle,
+        noExternalSummary,
+    )
 
-    val settingsList = remember(autoUrlSwitch, wifiSsid, localUrl, externalUrls) {
+    val settingsList = remember(
+        autoUrlSwitch,
+        wifiSsid,
+        localUrl,
+        externalUrls,
+        resourceStrings,
+    ) {
         buildList {
             if (autoUrlSwitch) {
                 // Local network
-                add(SettingsEntity.Header(title = context.getString(R.string.cloud_net_local)))
+                add(SettingsEntity.Header(title = localHeader))
                 add(
                     SettingsEntity.Preference(
-                        title = context.getString(R.string.cloud_net_wifi_name),
-                        summary = wifiSsid.ifBlank {
-                            context.getString(R.string.cloud_net_wifi_blank_summary)
-                        },
+                        title = wifiNameTitle,
+                        summary = wifiSsid.ifBlank { wifiBlankSummary },
                         onClick = { scope.launch { wifiSheetState.show() } },
                         screenPosition = Position.Top
                     )
                 )
                 add(
                     SettingsEntity.Preference(
-                        title = context.getString(R.string.cloud_net_local_url),
-                        summary = localUrl.ifBlank { context.getString(R.string.cloud_net_not_configured) },
+                        title = localUrlTitle,
+                        summary = localUrl.ifBlank { notConfiguredSummary },
                         onClick = { showLocalUrlDialog = true },
                         screenPosition = Position.Bottom
                     )
                 )
 
                 // External URLs
-                add(SettingsEntity.Header(title = context.getString(R.string.cloud_net_external)))
+                add(SettingsEntity.Header(title = externalHeader))
                 if (externalUrls.isEmpty()) {
                     add(
                         SettingsEntity.Preference(
-                            title = context.getString(R.string.cloud_net_add_external),
-                            summary = context.getString(R.string.cloud_net_no_external),
+                            title = addExternalTitle,
+                            summary = noExternalSummary,
                             onClick = { showAddExternalDialog = true },
                             screenPosition = Position.Alone
                         )
@@ -145,7 +173,7 @@ fun CloudNetworkingScreen() {
                     }
                     add(
                         SettingsEntity.Preference(
-                            title = context.getString(R.string.cloud_net_add_external),
+                            title = addExternalTitle,
                             onClick = { showAddExternalDialog = true },
                             screenPosition = Position.Alone
                         )

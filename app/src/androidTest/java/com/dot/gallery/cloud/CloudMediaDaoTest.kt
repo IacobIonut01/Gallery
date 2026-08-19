@@ -139,8 +139,11 @@ class CloudMediaDaoTest {
         val second = media("shared-id", ProviderType.IMMICH, 2L)
         dao.insertAll(listOf(first, second))
 
-        dao.updateFavorite("shared-id", ProviderType.IMMICH, 2L, true)
+        val matched = dao.updateFavoriteAndCount("shared-id", ProviderType.IMMICH, 2L, true)
+        val unmatched = dao.updateFavoriteAndCount("missing-id", ProviderType.IMMICH, 2L, true)
 
+        assertEquals(1, matched)
+        assertEquals(0, unmatched)
         assertEquals(false, dao.getByRemoteId("shared-id", ProviderType.IMMICH, 1L)?.favorite)
         assertEquals(true, dao.getByRemoteId("shared-id", ProviderType.IMMICH, 2L)?.favorite)
         assertEquals(first.globalMediaId, dao.getByGlobalMediaId(first.globalMediaId)?.globalMediaId)

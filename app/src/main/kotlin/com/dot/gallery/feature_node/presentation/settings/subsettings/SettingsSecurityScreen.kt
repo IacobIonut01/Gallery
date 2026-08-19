@@ -28,6 +28,9 @@ import com.dot.gallery.R
 import com.dot.gallery.core.Position
 import com.dot.gallery.core.Settings
 import com.dot.gallery.core.SettingsEntity
+import com.dot.gallery.core.encryption.EncryptionBackendState
+import com.dot.gallery.core.encryption.EncryptionRuntimeState
+import com.dot.gallery.core.encryption.EncryptionStateMonitor
 import com.dot.gallery.core.sandbox.PrivateFolderManager
 import com.dot.gallery.core.security.AdvancedProtectionMonitor
 import com.dot.gallery.feature_node.presentation.settings.components.BaseSettingsScreen
@@ -54,6 +57,7 @@ fun SettingsSecurityScreen() {
     var metadataIsolationMode by Settings.Security.rememberMetadataIsolationMode()
     var sandboxedDecode by Settings.Security.rememberSandboxedDecode()
     var privateFolderUri by Settings.Security.rememberPrivateFolderUri()
+    val encryptionState by EncryptionStateMonitor.state.collectAsState()
 
     // When Android Advanced Protection Mode (AAPM) is enabled, sandboxed decoding
     // is forced on and metadata isolation is raised to at least Hybrid. The stored
@@ -159,6 +163,7 @@ fun SettingsSecurityScreen() {
                 sandboxedDecode = effectiveSandboxedDecode,
                 onSandboxedDecodeChange = { if (!advancedProtection) sandboxedDecode = it },
                 advancedProtection = advancedProtection,
+                encryptionState = encryptionState,
                 privateFolderUri = privateFolderUri,
                 onDetailClick = { detailKey = it },
                 listState = listState,
@@ -173,6 +178,7 @@ private fun SecurityListScreen(
     sandboxedDecode: Boolean,
     onSandboxedDecodeChange: (Boolean) -> Unit,
     advancedProtection: Boolean,
+    encryptionState: EncryptionRuntimeState,
     privateFolderUri: String,
     onDetailClick: (String) -> Unit,
     listState: LazyListState,
@@ -214,9 +220,23 @@ private fun SecurityListScreen(
             SettingsEntity.Header(title = res.getString(R.string.security_data_protection_header))
         }
 
+        val encryptionSummary = stringResource(
+            when {
+                encryptionState.fullyEncrypted -> R.string.security_encryption_active
+                encryptionState.settings == EncryptionBackendState.PLAINTEXT_FALLBACK &&
+                    encryptionState.database == EncryptionBackendState.PLAINTEXT_FALLBACK ->
+                    R.string.security_encryption_plaintext_fallback
+                encryptionState.settings == EncryptionBackendState.PLAINTEXT_FALLBACK ->
+                    R.string.security_encryption_settings_fallback
+                encryptionState.database == EncryptionBackendState.PLAINTEXT_FALLBACK ->
+                    R.string.security_encryption_database_fallback
+                else -> R.string.security_encryption_checking
+            }
+        )
         val encryptionStatusPref = rememberPreference(
+            encryptionState,
             title = stringResource(R.string.security_encryption_status),
-            summary = stringResource(R.string.security_encryption_active),
+            summary = encryptionSummary,
             enabled = false,
             onClick = {},
             screenPosition = Position.Top

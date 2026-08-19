@@ -78,12 +78,16 @@ import com.dot.gallery.core.LocalEventHandler
 import com.dot.gallery.core.Settings.Album.rememberAlbumGridSize
 import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
 import com.dot.gallery.core.navigate
+import com.dot.gallery.core.presentation.components.Error
+import com.dot.gallery.core.presentation.components.LoadingMedia
 import com.dot.gallery.core.presentation.components.NavigationBackButton
 import com.dot.gallery.feature_node.data.data_source.CategoryWithMediaCount
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.domain.util.getUri
+import com.dot.gallery.feature_node.presentation.common.components.MediaContentState
 import com.dot.gallery.feature_node.presentation.common.components.TwoLinedDateToolbarTitle
+import com.dot.gallery.feature_node.presentation.common.components.mediaContentState
 import com.dot.gallery.feature_node.presentation.library.components.dashedBorder
 import com.dot.gallery.feature_node.presentation.util.categorySharedElement
 import com.dot.gallery.feature_node.presentation.util.GlideInvalidation
@@ -166,7 +170,20 @@ fun CategoriesScreen(
             }
         }
     ) { paddingValues ->
-        GridPinchZoomLayout(
+        when (mediaContentState(
+            isLoading = mediaState.isLoading,
+            error = mediaState.error,
+            isEmpty = categoriesWithCount.isEmpty(),
+        )) {
+            MediaContentState.ERROR -> Error(
+                modifier = Modifier.padding(paddingValues),
+                errorMessage = mediaState.error,
+            )
+            MediaContentState.LOADING -> LoadingMedia(
+                modifier = Modifier.padding(paddingValues),
+            )
+            MediaContentState.EMPTY,
+            MediaContentState.CONTENT -> GridPinchZoomLayout(
             state = pinchState,
             modifier = Modifier.hazeSource(LocalHazeState.current),
             indicatorTopPadding = paddingValues.calculateTopPadding() + 16.dp,
@@ -316,6 +333,7 @@ fun CategoriesScreen(
             }
         }
     }
+}
 }
 
 @OptIn(ExperimentalGlideComposeApi::class)

@@ -42,7 +42,6 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -89,17 +88,26 @@ fun SettingsNavigationScreen() {
     var showSelectionTitles by rememberShowSelectionTitles()
     val config by rememberSelectionSheetConfig()
 
-    val context = LocalContext.current
-
     when (detailKey) {
         DETAIL_LAUNCH_SCREEN -> {
             BackHandler { detailKey = null }
-            val launchOptions = remember(lastScreen, forcedLastScreen) {
+            val useLastOpenedScreenLabel = stringResource(R.string.use_last_opened_screen)
+            val launchOnTimelineLabel = stringResource(R.string.launch_on_timeline)
+            val launchOnAlbumsLabel = stringResource(R.string.launch_on_albums)
+            val launchOnLibraryLabel = stringResource(R.string.launch_on_library)
+            val launchOptions = remember(
+                lastScreen,
+                forcedLastScreen,
+                useLastOpenedScreenLabel,
+                launchOnTimelineLabel,
+                launchOnAlbumsLabel,
+                launchOnLibraryLabel,
+            ) {
                 listOf(
-                    PreferenceOption("auto", context.getString(R.string.use_last_opened_screen), !forcedLastScreen),
-                    PreferenceOption(Screen.TimelineScreen(), context.getString(R.string.launch_on_timeline), forcedLastScreen && lastScreen == Screen.TimelineScreen()),
-                    PreferenceOption(Screen.AlbumsScreen(), context.getString(R.string.launch_on_albums), forcedLastScreen && lastScreen == Screen.AlbumsScreen()),
-                    PreferenceOption(Screen.LibraryScreen(), context.getString(R.string.launch_on_library), forcedLastScreen && lastScreen == Screen.LibraryScreen()),
+                    PreferenceOption("auto", useLastOpenedScreenLabel, !forcedLastScreen),
+                    PreferenceOption(Screen.TimelineScreen(), launchOnTimelineLabel, forcedLastScreen && lastScreen == Screen.TimelineScreen()),
+                    PreferenceOption(Screen.AlbumsScreen(), launchOnAlbumsLabel, forcedLastScreen && lastScreen == Screen.AlbumsScreen()),
+                    PreferenceOption(Screen.LibraryScreen(), launchOnLibraryLabel, forcedLastScreen && lastScreen == Screen.LibraryScreen()),
                 )
             }
             ChooserPreferenceDetailScreen(
@@ -214,14 +222,14 @@ private fun LaunchScreenPreview(lastScreen: String, forcedLastScreen: Boolean) {
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "A",
+                    text = stringResource(R.string.settings_navigation_auto_symbol),
                     style = MaterialTheme.typography.titleMedium,
                     color = if (isAutoSelected) MaterialTheme.colorScheme.primary
                     else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                 )
             }
             Text(
-                text = "Auto",
+                text = stringResource(R.string.auto),
                 style = MaterialTheme.typography.labelSmall,
                 color = if (isAutoSelected) MaterialTheme.colorScheme.primary
                 else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
@@ -388,21 +396,31 @@ private fun NavigationListScreen(
 ) {
     @Composable
     fun settings(): SnapshotStateList<SettingsEntity> {
-        val context = LocalContext.current
-
-        val launchHeader = remember(context) {
-            SettingsEntity.Header(title = context.getString(R.string.set_default_launch_screen))
+        val launchHeaderTitle = stringResource(R.string.set_default_launch_screen)
+        val launchHeader = remember(launchHeaderTitle) {
+            SettingsEntity.Header(title = launchHeaderTitle)
         }
 
-        val launchSummary = remember(lastScreen, forcedLastScreen) {
+        val launchOnTimelineLabel = stringResource(R.string.launch_on_timeline)
+        val launchOnAlbumsLabel = stringResource(R.string.launch_on_albums)
+        val launchOnLibraryLabel = stringResource(R.string.launch_on_library)
+        val launchAutoLabel = stringResource(R.string.launch_auto)
+        val launchSummary = remember(
+            lastScreen,
+            forcedLastScreen,
+            launchOnTimelineLabel,
+            launchOnAlbumsLabel,
+            launchOnLibraryLabel,
+            launchAutoLabel,
+        ) {
             if (forcedLastScreen) {
                 when (lastScreen) {
-                    Screen.TimelineScreen() -> context.getString(R.string.launch_on_timeline)
-                    Screen.AlbumsScreen() -> context.getString(R.string.launch_on_albums)
-                    else -> context.getString(R.string.launch_on_library)
+                    Screen.TimelineScreen() -> launchOnTimelineLabel
+                    Screen.AlbumsScreen() -> launchOnAlbumsLabel
+                    else -> launchOnLibraryLabel
                 }
             } else {
-                context.getString(R.string.launch_auto)
+                launchAutoLabel
             }
         }
         val forcedLastScreenPref = rememberPreference(
@@ -413,8 +431,9 @@ private fun NavigationListScreen(
             screenPosition = Position.Alone
         )
 
-        val barsHeader = remember(context) {
-            SettingsEntity.Header(title = context.getString(R.string.navigation))
+        val barsHeaderTitle = stringResource(R.string.navigation)
+        val barsHeader = remember(barsHeaderTitle) {
+            SettingsEntity.Header(title = barsHeaderTitle)
         }
 
         val showOldNavbarPref = rememberSwitchPreference(
@@ -447,8 +466,9 @@ private fun NavigationListScreen(
             screenPosition = Position.Bottom
         )
 
-        val interfaceHeader = remember(context) {
-            SettingsEntity.Header(title = context.getString(R.string.interface_settings))
+        val interfaceHeaderTitle = stringResource(R.string.interface_settings)
+        val interfaceHeader = remember(interfaceHeaderTitle) {
+            SettingsEntity.Header(title = interfaceHeaderTitle)
         }
 
         val showSelectionTitlesPref = rememberSwitchPreference(
@@ -472,8 +492,8 @@ private fun NavigationListScreen(
         )
 
         return remember(
-            forcedLastScreenPref, showOldNavbarPref, autoHideSearchPref,
-            autoHideNavBarPref, showSelectionTitlesPref, selectionActionsPref
+            launchHeader, forcedLastScreenPref, barsHeader, showOldNavbarPref, autoHideSearchPref,
+            autoHideNavBarPref, interfaceHeader, showSelectionTitlesPref, selectionActionsPref
         ) {
             mutableStateListOf(
                 launchHeader,

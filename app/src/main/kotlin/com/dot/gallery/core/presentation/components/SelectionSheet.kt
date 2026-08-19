@@ -95,6 +95,7 @@ import com.dot.gallery.core.Settings.Misc.rememberShowSelectionTitles
 import com.dot.gallery.core.Settings.Misc.rememberTrashEnabled
 import com.dot.gallery.core.util.SdkCompat
 import com.dot.gallery.core.decoder.format.ImageReencoder
+import com.dot.gallery.cloud.core.CloudRuntimeSettings
 import com.dot.gallery.cloud.ui.CloudSelectionViewModel
 import com.dot.gallery.feature_node.domain.model.ActionCondition
 import com.dot.gallery.feature_node.domain.model.Media
@@ -108,7 +109,10 @@ import com.dot.gallery.feature_node.presentation.collection.CollectionViewModel
 import com.dot.gallery.feature_node.presentation.collection.components.AddToCollectionSheet
 import com.dot.gallery.feature_node.presentation.exif.CopyMediaSheet
 import com.dot.gallery.feature_node.presentation.exif.MoveMediaSheet
+import com.dot.gallery.feature_node.presentation.mediaview.MediaActionCapabilityPolicy
+import com.dot.gallery.feature_node.presentation.mediaview.MediaActionPolicyInput
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaInfoRow
+import com.dot.gallery.feature_node.presentation.mediaview.isReadOnlyCloudMedia
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
 import com.dot.gallery.feature_node.presentation.privatefolder.PrivateFolderMoveViewModel
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialog
@@ -149,6 +153,11 @@ fun <T : Media> BoxScope.SelectionSheet(
 
     val handler = LocalMediaHandler.current
     val context = LocalContext.current
+    val downloadingText = stringResource(R.string.downloading)
+    val downloadCompleteText = stringResource(R.string.download_complete)
+    val downloadFailedText = stringResource(R.string.download_failed)
+    val noLocalItemsText = stringResource(R.string.vault_hide_no_local_items)
+    val hideInProgressText = stringResource(R.string.vault_hide_in_progress)
     val scope = rememberCoroutineScope()
     // Non-encodable selected items pending a rotate → offered as PNG copies via the fallback sheet.
     var rotateFallbackList by remember { mutableStateOf<List<T>>(emptyList()) }
@@ -295,6 +304,19 @@ fun <T : Media> BoxScope.SelectionSheet(
     val isMixedCloudSelection = selectedSnapshot.any { it.isCloud } && !isCloudSelection
     val cloudSupportsFavorite = isCloudSelection && cloudSelectionViewModel.supportsFavorite(selectedSnapshot)
     val cloudSupportsTrash = isCloudSelection && cloudSelectionViewModel.supportsTrash(selectedSnapshot)
+    val cloudSettingsByConfigId by CloudRuntimeSettings.settingsByConfigId.collectAsStateWithLifecycle()
+    val cloudSelectionReadOnly = isCloudSelection && selectedSnapshot.any {
+        it.isReadOnlyCloudMedia(cloudSettingsByConfigId)
+    }
+    val cloudActionCapabilities = MediaActionCapabilityPolicy.resolve(
+        MediaActionPolicyInput(
+            isCloud = isCloudSelection,
+            cloudReadOnly = cloudSelectionReadOnly,
+            sourceAllowsDelete = isCloudSelection,
+            providerSupportsFavorite = cloudSupportsFavorite,
+            providerSupportsTrash = cloudSupportsTrash,
+        )
+    )
 
     AnimatedVisibility(
         modifier = modifier,
@@ -499,17 +521,19 @@ fun <T : Media> BoxScope.SelectionSheet(
                 if (isCloudSelection) {
                     // Share — resolveShareableUri downloads/caches the full-size original,
                     // then shares it via a FileProvider content URI.
-                    SelectionBarColumn(
-                        imageVector = SelectionAction.SHARE.icon,
-                        tabletMode = tabletMode,
-                        title = stringResource(SelectionAction.SHARE.labelRes)
-                    ) {
-                        scope.launch {
-                            context.shareMediaWithVaultSupport(selectedMedia)
+                    if (cloudActionCapabilities.share) {
+                        SelectionBarColumn(
+                            imageVector = SelectionAction.SHARE.icon,
+                            tabletMode = tabletMode,
+                            title = stringResource(SelectionAction.SHARE.labelRes)
+                        ) {
+                            scope.launch {
+                                context.shareMediaWithVaultSupport(selectedMedia)
+                            }
                         }
                     }
                     // Favorite — only when every selected item's provider supports server favorites.
-                    if (cloudSupportsFavorite && showFavoriteButton) {
+                    if (cloudActionCapabilities.favorite && showFavoriteButton) {
                         SelectionBarColumn(
                             imageVector = SelectionAction.FAVORITE.icon,
                             tabletMode = tabletMode,
@@ -542,7 +566,7 @@ fun <T : Media> BoxScope.SelectionSheet(
                         }
                     }
                     // Trash — recoverable, only when the provider has a real bin (e.g. Immich).
-                    if (cloudSupportsTrash) {
+                    if (cloudActionCapabilities.trash && cloudSupportsTrash) {
                         SelectionBarColumn(
                             imageVector = SelectionAction.TRASH.icon,
                             tabletMode = tabletMode,
@@ -551,13 +575,15 @@ fun <T : Media> BoxScope.SelectionSheet(
                             scope.launch { cloudTrashConfirmState.show() }
                         }
                     }
-                    // Delete — permanent hard delete on the server, available everywhere.
-                    SelectionBarColumn(
-                        imageVector = Icons.Outlined.DeleteForever,
-                        tabletMode = tabletMode,
-                        title = stringResource(R.string.cloud_delete)
-                    ) {
-                        scope.launch { cloudDeleteConfirmState.show() }
+                    // Delete — permanent hard delete on the server, unless cloud read-only is active.
+                    if (cloudActionCapabilities.trash) {
+                        SelectionBarColumn(
+                            imageVector = Icons.Outlined.DeleteForever,
+                            tabletMode = tabletMode,
+                            title = stringResource(R.string.cloud_delete)
+                        ) {
+                            scope.launch { cloudDeleteConfirmState.show() }
+                        }
                     }
                 } else sanitizedConfig.bottomActions.forEach { action ->
                     val isVisible = isActionVisible(action, collectionId, showFavoriteButton, isInVault)
@@ -724,9 +750,6 @@ fun <T : Media> BoxScope.SelectionSheet(
                             SelectionAction.DOWNLOAD -> {
                                 val cloudItems = selectedMedia.filter { it.isCloud }
                                 if (cloudItems.isNotEmpty()) {
-                                    val downloadingText = context.getString(R.string.downloading)
-                                    val completeText = context.getString(R.string.download_complete)
-                                    val failedText = context.getString(R.string.download_failed)
                                     SelectionBarColumn(
                                         imageVector = action.icon,
                                         tabletMode = tabletMode,
@@ -737,9 +760,9 @@ fun <T : Media> BoxScope.SelectionSheet(
                                             val result = handler.downloadCloudMedia(cloudItems)
                                             val count = result.getOrDefault(0)
                                             if (count > 0) {
-                                                Toast.makeText(context, completeText, Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(context, downloadCompleteText, Toast.LENGTH_SHORT).show()
                                             } else {
-                                                Toast.makeText(context, failedText, Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(context, downloadFailedText, Toast.LENGTH_SHORT).show()
                                             }
                                             selector.clearSelection()
                                         }
@@ -799,10 +822,10 @@ fun <T : Media> BoxScope.SelectionSheet(
                         ) {
                             val urisToHide = resolveSelectedHideUris()
                             if (urisToHide.isEmpty()) {
-                                Toast.makeText(context, context.getString(R.string.vault_hide_no_local_items), Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, noLocalItemsText, Toast.LENGTH_SHORT).show()
                                 return@launch
                             }
-                            Toast.makeText(context, context.getString(R.string.vault_hide_in_progress), Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, hideInProgressText, Toast.LENGTH_SHORT).show()
                             if (vaultEncryptBehavior == Settings.Vault.ENCRYPT_DELETE) {
                                 vaultViewModel.encryptAndRequestDeletion(targetVault, urisToHide)
                             } else {
@@ -826,10 +849,10 @@ fun <T : Media> BoxScope.SelectionSheet(
             val vault = hideTargetVault ?: return@AddToVaultSheet
             val urisToHide = resolveSelectedHideUris()
             if (urisToHide.isEmpty()) {
-                Toast.makeText(context, context.getString(R.string.vault_hide_no_local_items), Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, noLocalItemsText, Toast.LENGTH_SHORT).show()
                 return@AddToVaultSheet
             }
-            Toast.makeText(context, context.getString(R.string.vault_hide_in_progress), Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, hideInProgressText, Toast.LENGTH_SHORT).show()
             scope.launch {
                 vaultViewModel.encryptAndRequestDeletion(vault, urisToHide)
                 selector.clearSelection()
@@ -839,10 +862,10 @@ fun <T : Media> BoxScope.SelectionSheet(
             val vault = hideTargetVault ?: return@AddToVaultSheet
             val urisToHide = resolveSelectedHideUris()
             if (urisToHide.isEmpty()) {
-                Toast.makeText(context, context.getString(R.string.vault_hide_no_local_items), Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, noLocalItemsText, Toast.LENGTH_SHORT).show()
                 return@AddToVaultSheet
             }
-            Toast.makeText(context, context.getString(R.string.vault_hide_in_progress), Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, hideInProgressText, Toast.LENGTH_SHORT).show()
             scope.launch {
                 vaultViewModel.addMediaKeepOriginals(vault, urisToHide)
                 selector.clearSelection()

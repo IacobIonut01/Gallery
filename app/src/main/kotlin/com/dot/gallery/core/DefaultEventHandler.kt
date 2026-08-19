@@ -3,14 +3,50 @@ package com.dot.gallery.core
 import androidx.compose.runtime.compositionLocalOf
 import com.dot.gallery.feature_node.domain.model.UIEvent
 import com.dot.gallery.feature_node.domain.util.EventHandler
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.launch
 
 val LocalEventHandler = compositionLocalOf<EventHandler> {
     error("No EventHandler provided!!! This is likely due to a missing Hilt injection in the Composable hierarchy.")
 }
 
-class DefaultEventHandler : EventHandler {
+class DefaultEventHandler(
+    private val updateDatabase: (suspend () -> Unit)? = null,
+    private val processScope: CoroutineScope? = updateDatabase?.let {
+        CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    },
+) : EventHandler {
+    // The singleton handler owns durable process work on a separate channel so navigation
+    // events and Activity lifecycle changes cannot cancel a database update in progress.
+    // Activity-local handlers omit updateDatabase and keep UpdateDatabase as a normal UI event.
+    private val databaseUpdates = updateDatabase?.let {
+        Channel<Unit>(capacity = Channel.CONFLATED)
+    }
+
+    init {
+        val updates = databaseUpdates
+        val update = updateDatabase
+        if (updates != null && update != null) {
+            processScope?.launch {
+                for (ignored in updates) {
+                    delay(DATABASE_UPDATE_DELAY_MS)
+                    try {
+                        update()
+                    } catch (cancellation: CancellationException) {
+                        throw cancellation
+                    } catch (error: Exception) {
+                        error.printStackTrace()
+                    }
+                }
+            }
+        }
+    }
 
     // Use an unlimited buffer so trySend never drops events. A zero-capacity
     // (rendezvous) channel only delivers when a receiver is suspended at that exact
@@ -25,7 +61,15 @@ class DefaultEventHandler : EventHandler {
     override var setFollowThemeAction: (Boolean) -> Unit = {}
 
     override fun pushEvent(event: UIEvent) {
-        updater.trySend(event)
+        if (event == UIEvent.UpdateDatabase && databaseUpdates != null) {
+            databaseUpdates.trySend(Unit)
+        } else {
+            updater.trySend(event)
+        }
+    }
+
+    private companion object {
+        const val DATABASE_UPDATE_DELAY_MS = 1_000L
     }
 
 }

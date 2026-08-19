@@ -32,7 +32,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -182,7 +181,7 @@ fun CloudUploadSettingsScreen(
             if (localAlbums.isEmpty()) {
                 item(span = { GridItemSpan(maxLineSpan) }) {
                     Text(
-                        text = "No local albums found",
+                        text = stringResource(R.string.cloud_destinations_no_albums),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(32.dp)
@@ -325,19 +324,14 @@ fun CloudUploadSettingsScreen(
                     if (dedupState.duplicates.isNotEmpty() && !dedupState.isDeleting) {
                         Spacer(Modifier.height(4.dp))
                         Text(
-                            "${dedupState.duplicates.size} files can be removed locally",
-                            style = MaterialTheme.typography.bodySmall
+                            text = stringResource(R.string.cloud_local_deletion_unavailable),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error
                         )
                     }
                 }
             },
-            confirmButton = {
-                if (dedupState.duplicates.isNotEmpty() && !dedupState.isScanning && !dedupState.isDeleting) {
-                    Button(onClick = { viewModel.deleteLocalDuplicates() }) {
-                        Text(stringResource(R.string.cloud_dedup_delete_local))
-                    }
-                }
-            },
+            confirmButton = {},
             dismissButton = {
                 if (!dedupState.isScanning && !dedupState.isDeleting) {
                     TextButton(onClick = {

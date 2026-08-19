@@ -1073,4 +1073,187 @@
     <string name="help_tip_video_fix_black_p1_title">Keep video visible</string>
     <string name="help_tip_video_fix_black_p1_desc">On some devices (notably Samsung) a playing video can black out when the system bars are shown or hidden, even though it keeps playing. Enable Media Viewer › Video Playback › \'Fix black video on hide\' to re-bind the player surface on every bar change. It is on by default for Samsung devices and off elsewhere — turn it off if you don\'t need it.</string>
     <!-- RELEASE NOTES: 5.0.3 -->
+    <string name="help_tip_motion_photo_frames_title">Ekstrak bingkai Foto Bergerak</string>
+    <string name="help_tip_motion_photo_frames_subtitle">Simpan momen yang tepat dari klip tersemat</string>
+    <string name="help_tip_motion_photo_frames_p1_title">Pilih dan ekspor bingkai</string>
+    <string name="help_tip_motion_photo_frames_p1_desc">Buka Foto Bergerak di penampil, lalu ketuk strip filmnya atau pilih Ekstrak bingkai dari lembar tindakan. Geser ke momen yang tepat, pilih satu atau beberapa bingkai, lalu ekspor dalam format gambar pilihan Anda.</string>
+    <string name="help_tip_motion_photo_frames_p1_s1">Buka Foto Bergerak di penampil</string>
+    <string name="help_tip_motion_photo_frames_p1_s2">Ketuk strip film atau pilih Ekstrak bingkai</string>
+    <string name="help_tip_motion_photo_frames_p1_s3">Geser dan pilih momen yang Anda inginkan</string>
+    <string name="help_tip_motion_photo_frames_p1_s4">Pilih format dan ekspor bingkai yang dipilih</string>
+
+    <string name="help_tip_search_ignored_albums_title">Cari album yang diabaikan</string>
+    <string name="help_tip_search_ignored_albums_subtitle">Temukan media tersembunyi tanpa mengembalikannya ke linimasa</string>
+    <string name="help_tip_search_ignored_albums_p1_title">Perluas Pencarian Cerdas dengan aman</string>
+    <string name="help_tip_search_ignored_albums_p1_desc">Sertakan album yang disembunyikan dari linimasa dalam Fitur Cerdas dan Pencarian Cerdas tanpa menampilkannya di linimasa atau tab Album. Opsi ini nonaktif secara default, mengubahnya akan memulai penyegaran penuh, dan album terkunci selalu dikecualikan.</string>
+    <string name="help_tip_search_ignored_albums_p1_s1">Buka Setelan > Fitur cerdas</string>
+    <string name="help_tip_search_ignored_albums_p1_s2">Aktifkan Sertakan album yang diabaikan</string>
+    <string name="help_tip_search_ignored_albums_p1_s3">Tunggu hingga penyegaran penuh Fitur Cerdas selesai</string>
+    <string name="help_tip_search_ignored_albums_p1_s4">Cari media tersembunyi sementara album terkunci tetap privat</string>
+
+    <string name="help_tip_cloud_nextcloud_login_title">Masuk ke Nextcloud dengan aman</string>
+    <string name="help_tip_cloud_nextcloud_login_subtitle">Gunakan otorisasi browser dan autentikasi dua faktor</string>
+    <string name="help_tip_cloud_nextcloud_login_p1_title">Alur Masuk Nextcloud v2</string>
+    <string name="help_tip_cloud_nextcloud_login_p1_desc">ReFra membuka server Nextcloud Anda di browser sistem agar Anda dapat masuk dan menyelesaikan autentikasi dua faktor di sana. Setelah disetujui, Nextcloud membuat kata sandi khusus aplikasi yang disimpan ReFra secara terenkripsi di perangkat Anda.</string>
+    <string name="help_tip_cloud_nextcloud_login_p1_s1">Tambahkan akun Nextcloud dan masukkan URL servernya</string>
+    <string name="help_tip_cloud_nextcloud_login_p1_s2">Lanjutkan ke browser sistem</string>
+    <string name="help_tip_cloud_nextcloud_login_p1_s3">Masuk, selesaikan autentikasi dua faktor, dan setujui akses</string>
+    <string name="help_tip_cloud_nextcloud_login_p1_s4">Kembali ke ReFra saat proses koneksi diselesaikan</string>
+
+    <string name="help_tip_accessibility_remote_settings_title">Navigasikan setelan tanpa sentuhan</string>
+    <string name="help_tip_accessibility_remote_settings_subtitle">Gunakan keyboard, D-pad, atau remote di seluruh setelan</string>
+    <string name="help_tip_accessibility_remote_settings_p1_title">Navigasi fokus yang mudah diprediksi</string>
+    <string name="help_tip_accessibility_remote_settings_p1_desc">Daftar setelan, layar detail, kontrol pilihan, dan tindakan bawah mendukung fokus terarah. ReFra menyorot kontrol yang difokuskan dengan jelas dan menempatkan fokus pada item yang dapat ditindaklanjuti saat layar dibuka.</string>
+    <string name="help_tip_accessibility_remote_settings_p1_s1">Gunakan tombol panah atau D-pad untuk berpindah di antara kontrol</string>
+    <string name="help_tip_accessibility_remote_settings_p1_s2">Tekan Enter atau tombol tengah untuk mengaktifkan kontrol</string>
+    <string name="help_tip_accessibility_remote_settings_p1_s3">Gunakan Kembali untuk meninggalkan layar detail</string>
+    <string name="help_tip_accessibility_remote_settings_p1_s4">Lanjutkan dari kontrol setelan yang disorot</string>
+    <string name="help_search_hint">Cari bantuan dan tips</string>
+    <string name="help_search_clear">Hapus pencarian</string>
+    <string name="help_search_no_results">Tidak ada bantuan yang ditemukan untuk \"%1$s\"</string>
+    <string name="help_search_section_tips">Tips dan panduan</string>
+    <string name="help_search_section_settings">Setelan</string>
+    <string name="help_search_section_actions">Tindakan cepat</string>
+    <string name="help_search_section_changelog">Yang baru</string>
+    <string name="help_search_see_all">Lihat semua %1$d hasil</string>
+    <string name="help_tips_section_title">Bantuan dan Tips</string>
+    <string name="help_quick_actions">Tindakan cepat</string>
+    <string name="help_qa_open_timeline">Buka linimasa</string>
+    <string name="help_qa_open_albums">Buka album</string>
+    <string name="help_qa_open_search">Buka pencarian</string>
+    <string name="help_qa_open_categories">Buka kategori</string>
+    <string name="help_qa_open_vault">Buka brankas</string>
+    <string name="help_qa_open_trash">Buka sampah</string>
+    <string name="help_qa_open_favorites">Buka favorit</string>
+    <string name="help_qa_open_locations">Buka lokasi</string>
+    <string name="help_qa_open_library">Buka perpustakaan</string>
+    <string name="help_qa_open_color_palette">Buka palet warna</string>
+    <string name="help_qa_open_appearance">Buka setelan tampilan</string>
+    <string name="help_tip_view_cutout_title">Potong subjek</string>
+    <string name="help_tip_view_cutout_subtitle">Angkat seseorang atau objek dari latar belakang</string>
+    <string name="help_tip_view_cutout_p1_title">Angkat subjek yang terdeteksi</string>
+    <string name="help_tip_view_cutout_p1_desc">Di penampil, ReFra dapat mendeteksi subjek utama di perangkat dan menampilkan saran yang disorot. Buka untuk menyempurnakan masker, lalu salin, bagikan, atau simpan potongan transparan. Anda juga dapat menekan lama untuk memulai pemotongan dari pengaturan Penampil Media.</string>
+    <string name="help_tip_view_cutout_p1_s1">Buka foto dengan subjek yang jelas</string>
+    <string name="help_tip_view_cutout_p1_s2">Ketuk saran Potong subjek</string>
+    <string name="help_tip_view_cutout_p1_s3">Sempurnakan garis tepi dengan titik sertakan atau kecualikan</string>
+    <string name="help_tip_view_cutout_p1_s4">Salin, bagikan, atau simpan potongan</string>
+
+    <string name="help_tip_slideshow_play_title">Mainkan tayangan slide</string>
+    <string name="help_tip_slideshow_play_subtitle">Secara otomatis maju melalui album layar penuh</string>
+    <string name="help_tip_slideshow_play_p1_title">Mulai dari penampil</string>
+    <string name="help_tip_slideshow_play_p1_desc">Buka foto apa saja, lalu pilih Tayangan Slide dari menu opsi untuk maju otomatis melalui album layar penuh.</string>
+    <string name="help_tip_slideshow_play_p1_s1">Buka foto dalam album</string>
+    <string name="help_tip_slideshow_play_p1_s2">Buka menu opsi</string>
+    <string name="help_tip_slideshow_play_p1_s3">Ketuk Slideshow untuk memulai</string>
+
+    <string name="help_tip_settings_slideshow_title">Pengaturan slideshow</string>
+    <string name="help_tip_settings_slideshow_subtitle">Atur interval, urutan, dan pengulangan</string>
+    <string name="help_tip_settings_slideshow_p1_title">Sesuaikan pemutaran</string>
+    <string name="help_tip_settings_slideshow_p1_desc">Sesuaikan berapa lama setiap item ditampilkan, apakah pemutaran diulang, dan urutan item muncul.</string>
+    <string name="help_tip_settings_slideshow_p1_s1">Buka pengaturan Slideshow</string>
+    <string name="help_tip_settings_slideshow_p1_s2">Atur interval per item</string>
+    <string name="help_tip_settings_slideshow_p1_s3">Pilih urutan dan pengulangan</string>
+
+    <string name="help_tip_settings_date_format_title">Format tanggal</string>
+    <string name="help_tip_settings_date_format_subtitle">Pilih bagaimana tanggal ditampilkan</string>
+    <string name="help_tip_settings_date_format_p1_title">Pilih format Anda</string>
+    <string name="help_tip_settings_date_format_p1_desc">ReFra mengikuti tanggal sistem dan preferensi 12/24 jam secara default. Atur pengganti hanya jika Anda ingin pola khusus, dan gunakan tombol informasi untuk meninjau simbol format yang didukung.</string>
+    <string name="help_tip_settings_date_format_p1_s1">Buka format tanggal</string>
+    <string name="help_tip_settings_date_format_p1_s2">Pertahankan Ikuti sistem atau masukkan pola khusus</string>
+    <string name="help_tip_settings_date_format_p1_s3">Pratinjau hasil dan buka panduan format jika diperlukan</string>
+
+    <string name="help_tip_basics_setup_title">Pengaturan pertama kali</string>
+    <string name="help_tip_basics_setup_subtitle">Berikan akses dan pilih default Anda</string>
+    <string name="help_tip_basics_setup_p1_title">Memulai</string>
+    <string name="help_tip_basics_setup_p1_desc">Saat peluncuran pertama ReFra akan memandu Anda melalui izin, tampilan, model AI, akun cloud, dan tips berguna. Anda dapat mengulangi pengaturan ini kapan saja.</string>
+
+    <string name="help_tip_albums_ignored_manage_title">Kelola album yang diabaikan</string>
+    <string name="help_tip_albums_ignored_manage_subtitle">Tinjau dan pulihkan folder tersembunyi</string>
+    <string name="help_tip_albums_ignored_manage_p1_title">Daftar album yang diabaikan</string>
+    <string name="help_tip_albums_ignored_manage_p1_desc">Lihat setiap album yang telah Anda sembunyikan dari timeline dan pulihkan salah satunya di satu tempat.</string>
+    <string name="help_tip_albums_ignored_manage_p1_s1">Buka Album yang Diabaikan</string>
+    <string name="help_tip_albums_ignored_manage_p1_s2">Tinjau folder tersembunyi</string>
+    <string name="help_tip_albums_ignored_manage_p1_s3">Pulihkan yang Anda inginkan</string>
+
+    <string name="help_tip_cloud_add_server_title">Tambahkan server</string>
+    <string name="help_tip_cloud_add_server_subtitle">Hubungkan Immich, WebDAV, SMB, dan lainnya</string>
+    <string name="help_tip_cloud_add_server_p1_title">Wizard pengaturan</string>
+    <string name="help_tip_cloud_add_server_p1_desc">Sebuah panduan langkah demi langkah memandu Anda melalui alamat server, kredensial, jaringan, dan opsi sinkronisasi.</string>
+    <string name="help_tip_cloud_add_server_p1_s1">Pilih jenis penyedia</string>
+    <string name="help_tip_cloud_add_server_p1_s2">Masukkan server dan kredensial</string>
+    <string name="help_tip_cloud_add_server_p1_s3">Atur jaringan dan sinkronisasi</string>
+    <string name="help_tip_cloud_add_server_p1_s4">Tinjau dan simpan</string>
+
+    <string name="help_tip_cloud_destinations_title">Tujuan cadangan</string>
+    <string name="help_tip_cloud_destinations_subtitle">Peta setiap album ke satu atau lebih cloud</string>
+    <string name="help_tip_cloud_destinations_p1_title">Matriks tujuan</string>
+    <string name="help_tip_cloud_destinations_p1_desc">Pilih dengan tepat album mana yang dicadangkan ke akun terhubung menggunakan matriks sederhana.</string>
+
+    <string name="help_tip_cloud_provider_settings_title">Pengaturan akun</string>
+    <string name="help_tip_cloud_provider_settings_subtitle">Kelola akun yang terhubung</string>
+    <string name="help_tip_cloud_provider_settings_p1_title">Opsi per akun</string>
+    <string name="help_tip_cloud_provider_settings_p1_desc">Edit jaringan, cadangkan album dan perilaku sinkronisasi secara independen untuk setiap akun yang terhubung.</string>
+
+    <string name="help_tip_cloud_shared_links_title">Tautan bersama</string>
+    <string name="help_tip_cloud_shared_links_subtitle">Kelola tautan yang telah Anda bagikan</string>
+    <string name="help_tip_cloud_shared_links_p1_title">Tinjau tautan bersama</string>
+    <string name="help_tip_cloud_shared_links_p1_desc">Lihat dan cabut tautan publik yang dibuat di server yang terhubung.</string>
+
+    <string name="help_tip_cloud_sync_status_title">Status sinkronisasi</string>
+    <string name="help_tip_cloud_sync_status_subtitle">Lacak unggahan dan unduhan</string>
+    <string name="help_tip_cloud_sync_status_p1_title">Kemajuan langsung</string>
+    <string name="help_tip_cloud_sync_status_p1_desc">Pantau kemajuan cadangan dan lihat apa yang antre, berjalan, atau gagal.</string>
+
+    <string name="help_tip_cloud_people_title">Orang</string>
+    <string name="help_tip_cloud_people_subtitle">Jelajahi wajah dari server Anda</string>
+    <string name="help_tip_cloud_people_p1_title">Pengelompokan wajah</string>
+    <string name="help_tip_cloud_people_p1_desc">Jelajahi orang yang terdeteksi oleh server cloud Anda dan buka foto masing-masing orang.</string>
+
+    <string name="help_tip_cloud_free_up_space_title">Bebaskan ruang</string>
+    <string name="help_tip_cloud_free_up_space_subtitle">Hapus salinan lokal yang sudah dicadangkan dengan aman</string>
+    <string name="help_tip_cloud_free_up_space_p1_title">Klaim ulang penyimpanan</string>
+    <string name="help_tip_cloud_free_up_space_p1_desc">Hapus salinan media di perangkat yang sudah dicadangkan dengan aman ke cloud.</string>
+
+    <string name="help_tip_media_type_albums_title">Jelajah berdasarkan jenis media</string>
+    <string name="help_tip_media_type_albums_subtitle">Album otomatis untuk foto, video, GIF, dan file RAW</string>
+    <string name="help_tip_media_type_albums_p1_title">Album berdasarkan jenis media</string>
+    <string name="help_tip_media_type_albums_p1_desc">ReFra membuat album virtual dari perpustakaan terintegrasi Anda sehingga Anda dapat membuka semua foto, video, GIF, atau file RAW secara bersamaan. Visibilitasnya dikontrol melalui pengaturan Timeline &amp; Albums.</string>
+    <string name="help_tip_media_type_albums_p1_s1">Buka Albums dan gulir ke Jenis Media</string>
+    <string name="help_tip_media_type_albums_p1_s2">Buka satu jenis untuk menelusuri media yang sesuai</string>
+    <string name="help_tip_media_type_albums_p1_s3">Gunakan pengaturan Timeline &amp; Albums untuk menampilkan atau menyembunyikan bagian</string>
+
+    <string name="help_tip_raw_develop_title">Kembangkan foto RAW</string>
+    <string name="help_tip_raw_develop_subtitle">Sesuaikan data sensor sebelum mengekspor</string>
+    <string name="help_tip_raw_develop_p1_title">Gunakan kontrol Develop</string>
+    <string name="help_tip_raw_develop_p1_desc">Buka foto RAW yang didukung di editor untuk menyesuaikan white balance, exposure, highlights, warna output, dan demosaicing. ReFra menggunakan pratinjau yang aman untuk memori sambil mempertahankan output resolusi penuh.</string>
+    <string name="help_tip_raw_develop_p1_s1">Buka foto RAW dan ketuk Edit</string>
+    <string name="help_tip_raw_develop_p1_s2">Pilih opsi di tab Develop</string>
+    <string name="help_tip_raw_develop_p1_s3">Terapkan pemotongan, filter, atau markup tambahan</string>
+    <string name="help_tip_raw_develop_p1_s4">Simpan salinan atau ekspor JPEG, PNG, atau TIFF</string>
+
+    <string name="help_tip_people_grouping_title">Kelompokkan orang di perangkat</string>
+    <string name="help_tip_people_grouping_subtitle">Temukan wajah tanpa mengunggah perpustakaan Anda</string>
+    <string name="help_tip_people_grouping_p1_title">Pindai dan atur orang</string>
+    <string name="help_tip_people_grouping_p1_desc">Dengan model wajah terpasang, ReFra memindai dan mengelompokkan orang secara lokal. Anda dapat memulai pemindaian baru dari Orang, menyembunyikan seseorang, menggabungkan grup, dan membuat salinan buram ketika privasi penting.</string>
+    <string name="help_tip_people_grouping_p1_s1">Pasang model Deteksi Wajah</string>
+    <string name="help_tip_people_grouping_p1_s2">Buka Perpustakaan, lalu Orang</string>
+    <string name="help_tip_people_grouping_p1_s3">Ketuk Pindai untuk orang dan tunggu pengindeksan</string>
+    <string name="help_tip_people_grouping_p1_s4">Buka seseorang untuk mengelola grup atau memburamkan wajah</string>
+
+    <string name="help_tip_album_cover_title">Pilih sampul album</string>
+    <string name="help_tip_album_cover_subtitle">Gunakan foto lokal mana pun sebagai thumbnail</string>
+    <string name="help_tip_album_cover_p1_title">Tetapkan sampul khusus</string>
+    <string name="help_tip_album_cover_p1_desc">Untuk foto lokal yang tidak terenkripsi dalam album nyata, buka tindakan penampil dan pilih Gunakan sebagai sampul album. Anda juga dapat menampilkan tindakan ini dalam lembar pilihan yang dapat dikonfigurasi.</string>
+    <string name="help_tip_album_cover_p1_s1">Buka foto yang Anda inginkan dari albumnya</string>
+    <string name="help_tip_album_cover_p1_s2">Buka tindakan, lalu Gunakan sebagai</string>
+    <string name="help_tip_album_cover_p1_s3">Pilih Gunakan sebagai sampul album</string>
+
+    <string name="help_tip_metadata_sanitize_title">Hapus metadata sensitif</string>
+    <string name="help_tip_metadata_sanitize_subtitle">Bersihkan file yang didukung tanpa mengompres ulang piksel</string>
+    <string name="help_tip_metadata_sanitize_p1_title">Pilih apa yang akan dihapus</string>
+    <string name="help_tip_metadata_sanitize_p1_desc">Dari detail foto, pilih Hapus metadata dan pilih hanya lokasi, bidang deskriptif, atau semua metadata yang didukung. ReFra menulis dan memverifikasi salinan yang disanitasi tanpa kehilangan sebelum mengganti yang asli.</string>
+    <string name="help_tip_metadata_sanitize_p1_s1">Buka foto lokal yang didukung</string>
+    <string name="help_tip_metadata_sanitize_p1_s2">Perluas detailnya dan ketuk Hapus metadata</string>
+    <string name="help_tip_metadata_sanitize_p1_s3">Pilih tingkat sanitasi</string>
+    <string name="help_tip_metadata_sanitize_p1_s4">Konfirmasi hanya setelah meninjau peringatan penggantian</string>
 </resources>

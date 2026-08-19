@@ -1073,4 +1073,187 @@
     <string name="help_tip_video_fix_black_p1_title">Keep video visible</string>
     <string name="help_tip_video_fix_black_p1_desc">On some devices (notably Samsung) a playing video can black out when the system bars are shown or hidden, even though it keeps playing. Enable Media Viewer › Video Playback › \'Fix black video on hide\' to re-bind the player surface on every bar change. It is on by default for Samsung devices and off elsewhere — turn it off if you don\'t need it.</string>
     <!-- RELEASE NOTES: 5.0.3 -->
+    <string name="help_tip_motion_photo_frames_title">Bain frámaí as Grianghraf Gluaisne</string>
+    <string name="help_tip_motion_photo_frames_subtitle">Sábháil móimintí cruinne ón ngearrthóg leabaithe</string>
+    <string name="help_tip_motion_photo_frames_p1_title">Roghnaigh agus easpórtáil frámaí</string>
+    <string name="help_tip_motion_photo_frames_p1_desc">Oscail Grianghraf Gluaisne san amharcóir, ansin tapáil a stiall scannáin nó roghnaigh Bain frámaí ón mbileog gníomhartha. Téigh chuig móimint chruinn, roghnaigh fráma amháin nó níos mó agus easpórtáil iad san fhormáid íomhá is fearr leat.</string>
+    <string name="help_tip_motion_photo_frames_p1_s1">Oscail Grianghraf Gluaisne san amharcóir</string>
+    <string name="help_tip_motion_photo_frames_p1_s2">Tapáil an stiall scannáin nó roghnaigh Bain frámaí</string>
+    <string name="help_tip_motion_photo_frames_p1_s3">Cuardaigh agus roghnaigh na móimintí atá uait</string>
+    <string name="help_tip_motion_photo_frames_p1_s4">Roghnaigh formáid agus easpórtáil na frámaí roghnaithe</string>
+
+    <string name="help_tip_search_ignored_albums_title">Cuardaigh albaim a ndearnadh neamhaird orthu</string>
+    <string name="help_tip_search_ignored_albums_subtitle">Aimsigh meáin fholaithe gan iad a chur ar ais san amlíne</string>
+    <string name="help_tip_search_ignored_albums_p1_title">Leathnaigh Cuardach Cliste go sábháilte</string>
+    <string name="help_tip_search_ignored_albums_p1_desc">Cuir albaim atá folaithe ón amlíne san áireamh i nGnéithe Cliste agus i gCuardach Cliste gan iad a dhéanamh infheicthe san amlíne ná sa chluaisín Albaim. Tá an rogha múchta de réir réamhshocraithe, cuireann athrú uirthi tús le hathnuachan iomlán agus fágtar albaim ghlasáilte as an áireamh i gcónaí.</string>
+    <string name="help_tip_search_ignored_albums_p1_s1">Oscail Socruithe > Gnéithe cliste</string>
+    <string name="help_tip_search_ignored_albums_p1_s2">Cuir Cuir albaim ar tugadh neamhaird orthu san áireamh ar siúl</string>
+    <string name="help_tip_search_ignored_albums_p1_s3">Fan go gcríochnóidh athnuachan iomlán na nGnéithe Cliste</string>
+    <string name="help_tip_search_ignored_albums_p1_s4">Cuardaigh meáin fholaithe agus coinnigh albaim ghlasáilte príobháideach</string>
+
+    <string name="help_tip_cloud_nextcloud_login_title">Sínigh isteach in Nextcloud go slán</string>
+    <string name="help_tip_cloud_nextcloud_login_subtitle">Úsáid údarú brabhsálaí agus fíordheimhniú dhá fhachtóir</string>
+    <string name="help_tip_cloud_nextcloud_login_p1_title">Sreabhadh Logála Isteach Nextcloud v2</string>
+    <string name="help_tip_cloud_nextcloud_login_p1_desc">Osclaíonn ReFra do fhreastalaí Nextcloud i mbrabhsálaí an chórais ionas gur féidir leat síniú isteach agus fíordheimhniú dhá fhachtóir a chríochnú ann. Tar éis duit é a cheadú, cruthaíonn Nextcloud pasfhocal a bhaineann go sonrach leis an aip agus stórálann ReFra é criptithe ar do ghléas.</string>
+    <string name="help_tip_cloud_nextcloud_login_p1_s1">Cuir cuntas Nextcloud leis agus iontráil URL a fhreastalaí</string>
+    <string name="help_tip_cloud_nextcloud_login_p1_s2">Lean ar aghaidh chuig brabhsálaí an chórais</string>
+    <string name="help_tip_cloud_nextcloud_login_p1_s3">Sínigh isteach, críochnaigh fíordheimhniú dhá fhachtóir agus ceadaigh rochtain</string>
+    <string name="help_tip_cloud_nextcloud_login_p1_s4">Fill ar ReFra agus an nasc á chríochnú aige</string>
+
+    <string name="help_tip_accessibility_remote_settings_title">Déan nascleanúint sna socruithe gan teagmháil</string>
+    <string name="help_tip_accessibility_remote_settings_subtitle">Úsáid méarchlár, eochaircheap treo nó cianrialtán ar fud na socruithe</string>
+    <string name="help_tip_accessibility_remote_settings_p1_title">Nascleanúint fócais intuartha</string>
+    <string name="help_tip_accessibility_remote_settings_p1_desc">Tacaíonn liostaí socruithe, scáileáin mhionsonraí, rialuithe roghnúcháin agus gníomhartha íochtair le fócas treo. Aibhsíonn ReFra an rialú ar a bhfuil fócas go soiléir agus cuireann sé fócas ar mhír inghníomhaithe nuair a osclaítear scáileán.</string>
+    <string name="help_tip_accessibility_remote_settings_p1_s1">Úsáid na saigheada nó eochracha an eochaircheap treo chun bogadh idir rialuithe</string>
+    <string name="help_tip_accessibility_remote_settings_p1_s2">Brúigh Enter nó an cnaipe láir chun rialú a ghníomhachtú</string>
+    <string name="help_tip_accessibility_remote_settings_p1_s3">Úsáid Siar chun scáileán mionsonraí a fhágáil</string>
+    <string name="help_tip_accessibility_remote_settings_p1_s4">Lean ar aghaidh ón rialú socruithe aibhsithe</string>
+    <string name="help_search_hint">Cuardaigh cabhair agus leideanna</string>
+    <string name="help_search_clear">Glan an cuardach</string>
+    <string name="help_search_no_results">Níor aimsíodh aon chabhair do \"%1$s\"</string>
+    <string name="help_search_section_tips">Leideanna agus treoracha</string>
+    <string name="help_search_section_settings">Socruithe</string>
+    <string name="help_search_section_actions">Gníomhartha tapa</string>
+    <string name="help_search_section_changelog">Cad atá nua</string>
+    <string name="help_search_see_all">Féach ar na %1$d toradh go léir</string>
+    <string name="help_tips_section_title">Cabhair agus Leideanna</string>
+    <string name="help_quick_actions">Gníomhartha tapa</string>
+    <string name="help_qa_open_timeline">Oscail an amlíne</string>
+    <string name="help_qa_open_albums">Oscail na halbaim</string>
+    <string name="help_qa_open_search">Oscail an cuardach</string>
+    <string name="help_qa_open_categories">Oscail na catagóirí</string>
+    <string name="help_qa_open_vault">Oscail an cruinneachán</string>
+    <string name="help_qa_open_trash">Oscail an bruscar</string>
+    <string name="help_qa_open_favorites">Oscail na ceanáin</string>
+    <string name="help_qa_open_locations">Oscail na suíomhanna</string>
+    <string name="help_qa_open_library">Oscail an leabharlann</string>
+    <string name="help_qa_open_color_palette">Oscail an pailéad dathanna</string>
+    <string name="help_qa_open_appearance">Oscail na socruithe cuma</string>
+    <string name="help_tip_view_cutout_title">Gearr amach ábhar</string>
+    <string name="help_tip_view_cutout_subtitle">Déan duine nó rud a ardú ón gcúlra</string>
+    <string name="help_tip_view_cutout_p1_title">Déan an t-ábhar a aithnítear a ardú</string>
+    <string name="help_tip_view_cutout_p1_desc">Sa lucht féachana, is féidir le ReFra an príomh-ábhar a aithint ar an bhfeiste agus moladh béimnithe a thaispeáint. Oscail é chun an masc a fheabhsú, ansin cóipeáil, roinn nó sábháil gearradh trédhearcach. Is féidir leat freisin gearradh a thosú le brú fada ón socruithe Lucht Féachana Meán.</string>
+    <string name="help_tip_view_cutout_p1_s1">Oscail grianghraf le hábhar soiléir</string>
+    <string name="help_tip_view_cutout_p1_s2">Tapaigh an moladh Gearr amach ábhar</string>
+    <string name="help_tip_view_cutout_p1_s3">Feabhsigh an toirtlín le pointí a chur san áireamh nó a eisiamh</string>
+    <string name="help_tip_view_cutout_p1_s4">Cóipeáil, roinn nó sábháil an gearradh</string>
+
+    <string name="help_tip_slideshow_play_title">Sein slideshow</string>
+    <string name="help_tip_slideshow_play_subtitle">Dul ar aghaidh go huathoibríoch tríd an albam ar scáileán iomlán</string>
+    <string name="help_tip_slideshow_play_p1_title">Tosaigh ón lucht féachana</string>
+    <string name="help_tip_slideshow_play_p1_desc">Oscail aon ghrianghraf, ansin roghnaigh Slideshow ón roghchlár roghanna chun dul ar aghaidh go huathoibríoch tríd an albam ar scáileán iomlán.</string>
+    <string name="help_tip_slideshow_play_p1_s1">Oscail grianghraf in albam</string>
+    <string name="help_tip_slideshow_play_p1_s2">Oscail an roghchlár roghanna</string>
+    <string name="help_tip_slideshow_play_p1_s3">Tapaigh Sleamhnán Tosaigh chun tosú</string>
+
+    <string name="help_tip_settings_slideshow_title">Socruithe Sleamhnán</string>
+    <string name="help_tip_settings_slideshow_subtitle">Sonraigh an eatramh, an t-ord agus lúbadh</string>
+    <string name="help_tip_settings_slideshow_p1_title">Múnlaigh an seinnteoir</string>
+    <string name="help_tip_settings_slideshow_p1_desc">Coigeartaigh cé chomh fada is a thaispeántar gach mír, an lúbfaidh an seinnteoir, agus an t-ord ina bhfeictear na míreanna.</string>
+    <string name="help_tip_settings_slideshow_p1_s1">Oscail Socruithe Sleamhnán</string>
+    <string name="help_tip_settings_slideshow_p1_s2">Sonraigh an t-eatramh in aghaidh na míre</string>
+    <string name="help_tip_settings_slideshow_p1_s3">Roghnaigh ord agus lúbadh</string>
+
+    <string name="help_tip_settings_date_format_title">Formáid dáta</string>
+    <string name="help_tip_settings_date_format_subtitle">Roghnaigh conas a thaispeántar dátaí</string>
+    <string name="help_tip_settings_date_format_p1_title">Roghnaigh d\'fhoirmáid</string>
+    <string name="help_tip_settings_date_format_p1_desc">Leanann ReFra do dháta córais agus roghanna 12/24 uair an chloig de ghnáth. Socraigh sárfheidhmiú ach amháin nuair a theastaíonn patrún saincheaptha uait, agus bain úsáid as an gcnaipe eolais chun na siombailí formáide tacaíochta a athbhreithniú.</string>
+    <string name="help_tip_settings_date_format_p1_s1">Oscail formáid dáta</string>
+    <string name="help_tip_settings_date_format_p1_s2">Coinnigh Lean Córais nó cuir isteach patrún saincheaptha</string>
+    <string name="help_tip_settings_date_format_p1_s3">Réamhamharc an toradh agus oscail treoir fhormáide más gá</string>
+
+    <string name="help_tip_basics_setup_title">Socrú chéad-raoin</string>
+    <string name="help_tip_basics_setup_subtitle">Tabhair cead agus roghnaigh do roghanna réamhshocraithe</string>
+    <string name="help_tip_basics_setup_p1_title">Ag tosú</string>
+    <string name="help_tip_basics_setup_p1_desc">Ag seoladh an chéad uair, treoraíonn ReFra tú trí cheadanna, cuma, samhlacha AI, cuntais scamall agus leideanna úsáideacha. Féadfaidh tú filleadh ar an socrú ag am ar bith.</string>
+
+    <string name="help_tip_albums_ignored_manage_title">Bainistigh albamanna neamhairdithe</string>
+    <string name="help_tip_albums_ignored_manage_subtitle">Athbhreithnigh agus aisghabh fillteáin i bhfolach</string>
+    <string name="help_tip_albums_ignored_manage_p1_title">Liosta de na albamanna neamhairdithe</string>
+    <string name="help_tip_albums_ignored_manage_p1_desc">Féach ar gach albam atá i bhfolach uainn ón líne ama agus aisghabh aon cheann acu in aon áit amháin.</string>
+    <string name="help_tip_albums_ignored_manage_p1_s1">Oscail albamanna neamhairdithe</string>
+    <string name="help_tip_albums_ignored_manage_p1_s2">Athbhreithnigh na fillteáin i bhfolach</string>
+    <string name="help_tip_albums_ignored_manage_p1_s3">Aisghabh aon cheann a theastaíonn uait ar ais</string>
+
+    <string name="help_tip_cloud_add_server_title">Cuir freastalaí leis</string>
+    <string name="help_tip_cloud_add_server_subtitle">Ceangail Immich, WebDAV, SMB agus tuilleadh</string>
+    <string name="help_tip_cloud_add_server_p1_title">Treoraí socruithe</string>
+    <string name="help_tip_cloud_add_server_p1_desc">Treoraíonn draoi céim ar chéim tú trí sheoladh an fhreastalaí, cáilíochtaí, líonrú agus roghanna comhréitigh.</string>
+    <string name="help_tip_cloud_add_server_p1_s1">Roghnaigh cineál soláthraí</string>
+    <string name="help_tip_cloud_add_server_p1_s2">Iontráil an freastalaí agus na cáilíochtaí</string>
+    <string name="help_tip_cloud_add_server_p1_s3">Socraigh líonrú agus comhréiteach</string>
+    <string name="help_tip_cloud_add_server_p1_s4">Athbhreithnigh agus sábháil</string>
+
+    <string name="help_tip_cloud_destinations_title">Ceann-áin nuachúrsála</string>
+    <string name="help_tip_cloud_destinations_subtitle">Mapáil gach albam chuig scamall amháin nó níos mó</string>
+    <string name="help_tip_cloud_destinations_p1_title">Maitrís na gceann-áin</string>
+    <string name="help_tip_cloud_destinations_p1_desc">Roghnaigh go cruinn cé na halbaim a ndéanann tú cúltaca orthu chuig na cuntais nasctha ag baint úsáide as maitrís shimplí.</string>
+
+    <string name="help_tip_cloud_provider_settings_title">Socruithe cuntais</string>
+    <string name="help_tip_cloud_provider_settings_subtitle">Bainistigh cuntas nasctha</string>
+    <string name="help_tip_cloud_provider_settings_p1_title">Roghanna in aghaidh an chuntais</string>
+    <string name="help_tip_cloud_provider_settings_p1_desc">Cuir eagarthóireacht ar líonrú, albam cúltaca agus iompar comhréitigh go neamhspleách do gach cuntas nasctha.</string>
+
+    <string name="help_tip_cloud_shared_links_title">Naisc roinnte</string>
+    <string name="help_tip_cloud_shared_links_subtitle">Bainistigh na nascanna ar roinn tú</string>
+    <string name="help_tip_cloud_shared_links_p1_title">Athbhreithnigh na nascanna roinnte</string>
+    <string name="help_tip_cloud_shared_links_p1_desc">Féach agus cealaigh na naisc phoiblí a cruthaíodh ar do fhreastalaithe nasctha.</string>
+
+    <string name="help_tip_cloud_sync_status_title">Stádas comhtháthaithe</string>
+    <string name="help_tip_cloud_sync_status_subtitle">Rianú uaslódálacha agus íoslódálacha</string>
+    <string name="help_tip_cloud_sync_status_p1_title">Dul chun cinn beo</string>
+    <string name="help_tip_cloud_sync_status_p1_desc">Féach ar dhul chun cinn cúltaca agus féach cad atá ar feitheamh, ag rith nó teipthe.</string>
+
+    <string name="help_tip_cloud_people_title">Daoine</string>
+    <string name="help_tip_cloud_people_subtitle">Bhrabhsáil aghaidheanna ó do fhreastalaí</string>
+    <string name="help_tip_cloud_people_p1_title">Grúpáil aghaidheanna</string>
+    <string name="help_tip_cloud_people_p1_desc">Féach ar na daoine a aimsíodh ag do fhreastalaí scamall agus oscail grianghraif gach duine.</string>
+
+    <string name="help_tip_cloud_free_up_space_title">Saor áit</string>
+    <string name="help_tip_cloud_free_up_space_subtitle">Bain cóipeanna áitiúla atá cúltáilte go sábháilte</string>
+    <string name="help_tip_cloud_free_up_space_p1_title">Fáil ar ais stóráil</string>
+    <string name="help_tip_cloud_free_up_space_p1_desc">Scrios cóipeanna ar an bhfeiste de mheáin atá cúltáilte go sábháilte cheana sa scamall.</string>
+
+    <string name="help_tip_media_type_albums_title">Bhrabhsáil de réir cineál meán</string>
+    <string name="help_tip_media_type_albums_subtitle">Albam uathoibríoch do ghrianghraif, físeáin, GIFanna agus comhaid RAW</string>
+    <string name="help_tip_media_type_albums_p1_title">Albamanna de chineál meáin</string>
+    <string name="help_tip_media_type_albums_p1_desc">ReFra cruthaíonn albam fíorúla ó do leabharlann aontaithe ionas gur féidir leat gach grianghraf, físeán, GIF nó comhad RAW a oscailt le chéile. Déantar a le feiceáil a rialú ó shocruithe Amlíne &amp; Albamanna.</string>
+    <string name="help_tip_media_type_albums_p1_s1">Oscail Albamanna agus scrollaigh go Cineálacha Meán</string>
+    <string name="help_tip_media_type_albums_p1_s2">Oscail cineál chun meáin mheaitseála a bhrabhsáil</string>
+    <string name="help_tip_media_type_albums_p1_s3">Úsáid socruithe Amlíne &amp; Albamanna chun an rannán a thaispeáint nó a cheilt</string>
+
+    <string name="help_tip_raw_develop_title">Fhorbair grianghraif RAW</string>
+    <string name="help_tip_raw_develop_subtitle">Cuir an t-eolas braiteora in eagar sula ndéantar onnmhairiú</string>
+    <string name="help_tip_raw_develop_p1_title">Úsáid na rialaithe Forbartha</string>
+    <string name="help_tip_raw_develop_p1_desc">Oscail grianghraf RAW tacaithe sa eagarthóir chun cothromaíocht bhán, nochtadh, soilse, dath aschuir agus dí-mhosaiciú a choigeartú. Úsáideann ReFra réamhamharc sábháilte a chuireann cuimhne i bhfeidhm agus coinníonn sé aschur lán-réitigh.</string>
+    <string name="help_tip_raw_develop_p1_s1">Oscail grianghraf RAW agus sconna Eagar</string>
+    <string name="help_tip_raw_develop_p1_s2">Roghnaigh roghanna sa táb Forbartha</string>
+    <string name="help_tip_raw_develop_p1_s3">Cuir aon táirge breise, scagaire nó marcáil i bhfeidhm</string>
+    <string name="help_tip_raw_develop_p1_s4">Sábháil cóip nó easpórtáil JPEG, PNG nó TIFF</string>
+
+    <string name="help_tip_people_grouping_title">Grúpáil daoine ar an bhfeiste</string>
+    <string name="help_tip_people_grouping_subtitle">Aimsigh aghaidheanna gan do leabharlann a uaslódáil</string>
+    <string name="help_tip_people_grouping_p1_title">Scanáil agus eagraigh daoine</string>
+    <string name="help_tip_people_grouping_p1_desc">Le samhail aghaidheanna suiteáilte, scanálann ReFra agus grúpálann daoine go háitiúil. Is féidir leat scanáil úr a thosú ó Dhaoine, duine a cheilt, grúpaí a chumasc agus cóipeanna mionghearrtha a dhéanamh nuair atá príobháideachas tábhachtach.</string>
+    <string name="help_tip_people_grouping_p1_s1">Suiteáil an tsamhail Braite Aghaidhe</string>
+    <string name="help_tip_people_grouping_p1_s2">Oscail Leabharlann, ansin Daoine</string>
+    <string name="help_tip_people_grouping_p1_s3">Bí ag Brú Scanáil do dhaoine agus fan le haghaidh innéacsála</string>
+    <string name="help_tip_people_grouping_p1_s4">Oscail duine chun an grúpa a bhainistiú nó aghaidheanna a mhionghlacadh</string>
+
+    <string name="help_tip_album_cover_title">Roghnaigh clúdach albam</string>
+    <string name="help_tip_album_cover_subtitle">Úsáid aon phictiúr áitiúil mar naoiúir</string>
+    <string name="help_tip_album_cover_p1_title">Socraigh clúdach saincheaptha</string>
+    <string name="help_tip_album_cover_p1_desc">Chun grianghraf áitiúil, neamhchriptithe i albam fíor a úsáid, oscail gníomhartha féachóra agus roghnaigh Úsáid mar chlúdach albam. Is féidir leat an gníomh a nochtadh freisin sa bhileog roghnúcháin inrochtaine.</string>
+    <string name="help_tip_album_cover_p1_s1">Oscail an grianghraf atá uait óna albam</string>
+    <string name="help_tip_album_cover_p1_s2">Oscail gníomhartha, ansin Úsáid mar</string>
+    <string name="help_tip_album_cover_p1_s3">Roghnaigh Úsáid mar chlúdach albam</string>
+
+    <string name="help_tip_metadata_sanitize_title">Bain metadata íogair</string>
+    <string name="help_tip_metadata_sanitize_subtitle">Glan comhaid thacaítear leo gan picteilíní a athchruthú</string>
+    <string name="help_tip_metadata_sanitize_p1_title">Roghnaigh cad ba mhaith leat a bhaint</string>
+    <string name="help_tip_metadata_sanitize_p1_desc">Ó miondealtaí grianghraf, roghnaigh Bain metadata agus roghnaigh ach an suíomh, réimsí tuairisciúla nó gach metadata tacaithe. Scríobh agus fíoraíonn ReFra cóip ghlan gan cailliúint sular chuir sé isteach ar an bhunaoriginal.</string>
+    <string name="help_tip_metadata_sanitize_p1_s1">Oscail grianghraf áitiúil a thacaítear</string>
+    <string name="help_tip_metadata_sanitize_p1_s2">Leathnaigh a mhiondealtaí agus sconna Bain metadata</string>
+    <string name="help_tip_metadata_sanitize_p1_s3">Roghnaigh an leibhéal glantacháin</string>
+    <string name="help_tip_metadata_sanitize_p1_s4">Dearbhaigh ach amháin tar éis an rabhadh malartaithe a athbhreithniú</string>
 </resources>

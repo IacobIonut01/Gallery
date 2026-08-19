@@ -94,6 +94,7 @@ import com.dot.gallery.core.ml.ModelStatus
 import com.dot.gallery.core.navigate
 import com.dot.gallery.core.util.SdkCompat
 import com.dot.gallery.feature_node.domain.util.getUri
+import com.dot.gallery.feature_node.domain.util.isCloud
 import com.dot.gallery.feature_node.presentation.common.components.GridPinchZoomLayout
 import com.dot.gallery.feature_node.presentation.common.components.rememberGridPinchZoomState
 import com.dot.gallery.feature_node.presentation.library.components.LibrarySmallItem
@@ -348,8 +349,10 @@ fun LibraryScreen(
                         ) {
                             items(
                                 items = locations,
-                                key = { it.toString() }
-                            ) { (media, location) ->
+                                key = { it.media.id }
+                            ) { locationMedia ->
+                                val media = locationMedia.media
+                                val location = locationMedia.location
                                 with(sharedTransitionScope) {
                                     val isDarkTheme = isDarkTheme()
                                     val allowBlur by rememberAllowBlur()
@@ -365,16 +368,17 @@ fun LibraryScreen(
                                             .height(256.dp)
                                             .clip(RoundedCornerShape(24.dp))
                                             .clickable {
-                                                val gpsLocationNameCity =
-                                                    location.substringBefore(",")
-                                                val gpsLocationNameCountry =
-                                                    location.substringAfterLast(", ")
-                                                eventHandler.navigate(
-                                                    Screen.LocationTimelineScreen.location(
-                                                        gpsLocationNameCity = gpsLocationNameCity,
-                                                        gpsLocationNameCountry = gpsLocationNameCountry
+                                                val city = locationMedia.city
+                                                val country = locationMedia.country
+                                                if (!media.isCloud && !city.isNullOrBlank() && !country.isNullOrBlank()) {
+                                                    eventHandler.navigate(
+                                                        Screen.LocationTimelineScreen.location(city, country)
                                                     )
-                                                )
+                                                } else {
+                                                    eventHandler.navigate(
+                                                        Screen.MediaViewScreen.idAndAlbum(media.id, -1L)
+                                                    )
+                                                }
                                             },
                                     ) {
                                         GlideImage(
@@ -456,7 +460,7 @@ fun LibraryScreen(
                         ) {
                             items(
                                 items = cloudState.people,
-                                key = { it.id }
+                                key = { it.accountKey }
                             ) { person ->
                                 Box(
                                     modifier = Modifier
@@ -464,7 +468,10 @@ fun LibraryScreen(
                                         .clip(CircleShape)
                                         .clickable {
                                             eventHandler.navigate(
-                                                Screen.PersonDetailScreen.personId(person.id)
+                                                Screen.PersonDetailScreen.personId(
+                                                    person.serverConfigId,
+                                                    person.id,
+                                                )
                                             )
                                         }
                                 ) {

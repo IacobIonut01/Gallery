@@ -36,7 +36,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 
-import androidx.compose.foundation.isSystemInDarkTheme
+import com.dot.gallery.ui.theme.isDarkTheme
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -82,6 +82,7 @@ fun <T : Media> GridPinchZoomScope.MediaGridView(
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
     allowSharedElements: Boolean = true,
+    onRetry: (() -> Unit)? = null,
     onMediaClick: @DisallowComposableCalls (media: T) -> Unit = {},
 ) {
     val mappedData by rememberedDerivedState(mediaState, groupMethod) {
@@ -175,11 +176,11 @@ fun <T : Media> GridPinchZoomScope.MediaGridView(
                     exit = exitAnimation
                 ) {
                     val text by rememberedDerivedState(stickyHeaderItem) { stickyHeaderItem ?: "" }
-                    val isDarkTheme = isSystemInDarkTheme()
+                    val darkTheme = isDarkTheme()
                     Text(
                         text = text,
                         style = MaterialTheme.typography.titleMedium.let { style ->
-                            if (!isDarkTheme) style.copy(
+                            if (!darkTheme) style.copy(
                                 shadow = Shadow(
                                     color = Color.White,
                                     offset = Offset.Zero,
@@ -224,7 +225,8 @@ fun <T : Media> GridPinchZoomScope.MediaGridView(
                 onMediaClick = onMediaClick,
                 sharedTransitionScope = sharedTransitionScope,
                 animatedContentScope = animatedContentScope,
-                allowSharedElements = allowSharedElements
+                allowSharedElements = allowSharedElements,
+                onRetry = onRetry,
             )
         }
     } else {
@@ -245,7 +247,8 @@ fun <T : Media> GridPinchZoomScope.MediaGridView(
             onMediaClick = onMediaClick,
             sharedTransitionScope = sharedTransitionScope,
             animatedContentScope = animatedContentScope,
-            allowSharedElements = allowSharedElements
+            allowSharedElements = allowSharedElements,
+            onRetry = onRetry,
         )
     }
 

@@ -81,7 +81,6 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -144,7 +143,6 @@ private const val DETAIL_TIMELINE_LAYOUT = "timeline_layout"
 private const val DETAIL_GROUP_SIMILAR = "group_similar"
 private const val DETAIL_GIF_ANIMATION = "gif_animation"
 private const val DETAIL_FILTER_BUTTON = "filter_button"
-private const val DETAIL_HIDE_TIMELINE = "hide_timeline"
 private const val DETAIL_MERGE_ALBUMS = "merge_albums"
 private const val DETAIL_ALBUM_SECTIONS = "album_sections"
 private const val DETAIL_PINNED_GRID = "pinned_albums_as_grid"
@@ -171,7 +169,7 @@ fun SettingsTimelineAlbumsScreen() {
     var allowGifAnimation by rememberAllowGifAnimation()
     var showFilterButton by rememberShowFilterButton()
     var showSearchBarFavButton by rememberShowSearchBarFavoriteButton()
-    var hideTimelineOnAlbum by Settings.Album.rememberHideTimelineOnAlbum()
+    var dateHeaderAlbums by Settings.Album.rememberAlbumGroupByDate()
     var mergeAlbumsByName by Settings.Album.rememberMergeAlbumsByName()
     var albumSectionsEnabled by Settings.Album.rememberAlbumSectionsEnabled()
     var pinnedAlbumsAsGrid by Settings.Album.rememberPinnedAlbumsAsGrid()
@@ -283,16 +281,6 @@ fun SettingsTimelineAlbumsScreen() {
                 preview = { checked -> SearchBarFavoriteButtonPreview(checked) },
             )
         }
-        DETAIL_HIDE_TIMELINE -> {
-            BackHandler { detailKey = null }
-            SwitchPreferenceDetailScreen(
-                title = stringResource(R.string.hide_timeline_for_albums),
-                isChecked = hideTimelineOnAlbum,
-                onCheckedChange = { hideTimelineOnAlbum = it },
-                description = stringResource(R.string.hide_timeline_for_albums_description),
-                preview = { checked -> HideTimelinePreview(checked) },
-            )
-        }
         DETAIL_MERGE_ALBUMS -> {
             BackHandler { detailKey = null }
             SwitchPreferenceDetailScreen(
@@ -345,7 +333,7 @@ fun SettingsTimelineAlbumsScreen() {
                     Column {
                         val sections = buildList {
                             add(Triple(R.string.date_headers_timeline, dateHeaderTimeline) { v: Boolean -> dateHeaderTimeline = v })
-                            add(Triple(R.string.date_headers_albums, !hideTimelineOnAlbum) { v: Boolean -> hideTimelineOnAlbum = !v })
+                            add(Triple(R.string.date_headers_albums, dateHeaderAlbums) { v: Boolean -> dateHeaderAlbums = v })
                             if (SdkCompat.supportsFavorites) {
                                 add(Triple(R.string.date_headers_favorites, dateHeaderFavorites) { v: Boolean -> dateHeaderFavorites = v })
                             }
@@ -441,8 +429,6 @@ fun SettingsTimelineAlbumsScreen() {
                 onShowFilterButtonChange = { showFilterButton = it },
                 showSearchBarFavButton = showSearchBarFavButton,
                 onShowSearchBarFavButtonChange = { showSearchBarFavButton = it },
-                hideTimelineOnAlbum = hideTimelineOnAlbum,
-                onHideTimelineChange = { hideTimelineOnAlbum = it },
                 mergeAlbumsByName = mergeAlbumsByName,
                 onMergeAlbumsChange = { mergeAlbumsByName = it },
                 albumSectionsEnabled = albumSectionsEnabled,
@@ -472,8 +458,6 @@ private fun TimelineAlbumsListScreen(
     onShowFilterButtonChange: (Boolean) -> Unit,
     showSearchBarFavButton: Boolean,
     onShowSearchBarFavButtonChange: (Boolean) -> Unit,
-    hideTimelineOnAlbum: Boolean,
-    onHideTimelineChange: (Boolean) -> Unit,
     mergeAlbumsByName: Boolean,
     onMergeAlbumsChange: (Boolean) -> Unit,
     albumSectionsEnabled: Boolean = false,
@@ -490,16 +474,17 @@ private fun TimelineAlbumsListScreen(
 ) {
     @Composable
     fun settings(): SnapshotStateList<SettingsEntity> {
-        val context = LocalContext.current
-
-        val timelineHeader = remember(context) {
-            SettingsEntity.Header(title = context.getString(R.string.timeline))
+        val timelineHeaderTitle = stringResource(R.string.timeline)
+        val timelineHeader = remember(timelineHeaderTitle) {
+            SettingsEntity.Header(title = timelineHeaderTitle)
         }
 
-        val layoutLabel = remember(timelineLayoutType) {
+        val mosaicLayoutLabel = stringResource(R.string.timeline_layout_mosaic)
+        val gridLayoutLabel = stringResource(R.string.timeline_layout_grid)
+        val layoutLabel = remember(timelineLayoutType, mosaicLayoutLabel, gridLayoutLabel) {
             when (timelineLayoutType) {
-                Settings.Misc.LAYOUT_MOSAIC -> context.getString(R.string.timeline_layout_mosaic)
-                else -> context.getString(R.string.timeline_layout_grid)
+                Settings.Misc.LAYOUT_MOSAIC -> mosaicLayoutLabel
+                else -> gridLayoutLabel
             }
         }
         val timelineLayoutPref = rememberPreference(
@@ -564,19 +549,10 @@ private fun TimelineAlbumsListScreen(
             screenPosition = Position.Bottom
         )
 
-        val albumsHeader = remember(context) {
-            SettingsEntity.Header(title = context.getString(R.string.albums))
+        val albumsHeaderTitle = stringResource(R.string.albums)
+        val albumsHeader = remember(albumsHeaderTitle) {
+            SettingsEntity.Header(title = albumsHeaderTitle)
         }
-
-        val hideTimelineOnAlbumPref = rememberSwitchPreference(
-            hideTimelineOnAlbum,
-            title = stringResource(R.string.hide_timeline_for_albums),
-            summary = stringResource(R.string.hide_timeline_for_album_summary),
-            isChecked = hideTimelineOnAlbum,
-            onCheck = onHideTimelineChange,
-            onClick = { onDetailClick(DETAIL_HIDE_TIMELINE) },
-            screenPosition = Position.Top
-        )
 
         val mergeAlbumsByNamePref = rememberSwitchPreference(
             mergeAlbumsByName,
@@ -585,7 +561,7 @@ private fun TimelineAlbumsListScreen(
             isChecked = mergeAlbumsByName,
             onCheck = onMergeAlbumsChange,
             onClick = { onDetailClick(DETAIL_MERGE_ALBUMS) },
-            screenPosition = Position.Middle
+            screenPosition = Position.Top
         )
 
         val albumSectionsPref = rememberSwitchPreference(
@@ -617,13 +593,25 @@ private fun TimelineAlbumsListScreen(
             screenPosition = Position.Bottom
         )
 
-        val favIconPositionLabel = remember(favIconPosition) {
+        val favDisabledLabel = stringResource(R.string.fav_position_disabled)
+        val favBottomStartLabel = stringResource(R.string.fav_position_bottom_start)
+        val favTopEndLabel = stringResource(R.string.fav_position_top_end)
+        val favTopStartLabel = stringResource(R.string.fav_position_top_start)
+        val favBottomEndLabel = stringResource(R.string.fav_position_bottom_end)
+        val favIconPositionLabel = remember(
+            favIconPosition,
+            favDisabledLabel,
+            favBottomStartLabel,
+            favTopEndLabel,
+            favTopStartLabel,
+            favBottomEndLabel,
+        ) {
             when (favIconPosition) {
-                Settings.Misc.FAV_ICON_DISABLED -> context.getString(R.string.fav_position_disabled)
-                Settings.Misc.FAV_ICON_BOTTOM_START -> context.getString(R.string.fav_position_bottom_start)
-                Settings.Misc.FAV_ICON_TOP_END -> context.getString(R.string.fav_position_top_end)
-                Settings.Misc.FAV_ICON_TOP_START -> context.getString(R.string.fav_position_top_start)
-                else -> context.getString(R.string.fav_position_bottom_end)
+                Settings.Misc.FAV_ICON_DISABLED -> favDisabledLabel
+                Settings.Misc.FAV_ICON_BOTTOM_START -> favBottomStartLabel
+                Settings.Misc.FAV_ICON_TOP_END -> favTopEndLabel
+                Settings.Misc.FAV_ICON_TOP_START -> favTopStartLabel
+                else -> favBottomEndLabel
             }
         }
         val hasFavorites = SdkCompat.supportsFavorites
@@ -635,8 +623,9 @@ private fun TimelineAlbumsListScreen(
             screenPosition = Position.Bottom
         )
 
-        val displayHeader = remember(context) {
-            SettingsEntity.Header(title = context.getString(R.string.settings_display_header))
+        val displayHeaderTitle = stringResource(R.string.settings_display_header)
+        val displayHeader = remember(displayHeaderTitle) {
+            SettingsEntity.Header(title = displayHeaderTitle)
         }
 
         val dateHeadersPref = rememberPreference(
@@ -654,11 +643,11 @@ private fun TimelineAlbumsListScreen(
         )
 
         return remember(
-            timelineLayoutPref, groupSimilarMediaPref,
+            timelineHeader, timelineLayoutPref, groupSimilarMediaPref,
             allowGifAnimationPref, dateHeaderPref, showFilterButtonPref,
             showSearchBarFavButtonPref, storyCardsPref,
-            hideTimelineOnAlbumPref, mergeAlbumsByNamePref, albumSectionsPref, pinnedAlbumsAsGridPref, showMediaTypeAlbumsPref, favIconPositionPref,
-            dateHeadersPref, groupMethodPref
+            albumsHeader, mergeAlbumsByNamePref, albumSectionsPref, pinnedAlbumsAsGridPref,
+            showMediaTypeAlbumsPref, displayHeader, favIconPositionPref, dateHeadersPref, groupMethodPref
         ) {
             mutableStateListOf<SettingsEntity>().apply {
                 add(timelineHeader)
@@ -673,7 +662,6 @@ private fun TimelineAlbumsListScreen(
                 add(storyCardsPref)
 
                 add(albumsHeader)
-                add(hideTimelineOnAlbumPref)
                 add(mergeAlbumsByNamePref)
                 add(albumSectionsPref)
                 add(pinnedAlbumsAsGridPref)

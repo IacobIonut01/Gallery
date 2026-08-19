@@ -1073,4 +1073,187 @@
     <string name="help_tip_video_fix_black_p1_title">Keep video visible</string>
     <string name="help_tip_video_fix_black_p1_desc">On some devices (notably Samsung) a playing video can black out when the system bars are shown or hidden, even though it keeps playing. Enable Media Viewer › Video Playback › \'Fix black video on hide\' to re-bind the player surface on every bar change. It is on by default for Samsung devices and off elsewhere — turn it off if you don\'t need it.</string>
     <!-- RELEASE NOTES: 5.0.3 -->
+    <string name="help_tip_motion_photo_frames_title">Képkockák kinyerése Mozgóképből</string>
+    <string name="help_tip_motion_photo_frames_subtitle">Pontos pillanatok mentése a beágyazott klipből</string>
+    <string name="help_tip_motion_photo_frames_p1_title">Képkockák kiválasztása és exportálása</string>
+    <string name="help_tip_motion_photo_frames_p1_desc">Nyiss meg egy Mozgóképet a megtekintőben, majd koppints a filmszalagjára, vagy válaszd a műveletlap Képkockák kinyerése elemét. Lépj a kívánt pillanathoz, jelölj ki egy vagy több képkockát, majd exportáld őket a kívánt képformátumban.</string>
+    <string name="help_tip_motion_photo_frames_p1_s1">Nyiss meg egy Mozgóképet a megtekintőben</string>
+    <string name="help_tip_motion_photo_frames_p1_s2">Koppints a filmszalagra, vagy válaszd a Képkockák kinyerése lehetőséget</string>
+    <string name="help_tip_motion_photo_frames_p1_s3">Léptess, és válaszd ki a kívánt pillanatokat</string>
+    <string name="help_tip_motion_photo_frames_p1_s4">Válassz formátumot, és exportáld a kijelölt képkockákat</string>
+
+    <string name="help_tip_search_ignored_albums_title">Keresés a mellőzött albumokban</string>
+    <string name="help_tip_search_ignored_albums_subtitle">Rejtett média keresése az idővonalra való visszahelyezés nélkül</string>
+    <string name="help_tip_search_ignored_albums_p1_title">Az Intelligens keresés biztonságos kibővítése</string>
+    <string name="help_tip_search_ignored_albums_p1_desc">Az idővonalról elrejtett albumokat felveheted az Intelligens funkciókba és az Intelligens keresésbe anélkül, hogy megjelennének az idővonalon vagy az Albumok lapon. A beállítás alapértelmezés szerint ki van kapcsolva, módosítása teljes frissítést indít, a zárolt albumok pedig mindig kimaradnak.</string>
+    <string name="help_tip_search_ignored_albums_p1_s1">Nyisd meg a Beállítások > Intelligens funkciók menüt</string>
+    <string name="help_tip_search_ignored_albums_p1_s2">Kapcsold be a Mellőzött albumok felvétele beállítást</string>
+    <string name="help_tip_search_ignored_albums_p1_s3">Várd meg az Intelligens funkciók teljes frissítésének befejezését</string>
+    <string name="help_tip_search_ignored_albums_p1_s4">Keress a rejtett médiában, miközben a zárolt albumok privátak maradnak</string>
+
+    <string name="help_tip_cloud_nextcloud_login_title">Biztonságos bejelentkezés a Nextcloudba</string>
+    <string name="help_tip_cloud_nextcloud_login_subtitle">Böngészős engedélyezés és kétlépcsős hitelesítés használata</string>
+    <string name="help_tip_cloud_nextcloud_login_p1_title">Nextcloud bejelentkezési folyamat v2</string>
+    <string name="help_tip_cloud_nextcloud_login_p1_desc">A ReFra megnyitja a Nextcloud-kiszolgálót a rendszer böngészőjében, ahol bejelentkezhetsz, és elvégezheted a kétlépcsős hitelesítést. Jóváhagyás után a Nextcloud alkalmazásspecifikus jelszót hoz létre, amelyet a ReFra titkosítva tárol az eszközödön.</string>
+    <string name="help_tip_cloud_nextcloud_login_p1_s1">Adj hozzá egy Nextcloud-fiókot, és add meg a kiszolgáló URL-címét</string>
+    <string name="help_tip_cloud_nextcloud_login_p1_s2">Folytasd a rendszer böngészőjében</string>
+    <string name="help_tip_cloud_nextcloud_login_p1_s3">Jelentkezz be, végezd el a kétlépcsős hitelesítést, és hagyd jóvá a hozzáférést</string>
+    <string name="help_tip_cloud_nextcloud_login_p1_s4">Térj vissza a ReFrába, amíg befejezi a csatlakozást</string>
+
+    <string name="help_tip_accessibility_remote_settings_title">Navigálás a beállításokban érintés nélkül</string>
+    <string name="help_tip_accessibility_remote_settings_subtitle">Billentyűzet, iránygombok vagy távirányító használata minden beállításnál</string>
+    <string name="help_tip_accessibility_remote_settings_p1_title">Kiszámítható fókusznavigáció</string>
+    <string name="help_tip_accessibility_remote_settings_p1_desc">A beállításlisták, a részletező képernyők, a kijelölési vezérlők és az alsó műveletek támogatják az irányított fókuszt. A ReFra jól láthatóan kiemeli a fókuszban lévő vezérlőt, és a képernyő megnyitásakor egy használható elemre helyezi a fókuszt.</string>
+    <string name="help_tip_accessibility_remote_settings_p1_s1">A nyíl- vagy iránygombokkal lépkedhetsz a vezérlők között</string>
+    <string name="help_tip_accessibility_remote_settings_p1_s2">A vezérlő aktiválásához nyomd meg az Enter vagy a középső gombot</string>
+    <string name="help_tip_accessibility_remote_settings_p1_s3">A részletező képernyő elhagyásához használd a Vissza gombot</string>
+    <string name="help_tip_accessibility_remote_settings_p1_s4">Folytasd a kiemelt beállításvezérlőtől</string>
+    <string name="help_search_hint">Keresés a súgóban és a tippek között</string>
+    <string name="help_search_clear">Keresés törlése</string>
+    <string name="help_search_no_results">Nem található súgó ehhez: \"%1$s\"</string>
+    <string name="help_search_section_tips">Tippek és útmutatók</string>
+    <string name="help_search_section_settings">Beállítások</string>
+    <string name="help_search_section_actions">Gyorsműveletek</string>
+    <string name="help_search_section_changelog">Újdonságok</string>
+    <string name="help_search_see_all">Az összes találat megtekintése (%1$d)</string>
+    <string name="help_tips_section_title">Súgó és tippek</string>
+    <string name="help_quick_actions">Gyorsműveletek</string>
+    <string name="help_qa_open_timeline">Idővonal megnyitása</string>
+    <string name="help_qa_open_albums">Albumok megnyitása</string>
+    <string name="help_qa_open_search">Keresés megnyitása</string>
+    <string name="help_qa_open_categories">Kategóriák megnyitása</string>
+    <string name="help_qa_open_vault">Széf megnyitása</string>
+    <string name="help_qa_open_trash">Kuka megnyitása</string>
+    <string name="help_qa_open_favorites">Kedvencek megnyitása</string>
+    <string name="help_qa_open_locations">Helyek megnyitása</string>
+    <string name="help_qa_open_library">Könyvtár megnyitása</string>
+    <string name="help_qa_open_color_palette">Színpaletta megnyitása</string>
+    <string name="help_qa_open_appearance">Megjelenési beállítások megnyitása</string>
+    <string name="help_tip_view_cutout_title">Vágj ki egy témát</string>
+    <string name="help_tip_view_cutout_subtitle">Emelj ki egy személyt vagy tárgyat a háttérből</string>
+    <string name="help_tip_view_cutout_p1_title">Emeld ki a felismert témát</string>
+    <string name="help_tip_view_cutout_p1_desc">A nézőben a ReFra képes a fő témát a készüléken észlelni, majd kiemelt javaslatot mutatni. Nyisd meg, hogy finomítsd a maszkot, majd másold, oszd meg vagy mentsd el átlátszó kivágásként. A Médiamegjelenítő beállításaiból hosszú nyomással is indíthatod a kivágást.</string>
+    <string name="help_tip_view_cutout_p1_s1">Nyiss meg egy fényképet egyértelmű témával</string>
+    <string name="help_tip_view_cutout_p1_s2">Érintsd meg a Téma kivágása javaslatot</string>
+    <string name="help_tip_view_cutout_p1_s3">Finomítsd a körvonalat belefoglaló vagy kizáró pontokkal</string>
+    <string name="help_tip_view_cutout_p1_s4">Másold, oszd meg vagy mentsd el a kivágást</string>
+
+    <string name="help_tip_slideshow_play_title">Játssz le diavetítést</string>
+    <string name="help_tip_slideshow_play_subtitle">Automatikusan léptessen egy teljes képernyős albumon keresztül</string>
+    <string name="help_tip_slideshow_play_p1_title">Indítás a nézőből</string>
+    <string name="help_tip_slideshow_play_p1_desc">Nyiss meg bármilyen fényképet, majd a menüopciók közül válaszd a Diavetítés lehetőséget, hogy automatikusan léptessen a teljes képernyős albumon keresztül.</string>
+    <string name="help_tip_slideshow_play_p1_s1">Nyisson meg egy fényképet egy albumban</string>
+    <string name="help_tip_slideshow_play_p1_s2">Nyissa meg a beállítások menüt</string>
+    <string name="help_tip_slideshow_play_p1_s3">Érintse meg a Diavetítés gombot a kezdéshez</string>
+
+    <string name="help_tip_settings_slideshow_title">Diavetítés beállításai</string>
+    <string name="help_tip_settings_slideshow_subtitle">Állítsa be az időközt, sorrendet és a hurkolást</string>
+    <string name="help_tip_settings_slideshow_p1_title">Finomhangolja a lejátszást</string>
+    <string name="help_tip_settings_slideshow_p1_desc">Állítsa be, hogy mennyi ideig jelenjen meg az egyes elemek, hogy hurkolva legyen-e a lejátszás, és az elemek milyen sorrendben jelenjenek meg.</string>
+    <string name="help_tip_settings_slideshow_p1_s1">Nyissa meg a Diavetítés beállításait</string>
+    <string name="help_tip_settings_slideshow_p1_s2">Állítsa be az egyes elemek időközét</string>
+    <string name="help_tip_settings_slideshow_p1_s3">Válassza ki a sorrendet és a hurkolást</string>
+
+    <string name="help_tip_settings_date_format_title">Dátumformátum</string>
+    <string name="help_tip_settings_date_format_subtitle">Válassza ki, hogyan jelenjenek meg a dátumok</string>
+    <string name="help_tip_settings_date_format_p1_title">Válassza ki a formátumot</string>
+    <string name="help_tip_settings_date_format_p1_desc">A ReFra alapértelmezés szerint a rendszerdátumot és a 12/24 órás beállításokat követi. Csak akkor állítson felül, ha egy egyedi mintát szeretne, és használja az információs gombot a támogatott formátumszimbólumok áttekintéséhez.</string>
+    <string name="help_tip_settings_date_format_p1_s1">Nyissa meg a Dátumformátumot</string>
+    <string name="help_tip_settings_date_format_p1_s2">Tartsa a Rendszer követése beállítást, vagy adjon meg egy egyedi mintát</string>
+    <string name="help_tip_settings_date_format_p1_s3">Előnézet a eredményről és nyissa meg a formátum útmutatót, ha szükséges</string>
+
+    <string name="help_tip_basics_setup_title">Első indítási beállítás</string>
+    <string name="help_tip_basics_setup_subtitle">Engedélyezés megadása és alapértelmezések kiválasztása</string>
+    <string name="help_tip_basics_setup_p1_title">Első lépések</string>
+    <string name="help_tip_basics_setup_p1_desc">Az első indításkor ReFra végigvezeti Önt az engedélyeken, a megjelenésen, az AI modelleken, a felhőfiókokon és hasznos tippeken. A beállítást bármikor újra elvégezheti.</string>
+
+    <string name="help_tip_albums_ignored_manage_title">Kezelt figyelmen kívül hagyott albumok</string>
+    <string name="help_tip_albums_ignored_manage_subtitle">Rejtett mappák áttekintése és visszaállítása</string>
+    <string name="help_tip_albums_ignored_manage_p1_title">Figyelmen kívül hagyott albumok listája</string>
+    <string name="help_tip_albums_ignored_manage_p1_desc">Nézze meg az összes albumot, amelyet elrejtett az idővonalról, és állítson vissza bármelyiket egy helyen.</string>
+    <string name="help_tip_albums_ignored_manage_p1_s1">Megnyitás Figyelmen kívül hagyott albumok</string>
+    <string name="help_tip_albums_ignored_manage_p1_s2">Rejtett mappák áttekintése</string>
+    <string name="help_tip_albums_ignored_manage_p1_s3">Állítsa vissza a kívántakat</string>
+
+    <string name="help_tip_cloud_add_server_title">Szerver hozzáadása</string>
+    <string name="help_tip_cloud_add_server_subtitle">Csatlakozás Immich-hez, WebDAV-hoz, SMB-hez és másokhoz</string>
+    <string name="help_tip_cloud_add_server_p1_title">Beállító varázsló</string>
+    <string name="help_tip_cloud_add_server_p1_desc">Egy lépésről lépésre vezető varázsló végigvezet a szerver címén, hitelesítő adatokon, hálózati és szinkronizálási beállításokon.</string>
+    <string name="help_tip_cloud_add_server_p1_s1">Válasszon szolgáltató típust</string>
+    <string name="help_tip_cloud_add_server_p1_s2">Írja be a szervert és a hitelesítő adatokat</string>
+    <string name="help_tip_cloud_add_server_p1_s3">Állítsa be a hálózatot és a szinkronizálást</string>
+    <string name="help_tip_cloud_add_server_p1_s4">Ellenőrizze és mentse</string>
+
+    <string name="help_tip_cloud_destinations_title">Biztonsági mentés célpontjai</string>
+    <string name="help_tip_cloud_destinations_subtitle">Térképezze fel minden albumot egy vagy több felhőhöz</string>
+    <string name="help_tip_cloud_destinations_p1_title">Célpont mátrix</string>
+    <string name="help_tip_cloud_destinations_p1_desc">Válassza ki pontosan, mely albumok készüljenek biztonsági mentésről mely csatlakoztatott fiókokra egy egyszerű mátrix segítségével.</string>
+
+    <string name="help_tip_cloud_provider_settings_title">Fiókbeállítások</string>
+    <string name="help_tip_cloud_provider_settings_subtitle">Kezelje a csatlakoztatott fiókot</string>
+    <string name="help_tip_cloud_provider_settings_p1_title">Fiókonkénti opciók</string>
+    <string name="help_tip_cloud_provider_settings_p1_desc">Szerkessze a hálózati beállításokat, mentési albumokat és a szinkronizálási viselkedést minden csatlakoztatott fiókhoz külön-külön.</string>
+
+    <string name="help_tip_cloud_shared_links_title">Megosztott linkek</string>
+    <string name="help_tip_cloud_shared_links_subtitle">Kezelje a megosztott linkeket</string>
+    <string name="help_tip_cloud_shared_links_p1_title">Tekintse át a megosztott linkeket</string>
+    <string name="help_tip_cloud_shared_links_p1_desc">Tekintse meg és vonja vissza a csatlakoztatott szerverein létrehozott nyilvános linkeket.</string>
+
+    <string name="help_tip_cloud_sync_status_title">Szinkronizálás állapota</string>
+    <string name="help_tip_cloud_sync_status_subtitle">Feltöltések és letöltések követése</string>
+    <string name="help_tip_cloud_sync_status_p1_title">Élő előrehaladás</string>
+    <string name="help_tip_cloud_sync_status_p1_desc">Kövesse a biztonsági mentés előrehaladását, és nézze meg, mi van sorban, fut vagy sikertelen.</string>
+
+    <string name="help_tip_cloud_people_title">Emberek</string>
+    <string name="help_tip_cloud_people_subtitle">Böngéssze a szerverén lévő arcokat</string>
+    <string name="help_tip_cloud_people_p1_title">Arccsoportosítás</string>
+    <string name="help_tip_cloud_people_p1_desc">Fedezze fel a felhő szerver által észlelt embereket, és nyissa meg mindegyik személy fotóit.</string>
+
+    <string name="help_tip_cloud_free_up_space_title">Hely felszabadítása</string>
+    <string name="help_tip_cloud_free_up_space_subtitle">A helyileg tárolt, biztonságosan mentett másolatok eltávolítása</string>
+    <string name="help_tip_cloud_free_up_space_p1_title">Tároló visszaigénylése</string>
+    <string name="help_tip_cloud_free_up_space_p1_desc">Törölje az eszközön lévő médiák másolatait, amelyeket már biztonságosan mentettek a felhőbe.</string>
+
+    <string name="help_tip_media_type_albums_title">Böngészés médiatípus szerint</string>
+    <string name="help_tip_media_type_albums_subtitle">Automatikus albumok fotók, videók, GIF-ek és RAW fájlok számára</string>
+    <string name="help_tip_media_type_albums_p1_title">Médiatípus szerinti albumok</string>
+    <string name="help_tip_media_type_albums_p1_desc">ReFra virtuális albumokat hoz létre az egységes könyvtáradból, így az összes fényképet, videót, GIF-et vagy RAW fájlt együtt nyithatod meg. Láthatóságukat az Idővonal és albumok beállításai szabályozzák.</string>
+    <string name="help_tip_media_type_albums_p1_s1">Nyisd meg az albumokat, és görgess a Média típusokhoz</string>
+    <string name="help_tip_media_type_albums_p1_s2">Nyiss meg egy típust a megfelelő média tallózásához</string>
+    <string name="help_tip_media_type_albums_p1_s3">Használd az Idővonal és albumok beállításait a szakasz megjelenítéséhez vagy elrejtéséhez</string>
+
+    <string name="help_tip_raw_develop_title">Fejleszd a RAW fotókat</string>
+    <string name="help_tip_raw_develop_subtitle">Állítsd be az érzékelő adatait exportálás előtt</string>
+    <string name="help_tip_raw_develop_p1_title">Használd a Fejlesztés vezérlőit</string>
+    <string name="help_tip_raw_develop_p1_desc">Nyiss meg egy támogatott RAW fotót a szerkesztőben a fehéregyensúly, a expozíció, a csúcsfények, a kimeneti szín és a demosaicing beállításához. ReFra memóriabiztos előnézetet használ, miközben megőrzi a teljes felbontású kimenetet.</string>
+    <string name="help_tip_raw_develop_p1_s1">Nyiss meg egy RAW fotót és koppints a Szerkesztésre</string>
+    <string name="help_tip_raw_develop_p1_s2">Válassz opciókat a Fejlesztés fülön</string>
+    <string name="help_tip_raw_develop_p1_s3">Alkalmazzon további vágást, szűrőt vagy jelölést</string>
+    <string name="help_tip_raw_develop_p1_s4">Mentse a másolatot, vagy exportálja JPEG, PNG vagy TIFF formátumban</string>
+
+    <string name="help_tip_people_grouping_title">Csoportosítsa az embereket a készüléken</string>
+    <string name="help_tip_people_grouping_subtitle">Keresse meg az arcokat anélkül, hogy feltöltené a könyvtárát</string>
+    <string name="help_tip_people_grouping_p1_title">Olvassa be és szervezze az embereket</string>
+    <string name="help_tip_people_grouping_p1_desc">Az arcmodell telepítése után a ReFra helyben olvassa be és csoportosítja az embereket. A Személyek menüből új beolvasást indíthat, elrejthet egy személyt, összevonhat csoportokat, és elmosott másolatokat hozhat létre, ha a magánélet fontos.</string>
+    <string name="help_tip_people_grouping_p1_s1">Telepítse az Arcfelismerő modellt</string>
+    <string name="help_tip_people_grouping_p1_s2">Nyissa meg a Könyvtárat, majd a Személyek menüt</string>
+    <string name="help_tip_people_grouping_p1_s3">Érintse meg a „Személyek beolvasása” lehetőséget, és várja meg a indexelést</string>
+    <string name="help_tip_people_grouping_p1_s4">Nyisson meg egy személyt a csoport kezelése vagy az arcok elmosása érdekében</string>
+
+    <string name="help_tip_album_cover_title">Válasszon albumborítót</string>
+    <string name="help_tip_album_cover_subtitle">Bármely helyi fotót használhat indexképként</string>
+    <string name="help_tip_album_cover_p1_title">Állítson be egy egyedi borítót</string>
+    <string name="help_tip_album_cover_p1_desc">Egy helyi, titkosítatlan fénykép esetén egy valódi albumban nyisd meg a megtekintő műveleteit, és válaszd a Használat albumborítóként lehetőséget. A műveletet a konfigurálható kiválasztó lapon is megjelenítheted.</string>
+    <string name="help_tip_album_cover_p1_s1">Nyisd meg a kívánt fényképet az albumából</string>
+    <string name="help_tip_album_cover_p1_s2">Nyisd meg a műveleteket, majd válaszd a Használat lehetőséget</string>
+    <string name="help_tip_album_cover_p1_s3">Válaszd a Használat albumborítóként lehetőséget</string>
+
+    <string name="help_tip_metadata_sanitize_title">Érzékeny metaadatok eltávolítása</string>
+    <string name="help_tip_metadata_sanitize_subtitle">Támogatott fájlok biztonsági törlése a pixelek újrakódolása nélkül</string>
+    <string name="help_tip_metadata_sanitize_p1_title">Válaszd ki, mit szeretnél eltávolítani</string>
+    <string name="help_tip_metadata_sanitize_p1_desc">Egy fénykép részleteinél válaszd a Metaadat eltávolítása lehetőséget, majd az csak hely, leíró mezők vagy az összes támogatott metaadat opciót. ReFra létrehoz egy veszteségmentesen megtisztított másolatot, ellenőrzi, majd az eredetit helyettesíti.</string>
+    <string name="help_tip_metadata_sanitize_p1_s1">Nyiss meg egy támogatott helyi fényképet</string>
+    <string name="help_tip_metadata_sanitize_p1_s2">Bővítsd ki a részleteit, és koppints a Metaadat eltávolítása lehetőségre</string>
+    <string name="help_tip_metadata_sanitize_p1_s3">Válaszd ki a tisztítás szintjét</string>
+    <string name="help_tip_metadata_sanitize_p1_s4">Csak a cserefigyelmeztetés áttekintése után erősítse meg</string>
 </resources>

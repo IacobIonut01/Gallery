@@ -3,9 +3,13 @@ package com.dot.gallery
 import com.dot.gallery.core.DefaultEventHandler
 import com.dot.gallery.core.navigateUp
 import com.dot.gallery.feature_node.domain.model.UIEvent
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeout
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -47,6 +51,24 @@ class DefaultEventHandlerTest {
             ),
             received
         )
+    }
+
+    @Test
+    fun databaseUpdateIsIndependentFromLaterUiEvents() = runTest {
+        var databaseUpdateCount = 0
+        val handler = DefaultEventHandler(
+            updateDatabase = { databaseUpdateCount++ },
+            processScope = backgroundScope,
+        )
+
+        handler.pushEvent(UIEvent.UpdateDatabase)
+        handler.navigateUp()
+
+        assertEquals(UIEvent.NavigationUpEvent, handler.updaterFlow.first())
+        runCurrent()
+        advanceTimeBy(1_000L)
+        runCurrent()
+        assertEquals(1, databaseUpdateCount)
     }
 
     @Test

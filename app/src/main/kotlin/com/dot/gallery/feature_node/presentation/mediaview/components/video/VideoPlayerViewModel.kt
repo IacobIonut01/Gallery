@@ -1,15 +1,17 @@
+@file:androidx.annotation.OptIn(markerClass = [androidx.media3.common.util.UnstableApi::class])
+
 package com.dot.gallery.feature_node.presentation.mediaview.components.video
 
 import android.content.Context
 import android.media.MediaMetadataRetriever
 import android.net.Uri
-import androidx.annotation.OptIn
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.TrackSelectionOverride
 import androidx.media3.common.TrackSelectionParameters
@@ -20,6 +22,7 @@ import androidx.media3.exoplayer.SeekParameters
 import com.dot.gallery.feature_node.domain.model.SubtitleTrack
 import com.dot.gallery.feature_node.data.data_source.KeychainHolder
 import java.util.Locale
+import com.dot.gallery.cloud.core.CloudAccountRuntimeSettings
 import com.dot.gallery.cloud.core.CloudRuntimeSettings
 import com.dot.gallery.cloud.media.CloudDataSource
 import com.dot.gallery.feature_node.domain.model.Media
@@ -38,6 +41,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
@@ -57,6 +63,7 @@ import kotlin.time.Duration.Companion.seconds
  * - positionMs
  * - wasPlaying
  */
+@UnstableApi
 @HiltViewModel(assistedFactory = VideoPlayerViewModel.Factory::class)
 class VideoPlayerViewModel @AssistedInject constructor(
     @param:ApplicationContext
@@ -73,6 +80,7 @@ class VideoPlayerViewModel @AssistedInject constructor(
     data class PlaybackState(
         val isDecrypting: Boolean = false,
         val decryptFailed: Boolean = false,
+        val playbackFailed: Boolean = false,
         val ready: Boolean = false,
         val durationMs: Long = 0L,
         val positionMs: Long = 0L,
@@ -87,7 +95,16 @@ class VideoPlayerViewModel @AssistedInject constructor(
     private var decryptedFile: File? = null
     private var initialSeekApplied = false
     private var progressJob: Job? = null
+    private var loadTimeoutJob: Job? = null
     private val _manualSubtitleConfigs = mutableListOf<MediaItem.SubtitleConfiguration>()
+
+    private val mediaUriString = media.getUri().toString()
+    private var configuredRepeatMode = videoRepeatMode(
+        isCloud = media.isCloud,
+        mediaUri = mediaUriString,
+        settingsByConfigId = CloudRuntimeSettings.settingsByConfigId.value,
+    )
+    private var slideshowActive = false
 
     // Public immutable flow
     private val _state =
@@ -103,21 +120,19 @@ class VideoPlayerViewModel @AssistedInject constructor(
 
     init {
         restoreFromSavedState()
+        observeCloudLoopSetting()
         prepareMedia()
         startProgressLoop()
     }
 
-    @OptIn(UnstableApi::class)
+    @UnstableApi
     private fun createExoPlayer(): ExoPlayer {
         val dataSourceFactory = CloudDataSource.Factory(appContext)
         return ExoPlayer.Builder(appContext)
             .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory))
             .build().apply {
             setSeekParameters(SeekParameters.EXACT)
-            // Cloud videos honour the cloud "Loop videos" viewer setting; local videos keep the
-            // existing loop-forever behaviour.
-            repeatMode = if (media.isCloud && !CloudRuntimeSettings.loopVideos)
-                Player.REPEAT_MODE_OFF else Player.REPEAT_MODE_ONE
+            repeatMode = effectiveRepeatMode()
             // Ensure text tracks are not disabled so embedded subtitles are available
             trackSelectionParameters = trackSelectionParameters
                 .buildUpon()
@@ -129,6 +144,18 @@ class VideoPlayerViewModel @AssistedInject constructor(
                         markReady()
                     }
                     updateDuration(duration)
+                }
+
+                override fun onPlayerError(error: PlaybackException) {
+                    printWarning("Video load failed for ${media.id}: ${error.message}")
+                    loadTimeoutJob?.cancel()
+                    _state.update {
+                        it.copy(
+                            ready = false,
+                            isPlaying = false,
+                            playbackFailed = true,
+                        )
+                    }
                 }
 
                 override fun onEvents(player: Player, events: Player.Events) {
@@ -152,6 +179,31 @@ class VideoPlayerViewModel @AssistedInject constructor(
                 }
             })
         }
+    }
+
+    private fun observeCloudLoopSetting() {
+        if (!media.isCloud) return
+        viewModelScope.launch {
+            CloudRuntimeSettings.settingsByConfigId
+                .map { videoRepeatMode(true, mediaUriString, it) }
+                .distinctUntilChanged()
+                .collect { repeatMode ->
+                    configuredRepeatMode = repeatMode
+                    applyRepeatMode()
+                }
+        }
+    }
+
+    private fun effectiveRepeatMode(): Int =
+        effectiveVideoRepeatMode(configuredRepeatMode, slideshowActive)
+
+    private fun applyRepeatMode() {
+        if (!player.isReleased) player.repeatMode = effectiveRepeatMode()
+    }
+
+    fun setSlideshowActive(active: Boolean) {
+        slideshowActive = active
+        applyRepeatMode()
     }
 
     private fun restoreFromSavedState() {
@@ -195,22 +247,36 @@ class VideoPlayerViewModel @AssistedInject constructor(
 
     private fun setAndPrepare(uri: Uri, mime: String?) {
         val existingUri = player.currentMediaItem?.localConfiguration?.uri
-        if (existingUri == uri) {
-            // Already set
-            return
-        }
+        if (existingUri == uri && !_state.value.playbackFailed) return
+
         initialSeekApplied = false
+        _state.update { it.copy(ready = false, playbackFailed = false) }
         val item = MediaItem.Builder()
             .setUri(uri)
             .setMimeType(mime)
             .build()
         player.setMediaItem(item)
         player.prepare()
+        loadTimeoutJob?.cancel()
+        loadTimeoutJob = viewModelScope.launch {
+            delay(LOAD_TIMEOUT_MS)
+            if (!_state.value.ready) {
+                player.pause()
+                _state.update {
+                    it.copy(
+                        ready = false,
+                        isPlaying = false,
+                        playbackFailed = true,
+                    )
+                }
+            }
+        }
     }
 
     private fun markReady() {
+        loadTimeoutJob?.cancel()
         if (!_state.value.ready) {
-            _state.update { it.copy(ready = true) }
+            _state.update { it.copy(ready = true, playbackFailed = false) }
             // Apply initial seek only once
             if (!initialSeekApplied && _state.value.positionMs > 0) {
                 player.seekTo(_state.value.positionMs)
@@ -228,7 +294,7 @@ class VideoPlayerViewModel @AssistedInject constructor(
         }
     }
 
-    @OptIn(UnstableApi::class)
+    @UnstableApi
     private fun startProgressLoop() {
         progressJob?.cancel()
         progressJob = viewModelScope.launch {
@@ -302,7 +368,16 @@ class VideoPlayerViewModel @AssistedInject constructor(
         decryptAndPrepare()
     }
 
-    @OptIn(UnstableApi::class)
+    fun retryPlayback() {
+        if (!_state.value.playbackFailed) return
+        if (media.isEncrypted && decryptedFile != null) {
+            setAndPrepare(Uri.fromFile(decryptedFile!!), media.mimeType)
+        } else {
+            setAndPrepare(media.getUri(), media.mimeType)
+        }
+    }
+
+    @UnstableApi
     fun reattachFromComposition() {
         if (player.isReleased) {
             printDebug("Reattached to composition ${media.id}'s video")
@@ -323,11 +398,13 @@ class VideoPlayerViewModel @AssistedInject constructor(
         }
     }
 
-    @OptIn(UnstableApi::class)
+    @UnstableApi
     fun detachFromComposition() {
         printDebug("Cleared from composition ${media.id}'s video")
         progressJob?.cancel()
         progressJob = null
+        loadTimeoutJob?.cancel()
+        loadTimeoutJob = null
         runCatching {
             if (!player.isReleased) {
                 savedStateHandle[KEY_POSITION] = player.currentPosition
@@ -337,10 +414,12 @@ class VideoPlayerViewModel @AssistedInject constructor(
         }
     }
 
-    @OptIn(UnstableApi::class)
+    @UnstableApi
     override fun onCleared() {
         progressJob?.cancel()
         progressJob = null
+        loadTimeoutJob?.cancel()
+        loadTimeoutJob = null
         try {
             if (!player.isReleased) {
                 // Persist position & play state
@@ -419,14 +498,14 @@ class VideoPlayerViewModel @AssistedInject constructor(
         updateSubtitleTracks(player.currentTracks)
     }
 
-    @OptIn(UnstableApi::class)
+    @UnstableApi
     fun addExternalSubtitle(uri: Uri) {
         val subtitleConfig = buildSubtitleConfig(uri)
         _manualSubtitleConfigs.add(subtitleConfig)
         rebuildMediaItemWithSubtitles()
     }
 
-    @OptIn(UnstableApi::class)
+    @UnstableApi
     fun removeExternalSubtitle(track: SubtitleTrack) {
         if (!track.isManuallyAdded || track.manualIndex !in _manualSubtitleConfigs.indices) return
         _manualSubtitleConfigs.removeAt(track.manualIndex)
@@ -448,7 +527,7 @@ class VideoPlayerViewModel @AssistedInject constructor(
             .build()
     }
 
-    @OptIn(UnstableApi::class)
+    @UnstableApi
     private fun rebuildMediaItemWithSubtitles() {
         val currentItem = player.currentMediaItem ?: return
         val currentPosition = player.currentPosition
@@ -469,7 +548,23 @@ class VideoPlayerViewModel @AssistedInject constructor(
     }
 
     companion object {
+        private const val LOAD_TIMEOUT_MS = 20_000L
         private const val KEY_POSITION = "positionMs"
         private const val KEY_PLAYING = "wasPlaying"
     }
+}
+
+internal fun effectiveVideoRepeatMode(configuredRepeatMode: Int, slideshowActive: Boolean): Int =
+    if (slideshowActive) Player.REPEAT_MODE_OFF else configuredRepeatMode
+
+internal fun videoRepeatMode(
+    isCloud: Boolean,
+    mediaUri: String,
+    settingsByConfigId: Map<Long, CloudAccountRuntimeSettings>,
+): Int {
+    if (!isCloud) return Player.REPEAT_MODE_ONE
+    val loopVideos = CloudRuntimeSettings
+        .settingsForCloudUri(mediaUri, settingsByConfigId)
+        .loopVideos
+    return if (loopVideos) Player.REPEAT_MODE_ONE else Player.REPEAT_MODE_OFF
 }

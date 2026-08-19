@@ -6,10 +6,13 @@
 package com.dot.gallery.feature_node.presentation.setup.pages
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
+import android.provider.Settings as AndroidSettings
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -29,6 +32,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -39,6 +43,8 @@ import com.dot.gallery.BuildConfig
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants
 import com.dot.gallery.core.presentation.components.SetupButton
+import com.dot.gallery.core.presentation.components.util.MediaAccessState
+import com.dot.gallery.core.presentation.components.util.mediaAccessState
 import com.dot.gallery.feature_node.presentation.setup.components.SetupPermissionItem
 import com.dot.gallery.feature_node.presentation.setup.components.SetupWizardScaffold
 import com.dot.gallery.feature_node.presentation.util.RepeatOnResume
@@ -61,8 +67,32 @@ fun SetupPermissionsPage(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    val mediaPermissions = rememberMultiplePermissionsState(Constants.PERMISSIONS)
-    val coreGranted = mediaPermissions.allPermissionsGranted
+    var mediaAccess by remember { mutableStateOf(context.mediaAccessState()) }
+    val mediaPermissions = rememberMultiplePermissionsState(
+        permissions = Constants.PERMISSIONS,
+        onPermissionsResult = { mediaAccess = context.mediaAccessState() }
+    )
+    val coreGranted = mediaAccess != MediaAccessState.NONE
+    var locationGranted by remember {
+        mutableStateOf(
+            Build.VERSION.SDK_INT < Build.VERSION_CODES.Q ||
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.ACCESS_MEDIA_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+    var locationRequestAttempted by rememberSaveable { mutableStateOf(false) }
+
+    RepeatOnResume {
+        mediaAccess = context.mediaAccessState()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            locationGranted = ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_MEDIA_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        }
+    }
 
     SetupWizardScaffold(
         showBack = true,
@@ -79,7 +109,10 @@ fun SetupPermissionsPage(
                     applyBottomPadding = false,
                     applyInsets = false,
                     applyNavigationPadding = false,
-                    onClick = onNext
+                    onClick = {
+                        mediaAccess = context.mediaAccessState()
+                        if (mediaAccess != MediaAccessState.NONE) onNext()
+                    }
                 )
             } else {
                 SetupButton(
@@ -101,22 +134,65 @@ fun SetupPermissionsPage(
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // Required permissions
+            val mediaAccessLabel = stringResource(
+                when (mediaAccess) {
+                    MediaAccessState.FULL -> R.string.setup_media_access_full
+                    MediaAccessState.LIMITED -> R.string.setup_media_access_limited
+                    MediaAccessState.NONE -> R.string.setup_permission_not_granted
+                }
+            )
             SetupPermissionItem(
                 icon = Icons.Rounded.Image,
                 title = stringResource(R.string.read_media_images),
-                reason = stringResource(R.string.setup_reason_read_images)
+                reason = stringResource(R.string.setup_reason_read_images),
+                granted = coreGranted,
+                statusLabel = mediaAccessLabel,
             )
             SetupPermissionItem(
                 icon = Icons.Rounded.VideoFile,
                 title = stringResource(R.string.read_media_videos),
-                reason = stringResource(R.string.setup_reason_read_videos)
+                reason = stringResource(R.string.setup_reason_read_videos),
+                granted = coreGranted,
+                statusLabel = mediaAccessLabel,
             )
-            SetupPermissionItem(
-                icon = Icons.Rounded.LocationOn,
-                title = stringResource(R.string.access_media_location),
-                reason = stringResource(R.string.setup_reason_media_location)
-            )
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val locationPermission = rememberPermissionState(
+                    permission = Manifest.permission.ACCESS_MEDIA_LOCATION,
+                    onPermissionResult = {
+                        locationRequestAttempted = true
+                        locationGranted = it
+                    }
+                )
+                SetupPermissionItem(
+                    icon = Icons.Rounded.LocationOn,
+                    title = stringResource(R.string.access_media_location),
+                    reason = stringResource(R.string.setup_reason_media_location_optional),
+                    optional = true,
+                    granted = locationGranted,
+                    statusLabel = stringResource(
+                        if (locationGranted) R.string.granted else R.string.setup_permission_optional_not_granted
+                    ),
+                    grantActionLabel = stringResource(
+                        if (locationRequestAttempted && !locationGranted) {
+                            R.string.setup_open_app_settings
+                        } else {
+                            R.string.setup_grant_permissions
+                        }
+                    ),
+                    onGrant = {
+                        if (locationRequestAttempted && !locationGranted) {
+                            context.startActivity(
+                                Intent(
+                                    AndroidSettings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                    Uri.fromParts("package", context.packageName, null)
+                                )
+                            )
+                        } else {
+                            locationPermission.launchPermissionRequest()
+                        }
+                    }
+                )
+            }
             if (!BuildConfig.OFFLINE_MODE) {
                 SetupPermissionItem(
                     icon = Icons.Rounded.SignalWifi4Bar,

@@ -56,6 +56,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.dot.gallery.R
+import com.dot.gallery.cloud.sync.CloudUploadWorker
 import com.dot.gallery.cloud.ui.descriptor.ProviderBrandIcon
 import com.dot.gallery.core.presentation.components.NavigationBackButton
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
@@ -148,6 +149,8 @@ private fun UploadSummaryCard(state: UploadDetailsUiState, pendingText: String?)
             }
             Text(
                 text = when {
+                    state.isWorkerRunning && state.phase == CloudUploadWorker.PHASE_VERIFYING ->
+                        stringResource(R.string.cloud_backup_verifying_existing)
                     state.isWorkerRunning -> stringResource(R.string.cloud_upload_syncing)
                     pendingText != null -> stringResource(R.string.cloud_upload_ready)
                     else -> stringResource(R.string.cloud_upload_details_not_running)
@@ -158,7 +161,14 @@ private fun UploadSummaryCard(state: UploadDetailsUiState, pendingText: String?)
         }
 
         if (state.isWorkerRunning && state.totalItems > 0) {
-            val progress = state.completedItems.toFloat() / state.totalItems
+            val isVerifying = state.phase == CloudUploadWorker.PHASE_VERIFYING
+            val progressItems = visibleBackupProgressItems(
+                state.phase,
+                state.checkedItems,
+                state.completedItems,
+                state.failedItems
+            )
+            val progress = progressItems.toFloat() / state.totalItems
             LinearProgressIndicator(
                 progress = { progress },
                 modifier = Modifier
@@ -171,7 +181,15 @@ private fun UploadSummaryCard(state: UploadDetailsUiState, pendingText: String?)
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = stringResource(R.string.cloud_upload_completed_count, state.completedItems),
+                    text = if (isVerifying) {
+                        stringResource(
+                            R.string.cloud_backup_verifying_count,
+                            state.checkedItems,
+                            state.totalItems
+                        )
+                    } else {
+                        stringResource(R.string.cloud_upload_completed_count, state.completedItems)
+                    },
                     style = MaterialTheme.typography.bodySmall
                 )
                 if (state.failedItems > 0) {

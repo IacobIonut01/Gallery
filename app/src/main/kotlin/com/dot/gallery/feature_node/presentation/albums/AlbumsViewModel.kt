@@ -425,9 +425,9 @@ class AlbumsViewModel @Inject constructor(
         }
     }
 
-    fun addAlbumsToCollection(collectionId: Long, albumIds: List<Long>) {
+    fun replaceAlbumsInCollection(collectionId: Long, albumIds: List<Long>) {
         viewModelScope.launch(Dispatchers.IO) {
-            repository.addAlbumsToCollection(collectionId, albumIds)
+            repository.replaceAlbumsInCollection(collectionId, albumIds)
             for (albumId in albumIds) {
                 repository.getMediaByAlbumId(albumId, skipBatching = true)
                     .firstOrNull()

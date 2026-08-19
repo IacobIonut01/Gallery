@@ -128,4 +128,53 @@ class SlideshowPlaylistTest {
         assertFalse(gif(1).matchesSlideshowFilters(cfg.copy(includeGifs = false)))
         assertTrue(image(1).matchesSlideshowFilters(cfg))
     }
+
+    @Test
+    fun emptyPlaylistExitsWithoutProducingInvalidPage() {
+        assertEquals(
+            SlideshowAdvance.Exit,
+            resolveSlideshowAdvance(itemCount = 0, currentIndex = 0, loop = true)
+        )
+    }
+
+    @Test
+    fun oneNonLoopItemExitsAfterItsDwell() {
+        assertEquals(
+            SlideshowAdvance.Exit,
+            resolveSlideshowAdvance(itemCount = 1, currentIndex = 0, loop = false)
+        )
+        assertEquals(5_000L, slideshowDwellMillis(cfg, isVideo = false, loadFailed = false))
+    }
+
+    @Test
+    fun oneLoopItemHoldsInsteadOfRestartingSamePagerPage() {
+        assertEquals(
+            SlideshowAdvance.Hold,
+            resolveSlideshowAdvance(itemCount = 1, currentIndex = 0, loop = true)
+        )
+    }
+
+    @Test
+    fun failedMediaUsesShortTimeoutThenAdvances() {
+        assertEquals(
+            FAILED_MEDIA_DWELL_MILLIS,
+            slideshowDwellMillis(cfg, isVideo = true, loadFailed = true)
+        )
+        assertEquals(
+            SlideshowAdvance.Page(1),
+            resolveSlideshowAdvance(itemCount = 3, currentIndex = 0, loop = false)
+        )
+    }
+
+    @Test
+    fun finalItemWrapsOnlyWhenLooping() {
+        assertEquals(
+            SlideshowAdvance.Page(0),
+            resolveSlideshowAdvance(itemCount = 3, currentIndex = 2, loop = true)
+        )
+        assertEquals(
+            SlideshowAdvance.Exit,
+            resolveSlideshowAdvance(itemCount = 3, currentIndex = 2, loop = false)
+        )
+    }
 }

@@ -132,40 +132,41 @@ private class CloudOkHttpFetcher(
         try {
             CloudTrace.d("Glide.fetch -> GET $url")
             val start = System.nanoTime()
-            val response = call!!.execute()
-            if (!response.isSuccessful) {
-                CloudTrace.w("Glide.fetch -> HTTP ${response.code} for $url")
-                callback.onLoadFailed(Exception("HTTP ${response.code}: ${response.message}"))
-                return
+            call!!.execute().use { response ->
+                if (!response.isSuccessful) {
+                    CloudTrace.w("Glide.fetch -> HTTP ${response.code} for $url")
+                    callback.onLoadFailed(Exception("HTTP ${response.code}: ${response.message}"))
+                    return
+                }
+                val contentType = response.body.contentType()?.toString()
+                    ?: response.header("Content-Type")
+                val bytes = response.body.bytes()
+                if (bytes.isEmpty()) {
+                    callback.onLoadFailed(Exception("Empty response body (Content-Type=$contentType)"))
+                    return
+                }
+                CloudTrace.d("Glide.fetch <- ${CloudTrace.bytes(bytes.size.toLong())} ($contentType) in ${(System.nanoTime() - start) / 1_000_000}ms for $url")
+                // Servers sometimes answer a preview request with a non-image payload
+                // (HTML login/redirect page, JSON error, or an SVG mimetype icon when
+                // no real preview exists). Feeding those bytes to Glide produces a long
+                // chain of useless decode failures, so reject them up front with a
+                // descriptive error and log what was actually returned.
+                val isImage = contentType?.startsWith("image/", ignoreCase = true) == true
+                if (!isImage) {
+                    val snippet = String(bytes.copyOf(minOf(bytes.size, 180)))
+                        .replace('\n', ' ').replace('\r', ' ').trim()
+                    Log.w(
+                        "CloudFetcher",
+                        "Non-image preview response: url=$url contentType=$contentType " +
+                            "bytes=${bytes.size} snippet=\"$snippet\""
+                    )
+                    callback.onLoadFailed(
+                        Exception("Server returned non-image content (Content-Type=$contentType)")
+                    )
+                    return
+                }
+                callback.onDataReady(ByteArrayInputStream(bytes))
             }
-            val contentType = response.body?.contentType()?.toString()
-                ?: response.header("Content-Type")
-            val bytes = response.body?.bytes()
-            if (bytes == null || bytes.isEmpty()) {
-                callback.onLoadFailed(Exception("Empty response body (Content-Type=$contentType)"))
-                return
-            }
-            CloudTrace.d("Glide.fetch <- ${CloudTrace.bytes(bytes.size.toLong())} ($contentType) in ${(System.nanoTime() - start) / 1_000_000}ms for $url")
-            // Servers sometimes answer a preview request with a non-image payload
-            // (HTML login/redirect page, JSON error, or an SVG mimetype icon when
-            // no real preview exists). Feeding those bytes to Glide produces a long
-            // chain of useless decode failures, so reject them up front with a
-            // descriptive error and log what was actually returned.
-            val isImage = contentType?.startsWith("image/", ignoreCase = true) == true
-            if (!isImage) {
-                val snippet = String(bytes.copyOf(minOf(bytes.size, 180)))
-                    .replace('\n', ' ').replace('\r', ' ').trim()
-                Log.w(
-                    "CloudFetcher",
-                    "Non-image preview response: url=$url contentType=$contentType " +
-                        "bytes=${bytes.size} snippet=\"$snippet\""
-                )
-                callback.onLoadFailed(
-                    Exception("Server returned non-image content (Content-Type=$contentType)")
-                )
-                return
-            }
-            callback.onDataReady(ByteArrayInputStream(bytes))
         } catch (e: Exception) {
             callback.onLoadFailed(e)
         }
