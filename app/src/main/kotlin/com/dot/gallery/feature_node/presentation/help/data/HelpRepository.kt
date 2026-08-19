@@ -328,6 +328,11 @@ object HelpRepository {
         HelpTip(id = "view_motion_photo", title = R.string.help_tip_view_motion_photo_title, subtitle = R.string.help_tip_view_motion_photo_subtitle,
             icon = HelpIcon.ofVector(Icons.Outlined.Collections), category = HelpCategory.VIEWING,
             pages = listOf(TutorialPage(title = R.string.help_tip_view_motion_photo_p1_title, description = R.string.help_tip_view_motion_photo_p1_desc, previewType = PreviewType.MOTION_PHOTO)), sinceVersion = "4.1.0"),
+        HelpTip(id = "motion_photo_frames", title = R.string.help_tip_motion_photo_frames_title, subtitle = R.string.help_tip_motion_photo_frames_subtitle,
+            icon = HelpIcon.ofVector(Icons.Outlined.Movie), category = HelpCategory.VIEWING,
+            pages = listOf(
+                TutorialPage(title = R.string.help_tip_motion_photo_frames_p1_title, description = R.string.help_tip_motion_photo_frames_p1_desc, steps = listOf(R.string.help_tip_motion_photo_frames_p1_s1, R.string.help_tip_motion_photo_frames_p1_s2, R.string.help_tip_motion_photo_frames_p1_s3, R.string.help_tip_motion_photo_frames_p1_s4), previewType = PreviewType.MOTION_PHOTO)
+            ), sinceVersion = "5.1.1"),
         HelpTip(id = "view_full_brightness", title = R.string.help_tip_view_full_brightness_title, subtitle = R.string.help_tip_view_full_brightness_subtitle,
             icon = HelpIcon.ofVector(Icons.Outlined.Collections), category = HelpCategory.VIEWING,
             deepLink = Screen.SettingsMediaViewerScreen(),
@@ -525,6 +530,12 @@ object HelpRepository {
                 TutorialPage(title = R.string.help_tip_search_ai_p2_title, description = R.string.help_tip_search_ai_p2_desc, previewType = PreviewType.AI_SEARCH),
                 TutorialPage(title = R.string.help_tip_search_ai_p3_title, description = R.string.help_tip_search_ai_p3_desc, steps = listOf(R.string.help_tip_search_ai_p3_s1, R.string.help_tip_search_ai_p3_s2, R.string.help_tip_search_ai_p3_s3, R.string.help_tip_search_ai_p3_s4), actionLabel = R.string.help_action_open_settings, previewType = PreviewType.AI_SEARCH)
             ), sinceVersion = "4.1.0"),
+        HelpTip(id = "search_ignored_albums", title = R.string.help_tip_search_ignored_albums_title, subtitle = R.string.help_tip_search_ignored_albums_subtitle,
+            icon = HelpIcon.ofVector(Icons.Outlined.ImageSearch), category = HelpCategory.SEARCH,
+            deepLink = Screen.SettingsSmartFeaturesScreen(),
+            pages = listOf(
+                TutorialPage(title = R.string.help_tip_search_ignored_albums_p1_title, description = R.string.help_tip_search_ignored_albums_p1_desc, steps = listOf(R.string.help_tip_search_ignored_albums_p1_s1, R.string.help_tip_search_ignored_albums_p1_s2, R.string.help_tip_search_ignored_albums_p1_s3, R.string.help_tip_search_ignored_albums_p1_s4), previewType = PreviewType.AI_SEARCH)
+            ), sinceVersion = "5.1.1"),
         HelpTip(id = "search_history", title = R.string.help_tip_search_history_title, subtitle = R.string.help_tip_search_history_subtitle,
             icon = HelpIcon.ofVector(Icons.Outlined.ImageSearch), category = HelpCategory.SEARCH,
             pages = listOf(TutorialPage(title = R.string.help_tip_search_history_p1_title, description = R.string.help_tip_search_history_p1_desc, previewType = PreviewType.SEARCH_BAR)), sinceVersion = "4.0.0"),
@@ -677,6 +688,12 @@ object HelpRepository {
                 TutorialPage(title = R.string.help_tip_cloud_connect_p1_title, description = R.string.help_tip_cloud_connect_p1_desc),
                 TutorialPage(title = R.string.help_tip_cloud_connect_p2_title, description = R.string.help_tip_cloud_connect_p2_desc, steps = listOf(R.string.help_tip_cloud_connect_p2_s1, R.string.help_tip_cloud_connect_p2_s2, R.string.help_tip_cloud_connect_p2_s3, R.string.help_tip_cloud_connect_p2_s4))
             ), sinceVersion = "5.0.0"),
+        HelpTip(id = "cloud_nextcloud_login", title = R.string.help_tip_cloud_nextcloud_login_title, subtitle = R.string.help_tip_cloud_nextcloud_login_subtitle,
+            icon = HelpIcon.ofVector(Icons.Outlined.Cloud), category = HelpCategory.CLOUD_SYNC,
+            deepLink = Screen.CloudAccountsScreen(),
+            pages = listOf(
+                TutorialPage(title = R.string.help_tip_cloud_nextcloud_login_p1_title, description = R.string.help_tip_cloud_nextcloud_login_p1_desc, steps = listOf(R.string.help_tip_cloud_nextcloud_login_p1_s1, R.string.help_tip_cloud_nextcloud_login_p1_s2, R.string.help_tip_cloud_nextcloud_login_p1_s3, R.string.help_tip_cloud_nextcloud_login_p1_s4))
+            ), sinceVersion = "5.1.1"),
         HelpTip(id = "cloud_timeline", title = R.string.help_tip_cloud_timeline_title, subtitle = R.string.help_tip_cloud_timeline_subtitle,
             icon = HelpIcon.ofVector(Icons.Outlined.CloudDone), category = HelpCategory.CLOUD_SYNC,
             pages = listOf(
@@ -979,7 +996,13 @@ object HelpRepository {
             pages = listOf(TutorialPage(title = R.string.help_tip_advanced_standalone_p1_title, description = R.string.help_tip_advanced_standalone_p1_desc)), sinceVersion = "4.0.0"),
         HelpTip(id = "advanced_wallpaper", title = R.string.help_tip_advanced_wallpaper_title, subtitle = R.string.help_tip_advanced_wallpaper_subtitle,
             icon = HelpIcon.ofVector(Icons.Outlined.Collections), category = HelpCategory.ACCESSIBILITY,
-            pages = listOf(TutorialPage(title = R.string.help_tip_advanced_wallpaper_p1_title, description = R.string.help_tip_advanced_wallpaper_p1_desc, steps = listOf(R.string.help_tip_advanced_wallpaper_p1_s1, R.string.help_tip_advanced_wallpaper_p1_s2, R.string.help_tip_advanced_wallpaper_p1_s3, R.string.help_tip_advanced_wallpaper_p1_s4, R.string.help_tip_advanced_wallpaper_p1_s5))), sinceVersion = "4.0.0")
+            pages = listOf(TutorialPage(title = R.string.help_tip_advanced_wallpaper_p1_title, description = R.string.help_tip_advanced_wallpaper_p1_desc, steps = listOf(R.string.help_tip_advanced_wallpaper_p1_s1, R.string.help_tip_advanced_wallpaper_p1_s2, R.string.help_tip_advanced_wallpaper_p1_s3, R.string.help_tip_advanced_wallpaper_p1_s4, R.string.help_tip_advanced_wallpaper_p1_s5))), sinceVersion = "4.0.0"),
+        HelpTip(id = "accessibility_remote_settings", title = R.string.help_tip_accessibility_remote_settings_title, subtitle = R.string.help_tip_accessibility_remote_settings_subtitle,
+            icon = HelpIcon.ofVector(Icons.Outlined.Settings), category = HelpCategory.ACCESSIBILITY,
+            deepLink = Screen.SettingsScreen(),
+            pages = listOf(
+                TutorialPage(title = R.string.help_tip_accessibility_remote_settings_p1_title, description = R.string.help_tip_accessibility_remote_settings_p1_desc, steps = listOf(R.string.help_tip_accessibility_remote_settings_p1_s1, R.string.help_tip_accessibility_remote_settings_p1_s2, R.string.help_tip_accessibility_remote_settings_p1_s3, R.string.help_tip_accessibility_remote_settings_p1_s4), previewType = PreviewType.SETTINGS_GENERAL)
+            ), sinceVersion = "5.1.1")
     )
     // endregion
 

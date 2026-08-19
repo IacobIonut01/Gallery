@@ -1,0 +1,15 @@
+What's new in 5.1.1:
+
+• Extract exact frames from Motion Photos and videos
+• Sign in to Nextcloud with secure browser-based 2FA
+• Optionally include ignored albums in Smart Search
+• Navigate settings by keyboard, D-pad, or remote
+
+Improvements:
+
+• Resumable Smart scans, smoother grids, and faster cloud backups
+• Clearer timeline grouping, permission, and encryption status
+
+Bug fixes:
+
+• More reliable media actions, Motion Photos, categories, cloud indexing, large albums, and viewer transitions

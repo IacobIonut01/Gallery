@@ -1,44 +1,37 @@
-## What's new in 5.1.0
+## What's new in 5.1.1
 
-ReFra 5.1.0 is a major capability release: connect multiple cloud services, develop RAW photos, edit huge images at full resolution, lift subjects on-device, browse people and places, and enjoy sharper HDR and animated media throughout the viewer.
+ReFra 5.1.1 adds precise frame extraction, secure Nextcloud browser sign-in, broader Smart Search controls, and extensive reliability improvements across browsing, cloud backup, Smart Features, and the media viewer.
 
 ### New Features
 
-- **Multi-account cloud library** — Connect Immich, ownCloud, Nextcloud, WebDAV, SMB and NFS accounts; merge remote media into the timeline; configure per-album destinations; monitor backup and sync; browse shared links; and keep selected media available offline
-- **Guided setup** — A redesigned first-run flow walks through permissions, appearance, AI models, cloud accounts and useful tips
-- **On-device subject cutout** — ReFra detects the main subject without uploading the photo, then lets you refine, copy, share or save it with a transparent background; the editor also includes background removal (#991)
-- **People and privacy tools** — Scan and group faces on-device, browse people, and blur detected faces manually or automatically
-- **RAW development** — Develop RAW photos in the editor with white balance, exposure, highlight, colour-space and demosaic controls, then export JPEG, PNG or 8/16-bit TIFF
-- **Full-resolution tiled editing** — Large photos are edited through a memory-bounded tiled pipeline that preserves their original resolution and source format
-- **HDR HEIC viewer** — Native tiled HEIC decoding, Ultra HDR gain-map rendering and HDR display support deliver sharp zoom without loading the whole image into memory
-- **Interactive photo map** — Photo thumbnail clusters, deterministic zooming, map appearance controls and a unified location timeline replace the old heatmap experience (#1037, #1038)
-- **Lossless metadata sanitization** — Remove sensitive metadata from supported images without recompressing their pixels
-- **Album slideshows** — Start configurable, full-screen playback from an album (#1032)
-- **Media-type albums** — Browse automatic albums grouped by media format and type (#1030)
-- **Album covers** — Choose any local photo as an album's cover
-- **Secure picker vaults** — Authenticate individual vaults, select across vaults and safely clean up temporary picker files
+- **Motion Photo and video frame extraction** — Scrub to an exact moment, select one or more frames, and export up to 50 JPEG or PNG images while preserving capture metadata when available (#910)
+- **Nextcloud two-factor sign-in** — Authorize through Nextcloud Login Flow v2 in your browser, including two-factor authentication, while ReFra securely stores the generated app password (#1073)
+- **Search ignored albums** — Optionally include timeline-hidden albums in Smart Features and Smart Search without making them visible in the timeline; locked albums remain private (#1098)
+- **Remote and keyboard settings navigation** — Move predictably through settings with a D-pad, keyboard, or remote, with clear focus across lists, controls, and actions
 
 ### Improvements
 
-- **Help & Tips** — Unified fuzzy search, real-component previews, quick actions and markdown-powered release notes make guidance easier to find
-- **System-aware dates** — Date and time formats now follow the device by default, while an information sheet explains custom format strings (#953)
-- **Sharper animation** — GIF, animated WebP and APNG render at full viewer resolution (#1056)
-- **Smoother media viewer** — Faster opening and swiping, stable hidden controls, visible rotation progress and seamless refresh after overwrite or copy
-- **Pinned albums** — Choose tile or banner layouts, with locked albums consistently using privacy-safe thumbnails
-- **Photo stacks** — Matching RAW/DNG files rank below JPEGs so the processed photo becomes the stack cover
-- **Selection experience** — Reused thumbnail painters reduce flashes, drag-selection hit testing is accurate, and mosaic counters stay correct
-- **Navigation** — Re-tapping the selected navigation tab scrolls its content back to the top
-- **AI model management** — Search and Subject Cutout models are managed independently and can be downloaded again after deletion
+- **Resumable Smart Features scans** — Checkpointed, energy-aware stages preserve valid results, recover after interruption, skip unchanged work, and avoid repeatedly scanning photos with no detected faces (#1088)
+- **Faster thumbnail grids** — Lightweight thumbnails keep scrolling smooth, then refine to full quality when movement stops; MediaStore thumbnails also use a direct fast path (#1076)
+- **More efficient cloud backup** — Streamed uploads, bounded concurrency, batched checks, and preserved verification state reduce repeated hashing, I/O, and network work (#1016)
+- **Clearer timeline organization** — Date separators and daily, monthly, or yearly grouping can be configured independently across Timeline, Albums, Favorites, Vault, and Cloud Archive
+- **More discoverable settings** — Help & Tips search now learns additional rendered settings automatically
+- **Security and permission transparency** — Security settings report the active encryption or fallback state, and setup correctly recognizes Android's selected-photo access as limited permission
+- **Reproducible native builds** — Local, CI, and F-Droid native builds use the same pinned stable NDK toolchain (#1068)
 
 ### Bug Fixes
 
-- **Format detection** — Standard images mislabeled by MediaStore as RAW or TIFF now decode normally (#1054), while JXL metadata and unclassified special-format images are recovered correctly
-- **Locked albums** — Pinned locked albums no longer reveal their cover thumbnail (#1057)
-- **Private folders** — Fixed SAF crashes during move-out and deletion, restored video playback and refresh, and respected the configured selection actions (#1015)
-- **Editor reliability** — Save failures and permission errors are reported, edited images refresh immediately, and streamed overwrites preserve the source until encoding succeeds
-- **Subject cutout** — Fixed gesture routing, swipe positioning, memory cleanup, pager conflicts and failed-session state
-- **Grid stability** — Fixed crashes while pinch-zooming mosaic timelines or scrolling smart-category preview results (#1019)
-- **SVG rendering** — Files without a `viewBox` no longer show a second shrunken image (#1020)
-- **Viewer playback** — Fixed white flashes between videos, controls reappearing during swipes, Ultra HDR detection after restart and screen timeout during playback (#998, #1005)
-- **Picker navigation** — Returning from Android's media picker no longer breaks gallery back navigation
-- **Cloud actions** — Multi-account selection actions now resolve the correct provider instance
+- **Large album navigation** — Opening a selected item from a large local album now lands on the photo that was tapped instead of the first item
+- **Motion Photo playback** — Fixed cropping, surface recreation, wrong-page playback, zoom mismatches, and distorted filmstrip thumbnails (#1107)
+- **Safe media actions** — Favorite, trash, restore, delete, and write operations now work safely for JXL, JPEG 2000, PSD/PSB, APNG, and other media indexed in Android's generic Files collection (#1113)
+- **Cloud reliability** — Prevented stuck indexing notifications, preserved verified backups through re-indexing, and made original downloads account-safe, atomic, and resilient to interruption (#1045)
+- **Category freshness** — Smart categories no longer retain deleted items, stale counts, or missing cover thumbnails
+- **Trash and restore safety** — Actions wait for confirmed completion, preserve storage-volume identity, and no longer silently become permanent deletion (#1090)
+- **Merged album browsing and filtering** — Merged subfolders display their media again, and timeline filters resolve all source folders without hiding the timeline (#1080)
+- **Viewer and grid stability** — Fixed Fancy Blur contrast, viewer flashes, internal-cache reliability, rotation-lock handling, and invalid pinch-grid transitions (#1029, #1062, #1065, #1074)
+- **Search and screen states** — Back clears active searches even with no results, and gallery screens prioritize real errors over misleading loading or empty states
+- **Settings correctness** — System-following date formats remain system-controlled instead of appearing as custom overrides
+- **Smart scan efficiency** — Successful face scans with no detections are no longer repeated unnecessarily
+- **Viewer actions** — Removed the obsolete automatic Subject Cutout suggestion pill while retaining editor and configured long-press access
+- **Android 17 networking** — ReFra requests the local-network permission needed by LAN cloud providers and casting (#1092)
+- **Themed icon sizing** — The monochrome launcher icon now matches the optical size and padding of the color icon (#50)
