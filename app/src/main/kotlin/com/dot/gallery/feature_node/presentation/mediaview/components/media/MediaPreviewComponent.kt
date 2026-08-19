@@ -28,6 +28,12 @@ import com.dot.gallery.feature_node.presentation.mediaview.components.video.Vide
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
 import dev.chrisbanes.haze.hazeSource
 
+internal fun shouldRenderMotionPhotoSurface(
+    isVideo: Boolean,
+    isMotionPhoto: Boolean,
+    isSelected: Boolean,
+) = !isVideo && isMotionPhoto && isSelected
+
 @Stable
 @NonRestartableComposable
 @Composable
@@ -120,6 +126,11 @@ fun <T : Media> MediaPreviewComponent(
                         onItemClick = onItemClick,
                         onSwipeDown = onSwipeDown,
                         onSubsamplingLoadingChange = onSubsamplingLoadingChange,
+                        onZoomTransformChange = {
+                            if (isSelected) {
+                                motionPhotoState?.videoTransform = it.toMotionPhotoVideoTransform()
+                            }
+                        },
                         onLoadFailed = onLoadFailed,
                         onCutoutStateChanged = onCutoutStateChanged,
                         onCutoutController = onCutoutController,
@@ -129,8 +140,8 @@ fun <T : Media> MediaPreviewComponent(
                     )
                 }
 
-                if (!media.isVideo && isMotionPhoto && motionPhotoState != null) {
-                    MotionPhotoSurface(state = motionPhotoState)
+                if (shouldRenderMotionPhotoSurface(media.isVideo, isMotionPhoto, isSelected)) {
+                    motionPhotoState?.let { MotionPhotoSurface(state = it) }
                 }
 
                 AnimatedVisibility(

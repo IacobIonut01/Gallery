@@ -20,6 +20,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -99,6 +100,7 @@ import com.github.panpf.sketch.resize.Precision
 import com.github.panpf.zoomimage.ZoomImage
 import com.github.panpf.zoomimage.compose.subsampling.ComposeTileImage
 import com.github.panpf.zoomimage.compose.subsampling.SubsamplingState
+import com.github.panpf.zoomimage.compose.zoom.Transform
 import com.github.panpf.zoomimage.compose.zoom.ZoomableState
 import com.github.panpf.zoomimage.compose.zoom.mouseZoom
 import com.github.panpf.zoomimage.compose.zoom.zoomable
@@ -268,6 +270,7 @@ fun <T : Media> ZoomablePagerImage(
     onItemClick: () -> Unit,
     onSwipeDown: () -> Unit,
     onSubsamplingLoadingChange: (Boolean) -> Unit = {},
+    onZoomTransformChange: (Transform) -> Unit = {},
     onLoadFailed: () -> Unit = {},
     onCutoutStateChanged: (Boolean) -> Unit = {},
     onCutoutController: (CutoutController?) -> Unit = {},
@@ -288,6 +291,14 @@ fun <T : Media> ZoomablePagerImage(
         label = "rotationAnimation"
     )
     val zoomState = rememberSketchZoomState()
+    val currentOnZoomTransformChange by rememberUpdatedState(onZoomTransformChange)
+    LaunchedEffect(zoomState.zoomable, isSelected) {
+        if (isSelected) {
+            snapshotFlow { zoomState.zoomable.userTransform }.collect {
+                currentOnZoomTransformChange(it)
+            }
+        }
+    }
     // Raise the maximum (pinch) zoom to 5000% of native while leaving double-tap on the normal
     // dynamic mediumScale. See ExtendedZoomScalesCalculator.
     LaunchedEffect(zoomState) {

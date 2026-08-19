@@ -43,9 +43,19 @@ import kotlinx.coroutines.launch
 import java.io.File
 import java.util.UUID
 import javax.inject.Inject
+import kotlin.math.roundToInt
 
 private const val NUM_FILMSTRIP_FRAMES = 12
 private const val FILMSTRIP_THUMB_HEIGHT = 108 // px, ~36dp @ 3x
+
+internal fun scaledFilmstripFrameWidth(
+    sourceWidth: Int,
+    sourceHeight: Int,
+    targetHeight: Int,
+): Int {
+    if (sourceWidth <= 0 || sourceHeight <= 0 || targetHeight <= 0) return 1
+    return (sourceWidth.toFloat() * targetHeight / sourceHeight).roundToInt().coerceAtLeast(1)
+}
 
 @HiltViewModel
 class MediaViewViewModel @Inject constructor(
@@ -319,9 +329,8 @@ class MediaViewViewModel @Inject constructor(
     private fun stitchFrames(frames: List<Bitmap>, thumbHeight: Int): Bitmap? {
         if (frames.isEmpty()) return null
         val scaled = frames.map { bmp ->
-            val scale = thumbHeight.toFloat() / bmp.height
-            val w = (bmp.width * scale).toInt().coerceAtLeast(1)
-            bmp.scale(w, thumbHeight)
+            val width = scaledFilmstripFrameWidth(bmp.width, bmp.height, thumbHeight)
+            bmp.scale(width, thumbHeight)
         }
         val totalWidth = scaled.sumOf { it.width }
         val composite = createBitmap(totalWidth, thumbHeight)

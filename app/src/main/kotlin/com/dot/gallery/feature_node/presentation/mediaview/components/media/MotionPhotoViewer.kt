@@ -1,8 +1,7 @@
 package com.dot.gallery.feature_node.presentation.mediaview.components.media
 
 import android.graphics.Bitmap
-import android.view.SurfaceView
-import android.view.View
+import android.view.TextureView
 import androidx.annotation.OptIn
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
@@ -17,6 +16,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -31,6 +31,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -43,12 +44,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -63,17 +64,54 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.compose.modifiers.resizeWithContentScale
 import androidx.media3.ui.compose.state.rememberPresentationState
 import com.dot.gallery.R
-import com.dot.gallery.feature_node.presentation.mediaview.LocalMediaViewerVisualPolicy
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.util.MotionPhotoInfo
 import com.dot.gallery.feature_node.presentation.mediaview.MediaViewViewModel
-import com.dot.gallery.feature_node.presentation.util.LocalHazeState
-import com.dot.gallery.feature_node.presentation.util.rememberSurfaceCapture
-import dev.chrisbanes.haze.hazeSource
+import com.github.panpf.zoomimage.compose.zoom.Transform
+import kotlin.math.roundToInt
 
 private val FILMSTRIP_HEIGHT = 36.dp
 private val SCRUBBER_WIDTH = 3.dp
 private val FAVOURITE_DOT_SIZE = 6.dp
+
+internal data class MotionPhotoVideoTransform(
+    val scaleX: Float,
+    val scaleY: Float,
+    val offsetX: Float,
+    val offsetY: Float,
+    val scaleOrigin: TransformOrigin,
+) {
+    companion object {
+        val Identity = Transform.Origin.toMotionPhotoVideoTransform()
+    }
+}
+
+internal fun Transform.toMotionPhotoVideoTransform() = MotionPhotoVideoTransform(
+    scaleX = scaleX,
+    scaleY = scaleY,
+    offsetX = offsetX,
+    offsetY = offsetY,
+    scaleOrigin = scaleOrigin,
+)
+
+internal fun fitMotionPhotoFilmstrip(
+    sourceWidth: Int,
+    sourceHeight: Int,
+    maxWidth: Int,
+    maxHeight: Int,
+): IntSize {
+    if (sourceWidth <= 0 || sourceHeight <= 0 || maxWidth <= 0 || maxHeight <= 0) {
+        return IntSize.Zero
+    }
+    val scale = minOf(
+        maxWidth.toFloat() / sourceWidth,
+        maxHeight.toFloat() / sourceHeight,
+    )
+    return IntSize(
+        width = (sourceWidth * scale).roundToInt().coerceAtLeast(1),
+        height = (sourceHeight * scale).roundToInt().coerceAtLeast(1),
+    )
+}
 
 // ======================== State ========================
 
@@ -98,6 +136,7 @@ class MotionPhotoState(
     var videoReady by mutableStateOf(false)
     var positionMs by mutableLongStateOf(0L)
     var durationMs by mutableLongStateOf(0L)
+    internal var videoTransform by mutableStateOf(MotionPhotoVideoTransform.Identity)
 
     val isDetected: Boolean get() = motionInfo != null
 
@@ -170,68 +209,62 @@ fun <T : Media> rememberMotionPhotoState(
 fun BoxScope.MotionPhotoSurface(state: MotionPhotoState) {
     // Video surface – keep always composed when player exists so that
     // pause→resume doesn't recreate the surface (which causes cropping).
+    val player = state.player
+    val presentationState = rememberPresentationState(
+        player = player,
+        keepContentOnReset = true
+    )
     val videoAlpha by animateFloatAsState(
-        targetValue = if (state.isPlaying && state.videoReady) 1f else 0f,
+        targetValue = if (
+            state.isPlaying && state.videoReady && !presentationState.coverSurface
+        ) 1f else 0f,
         animationSpec = tween(250),
         label = "motionVideoAlpha"
     )
-    val density = LocalDensity.current
-    val allowBlur = LocalMediaViewerVisualPolicy.current.allowBlur
-    val hazeState = LocalHazeState.current
-    var surfaceViewRef by remember { mutableStateOf<View?>(null) }
-    var videoSize by remember { mutableStateOf(IntSize.Zero) }
-    val videoCapture by rememberSurfaceCapture(
-        view = surfaceViewRef,
-        enabled = allowBlur && state.isPlaying
-    )
-    if (state.player != null) {
+    var textureViewRef by remember(player) { mutableStateOf<TextureView?>(null) }
+    if (player != null) {
+        val transform = state.videoTransform
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .zIndex(1f)
                 .graphicsLayer { alpha = videoAlpha }
         ) {
-            if (videoSize != IntSize.Zero) {
-                videoCapture?.let { bitmap ->
-                    Image(
-                        bitmap = bitmap,
-                        contentDescription = null,
-                        contentScale = ContentScale.FillBounds,
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .size(
-                                with(density) { videoSize.width.toDp() },
-                                with(density) { videoSize.height.toDp() }
-                            )
-                            .hazeSource(hazeState)
-                    )
-                }
-            }
-            state.player?.let { exo ->
-                val presentationState = rememberPresentationState(
-                    player = exo,
-                    keepContentOnReset = true
-                )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        scaleX = transform.scaleX
+                        scaleY = transform.scaleY
+                        translationX = transform.offsetX
+                        translationY = transform.offsetY
+                        transformOrigin = transform.scaleOrigin
+                    }
+            ) {
                 AndroidView(
-                    factory = { ctx ->
-                        SurfaceView(ctx).also { sv ->
-                            surfaceViewRef = sv
-                            exo.setVideoSurfaceView(sv)
-                        }
-                    },
-                    update = { sv ->
-                        exo.setVideoSurfaceView(sv)
-                    },
+                    factory = { TextureView(it) },
+                    update = { textureViewRef = it },
                     modifier = Modifier
                         .align(Alignment.Center)
                         .resizeWithContentScale(
                             contentScale = ContentScale.Fit,
                             sourceSizeDp = presentationState.videoSizeDp
                         )
-                        .onGloballyPositioned { coordinates ->
-                            videoSize = coordinates.size
-                        }
                 )
+            }
+
+            val textureView = textureViewRef
+            DisposableEffect(player, textureView) {
+                if (textureView == null) {
+                    onDispose { }
+                } else {
+                    player.setVideoTextureView(textureView)
+                    onDispose {
+                        if (!player.isReleased) {
+                            player.clearVideoTextureView(textureView)
+                        }
+                    }
+                }
             }
         }
     }
@@ -265,9 +298,10 @@ fun MotionPhotoFilmstrip(
     modifier: Modifier = Modifier,
     onTap: () -> Unit = {},
 ) {
-    val compositeImage = remember(state.compositeFilmstrip) {
-        state.compositeFilmstrip?.asImageBitmap()
-    } ?: return
+    val compositeFilmstrip = state.compositeFilmstrip ?: return
+    val compositeImage = remember(compositeFilmstrip) {
+        compositeFilmstrip.asImageBitmap()
+    }
 
     val density = LocalDensity.current
     val haptic = LocalHapticFeedback.current
@@ -283,98 +317,115 @@ fun MotionPhotoFilmstrip(
 
     val filmstripShape = RoundedCornerShape(8.dp)
 
-    Box(modifier = modifier.fillMaxWidth()) {
-        // Favourite shot dot (above the filmstrip)
-        if (favouriteFraction >= 0f && stripWidthPx > 0f) {
-            val dotOffsetDp = with(density) { (favouriteFraction * stripWidthPx).toDp() }
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(bottom = 4.dp)
-                    .offset(x = dotOffsetDp - FAVOURITE_DOT_SIZE / 2)
-                    .size(FAVOURITE_DOT_SIZE)
-                    .background(Color.White, CircleShape)
+    BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+        val stripSize = remember(compositeFilmstrip, maxWidth, density) {
+            fitMotionPhotoFilmstrip(
+                sourceWidth = compositeFilmstrip.width,
+                sourceHeight = compositeFilmstrip.height,
+                maxWidth = with(density) { maxWidth.toPx().roundToInt() },
+                maxHeight = with(density) { FILMSTRIP_HEIGHT.toPx().roundToInt() },
             )
         }
+        if (stripSize == IntSize.Zero) return@BoxWithConstraints
+        val stripWidth = with(density) { stripSize.width.toDp() }
+        val stripHeight = with(density) { stripSize.height.toDp() }
 
-        // Filmstrip + scrub indicator
         Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = FAVOURITE_DOT_SIZE + 4.dp)
-                .clip(filmstripShape)
-                .border(
-                    width = 1.dp,
-                    color = Color.White.copy(alpha = 0.3f),
-                    shape = filmstripShape
-                )
-                .onSizeChanged { size -> stripWidthPx = size.width.toFloat() }
-                .pointerInput(Unit) {
-                    detectTapGestures { onTap() }
-                }
-                .pointerInput(state.durationMs, favouriteShotMs) {
-                    detectHorizontalDragGestures(
-                        onDragStart = { didSnapToFavourite = false },
-                        onDragEnd = { didSnapToFavourite = false },
-                        onDragCancel = { didSnapToFavourite = false },
-                    ) { change, _ ->
-                        change.consume()
-                        if (stripWidthPx > 0 && state.durationMs > 0) {
-                            val x = change.position.x.coerceIn(0f, stripWidthPx)
-                            var seekMs =
-                                ((x / stripWidthPx) * state.durationMs).toLong()
-                                    .coerceIn(0L, state.durationMs)
-
-                            // Snap to favourite frame when within threshold
-                            if (favouriteShotMs > 0) {
-                                val snapThresholdMs = (state.durationMs * 0.03f).toLong()
-                                val nearFavourite =
-                                    (seekMs - favouriteShotMs) in -snapThresholdMs..snapThresholdMs
-                                if (nearFavourite) {
-                                    seekMs = favouriteShotMs
-                                    if (!didSnapToFavourite) {
-                                        didSnapToFavourite = true
-                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                    }
-                                } else {
-                                    didSnapToFavourite = false
-                                }
-                            }
-
-                            state.seekAndPause(seekMs)
-                        }
-                    }
-                }
+                .align(Alignment.TopCenter)
+                .width(stripWidth)
         ) {
-            // Single composite filmstrip image (stitched on IO in ViewModel)
-            Image(
-                bitmap = compositeImage,
-                contentDescription = null,
-                contentScale = ContentScale.FillBounds,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(FILMSTRIP_HEIGHT)
-            )
-
-            // Scrub indicator (white vertical bar) — positioned via graphicsLayer
-            // to avoid recomposition on every positionMs update (draw-phase only).
-            if (state.positionMs > 0 && stripWidthPx > 0f) {
-                val scrubberHalfPx = with(density) { SCRUBBER_WIDTH.toPx() / 2f }
+            // Favourite shot dot (above the filmstrip)
+            if (favouriteFraction >= 0f && stripWidthPx > 0f) {
+                val dotOffsetDp = with(density) { (favouriteFraction * stripWidthPx).toDp() }
                 Box(
                     modifier = Modifier
-                        .align(Alignment.CenterStart)
-                        .width(SCRUBBER_WIDTH)
-                        .height(FILMSTRIP_HEIGHT)
-                        .graphicsLayer {
-                            val f = if (state.durationMs > 0) {
-                                (state.positionMs.toFloat() / state.durationMs.toFloat())
-                                    .coerceIn(0f, 1f)
-                            } else 0f
-                            translationX = f * stripWidthPx - scrubberHalfPx
-                        }
-                        .clip(RoundedCornerShape(2.dp))
-                        .background(Color.White)
+                        .align(Alignment.TopStart)
+                        .padding(bottom = 4.dp)
+                        .offset(x = dotOffsetDp - FAVOURITE_DOT_SIZE / 2)
+                        .size(FAVOURITE_DOT_SIZE)
+                        .background(Color.White, CircleShape)
                 )
+            }
+
+            // Filmstrip + scrub indicator
+            Box(
+                modifier = Modifier
+                    .padding(top = FAVOURITE_DOT_SIZE + 4.dp)
+                    .width(stripWidth)
+                    .height(stripHeight)
+                    .clip(filmstripShape)
+                    .border(
+                        width = 1.dp,
+                        color = Color.White.copy(alpha = 0.3f),
+                        shape = filmstripShape
+                    )
+                    .onSizeChanged { size -> stripWidthPx = size.width.toFloat() }
+                    .pointerInput(Unit) {
+                        detectTapGestures { onTap() }
+                    }
+                    .pointerInput(state.durationMs, favouriteShotMs) {
+                        detectHorizontalDragGestures(
+                            onDragStart = { didSnapToFavourite = false },
+                            onDragEnd = { didSnapToFavourite = false },
+                            onDragCancel = { didSnapToFavourite = false },
+                        ) { change, _ ->
+                            change.consume()
+                            if (stripWidthPx > 0 && state.durationMs > 0) {
+                                val x = change.position.x.coerceIn(0f, stripWidthPx)
+                                var seekMs =
+                                    ((x / stripWidthPx) * state.durationMs).toLong()
+                                        .coerceIn(0L, state.durationMs)
+
+                                // Snap to favourite frame when within threshold
+                                if (favouriteShotMs > 0) {
+                                    val snapThresholdMs = (state.durationMs * 0.03f).toLong()
+                                    val nearFavourite =
+                                        (seekMs - favouriteShotMs) in -snapThresholdMs..snapThresholdMs
+                                    if (nearFavourite) {
+                                        seekMs = favouriteShotMs
+                                        if (!didSnapToFavourite) {
+                                            didSnapToFavourite = true
+                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        }
+                                    } else {
+                                        didSnapToFavourite = false
+                                    }
+                                }
+
+                                state.seekAndPause(seekMs)
+                            }
+                        }
+                    }
+            ) {
+                // Single composite filmstrip image (stitched on IO in ViewModel)
+                Image(
+                    bitmap = compositeImage,
+                    contentDescription = null,
+                    contentScale = ContentScale.FillBounds,
+                    modifier = Modifier.fillMaxSize()
+                )
+
+                // Scrub indicator (white vertical bar) — positioned via graphicsLayer
+                // to avoid recomposition on every positionMs update (draw-phase only).
+                if (state.positionMs > 0 && stripWidthPx > 0f) {
+                    val scrubberHalfPx = with(density) { SCRUBBER_WIDTH.toPx() / 2f }
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.CenterStart)
+                            .width(SCRUBBER_WIDTH)
+                            .height(stripHeight)
+                            .graphicsLayer {
+                                val f = if (state.durationMs > 0) {
+                                    (state.positionMs.toFloat() / state.durationMs.toFloat())
+                                        .coerceIn(0f, 1f)
+                                } else 0f
+                                translationX = f * stripWidthPx - scrubberHalfPx
+                            }
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(Color.White)
+                    )
+                }
             }
         }
     }
@@ -394,9 +445,10 @@ fun MotionPhotoShotsSection(
     onOpenFramePicker: () -> Unit = {},
 ) {
     // Hide entirely until composite filmstrip is loaded
-    val compositeImage = remember(state.compositeFilmstrip) {
-        state.compositeFilmstrip?.asImageBitmap()
-    } ?: return
+    val compositeFilmstrip = state.compositeFilmstrip ?: return
+    val compositeImage = remember(compositeFilmstrip) {
+        compositeFilmstrip.asImageBitmap()
+    }
 
     val density = LocalDensity.current
     var stripWidthPx by remember { mutableFloatStateOf(0f) }
@@ -420,39 +472,57 @@ fun MotionPhotoShotsSection(
             color = MaterialTheme.colorScheme.onSurface
         )
 
-        Box(modifier = Modifier.fillMaxWidth()) {
-            // Favourite shot dot (above the filmstrip)
-            if (favouriteFraction >= 0f && stripWidthPx > 0f) {
-                val dotOffsetDp =
-                    with(density) { (favouriteFraction * stripWidthPx).toDp() }
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(bottom = 4.dp)
-                        .offset(x = dotOffsetDp - FAVOURITE_DOT_SIZE / 2)
-                        .size(FAVOURITE_DOT_SIZE)
-                        .background(Color.White, CircleShape)
+        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+            val stripSize = remember(compositeFilmstrip, maxWidth, density) {
+                fitMotionPhotoFilmstrip(
+                    sourceWidth = compositeFilmstrip.width,
+                    sourceHeight = compositeFilmstrip.height,
+                    maxWidth = with(density) { maxWidth.toPx().roundToInt() },
+                    maxHeight = with(density) { FILMSTRIP_HEIGHT.toPx().roundToInt() },
                 )
             }
+            if (stripSize == IntSize.Zero) return@BoxWithConstraints
+            val stripWidth = with(density) { stripSize.width.toDp() }
+            val stripHeight = with(density) { stripSize.height.toDp() }
 
-            // Single composite filmstrip image
-            Image(
-                bitmap = compositeImage,
-                contentDescription = null,
-                contentScale = ContentScale.FillBounds,
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = FAVOURITE_DOT_SIZE + 4.dp)
-                    .clip(filmstripShape)
-                    .border(
-                        width = 1.dp,
-                        color = Color.White.copy(alpha = 0.15f),
-                        shape = filmstripShape
+                    .align(Alignment.TopCenter)
+                    .width(stripWidth)
+            ) {
+                // Favourite shot dot (above the filmstrip)
+                if (favouriteFraction >= 0f && stripWidthPx > 0f) {
+                    val dotOffsetDp =
+                        with(density) { (favouriteFraction * stripWidthPx).toDp() }
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(bottom = 4.dp)
+                            .offset(x = dotOffsetDp - FAVOURITE_DOT_SIZE / 2)
+                            .size(FAVOURITE_DOT_SIZE)
+                            .background(Color.White, CircleShape)
                     )
-                    .height(FILMSTRIP_HEIGHT)
-                    .onSizeChanged { size -> stripWidthPx = size.width.toFloat() }
-                    .pointerInput(Unit) { detectTapGestures { onOpenFramePicker() } }
-            )
+                }
+
+                // Single composite filmstrip image
+                Image(
+                    bitmap = compositeImage,
+                    contentDescription = null,
+                    contentScale = ContentScale.FillBounds,
+                    modifier = Modifier
+                        .padding(top = FAVOURITE_DOT_SIZE + 4.dp)
+                        .width(stripWidth)
+                        .height(stripHeight)
+                        .clip(filmstripShape)
+                        .border(
+                            width = 1.dp,
+                            color = Color.White.copy(alpha = 0.15f),
+                            shape = filmstripShape
+                        )
+                        .onSizeChanged { size -> stripWidthPx = size.width.toFloat() }
+                        .pointerInput(Unit) { detectTapGestures { onOpenFramePicker() } }
+                )
+            }
         }
     }
 }
