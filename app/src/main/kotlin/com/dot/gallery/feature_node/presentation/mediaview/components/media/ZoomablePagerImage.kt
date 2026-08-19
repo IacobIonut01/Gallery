@@ -126,7 +126,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.ScreenRotationAlt
 import androidx.compose.ui.draw.clip
@@ -663,7 +662,7 @@ fun <T : Media> ZoomablePagerImage(
     val modelManager = remember { (context.applicationContext as com.dot.gallery.GalleryApp).modelManager }
     val cutoutState = rememberCutoutState()
     // When true, long-press starts a cutout session and Rotate is offered as an on-screen pill.
-    // When false (default), long-press rotates and Cut out is offered as an on-screen pill.
+    // When false (default), long-press rotates the image.
     val longPressStartsCutout by Settings.Misc.rememberLongPressCutout()
 
     // Pulsing glow for the cutout contour. The infinite animation is only created while it's
@@ -950,34 +949,13 @@ fun <T : Media> ZoomablePagerImage(
                     onClick = rotateImage
                 )
             }
-        } else {
-            // Rotate is the default long-press action, so keep Cutout discoverable without requiring
-            // users to find and change the gesture preference first.
-            AnimatedVisibility(
-                visible = chromeVisible && cutoutEnabled && cutoutSupported,
-                enter = fadeIn(),
-                exit = fadeOut(),
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .navigationBarsPadding()
-                    .padding(bottom = 96.dp)
-            ) {
-                MediaViewActionPill(
-                    icon = Icons.Outlined.AutoAwesome,
-                    label = stringResource(R.string.cutout_action),
-                    onClick = {
-                        val center = zoomState.zoomable.contentDisplayRect.center
-                        startCutoutAt(Offset(center.x.toFloat(), center.y.toFloat()))
-                    }
-                )
-            }
         }
     }
 }
 
 /**
- * Small pill button matching the media viewer's motion-photo / rotate chip style, used to expose
- * whichever long-press action (rotate or cut out) is not currently bound to the long-press gesture.
+ * Small pill button matching the media viewer's motion-photo / rotate chip style, used for viewer
+ * actions such as retrying an image load or rotating when cutout owns the long-press gesture.
  */
 @Composable
 private fun MediaViewActionPill(
