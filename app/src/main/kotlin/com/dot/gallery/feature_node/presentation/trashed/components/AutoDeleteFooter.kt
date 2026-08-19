@@ -31,10 +31,9 @@ import com.dot.gallery.core.LocalMediaSelector
 import com.dot.gallery.core.Position
 import com.dot.gallery.core.SettingsEntity
 import com.dot.gallery.core.presentation.components.SetupButton
-import com.dot.gallery.core.util.SdkCompat
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaState
-import com.dot.gallery.feature_node.domain.util.isCloud
+import com.dot.gallery.feature_node.domain.repository.MediaMutationResult
 import com.dot.gallery.feature_node.presentation.settings.components.SettingsItem
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import kotlinx.coroutines.launch
@@ -119,8 +118,7 @@ fun <T : Media> AutoDeleteFooter(
         data = media,
         action = TrashDialogAction.DELETE
     ) {
-        handler.deleteMedia(result, it)
-        if (it.all { item -> item.isCloud } || !SdkCompat.supportsMediaStoreRequests) {
+        if (handler.deleteMedia(result, it) == MediaMutationResult.COMPLETED) {
             selector.clearSelection()
         }
     }
@@ -129,8 +127,7 @@ fun <T : Media> AutoDeleteFooter(
         data = media,
         action = TrashDialogAction.RESTORE
     ) {
-        handler.trashMedia(result, it, false)
-        if (it.all { item -> item.isCloud }) {
+        if (handler.trashMedia(result, it, false) == MediaMutationResult.COMPLETED) {
             selector.clearSelection()
         }
     }

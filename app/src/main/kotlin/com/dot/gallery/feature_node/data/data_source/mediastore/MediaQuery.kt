@@ -166,6 +166,9 @@ object MediaQuery {
         return ContentUris.withAppendedId(base, id)
     }
 
+    fun isFilesCollectionUri(uri: Uri): Boolean =
+        uri.authority == MediaStore.AUTHORITY && uri.pathSegments.getOrNull(1) == "file"
+
     object Selection {
         private val imageType =
             MediaStore.Files.FileColumns.MEDIA_TYPE eq MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE

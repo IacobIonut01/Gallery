@@ -43,6 +43,12 @@ import com.dot.gallery.feature_node.presentation.picker.AllowedMedia
 import kotlinx.coroutines.flow.Flow
 import java.io.File
 
+enum class MediaMutationResult {
+    COMPLETED,
+    REQUEST_LAUNCHED,
+    FAILED,
+}
+
 interface MediaRepository {
 
     suspend fun updateInternalDatabase()
@@ -112,7 +118,7 @@ interface MediaRepository {
         result: ActivityResultLauncher<IntentSenderRequest>,
         mediaList: List<T>,
         trash: Boolean
-    )
+    ): MediaMutationResult
 
     suspend fun <T: Media> copyMedia(
         from: T,
@@ -124,7 +130,7 @@ interface MediaRepository {
     suspend fun <T: Media> deleteMedia(
         result: ActivityResultLauncher<IntentSenderRequest>,
         mediaList: List<T>
-    )
+    ): MediaMutationResult
 
     suspend fun <T: Media> renameMedia(
         media: T,

@@ -25,6 +25,7 @@ import com.dot.gallery.core.LocalMediaHandler
 import com.dot.gallery.core.LocalMediaSelector
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaState
+import com.dot.gallery.feature_node.domain.repository.MediaMutationResult
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.rememberIsMediaManager
 import com.dot.gallery.feature_node.presentation.util.selectedMedia
@@ -69,11 +70,14 @@ fun <T: Media> TrashedNavActions(
                         if (isMediaManager) {
                             restoreSheetState.show()
                         } else {
-                            handler.trashMedia(
+                            val mutationResult = handler.trashMedia(
                                 result,
                                 selectedMediaList.ifEmpty { mediaState.value.media },
                                 false
                             )
+                            if (mutationResult == MediaMutationResult.COMPLETED) {
+                                selector.clearSelection()
+                            }
                         }
                     }
                 }
@@ -90,7 +94,9 @@ fun <T: Media> TrashedNavActions(
                             if (isMediaManager) {
                                 deleteSheetState.show()
                             } else {
-                                handler.deleteMedia(result, selectedMediaList)
+                                if (handler.deleteMedia(result, selectedMediaList) == MediaMutationResult.COMPLETED) {
+                                    selector.clearSelection()
+                                }
                             }
                         }
                     }
@@ -107,7 +113,9 @@ fun <T: Media> TrashedNavActions(
                             if (isMediaManager) {
                                 deleteSheetState.show()
                             } else {
-                                handler.deleteMedia(result, mediaState.value.media)
+                                if (handler.deleteMedia(result, mediaState.value.media) == MediaMutationResult.COMPLETED) {
+                                    selector.clearSelection()
+                                }
                             }
                         }
                     }
@@ -125,14 +133,18 @@ fun <T: Media> TrashedNavActions(
         data = selectedMediaList.ifEmpty { mediaState.value.media },
         action = TrashDialogAction.DELETE
     ) {
-        handler.deleteMedia(result, it)
+        if (handler.deleteMedia(result, it) == MediaMutationResult.COMPLETED) {
+            selector.clearSelection()
+        }
     }
     TrashDialog(
         appBottomSheetState = restoreSheetState,
         data = selectedMediaList.ifEmpty { mediaState.value.media },
         action = TrashDialogAction.RESTORE
     ) {
-        handler.trashMedia(result, it, false)
+        if (handler.trashMedia(result, it, false) == MediaMutationResult.COMPLETED) {
+            selector.clearSelection()
+        }
     }
 }
 

@@ -28,6 +28,7 @@ import com.dot.gallery.feature_node.domain.util.getUri
 import com.dot.gallery.feature_node.domain.util.isCloud
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.Vault
+import com.dot.gallery.feature_node.domain.repository.MediaMutationResult
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -99,7 +100,7 @@ class MediaHandlerImpl @Inject constructor(
         result: ActivityResultLauncher<IntentSenderRequest>,
         mediaList: List<T>,
         trash: Boolean
-    ) {
+    ): MediaMutationResult {
         val (cloudMedia, localMedia) = mediaList.partition { it.isCloud }
 
         if (cloudMedia.isNotEmpty()) {
@@ -116,8 +117,10 @@ class MediaHandlerImpl @Inject constructor(
             }
         }
 
-        if (localMedia.isNotEmpty()) {
+        return if (localMedia.isNotEmpty()) {
             repository.trashMedia(result, localMedia, trash)
+        } else {
+            MediaMutationResult.COMPLETED
         }
     }
 
@@ -146,7 +149,7 @@ class MediaHandlerImpl @Inject constructor(
     override suspend fun <T : Media> deleteMedia(
         result: ActivityResultLauncher<IntentSenderRequest>,
         mediaList: List<T>
-    ) {
+    ): MediaMutationResult {
         val (cloudMedia, localMedia) = mediaList.partition { it.isCloud }
         if (cloudMedia.isNotEmpty()) {
             withContext(Dispatchers.IO) {
@@ -160,8 +163,10 @@ class MediaHandlerImpl @Inject constructor(
                 }
             }
         }
-        if (localMedia.isNotEmpty()) {
+        return if (localMedia.isNotEmpty()) {
             repository.deleteMedia(result, localMedia)
+        } else {
+            MediaMutationResult.COMPLETED
         }
     }
 

@@ -60,13 +60,12 @@ import com.dot.gallery.R
 import com.dot.gallery.core.LocalMediaHandler
 import com.dot.gallery.core.LocalMediaSelector
 import com.dot.gallery.core.Settings
-import com.dot.gallery.core.util.SdkCompat
 import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
 import com.dot.gallery.core.presentation.components.SelectAllAddon
 import com.dot.gallery.core.presentation.components.SelectionAddon
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaState
-import com.dot.gallery.feature_node.domain.util.isCloud
+import com.dot.gallery.feature_node.domain.repository.MediaMutationResult
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import com.dot.gallery.ui.theme.Shapes
@@ -207,8 +206,7 @@ fun <T : Media> BoxScope.TrashSelectionSheet(
         data = selectedMedia,
         action = TrashDialogAction.DELETE
     ) {
-        handler.deleteMedia(result, it)
-        if (it.all { media -> media.isCloud } || !SdkCompat.supportsMediaStoreRequests) {
+        if (handler.deleteMedia(result, it) == MediaMutationResult.COMPLETED) {
             selector.clearSelection()
         }
     }
@@ -217,8 +215,7 @@ fun <T : Media> BoxScope.TrashSelectionSheet(
         data = selectedMedia,
         action = TrashDialogAction.RESTORE
     ) {
-        handler.trashMedia(result, it, false)
-        if (it.all { media -> media.isCloud }) {
+        if (handler.trashMedia(result, it, false) == MediaMutationResult.COMPLETED) {
             selector.clearSelection()
         }
     }

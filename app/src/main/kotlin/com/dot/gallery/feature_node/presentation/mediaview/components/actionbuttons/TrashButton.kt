@@ -15,6 +15,7 @@ import com.dot.gallery.core.Settings.Misc.rememberTrashEnabled
 import com.dot.gallery.core.util.SdkCompat
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.Vault
+import com.dot.gallery.feature_node.domain.repository.MediaMutationResult
 import com.dot.gallery.feature_node.domain.util.isCloud
 import com.dot.gallery.feature_node.domain.util.isEncrypted
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialog
@@ -93,17 +94,12 @@ fun <T : Media> TrashButton(
             }
             onTrashConfirmed()
         } else {
-            if (effectiveAction == TrashDialogAction.TRASH) {
+            val mutationResult = if (effectiveAction == TrashDialogAction.TRASH) {
                 handler.trashMedia(result, it, true)
             } else {
                 handler.deleteMedia(result, it)
             }
-            // On API 29, content is deleted directly without launching an
-            // IntentSender, so onResultOk never fires. Trigger the callback
-            // here so the viewer still advances immediately.
-            if (!SdkCompat.supportsMediaStoreRequests) {
-                onTrashConfirmed()
-            }
+            if (mutationResult == MediaMutationResult.COMPLETED) onTrashConfirmed()
         }
     }
 }

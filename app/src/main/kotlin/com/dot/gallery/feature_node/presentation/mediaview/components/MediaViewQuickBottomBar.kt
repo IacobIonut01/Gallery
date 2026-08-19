@@ -27,6 +27,7 @@ import com.dot.gallery.core.Settings.Misc.rememberShowFavoriteButton
 import com.dot.gallery.core.util.SdkCompat
 import com.dot.gallery.core.setFollowTheme
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.repository.MediaMutationResult
 import com.dot.gallery.feature_node.domain.model.Vault
 import com.dot.gallery.feature_node.domain.util.canMakeActions
 import com.dot.gallery.feature_node.domain.util.isCloud
@@ -135,16 +136,20 @@ fun <T : Media> MediaViewQuickBottomBar(
                     data = listOf(currentMedia),
                     action = TrashDialogAction.RESTORE
                 ) {
-                    handler.trashMedia(result = result, mediaList = it, trash = false)
-                    if (currentMedia.isCloud) onTrashConfirmed()
+                    val mutationResult = handler.trashMedia(
+                        result = result,
+                        mediaList = it,
+                        trash = false
+                    )
+                    if (mutationResult == MediaMutationResult.COMPLETED) onTrashConfirmed()
                 }
                 TrashDialog(
                     appBottomSheetState = deleteSheetState,
                     data = listOf(currentMedia),
                     action = TrashDialogAction.DELETE
                 ) {
-                    handler.deleteMedia(result = result, mediaList = it)
-                    if (currentMedia.isCloud || !SdkCompat.supportsMediaStoreRequests) onTrashConfirmed()
+                    val mutationResult = handler.deleteMedia(result = result, mediaList = it)
+                    if (mutationResult == MediaMutationResult.COMPLETED) onTrashConfirmed()
                 }
             }
         } else {

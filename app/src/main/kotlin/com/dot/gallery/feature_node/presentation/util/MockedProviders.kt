@@ -27,6 +27,7 @@ import com.dot.gallery.feature_node.domain.model.CollectionWithCount
 import com.dot.gallery.feature_node.domain.model.IgnoredAlbum
 import com.dot.gallery.feature_node.domain.model.ImageEmbedding
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.repository.MediaMutationResult
 import com.dot.gallery.feature_node.domain.model.GeoMedia
 import com.dot.gallery.feature_node.domain.model.LocationMedia
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
@@ -112,7 +113,7 @@ class MockedMediaHandler: MediaHandler {
         result: ActivityResultLauncher<IntentSenderRequest>,
         mediaList: List<T>,
         trash: Boolean
-    ) = Unit
+    ) = MediaMutationResult.COMPLETED
 
     override suspend fun <T : Media> copyMedia(
         from: T,
@@ -124,7 +125,7 @@ class MockedMediaHandler: MediaHandler {
     override suspend fun <T : Media> deleteMedia(
         result: ActivityResultLauncher<IntentSenderRequest>,
         mediaList: List<T>
-    ) = Unit
+    ) = MediaMutationResult.COMPLETED
 
     override suspend fun <T : Media> renameMedia(
         media: T,

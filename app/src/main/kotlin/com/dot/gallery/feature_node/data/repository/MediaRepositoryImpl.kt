@@ -14,6 +14,7 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import android.location.Geocoder
 import android.net.Uri
+import android.os.Bundle
 import android.os.Environment
 import android.os.Build
 import android.provider.MediaStore
@@ -48,6 +49,7 @@ import com.dot.gallery.feature_node.data.data_source.CategoryWithMediaCount
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
 import com.dot.gallery.feature_node.data.data_source.SmartScanFeature
 import com.dot.gallery.feature_node.data.data_source.KeychainHolder
+import com.dot.gallery.feature_node.data.data_source.mediastore.MediaQuery
 import com.dot.gallery.feature_node.data.data_source.mediastore.queries.AlbumsFlow
 import com.dot.gallery.feature_node.data.data_source.mediastore.queries.MediaFlow
 import com.dot.gallery.feature_node.data.data_source.mediastore.queries.MediaUriFlow
@@ -80,6 +82,7 @@ import com.dot.gallery.feature_node.domain.model.Vault
 import com.dot.gallery.feature_node.domain.model.retrieveExtraMediaMetadata
 import com.dot.gallery.feature_node.domain.model.toMediaMetadata
 import com.dot.gallery.feature_node.domain.util.isCloud
+import com.dot.gallery.feature_node.domain.repository.MediaMutationResult
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.domain.util.MediaOrder
 import com.dot.gallery.feature_node.domain.util.OrderType
@@ -331,6 +334,27 @@ class MediaRepositoryImpl(
             onlyMatchingUris = onlyMatching
         ).flowData().mapAsResource(errorOnEmpty = true, errorMessage = "Media could not be opened")
 
+    private suspend fun <T : Media> mutateMediaDirectly(
+        mediaList: List<T>,
+        operation: String,
+        mutation: (T) -> Boolean
+    ): Boolean = withContext(Dispatchers.IO) {
+        mediaList.map { media ->
+            runCatching { mutation(media) }
+                .onFailure {
+                    printWarning("Failed to $operation media ${media.id}: ${it.message}")
+                }
+                .getOrDefault(false)
+        }.all { it }
+    }
+
+    private fun <T : Media> List<T>.hasFilesCollectionItems(): Boolean =
+        any { MediaQuery.isFilesCollectionUri(it.getUri()) }
+
+    private fun includeTrashedQueryArgs() = Bundle().apply {
+        putInt(MediaStore.QUERY_ARG_MATCH_TRASHED, MediaStore.MATCH_INCLUDE)
+    }
+
     override suspend fun <T : Media> toggleFavorite(
         result: ActivityResultLauncher<IntentSenderRequest>,
         mediaList: List<T>,
@@ -340,11 +364,29 @@ class MediaRepositoryImpl(
             // Favorites not supported on API 29
             return
         }
-        val intentSender = MediaStore.createFavoriteRequest(
-            contentResolver,
-            mediaList.map { it.getUri() },
-            favorite
-        ).intentSender
+        val values = ContentValues().apply {
+            put(MediaStore.MediaColumns.IS_FAVORITE, if (favorite) 1 else 0)
+        }
+        if (SdkCompat.hasFullFileAccess) {
+            mutateMediaDirectly(mediaList, "favorite") {
+                contentResolver.update(it.getUri(), values, includeTrashedQueryArgs()) > 0
+            }
+            return
+        }
+        if (mediaList.hasFilesCollectionItems()) {
+            printWarning("Cannot favorite Files collection items without all-files access")
+            return
+        }
+        val intentSender = try {
+            MediaStore.createFavoriteRequest(
+                contentResolver,
+                mediaList.map { it.getUri() },
+                favorite
+            ).intentSender
+        } catch (e: IllegalArgumentException) {
+            printWarning("Failed to create favorite request: ${e.message}")
+            return
+        }
         val senderRequest: IntentSenderRequest = IntentSenderRequest.Builder(intentSender)
             .setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION, 0)
             .build()
@@ -357,52 +399,84 @@ class MediaRepositoryImpl(
         result: ActivityResultLauncher<IntentSenderRequest>,
         mediaList: List<T>,
         trash: Boolean
-    ) {
+    ): MediaMutationResult {
         if (!SdkCompat.supportsMediaStoreRequests) {
             // Trash not supported on API 29
-            return
+            return MediaMutationResult.FAILED
         }
-        val intentSender = MediaStore.createTrashRequest(
-            contentResolver,
-            mediaList.map { it.getUri() },
-            trash
-        ).intentSender
+        val values = ContentValues().apply {
+            put(MediaStore.MediaColumns.IS_TRASHED, if (trash) 1 else 0)
+        }
+        if (SdkCompat.hasFullFileAccess) {
+            val allSucceeded = mutateMediaDirectly(
+                mediaList,
+                if (trash) "trash" else "restore"
+            ) {
+                contentResolver.update(it.getUri(), values, includeTrashedQueryArgs()) > 0
+            }
+            return if (allSucceeded) MediaMutationResult.COMPLETED else MediaMutationResult.FAILED
+        }
+        if (mediaList.hasFilesCollectionItems()) {
+            printWarning("Cannot trash Files collection items without all-files access")
+            return MediaMutationResult.FAILED
+        }
+        val intentSender = try {
+            MediaStore.createTrashRequest(
+                contentResolver,
+                mediaList.map { it.getUri() },
+                trash
+            ).intentSender
+        } catch (e: IllegalArgumentException) {
+            printWarning("Failed to create trash request: ${e.message}")
+            return MediaMutationResult.FAILED
+        }
         val senderRequest: IntentSenderRequest = IntentSenderRequest.Builder(intentSender)
             .setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION, 0)
             .build()
         withContext(Dispatchers.Main.immediate) {
             result.launch(senderRequest)
         }
+        return MediaMutationResult.REQUEST_LAUNCHED
     }
 
     override suspend fun <T : Media> deleteMedia(
         result: ActivityResultLauncher<IntentSenderRequest>,
         mediaList: List<T>
-    ) {
+    ): MediaMutationResult {
         if (!SdkCompat.supportsMediaStoreRequests) {
             // On API 29, delete directly via ContentResolver
             // requestLegacyExternalStorage grants full write access
-            withContext(Dispatchers.IO) {
-                mediaList.forEach { media ->
-                    runCatching {
-                        contentResolver.delete(media.getUri(), null, null)
-                    }.onFailure {
-                        printWarning("Failed to delete media ${media.id}: ${it.message}")
-                    }
-                }
+            val allSucceeded = mutateMediaDirectly(mediaList, "delete") {
+                contentResolver.delete(it.getUri(), null, null) > 0
             }
-            return
+            return if (allSucceeded) MediaMutationResult.COMPLETED else MediaMutationResult.FAILED
         }
-        val intentSender =
+        if (SdkCompat.hasFullFileAccess) {
+            val allSucceeded = mutateMediaDirectly(mediaList, "delete") {
+                contentResolver.delete(it.getUri(), includeTrashedQueryArgs()) > 0
+            }
+            return if (allSucceeded) MediaMutationResult.COMPLETED else MediaMutationResult.FAILED
+        }
+        if (mediaList.hasFilesCollectionItems()) {
+            printWarning("Cannot delete Files collection items without all-files access")
+            return MediaMutationResult.FAILED
+        }
+        val intentSender = try {
             MediaStore.createDeleteRequest(
                 contentResolver,
-                mediaList.map { it.getUri() }).intentSender
+                mediaList.map { it.getUri() }
+            ).intentSender
+        } catch (e: IllegalArgumentException) {
+            printWarning("Failed to create delete request: ${e.message}")
+            return MediaMutationResult.FAILED
+        }
         val senderRequest: IntentSenderRequest = IntentSenderRequest.Builder(intentSender)
             .setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION, 0)
             .build()
         withContext(Dispatchers.Main.immediate) {
             result.launch(senderRequest)
         }
+        return MediaMutationResult.REQUEST_LAUNCHED
     }
 
     override suspend fun <T : Media> copyMedia(

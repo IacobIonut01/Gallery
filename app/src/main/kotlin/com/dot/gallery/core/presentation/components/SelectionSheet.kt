@@ -99,6 +99,7 @@ import com.dot.gallery.cloud.core.CloudRuntimeSettings
 import com.dot.gallery.cloud.ui.CloudSelectionViewModel
 import com.dot.gallery.feature_node.domain.model.ActionCondition
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.repository.MediaMutationResult
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
 import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.domain.model.SelectionAction
@@ -928,14 +929,12 @@ fun <T : Media> BoxScope.SelectionSheet(
         data = selectedMedia,
         action = effectiveTrashAction,
     ) {
-        if (effectiveTrashAction == TrashDialogAction.TRASH) {
+        val mutationResult = if (effectiveTrashAction == TrashDialogAction.TRASH) {
             handler.trashMedia(result, it, true)
         } else {
             handler.deleteMedia(result, it)
-            if (!SdkCompat.supportsMediaStoreRequests) {
-                selector.clearSelection()
-            }
         }
+        if (mutationResult == MediaMutationResult.COMPLETED) selector.clearSelection()
     }
 
     ConfirmationSheet(
@@ -983,7 +982,9 @@ fun <T : Media> BoxScope.SelectionSheet(
                     Toast.makeText(context, privateFolderMovingText, Toast.LENGTH_SHORT).show()
                     val moved = privateFolderMoveViewModel.copyIntoPrivateFolder(toMove)
                     if (moved.isNotEmpty()) {
-                        handler.deleteMedia(result, moved)
+                        if (handler.deleteMedia(result, moved) == MediaMutationResult.COMPLETED) {
+                            selector.clearSelection()
+                        }
                     } else {
                         Toast.makeText(context, privateFolderMoveFailedText, Toast.LENGTH_SHORT).show()
                     }

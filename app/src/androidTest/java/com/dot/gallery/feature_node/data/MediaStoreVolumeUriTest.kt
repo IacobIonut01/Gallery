@@ -1,7 +1,10 @@
 package com.dot.gallery.feature_node.data
 
+import android.net.Uri
 import com.dot.gallery.feature_node.data.data_source.mediastore.MediaQuery
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class MediaStoreVolumeUriTest {
@@ -43,6 +46,14 @@ class MediaStoreVolumeUriTest {
                 volumeName = "5216-4f19"
             ).toString()
         )
+    }
+
+    @Test
+    fun identifiesFilesCollectionItemsForDirectMutation() {
+        assertTrue(MediaQuery.isFilesCollectionUri(Uri.parse("content://media/external_primary/file/11")))
+        assertTrue(MediaQuery.isFilesCollectionUri(Uri.parse("content://media/5216-4f19/file/11")))
+        assertFalse(MediaQuery.isFilesCollectionUri(Uri.parse("content://media/external_primary/images/media/11")))
+        assertFalse(MediaQuery.isFilesCollectionUri(Uri.parse("content://other/external_primary/file/11")))
     }
 
     @Test

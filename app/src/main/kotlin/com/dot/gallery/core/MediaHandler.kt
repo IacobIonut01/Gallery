@@ -10,6 +10,7 @@ import com.dot.gallery.core.metadata.SanitizationCapability
 import com.dot.gallery.core.metadata.SanitizationResult
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.Vault
+import com.dot.gallery.feature_node.domain.repository.MediaMutationResult
 import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
@@ -30,7 +31,7 @@ interface MediaHandler {
         result: ActivityResultLauncher<IntentSenderRequest>,
         mediaList: List<T>,
         trash: Boolean = true
-    )
+    ): MediaMutationResult
 
     suspend fun <T: Media> copyMedia(from: T, path: String)
 
@@ -39,7 +40,7 @@ interface MediaHandler {
     suspend fun <T: Media> deleteMedia(
         result: ActivityResultLauncher<IntentSenderRequest>,
         mediaList: List<T>
-    )
+    ): MediaMutationResult
 
     suspend fun <T: Media> renameMedia(media: T, newName: String): Boolean
 
