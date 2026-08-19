@@ -506,7 +506,6 @@ private fun ShortcutTile(
     Box(modifier = modifier.clip(RoundedCornerShape(16.dp)).then(borderMod)) {
         LibrarySmallItem(
             title = data.title,
-            subtitle = data.subtitle,
             icon = data.icon,
             contentColor = data.contentColor,
             useIndicator = data.useIndicator && showIndicator,

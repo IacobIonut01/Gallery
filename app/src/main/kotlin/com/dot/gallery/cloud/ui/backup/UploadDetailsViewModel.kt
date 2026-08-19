@@ -14,9 +14,13 @@ import androidx.work.WorkManager
 import com.dot.gallery.cloud.core.ProviderRegistry
 import com.dot.gallery.cloud.core.ProviderType
 import com.dot.gallery.cloud.core.capabilities.SyncCapableProvider
+import com.dot.gallery.cloud.data.dao.CloudMediaDao
 import com.dot.gallery.cloud.data.dao.CloudServerConfigDao
 import com.dot.gallery.cloud.data.dao.CloudUploadPrefDao
 import com.dot.gallery.cloud.sync.CloudUploadWorker
+import com.dot.gallery.cloud.sync.backupLocalRevisionKey
+import com.dot.gallery.cloud.sync.backupVerificationCutoff
+import com.dot.gallery.cloud.sync.cacheVerifiedBackupRevision
 import com.dot.gallery.cloud.sync.isActiveBackupWork
 import com.dot.gallery.cloud.ui.verifiedItemsByIndex
 import com.dot.gallery.feature_node.domain.model.Media
@@ -77,6 +81,7 @@ class UploadDetailsViewModel @Inject constructor(
     private val workManager: WorkManager,
     private val configDao: CloudServerConfigDao,
     private val uploadPrefDao: CloudUploadPrefDao,
+    private val cloudMediaDao: CloudMediaDao,
     private val registry: ProviderRegistry,
     private val repository: MediaRepository
 ) : ViewModel() {
@@ -146,25 +151,48 @@ class UploadDetailsViewModel @Inject constructor(
                 val groups = mutableListOf<UploadGroup>()
                 for ((cfg, provider, prefs) in perConfig) {
                     val accountLabel = cfg.displayName.ifBlank { cfg.providerType.displayName }
+                    val localRevisions = cloudMediaDao.getValidBackupRevisions(
+                        cfg.id,
+                        backupVerificationCutoff()
+                    ).map { backupLocalRevisionKey(it.localUri, it.localSize, it.localTimestamp) }
+                        .toSet()
                     for (pref in prefs) {
                         val media = (repository.getMediaByAlbumId(pref.albumId, skipBatching = true).first().data ?: emptyList())
                             .filter { it.uri.scheme != "cloud" }
                         if (media.isEmpty()) continue
-                        // Hash every readable item so filename or metadata matches never suppress
-                        // a pending upload without provider-confirmed content evidence.
-                        val hashed = media.mapNotNull { item ->
-                            hashOf(item)?.let { hash -> item to hash }
-                        }
-                        // Unreadable items remain pending rather than sending an invalid empty hash.
-                        val present = if (hashed.isEmpty()) emptyMap() else try {
-                            provider.bulkUploadCheck(hashed.map { it.second }).getOrDefault(emptyMap())
-                        } catch (e: CancellationException) {
-                            throw e
-                        } catch (_: Exception) {
-                            emptyMap()
-                        }
-                        val verifiedIds = verifiedItemsByIndex(hashed, present).mapTo(mutableSetOf()) {
-                            it.first.id
+                        val verifiedIds = media.filterTo(mutableListOf()) { item ->
+                            backupLocalRevisionKey(
+                                item.getUri().toString(),
+                                item.size,
+                                item.timestamp
+                            ) in localRevisions
+                        }.mapTo(mutableSetOf()) { it.id }
+                        val unchecked = media.filterNot { it.id in verifiedIds }
+                        if (provider.requiresUploadChecksum) {
+                            // Hash every remaining readable item so filename or remote metadata matches
+                            // never suppress a pending upload without provider-confirmed content evidence.
+                            val hashed = unchecked.mapNotNull { item ->
+                                hashOf(item)?.let { hash -> item to hash }
+                            }
+                            // Unreadable items remain pending rather than sending an invalid empty hash.
+                            val present = if (hashed.isEmpty()) emptyMap() else try {
+                                provider.bulkUploadCheck(hashed.map { it.second }).getOrDefault(emptyMap())
+                            } catch (e: CancellationException) {
+                                throw e
+                            } catch (_: Exception) {
+                                emptyMap()
+                            }
+                            verifiedItemsByIndex(hashed, present).forEach { (item, hash) ->
+                                verifiedIds += item.id
+                                cacheVerifiedBackupRevision(cloudMediaDao, cfg.id, item, hash)
+                            }
+                        } else {
+                            val targetPath = pref.albumLabel.trim().ifBlank { null }
+                            unchecked.forEach { item ->
+                                if (runCatching { provider.remoteExists(item, targetPath) }.getOrDefault(false)) {
+                                    verifiedIds += item.id
+                                }
+                            }
                         }
                         val pending = media.filterNot { it.id in verifiedIds }
                         if (pending.isEmpty()) continue

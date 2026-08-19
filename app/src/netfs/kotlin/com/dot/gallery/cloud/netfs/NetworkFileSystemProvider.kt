@@ -559,7 +559,8 @@ open class NetworkFileSystemProvider(
                     mimeType = localMedia.mimeType,
                     timestamp = System.currentTimeMillis(),
                     size = if (size > 0) size else 0L,
-                    syncState = SyncState.SYNCED
+                    syncState = SyncState.SYNCED,
+                    localCopyPath = localMedia.getUri().toString()
                 )
                 cloudMediaDao.insert(entity)
                 Result.success(entity)

@@ -16,6 +16,7 @@ import com.dot.gallery.cloud.core.cloudMediaId
 import com.dot.gallery.core.Constants
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.presentation.util.getDate
+import java.util.Base64
 
 @Entity(
     tableName = "cloud_media",
@@ -127,4 +128,39 @@ data class CloudMediaEntity(
     companion object {
         const val CLOUD_ALBUM_ID = -500L
     }
+}
+
+@Entity(
+    tableName = "cloud_backup_revision",
+    primaryKeys = ["serverConfigId", "localUri"],
+    indices = [
+        Index(value = ["serverConfigId"]),
+        Index(value = ["providerType"]),
+        Index(value = ["serverConfigId", "remoteId"])
+    ]
+)
+data class CloudBackupRevisionEntity(
+    val serverConfigId: Long,
+    val providerType: ProviderType,
+    val localUri: String,
+    val localSize: Long,
+    val localTimestamp: Long,
+    val remoteId: String,
+    val remoteFingerprint: String,
+    val verifiedAt: Long
+)
+
+fun CloudMediaEntity.backupFingerprint(): String =
+    contentHash?.takeIf { it.isNotBlank() }?.let(::canonicalBackupChecksum) ?: "$size|$timestamp"
+
+fun canonicalBackupChecksum(value: String): String {
+    val normalized = value.lowercase()
+    if (normalized.length == 40 && normalized.all { it in '0'..'9' || it in 'a'..'f' }) {
+        return normalized
+    }
+    return runCatching { Base64.getDecoder().decode(value) }
+        .getOrNull()
+        ?.takeIf { it.size == 20 }
+        ?.joinToString("") { "%02x".format(it) }
+        ?: value
 }

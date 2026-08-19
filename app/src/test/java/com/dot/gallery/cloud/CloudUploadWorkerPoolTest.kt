@@ -6,8 +6,11 @@
 package com.dot.gallery.cloud
 
 import androidx.work.WorkInfo
+import com.dot.gallery.cloud.sync.BACKUP_VERIFICATION_MAX_AGE_MS
 import com.dot.gallery.cloud.sync.CloudUploadWorker
+import com.dot.gallery.cloud.sync.backupChecksumVariants
 import com.dot.gallery.cloud.sync.backupDestinationConfigIds
+import com.dot.gallery.cloud.sync.backupVerificationCutoff
 import com.dot.gallery.cloud.sync.isActiveBackupWork
 import com.dot.gallery.cloud.sync.isBackupRevisionCached
 import com.dot.gallery.cloud.sync.mapWorkerPool
@@ -135,6 +138,23 @@ class CloudUploadWorkerPoolTest {
     }
 
     @Test
+    fun cachedVerificationExpiresAfterBoundedAge() {
+        val now = 1_000_000_000L
+
+        assertEquals(now - BACKUP_VERIFICATION_MAX_AGE_MS, backupVerificationCutoff(now))
+    }
+
+    @Test
+    fun checksumLookupSupportsImmichBase64AndLocalHexRepresentations() {
+        val hex = "000102030405060708090a0b0c0d0e0f10111213"
+
+        assertEquals(
+            listOf(hex, "AAECAwQFBgcICQoLDA0ODxAREhM="),
+            backupChecksumVariants(hex)
+        )
+    }
+
+    @Test
     fun immichPresenceRequiresNonTrashedDuplicate() {
         val duplicate = ImmichBulkCheckResultItemDto(
             action = "reject",
@@ -175,6 +195,38 @@ class CloudUploadWorkerPoolTest {
                 timestamp = 101L,
                 localRevisions = emptySet(),
                 remoteRevisions = remoteRevisions
+            )
+        )
+    }
+
+    @Test
+    fun unchangedSuccessfulSyncRevisionDoesNotRequireAnotherContentCheck() {
+        assertEquals(
+            BackupMatchEvidence.VERIFIED_REVISION,
+            backupMatchEvidence(
+                uri = "content://media/42",
+                mediaId = 42L,
+                label = "photo.jpg",
+                mimeType = "image/jpeg",
+                size = 1234L,
+                timestamp = 100L,
+                cachedNames = setOf("photo.jpg"),
+                localRevisions = setOf("content://media/42|1234|100"),
+                remoteRevisions = emptySet()
+            )
+        )
+        assertEquals(
+            BackupMatchEvidence.ASSUMED_FILENAME,
+            backupMatchEvidence(
+                uri = "content://media/42",
+                mediaId = 42L,
+                label = "photo.jpg",
+                mimeType = "image/jpeg",
+                size = 1234L,
+                timestamp = 101L,
+                cachedNames = setOf("photo.jpg"),
+                localRevisions = setOf("content://media/42|1234|100"),
+                remoteRevisions = emptySet()
             )
         )
     }

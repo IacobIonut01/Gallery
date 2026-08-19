@@ -13,7 +13,10 @@ import androidx.room.Transaction
 import androidx.room.Update
 import com.dot.gallery.cloud.core.ProviderType
 import com.dot.gallery.cloud.core.SyncState
+import com.dot.gallery.cloud.data.entity.CloudBackupRevisionEntity
 import com.dot.gallery.cloud.data.entity.CloudMediaEntity
+import com.dot.gallery.cloud.data.entity.backupFingerprint
+import com.dot.gallery.cloud.data.entity.canonicalBackupChecksum
 import kotlinx.coroutines.flow.Flow
 
 data class CloudMediaLocalState(
@@ -24,12 +27,6 @@ data class CloudMediaLocalState(
     val size: Long,
     val timestamp: Long,
     val syncState: SyncState
-)
-
-data class CloudMediaLocalRevision(
-    val localCopyPath: String,
-    val size: Long,
-    val timestamp: Long
 )
 
 data class CloudMediaRemoteRevision(
@@ -58,14 +55,55 @@ interface CloudMediaDao {
     @Query("SELECT * FROM cloud_media WHERE serverConfigId = :configId ORDER BY timestamp DESC")
     fun getByServerConfig(configId: Long): Flow<List<CloudMediaEntity>>
 
+    @Query("SELECT * FROM cloud_backup_revision WHERE serverConfigId = :configId")
+    suspend fun getBackupRevisions(configId: Long): List<CloudBackupRevisionEntity>
+
     @Query(
         """
-        SELECT localCopyPath, size, timestamp FROM cloud_media
-        WHERE serverConfigId = :configId AND localCopyPath != ''
-            AND syncState = 'SYNCED' AND trashed = 0
+        SELECT * FROM cloud_backup_revision
+        WHERE serverConfigId = :configId AND verifiedAt >= :verifiedAfter
         """
     )
-    suspend fun getLocalRevisions(configId: Long): List<CloudMediaLocalRevision>
+    suspend fun getValidBackupRevisions(
+        configId: Long,
+        verifiedAfter: Long
+    ): List<CloudBackupRevisionEntity>
+
+    @Query(
+        """
+        SELECT * FROM cloud_backup_revision
+        WHERE serverConfigId = :configId AND remoteId IN (:remoteIds)
+        """
+    )
+    suspend fun getBackupRevisions(configId: Long, remoteIds: List<String>): List<CloudBackupRevisionEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertBackupRevision(revision: CloudBackupRevisionEntity)
+
+    @Query(
+        """
+        DELETE FROM cloud_backup_revision
+        WHERE serverConfigId = :configId AND localUri = :localUri
+        """
+    )
+    suspend fun deleteBackupRevision(configId: Long, localUri: String)
+
+    @Query("DELETE FROM cloud_backup_revision WHERE serverConfigId = :configId")
+    suspend fun deleteBackupRevisions(configId: Long)
+
+    @Query("DELETE FROM cloud_backup_revision")
+    suspend fun deleteAllBackupRevisions()
+
+    @Query("DELETE FROM cloud_backup_revision WHERE providerType = :providerType")
+    suspend fun deleteBackupRevisions(providerType: ProviderType)
+
+    @Query(
+        """
+        DELETE FROM cloud_backup_revision
+        WHERE serverConfigId = :configId AND remoteId = :remoteId
+        """
+    )
+    suspend fun deleteBackupRevisions(configId: Long, remoteId: String)
 
     @Query(
         """
@@ -87,7 +125,8 @@ interface CloudMediaDao {
 
     @Query(
         """
-        SELECT remoteId, providerType, serverConfigId, localCopyPath, size, timestamp, syncState FROM cloud_media
+        SELECT remoteId, providerType, serverConfigId, localCopyPath, size, timestamp, syncState
+        FROM cloud_media
         WHERE serverConfigId = :configId AND localCopyPath != '' AND remoteId IN (:remoteIds)
         """
     )
@@ -123,6 +162,15 @@ interface CloudMediaDao {
 
     @Query("SELECT * FROM cloud_media WHERE contentHash = :hash AND serverConfigId = :serverConfigId LIMIT 1")
     suspend fun getByContentHash(hash: String, serverConfigId: Long): CloudMediaEntity?
+
+    @Query(
+        """
+        SELECT * FROM cloud_media
+        WHERE contentHash IN (:hashes) AND serverConfigId = :serverConfigId
+        LIMIT 1
+        """
+    )
+    suspend fun getByContentHashes(hashes: List<String>, serverConfigId: Long): CloudMediaEntity?
 
     @Query("SELECT * FROM cloud_media WHERE syncState = :state ORDER BY timestamp DESC")
     fun getBySyncState(state: SyncState): Flow<List<CloudMediaEntity>>
@@ -179,8 +227,18 @@ interface CloudMediaDao {
     suspend fun insertAll(items: List<CloudMediaEntity>) {
         items.groupBy { it.serverConfigId }.forEach { (configId, configItems) ->
             configItems.chunked(900).forEach { chunk ->
-                val localStates = getLocalStates(configId, chunk.map { it.remoteId })
+                val remoteIds = chunk.map { it.remoteId }
+                val localStates = getLocalStates(configId, remoteIds)
                     .associateBy { it.providerType to it.remoteId }
+                val incomingByRemoteId = chunk.associateBy { it.remoteId }
+                getBackupRevisions(configId, remoteIds).forEach { revision ->
+                    val incoming = incomingByRemoteId[revision.remoteId]
+                    if (incoming != null &&
+                        incoming.backupFingerprint() != canonicalBackupChecksum(revision.remoteFingerprint)
+                    ) {
+                        deleteBackupRevision(configId, revision.localUri)
+                    }
+                }
                 insertAllRaw(
                     chunk.map { item ->
                         val local = localStates[item.providerType to item.remoteId]
@@ -288,14 +346,38 @@ interface CloudMediaDao {
         WHERE remoteId = :remoteId AND providerType = :providerType AND serverConfigId = :serverConfigId
         """
     )
-    suspend fun delete(remoteId: String, providerType: ProviderType, serverConfigId: Long)
+    suspend fun deleteRaw(remoteId: String, providerType: ProviderType, serverConfigId: Long)
+
+    @Transaction
+    suspend fun delete(remoteId: String, providerType: ProviderType, serverConfigId: Long) {
+        deleteBackupRevisions(serverConfigId, remoteId)
+        deleteRaw(remoteId, providerType, serverConfigId)
+    }
 
     @Query("DELETE FROM cloud_media WHERE serverConfigId = :configId")
-    suspend fun deleteByServerConfig(configId: Long)
+    suspend fun deleteByServerConfigRaw(configId: Long)
+
+    @Transaction
+    suspend fun deleteByServerConfig(configId: Long) {
+        deleteBackupRevisions(configId)
+        deleteByServerConfigRaw(configId)
+    }
 
     @Query("DELETE FROM cloud_media WHERE providerType = :providerType")
-    suspend fun deleteByProvider(providerType: ProviderType)
+    suspend fun deleteByProviderRaw(providerType: ProviderType)
+
+    @Transaction
+    suspend fun deleteByProvider(providerType: ProviderType) {
+        deleteBackupRevisions(providerType)
+        deleteByProviderRaw(providerType)
+    }
 
     @Query("DELETE FROM cloud_media")
-    suspend fun deleteAll()
+    suspend fun deleteAllRaw()
+
+    @Transaction
+    suspend fun deleteAll() {
+        deleteAllBackupRevisions()
+        deleteAllRaw()
+    }
 }

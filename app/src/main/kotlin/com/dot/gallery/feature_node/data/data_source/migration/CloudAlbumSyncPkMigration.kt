@@ -42,3 +42,47 @@ val MIGRATION_43_44 = object : Migration(43, 44) {
         db.execSQL("ALTER TABLE `cloud_album_sync_new` RENAME TO `cloud_album_sync`")
     }
 }
+
+val MIGRATION_44_45 = object : Migration(44, 45) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `cloud_backup_revision` (
+                `serverConfigId` INTEGER NOT NULL,
+                `providerType` TEXT NOT NULL,
+                `localUri` TEXT NOT NULL,
+                `localSize` INTEGER NOT NULL,
+                `localTimestamp` INTEGER NOT NULL,
+                `remoteId` TEXT NOT NULL,
+                `remoteFingerprint` TEXT NOT NULL,
+                `verifiedAt` INTEGER NOT NULL,
+                PRIMARY KEY(`serverConfigId`, `localUri`)
+            )
+            """.trimIndent()
+        )
+        db.execSQL(
+            """
+            INSERT OR REPLACE INTO `cloud_backup_revision` (
+                `serverConfigId`, `providerType`, `localUri`, `localSize`, `localTimestamp`,
+                `remoteId`, `remoteFingerprint`, `verifiedAt`
+            )
+            SELECT `serverConfigId`, `providerType`, `localCopyPath`, `size`, `timestamp`,
+                `remoteId`, `contentHash`, CAST(strftime('%s', 'now') AS INTEGER) * 1000
+            FROM `cloud_media`
+            WHERE `localCopyPath` != '' AND `contentHash` IS NOT NULL AND `contentHash` != ''
+            """.trimIndent()
+        )
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_cloud_backup_revision_serverConfigId` " +
+                "ON `cloud_backup_revision` (`serverConfigId`)"
+        )
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_cloud_backup_revision_providerType` " +
+                "ON `cloud_backup_revision` (`providerType`)"
+        )
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_cloud_backup_revision_serverConfigId_remoteId` " +
+                "ON `cloud_backup_revision` (`serverConfigId`, `remoteId`)"
+        )
+    }
+}

@@ -38,8 +38,10 @@ import com.dot.gallery.cloud.data.dao.CloudDeleteLocalPrefDao
 import com.dot.gallery.cloud.data.dao.CloudMediaDao
 import com.dot.gallery.cloud.data.dao.CloudServerConfigDao
 import com.dot.gallery.cloud.data.dao.CloudUploadPrefDao
+import com.dot.gallery.cloud.data.entity.CloudBackupRevisionEntity
 import com.dot.gallery.cloud.data.entity.CloudMediaEntity
 import com.dot.gallery.cloud.data.entity.CloudServerConfigEntity
+import com.dot.gallery.cloud.data.entity.backupFingerprint
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.domain.util.getUri
@@ -59,6 +61,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import androidx.work.workDataOf
 import java.security.MessageDigest
+import java.util.Base64
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
@@ -161,13 +164,11 @@ class CloudUploadWorker @AssistedInject constructor(
                 }
 
                 val accountLabel = config.displayName.ifBlank { config.providerType.displayName }
-                val cachedLocalRevisions = if (syncProvider.requiresUploadChecksum) {
-                    emptySet()
-                } else {
-                    cloudMediaDao.getLocalRevisions(config.id)
-                        .map { "${it.localCopyPath}|${it.size}|${it.timestamp / 1000L}" }
-                        .toSet()
-                }
+                val cachedLocalRevisions = cloudMediaDao.getValidBackupRevisions(
+                    config.id,
+                    backupVerificationCutoff()
+                ).map { backupLocalRevisionKey(it.localUri, it.localSize, it.localTimestamp) }
+                    .toSet()
                 val cachedRemoteRevisions = emptySet<String>()
 
                 for (pref in enabledPrefs) {
@@ -254,7 +255,11 @@ class CloudUploadWorker @AssistedInject constructor(
                             syncProvider.bulkUploadCheck(mediaWithHashes.map { it.second })
                                 .onSuccess { alreadyUploaded ->
                                     mediaWithHashes.forEachIndexed { idx, (media, hash) ->
-                                        if (alreadyUploaded[idx.toString()] != true) queue(media, hash)
+                                        if (alreadyUploaded[idx.toString()] == true) {
+                                            cacheVerifiedBackupRevision(cloudMediaDao, config.id, media, hash)
+                                        } else {
+                                            queue(media, hash)
+                                        }
                                     }
                                 }
                                 .onFailure { error ->
@@ -321,6 +326,12 @@ class CloudUploadWorker @AssistedInject constructor(
                                         printDebug("CloudUploadWorker: [${task.accountLabel}] already backed up ${task.media.label}")
                                     }
                                     outcome.result?.onSuccess { entity ->
+                                        cacheSuccessfulBackupRevision(
+                                            cloudMediaDao,
+                                            task.configId,
+                                            task.media,
+                                            entity
+                                        )
                                         completedItems++
                                         completedFiles.add(task.media.label)
                                         if (entity.remoteId.isNotBlank()) {
@@ -595,7 +606,10 @@ class CloudUploadWorker @AssistedInject constructor(
                     ?: return UploadOutcome(kotlin.Result.failure(Exception("Checksum is required")))
                 val alreadyPresent = task.provider.bulkUploadCheck(listOf(requiredChecksum))
                     .getOrElse { return UploadOutcome(kotlin.Result.failure(it)) }["0"] == true
-                if (alreadyPresent) return UploadOutcome(alreadyPresent = true)
+                if (alreadyPresent) {
+                    cacheVerifiedBackupRevision(cloudMediaDao, task.configId, task.media, requiredChecksum)
+                    return UploadOutcome(alreadyPresent = true)
+                }
             }
             val result = checksum?.let {
                 task.provider.uploadAsset(task.media, task.targetPath, it)
@@ -745,6 +759,65 @@ internal fun backupDestinationConfigIds(
     albumIdsByConfig: Map<Long, Set<Long>>
 ): Set<Long> = albumIdsByConfig.filterValues { albumId in it }.keys
 
+internal const val BACKUP_VERIFICATION_MAX_AGE_MS = 7L * 24L * 60L * 60L * 1000L
+
+internal fun backupVerificationCutoff(now: Long = System.currentTimeMillis()): Long =
+    now - BACKUP_VERIFICATION_MAX_AGE_MS
+
+internal fun backupLocalRevisionKey(uri: String, size: Long, timestamp: Long): String =
+    "$uri|$size|$timestamp"
+
+internal suspend fun cacheVerifiedBackupRevision(
+    cloudMediaDao: CloudMediaDao,
+    configId: Long,
+    media: Media,
+    hash: String
+): Boolean {
+    val remote = cloudMediaDao.getByContentHashes(backupChecksumVariants(hash), configId)
+        ?: return false
+    cacheSuccessfulBackupRevision(cloudMediaDao, configId, media, remote)
+    return true
+}
+
+internal suspend fun cacheSuccessfulBackupRevision(
+    cloudMediaDao: CloudMediaDao,
+    configId: Long,
+    media: Media,
+    remote: CloudMediaEntity
+) {
+    cloudMediaDao.upsertBackupRevision(
+        CloudBackupRevisionEntity(
+            serverConfigId = configId,
+            providerType = remote.providerType,
+            localUri = media.getUri().toString(),
+            localSize = media.size,
+            localTimestamp = media.timestamp,
+            remoteId = remote.remoteId,
+            remoteFingerprint = remote.backupFingerprint(),
+            verifiedAt = System.currentTimeMillis()
+        )
+    )
+}
+
+internal fun backupChecksumVariants(hash: String): List<String> {
+    val normalized = hash.lowercase()
+    if (normalized.length != 40 || normalized.any { it !in '0'..'9' && it !in 'a'..'f' }) {
+        return listOf(hash)
+    }
+    val bytes = ByteArray(normalized.length / 2) { index ->
+        normalized.substring(index * 2, index * 2 + 2).toInt(16).toByte()
+    }
+    return listOf(hash, Base64.getEncoder().encodeToString(bytes)).distinct()
+}
+
+internal fun backupRemoteRevisionKey(
+    mediaId: String,
+    label: String,
+    mimeType: String,
+    size: Long,
+    timestamp: Long
+): String = "$mediaId|$label|$mimeType|$size|$timestamp"
+
 internal fun isBackupRevisionCached(
     uri: String,
     mediaId: Long,
@@ -754,8 +827,8 @@ internal fun isBackupRevisionCached(
     timestamp: Long,
     localRevisions: Set<String>,
     remoteRevisions: Set<String>
-): Boolean = "$uri|$size|$timestamp" in localRevisions ||
-    "$mediaId|$label|$mimeType|$size|$timestamp" in remoteRevisions
+): Boolean = backupLocalRevisionKey(uri, size, timestamp) in localRevisions ||
+    backupRemoteRevisionKey(mediaId.toString(), label, mimeType, size, timestamp) in remoteRevisions
 
 internal fun shouldDeferChecksumCheck(itemCount: Int, maxConcurrentUploads: Int): Boolean =
     itemCount <= maxConcurrentUploads.coerceAtLeast(1) * 2

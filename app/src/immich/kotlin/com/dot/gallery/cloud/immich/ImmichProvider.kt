@@ -964,9 +964,10 @@ class ImmichProvider @Inject constructor(
 
     override suspend fun emptyTrash(): Result<Unit> {
         return try {
+            val configId = requireConfigId()
             val response = requireApi().emptyTrash()
             if (response.isSuccessful) {
-                cloudMediaDao.deleteByProvider(ProviderType.IMMICH)
+                cloudMediaDao.deleteByServerConfig(configId)
                 Result.success(Unit)
             } else {
                 Result.failure(Exception("Failed to empty trash: ${response.code()}"))

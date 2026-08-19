@@ -22,6 +22,7 @@ import com.dot.gallery.cloud.data.dao.CloudUploadPrefDao
 import com.dot.gallery.cloud.data.dao.PersonDao
 import com.dot.gallery.cloud.data.dao.SyncStateDao
 import com.dot.gallery.cloud.data.entity.CloudAlbumSyncEntity
+import com.dot.gallery.cloud.data.entity.CloudBackupRevisionEntity
 import com.dot.gallery.cloud.data.entity.CloudMediaEntity
 import com.dot.gallery.cloud.data.entity.CloudOfflinePinEntity
 import com.dot.gallery.cloud.data.entity.CloudServerConfigEntity
@@ -85,6 +86,7 @@ import com.dot.gallery.feature_node.domain.util.Converters
         CollectionAlbum::class,
         ScannedMedia::class,
         CloudMediaEntity::class,
+        CloudBackupRevisionEntity::class,
         CloudServerConfigEntity::class,
         PersonEntity::class,
         DetectedFaceEntity::class,
@@ -101,7 +103,7 @@ import com.dot.gallery.feature_node.domain.util.Converters
         SmartScanPhaseEntity::class,
         MediaFeatureStateEntity::class
     ],
-    version = 44,
+    version = 45,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
@@ -150,7 +152,7 @@ import com.dot.gallery.feature_node.domain.util.Converters
         // Migration 40 to 41 is handled manually in SmartScanMigration.kt
         // Migration 41 to 42 is handled manually in MergedSubfolderMigration.kt
         // Migration 42 to 43 is handled manually in SmartScanMigration.kt
-        // Migration 43 to 44 is handled manually in CloudAlbumSyncPkMigration.kt
+        // Migrations 43 to 45 are handled manually in CloudAlbumSyncPkMigration.kt
     ]
 )
 @TypeConverters(Converters::class, CloudConverters::class, SmartScanConverters::class)

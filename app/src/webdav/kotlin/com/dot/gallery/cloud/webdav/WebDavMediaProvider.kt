@@ -431,7 +431,8 @@ open class WebDavMediaProvider(
                         mimeType = mimeType,
                         timestamp = System.currentTimeMillis(),
                         size = tempFile.length(),
-                        syncState = SyncState.SYNCED
+                        syncState = SyncState.SYNCED,
+                        localCopyPath = localMedia.getUri().toString()
                     )
                     cloudMediaDao.insert(entity)
                     Result.success(entity)

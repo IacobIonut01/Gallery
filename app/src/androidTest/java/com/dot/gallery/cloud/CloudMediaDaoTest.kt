@@ -9,8 +9,8 @@ import androidx.room.Room
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.dot.gallery.cloud.core.ProviderType
-import com.dot.gallery.cloud.core.SyncState
 import com.dot.gallery.cloud.data.dao.CloudMediaDao
+import com.dot.gallery.cloud.data.entity.CloudBackupRevisionEntity
 import com.dot.gallery.cloud.data.entity.CloudMediaEntity
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
 import com.dot.gallery.feature_node.domain.util.isVideo
@@ -72,6 +72,20 @@ class CloudMediaDaoTest {
         archived = archived,
         mimeType = mimeType,
         duration = duration
+    )
+
+    private fun revision(
+        localUri: String,
+        remoteFingerprint: String = "sha1"
+    ) = CloudBackupRevisionEntity(
+        serverConfigId = 1L,
+        providerType = ProviderType.IMMICH,
+        localUri = localUri,
+        localSize = 1234L,
+        localTimestamp = 100L,
+        remoteId = "asset",
+        remoteFingerprint = remoteFingerprint,
+        verifiedAt = System.currentTimeMillis()
     )
 
     @Test
@@ -180,29 +194,64 @@ class CloudMediaDaoTest {
     }
 
     @Test
-    fun remoteRefreshPreservesLocalBackupRevision() = runBlocking {
-        val uploaded = media("asset", ProviderType.IMMICH, 1L, timestamp = 2_000L).copy(
-            localCopyPath = "content://media/external/images/media/42",
-            size = 1234L,
-            syncState = SyncState.SYNCED
+    fun backupRevisionCacheSupportsIdenticalLocalFilesWithoutChangingRemoteMetadata() = runBlocking {
+        dao.insert(
+            media("asset", ProviderType.IMMICH, 1L, timestamp = 2_000L).copy(
+                contentHash = "sha1",
+                size = 2345L,
+                favorite = true
+            )
         )
-        dao.insert(uploaded)
+        dao.upsertBackupRevision(revision("content://media/42"))
+        dao.upsertBackupRevision(revision("content://media/43"))
+
+        val cached = dao.getByRemoteId("asset", ProviderType.IMMICH, 1L)!!
+        assertEquals(2345L, cached.size)
+        assertEquals(2_000L, cached.timestamp)
+        assertTrue(cached.favorite)
+        assertEquals(2, dao.getBackupRevisions(1L).size)
+    }
+
+    @Test
+    fun remoteRefreshInvalidatesBackupProofWhenFingerprintChanges() = runBlocking {
+        dao.insert(
+            media("asset", ProviderType.IMMICH, 1L, timestamp = 2_000L).copy(
+                contentHash = "old-hash"
+            )
+        )
+        dao.upsertBackupRevision(revision("content://media/42", remoteFingerprint = "old-hash"))
 
         dao.insertAll(
             listOf(
                 media("asset", ProviderType.IMMICH, 1L, timestamp = 3_000L).copy(
-                    label = "refreshed.jpg",
-                    size = 1234L,
-                    syncState = SyncState.REMOTE_ONLY
+                    contentHash = "new-hash"
                 )
             )
         )
 
-        val refreshed = dao.getByRemoteId("asset", ProviderType.IMMICH, 1L)!!
-        assertEquals("refreshed.jpg", refreshed.label)
-        assertEquals(uploaded.localCopyPath, refreshed.localCopyPath)
-        assertEquals(uploaded.timestamp, refreshed.timestamp)
-        assertEquals(SyncState.SYNCED, refreshed.syncState)
+        assertTrue(dao.getBackupRevisions(1L).isEmpty())
+    }
+
+    @Test
+    fun remoteRefreshPreservesBackupProofWhenFingerprintIsUnchanged() = runBlocking {
+        val hex = "000102030405060708090a0b0c0d0e0f10111213"
+        val base64 = "AAECAwQFBgcICQoLDA0ODxAREhM="
+        dao.insert(
+            media("asset", ProviderType.IMMICH, 1L, timestamp = 2_000L).copy(
+                contentHash = base64
+            )
+        )
+        dao.upsertBackupRevision(revision("content://media/42", remoteFingerprint = hex))
+
+        dao.insertAll(
+            listOf(
+                media("asset", ProviderType.IMMICH, 1L, timestamp = 3_000L).copy(
+                    contentHash = base64
+                )
+            )
+        )
+
+        assertEquals(1, dao.getBackupRevisions(1L).size)
     }
 
     @Test

@@ -24,6 +24,10 @@ import com.dot.gallery.cloud.di.CloudProviderInitializer
 import com.dot.gallery.cloud.sync.CloudIndexProgressManager
 import com.dot.gallery.cloud.sync.CloudSyncScheduler
 import com.dot.gallery.cloud.sync.CloudUploadWorker
+import com.dot.gallery.cloud.sync.backupLocalRevisionKey
+import com.dot.gallery.cloud.sync.backupRemoteRevisionKey
+import com.dot.gallery.cloud.sync.backupVerificationCutoff
+import com.dot.gallery.cloud.sync.cacheVerifiedBackupRevision
 import com.dot.gallery.cloud.sync.isActiveBackupWork
 import com.dot.gallery.cloud.sync.isBackupRevisionCached
 import com.dot.gallery.cloud.ui.verifiedItemsByIndex
@@ -63,7 +67,7 @@ data class AccountBackupStatus(
     val accountLabel: String,
     val enabledAlbumCount: Int,
     val totalAssets: Int,
-    /** Content-hash matches confirmed by the provider during the latest scan. */
+    /** Provider-confirmed matches plus unchanged local revisions from successful syncs. */
     val verifiedCount: Int,
     /** Filename-only matches from the local cloud index; useful evidence, not proof. */
     val assumedCount: Int,
@@ -289,14 +293,22 @@ class CloudBackupViewModel @Inject constructor(
                         val cachedNames = cached
                             .mapNotNull { it.label.ifBlank { it.remoteId.substringAfterLast('/') }.ifBlank { null } }
                             .toSet()
-                        val localRevisions = cached
-                            .filter { it.localCopyPath.isNotBlank() }
-                            .map { "${it.localCopyPath}|${it.size}|${it.timestamp / 1000L}" }
+                        val localRevisions = cloudMediaDao.getValidBackupRevisions(
+                            cfg.id,
+                            backupVerificationCutoff()
+                        ).map { backupLocalRevisionKey(it.localUri, it.localSize, it.localTimestamp) }
                             .toSet()
                         val remoteRevisions = if (provider?.requiresUploadChecksum == true) {
-                            cached
-                                .filter { it.fileId.isNotBlank() && it.lastSyncedAt > 0L }
-                                .map { "${it.fileId}|${it.label}|${it.mimeType}|${it.size}|${it.lastSyncedAt / 1000L}" }
+                            cloudMediaDao.getRemoteRevisions(cfg.id)
+                                .map {
+                                    backupRemoteRevisionKey(
+                                        it.fileId,
+                                        it.label,
+                                        it.mimeType,
+                                        it.size,
+                                        it.lastSyncedAt / 1000L
+                                    )
+                                }
                                 .toSet()
                         } else {
                             emptySet()
@@ -320,29 +332,26 @@ class CloudBackupViewModel @Inject constructor(
                             connectionState = connectionStateOf(cfg.id),
                             enabledAlbumCount = prefs.size,
                             media = media,
-                            cachedNames = cachedNames,
-                            nameMatched = evidenceByMediaId.count {
-                                it.value != BackupMatchEvidence.UNKNOWN
-                            }
+                            evidenceByMediaId = evidenceByMediaId
                         )
                     }
 
                     // Phase A publish: services + provisional counts, still scanning.
                     val refined = scanned.map {
-                        it.toStatus(verified = 0, assumed = it.nameMatched)
+                        it.toStatus(it.verifiedIds.size, it.assumedCount(it.verifiedIds))
                     }.toMutableList()
                     publishAccounts(refined, isScanning = true)
                     var verificationFailed = false
 
-                    // Phase B: hash every readable candidate and ask the provider for a content
-                    // match. Filename matches stay assumed unless this check confirms them.
+                    // Phase B: hash every readable, not-yet-verified candidate and ask the provider
+                    // for a content match. Filename matches stay assumed unless this check confirms them.
                     scanned.forEachIndexed { accountIndex, s ->
-                        val verifiedIds = mutableSetOf<Long>()
+                        val verifiedIds = s.verifiedIds.toMutableSet()
                         // No live provider (errored/not authenticated) — retain filename matches
                         // as assumptions and leave everything else unknown. With a provider, hash
-                        // every candidate so a filename match can be promoted to verified proof.
+                        // every remaining candidate so a filename match can be promoted to verified proof.
                         val provider = s.provider
-                        val candidates = s.media
+                        val candidates = s.media.filterNot { it.id in verifiedIds }
                         if (provider != null) {
                             candidates.chunked(VERIFICATION_BATCH_SIZE).forEachIndexed { chunkIndex, chunk ->
                                 val checked = (chunkIndex * VERIFICATION_BATCH_SIZE).coerceAtMost(candidates.size)
@@ -363,20 +372,22 @@ class CloudBackupViewModel @Inject constructor(
                                         verificationFailed = true
                                         emptyMap()
                                     }
-                                    verifiedIds += verifiedItemsByIndex(hashed, present)
-                                        .map { it.first.id }
+                                    verifiedItemsByIndex(hashed, present).forEach { (media, hash) ->
+                                        verifiedIds += media.id
+                                        cacheVerifiedBackupRevision(cloudMediaDao, s.config.id, media, hash)
+                                    }
                                 }
-                                val assumed = s.media.count {
-                                    it.id !in verifiedIds && it.label in s.cachedNames
-                                }
-                                refined[accountIndex] = s.toStatus(verifiedIds.size, assumed)
+                                refined[accountIndex] = s.toStatus(
+                                    verifiedIds.size,
+                                    s.assumedCount(verifiedIds)
+                                )
                                 publishAccounts(refined, isScanning = true)
                             }
                         }
-                        val assumed = s.media.count {
-                            it.id !in verifiedIds && it.label in s.cachedNames
-                        }
-                        refined[accountIndex] = s.toStatus(verifiedIds.size, assumed)
+                        refined[accountIndex] = s.toStatus(
+                            verifiedIds.size,
+                            s.assumedCount(verifiedIds)
+                        )
                     }
 
                     publishAccounts(refined, isScanning = false)
@@ -404,9 +415,16 @@ class CloudBackupViewModel @Inject constructor(
         val connectionState: ConnectionState,
         val enabledAlbumCount: Int,
         val media: List<com.dot.gallery.feature_node.domain.model.Media.UriMedia>,
-        val cachedNames: Set<String>,
-        val nameMatched: Int
+        val evidenceByMediaId: Map<Long, BackupMatchEvidence>
     ) {
+        val verifiedIds: Set<Long> = evidenceByMediaId
+            .filterValues { it == BackupMatchEvidence.VERIFIED_REVISION }
+            .keys
+
+        fun assumedCount(verifiedIds: Set<Long>): Int = evidenceByMediaId.count { (mediaId, evidence) ->
+            mediaId !in verifiedIds && evidence.isAssumed
+        }
+
         fun toStatus(verified: Int, assumed: Int) = AccountBackupStatus(
             configId = config.id,
             providerType = config.providerType,
@@ -533,9 +551,13 @@ class CloudBackupViewModel @Inject constructor(
 }
 
 internal enum class BackupMatchEvidence {
+    VERIFIED_REVISION,
     ASSUMED_REVISION,
     ASSUMED_FILENAME,
-    UNKNOWN
+    UNKNOWN;
+
+    val isAssumed: Boolean
+        get() = this == ASSUMED_REVISION || this == ASSUMED_FILENAME
 }
 
 internal fun backupMatchEvidence(
@@ -549,6 +571,8 @@ internal fun backupMatchEvidence(
     localRevisions: Set<String>,
     remoteRevisions: Set<String>
 ): BackupMatchEvidence = when {
+    backupLocalRevisionKey(uri, size, timestamp) in localRevisions ->
+        BackupMatchEvidence.VERIFIED_REVISION
     isBackupRevisionCached(
         uri = uri,
         mediaId = mediaId,
@@ -556,7 +580,7 @@ internal fun backupMatchEvidence(
         mimeType = mimeType,
         size = size,
         timestamp = timestamp,
-        localRevisions = localRevisions,
+        localRevisions = emptySet(),
         remoteRevisions = remoteRevisions
     ) -> BackupMatchEvidence.ASSUMED_REVISION
     label in cachedNames -> BackupMatchEvidence.ASSUMED_FILENAME
