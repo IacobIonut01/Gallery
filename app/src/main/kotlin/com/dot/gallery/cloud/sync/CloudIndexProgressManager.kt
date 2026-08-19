@@ -20,6 +20,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -57,6 +58,10 @@ class CloudIndexProgressManager @Inject constructor(
 
     private val _state = MutableStateFlow(IndexState())
     val state: StateFlow<IndexState> = _state.asStateFlow()
+
+    init {
+        cancelNotification()
+    }
 
     /** Marks [configId] as started indexing and (re)posts the notification. */
     @Synchronized
@@ -120,6 +125,7 @@ class CloudIndexProgressManager @Inject constructor(
             .setContentText(text)
             .setProgress(0, 0, true)
             .setOngoing(true)
+            .setTimeoutAfter(INDEX_NOTIFICATION_TIMEOUT_MILLIS)
             .setOnlyAlertOnce(true)
             .setSilent(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -138,5 +144,13 @@ class CloudIndexProgressManager @Inject constructor(
     private companion object {
         const val CHANNEL_INDEX = "cloud_index_progress"
         const val NOTIFICATION_ID_INDEX = 91003
+        const val INDEX_NOTIFICATION_TIMEOUT_MILLIS = 5 * 60_000L
     }
 }
+
+internal fun shouldStartCloudIndex(effectiveOffline: Boolean): Boolean = !effectiveOffline
+
+internal suspend fun <T> fetchCloudIndexPage(
+    timeoutMillis: Long,
+    fetch: suspend () -> T
+): T = withTimeout(timeoutMillis) { fetch() }

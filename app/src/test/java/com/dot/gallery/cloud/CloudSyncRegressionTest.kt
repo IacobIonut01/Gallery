@@ -12,14 +12,19 @@ import com.dot.gallery.cloud.data.entity.CloudUploadPrefEntity
 import com.dot.gallery.cloud.sync.CloudSyncSchedulePlan
 import com.dot.gallery.cloud.sync.cloudSyncScheduleChanged
 import com.dot.gallery.cloud.sync.cloudSyncSchedulePlan
+import com.dot.gallery.cloud.sync.fetchCloudIndexPage
 import com.dot.gallery.cloud.sync.isCloudSyncDue
+import com.dot.gallery.cloud.sync.shouldStartCloudIndex
 import com.dot.gallery.cloud.sync.syncIncrementally
 import com.dot.gallery.cloud.ui.AddServerUiState
 import com.dot.gallery.cloud.ui.backup.backupScanRequired
 import com.dot.gallery.cloud.ui.backup.backupSelectionKeys
 import com.dot.gallery.cloud.ui.backup.newlyConnectedConfigIds
 import com.dot.gallery.cloud.ui.mergeCloudServerConfig
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -182,6 +187,25 @@ class CloudSyncRegressionTest {
         assertFalse(isCloudSyncDue(lastSyncTimestamp = hour, intervalMinutes = 60, now = hour * 2 - 1))
         assertTrue(isCloudSyncDue(lastSyncTimestamp = hour, intervalMinutes = 60, now = hour * 2))
         assertTrue(isCloudSyncDue(lastSyncTimestamp = 0L, intervalMinutes = 1440, now = 1L))
+    }
+
+    @Test
+    fun cloudIndexDoesNotStartWhileOffline() {
+        assertFalse(shouldStartCloudIndex(effectiveOffline = true))
+        assertTrue(shouldStartCloudIndex(effectiveOffline = false))
+    }
+
+    @Test
+    fun stalledCloudIndexPageTimesOut() = runTest {
+        var timedOut = false
+
+        try {
+            fetchCloudIndexPage(timeoutMillis = 1_000L) { awaitCancellation() }
+        } catch (_: TimeoutCancellationException) {
+            timedOut = true
+        }
+
+        assertTrue(timedOut)
     }
 
     @Test

@@ -17,12 +17,16 @@ import com.dot.gallery.cloud.data.dao.CloudMediaDao
 import com.dot.gallery.cloud.data.dao.CloudServerConfigDao
 import com.dot.gallery.cloud.data.repository.CloudRepository
 import com.dot.gallery.cloud.network.ServerUrlResolver
+import com.dot.gallery.cloud.offline.OfflineModeManager
 import com.dot.gallery.cloud.sync.CloudIndexProgressManager
+import com.dot.gallery.cloud.sync.fetchCloudIndexPage
+import com.dot.gallery.cloud.sync.shouldStartCloudIndex
 import com.dot.gallery.core.Resource
 import com.dot.gallery.core.backup.PendingCloudFavoriteStore
 import com.dot.gallery.core.smart.SmartScanScheduler
 import com.dot.gallery.feature_node.data.data_source.SmartScanFeature
 import com.dot.gallery.feature_node.presentation.util.printDebug
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -49,6 +53,7 @@ class CloudProviderInitializer @Inject constructor(
     private val cloudMediaDao: CloudMediaDao,
     private val cloudRepository: CloudRepository,
     private val urlResolver: ServerUrlResolver,
+    private val offlineModeManager: OfflineModeManager,
     private val indexProgressManager: CloudIndexProgressManager,
     private val smartScanScheduler: SmartScanScheduler,
     private val pendingCloudFavoriteStore: PendingCloudFavoriteStore
@@ -78,13 +83,16 @@ class CloudProviderInitializer @Inject constructor(
      */
     private fun prefetchProviderData(provider: RemoteMediaProvider, label: String, configId: Long) {
         prefetchScope.launch {
+            if (!shouldStartCloudIndex(offlineModeManager.effectiveOfflineNow)) return@launch
             indexProgressManager.start(configId, label)
             try {
                 val previousSmartFeatureRevisions = cloudMediaDao.getSmartFeatureRevisions(configId)
                 var page = 0
                 var total = 0
                 while (true) {
-                    val resource = provider.getRemoteAssets(page, PREFETCH_PAGE_SIZE).first()
+                    val resource = fetchCloudIndexPage(PREFETCH_PAGE_TIMEOUT_MILLIS) {
+                        provider.getRemoteAssets(page, PREFETCH_PAGE_SIZE).first()
+                    }
                     if (resource !is Resource.Success) break
                     val items = resource.data ?: emptyList()
                     if (items.isNotEmpty()) {
@@ -105,6 +113,8 @@ class CloudProviderInitializer @Inject constructor(
                 if (cloudMediaDao.getSmartFeatureRevisions(configId) != previousSmartFeatureRevisions) {
                     smartScanScheduler.automatic(SmartScanFeature.ALL_MASK)
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 printDebug("CloudProviderInitializer: Asset prefetch failed for $label: ${e.message}")
             } finally {
@@ -112,15 +122,20 @@ class CloudProviderInitializer @Inject constructor(
             }
         }
         prefetchScope.launch {
+            if (!shouldStartCloudIndex(offlineModeManager.effectiveOfflineNow)) return@launch
             try {
                 val previousSmartFeatureRevisions = cloudMediaDao.getSmartFeatureRevisions(configId)
-                val trashed = provider.getRemoteTrashed().first()
+                val trashed = fetchCloudIndexPage(PREFETCH_PAGE_TIMEOUT_MILLIS) {
+                    provider.getRemoteTrashed().first()
+                }
                 if (trashed is Resource.Success) {
                     trashed.data?.let { cloudMediaDao.insertAll(it) }
                     if (cloudMediaDao.getSmartFeatureRevisions(configId) != previousSmartFeatureRevisions) {
                         smartScanScheduler.automatic(SmartScanFeature.ALL_MASK)
                     }
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 printDebug("CloudProviderInitializer: Trash prefetch failed for $label: ${e.message}")
             }
@@ -305,6 +320,7 @@ class CloudProviderInitializer @Inject constructor(
     companion object {
         /** Page size for the startup asset prefetch. */
         private const val PREFETCH_PAGE_SIZE = 200
+        private const val PREFETCH_PAGE_TIMEOUT_MILLIS = 5 * 60_000L
 
         /**
          * Hard cap on prefetch pages (safety valve against a misbehaving provider that never
