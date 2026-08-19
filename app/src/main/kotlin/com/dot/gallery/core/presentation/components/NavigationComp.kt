@@ -49,7 +49,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.dot.gallery.R
-import com.dot.gallery.core.AlbumMediaLoadMode
 import com.dot.gallery.core.Constants
 import com.dot.gallery.core.LocalMediaDistributor
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
@@ -71,6 +70,7 @@ import com.dot.gallery.core.Settings
 import com.dot.gallery.core.Settings.Misc.rememberTimelineGroupByMonth
 import com.dot.gallery.core.Settings.Misc.rememberTimelineGroupByYear
 import com.dot.gallery.core.navigate
+import com.dot.gallery.core.restorableAlbumTimelineMediaFlow
 import com.dot.gallery.core.presentation.components.util.OnLifecycleEvent
 import com.dot.gallery.core.presentation.components.util.permissionGranted
 import com.dot.gallery.core.presentation.vm.NavigationViewModel
@@ -588,7 +588,7 @@ fun NavigationComp(
                     backStackEntry.arguments?.getLong("albumId") ?: -1
                 }
                 val albumMediaFlow = remember(argumentAlbumId) {
-                    distributor.albumTimelineMediaFlow(argumentAlbumId)
+                    distributor.restorableAlbumTimelineMediaFlow(argumentAlbumId)
                 }
                 val albumMediaState = albumMediaFlow.collectAsStateWithLifecycle(initialValue = MediaState())
                 AlbumTimelineScreen(
@@ -755,7 +755,7 @@ fun NavigationComp(
                 } else null
                 val privateFolderState = privateFolderViewModel?.mediaState?.collectAsStateWithLifecycle()
                 val albumMediaFlow = remember(albumId) {
-                    distributor.albumTimelineMediaFlow(albumId, AlbumMediaLoadMode.Complete)
+                    distributor.restorableAlbumTimelineMediaFlow(albumId)
                 }
                 val albumMediaState = albumMediaFlow.collectAsStateWithLifecycle(initialValue = MediaState())
                 val mediaState by rememberedDerivedState(albumId, privateFolderState?.value, albumMediaState.value) {
