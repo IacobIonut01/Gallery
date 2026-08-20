@@ -59,7 +59,7 @@ kotlinxSerializationJson = "1.11.0"
 workRuntimeKtx = "2.12.0-rc01"
 zoomimage = "1.6.0-alpha01"
 lifecycleProcess = "2.11.0"
-glide-compose = "1.0.0-beta09"
+glide-compose = "1.0.0-beta10"
 glide-ksp = "5.0.7"
 desugarJdkLibs = "2.1.5"
 
