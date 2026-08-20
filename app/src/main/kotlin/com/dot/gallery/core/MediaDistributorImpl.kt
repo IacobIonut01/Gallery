@@ -26,6 +26,8 @@ import com.dot.gallery.feature_node.domain.model.GeoMedia
 import com.dot.gallery.feature_node.domain.model.IgnoredAlbum
 import com.dot.gallery.feature_node.domain.model.ImageEmbedding
 import com.dot.gallery.feature_node.domain.model.LocationMedia
+import com.dot.gallery.feature_node.domain.model.matchesLocationCoordinates
+import com.dot.gallery.feature_node.domain.model.matchesLocationName
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
 import com.dot.gallery.feature_node.domain.model.MediaState
@@ -102,6 +104,36 @@ import javax.inject.Singleton
 
 val LocalMediaDistributor = compositionLocalOf<MediaDistributor> {
     error("No MediaDistributor provided!!! This is likely due to a missing Hilt injection in the Composable hierarchy.")
+}
+
+internal fun matchingLocationMediaIds(
+    localMediaIds: Set<Long>,
+    cloudMedia: List<CloudMediaEntity>,
+    city: String,
+    country: String,
+    latitude: Double? = null,
+    longitude: Double? = null,
+    additionalMediaIds: Set<Long> = emptySet(),
+): Set<Long> = buildSet {
+    addAll(localMediaIds)
+    addAll(additionalMediaIds)
+    cloudMedia.forEach {
+        if (matchesLocationName(it.city, it.country, city, country) ||
+            matchesLocationCoordinates(it.latitude, it.longitude, latitude, longitude)
+        ) {
+            add(it.globalMediaId)
+        }
+    }
+}
+
+internal fun expandLocationMediaIds(
+    matchingMediaIds: Set<Long>,
+    cloudBackupIdsByLocalId: Map<Long, List<Long>>,
+): Set<Long> = buildSet {
+    addAll(matchingMediaIds)
+    cloudBackupIdsByLocalId.forEach { (localId, cloudIds) ->
+        if (cloudIds.any { it in matchingMediaIds }) add(localId)
+    }
 }
 
 @Singleton
@@ -1166,34 +1198,67 @@ class MediaDistributorImpl @Inject constructor(
 
     override fun locationBasedMedia(
         gpsLocationNameCity: String,
-        gpsLocationNameCountry: String
-    ): Flow<MediaState<Media.UriMedia>> = combine(
-        repository.getMetadata(),
-        timelineMediaFlow,
-        groupSimilarMedia,
-        enabledGroupTypes
-    ) { metadata, timelineState, shouldGroupSimilar, groupTypes ->
-        val matchingMediaIds = metadata
-            .filter {
-                it.gpsLocationNameCity == gpsLocationNameCity &&
-                        it.gpsLocationNameCountry == gpsLocationNameCountry
-            }
-            .mapTo(HashSet()) { it.mediaId }
-        val filteredMedia = timelineState.media.filter {
-            it.id in matchingMediaIds
+        gpsLocationNameCountry: String,
+        latitude: Double?,
+        longitude: Double?,
+        additionalMediaIds: Flow<Set<Long>>,
+    ): Flow<MediaState<Media.UriMedia>> {
+        val matchingMediaIds = combine(
+            repository.getMetadata(),
+            cloudRepository.getCachedMedia(),
+            additionalMediaIds,
+        ) { metadata, cloudMedia, extraIds ->
+            val localMediaIds = metadata
+                .filter {
+                    matchesLocationName(
+                        candidateCity = it.gpsLocationNameCity,
+                        candidateCountry = it.gpsLocationNameCountry,
+                        city = gpsLocationNameCity,
+                        country = gpsLocationNameCountry,
+                    ) || matchesLocationCoordinates(
+                        candidateLatitude = it.gpsLatitude,
+                        candidateLongitude = it.gpsLongitude,
+                        latitude = latitude,
+                        longitude = longitude,
+                    )
+                }
+                .mapTo(HashSet()) { it.mediaId }
+            matchingLocationMediaIds(
+                localMediaIds = localMediaIds,
+                cloudMedia = cloudMedia,
+                city = gpsLocationNameCity,
+                country = gpsLocationNameCountry,
+                latitude = latitude,
+                longitude = longitude,
+                additionalMediaIds = extraIds,
+            )
         }
-        val filteredIds = filteredMedia.mapTo(HashSet(filteredMedia.size)) { it.id }
-        return@combine mapMediaToItem(
-            data = filteredMedia,
-            error = timelineState.error,
-            albumId = -1L,
-            groupSimilarMedia = shouldGroupSimilar,
-            enabledGroupTypes = groupTypes,
-            cloudBackups = timelineState.cloudBackups.filterKeys { it in filteredIds },
-            defaultDateFormat = dateFormatsFlow.value.first,
-            extendedDateFormat = dateFormatsFlow.value.second,
-            weeklyDateFormat = dateFormatsFlow.value.third
-        )
+        return combine(
+            matchingMediaIds,
+            timelineMediaFlow,
+            groupSimilarMedia,
+            enabledGroupTypes,
+        ) { mediaIds, timelineState, shouldGroupSimilar, groupTypes ->
+            val expandedMediaIds = expandLocationMediaIds(
+                matchingMediaIds = mediaIds,
+                cloudBackupIdsByLocalId = timelineState.cloudBackups.mapValues { (_, copies) ->
+                    copies.map { it.id }
+                },
+            )
+            val filteredMedia = timelineState.media.filter { it.id in expandedMediaIds }
+            val filteredIds = filteredMedia.mapTo(HashSet(filteredMedia.size)) { it.id }
+            mapMediaToItem(
+                data = filteredMedia,
+                error = timelineState.error,
+                albumId = -1L,
+                groupSimilarMedia = shouldGroupSimilar,
+                enabledGroupTypes = groupTypes,
+                cloudBackups = timelineState.cloudBackups.filterKeys { it in filteredIds },
+                defaultDateFormat = dateFormatsFlow.value.first,
+                extendedDateFormat = dateFormatsFlow.value.second,
+                weeklyDateFormat = dateFormatsFlow.value.third
+            ).copy(isLoading = timelineState.isLoading)
+        }
     }
 
     private val locationsAndGeoMediaFlow: SharedFlow<Pair<List<LocationMedia>, List<GeoMedia>>> = combine(

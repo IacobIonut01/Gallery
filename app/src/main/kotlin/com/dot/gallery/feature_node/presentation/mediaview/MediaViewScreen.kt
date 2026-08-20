@@ -188,6 +188,38 @@ import kotlin.math.abs
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
+internal data class MediaViewerInitialSelection(
+    val pageIndex: Int,
+    val memberId: Long?,
+    val found: Boolean,
+)
+
+internal fun shouldDismissMissingMediaTarget(
+    isLoading: Boolean,
+    targetFound: Boolean,
+    hasMedia: Boolean,
+    isStandalone: Boolean,
+): Boolean = !isLoading && !targetFound && hasMedia && !isStandalone
+
+internal fun resolveMediaViewerInitialSelection(
+    mediaId: Long,
+    pagerMediaIds: List<Long>,
+    mediaGroupIds: Map<Long, List<Long>>,
+): MediaViewerInitialSelection {
+    val directIndex = pagerMediaIds.indexOf(mediaId)
+    if (directIndex >= 0) {
+        return MediaViewerInitialSelection(directIndex, null, true)
+    }
+    val groupEntry = mediaGroupIds.entries.firstOrNull { mediaId in it.value }
+        ?: return MediaViewerInitialSelection(0, null, false)
+    val groupIndex = pagerMediaIds.indexOf(groupEntry.key)
+    return if (groupIndex >= 0) {
+        MediaViewerInitialSelection(groupIndex, mediaId, true)
+    } else {
+        MediaViewerInitialSelection(0, null, false)
+    }
+}
+
 @Composable
 fun <T> rememberedDerivedState(
     key: Any? = Unit,
@@ -375,10 +407,21 @@ fun <T : Media> MediaViewScreen(
         } else filtered
     }
 
-    // Use only primitive ids/sizes as saveable keys (avoid passing full media list object)
-    val initialPage = rememberSaveable(mediaId, pagerItems.size) {
-        pagerItems.indexOfFirst { it.id == mediaId }.coerceAtLeast(0)
+    val initialSelection by rememberedDerivedState(
+        mediaId,
+        pagerItems,
+        mediaState.value.mediaGroups,
+    ) {
+        resolveMediaViewerInitialSelection(
+            mediaId = mediaId,
+            pagerMediaIds = pagerItems.map { it.id },
+            mediaGroupIds = mediaState.value.mediaGroups.mapValues { (_, members) ->
+                members.map { it.id }
+            },
+        )
     }
+    // Use only primitive ids/sizes as saveable keys (avoid passing full media list object)
+    val initialPage = initialSelection.pageIndex
     var currentPage by rememberSaveable(initialPage) { mutableIntStateOf(initialPage) }
     var isVideoZoomed by rememberSaveable { mutableStateOf(false) }
 
@@ -397,7 +440,12 @@ fun <T : Media> MediaViewScreen(
     }
 
     // Track which group member is selected (null = show representative/pager item)
-    var selectedMemberOverrideId by rememberSaveable { mutableStateOf<Long?>(null) }
+    var selectedMemberOverrideId by rememberSaveable(mediaId, initialSelection.memberId) {
+        mutableStateOf(initialSelection.memberId)
+    }
+    var selectedMemberPage by rememberSaveable(mediaId, initialPage) {
+        mutableIntStateOf(initialPage)
+    }
 
     // Multi-select state for group members
     var groupMultiSelectMode by rememberSaveable { mutableStateOf(false) }
@@ -405,7 +453,10 @@ fun <T : Media> MediaViewScreen(
 
     // Select first group member when swiping to a different page
     LaunchedEffect(currentPage) {
-        selectedMemberOverrideId = null
+        if (initialPageSetup && currentPage != selectedMemberPage) {
+            selectedMemberOverrideId = null
+            selectedMemberPage = currentPage
+        }
         groupMultiSelectMode = false
         groupMultiSelectedIds = emptySet()
         isVideoZoomed = false
@@ -438,12 +489,26 @@ fun <T : Media> MediaViewScreen(
         ensureMetadataAvailable(currentMedia, metadataState.value)
     }
 
-    LaunchedEffect(mediaId, initialPage, mediaState.value.isLoading) {
-        if (!mediaState.value.isLoading && !initialPageSetup) {
+    LaunchedEffect(mediaId, initialPage, initialSelection.found, mediaState.value.isLoading) {
+        if (!mediaState.value.isLoading && initialSelection.found && !initialPageSetup) {
             if (pagerState.currentPage != initialPage) {
                 pagerState.scrollToPage(initialPage)
             }
+            currentPage = initialPage
+            selectedMemberPage = initialPage
+            selectedMemberOverrideId = initialSelection.memberId
             initialPageSetup = true
+        }
+    }
+    LaunchedEffect(mediaState.value.isLoading, initialSelection.found, pagerItems.isNotEmpty()) {
+        if (shouldDismissMissingMediaTarget(
+                isLoading = mediaState.value.isLoading,
+                targetFound = initialSelection.found,
+                hasMedia = pagerItems.isNotEmpty(),
+                isStandalone = isStandalone,
+            )
+        ) {
+            eventHandler.navigateUp()
         }
     }
 

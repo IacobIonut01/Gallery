@@ -60,8 +60,10 @@ class CategoriesViewModel @Inject constructor(
     /**
      * Local EXIF and account-qualified cloud media with usable coordinates.
      */
-    val geoMedia = mapGeoMediaSource.mergedGeoMedia(distributor.geoMediaFlow)
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val geoMedia = mapGeoMediaSource.mergedGeoMedia(
+        localGeoMedia = distributor.geoMediaFlow,
+        timelineMedia = distributor.timelineMediaFlow,
+    ).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     /**
      * Flow of named and coordinate-only locations. Entries remain actionable when reverse
@@ -70,6 +72,7 @@ class CategoriesViewModel @Inject constructor(
     val locations = mapGeoMediaSource.mergedLocations(
         localLocations = distributor.locationsMediaFlow,
         geoMedia = geoMedia,
+        timelineMedia = distributor.timelineMediaFlow,
     ).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // ============ New Category System ============

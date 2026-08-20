@@ -105,7 +105,10 @@ interface MediaDistributor {
 
     fun locationBasedMedia(
         gpsLocationNameCity: String,
-        gpsLocationNameCountry: String
+        gpsLocationNameCountry: String,
+        latitude: Double?,
+        longitude: Double?,
+        additionalMediaIds: Flow<Set<Long>>,
     ): Flow<MediaState<Media.UriMedia>>
 }
 

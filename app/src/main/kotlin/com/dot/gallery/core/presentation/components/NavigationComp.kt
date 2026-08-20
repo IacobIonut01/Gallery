@@ -1661,17 +1661,23 @@ fun NavigationComp(
 
             composable(Screen.LocationTimelineScreen.location()) { backStackEntry ->
                 val gpsLocationNameCity: String = remember(backStackEntry) {
-                    backStackEntry.arguments?.getString("gpsLocationNameCity", "null").toString()
+                    backStackEntry.arguments?.getString("gpsLocationNameCity").orEmpty()
                 }
                 val gpsLocationNameCountry: String = remember(backStackEntry) {
-                    backStackEntry.arguments?.getString("gpsLocationNameCountry", "null").toString()
+                    backStackEntry.arguments?.getString("gpsLocationNameCountry").orEmpty()
+                }
+                val latitude = remember(backStackEntry) {
+                    backStackEntry.arguments?.getString("latitude")?.toDoubleOrNull()
+                }
+                val longitude = remember(backStackEntry) {
+                    backStackEntry.arguments?.getString("longitude")?.toDoubleOrNull()
                 }
 
                 val locationsViewModel =
                     hiltViewModel<LocationsViewModel, LocationsViewModel.Factory>(
                         key = "LocationViewModel",
                         creationCallback = { factory ->
-                            factory.create(gpsLocationNameCity, gpsLocationNameCountry)
+                            factory.create(gpsLocationNameCity, gpsLocationNameCountry, latitude, longitude)
                         }
                     )
                 val mediaState = locationsViewModel.mediaState.collectAsStateWithLifecycle()
@@ -1680,6 +1686,8 @@ fun NavigationComp(
                 LocationTimelineScreen(
                     gpsLocationNameCity = gpsLocationNameCity,
                     gpsLocationNameCountry = gpsLocationNameCountry,
+                    latitude = latitude,
+                    longitude = longitude,
                     mediaState = mediaState,
                     latestGeoMedia = latestGeoMedia,
                     metadataState = metadataState,
@@ -1724,10 +1732,16 @@ fun NavigationComp(
                     backStackEntry.arguments?.getString("mediaId")?.toLongOrNull() ?: -1
                 }
                 val gpsLocationNameCity: String = remember(backStackEntry) {
-                    backStackEntry.arguments?.getString("gpsLocationNameCity", "null").toString()
+                    backStackEntry.arguments?.getString("gpsLocationNameCity").orEmpty()
                 }
                 val gpsLocationNameCountry: String = remember(backStackEntry) {
-                    backStackEntry.arguments?.getString("gpsLocationNameCountry", "null").toString()
+                    backStackEntry.arguments?.getString("gpsLocationNameCountry").orEmpty()
+                }
+                val latitude = remember(backStackEntry) {
+                    backStackEntry.arguments?.getString("latitude")?.toDoubleOrNull()
+                }
+                val longitude = remember(backStackEntry) {
+                    backStackEntry.arguments?.getString("longitude")?.toDoubleOrNull()
                 }
                 val parentEntry = remember(backStackEntry) {
                     navController.getBackStackEntry(Screen.LocationTimelineScreen.location())
@@ -1738,7 +1752,7 @@ fun NavigationComp(
                         viewModelStoreOwner = parentEntry,
                         key = "LocationViewModel",
                         creationCallback = { factory ->
-                            factory.create(gpsLocationNameCity, gpsLocationNameCountry)
+                            factory.create(gpsLocationNameCity, gpsLocationNameCountry, latitude, longitude)
                         }
                     )
                 val mediaState = locationsViewModel.mediaState.collectAsStateWithLifecycle()
@@ -1751,7 +1765,7 @@ fun NavigationComp(
                     metadataState = metadataState,
                     albumsState = albumsState,
                     vaultState = vaultState,
-                    target = "location_${gpsLocationNameCity}_$gpsLocationNameCountry",
+                    target = "location_${gpsLocationNameCity}_${gpsLocationNameCountry}_${latitude}_$longitude",
                     allowBlur = allowBlur,
                     sharedTransitionScope = this@SharedTransitionLayout,
                     animatedContentScope = this

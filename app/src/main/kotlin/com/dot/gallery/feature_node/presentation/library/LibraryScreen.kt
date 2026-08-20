@@ -94,7 +94,6 @@ import com.dot.gallery.core.ml.ModelStatus
 import com.dot.gallery.core.navigate
 import com.dot.gallery.core.util.SdkCompat
 import com.dot.gallery.feature_node.domain.util.getUri
-import com.dot.gallery.feature_node.domain.util.isCloud
 import com.dot.gallery.feature_node.presentation.common.components.GridPinchZoomLayout
 import com.dot.gallery.feature_node.presentation.common.components.rememberGridPinchZoomState
 import com.dot.gallery.feature_node.presentation.library.components.LibrarySmallItem
@@ -370,9 +369,18 @@ fun LibraryScreen(
                                             .clickable {
                                                 val city = locationMedia.city
                                                 val country = locationMedia.country
-                                                if (!media.isCloud && !city.isNullOrBlank() && !country.isNullOrBlank()) {
+                                                val latitude = locationMedia.latitude
+                                                val longitude = locationMedia.longitude
+                                                if (!city.isNullOrBlank() || !country.isNullOrBlank() ||
+                                                    latitude != null && longitude != null
+                                                ) {
                                                     eventHandler.navigate(
-                                                        Screen.LocationTimelineScreen.location(city, country)
+                                                        Screen.LocationTimelineScreen.location(
+                                                            gpsLocationNameCity = city.orEmpty(),
+                                                            gpsLocationNameCountry = country.orEmpty(),
+                                                            latitude = latitude,
+                                                            longitude = longitude,
+                                                        )
                                                     )
                                                 } else {
                                                     eventHandler.navigate(

@@ -27,6 +27,7 @@ import com.dot.gallery.feature_node.presentation.help.data.HelpSearchIndex
 import com.dot.gallery.feature_node.presentation.help.data.HelpSearchItem
 import com.dot.gallery.feature_node.presentation.help.search.HelpFuzzyMatcher
 import com.dot.gallery.feature_node.presentation.library.CategoryMedia
+import com.dot.gallery.feature_node.presentation.location.MapGeoMediaSource
 import com.dot.gallery.feature_node.presentation.util.mapMediaToItem
 import com.frosch2010.fuzzywuzzy_kotlin.FuzzySearch
 import com.frosch2010.fuzzywuzzy_kotlin.ToStringFunction
@@ -93,6 +94,7 @@ internal fun <T, K> smartSearchMediaPool(
 @HiltViewModel
 class SearchViewModel @Inject constructor(
     mediaDistributor: MediaDistributor,
+    mapGeoMediaSource: MapGeoMediaSource,
     smartScanDao: SmartScanDao,
     private val searchHelper: SearchHelper,
     repository: MediaRepository,
@@ -162,8 +164,15 @@ class SearchViewModel @Inject constructor(
     )
 
     // Top locations for the search screen carousel (matching LibraryScreen style)
-    val topLocations: StateFlow<ImmutableList<LocationMedia>> = mediaDistributor.locationsMediaFlow
-        .map { it.take(10).toImmutableList() }
+    private val geoMedia = mapGeoMediaSource.mergedGeoMedia(
+        localGeoMedia = mediaDistributor.geoMediaFlow,
+        timelineMedia = mediaDistributor.timelineMediaFlow,
+    )
+    val topLocations: StateFlow<ImmutableList<LocationMedia>> = mapGeoMediaSource.mergedLocations(
+        localLocations = mediaDistributor.locationsMediaFlow,
+        geoMedia = geoMedia,
+        timelineMedia = mediaDistributor.timelineMediaFlow,
+    ).map { it.take(10).toImmutableList() }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),

@@ -444,15 +444,26 @@ fun SearchScreen(
                                 LocationCarousel(
                                     locations = topLocations,
                                     onLocationClick = { locationMedia ->
-                                        val city = locationMedia.location.substringBefore(",")
-                                        val country =
-                                            locationMedia.location.substringAfterLast(", ")
-                                        eventHandler.navigate(
-                                            Screen.LocationTimelineScreen.location(
-                                                gpsLocationNameCity = city,
-                                                gpsLocationNameCountry = country
+                                        val city = locationMedia.city
+                                        val country = locationMedia.country
+                                        val latitude = locationMedia.latitude
+                                        val longitude = locationMedia.longitude
+                                        if (!city.isNullOrBlank() || !country.isNullOrBlank() ||
+                                            latitude != null && longitude != null
+                                        ) {
+                                            eventHandler.navigate(
+                                                Screen.LocationTimelineScreen.location(
+                                                    gpsLocationNameCity = city.orEmpty(),
+                                                    gpsLocationNameCountry = country.orEmpty(),
+                                                    latitude = latitude,
+                                                    longitude = longitude,
+                                                )
                                             )
-                                        )
+                                        } else {
+                                            eventHandler.navigate(
+                                                Screen.MediaViewScreen.idAndAlbum(locationMedia.media.id, -1L)
+                                            )
+                                        }
                                     },
                                     title = null
                                 )

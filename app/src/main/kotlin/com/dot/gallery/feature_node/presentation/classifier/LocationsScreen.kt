@@ -141,15 +141,27 @@ fun LocationsScreen(
             ) { countryLocations ->
                 CountryLocationRow(
                     countryLocations = countryLocations,
-                    onLocationClick = { location ->
-                        val gpsLocationNameCity = location.substringBefore(",").trim()
-                        val gpsLocationNameCountry = location.substringAfterLast(", ").trim()
-                        eventHandler.navigate(
-                            Screen.LocationTimelineScreen.location(
-                                gpsLocationNameCity = gpsLocationNameCity,
-                                gpsLocationNameCountry = gpsLocationNameCountry
+                    onLocationClick = { locationMedia ->
+                        val city = locationMedia.city
+                        val country = locationMedia.country
+                        val latitude = locationMedia.latitude
+                        val longitude = locationMedia.longitude
+                        if (!city.isNullOrBlank() || !country.isNullOrBlank() ||
+                            latitude != null && longitude != null
+                        ) {
+                            eventHandler.navigate(
+                                Screen.LocationTimelineScreen.location(
+                                    gpsLocationNameCity = city.orEmpty(),
+                                    gpsLocationNameCountry = country.orEmpty(),
+                                    latitude = latitude,
+                                    longitude = longitude,
+                                )
                             )
-                        )
+                        } else {
+                            eventHandler.navigate(
+                                Screen.MediaViewScreen.idAndAlbum(locationMedia.media.id, -1L)
+                            )
+                        }
                     }
                 )
             }
@@ -180,7 +192,7 @@ fun LocationsScreen(
 @Composable
 private fun CountryLocationRow(
     countryLocations: CountryLocations,
-    onLocationClick: (String) -> Unit,
+    onLocationClick: (LocationMedia) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -210,7 +222,7 @@ private fun CountryLocationRow(
             ) { locationMedia ->
                 LocationCard(
                     locationMedia = locationMedia,
-                    onClick = { onLocationClick(locationMedia.location) }
+                    onClick = { onLocationClick(locationMedia) }
                 )
             }
         }

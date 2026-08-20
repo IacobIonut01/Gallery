@@ -77,6 +77,7 @@ import com.dot.gallery.feature_node.domain.model.MediaMetadataState
 import com.dot.gallery.feature_node.domain.util.getUri
 import com.dot.gallery.feature_node.presentation.util.GlideInvalidation
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
+import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.feature_node.presentation.util.getDate
 import com.dot.gallery.feature_node.presentation.util.rememberSurfaceCapture
 import com.dot.gallery.feature_node.presentation.util.rememberWindowInsetsController
@@ -657,7 +658,24 @@ internal fun MapLocationsContent(
             selectedMediaId = selectedMediaId,
             onMediaClick = { geoMedia -> openMediaViewer(geoMedia) },
             onLocationClick = { locationMedia ->
-                eventHandler.navigate(mapMediaViewerRoute(locationMedia.media.id))
+                val city = locationMedia.city
+                val country = locationMedia.country
+                val latitude = locationMedia.latitude
+                val longitude = locationMedia.longitude
+                if (!city.isNullOrBlank() || !country.isNullOrBlank() ||
+                    latitude != null && longitude != null
+                ) {
+                    eventHandler.navigate(
+                        Screen.LocationTimelineScreen.location(
+                            gpsLocationNameCity = city.orEmpty(),
+                            gpsLocationNameCountry = country.orEmpty(),
+                            latitude = latitude,
+                            longitude = longitude,
+                        )
+                    )
+                } else {
+                    eventHandler.navigate(mapMediaViewerRoute(locationMedia.media.id))
+                }
             },
         )
     }

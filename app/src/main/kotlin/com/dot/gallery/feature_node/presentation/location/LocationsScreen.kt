@@ -52,6 +52,8 @@ import com.dot.gallery.core.presentation.components.NavigationBackButton
 import com.dot.gallery.feature_node.domain.model.GeoMedia
 import com.dot.gallery.feature_node.domain.model.LocationMedia
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.model.locationCoordinateKey
+import com.dot.gallery.feature_node.domain.model.locationLabelKey
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
 import com.dot.gallery.feature_node.domain.util.getUri
 import com.dot.gallery.feature_node.domain.util.isCloud
@@ -95,7 +97,15 @@ internal fun ListLocationsContent(
     val eventHandler = LocalEventHandler.current
 
     val grouped = remember(locations) {
-        locations.groupBy { it.location }
+        locations.groupBy {
+            if (!it.city.isNullOrBlank() || !it.country.isNullOrBlank()) {
+                "name:${locationLabelKey(it.location)}"
+            } else {
+                locationCoordinateKey(it.latitude, it.longitude)
+                    ?.let { key -> "coordinates:$key" }
+                    ?: "label:${locationLabelKey(it.location)}"
+            }
+        }
     }
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
@@ -150,20 +160,31 @@ internal fun ListLocationsContent(
                 items(
                     items = grouped.entries.toList(),
                     key = { it.key }
-                ) { (location, mediaList) ->
+                ) { (_, mediaList) ->
                     val representative = mediaList.maxByOrNull { it.media.definedTimestamp }
                     LibrarySmallItem(
                         modifier = Modifier.clickable(enabled = representative != null) {
                             val item = representative ?: return@clickable
                             val city = item.city
                             val country = item.country
-                            if (!item.media.isCloud && !city.isNullOrBlank() && !country.isNullOrBlank()) {
-                                eventHandler.navigate(Screen.LocationTimelineScreen.location(city, country))
+                            val latitude = item.latitude
+                            val longitude = item.longitude
+                            if (!city.isNullOrBlank() || !country.isNullOrBlank() ||
+                                latitude != null && longitude != null
+                            ) {
+                                eventHandler.navigate(
+                                    Screen.LocationTimelineScreen.location(
+                                        gpsLocationNameCity = city.orEmpty(),
+                                        gpsLocationNameCountry = country.orEmpty(),
+                                        latitude = latitude,
+                                        longitude = longitude,
+                                    )
+                                )
                             } else {
                                 eventHandler.navigate(Screen.MediaViewScreen.idAndAlbum(item.media.id, -1L))
                             }
                         },
-                        title = location,
+                        title = representative?.location.orEmpty(),
                         subtitle = "${mediaList.size} ${if (mediaList.size == 1) "item" else "items"}",
                         icon = Icons.Outlined.LocationOn,
                         useIndicator = true,
