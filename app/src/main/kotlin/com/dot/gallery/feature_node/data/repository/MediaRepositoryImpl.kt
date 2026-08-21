@@ -28,6 +28,7 @@ import com.dot.gallery.core.Resource
 import com.dot.gallery.core.activeDataStore
 import com.dot.gallery.core.decoder.format.ImageReencoder
 import com.dot.gallery.core.metadata.MetadataRemovalMode
+import com.dot.gallery.core.metadata.MetadataSaveMode
 import com.dot.gallery.core.metadata.MetadataSanitizer
 import com.dot.gallery.core.metadata.SanitizationCapability
 import com.dot.gallery.core.metadata.SanitizationResult
@@ -587,12 +588,9 @@ class MediaRepositoryImpl(
 
     override suspend fun sanitizeMediaMetadata(
         media: Media,
-        mode: MetadataRemovalMode
-    ): SanitizationResult {
-        val result = metadataSanitizer.sanitize(media, mode)
-        if (result is SanitizationResult.Success) refreshMetadataFor(media)
-        return result
-    }
+        mode: MetadataRemovalMode,
+        saveMode: MetadataSaveMode
+    ): SanitizationResult = metadataSanitizer.sanitize(media, mode, saveMode)
 
     override suspend fun refreshMetadataFor(media: Media) {
         database.getMetadataDao().deleteForMedia(media.id)

@@ -6,6 +6,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import com.dot.gallery.core.decoder.format.ImageReencoder
 import com.dot.gallery.core.metadata.MetadataRemovalMode
+import com.dot.gallery.core.metadata.MetadataSaveMode
 import com.dot.gallery.core.metadata.SanitizationCapability
 import com.dot.gallery.core.metadata.SanitizationResult
 import com.dot.gallery.feature_node.domain.model.Media
@@ -48,7 +49,11 @@ interface MediaHandler {
 
     suspend fun probeMetadataSanitization(media: Media): SanitizationCapability
 
-    suspend fun sanitizeMediaMetadata(media: Media, mode: MetadataRemovalMode): SanitizationResult
+    suspend fun sanitizeMediaMetadata(
+        media: Media,
+        mode: MetadataRemovalMode,
+        saveMode: MetadataSaveMode
+    ): SanitizationResult
 
     suspend fun <T: Media> updateMediaDescription(media: T, description: String): Boolean
 

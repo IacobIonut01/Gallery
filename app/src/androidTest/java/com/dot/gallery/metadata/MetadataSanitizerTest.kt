@@ -5,6 +5,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.dot.gallery.core.metadata.AndroidMetadataSanitizer
 import com.dot.gallery.core.metadata.MetadataRemovalMode
+import com.dot.gallery.core.metadata.MetadataSaveMode
 import com.dot.gallery.core.metadata.SanitizationResult
 import com.dot.gallery.core.util.ext.saveImageStreaming
 import com.dot.gallery.feature_node.domain.model.Media
@@ -19,11 +20,13 @@ import java.util.zip.CRC32
 
 @RunWith(AndroidJUnit4::class)
 class MetadataSanitizerTest {
+    private val pngSignature = byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A)
+
     @Test
-    fun everythingCommitsVerifiedCandidateToSameMediaStoreItem() = runBlocking {
+    fun replacePreparesVerifiedCandidateBeforeOriginalIsTrashed() = runBlocking {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val resolver = context.contentResolver
-        val original = pngWithText("private-location")
+        val original = pngWithoutText()
         val uri = resolver.saveImageStreaming(
             mimeType = "image/png",
             relativePath = Environment.DIRECTORY_PICTURES + "/MetadataTests",
@@ -35,24 +38,66 @@ class MetadataSanitizerTest {
             true
         }
         val target = requireNotNull(uri)
+        var replacement: android.net.Uri? = null
         try {
             val media = media(target, original.size.toLong(), "image/png")
             val result = AndroidMetadataSanitizer(context).sanitize(
                 media,
-                MetadataRemovalMode.EVERYTHING
-            )
-            val committed = resolver.openInputStream(target)?.use { it.readBytes() } ?: ByteArray(0)
+                MetadataRemovalMode.LOCATION,
+                MetadataSaveMode.REPLACE_ORIGINAL
+            ) as SanitizationResult.Success
+            val replacementUri = result.outputUri
+            replacement = replacementUri
 
-            assertTrue(result is SanitizationResult.Success)
-            assertFalse(committed.toString(Charsets.ISO_8859_1).contains("private-location"))
-            assertTrue(committed.contentEquals(pngWithoutText()))
+            assertTrue(result.saveMode == MetadataSaveMode.REPLACE_ORIGINAL)
+            assertFalse(target == replacementUri)
+            assertArrayEquals(original, resolver.openInputStream(target)?.use { it.readBytes() })
+            assertValidPng(resolver.openInputStream(replacementUri)?.use { it.readBytes() })
         } finally {
+            replacement?.let { resolver.delete(it, null, null) }
             resolver.delete(target, null, null)
         }
     }
 
     @Test
-    fun malformedCandidateLeavesOriginalUntouched() = runBlocking {
+    fun saveCopyLeavesOriginalUntouchedAndPublishesVerifiedCandidate() = runBlocking {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val resolver = context.contentResolver
+        val original = pngWithoutText()
+        val uri = resolver.saveImageStreaming(
+            mimeType = "image/png",
+            relativePath = Environment.DIRECTORY_PICTURES + "/MetadataTests",
+            displayName = "sanitize-copy-${System.nanoTime()}.png"
+        ) { fd ->
+            android.os.ParcelFileDescriptor.AutoCloseOutputStream(
+                android.os.ParcelFileDescriptor.fromFd(fd)
+            ).use { it.write(original) }
+            true
+        }
+        val target = requireNotNull(uri)
+        var copy: android.net.Uri? = null
+        try {
+            val result = AndroidMetadataSanitizer(context).sanitize(
+                media(target, original.size.toLong(), "image/png"),
+                MetadataRemovalMode.LOCATION,
+                MetadataSaveMode.SAVE_COPY
+            )
+            val success = result as SanitizationResult.Success
+            val copyUri = success.outputUri
+            copy = copyUri
+
+            assertTrue(success.saveMode == MetadataSaveMode.SAVE_COPY)
+            assertFalse(target == copyUri)
+            assertArrayEquals(original, resolver.openInputStream(target)?.use { it.readBytes() })
+            assertValidPng(resolver.openInputStream(copyUri)?.use { it.readBytes() })
+        } finally {
+            copy?.let { resolver.delete(it, null, null) }
+            resolver.delete(target, null, null)
+        }
+    }
+
+    @Test
+    fun malformedInputFailsClosedAndLeavesOriginalUntouched() = runBlocking {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val resolver = context.contentResolver
         val original = byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte(), 0xE1.toByte())
@@ -70,10 +115,11 @@ class MetadataSanitizerTest {
         try {
             val result = AndroidMetadataSanitizer(context).sanitize(
                 media(target, original.size.toLong(), "image/jpeg"),
-                MetadataRemovalMode.EVERYTHING
+                MetadataRemovalMode.LOCATION,
+                MetadataSaveMode.REPLACE_ORIGINAL
             )
 
-            assertTrue(result is SanitizationResult.CommitFailed)
+            assertTrue(result is SanitizationResult.Unsupported)
             assertArrayEquals(original, resolver.openInputStream(target)?.use { it.readBytes() })
         } finally {
             resolver.delete(target, null, null)
@@ -96,13 +142,16 @@ class MetadataSanitizerTest {
         size = size
     )
 
-    private fun pngWithText(value: String): ByteArray = png(value)
+    private fun assertValidPng(bytes: ByteArray?) {
+        assertTrue(bytes != null && bytes.size >= pngSignature.size)
+        assertArrayEquals(pngSignature, requireNotNull(bytes).copyOfRange(0, pngSignature.size))
+    }
 
     private fun pngWithoutText(): ByteArray = png(null)
 
     private fun png(text: String?): ByteArray {
         val output = ByteArrayOutputStream()
-        output.write(byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A))
+        output.write(pngSignature)
         writeChunk(output, "IHDR", byteArrayOf(0, 0, 0, 1, 0, 0, 0, 1, 8, 2, 0, 0, 0))
         if (text != null) writeChunk(output, "tEXt", "Comment\u0000$text".toByteArray())
         writeChunk(output, "IDAT", byteArrayOf(0x78, 0x01, 0x01, 0x04, 0x00, 0xFB.toByte(), 0xFF.toByte(), 0, 0, 0, 0, 0, 4, 0, 1))

@@ -107,6 +107,8 @@ import com.dot.gallery.core.Settings.Misc.rememberExtendedDateHeaderFormat
 import com.dot.gallery.core.Settings.Misc.rememberShowMediaViewDateHeader
 import com.dot.gallery.core.Settings.Misc.rememberVideoAutoplay
 import com.dot.gallery.core.decoder.format.ImageReencoder
+import com.dot.gallery.core.metadata.MetadataRemovalMode
+import com.dot.gallery.core.metadata.MetadataSaveMode
 import com.dot.gallery.core.navigateUp
 import com.dot.gallery.core.presentation.components.OverwriteFallbackSheet
 import com.dot.gallery.core.presentation.components.util.swipe
@@ -329,7 +331,7 @@ fun <T : Media> MediaViewScreen(
         MediaViewViewModel.MetadataSanitizationUiState.Idle
     ),
     probeMetadataSanitization: (Media) -> Unit = {},
-    sanitizeMetadata: (Media, com.dot.gallery.core.metadata.MetadataRemovalMode) -> Unit = { _, _ -> },
+    sanitizeMetadata: (Media, MetadataRemovalMode, MetadataSaveMode) -> Unit = { _, _, _ -> },
     resetMetadataSanitization: () -> Unit = {},
     motionPhotoStateFactory: @Composable (Media?) -> MotionPhotoState = { remember { MotionPhotoState() } },
 ) = CompositionLocalProvider(

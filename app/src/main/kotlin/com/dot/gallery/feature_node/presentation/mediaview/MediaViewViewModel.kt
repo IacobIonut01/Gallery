@@ -14,7 +14,9 @@ import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
+import com.dot.gallery.core.metadata.MediaContainerFormat
 import com.dot.gallery.core.metadata.MetadataRemovalMode
+import com.dot.gallery.core.metadata.MetadataSaveMode
 import com.dot.gallery.core.metadata.SanitizationCapability
 import com.dot.gallery.core.metadata.SanitizationResult
 import com.dot.gallery.core.workers.RotateMediaWorker
@@ -81,7 +83,11 @@ class MediaViewViewModel @Inject constructor(
         data object Idle : MetadataSanitizationUiState
         data class Probing(val mediaId: Long) : MetadataSanitizationUiState
         data class Ready(val mediaId: Long, val capability: SanitizationCapability) : MetadataSanitizationUiState
-        data class Running(val mediaId: Long, val mode: MetadataRemovalMode) : MetadataSanitizationUiState
+        data class Running(
+            val mediaId: Long,
+            val mode: MetadataRemovalMode,
+            val saveMode: MetadataSaveMode
+        ) : MetadataSanitizationUiState
         data class Complete(val mediaId: Long, val result: SanitizationResult) : MetadataSanitizationUiState
     }
 
@@ -92,22 +98,37 @@ class MediaViewViewModel @Inject constructor(
         _metadataSanitizationState.asStateFlow()
 
     private var lastMetadataFetchId: Long? = null
+    private var metadataSanitizationJob: Job? = null
 
     fun probeMetadataSanitization(media: Media) {
+        if (metadataSanitizationJob?.isActive == true) return
         _metadataSanitizationState.value = MetadataSanitizationUiState.Probing(media.id)
-        viewModelScope.launch(Dispatchers.IO) {
-            val capability = repository.probeMetadataSanitization(media)
+        metadataSanitizationJob = viewModelScope.launch(Dispatchers.IO) {
+            val capability = try {
+                repository.probeMetadataSanitization(media)
+            } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                SanitizationCapability(
+                    MediaContainerFormat.UNKNOWN,
+                    emptySet(),
+                    limitation = "The media could not be inspected safely."
+                )
+            }
             _metadataSanitizationState.value = MetadataSanitizationUiState.Ready(media.id, capability)
         }
     }
 
-    fun sanitizeMetadata(media: Media, mode: MetadataRemovalMode) {
-        _metadataSanitizationState.value = MetadataSanitizationUiState.Running(media.id, mode)
-        viewModelScope.launch(Dispatchers.IO) {
-            val result = repository.sanitizeMediaMetadata(media, mode)
-            if (result is SanitizationResult.Success) {
-                cleanupMotionPhoto()
-                prepareMotionPhoto(media)
+    fun sanitizeMetadata(media: Media, mode: MetadataRemovalMode, saveMode: MetadataSaveMode) {
+        if (metadataSanitizationJob?.isActive == true) return
+        _metadataSanitizationState.value = MetadataSanitizationUiState.Running(media.id, mode, saveMode)
+        metadataSanitizationJob = viewModelScope.launch(Dispatchers.IO) {
+            val result = try {
+                repository.sanitizeMediaMetadata(media, mode, saveMode)
+            } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                SanitizationResult.CommitFailed(error.message ?: error.javaClass.simpleName, false)
             }
             _metadataSanitizationState.value = MetadataSanitizationUiState.Complete(media.id, result)
         }

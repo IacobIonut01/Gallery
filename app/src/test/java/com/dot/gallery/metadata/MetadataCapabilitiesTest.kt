@@ -10,17 +10,21 @@ import org.junit.Test
 class MetadataCapabilitiesTest {
     @Test
     fun commonRasterModesAreAvailable() {
-        MetadataRemovalMode.entries.forEach { mode ->
-            assertTrue(MetadataCapabilities.forFormat(MediaContainerFormat.JPEG).supports(mode))
-            assertTrue(MetadataCapabilities.forFormat(MediaContainerFormat.PNG).supports(mode))
-            assertTrue(MetadataCapabilities.forFormat(MediaContainerFormat.WEBP).supports(mode))
-        }
+        assertTrue(MetadataCapabilities.forFormat(MediaContainerFormat.JPEG).supports(MetadataRemovalMode.LOCATION))
+        assertTrue(MetadataCapabilities.forFormat(MediaContainerFormat.PNG).supports(MetadataRemovalMode.LOCATION))
+        assertTrue(MetadataCapabilities.forFormat(MediaContainerFormat.WEBP).supports(MetadataRemovalMode.LOCATION))
+        assertFalse(MetadataCapabilities.forFormat(MediaContainerFormat.JPEG).supports(MetadataRemovalMode.PRIVACY))
+        assertFalse(MetadataCapabilities.forFormat(MediaContainerFormat.PNG).supports(MetadataRemovalMode.PRIVACY))
+        assertFalse(MetadataCapabilities.forFormat(MediaContainerFormat.WEBP).supports(MetadataRemovalMode.PRIVACY))
+        assertFalse(MetadataCapabilities.forFormat(MediaContainerFormat.JPEG).supports(MetadataRemovalMode.EVERYTHING))
+        assertFalse(MetadataCapabilities.forFormat(MediaContainerFormat.PNG).supports(MetadataRemovalMode.EVERYTHING))
+        assertFalse(MetadataCapabilities.forFormat(MediaContainerFormat.WEBP).supports(MetadataRemovalMode.EVERYTHING))
         assertFalse(MetadataCapabilities.forFormat(MediaContainerFormat.GIF).supports(MetadataRemovalMode.LOCATION))
-        assertTrue(MetadataCapabilities.forFormat(MediaContainerFormat.GIF).supports(MetadataRemovalMode.PRIVACY))
+        assertFalse(MetadataCapabilities.forFormat(MediaContainerFormat.GIF).supports(MetadataRemovalMode.PRIVACY))
         assertFalse(MetadataCapabilities.forFormat(MediaContainerFormat.BMP).supports(MetadataRemovalMode.EVERYTHING))
-        assertTrue(MetadataCapabilities.forFormat(MediaContainerFormat.JP2).supports(MetadataRemovalMode.EVERYTHING))
+        assertFalse(MetadataCapabilities.forFormat(MediaContainerFormat.JP2).supports(MetadataRemovalMode.EVERYTHING))
         assertFalse(MetadataCapabilities.forFormat(MediaContainerFormat.JP2).supports(MetadataRemovalMode.PRIVACY))
-        assertTrue(MetadataCapabilities.forFormat(MediaContainerFormat.JXL).supports(MetadataRemovalMode.EVERYTHING))
+        assertFalse(MetadataCapabilities.forFormat(MediaContainerFormat.JXL).supports(MetadataRemovalMode.EVERYTHING))
     }
 
     @Test

@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import com.dot.gallery.R
 import com.dot.gallery.core.Position
 import com.dot.gallery.core.metadata.MetadataRemovalMode
+import com.dot.gallery.core.metadata.MetadataSaveMode
 import com.dot.gallery.core.metadata.SanitizationCapability
 import com.dot.gallery.core.presentation.components.DragHandle
 import com.dot.gallery.core.presentation.components.SetupButton
@@ -47,10 +48,12 @@ fun MetadataRemovalSheet(
     state: AppBottomSheetState,
     capability: SanitizationCapability?,
     isBusy: Boolean,
-    onConfirm: (MetadataRemovalMode) -> Unit
+    canReplaceOriginal: Boolean,
+    onConfirm: (MetadataRemovalMode, MetadataSaveMode) -> Unit
 ) {
     val scope = rememberCoroutineScope()
     var selectedMode by remember { mutableStateOf(MetadataRemovalMode.LOCATION) }
+    var selectedSaveMode by remember { mutableStateOf(MetadataSaveMode.SAVE_COPY) }
     if (!state.isVisible) return
 
     val limitation = capability?.limitation
@@ -119,6 +122,27 @@ fun MetadataRemovalSheet(
                     )
                 }
             }
+            Text(
+                text = stringResource(R.string.metadata_save_destination_title),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Column(modifier = Modifier.fillMaxWidth()) {
+                MetadataSaveMode.entries.forEachIndexed { index, saveMode ->
+                    RadioSettingsItem(
+                        title = saveMode.title(),
+                        summary = saveMode.description(),
+                        selected = selectedSaveMode == saveMode,
+                        enabled = !isBusy && (
+                            saveMode != MetadataSaveMode.REPLACE_ORIGINAL || canReplaceOriginal
+                        ),
+                        screenPosition = if (index == 0) Position.Top else Position.Bottom,
+                        applyPaddings = false,
+                        onClick = { selectedSaveMode = saveMode },
+                    )
+                }
+            }
             Surface(
                 color = MaterialTheme.colorScheme.secondaryContainer,
                 contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
@@ -173,10 +197,18 @@ fun MetadataRemovalSheet(
                     text = stringResource(R.string.action_cancel)
                 )
                 SetupButton(
-                    onClick = { onConfirm(selectedMode) },
+                    onClick = { onConfirm(selectedMode, selectedSaveMode) },
                     enabled = supported && !isBusy,
-                    containerColor = MaterialTheme.colorScheme.error,
-                    contentColor = MaterialTheme.colorScheme.onError,
+                    containerColor = if (selectedSaveMode == MetadataSaveMode.REPLACE_ORIGINAL) {
+                        MaterialTheme.colorScheme.error
+                    } else {
+                        MaterialTheme.colorScheme.primary
+                    },
+                    contentColor = if (selectedSaveMode == MetadataSaveMode.REPLACE_ORIGINAL) {
+                        MaterialTheme.colorScheme.onError
+                    } else {
+                        MaterialTheme.colorScheme.onPrimary
+                    },
                     applyHorizontalPadding = false,
                     applyBottomPadding = false,
                     applyInsets = false,
@@ -184,7 +216,7 @@ fun MetadataRemovalSheet(
                     text = if (isBusy) {
                         stringResource(R.string.remove_metadata_running)
                     } else {
-                        stringResource(R.string.remove_metadata_confirm)
+                        selectedSaveMode.actionTitle()
                     }
                 )
             }
@@ -204,4 +236,22 @@ private fun MetadataRemovalMode.description(): String = when (this) {
     MetadataRemovalMode.LOCATION -> stringResource(R.string.metadata_mode_location_description)
     MetadataRemovalMode.PRIVACY -> stringResource(R.string.metadata_mode_privacy_description)
     MetadataRemovalMode.EVERYTHING -> stringResource(R.string.metadata_mode_everything_description)
+}
+
+@Composable
+private fun MetadataSaveMode.title(): String = when (this) {
+    MetadataSaveMode.SAVE_COPY -> stringResource(R.string.metadata_save_copy)
+    MetadataSaveMode.REPLACE_ORIGINAL -> stringResource(R.string.metadata_replace_original)
+}
+
+@Composable
+private fun MetadataSaveMode.description(): String = when (this) {
+    MetadataSaveMode.SAVE_COPY -> stringResource(R.string.metadata_save_copy_description)
+    MetadataSaveMode.REPLACE_ORIGINAL -> stringResource(R.string.metadata_replace_original_description)
+}
+
+@Composable
+private fun MetadataSaveMode.actionTitle(): String = when (this) {
+    MetadataSaveMode.SAVE_COPY -> stringResource(R.string.metadata_save_copy_action)
+    MetadataSaveMode.REPLACE_ORIGINAL -> stringResource(R.string.metadata_replace_original_action)
 }

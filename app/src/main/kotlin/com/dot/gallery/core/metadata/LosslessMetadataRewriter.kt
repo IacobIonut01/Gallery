@@ -326,7 +326,7 @@ internal object LosslessMetadataRewriter {
         exif.saveAttributes()
     }
 
-    private val locationTags = arrayOf(
+    internal val locationTags = arrayOf(
         ExifInterface.TAG_GPS_ALTITUDE,
         ExifInterface.TAG_GPS_ALTITUDE_REF,
         ExifInterface.TAG_GPS_AREA_INFORMATION,
@@ -360,7 +360,7 @@ internal object LosslessMetadataRewriter {
         ExifInterface.TAG_GPS_TRACK_REF
     )
 
-    private val privacyTags = arrayOf(
+    internal val privacyTags = arrayOf(
         ExifInterface.TAG_ARTIST,
         ExifInterface.TAG_BODY_SERIAL_NUMBER,
         ExifInterface.TAG_CAMERA_OWNER_NAME,

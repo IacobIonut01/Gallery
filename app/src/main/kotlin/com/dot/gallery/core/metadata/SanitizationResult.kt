@@ -1,5 +1,7 @@
 package com.dot.gallery.core.metadata
 
+import android.net.Uri
+
 data class SanitizationCapability(
     val format: MediaContainerFormat,
     val supportedModes: Set<MetadataRemovalMode>,
@@ -19,7 +21,11 @@ sealed interface SanitizationResult {
         val removedCategories: Set<MetadataCategory>,
         val retainedRequiredMetadata: Set<MetadataCategory>,
         val bytesBefore: Long,
-        val bytesAfter: Long
+        val bytesAfter: Long,
+        val saveMode: MetadataSaveMode,
+        val sourceUri: Uri,
+        val sourceSha256: String,
+        val outputUri: Uri
     ) : SanitizationResult
 
     data class Unsupported(

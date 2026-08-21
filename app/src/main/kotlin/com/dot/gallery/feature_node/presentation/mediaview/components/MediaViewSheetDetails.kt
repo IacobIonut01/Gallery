@@ -35,7 +35,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -61,9 +60,12 @@ import com.dot.gallery.core.LocalMediaHandler
 import com.dot.gallery.feature_node.presentation.mediaview.LocalMediaViewerVisualPolicy
 import com.dot.gallery.core.navigate
 import com.dot.gallery.core.metadata.MetadataRemovalMode
+import com.dot.gallery.core.metadata.MetadataSaveMode
+import com.dot.gallery.core.metadata.SanitizationCapability
 import com.dot.gallery.core.metadata.SanitizationResult
 import com.dot.gallery.core.presentation.components.DragHandle
 import com.dot.gallery.core.presentation.components.NavigationBarSpacer
+import com.dot.gallery.core.util.SdkCompat
 import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
@@ -89,13 +91,13 @@ import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedStat
 import com.dot.gallery.feature_node.presentation.util.GlideInvalidation
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
 import com.dot.gallery.feature_node.presentation.util.hazeEffectScaled
+import com.dot.gallery.feature_node.presentation.util.matchesSha256
 import com.dot.gallery.feature_node.presentation.util.Screen
-import com.dot.gallery.feature_node.presentation.util.launchWriteRequest
 import com.dot.gallery.feature_node.presentation.util.printDebug
 import com.dot.gallery.feature_node.presentation.util.rememberActivityResult
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.rememberMediaInfo
-import com.dot.gallery.feature_node.presentation.util.writeRequest
+import com.dot.gallery.feature_node.presentation.util.trashRequest
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlinx.coroutines.launch
@@ -115,7 +117,7 @@ fun <T : Media> MediaViewSheetDetails(
     metadataSanitizationState: MediaViewViewModel.MetadataSanitizationUiState =
         MediaViewViewModel.MetadataSanitizationUiState.Idle,
     probeMetadataSanitization: (Media) -> Unit = {},
-    sanitizeMetadata: (Media, MetadataRemovalMode) -> Unit = { _, _ -> },
+    sanitizeMetadata: (Media, MetadataRemovalMode, MetadataSaveMode) -> Unit = { _, _, _ -> },
     resetMetadataSanitization: () -> Unit = {},
 ) {
     val metadata by rememberedDerivedState(metadataState.value, currentMedia) {
@@ -221,36 +223,60 @@ fun <T : Media> MediaViewSheetDetails(
 
                 val metadataRemovalSheetState = rememberAppBottomSheetState()
                 val metadataRemovalSuccessText = stringResource(R.string.remove_metadata_success)
+                val metadataRemovalCopySuccessText = stringResource(R.string.remove_metadata_copy_success)
                 val metadataRemovalRolledBackText = stringResource(R.string.remove_metadata_rolled_back)
                 val metadataRemovalFailedText = stringResource(R.string.remove_metadata_failed)
-                var pendingRemovalMode by rememberSaveable(currentMedia.id) {
-                    mutableStateOf(MetadataRemovalMode.LOCATION)
+                val canReplaceOriginal = SdkCompat.supportsTrash
+                var rememberedSanitizationCapability by remember(currentMedia.id) {
+                    mutableStateOf<SanitizationCapability?>(null)
+                }
+                LaunchedEffect(metadataSanitizationState, currentMedia.id) {
+                    if (metadataSanitizationState is MediaViewViewModel.MetadataSanitizationUiState.Ready &&
+                        metadataSanitizationState.mediaId == currentMedia.id
+                    ) {
+                        rememberedSanitizationCapability = metadataSanitizationState.capability
+                    }
                 }
                 val sanitizationCapability = when (metadataSanitizationState) {
                     is MediaViewViewModel.MetadataSanitizationUiState.Ready ->
                         metadataSanitizationState.takeIf { it.mediaId == currentMedia.id }?.capability
-                    else -> null
+                            ?: rememberedSanitizationCapability
+                    else -> rememberedSanitizationCapability
                 }
-                val metadataRemovalBusy = when (metadataSanitizationState) {
-                    is MediaViewViewModel.MetadataSanitizationUiState.Probing ->
-                        metadataSanitizationState.mediaId == currentMedia.id
-                    is MediaViewViewModel.MetadataSanitizationUiState.Running ->
-                        metadataSanitizationState.mediaId == currentMedia.id
-                    else -> false
-                }
-                val doMetadataRemoval: () -> Unit = {
-                    sanitizeMetadata(currentMedia, pendingRemovalMode)
-                }
+                val metadataRemovalBusy =
+                    metadataSanitizationState is MediaViewViewModel.MetadataSanitizationUiState.Probing ||
+                        metadataSanitizationState is MediaViewViewModel.MetadataSanitizationUiState.Running
                 val metadataRemovalPermissionResult = rememberActivityResult(
-                    onResultOk = doMetadataRemoval
+                    onResultCanceled = {
+                        Toast.makeText(context, metadataRemovalCopySuccessText, Toast.LENGTH_SHORT).show()
+                        scope.launch { metadataRemovalSheetState.hide() }
+                        resetMetadataSanitization()
+                    },
+                    onResultOk = {
+                        Toast.makeText(context, metadataRemovalSuccessText, Toast.LENGTH_SHORT).show()
+                        scope.launch { metadataRemovalSheetState.hide() }
+                        resetMetadataSanitization()
+                    }
                 )
                 LaunchedEffect(
                     metadataSanitizationState,
                     currentMedia.id,
                     metadataRemovalSuccessText,
+                    metadataRemovalCopySuccessText,
                     metadataRemovalRolledBackText,
                     metadataRemovalFailedText,
                 ) {
+                    val staleTerminalState = when (metadataSanitizationState) {
+                        is MediaViewViewModel.MetadataSanitizationUiState.Ready ->
+                            metadataSanitizationState.mediaId != currentMedia.id
+                        is MediaViewViewModel.MetadataSanitizationUiState.Complete ->
+                            metadataSanitizationState.mediaId != currentMedia.id
+                        else -> false
+                    }
+                    if (staleTerminalState) {
+                        resetMetadataSanitization()
+                        return@LaunchedEffect
+                    }
                     when (metadataSanitizationState) {
                         is MediaViewViewModel.MetadataSanitizationUiState.Ready -> {
                             if (metadataSanitizationState.mediaId == currentMedia.id) {
@@ -260,18 +286,43 @@ fun <T : Media> MediaViewSheetDetails(
                         is MediaViewViewModel.MetadataSanitizationUiState.Complete -> {
                             if (metadataSanitizationState.mediaId == currentMedia.id) {
                                 val result = metadataSanitizationState.result
-                                val message = when (result) {
-                                    is SanitizationResult.Success -> metadataRemovalSuccessText
-                                    is SanitizationResult.CommitFailed -> if (result.rolledBack) {
-                                        metadataRemovalRolledBackText
+                                if (result is SanitizationResult.Success &&
+                                    result.saveMode == MetadataSaveMode.REPLACE_ORIGINAL
+                                ) {
+                                    val sourceUnchanged = result.sourceUri.matchesSha256(
+                                        context.contentResolver,
+                                        result.sourceSha256
+                                    )
+                                    val trashRequest = if (sourceUnchanged) {
+                                        result.sourceUri.trashRequest(context.contentResolver)
                                     } else {
-                                        metadataRemovalFailedText
+                                        null
                                     }
-                                    else -> metadataRemovalFailedText
+                                    if (trashRequest != null) {
+                                        metadataRemovalPermissionResult.launch(trashRequest)
+                                    } else {
+                                        Toast.makeText(
+                                            context,
+                                            metadataRemovalCopySuccessText,
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        metadataRemovalSheetState.hide()
+                                        resetMetadataSanitization()
+                                    }
+                                } else {
+                                    val message = when (result) {
+                                        is SanitizationResult.Success -> metadataRemovalCopySuccessText
+                                        is SanitizationResult.CommitFailed -> if (result.rolledBack) {
+                                            metadataRemovalRolledBackText
+                                        } else {
+                                            metadataRemovalFailedText
+                                        }
+                                        else -> metadataRemovalFailedText
+                                    }
+                                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                                    if (result is SanitizationResult.Success) metadataRemovalSheetState.hide()
+                                    resetMetadataSanitization()
                                 }
-                                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                                if (result is SanitizationResult.Success) metadataRemovalSheetState.hide()
-                                resetMetadataSanitization()
                             }
                         }
                         else -> Unit
@@ -642,14 +693,9 @@ fun <T : Media> MediaViewSheetDetails(
                         state = metadataRemovalSheetState,
                         capability = sanitizationCapability,
                         isBusy = metadataRemovalBusy,
-                        onConfirm = { mode ->
-                            pendingRemovalMode = mode
-                            scope.launch {
-                                metadataRemovalPermissionResult.launchWriteRequest(
-                                    currentMedia.writeRequest(context.contentResolver),
-                                    doMetadataRemoval
-                                )
-                            }
+                        canReplaceOriginal = canReplaceOriginal,
+                        onConfirm = { mode, saveMode ->
+                            sanitizeMetadata(currentMedia, mode, saveMode)
                         }
                     )
                 }

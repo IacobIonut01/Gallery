@@ -26,27 +26,12 @@ internal object MetadataVerifier {
 
     private fun verifyExif(file: File, mode: MetadataRemovalMode): Boolean {
         if (mode == MetadataRemovalMode.EVERYTHING) return true
-        val exif = runCatching { ExifInterface(file.absolutePath) }.getOrNull() ?: return true
-        if (exif.latLong != null) return false
-        if (mode == MetadataRemovalMode.PRIVACY) {
-            val privacyTags = arrayOf(
-                ExifInterface.TAG_ARTIST,
-                ExifInterface.TAG_BODY_SERIAL_NUMBER,
-                ExifInterface.TAG_CAMERA_OWNER_NAME,
-                ExifInterface.TAG_COPYRIGHT,
-                ExifInterface.TAG_DATETIME,
-                ExifInterface.TAG_DATETIME_DIGITIZED,
-                ExifInterface.TAG_DATETIME_ORIGINAL,
-                ExifInterface.TAG_IMAGE_DESCRIPTION,
-                ExifInterface.TAG_IMAGE_UNIQUE_ID,
-                ExifInterface.TAG_LENS_SERIAL_NUMBER,
-                ExifInterface.TAG_MAKER_NOTE,
-                ExifInterface.TAG_MAKE,
-                ExifInterface.TAG_MODEL,
-                ExifInterface.TAG_SOFTWARE,
-                ExifInterface.TAG_USER_COMMENT
-            )
-            if (privacyTags.any { exif.getAttribute(it) != null }) return false
+        val exif = runCatching { ExifInterface(file.absolutePath) }.getOrNull() ?: return false
+        if (LosslessMetadataRewriter.locationTags.any { exif.getAttribute(it) != null }) return false
+        if (mode == MetadataRemovalMode.PRIVACY &&
+            LosslessMetadataRewriter.privacyTags.any { exif.getAttribute(it) != null }
+        ) {
+            return false
         }
         return true
     }
