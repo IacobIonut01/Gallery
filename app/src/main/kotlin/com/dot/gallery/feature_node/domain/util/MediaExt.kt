@@ -111,7 +111,10 @@ fun resolveMediaStoreVolume(path: String): Pair<String, String> {
 }
 
 val Media.mediaStoreVolumeName: String
-    get() = resolveMediaStoreVolume(path).first
+    get() = runCatching {
+        getUri().takeIf { it.scheme == "content" && it.authority == "media" }
+            ?.pathSegments?.firstOrNull()
+    }.getOrNull() ?: resolveMediaStoreVolume(path).first
 
 /**
  * Used to determine if the Media object is not accessible

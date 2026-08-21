@@ -60,7 +60,8 @@ import com.dot.gallery.feature_node.domain.model.AlbumGroupWithAlbums
 import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.util.isCloud
-import com.dot.gallery.feature_node.domain.util.volume
+import com.dot.gallery.feature_node.domain.util.mediaStoreVolumeName
+import com.dot.gallery.feature_node.domain.util.resolveMediaStoreVolume
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumComponent
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumGroupComponent
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
@@ -100,10 +101,30 @@ fun <T: Media> MoveMediaSheet(
     val securitySheetState = rememberAppBottomSheetState()
     var pendingLockedAlbumPath by remember { mutableStateOf<String?>(null) }
     var searchQuery by remember { mutableStateOf("") }
+    val sources = mediaList.filter { !it.isCloud }.map {
+        AlbumDestinationSource(it.mediaStoreVolumeName, it.relativePath)
+    }
+
+    fun Album.isMoveDestinationEnabled(): Boolean = absolutePath.isNotBlank() &&
+        isAlbumMoveDestinationEnabled(
+            hasFullMediaAccess = hasFullMediaAccess,
+            albumVolume = volume,
+            albumRelativePath = relativePath,
+            sources = sources,
+            isCloudAlbum = uri.scheme == "cloud" || relativePath.startsWith("cloud/"),
+        )
+
+    fun localMediaForDestination(path: String): List<T> {
+        val (destinationVolume, destinationRelativePath) = resolveMediaStoreVolume(path)
+        return mediaList.filter {
+            !it.isCloud && (it.mediaStoreVolumeName != destinationVolume ||
+                it.relativePath.trim('/') != destinationRelativePath.trim('/'))
+        }
+    }
 
     val doMove: () -> Unit = {
         scope.launch {
-            val localMedia = mediaList.filter { !it.isCloud }
+            val localMedia = localMediaForDestination(newPath)
             val done = async {
                 localMedia.forEachIndexed { index, it ->
                     if (handler.moveMedia(media = it, newPath = newPath)) {
@@ -139,7 +160,7 @@ fun <T: Media> MoveMediaSheet(
 
     fun startMove(albumPath: String) {
         val cloudMedia = mediaList.filter { it.isCloud }
-        val localMedia = mediaList.filter { !it.isCloud }
+        val localMedia = localMediaForDestination(albumPath)
         // For cloud media: copy to local destination (download + insert into MediaStore)
         if (cloudMedia.isNotEmpty()) {
             scope.launch { handler.copyMedia(*cloudMedia.map { it to albumPath }.toTypedArray()) }
@@ -325,22 +346,10 @@ fun <T: Media> MoveMediaSheet(
                                 items = filteredGroupAlbums,
                                 key = { item -> "group_album_${item.id}" }
                             ) { item ->
-                                val mediaVolume = (mediaList.firstOrNull()?.volume ?: item.volume)
-                                val albumOwnership =
-                                    item.relativePath.substringBeforeLast("Android/media/", "allow")
-                                val mediaOwnership =
-                                    mediaList.firstOrNull()?.relativePath?.substringBeforeLast(
-                                        "Android/media/",
-                                        "allow"
-                                    ) ?: albumOwnership
-                                val mediaAlbum = mediaList.firstOrNull()?.albumLabel ?: item.label
                                 AlbumComponent(
                                     modifier = Modifier.animateItem(),
                                     album = item,
-                                    isEnabled = hasFullMediaAccess || (item.volume == mediaVolume
-                                            && albumOwnership == "allow"
-                                            && mediaOwnership == "allow"
-                                            && item.label != mediaAlbum),
+                                    isEnabled = item.isMoveDestinationEnabled(),
                                     onItemClick = { album ->
                                         if (album.isLocked) {
                                             if (!biometricState.isSupported) {
@@ -386,21 +395,9 @@ fun <T: Media> MoveMediaSheet(
                                 items = filteredUngroupedAlbums,
                                 key = { item -> item.toString() }
                             ) { item ->
-                                val mediaVolume = (mediaList.firstOrNull()?.volume ?: item.volume)
-                                val albumOwnership =
-                                    item.relativePath.substringBeforeLast("Android/media/", "allow")
-                                val mediaOwnership =
-                                    mediaList.firstOrNull()?.relativePath?.substringBeforeLast(
-                                        "Android/media/",
-                                        "allow"
-                                    ) ?: albumOwnership
-                                val mediaAlbum = mediaList.firstOrNull()?.albumLabel ?: item.label
                                 AlbumComponent(
                                     album = item,
-                                    isEnabled = hasFullMediaAccess || (item.volume == mediaVolume
-                                            && albumOwnership == "allow"
-                                            && mediaOwnership == "allow"
-                                            && item.label != mediaAlbum),
+                                    isEnabled = item.isMoveDestinationEnabled(),
                                     onItemClick = { album ->
                                         if (album.isLocked) {
                                             if (!biometricState.isSupported) {
@@ -443,5 +440,44 @@ fun <T: Media> MoveMediaSheet(
             }
         }
     )
+}
+
+internal data class AlbumDestinationSource(
+    val volume: String,
+    val relativePath: String,
+)
+
+internal fun isAlbumDestinationEnabled(
+    hasFullMediaAccess: Boolean,
+    albumVolume: String,
+    albumRelativePath: String,
+    sources: List<AlbumDestinationSource>,
+    isCloudAlbum: Boolean = false,
+): Boolean {
+    if (isCloudAlbum) return false
+    if (hasFullMediaAccess) return true
+    return !albumRelativePath.isAndroidMediaPath() && sources.all {
+        it.volume == albumVolume && !it.relativePath.isAndroidMediaPath()
+    }
+}
+
+internal fun isAlbumMoveDestinationEnabled(
+    hasFullMediaAccess: Boolean,
+    albumVolume: String,
+    albumRelativePath: String,
+    sources: List<AlbumDestinationSource>,
+    isCloudAlbum: Boolean = false,
+): Boolean = isAlbumDestinationEnabled(
+    hasFullMediaAccess = hasFullMediaAccess,
+    albumVolume = albumVolume,
+    albumRelativePath = albumRelativePath,
+    sources = sources,
+    isCloudAlbum = isCloudAlbum,
+) && (sources.isEmpty() || sources.any {
+    it.volume != albumVolume || it.relativePath.trim('/') != albumRelativePath.trim('/')
+})
+
+private fun String.isAndroidMediaPath(): Boolean = trim('/').let {
+    it == "Android/media" || it.startsWith("Android/media/")
 }
 

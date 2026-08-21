@@ -51,7 +51,7 @@ data class Album(
 
     @IgnoredOnParcel
     @Stable
-    val absolutePath: String = volume.trimEnd('/') + "/" + relativePath
+    val absolutePath: String = resolveAlbumAbsolutePath(pathToThumbnail, relativePath, storageVolume)
 
     @IgnoredOnParcel
     @Stable
@@ -70,4 +70,18 @@ data class Album(
             timestamp = 0
         )
     }
+}
+
+internal fun resolveAlbumAbsolutePath(
+    pathToThumbnail: String,
+    relativePath: String,
+    storageVolume: String? = null,
+): String {
+    val normalizedRelativePath = relativePath.trim('/')
+    if (normalizedRelativePath.isEmpty()) return pathToThumbnail.substringBeforeLast('/')
+    val filesystemRoot = pathToThumbnail.substringBefore("/$normalizedRelativePath/", "")
+    if (filesystemRoot.isNotEmpty()) return "$filesystemRoot/$normalizedRelativePath/"
+    return relativePath.takeIf {
+        storageVolume == null || storageVolume == "external" || storageVolume == "external_primary"
+    }.orEmpty()
 }
