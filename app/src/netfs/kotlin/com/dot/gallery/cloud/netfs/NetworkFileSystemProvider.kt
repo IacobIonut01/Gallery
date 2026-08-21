@@ -79,6 +79,13 @@ open class NetworkFileSystemProvider(
     @Volatile
     private var connection: NetFsConnection? = null
 
+    @Volatile
+    private var connectionGeneration = 0L
+
+    @Volatile
+    private var mediaIndex: NetFsMediaIndex? = null
+    private val mediaIndexLock = Any()
+
     override val isAvailable: Boolean
         get() = currentConfig != null && _connectionState.value == ConnectionState.CONNECTED
 
@@ -88,14 +95,23 @@ open class NetworkFileSystemProvider(
         ProviderCapability.SYNC
     )
 
+    @Synchronized
     override fun configure(config: CloudServerConfig) {
+        connection?.let { runCatching { backend.close(it) } }
+        connection = null
+        connectionGeneration++
+        mediaIndex = null
         currentConfig = config
+        _connectionState.value = ConnectionState.DISCONNECTED
         printDebug("${backend.displayName}Provider: Configured with ${config.serverUrl}")
     }
 
+    @Synchronized
     override fun disconnect() {
         connection?.let { runCatching { backend.close(it) } }
         connection = null
+        connectionGeneration++
+        mediaIndex = null
         _connectionState.value = ConnectionState.DISCONNECTED
         currentConfig = null
     }
@@ -107,6 +123,12 @@ open class NetworkFileSystemProvider(
         return CloudTrace.time("${backend.providerType} connect") {
             backend.connect(config)
         }.also { connection = it }
+    }
+
+    @Synchronized
+    private fun invalidateMediaIndex() {
+        connectionGeneration++
+        mediaIndex = null
     }
 
     // === Auth ===
@@ -145,8 +167,7 @@ open class NetworkFileSystemProvider(
         try {
             val conn = requireConnection()
             val configId = currentConfig?.id ?: 0L
-            val all = scanMedia(conn, "")
-            val paged = all.drop(page * pageSize).take(pageSize).map { it.toEntity(configId) }
+            val paged = mediaIndex(conn).page(page, pageSize).map { it.toEntity(configId) }
             cloudMediaDao.insertAll(paged)
             emit(Resource.Success(paged))
         } catch (e: CancellationException) {
@@ -175,18 +196,19 @@ open class NetworkFileSystemProvider(
             val conn = requireConnection()
             val configId = currentConfig?.id ?: 0L
             val albums = CloudTrace.time("${backend.providerType} getRemoteAlbums") {
-                backend.listDir(conn, "")
-                    .filter { it.isDirectory }
-                    .map { dir ->
-                        CloudAlbum(
-                            remoteId = dir.relativePath,
-                            providerType = backend.providerType,
-                            serverConfigId = configId,
-                            name = dir.name,
-                            assetCount = 0,
-                            isShared = false
-                        )
-                    }
+                val index = mediaIndex(conn)
+                index.rootAlbumPaths().map { albumPath ->
+                    val stats = index.albumStats(albumPath)
+                    CloudAlbum(
+                        remoteId = albumPath,
+                        providerType = backend.providerType,
+                        serverConfigId = configId,
+                        name = albumPath.substringAfterLast('/'),
+                        assetCount = stats.assetCount,
+                        thumbnailAssetId = stats.thumbnailAssetId,
+                        isShared = false
+                    )
+                }
             }
             CloudTrace.d("${backend.providerType} getRemoteAlbums -> ${albums.size} folders")
             emit(Resource.Success(albums))
@@ -205,7 +227,7 @@ open class NetworkFileSystemProvider(
             val conn = requireConnection()
             val configId = currentConfig?.id ?: 0L
             val media = CloudTrace.time("${backend.providerType} getRemoteAlbumMedia '$albumId'") {
-                scanMedia(conn, albumId).map { it.toEntity(configId) }
+                mediaIndex(conn).inAlbum(albumId).map { it.toEntity(configId) }
             }
             CloudTrace.d("${backend.providerType} getRemoteAlbumMedia '$albumId' -> ${media.size} items")
             emit(Resource.Success(media))
@@ -222,6 +244,7 @@ open class NetworkFileSystemProvider(
     override suspend fun createAlbum(name: String): Result<CloudAlbum> = withContext(Dispatchers.IO) {
         try {
             backend.mkdir(requireConnection(), name)
+            invalidateMediaIndex()
             Result.success(
                 CloudAlbum(
                     remoteId = name,
@@ -262,6 +285,7 @@ open class NetworkFileSystemProvider(
         try {
             val configId = currentConfig?.id ?: error("Not configured")
             backend.delete(requireConnection(), remoteId)
+            invalidateMediaIndex()
             cloudMediaDao.delete(remoteId, backend.providerType, configId)
             Result.success(Unit)
         } catch (e: Exception) {
@@ -279,7 +303,7 @@ open class NetworkFileSystemProvider(
         try {
             val conn = requireConnection()
             val configId = currentConfig?.id ?: 0L
-            val matched = scanMedia(conn, "")
+            val matched = mediaIndex(conn).inAlbum("")
                 .filter { it.name.contains(query, ignoreCase = true) }
                 .map { it.toEntity(configId) }
             Result.success(matched)
@@ -311,10 +335,12 @@ open class NetworkFileSystemProvider(
     // === Media-pipeline URLs (loopback bridge) ===
 
     override fun getThumbnailUrl(remoteId: String, size: ThumbnailSize): String =
-        NetFsLoopback.thumbnailUrl(backend.providerType, remoteId, size)
+        NetFsLoopback.thumbnailUrl(
+            backend.providerType, currentConfig?.id ?: 0L, remoteId, size
+        )
 
     override fun getOriginalUrl(remoteId: String): String =
-        NetFsLoopback.originalUrl(backend.providerType, remoteId)
+        NetFsLoopback.originalUrl(backend.providerType, currentConfig?.id ?: 0L, remoteId)
 
     override fun getAuthHeaders(): Map<String, String> = emptyMap() // token is embedded in the loopback URL
 
@@ -549,6 +575,7 @@ open class NetworkFileSystemProvider(
                     context.contentResolver.openAssetFileDescriptor(localMedia.getUri(), "r")?.use { it.length }
                 }.getOrNull() ?: -1L
                 input.use { backend.write(conn, remotePath, it, size) }
+                invalidateMediaIndex()
                 val entity = CloudMediaEntity(
                     remoteId = remotePath,
                     providerType = backend.providerType,
@@ -588,7 +615,8 @@ open class NetworkFileSystemProvider(
             try {
                 val conn = requireConnection()
                 val configId = currentConfig?.id ?: 0L
-                Result.success(scanMedia(conn, "").map { it.toEntity(configId) })
+                invalidateMediaIndex()
+                Result.success(mediaIndex(conn).inAlbum("").map { it.toEntity(configId) })
             } catch (e: Exception) {
                 Result.failure(e)
             }
@@ -627,20 +655,63 @@ open class NetworkFileSystemProvider(
         "mp4", "mkv", "mov", "avi", "webm", "3gp"
     )
 
-    private fun scanMedia(conn: NetFsConnection, path: String, depth: Int = 0): List<NetFsEntry> {
-        if (depth > 4) return emptyList()
-        return try {
-            backend.listDir(conn, path).flatMap { entry ->
+    private fun mediaIndex(conn: NetFsConnection): NetFsMediaIndex {
+        mediaIndex?.let { return it }
+        return synchronized(mediaIndexLock) {
+            mediaIndex ?: run {
+                val generation = connectionGeneration
+                val index = CloudTrace.time("${backend.providerType} scan media index") {
+                    NetFsMediaIndex(scanMedia(conn))
+                }
+                check(generation == connectionGeneration && connection === conn) {
+                    "Network filesystem connection changed during indexing"
+                }
+                mediaIndex = index
+                index
+            }
+        }
+    }
+
+    private fun scanMedia(conn: NetFsConnection): List<NetFsEntry> {
+        val media = ArrayList<NetFsEntry>()
+        val pending = java.util.ArrayDeque<String>().apply { add("") }
+        val visited = HashSet<String>()
+        while (pending.isNotEmpty()) {
+            val path = pending.removeFirst()
+            if (!visited.add(path)) continue
+            listDirWithRetry(conn, path).forEach { entry ->
                 if (entry.isDirectory) {
-                    scanMedia(conn, entry.relativePath, depth + 1)
-                } else {
-                    val ext = entry.name.substringAfterLast('.', "").lowercase()
-                    if (ext in mediaExtensions) listOf(entry) else emptyList()
+                    pending.addLast(entry.relativePath)
+                } else if (entry.name.substringAfterLast('.', "").lowercase() in mediaExtensions) {
+                    media.add(entry)
                 }
             }
-        } catch (_: Exception) {
-            emptyList()
         }
+        return media.sortedBy { it.relativePath }
+    }
+
+    private fun listDirWithRetry(conn: NetFsConnection, path: String): List<NetFsEntry> {
+        var failure: Exception? = null
+        repeat(SCAN_LIST_RETRIES) { attempt ->
+            try {
+                return backend.listDir(conn, path)
+            } catch (e: Exception) {
+                failure = e
+                CloudTrace.w(
+                    "${backend.providerType} scan failed at '$path' " +
+                        "(attempt ${attempt + 1}/$SCAN_LIST_RETRIES): ${e.message}"
+                )
+                if (attempt + 1 < SCAN_LIST_RETRIES) {
+                    try {
+                        Thread.sleep(SCAN_RETRY_DELAY_MILLIS * (attempt + 1))
+                    } catch (interrupted: InterruptedException) {
+                        Thread.currentThread().interrupt()
+                        throw interrupted
+                    }
+                }
+            }
+        }
+        throw failure ?: IllegalStateException("Unable to list '$path'")
     }
 
     private fun mimeOf(path: String): String = when (path.substringAfterLast('.', "").lowercase()) {
@@ -661,6 +732,9 @@ open class NetworkFileSystemProvider(
     }
 
     private companion object {
+        const val SCAN_LIST_RETRIES = 3
+        const val SCAN_RETRY_DELAY_MILLIS = 250L
+
         // ~1 MB: large enough that smbj fills it with a single SMB2 READ (its typical negotiated max),
         // collapsing the per-file round-trips that were timing out the image pipeline.
         const val LOOPBACK_READ_BUFFER_BYTES = 1024 * 1024
@@ -685,8 +759,10 @@ open class NetworkFileSystemProvider(
             timestamp = ts,
             size = size,
             syncState = SyncState.REMOTE_ONLY,
-            thumbnailUrl = NetFsLoopback.thumbnailUrl(backend.providerType, relativePath, ThumbnailSize.PREVIEW),
-            originalUrl = NetFsLoopback.originalUrl(backend.providerType, relativePath)
+            thumbnailUrl = NetFsLoopback.thumbnailUrl(
+                backend.providerType, configId, relativePath, ThumbnailSize.PREVIEW
+            ),
+            originalUrl = NetFsLoopback.originalUrl(backend.providerType, configId, relativePath)
         )
     }
 }

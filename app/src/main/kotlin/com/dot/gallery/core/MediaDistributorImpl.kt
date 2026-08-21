@@ -126,6 +126,9 @@ internal fun matchingLocationMediaIds(
     }
 }
 
+internal fun usesLiveCloudAlbumMembership(providerType: ProviderType): Boolean =
+    providerType == ProviderType.SMB || providerType == ProviderType.NFS
+
 internal fun expandLocationMediaIds(
     matchingMediaIds: Set<Long>,
     cloudBackupIdsByLocalId: Map<Long, List<Long>>,
@@ -861,13 +864,17 @@ class MediaDistributorImpl @Inject constructor(
                         val albumSort = values[3] as Settings.Album.LastSort
                         @Suppress("UNCHECKED_CAST")
                         val cachedNonTrashed = values[4] as List<Media.UriMedia>
-                        val cachedIds = cachedNonTrashed.mapTo(HashSet()) { it.id }
                         val allMedia = when (resource) {
                             is Resource.Success -> resource.data?.map { it.toUriMedia() } ?: emptyList()
                             is Resource.Error -> resource.data?.map { it.toUriMedia() } ?: emptyList()
                         }
-                        // Filter out items that are no longer in the non-trashed cache
-                        val media = if (cachedIds.isNotEmpty()) allMedia.filter { it.id in cachedIds } else allMedia
+                        // NAS membership comes from one complete live index; other providers stay cache-filtered.
+                        val media = if (usesLiveCloudAlbumMembership(cloudAlbum.providerType)) {
+                            allMedia
+                        } else {
+                            val cachedIds = cachedNonTrashed.mapTo(HashSet()) { it.id }
+                            if (cachedIds.isNotEmpty()) allMedia.filter { it.id in cachedIds } else allMedia
+                        }
                         val error = if (resource is Resource.Error) resource.message ?: "" else ""
                         val (defaultDateFormat, extendedDateFormat, weeklyDateFormat) = dateFormats
                         val sorter = when (albumSort.kind) {

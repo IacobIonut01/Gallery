@@ -20,6 +20,44 @@ data class NetFsEntry(
     val lastModified: Long
 )
 
+internal data class NetFsAlbumStats(
+    val assetCount: Int,
+    val thumbnailAssetId: String?
+)
+
+internal class NetFsMediaIndex(private val entries: List<NetFsEntry>) {
+    private val entriesByRootAlbum = entries.groupBy {
+        it.relativePath.substringBefore('/', "")
+    }
+
+    fun page(page: Int, pageSize: Int): List<NetFsEntry> {
+        if (page < 0 || pageSize <= 0) return emptyList()
+        val offset = page.toLong() * pageSize
+        if (offset >= entries.size) return emptyList()
+        return entries.subList(offset.toInt(), minOf(entries.size, offset.toInt() + pageSize))
+    }
+
+    fun inAlbum(albumPath: String): List<NetFsEntry> {
+        val normalized = albumPath.trim('/')
+        if (normalized.isEmpty()) return entries
+        if ('/' !in normalized) return entriesByRootAlbum[normalized].orEmpty()
+        val prefix = "$normalized/"
+        return entries.filter { it.relativePath.startsWith(prefix) }
+    }
+
+    fun rootAlbumPaths(): List<String> = entriesByRootAlbum.keys.filter { it.isNotEmpty() }.sorted()
+
+    fun albumStats(albumPath: String): NetFsAlbumStats {
+        val media = inAlbum(albumPath)
+        return NetFsAlbumStats(
+            assetCount = media.size,
+            thumbnailAssetId = media.maxWithOrNull(
+                compareBy<NetFsEntry> { it.lastModified }.thenBy { it.relativePath }
+            )?.relativePath
+        )
+    }
+}
+
 /** Disk usage for the connected share/export. */
 data class NetFsStorage(
     val usedBytes: Long,
