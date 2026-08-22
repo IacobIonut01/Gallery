@@ -68,7 +68,7 @@
     <string name="pinned_albums_title">Angeheftete Alben</string>
     <string name="unpin">Lösen</string>
     <string name="pin">Anheften</string>
-    <string name="nav_timeline">Timeline</string>
+    <string name="nav_timeline">Zeitleiste</string>
     <string name="location_cd">Medienstandort</string>
     <string name="location_map_cd">Standortkarte</string>
     <string name="show_in_app">In App anzeigen</string>
@@ -135,9 +135,9 @@
     <string name="reset">Zurücksetzen</string>
     <string name="set_wallpaper">Hintergrundbild</string>
     <string name="set_wallpaper_error">Hintergrundbild kann nicht gesetzt werden, keine Anwendung verfügbar!</string>
-    <string name="monthly_timeline_title">Timeline nach Monat</string>
+    <string name="monthly_timeline_title">Zeitleiste nach Monat</string>
     <string name="monthly_timeline_summary">Timeline nach Monat statt nach Datum gruppieren (Startet App neu)</string>
-    <string name="timeline_layout_type">Timeline-Layout</string>
+    <string name="timeline_layout_type">Layout der Zeitleiste</string>
     <string name="timeline_layout_type_summary">Wähle zwischen einem einheitlichen Raster oder einem Mosaik-Layout</string>
     <string name="timeline_layout_grid">Raster</string>
     <string name="timeline_layout_mosaic">Mosaik</string>
@@ -362,7 +362,7 @@
     <string name="setup_location_location_title">Wo sollte ignoriert werden</string>
     <string name="setup_location_location_subtitle">Das Album und sein Inhalt werden je nach Ort ausgeblendet</string>
     <string name="setup_location_options_albums">Alben</string>
-    <string name="setup_location_options_timeline">Timeline</string>
+    <string name="setup_location_options_timeline">Zeitleiste</string>
     <string name="setup_location_options_both">Beide</string>
     <string name="setup_location_type_title">Welche sollten ignoriert werden</string>
     <string name="setup_location_type_subtitle">Du kannst ein einzelnes Album oder mehrere Alben auswählen, oder einen regulären Ausdruck erstellen, um Übereinstimmungen für mehrere Alben zu finden</string>
@@ -955,7 +955,7 @@
     <string name="sort_most_accurate">Genaueste</string>
     <string name="sort_by_date">Datum</string>
     <plurals name="item_count">
-        <item quantity="one">%s Datei</item>
+        <item quantity="one">%s Element</item>
         <item quantity="other">%s Elemente</item>
     </plurals>
     <plurals name="album_count">
