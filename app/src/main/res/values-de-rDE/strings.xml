@@ -148,7 +148,7 @@
     <string name="amoled_mode_title">Amoled-Modus verwenden</string>
     <string name="amoled_mode_summary">Höherer Kontrast, geeignet für AMOLED-Bildschirme</string>
     <string name="amoled_mode_requires_dark">Nur verfügbar, wenn die App den dunklen Modus verwendet</string>
-    <string name="use_system_font_title">Nutze die Systemschriftart</string>
+    <string name="use_system_font_title">Systemschriftart verwenden</string>
     <string name="use_system_font_summary">Nutze die Standardschriftart des Betriebssystems statt der eingebauten</string>
     <string name="use_system_font_description">Wenn dies aktiviert ist, nutzt die Anwendung die Systemschriftart deines Geräts anstelle der integrierten Standardschriftart. Dies kann die Lesbarkeit verbessern, wenn du eine eigene Systemschriftart verwendest.</string>
     <string name="color_palette_preview_description">Symbole, Text und mehr passen sich farblich an dein Hintergrundbild an</string>
@@ -1465,8 +1465,8 @@
     <string name="cloud_help_webdav">Geben Sie die vollständige WebDAV-Endpunkt-URL, die von Ihrem Host bereitgestellt wurde, sowie Ihren WebDAV-Benutzernamen und Ihr Passwort ein.</string>
     <string name="cloud_help_smb">Verwenden Sie smb://host/share/folder. Lassen Sie den Benutzernamen für den Gastzugang leer oder geben Sie Benutzer / DOMAIN\\Benutzer und Ihr Passwort ein. Das Share muss sich im gleichen lokalen Netzwerk wie dieses Gerät befinden. SMB2/3 ist erforderlich (älteres SMB1 wird nicht unterstützt).</string>
     <string name="cloud_help_nfs">Verwenden Sie nfs://host/export/path, wobei alles nach dem Host der exportierte Pfad ist. Nur NFSv3 (mit AUTH_SYS) wird unterstützt — NFSv2 und NFSv4 nicht. Optional kann eine uid:gid eingestellt werden, auf die der Export Zugriff gewährt. Der Export muss die IP dieses Geräts zulassen, einen NFSv3-Mount anbieten und sich im gleichen lokalen Netzwerk befinden.</string>
-    <string name="cloud_smb_url_hint">smb://host/share/folder</string>
-    <string name="cloud_nfs_url_hint">nfs://host/export/path</string>
+    <string name="cloud_smb_url_hint">smb://host/share/Ordner</string>
+    <string name="cloud_nfs_url_hint">nfs://Host/Export/Pfad</string>
     <string name="cloud_smb_username_hint">Benutzer oder DOMAIN\\Benutzer (für Gastzugang leer lassen)</string>
     <string name="cloud_nfs_uid_gid">Benutzer-ID (uid:gid)</string>
     <string name="cloud_nfs_uid_gid_hint">z. B. 1000:1000 (optional, AUTH_SYS)</string>
@@ -1624,7 +1624,7 @@
     <string name="cloud_destinations_pick_subtitle">Wählen Sie aus, welche Alben zu diesem Dienst gesichert werden.</string>
     <string name="cloud_destinations_album_backing_up">%1$d Elemente · wird gesichert</string>
     <string name="cloud_backup_global_options">Globale Optionen</string>
-    <string name="cloud_global">Global</string>
+    <string name="cloud_global">Systemweit</string>
     <string name="cloud_offline_title">Offline &amp; Cache</string>
     <string name="cloud_offline_summary">Zwischengespeicherte Medien und Downloads für die Offline-Nutzung</string>
     <string name="cloud_offline_mode_header">Offline-Modus</string>
@@ -1678,8 +1678,8 @@
     <string name="cloud_backup_no_services">Keine Cloud-Dienste verbunden</string>
     <string name="cloud_backup_add_service">Einen Dienst hinzufügen</string>
     <string name="cloud_backup_uploading_short">Hochladen…</string>
-    <string name="cloud_backup_verifying_existing">Checking existing backups</string>
-    <string name="cloud_backup_verifying_count">Checked %1$d of %2$d items</string>
+    <string name="cloud_backup_verifying_existing">Vorhandene Sicherungen überprüfen</string>
+    <string name="cloud_backup_verifying_count">%1$d von %2$d Elementen überprüft</string>
     <string name="cloud_backup_select_albums">Alben auswählen</string>
     <string name="cloud_backup_start">Sicherung starten</string>
     <string name="cloud_backup_start_summary">Ausgewählte Alben in die Cloud hochladen</string>
