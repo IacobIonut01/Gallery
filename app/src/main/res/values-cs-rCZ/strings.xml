@@ -625,8 +625,8 @@
     <string name="vault_item_deleted">Položka byla smazána z trezoru</string>
     <string name="vault_add_to_vault_title">Přidat do trezoru</string>
     <string name="vault_delete_originals">Odstranit originály po zašifrování</string>
-    <string name="vault_encrypt_and_keep">Šifrovat &amp; Ponechat</string>
-    <string name="vault_encrypt_and_delete">Šifrovat &amp; Odstranit</string>
+    <string name="vault_encrypt_and_keep">Šifrovat a ponechat</string>
+    <string name="vault_encrypt_and_delete">Šifrovat a odstranit</string>
     <string name="vault_remember_choice">Zapamatovat si volbu</string>
     <string name="vault_encrypt_behavior">Chování šifrování trezoru</string>
     <string name="vault_encrypt_behavior_summary">Vyberte, co se stane s originály při přidávání do trezoru</string>
@@ -714,7 +714,7 @@
     <string name="settings_appearance_summary">Vzhled, barvy, tmavý režim, vizuální efekty</string>
     <string name="settings_visual_effects_header">Vizuální efekty</string>
     <string name="settings_font_header">Písmo</string>
-    <string name="settings_timeline_albums">Časová osa &amp; Alba</string>
+    <string name="settings_timeline_albums">Časová osa a alba</string>
     <string name="settings_timeline_albums_summary">Rozložení, seskupování, formát data, chování alb</string>
     <string name="settings_display_header">Zobrazení</string>
     <string name="settings_media_viewer">Prohlížeč médií</string>
@@ -1121,14 +1121,14 @@
     <string name="remove_from_collection">Odebrat ze sbírky</string>
     <string name="collection_empty">Tato sbírka je prázdná</string>
     <string name="n_items_in_collection">%1$d položek</string>
-    <string name="create_and_add">Vytvořit &amp; přidat</string>
+    <string name="create_and_add">Vytvořit a přidat</string>
     <string name="pin_collection">Připnout</string>
     <string name="unpin_collection">Odepnout</string>
     <string name="select_albums_for_collection">Přidat alba</string>
     <string name="select_albums_for_collection_subtitle">Vyberte alba, jejichž mediální soubory chcete přidat do této sbírky</string>
     <string name="add_selected">Přidat vybrané</string>
     <!-- Help & Tips Screen -->
-    <string name="help_title">Nápověda &amp; tipy</string>
+    <string name="help_title">Nápověda a tipy</string>
     <string name="help_summary">Návody, tipy a co je nového</string>
     <string name="help_whats_new">Co je nového</string>
     <string name="help_whats_new_subtitle">Objevte nejnovější funkce Galerie</string>
@@ -1144,27 +1144,27 @@
     <string name="help_cat_basics">Základy</string>
     <string name="help_cat_navigation">Navigace</string>
     <string name="help_cat_personalization">Personalizace</string>
-    <string name="help_cat_timeline_albums">Časová osa &amp; nastavení alb</string>
-    <string name="help_cat_viewing">Fotografie &amp; prohlížení videí</string>
+    <string name="help_cat_timeline_albums">Časová osa a nastavení alb</string>
+    <string name="help_cat_viewing">Fotografie a prohlížení videí</string>
     <string name="help_cat_viewer_actions">Akce v prohlížeči médií</string>
     <string name="help_cat_viewer_settings">Nastavení prohlížeče médií</string>
     <string name="help_cat_editing">Úprava fotografií</string>
     <string name="help_cat_search">Vyhledávání</string>
     <string name="help_cat_ai">Funkce umělé inteligence</string>
-    <string name="help_cat_albums">Alba &amp; sbírky</string>
+    <string name="help_cat_albums">Alba a sbírky</string>
     <string name="help_cat_vault">Trezor</string>
-    <string name="help_cat_cloud_sync">Cloud &amp; synchronizace</string>
-    <string name="help_cat_fav_trash">Oblíbené &amp; koš</string>
+    <string name="help_cat_cloud_sync">Cloud a synchronizace</string>
+    <string name="help_cat_fav_trash">Oblíbené a koš</string>
     <string name="help_cat_locations">Procházení podle polohy</string>
-    <string name="help_cat_metadata">Metadata &amp; EXIF</string>
+    <string name="help_cat_metadata">Metadata a EXIF</string>
     <string name="help_cat_settings_appearance">Nastavení: Vzhled</string>
     <string name="help_cat_settings_general">Nastavení: Obecné</string>
     <string name="help_cat_settings_navigation">Nastavení: Navigace</string>
     <string name="help_cat_settings_smart">Nastavení: Chytré funkce</string>
     <string name="help_cat_settings_security">Nastavení: Zabezpečení</string>
-    <string name="help_cat_gestures">Gesta &amp; zkratky</string>
-    <string name="help_cat_selection_actions">Výběr &amp; hromadné akce</string>
-    <string name="help_cat_accessibility">Přístupnost &amp; pokročilé</string>
+    <string name="help_cat_gestures">Gesta a zkratky</string>
+    <string name="help_cat_selection_actions">Výběr a hromadné akce</string>
+    <string name="help_cat_accessibility">Přístupnost a pokročilé</string>
     <!-- FCast -->
     <string name="cancel">Zrušit</string>
     <string name="cast_connect">Zahájit přenos</string>
@@ -1348,7 +1348,7 @@
     <string name="date_headers_favorites">Oblíbené</string>
     <string name="date_headers_vault">Trezor</string>
     <string name="date_headers_cloud_archive">Cloudový archiv</string>
-    <string name="date_headers_location">Mapa &amp; poloha</string>
+    <string name="date_headers_location">Mapa a poloha</string>
     <!-- Per-section group method settings -->
     <string name="group_method_title">Seskupení médií</string>
     <string name="group_method_summary">Nastavte způsob seskupování médií v jednotlivých sekcích</string>
@@ -1362,14 +1362,14 @@
     <string name="group_method_favorites">Oblíbené</string>
     <string name="group_method_vault">Trezor</string>
     <string name="group_method_cloud_archive">Cloudový archiv</string>
-    <string name="group_method_location">Mapa &amp; poloha</string>
+    <string name="group_method_location">Mapa a poloha</string>
     <string name="customize_date_formats">Přizpůsobení formátů data</string>
     <!-- Story Cards -->
     <string name="story_cards_settings_title">Příběhové karty</string>
     <string name="story_cards_settings_summary">Konfigurace příběhových karet nad časovou osou</string>
     <string name="story_cards_enabled">Zobrazit příběhové karty</string>
     <string name="story_cards_enabled_summary">Zobrazit příběhové karty nad časovou osou</string>
-    <string name="story_cards_order_title">Typy karet &amp; řazení</string>
+    <string name="story_cards_order_title">Typy karet a řazení</string>
     <string name="story_viewer_settings_title">Prohlížeč příběhů</string>
     <string name="story_viewer_auto_advance">Automatický posun</string>
     <string name="story_viewer_auto_advance_summary">Automaticky přejít na další fotografii</string>
@@ -1378,7 +1378,7 @@
     <string name="navigate_back">Zpět</string>
     <!-- Cloud Accounts Settings -->
     <string name="settings_cloud_accounts">Cloudové účty</string>
-    <string name="settings_cloud_accounts_summary">Immich, ownCloud sync &amp; remote media</string>
+    <string name="settings_cloud_accounts_summary"> Synchronizace s Immich, ownCloud, Nextcloud a vzdálená média</string>
     <string name="cloud_no_accounts">Není nakonfigurován žádný cloudový účet</string>
     <string name="cloud_no_accounts_description">Přidejte cloudový mediální server, abyste mohli synchronizovat a procházet své fotografie a videa uložené na vzdálených úložištích.</string>
     <string name="cloud_add_server">Přidat server</string>
