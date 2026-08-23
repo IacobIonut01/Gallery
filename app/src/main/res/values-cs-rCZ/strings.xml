@@ -1378,7 +1378,7 @@
     <string name="navigate_back">Zpět</string>
     <!-- Cloud Accounts Settings -->
     <string name="settings_cloud_accounts">Cloudové účty</string>
-    <string name="settings_cloud_accounts_summary"> Synchronizace s Immich, ownCloud, Nextcloud a vzdálená média</string>
+    <string name="settings_cloud_accounts_summary">Synchronizace s Immich, ownCloud, Nextcloud a vzdálená média</string>
     <string name="cloud_no_accounts">Není nakonfigurován žádný cloudový účet</string>
     <string name="cloud_no_accounts_description">Přidejte cloudový mediální server, abyste mohli synchronizovat a procházet své fotografie a videa uložené na vzdálených úložištích.</string>
     <string name="cloud_add_server">Přidat server</string>
