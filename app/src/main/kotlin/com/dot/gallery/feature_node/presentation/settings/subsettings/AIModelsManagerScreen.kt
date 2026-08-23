@@ -1,6 +1,8 @@
 package com.dot.gallery.feature_node.presentation.settings.subsettings
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.text.format.Formatter
 import androidx.core.net.toUri
 import androidx.compose.foundation.background
@@ -45,6 +47,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.BlendMode
@@ -250,14 +253,20 @@ private fun ModelGroupSection(
     val info by viewModel.downloadInfo(group).collectAsStateWithLifecycle()
     val error by viewModel.errorMessage(group).collectAsStateWithLifecycle()
     var showDeleteDialog by remember { mutableStateOf(false) }
+    // Offline flavor strips android.permission.INTERNET at build time; use that as the signal.
+    val isOfflineBuild = remember(context) {
+        context.checkSelfPermission(Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED
+    }
 
     val actionTitle: String
     val actionSummary: String
     val actionClick: () -> Unit
+    var actionEnabled = true
     when (status) {
         ModelStatus.READY -> {
             val sizeStr = Formatter.formatFileSize(context, viewModel.installedSize(group))
             actionTitle = stringResource(R.string.ai_models_delete)
+            actionEnabled = !isOfflineBuild
             actionSummary = readySummary + "\n" + stringResource(R.string.ai_models_size, sizeStr)
             actionClick = { showDeleteDialog = true }
         }
@@ -327,7 +336,8 @@ private fun ModelGroupSection(
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(16.dp))
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                .clickable { actionClick() }
+                .clickable(enabled = actionEnabled) { actionClick() }
+                .alpha(if (actionEnabled) 1f else 0.5f)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
