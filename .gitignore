@@ -33,3 +33,5 @@ ml-models/segment/
 # >>> ml-models split (managed)
 ml-models/src/main/assets/arcface.onnx
 # <<< ml-models split (managed)
+
+/scripts/native/sources/

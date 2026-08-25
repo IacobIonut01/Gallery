@@ -58,6 +58,65 @@ val copySegmentModelsTask = tasks.register<Copy>("copySegmentModels") {
     into(layout.buildDirectory.dir("generated/assets/ml-models"))
 }
 
+val nativeDownloadCache = rootProject.file("build/native-downloads")
+val nativeCommonScript = rootProject.file("scripts/native/native-common.sh")
+val nativeStacks = listOf(
+    Triple("Heif", "build-heif.sh", "heif"),
+    Triple("Imgcodec", "build-imgcodec.sh", "imgcodec"),
+    Triple("HeifEncode", "build-heif-encode.sh", "heifenc"),
+    Triple("Libraw", "build-libraw.sh", "rawcodec")
+)
+val nativeAbiTaskSuffixes = mapOf(
+    "arm64-v8a" to "Arm64V8a",
+    "armeabi-v7a" to "ArmeabiV7a",
+    "x86_64" to "X8664",
+    "x86" to "X86"
+)
+val nativeSourceOverrides = listOf(
+    "NATIVE_SOURCES_DIR",
+    "LIBDE265_SOURCE_DIR",
+    "LIBHEIF_SOURCE_DIR",
+    "ZLIB_SOURCE_DIR",
+    "LIBPNG_SOURCE_DIR",
+    "LIBJPEG_TURBO_SOURCE_DIR",
+    "X265_SOURCE_DIR",
+    "AOM_SOURCE_DIR",
+    "LIBRAW_SOURCE_DIR",
+    "LIBTIFF_SOURCE_DIR"
+)
+val nativeTasksByAbi = nativeAbiTaskSuffixes.mapValues { (abi, suffix) ->
+    nativeStacks.map { (stack, scriptName, outputName) ->
+        val script = rootProject.file("scripts/native/$scriptName")
+        tasks.register<Exec>("build${stack}Native$suffix") {
+            group = "build"
+            workingDir(rootProject.projectDir)
+            commandLine("bash", script.absolutePath, abi)
+            environment("NATIVE_OFFLINE", "0")
+            environment("NATIVE_SOURCE_ARCHIVES_DIR", "")
+            environment("NATIVE_DOWNLOAD_CACHE", nativeDownloadCache.absolutePath)
+            environment("NATIVE_OUTPUT_BASE", file("src/main/cpp").absolutePath)
+            nativeSourceOverrides.forEach { environment(it, "") }
+            inputs.file(script)
+            inputs.file(nativeCommonScript)
+            inputs.file(rootProject.file("gradle.properties"))
+            inputs.property("ndkVersion", pinnedNdkVersion)
+            inputs.property("nativeSourceMode", "download")
+            outputs.dir(file("src/main/cpp/$outputName/$abi"))
+        }
+    }
+}
+
+tasks.configureEach {
+    nativeTasksByAbi.forEach { (abi, nativeTasks) ->
+        if (name.startsWith("configureCMake") && name.endsWith("[$abi]")) {
+            nativeTasks.forEach { nativeTask ->
+                dependsOn(nativeTask)
+                inputs.files(nativeTask.map { it.outputs.files })
+            }
+        }
+    }
+}
+
 tasks.configureEach {
     val mergesAssets = name.contains("merge", ignoreCase = true) &&
         name.contains("Assets", ignoreCase = true)

@@ -60,10 +60,6 @@ jobs:
           fileName: 'release_key.jks'
           fileDir: 'app/'
           encodedString: ${{ secrets.SIGNING_KEY }}
-      - name: Build native libs
-        uses: ./.github/actions/build-native-libs
-        with:
-          arch: ${{ matrix.arch }}
       - name: Build Release APK
         run: ./gradlew --build-cache :app:assemble${{ matrix.arch }}NoMLRelease
         env:
@@ -106,10 +102,6 @@ jobs:
           fileName: 'release_key.jks'
           fileDir: 'app/'
           encodedString: ${{ secrets.SIGNING_KEY }}
-      - name: Build native libs
-        uses: ./.github/actions/build-native-libs
-        with:
-          arch: ${{ matrix.arch }}
       - name: Build Release APK
         run: ./gradlew --build-cache :app:assemble${{ matrix.arch }}WithMLRelease
         env:
@@ -150,10 +142,6 @@ jobs:
           fileName: 'release_key.jks'
           fileDir: 'app/'
           encodedString: ${{ secrets.SIGNING_KEY }}
-      - name: Build native libs
-        uses: ./.github/actions/build-native-libs
-        with:
-          arch: ${{ matrix.arch }}
       - name: Build Release APK
         run: ./gradlew --build-cache :app:assemble${{ matrix.arch }}NoMLRelease
         env:

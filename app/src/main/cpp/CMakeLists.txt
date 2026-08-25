@@ -11,6 +11,16 @@ project(heiftiles LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+file(REAL_PATH "${CMAKE_CURRENT_SOURCE_DIR}" REFRA_SOURCE_DIR_REAL)
+file(REAL_PATH "${CMAKE_CURRENT_BINARY_DIR}" REFRA_BINARY_DIR_REAL)
+file(REAL_PATH "${CMAKE_ANDROID_NDK}" REFRA_NDK_DIR_REAL)
+add_compile_options(
+        "-ffile-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=/usr/src/refra-jni"
+        "-ffile-prefix-map=${REFRA_SOURCE_DIR_REAL}=/usr/src/refra-jni"
+        "-ffile-prefix-map=${CMAKE_CURRENT_BINARY_DIR}=/usr/src/refra-jni-build"
+        "-ffile-prefix-map=${REFRA_BINARY_DIR_REAL}=/usr/src/refra-jni-build"
+        "-ffile-prefix-map=${CMAKE_ANDROID_NDK}=/opt/android-ndk"
+        "-ffile-prefix-map=${REFRA_NDK_DIR_REAL}=/opt/android-ndk")
 
 set(HEIF_PREBUILT "${CMAKE_CURRENT_SOURCE_DIR}/heif/${ANDROID_ABI}")
 
@@ -84,7 +94,7 @@ set(HEIFENC_PREBUILT "${CMAKE_CURRENT_SOURCE_DIR}/heifenc/${ANDROID_ABI}")
 
 add_library(heifenc SHARED heif_encode_jni.cpp)
 
-if(EXISTS "${HEIFENC_PREBUILT}/lib/libheif.a" AND EXISTS "${HEIFENC_PREBUILT}/lib/libx265.a" AND EXISTS "${HEIFENC_PREBUILT}/lib/libaom.a")
+if(EXISTS "${HEIFENC_PREBUILT}/lib/libheif.a" AND EXISTS "${HEIFENC_PREBUILT}/lib/libx265.a" AND EXISTS "${HEIFENC_PREBUILT}/lib/libaom.a" AND EXISTS "${HEIFENC_PREBUILT}/lib/libde265.a")
     message(STATUS "heifenc: using prebuilt libheif (encoders) + x265 + aom for ${ANDROID_ABI}")
 
     add_library(heif_enc STATIC IMPORTED)

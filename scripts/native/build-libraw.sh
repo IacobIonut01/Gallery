@@ -28,7 +28,8 @@ CMAKE_VERSION="3.31.6"
 # --- Paths -----------------------------------------------------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-OUT_ROOT="$REPO_ROOT/app/src/main/cpp/rawcodec"
+source "$SCRIPT_DIR/native-common.sh"
+OUT_ROOT="${NATIVE_OUTPUT_BASE:-$REPO_ROOT/app/src/main/cpp}/rawcodec"
 
 SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
 if [ -z "$SDK" ] && [ -f "$REPO_ROOT/local.properties" ]; then
@@ -64,21 +65,23 @@ echo "Out      = $OUT_ROOT"
 # --- Source download -------------------------------------------------------------------------
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
-ZLIB_SRC="$WORK/zlib-$ZLIB_VERSION"
-JPEG_SRC="$WORK/libjpeg-turbo-$LIBJPEGTURBO_VERSION"
-RAW_SRC="$WORK/LibRaw-$LIBRAW_VERSION"
-TIFF_SRC="$WORK/tiff-$LIBTIFF_VERSION"
-
-echo "==> Downloading zlib $ZLIB_VERSION"
-curl -fsSL "https://github.com/madler/zlib/releases/download/v$ZLIB_VERSION/zlib-$ZLIB_VERSION.tar.gz" \
-    | tar -xz -C "$WORK"
-echo "==> Downloading libjpeg-turbo $LIBJPEGTURBO_VERSION"
-curl -fsSL "https://github.com/libjpeg-turbo/libjpeg-turbo/releases/download/$LIBJPEGTURBO_VERSION/libjpeg-turbo-$LIBJPEGTURBO_VERSION.tar.gz" \
-    | tar -xz -C "$WORK"
-echo "==> Downloading LibRaw $LIBRAW_VERSION"
-curl -fsSL "https://www.libraw.org/data/LibRaw-$LIBRAW_VERSION.tar.gz" | tar -xz -C "$WORK"
-echo "==> Downloading libtiff $LIBTIFF_VERSION"
-curl -fsSL "https://download.osgeo.org/libtiff/tiff-$LIBTIFF_VERSION.tar.gz" | tar -xz -C "$WORK"
+ZLIB_SRC="$WORK/zlib"
+JPEG_SRC="$WORK/libjpeg-turbo"
+RAW_SRC="$WORK/LibRaw"
+TIFF_SRC="$WORK/libtiff"
+native_set_reproducible_env
+native_prepare_source ZLIB_SOURCE_DIR zlib "$ZLIB_SRC" \
+    "https://github.com/madler/zlib/releases/download/v$ZLIB_VERSION/zlib-$ZLIB_VERSION.tar.gz" \
+    "9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23" CMakeLists.txt
+native_prepare_source LIBJPEG_TURBO_SOURCE_DIR libjpeg-turbo "$JPEG_SRC" \
+    "https://github.com/libjpeg-turbo/libjpeg-turbo/releases/download/$LIBJPEGTURBO_VERSION/libjpeg-turbo-$LIBJPEGTURBO_VERSION.tar.gz" \
+    "99130559e7d62e8d695f2c0eaeef912c5828d5b84a0537dcb24c9678c9d5b76b" CMakeLists.txt
+native_prepare_source LIBRAW_SOURCE_DIR LibRaw "$RAW_SRC" \
+    "https://www.libraw.org/data/LibRaw-$LIBRAW_VERSION.tar.gz" \
+    "dba34b7fc1143503942fa32ad9db43e94f714e62a4a856e91617f8f3e1e0aa5c" Makefile.dist
+native_prepare_source LIBTIFF_SOURCE_DIR libtiff "$TIFF_SRC" \
+    "https://download.osgeo.org/libtiff/tiff-$LIBTIFF_VERSION.tar.gz" \
+    "88b3979e6d5c7e32b50d7ec72fb15af724f6ab2cbf7e10880c360a77e4b5d99a" CMakeLists.txt
 
 build_abi() {
     local ABI="$1"
@@ -96,6 +99,10 @@ build_abi() {
         -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN"
         -DANDROID_ABI="$ABI" -DANDROID_PLATFORM="android-$ANDROID_API"
         -DCMAKE_BUILD_TYPE=Release
+        -DCMAKE_C_FLAGS="$NATIVE_REPRO_FLAGS"
+        -DCMAKE_CXX_FLAGS="$NATIVE_REPRO_FLAGS"
+        -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+        -DCMAKE_SKIP_RPATH=ON
         -DBUILD_SHARED_LIBS=OFF
         -DCMAKE_INSTALL_PREFIX="$STAGE"
         -DCMAKE_FIND_ROOT_PATH="$STAGE"
@@ -122,14 +129,10 @@ build_abi() {
         -DJPEG_INCLUDE_DIR="$STAGE/include" -DJPEG_LIBRARY="$STAGE/lib/libjpeg.a"
     "$CMAKE_BIN" --build "$WORK/tiff-$ABI" --target install
 
-    # 4) LibRaw (static). The libraw.org tarball has NO CMakeLists.txt — it ships autotools +
-    #    Makefile.dist. We drive Makefile.dist's `library` target with the NDK clang, baking every
-    #    needed define into CFLAGS (a make-command-line CFLAGS= overrides the Makefile's `CFLAGS+=`
-    #    lines, so USE_ZLIB/USE_JPEG must be included here). LDADD is irrelevant when only archiving
-    #    the static lib. Makefile.dist archives with bare `ar`/`ranlib`, so we shim those to the NDK
-    #    llvm tools on PATH (host ranlib can't index cross-compiled ELF objects).
-    local HOST_TAG CCB
-    HOST_TAG="$(ls -d "$NDK_DIR"/toolchains/llvm/prebuilt/*/bin 2>/dev/null | head -n1)"
+    # 4) LibRaw (static). The libraw.org tarball has NO CMakeLists.txt, so use Makefile.dist's
+    #    reentrant-object mapping while compiling and archiving directly with the pinned NDK tools.
+    local NDK_BIN CCB
+    NDK_BIN="$(ls -d "$NDK_DIR"/toolchains/llvm/prebuilt/*/bin 2>/dev/null | head -n1)"
     case "$ABI" in
         arm64-v8a)   CCB="aarch64-linux-android$ANDROID_API" ;;
         armeabi-v7a) CCB="armv7a-linux-androideabi$ANDROID_API" ;;
@@ -137,27 +140,40 @@ build_abi() {
         x86)         CCB="i686-linux-android$ANDROID_API" ;;
         *) echo "ERROR: unmapped ABI '$ABI' for LibRaw" >&2; return 1 ;;
     esac
-    if [ -z "$HOST_TAG" ] || [ ! -x "$HOST_TAG/$CCB-clang" ]; then
-        echo "ERROR: NDK clang '$CCB-clang' not found under $HOST_TAG" >&2; return 1
+    if [ -z "$NDK_BIN" ] || [ ! -x "$NDK_BIN/$CCB-clang++" ] || [ ! -x "$NDK_BIN/llvm-ar" ]; then
+        echo "ERROR: Required NDK tools not found under $NDK_BIN" >&2; return 1
     fi
 
-    local SHIM="$WORK/shim-$ABI"
-    mkdir -p "$SHIM"
-    ln -sf "$HOST_TAG/llvm-ar" "$SHIM/ar"
-    ln -sf "$HOST_TAG/llvm-ranlib" "$SHIM/ranlib"
-
-    # Build in a per-ABI copy: Makefile.dist writes object/ + lib/ inside the source tree.
     local RAWB="$WORK/LibRaw-$ABI-src"
     rm -rf "$RAWB"; cp -R "$RAW_SRC" "$RAWB"
-    mkdir -p "$RAWB/object" "$RAWB/lib" "$RAWB/bin"
-    local JOBS; JOBS="$(sysctl -n hw.ncpu 2>/dev/null || echo 4)"
-    (
-        cd "$RAWB"
-        PATH="$SHIM:$PATH" make -f Makefile.dist -j"$JOBS" library \
-            CC="$HOST_TAG/$CCB-clang" \
-            CXX="$HOST_TAG/$CCB-clang++" \
-            CFLAGS="-O3 -I. -w -fPIC -DNDEBUG -DUSE_ZLIB -DUSE_JPEG -DUSE_JPEG8 -I$STAGE/include"
-    )
+    mkdir -p "$RAWB/object" "$RAWB/lib"
+    local JOBS
+    JOBS="${NATIVE_JOBS:-$(getconf _NPROCESSORS_ONLN 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)}"
+    local -a RAW_OBJECTS=()
+    local -a PENDING_PIDS=()
+    local SOURCE OBJECT PID
+    while IFS= read -r SOURCE; do
+        OBJECT="$RAWB/object/${SOURCE//\//_}"
+        OBJECT="${OBJECT%.cpp}.o"
+        (
+            cd "$RAWB"
+            "$NDK_BIN/$CCB-clang++" -c -O3 -I. -w -fPIC -DNDEBUG \
+                -DUSE_ZLIB -DUSE_JPEG -DUSE_JPEG8 -I"$STAGE/include" \
+                $NATIVE_REPRO_FLAGS -o "$OBJECT" "$SOURCE"
+        ) &
+        PENDING_PIDS+=("$!")
+        RAW_OBJECTS+=("$OBJECT")
+        if [ "${#PENDING_PIDS[@]}" -ge "$JOBS" ]; then
+            for PID in "${PENDING_PIDS[@]}"; do wait "$PID"; done
+            PENDING_PIDS=()
+        fi
+    done < <(awk '/^object\/.*\.mt\.o: .*\.cpp$/ {print $2}' "$RAWB/Makefile.dist")
+    for PID in "${PENDING_PIDS[@]}"; do wait "$PID"; done
+    if [ "${#RAW_OBJECTS[@]}" -eq 0 ]; then
+        echo "ERROR: No LibRaw reentrant sources found in Makefile.dist" >&2; return 1
+    fi
+    "$NDK_BIN/llvm-ar" crsD "$RAWB/lib/libraw_r.a" "${RAW_OBJECTS[@]}"
+    "$NDK_BIN/llvm-ranlib" "$RAWB/lib/libraw_r.a"
 
     # Stage LibRaw's headers + static libs where step 5 (and the app CMake) expect them.
     mkdir -p "$STAGE/include/libraw"
@@ -178,6 +194,7 @@ build_abi() {
     cp -f "$STAGE"/include/tiff*.h "$OUT/include/" 2>/dev/null || true
     mkdir -p "$OUT/include/libraw"
     cp -f "$STAGE"/include/libraw/*.h "$OUT/include/libraw/" 2>/dev/null || true
+    native_normalize_archives "$OUT/lib/"*.a
     echo "==> Installed $ABI: $(ls -1 "$OUT/lib")"
 }
 

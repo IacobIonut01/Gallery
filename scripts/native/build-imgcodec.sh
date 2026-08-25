@@ -27,7 +27,8 @@ CMAKE_VERSION="3.31.6"
 # --- Paths -----------------------------------------------------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-OUT_ROOT="$REPO_ROOT/app/src/main/cpp/imgcodec"
+source "$SCRIPT_DIR/native-common.sh"
+OUT_ROOT="${NATIVE_OUTPUT_BASE:-$REPO_ROOT/app/src/main/cpp}/imgcodec"
 
 SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
 if [ -z "$SDK" ] && [ -f "$REPO_ROOT/local.properties" ]; then
@@ -63,19 +64,19 @@ echo "Out      = $OUT_ROOT"
 # --- Source download -------------------------------------------------------------------------
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
-ZLIB_SRC="$WORK/zlib-$ZLIB_VERSION"
-PNG_SRC="$WORK/libpng-$LIBPNG_VERSION"
-JPEG_SRC="$WORK/libjpeg-turbo-$LIBJPEGTURBO_VERSION"
-
-echo "==> Downloading zlib $ZLIB_VERSION"
-curl -fsSL "https://github.com/madler/zlib/releases/download/v$ZLIB_VERSION/zlib-$ZLIB_VERSION.tar.gz" \
-    | tar -xz -C "$WORK"
-echo "==> Downloading libpng $LIBPNG_VERSION"
-curl -fsSL "https://download.sourceforge.net/libpng/libpng-$LIBPNG_VERSION.tar.gz" \
-    | tar -xz -C "$WORK"
-echo "==> Downloading libjpeg-turbo $LIBJPEGTURBO_VERSION"
-curl -fsSL "https://github.com/libjpeg-turbo/libjpeg-turbo/releases/download/$LIBJPEGTURBO_VERSION/libjpeg-turbo-$LIBJPEGTURBO_VERSION.tar.gz" \
-    | tar -xz -C "$WORK"
+ZLIB_SRC="$WORK/zlib"
+PNG_SRC="$WORK/libpng"
+JPEG_SRC="$WORK/libjpeg-turbo"
+native_set_reproducible_env
+native_prepare_source ZLIB_SOURCE_DIR zlib "$ZLIB_SRC" \
+    "https://github.com/madler/zlib/releases/download/v$ZLIB_VERSION/zlib-$ZLIB_VERSION.tar.gz" \
+    "9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23" CMakeLists.txt
+native_prepare_source LIBPNG_SOURCE_DIR libpng "$PNG_SRC" \
+    "https://download.sourceforge.net/libpng/libpng-$LIBPNG_VERSION.tar.gz" \
+    "8c25a7792099a0089fa1cc76c94260d0bb3f1ec52b93671b572f8bb61577b732" CMakeLists.txt
+native_prepare_source LIBJPEG_TURBO_SOURCE_DIR libjpeg-turbo "$JPEG_SRC" \
+    "https://github.com/libjpeg-turbo/libjpeg-turbo/releases/download/$LIBJPEGTURBO_VERSION/libjpeg-turbo-$LIBJPEGTURBO_VERSION.tar.gz" \
+    "99130559e7d62e8d695f2c0eaeef912c5828d5b84a0537dcb24c9678c9d5b76b" CMakeLists.txt
 
 build_abi() {
     local ABI="$1"
@@ -93,6 +94,10 @@ build_abi() {
         -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN"
         -DANDROID_ABI="$ABI" -DANDROID_PLATFORM="android-$ANDROID_API"
         -DCMAKE_BUILD_TYPE=Release
+        -DCMAKE_C_FLAGS="$NATIVE_REPRO_FLAGS"
+        -DCMAKE_CXX_FLAGS="$NATIVE_REPRO_FLAGS"
+        -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+        -DCMAKE_SKIP_RPATH=ON
         -DBUILD_SHARED_LIBS=OFF
         -DCMAKE_INSTALL_PREFIX="$STAGE"
         -DCMAKE_FIND_ROOT_PATH="$STAGE"
@@ -128,6 +133,7 @@ build_abi() {
     cp -f "$STAGE/include/jpeglib.h" "$STAGE/include/jconfig.h" "$STAGE/include/jmorecfg.h" "$OUT/include/"
     cp -f "$STAGE"/include/png*.h "$OUT/include/" 2>/dev/null || true
     cp -f "$STAGE/include/zlib.h" "$STAGE/include/zconf.h" "$OUT/include/" 2>/dev/null || true
+    native_normalize_archives "$OUT/lib/"*.a
     echo "==> Installed $ABI: $(ls -1 "$OUT/lib")"
 }
 
