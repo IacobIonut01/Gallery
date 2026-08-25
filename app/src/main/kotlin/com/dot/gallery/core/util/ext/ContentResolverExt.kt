@@ -592,45 +592,30 @@ private fun ContentResolver.replaceImageFromStaging(
         ".bak",
         stagingFile.parentFile,
     )
-    var pendingWasSet = false
     var keepBackup = false
     return try {
         copyUriToFile(uri, backupFile)
-        runCatching {
-            update(
-                uri,
-                ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 1) },
-                null,
-                null,
-            )
-            pendingWasSet = true
-        }
 
         val replaced = replaceWithRollback(stagingFile, backupFile) { source ->
             copyFileToUri(source, uri)
         }
-        if (!replaced) {
-            clearPendingQuiet(uri)
-            return false
-        }
+        if (!replaced) return false
 
-        runCatching {
-            update(uri, ContentValues().apply {
-                put(MediaStore.MediaColumns.IS_PENDING, 0)
-                originalDates?.let { (dateTaken, dateAdded) ->
+        originalDates?.let { (dateTaken, dateAdded) ->
+            runCatching {
+                update(uri, ContentValues().apply {
                     dateTaken?.let { put(MediaStore.Images.Media.DATE_TAKEN, it) }
                     dateAdded?.let { put(MediaStore.MediaColumns.DATE_ADDED, it) }
-                }
-            }, null, null)
+                }, null, null)
+            }
         }
         true
     } catch (_: SourceRestoreException) {
-        // Keep the row pending and retain the rollback bytes for recovery rather than exposing a
-        // possibly partial source. Normal replacement failures are restored before this point.
+        // Retain the rollback bytes for recovery rather than discarding the only complete source.
+        // Normal replacement failures are restored before this point.
         keepBackup = true
         false
     } catch (_: Exception) {
-        if (pendingWasSet) clearPendingQuiet(uri)
         false
     } finally {
         if (!keepBackup) backupFile.delete()
@@ -679,9 +664,9 @@ private fun ContentResolver.copyUriToFile(uri: Uri, target: File) {
 }
 
 private fun ContentResolver.copyFileToUri(source: File, uri: Uri) {
-    val output = openOutputStream(uri, "rwt")
-        ?: throw IOException("Failed to open source for replacement")
     FileInputStream(source).use { input ->
+        val output = openOutputStream(uri, "rwt")
+            ?: throw IOException("Failed to open source for replacement")
         output.use {
             input.copyTo(it)
             it.flush()
@@ -718,14 +703,6 @@ private fun ContentResolver.queryDateColumns(uri: Uri): Pair<Long?, Long?>? {
         }
     } catch (_: Exception) {
         null
-    }
-}
-
-private fun ContentResolver.clearPendingQuiet(uri: Uri) {
-    runCatching {
-        update(uri, ContentValues().apply {
-            put(MediaStore.MediaColumns.IS_PENDING, 0)
-        }, null, null)
     }
 }
 

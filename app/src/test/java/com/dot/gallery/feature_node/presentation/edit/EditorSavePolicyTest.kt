@@ -1,14 +1,18 @@
 package com.dot.gallery.feature_node.presentation.edit
 
 import com.dot.gallery.core.decoder.format.ImageReencoder
+import com.dot.gallery.core.util.ext.replaceWithRollback
 import com.dot.gallery.feature_node.presentation.edit.components.develop.RawSaveFormat
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.File
+import java.io.IOException
 
 class EditorSavePolicyTest {
     @Test
@@ -60,5 +64,40 @@ class EditorSavePolicyTest {
         runCatching { guard.runIfIdle { error("encode failed") } }
 
         assertTrue(guard.runIfIdle {})
+    }
+
+    @Test
+    fun failedReplacementRestoresOriginalBytes() {
+        val source = File.createTempFile("editor-source-", ".jpg")
+        val replacement = File.createTempFile("editor-replacement-", ".jpg")
+        val backup = File.createTempFile("editor-backup-", ".jpg")
+        val originalBytes = "original-image-bytes".encodeToByteArray()
+        val replacementBytes = "replacement-image-bytes".encodeToByteArray()
+        try {
+            source.writeBytes(originalBytes)
+            replacement.writeBytes(replacementBytes)
+            backup.writeBytes(originalBytes)
+            var writeCount = 0
+
+            val replaced = replaceWithRollback(replacement, backup) { input ->
+                writeCount++
+                if (writeCount == 1) {
+                    source.outputStream().use { output ->
+                        output.write(input.readBytes(), 0, 4)
+                        throw IOException("Simulated replacement failure")
+                    }
+                } else {
+                    source.writeBytes(input.readBytes())
+                }
+            }
+
+            assertFalse(replaced)
+            assertEquals(2, writeCount)
+            assertArrayEquals(originalBytes, source.readBytes())
+        } finally {
+            source.delete()
+            replacement.delete()
+            backup.delete()
+        }
     }
 }
