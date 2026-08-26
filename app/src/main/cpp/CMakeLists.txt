@@ -27,6 +27,10 @@ set(HEIF_PREBUILT "${CMAKE_CURRENT_SOURCE_DIR}/heif/${ANDROID_ABI}")
 add_library(heiftiles SHARED heif_tiles_jni.cpp)
 
 find_library(log-lib log)
+find_library(dl-lib dl)
+
+add_library(metadata_brotli SHARED metadata_brotli_jni.cpp)
+target_link_libraries(metadata_brotli ${dl-lib})
 
 if(EXISTS "${HEIF_PREBUILT}/lib/libheif.a" AND EXISTS "${HEIF_PREBUILT}/lib/libde265.a")
     message(STATUS "heiftiles: using prebuilt libheif for ${ANDROID_ABI}")

@@ -18,14 +18,19 @@ import android.os.ParcelFileDescriptor
 import android.system.Os
 import android.system.OsConstants
 import com.drew.imaging.ImageMetadataReader
+import com.drew.metadata.Metadata
 import com.drew.metadata.exif.ExifIFD0Directory
 import com.drew.metadata.exif.ExifSubIFDDirectory
 import com.drew.metadata.exif.GpsDirectory
 import com.drew.metadata.mov.media.QuickTimeVideoDirectory
 import com.drew.metadata.mp4.media.Mp4VideoDirectory
 import com.drew.metadata.xmp.XmpDirectory
+import com.drew.metadata.xmp.XmpReader
 import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.io.FileInputStream
+import java.io.InputStream
+import java.io.PushbackInputStream
 
 /**
  * Isolated-process service for metadata parsing.
@@ -92,18 +97,18 @@ class IsolatedMetadataService : Service() {
         return pfd.use { fd ->
             // Primary: stream straight into metadata-extractor (the common JPEG/PNG/HEIF path).
             val meta = runCatching {
-                FileInputStream(fd.fileDescriptor).use { ImageMetadataReader.readMetadata(it) }
+                readFromCurrent(fd, ::readImageMetadata)
             }.getOrNull()
 
             if (meta != null) {
                 bundleFromImageMetadata(meta, label)
             } else {
                 // metadata-extractor cannot read this container (e.g. JXL: "File format could not
-                // be determined"). Recover embedded EXIF from the ISO-BMFF 'Exif' box and re-parse
-                // the raw TIFF payload with the same reader so date/camera/GPS/ISO still surface.
-                val exifMeta = extractEmbeddedExif(fd)
-                if (exifMeta != null) {
-                    bundleFromImageMetadata(exifMeta, label)
+                // be determined"). Recover embedded EXIF/XMP from direct or Brotli-compressed
+                // metadata boxes so date/camera/GPS/ISO and feature flags still surface.
+                val embeddedMeta = extractEmbeddedMetadata(fd)
+                if (embeddedMeta != null) {
+                    bundleFromImageMetadata(embeddedMeta, label)
                 } else {
                     // No EXIF recoverable — signal error so the client's in-process dimension
                     // fallback (native size probe) runs and the sheet still shows resolution/size.
@@ -114,31 +119,65 @@ class IsolatedMetadataService : Service() {
     }
 
     /**
-     * Reads a bounded prefix of the shared descriptor, walks the ISO-BMFF box tree for an embedded
-     * `Exif` box (JXL BMFF; also a generic `Exif\u0000\u0000` preamble), and re-parses the extracted
-     * raw TIFF/EXIF payload with metadata-extractor. Returns null if none is found. Rewinds the
-     * descriptor first since the primary streaming read advanced its offset.
+     * Reads a bounded prefix of the shared descriptor, walks JPEG XL metadata boxes, and merges
+     * direct or Brotli-compressed EXIF/XMP into metadata-extractor's model. Also accepts a generic
+     * `Exif\u0000\u0000` preamble. Rewinds the descriptor first since the primary streaming read
+     * advanced its offset.
      */
-    private fun extractEmbeddedExif(fd: ParcelFileDescriptor): com.drew.metadata.Metadata? =
+    private fun extractEmbeddedMetadata(fd: ParcelFileDescriptor): Metadata? =
         runCatching {
-            Os.lseek(fd.fileDescriptor, 0, OsConstants.SEEK_SET)
-            val bytes = readCappedBytes(fd, MAX_EXIF_SCAN_BYTES)
-            val tiff = BmffExifExtractor.extractExifTiff(bytes) ?: return null
-            ImageMetadataReader.readMetadata(ByteArrayInputStream(tiff))
+            val metadata = readFromStart(fd) { JxlBoxMetadataExtractor.extract(it) }
+            readFromStart(fd) {
+                JxlBoxMetadataExtractor.mergePreamble(
+                    readCappedBytes(it, MAX_EXIF_SCAN_BYTES),
+                    metadata
+                )
+            }
         }.getOrNull()
 
-    /** Reads up to [cap] bytes from [fd]'s current offset into a heap buffer. */
-    private fun readCappedBytes(fd: ParcelFileDescriptor, cap: Int): ByteArray =
-        FileInputStream(fd.fileDescriptor).use { stream ->
-            val buffer = ByteArray(cap)
-            var total = 0
-            while (total < cap) {
-                val read = stream.read(buffer, total, cap - total)
-                if (read < 0) break
-                total += read
-            }
-            if (total == cap) buffer else buffer.copyOf(total)
+    private inline fun <T> readFromStart(
+        fd: ParcelFileDescriptor,
+        block: (InputStream) -> T
+    ): T {
+        Os.lseek(fd.fileDescriptor, 0, OsConstants.SEEK_SET)
+        return readFromCurrent(fd, block)
+    }
+
+    private inline fun <T> readFromCurrent(
+        fd: ParcelFileDescriptor,
+        block: (InputStream) -> T
+    ): T = ParcelFileDescriptor.AutoCloseInputStream(
+        ParcelFileDescriptor.dup(fd.fileDescriptor)
+    ).use(block)
+
+    /** Reads up to [cap] bytes from [stream]'s current offset into a heap buffer. */
+    private fun readCappedBytes(stream: InputStream, cap: Int): ByteArray {
+        val buffer = ByteArray(cap)
+        var total = 0
+        while (total < cap) {
+            val read = stream.read(buffer, total, cap - total)
+            if (read < 0) break
+            total += read
         }
+        return if (total == cap) buffer else buffer.copyOf(total)
+    }
+
+    private fun readImageMetadata(stream: InputStream): Metadata? {
+        val input = PushbackInputStream(stream, JXL_CONTAINER_SIGNATURE.size)
+        val signature = ByteArray(JXL_CONTAINER_SIGNATURE.size)
+        var count = 0
+        while (count < signature.size) {
+            val read = input.read(signature, count, signature.size - count)
+            if (read <= 0) break
+            count += read
+        }
+        if (count > 0) input.unread(signature, 0, count)
+        return if (count == signature.size && signature.contentEquals(JXL_CONTAINER_SIGNATURE)) {
+            JxlBoxMetadataExtractor.extract(input)
+        } else {
+            ImageMetadataReader.readMetadata(input)
+        }
+    }
 
     private fun bundleFromImageMetadata(
         meta: com.drew.metadata.Metadata,
@@ -362,8 +401,8 @@ class IsolatedMetadataService : Service() {
         // metadata-extractor can't read the container, so the "View all metadata" screen still
         // lists the embedded EXIF directories for those formats.
         val metadata = runCatching {
-            FileInputStream(pfd.fileDescriptor).use { ImageMetadataReader.readMetadata(it) }
-        }.getOrNull() ?: extractEmbeddedExif(pfd)
+            readFromCurrent(pfd, ::readImageMetadata)
+        }.getOrNull() ?: extractEmbeddedMetadata(pfd)
 
         val dirNames = ArrayList<String>()
         var dirIndex = 0
@@ -495,6 +534,10 @@ class IsolatedMetadataService : Service() {
          * practice; capping the read keeps peak memory bounded in the isolated process.
          */
         private const val MAX_EXIF_SCAN_BYTES = 8 * 1024 * 1024
+        private val JXL_CONTAINER_SIGNATURE = byteArrayOf(
+            0x00, 0x00, 0x00, 0x0C, 0x4A, 0x58, 0x4C, 0x20,
+            0x0D, 0x0A, 0x87.toByte(), 0x0A
+        )
 
         // Bundle keys — input
         const val KEY_PFD = "pfd"
@@ -549,73 +592,166 @@ class IsolatedMetadataService : Service() {
     }
 }
 
-/**
- * Recovers a raw TIFF/EXIF payload from an ISO-BMFF container that metadata-extractor can't parse
- * directly (notably JPEG XL, whose EXIF lives in an `Exif` box). Runs entirely inside the isolated
- * process so a malformed file can't reach the main app.
- *
- * The returned bytes start at the TIFF header (`II*\u0000` / `MM\u0000*`) so they can be handed
- * straight back to [ImageMetadataReader.readMetadata], which auto-detects TIFF and populates the
- * standard Exif/GPS directories.
- */
-private object BmffExifExtractor {
+internal object NativeBrotliDecoder {
+    private val isAvailable = runCatching { System.loadLibrary("metadata_brotli") }.isSuccess
 
-    private const val EXIF_BOX_TYPE = "Exif"
-
-    /** Extracts the embedded EXIF/TIFF payload, or null if none is present in the scanned prefix. */
-    fun extractExifTiff(bytes: ByteArray): ByteArray? {
-        walkBoxes(bytes)?.let { return it }
-        // Some writers store the JPEG-style "Exif\u0000\u0000" preamble followed by the TIFF header
-        // (e.g. inside an mdat). Scan for it as a fallback.
-        return findExifPreamble(bytes)
+    fun decompress(bytes: ByteArray, maxOutputSize: Int): ByteArray? {
+        if (!isAvailable) return null
+        return runCatching { nativeDecompress(bytes, maxOutputSize) }.getOrNull()
     }
 
-    /** Iterates top-level ISO-BMFF boxes looking for an `Exif` box and returns its TIFF payload. */
-    private fun walkBoxes(bytes: ByteArray): ByteArray? {
-        val n = bytes.size
-        var pos = 0
-        while (pos + 8 <= n) {
-            var boxSize = readU32(bytes, pos)
-            val type = String(bytes, pos + 4, 4, Charsets.ISO_8859_1)
-            var headerSize = 8
-            when (boxSize) {
-                1L -> {
-                    if (pos + 16 > n) break
-                    boxSize = readU64(bytes, pos + 8)
-                    headerSize = 16
+    private external fun nativeDecompress(bytes: ByteArray, maxOutputSize: Int): ByteArray?
+}
+
+/**
+ * Recovers EXIF/XMP from JPEG XL boxes that metadata-extractor can't parse directly. Both direct
+ * metadata boxes and their standard Brotli-compressed `brob` representation are supported. Parsing
+ * stays inside the isolated process so a malformed file can't reach the main app.
+ *
+ * EXIF bytes are normalized to start at the TIFF header (`II*\u0000` / `MM\u0000*`) before they are
+ * handed to [ImageMetadataReader.readMetadata]. XMP bytes are merged through [XmpReader].
+ */
+internal object JxlBoxMetadataExtractor {
+
+    private const val EXIF_BOX_TYPE = "Exif"
+    private const val XMP_BOX_TYPE = "xml "
+    private const val BROTLI_BOX_TYPE = "brob"
+    private const val MAX_METADATA_BYTES = 8 * 1024 * 1024
+    private const val MAX_METADATA_BOXES = 64
+    private val metadataBoxTypes = setOf(EXIF_BOX_TYPE, XMP_BOX_TYPE)
+
+    /** Extracts all supported embedded metadata, or null if none is present in the scanned input. */
+    fun extract(
+        bytes: ByteArray,
+        decompressor: (ByteArray, Int) -> ByteArray? = NativeBrotliDecoder::decompress
+    ): Metadata? {
+        val metadata = extractMetadata(ByteArrayInputStream(bytes), decompressor)
+        return mergePreamble(bytes, metadata)
+    }
+
+    fun extract(
+        input: InputStream,
+        decompressor: (ByteArray, Int) -> ByteArray? = NativeBrotliDecoder::decompress
+    ): Metadata? = extractMetadata(input, decompressor).takeIf { it.directoryCount > 0 }
+
+    fun mergePreamble(bytes: ByteArray, metadata: Metadata? = null): Metadata? {
+        val merged = metadata ?: Metadata()
+        if (!containsExif(merged)) findExifPreamble(bytes)?.let { mergeTiff(it, merged) }
+        return merged.takeIf { it.directoryCount > 0 }
+    }
+
+    /** Iterates top-level JPEG XL boxes and transparently expands supported `brob` boxes. */
+    private fun extractMetadata(
+        input: InputStream,
+        decompressor: (ByteArray, Int) -> ByteArray?
+    ): Metadata {
+        val metadata = Metadata()
+        var metadataBudget = MAX_METADATA_BYTES
+        var compressedBudget = MAX_METADATA_BYTES
+        repeat(MAX_METADATA_BOXES) {
+            val header = readHeader(input) ?: return metadata
+            when {
+                header.type in metadataBoxTypes -> {
+                    val payload = readBounded(input, header.payloadSize, metadataBudget)
+                    if (payload != null) {
+                        metadataBudget -= payload.size
+                        mergePayload(header.type, payload, metadata)
+                    }
                 }
-                0L -> boxSize = (n - pos).toLong() // extends to end of file
+                header.type == BROTLI_BOX_TYPE -> {
+                    if (header.payloadSize != null && header.payloadSize < 4) {
+                        input.skipExact(header.payloadSize)
+                    } else {
+                        val wrapped = input.readExactOrNull(4) ?: return metadata
+                        val wrappedType = wrapped.toString(Charsets.ISO_8859_1)
+                        val compressedSize = header.payloadSize?.minus(4)
+                        val compressed = if (wrappedType in metadataBoxTypes) {
+                            readBounded(input, compressedSize, compressedBudget)
+                        } else {
+                            if (compressedSize == null) return metadata
+                            input.skipExact(compressedSize)
+                            null
+                        }
+                        if (compressed != null) {
+                            compressedBudget -= compressed.size
+                            decompressor(compressed, metadataBudget)?.let { payload ->
+                                if (payload.size <= metadataBudget) {
+                                    metadataBudget -= payload.size
+                                    mergePayload(wrappedType, payload, metadata)
+                                }
+                            }
+                        }
+                    }
+                }
+                else -> {
+                    if (header.payloadSize == null) return metadata
+                    input.skipExact(header.payloadSize)
+                }
             }
-            if (boxSize < headerSize) break
-            val payloadStart = pos + headerSize
-            val payloadEnd = (pos + boxSize).coerceAtMost(n.toLong()).toInt()
-            if (payloadStart > payloadEnd) break
-
-            if (type == EXIF_BOX_TYPE) {
-                parseExifBoxPayload(bytes, payloadStart, payloadEnd)?.let { return it }
-            }
-
-            val next = pos + boxSize
-            if (next <= pos || next > Int.MAX_VALUE) break
-            pos = next.toInt()
+            if (header.payloadSize == null || metadataBudget == 0) return metadata
         }
-        return null
+        return metadata
+    }
+
+    private fun mergePayload(type: String, payload: ByteArray, metadata: Metadata) {
+        when (type) {
+            EXIF_BOX_TYPE -> mergeExif(payload, metadata)
+            XMP_BOX_TYPE -> XmpReader().extract(payload, metadata)
+        }
+    }
+
+    private fun readHeader(input: InputStream): BoxHeader? {
+        val sizeBytes = input.readExactOrNull(4) ?: return null
+        val type = input.readExactOrNull(4)?.toString(Charsets.ISO_8859_1) ?: return null
+        val shortSize = readU32(sizeBytes, 0)
+        if (shortSize == 0L) return BoxHeader(type, null)
+        if (shortSize == 1L) {
+            val extended = input.readExactOrNull(8) ?: return null
+            val size = readU64(extended, 0)
+            return if (size >= 16) BoxHeader(type, size - 16) else null
+        }
+        return if (shortSize >= 8) BoxHeader(type, shortSize - 8) else null
+    }
+
+    private fun readBounded(input: InputStream, size: Long?, limit: Int): ByteArray? {
+        if (limit <= 0) {
+            input.skipExact(size)
+            return null
+        }
+        if (size == null) return input.readToEnd(limit)
+        if (size > limit || size > Int.MAX_VALUE) {
+            input.skipExact(size)
+            return null
+        }
+        return input.readExactOrNull(size.toInt())
     }
 
     /**
      * JXL `Exif` box payload begins with a 4-byte big-endian offset to the TIFF header (usually 0),
-     * per ISO/IEC 18181-2. Returns the bytes from the TIFF header onward.
+     * per ISO/IEC 18181-2. Some writers instead begin directly with the TIFF header.
      */
-    private fun parseExifBoxPayload(bytes: ByteArray, start: Int, end: Int): ByteArray? {
-        if (end - start < 4) return null
-        val tiffOffset = readU32(bytes, start).toInt()
-        val tiffStart = start + 4 + tiffOffset
-        if (tiffStart in start until end && isTiffHeader(bytes, tiffStart)) {
-            return bytes.copyOfRange(tiffStart, end)
+    private fun mergeExif(payload: ByteArray, metadata: Metadata): Boolean {
+        val tiff = if (payload.size >= 4) {
+            val tiffStart = 4L + readU32(payload, 0)
+            if (tiffStart < payload.size && isTiffHeader(payload, tiffStart.toInt())) {
+                payload.copyOfRange(tiffStart.toInt(), payload.size)
+            } else if (isTiffHeader(payload, 0)) {
+                payload
+            } else {
+                null
+            }
+        } else {
+            null
         }
-        // Some writers omit the 4-byte offset and start the TIFF header immediately.
-        if (isTiffHeader(bytes, start)) return bytes.copyOfRange(start, end)
-        return null
+        return tiff?.let { mergeTiff(it, metadata) } ?: false
+    }
+
+    private fun mergeTiff(tiff: ByteArray, metadata: Metadata): Boolean {
+        val parsed = runCatching {
+            ImageMetadataReader.readMetadata(ByteArrayInputStream(tiff))
+        }.getOrNull() ?: return false
+        parsed.directories.forEach(metadata::addDirectory)
+        return parsed.directoryCount > 0
     }
 
     /** Scans for a JPEG-style "Exif\u0000\u0000" preamble immediately followed by a TIFF header. */
@@ -635,6 +771,49 @@ private object BmffExifExtractor {
         return null
     }
 
+    private fun containsExif(metadata: Metadata): Boolean =
+        metadata.containsDirectoryOfType(ExifIFD0Directory::class.java) ||
+                metadata.containsDirectoryOfType(ExifSubIFDDirectory::class.java) ||
+                metadata.containsDirectoryOfType(GpsDirectory::class.java)
+
+    private fun InputStream.readExactOrNull(size: Int): ByteArray? {
+        val bytes = ByteArray(size)
+        var offset = 0
+        while (offset < size) {
+            val count = read(bytes, offset, size - offset)
+            if (count <= 0) return null
+            offset += count
+        }
+        return bytes
+    }
+
+    private fun InputStream.readToEnd(limit: Int): ByteArray? {
+        val output = ByteArrayOutputStream(minOf(limit, DEFAULT_BUFFER_SIZE))
+        val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+        while (true) {
+            val count = read(buffer)
+            if (count < 0) return output.toByteArray()
+            if (output.size() + count > limit) return null
+            output.write(buffer, 0, count)
+        }
+    }
+
+    private fun InputStream.skipExact(size: Long?): Boolean {
+        if (size == null) return true
+        var remaining = size
+        while (remaining > 0) {
+            val skipped = skip(remaining)
+            if (skipped > 0) {
+                remaining -= skipped
+            } else if (read() >= 0) {
+                remaining--
+            } else {
+                return false
+            }
+        }
+        return true
+    }
+
     /** True if [off] points at a TIFF header: little-endian (II 2A 00) or big-endian (MM 00 2A). */
     private fun isTiffHeader(bytes: ByteArray, off: Int): Boolean {
         if (off < 0 || off + 4 > bytes.size) return false
@@ -652,10 +831,13 @@ private object BmffExifExtractor {
                 (bytes[off + 3].toLong() and 0xFF)
 
     private fun readU64(bytes: ByteArray, off: Int): Long {
+        if (bytes[off].toInt() and 0x80 != 0) return -1
         var value = 0L
         for (k in 0 until 8) {
             value = (value shl 8) or (bytes[off + k].toLong() and 0xFF)
         }
         return value
     }
+
+    private data class BoxHeader(val type: String, val payloadSize: Long?)
 }
