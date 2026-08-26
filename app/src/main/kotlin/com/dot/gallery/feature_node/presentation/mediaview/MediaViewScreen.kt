@@ -254,6 +254,7 @@ fun <T : Media> MediaViewScreenRoute(
     toggleRotate: () -> Unit,
     paddingValues: PaddingValues,
     isStandalone: Boolean = false,
+    initialUiVisible: Boolean = true,
     mediaId: Long,
     target: String? = null,
     mediaState: State<MediaState<out T>>,
@@ -273,6 +274,7 @@ fun <T : Media> MediaViewScreenRoute(
         toggleRotate = toggleRotate,
         paddingValues = paddingValues,
         isStandalone = isStandalone,
+        initialUiVisible = initialUiVisible,
         mediaId = mediaId,
         target = target,
         mediaState = mediaState,
@@ -310,6 +312,7 @@ fun <T : Media> MediaViewScreen(
     toggleRotate: () -> Unit,
     paddingValues: PaddingValues,
     isStandalone: Boolean = false,
+    initialUiVisible: Boolean = true,
     mediaId: Long,
     target: String? = null,
     mediaState: State<MediaState<out T>>,
@@ -566,7 +569,7 @@ fun <T : Media> MediaViewScreen(
     // and all source writes are unavailable.
     val showInfo by rememberedDerivedState { currentMedia?.trashed == 0 }
 
-    var showUI by rememberSaveable { mutableStateOf(true) }
+    var showUI by rememberSaveable { mutableStateOf(initialUiVisible) }
     val navigationChromeVisible = !animatedContentScope.transition.isRunning
     val showViewerChrome = showUI && navigationChromeVisible
     // True while the current cloud/remote page is downloading its full-size original for
@@ -625,6 +628,10 @@ fun <T : Media> MediaViewScreen(
         MediaViewViewModel.RotationStage.SAVING -> stringResource(R.string.rotate_stage_saving)
         MediaViewViewModel.RotationStage.UPLOADING -> stringResource(R.string.rotate_stage_uploading)
         null -> null
+    }
+
+    LaunchedEffect(initialUiVisible, showUI) {
+        if (!initialUiVisible && !showUI) windowInsetsController.toggleSystemBars(show = false)
     }
 
     BackHandler(!showUI && !slideshowActive) {
@@ -1181,7 +1188,7 @@ fun <T : Media> MediaViewScreen(
                                 ) {
                                     val hideUiOnPlay by rememberAutoHideOnVideoPlay()
                                     var uiInteracted by remember { mutableStateOf(false) }
-                                    LaunchedEffect(isPlaying.value, hideUiOnPlay) {
+                                    LaunchedEffect(isPlaying.value, hideUiOnPlay, showUI) {
                                         if (isPlaying.value && showUI && hideUiOnPlay && !uiInteracted) {
                                             // Wait up to 2s, but abort the auto-hide the moment the
                                             // user starts dragging the info sheet. During an active

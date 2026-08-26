@@ -52,6 +52,13 @@ import dev.chrisbanes.haze.rememberHazeState
 import androidx.appcompat.app.AppCompatActivity
 import javax.inject.Inject
 
+internal fun shouldShowStandaloneViewerUi(
+    intentMimeType: String?,
+    contentMimeType: String?,
+): Boolean = listOfNotNull(intentMimeType, contentMimeType).none {
+    it.startsWith("video/", ignoreCase = true)
+}
+
 @AndroidEntryPoint
 open class StandaloneActivity : AppCompatActivity() {
 
@@ -102,6 +109,10 @@ open class StandaloneActivity : AppCompatActivity() {
                 uriList.add(clipData.getItemAt(i).uri)
             }
         }
+        val contentMimeType = uriList.firstOrNull()?.let { uri ->
+            runCatching { contentResolver.getType(uri) }.getOrNull()
+        }
+        val initialUiVisible = shouldShowStandaloneViewerUi(intent.type, contentMimeType)
         // Occlude (and wake over) the lock screen when the review is secure.
         // This is only enabled when launched while locked, so a normal review
         // that is later locked mid-viewing never bypasses the keyguard.
@@ -178,6 +189,7 @@ open class StandaloneActivity : AppCompatActivity() {
                                             toggleRotate = ::toggleOrientation,
                                             paddingValues = paddingValues,
                                             isStandalone = true,
+                                            initialUiVisible = initialUiVisible,
                                             mediaId = mediaId,
                                             allowBlur = allowBlur,
                                             mediaState = mediaState,
