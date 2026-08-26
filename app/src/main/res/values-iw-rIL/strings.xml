@@ -957,13 +957,11 @@
     <plurals name="item_count">
         <item quantity="one">פריט %s</item>
         <item quantity="two">%s פריטים</item>
-        <item quantity="many">%s פריטים</item>
         <item quantity="other">%s פריטים</item>
     </plurals>
     <plurals name="album_count">
         <item quantity="one">%d album</item>
         <item quantity="two">%d albums</item>
-        <item quantity="many">%d albums</item>
         <item quantity="other">%d albums</item>
     </plurals>
     <!-- Widgets -->
