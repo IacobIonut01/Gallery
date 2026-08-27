@@ -14,7 +14,9 @@ import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.xml.sax.InputSource
 import java.io.File
+import java.io.InterruptedIOException
 import java.io.StringReader
+import java.security.MessageDigest
 import javax.xml.parsers.DocumentBuilderFactory
 
 data class WebDavResource(
@@ -118,6 +120,28 @@ class WebDavClient(
         return okHttpClient.newCall(request).execute().use { response ->
             if (!response.isSuccessful) throw WebDavException("Download", response.code, response.message)
             response.body.bytes()
+        }
+    }
+
+    fun sha1(remotePath: String): String {
+        val request = Request.Builder()
+            .url(buildUrl(remotePath))
+            .get()
+            .header("Authorization", credentials)
+            .build()
+        return okHttpClient.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) throw WebDavException("Checksum", response.code, response.message)
+            val digest = MessageDigest.getInstance("SHA-1")
+            response.body.byteStream().use { input ->
+                val buffer = ByteArray(8192)
+                while (true) {
+                    if (Thread.currentThread().isInterrupted) throw InterruptedIOException("Checksum cancelled")
+                    val read = input.read(buffer)
+                    if (read == -1) break
+                    digest.update(buffer, 0, read)
+                }
+            }
+            digest.digest().joinToString("") { "%02x".format(it) }
         }
     }
 

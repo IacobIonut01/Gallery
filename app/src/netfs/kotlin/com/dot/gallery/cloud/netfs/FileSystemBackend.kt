@@ -8,6 +8,8 @@ package com.dot.gallery.cloud.netfs
 import com.dot.gallery.cloud.core.CloudServerConfig
 import com.dot.gallery.cloud.core.ProviderType
 import java.io.InputStream
+import java.io.InterruptedIOException
+import java.security.MessageDigest
 
 /** A single directory/file entry returned by a backend listing. */
 data class NetFsEntry(
@@ -83,6 +85,18 @@ abstract class NetFsConnection {
  * Implementations live in their own flag-gated source set (`src/smb`, `src/nfs`) and are
  * contributed to the graph via Hilt `@IntoSet`, exactly like the WebDAV providers.
  */
+internal fun contentSha1(input: InputStream): String {
+    val digest = MessageDigest.getInstance("SHA-1")
+    val buffer = ByteArray(8192)
+    while (true) {
+        if (Thread.currentThread().isInterrupted) throw InterruptedIOException("Checksum cancelled")
+        val read = input.read(buffer)
+        if (read == -1) break
+        digest.update(buffer, 0, read)
+    }
+    return digest.digest().joinToString("") { "%02x".format(it) }
+}
+
 interface FileSystemBackend {
 
     val providerType: ProviderType

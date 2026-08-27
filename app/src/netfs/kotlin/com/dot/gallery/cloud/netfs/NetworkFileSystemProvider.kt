@@ -41,6 +41,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withContext
 import java.io.BufferedInputStream
 import java.io.File
@@ -562,13 +563,16 @@ open class NetworkFileSystemProvider(
 
     // === Sync ===
 
+    override fun deterministicRemoteId(localMedia: Media, targetPath: String?): String =
+        (targetPath?.trimEnd('/')?.ifEmpty { null } ?: "Photos") + "/${localMedia.label}"
+
     override suspend fun uploadAsset(localMedia: Media, targetPath: String?): Result<CloudMediaEntity> =
         withContext(Dispatchers.IO) {
             try {
                 val conn = requireConnection()
                 val configId = currentConfig?.id ?: 0L
                 val fileName = localMedia.label
-                val remotePath = (targetPath?.trimEnd('/')?.ifEmpty { null } ?: "Photos") + "/$fileName"
+                val remotePath = deterministicRemoteId(localMedia, targetPath)
                 val input = context.contentResolver.openInputStream(localMedia.getUri())
                     ?: return@withContext Result.failure(Exception("Cannot open media file"))
                 val size = runCatching {
@@ -623,7 +627,48 @@ open class NetworkFileSystemProvider(
         }
 
     override suspend fun bulkUploadCheck(hashes: List<String>): Result<Map<String, Boolean>> =
-        Result.success(hashes.associateWith { false })
+        Result.success(hashes.indices.associate { it.toString() to false })
+
+    override suspend fun verifyRemoteContent(
+        localMedia: Media,
+        targetPath: String?,
+        contentHash: String
+    ): Result<Boolean> = withContext(Dispatchers.IO) {
+        try {
+            val conn = requireConnection()
+            val configId = currentConfig?.id ?: throw IllegalStateException("Not configured")
+            val remotePath = deterministicRemoteId(localMedia, targetPath)
+            val remoteSize = runInterruptible { backend.fileSize(conn, remotePath) }
+            if (localMedia.size > 0L && remoteSize != localMedia.size) {
+                return@withContext Result.success(false)
+            }
+            val remoteHash = runInterruptible {
+                backend.openRead(conn, remotePath, 0L).use(::contentSha1)
+            }
+            if (cloudMediaDao.updateContentHash(remotePath, backend.providerType, configId, remoteHash) == 0) {
+                cloudMediaDao.insert(
+                    CloudMediaEntity(
+                        remoteId = remotePath,
+                        providerType = backend.providerType,
+                        serverConfigId = configId,
+                        label = localMedia.label,
+                        path = remotePath,
+                        relativePath = remotePath.substringBeforeLast('/'),
+                        mimeType = localMedia.mimeType,
+                        timestamp = System.currentTimeMillis(),
+                        size = remoteSize,
+                        syncState = SyncState.REMOTE_ONLY,
+                        contentHash = remoteHash
+                    )
+                )
+            }
+            Result.success(remoteHash.equals(contentHash, ignoreCase = true))
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 
     /**
      * SMB/NFS have no content-hash index, so an asset is "already uploaded" when a file
@@ -635,7 +680,7 @@ open class NetworkFileSystemProvider(
         withContext(Dispatchers.IO) {
             try {
                 val conn = requireConnection()
-                val remotePath = (targetPath?.trimEnd('/')?.ifEmpty { null } ?: "Photos") + "/${localMedia.label}"
+                val remotePath = deterministicRemoteId(localMedia, targetPath)
                 val remoteSize = runCatching { backend.fileSize(conn, remotePath) }.getOrNull()
                     ?: return@withContext false
                 if (remoteSize <= 0L) return@withContext false

@@ -30,8 +30,11 @@ import com.dot.gallery.feature_node.domain.util.getUri
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -197,9 +200,9 @@ class CloudUploadSettingsViewModel @Inject constructor(
                         AllowedMedia.BOTH
                     ).first().data ?: emptyList()
 
-                    val selectedAlbumIds = uploadPreferences.value
-                        .filterValues { it }
-                        .keys
+                    val enabledPrefs = uploadPrefDao.getEnabledByConfigList(configId)
+                    val prefsByAlbumId = enabledPrefs.associateBy { it.albumId }
+                    val selectedAlbumIds = prefsByAlbumId.keys
                     val localMedia = allMedia.filter {
                         it.uri.scheme != "cloud" && it.albumID in selectedAlbumIds
                     }
@@ -231,19 +234,21 @@ class CloudUploadSettingsViewModel @Inject constructor(
                     if (syncProvider.requiresUploadChecksum) {
                         mediaWithHashes.chunked(1000).forEach { chunk ->
                             val result = syncProvider.bulkUploadCheck(chunk.map { it.second })
-                                .getOrNull().orEmpty()
+                                .getOrThrow()
                             duplicateMedia += verifiedItemsByIndex(chunk, result).map { it.first }
                         }
                     } else {
-                        val albumLabels = localAlbums.value.associate { it.id to it.label }
-                        mediaWithHashes.forEach { (media, _) ->
-                            val targetPath = albumLabels[media.albumID]?.takeIf { it.isNotBlank() }
-                            if (runCatching {
-                                    syncProvider.remoteExists(media, targetPath)
-                                }.getOrDefault(false)
-                            ) {
-                                duplicateMedia += media
+                        mediaWithHashes.forEach { (media, hash) ->
+                            val targetPath = prefsByAlbumId[media.albumID]
+                                ?.albumLabel
+                                ?.trim()
+                                ?.ifBlank { null }
+                            val verified = try {
+                                syncProvider.verifyRemoteContent(media, targetPath, hash).getOrThrow()
+                            } catch (e: CancellationException) {
+                                throw e
                             }
+                            if (verified) duplicateMedia += media
                         }
                     }
 
@@ -255,6 +260,8 @@ class CloudUploadSettingsViewModel @Inject constructor(
                         message = if (duplicateMedia.isEmpty()) "No duplicates found"
                         else "Found ${duplicateMedia.size} local items already on cloud"
                     )
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (e: Exception) {
                     _dedupState.value = DedupState(
                         isScanning = false,
@@ -276,19 +283,22 @@ class CloudUploadSettingsViewModel @Inject constructor(
         _dedupState.value = DedupState()
     }
 
-    private fun computeSha1(media: Media): String? {
+    private suspend fun computeSha1(media: Media): String? {
         return try {
             val uri = media.getUri()
             context.contentResolver.openInputStream(uri)?.use { input ->
                 val digest = MessageDigest.getInstance("SHA-1")
                 val buffer = ByteArray(8192)
                 while (true) {
+                    currentCoroutineContext().ensureActive()
                     val read = input.read(buffer)
                     if (read == -1) break
                     digest.update(buffer, 0, read)
                 }
                 digest.digest().joinToString("") { "%02x".format(it) }
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (_: Exception) {
             null
         }

@@ -6,10 +6,12 @@
 package com.dot.gallery.cloud
 
 import androidx.work.WorkInfo
+import com.dot.gallery.cloud.data.dao.shouldInvalidateBackupRevision
 import com.dot.gallery.cloud.sync.BACKUP_VERIFICATION_MAX_AGE_MS
 import com.dot.gallery.cloud.sync.CloudUploadWorker
 import com.dot.gallery.cloud.sync.backupChecksumVariants
 import com.dot.gallery.cloud.sync.backupDestinationConfigIds
+import com.dot.gallery.cloud.sync.backupRevisionLocalUri
 import com.dot.gallery.cloud.sync.backupVerificationCutoff
 import com.dot.gallery.cloud.sync.isActiveBackupWork
 import com.dot.gallery.cloud.sync.isBackupRevisionCached
@@ -21,8 +23,14 @@ import com.dot.gallery.cloud.sync.runWorkerPool
 import com.dot.gallery.cloud.sync.shouldDeferChecksumCheck
 import com.dot.gallery.cloud.immich.data.dto.ImmichAssetDto
 import com.dot.gallery.cloud.immich.data.dto.ImmichBulkCheckResultItemDto
+import com.dot.gallery.cloud.immich.verifiedImmichAssetHashes
+import com.dot.gallery.cloud.webdav.canCacheWebDavChecksum
+import com.dot.gallery.cloud.webdav.data.api.WebDavClient
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import okhttp3.OkHttpClient
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.MockWebServer
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -138,6 +146,17 @@ class CloudUploadWorkerPoolTest {
     }
 
     @Test
+    fun pathBasedVerificationIsScopedToItsRemoteTarget() {
+        val uri = "content://media/42"
+
+        assertTrue(
+            backupRevisionLocalUri(uri, "Trips/photo.jpg") !=
+                backupRevisionLocalUri(uri, "Family/photo.jpg")
+        )
+        assertEquals(uri, backupRevisionLocalUri(uri, null))
+    }
+
+    @Test
     fun cachedVerificationExpiresAfterBoundedAge() {
         val now = 1_000_000_000L
 
@@ -167,6 +186,23 @@ class CloudUploadWorkerPoolTest {
         assertTrue(!duplicate.copy(isTrashed = true).isSafeDuplicate())
         assertTrue(!duplicate.copy(reason = "unsupported-format").isSafeDuplicate())
         assertTrue(!duplicate.copy(assetId = null).isSafeDuplicate())
+    }
+
+    @Test
+    fun immichVerificationRetainsDuplicateAssetIdentity() {
+        val duplicate = ImmichBulkCheckResultItemDto(
+            id = "1",
+            action = "reject",
+            assetId = "asset-id",
+            reason = "duplicate",
+            isTrashed = false
+        )
+
+        assertEquals(
+            mapOf("asset-id" to "hash-1"),
+            verifiedImmichAssetHashes(listOf("hash-0", "hash-1"), listOf(duplicate))
+        )
+        assertEquals(emptyMap<String, String>(), verifiedImmichAssetHashes(listOf("hash-0"), listOf(duplicate)))
     }
 
     @Test
@@ -267,6 +303,41 @@ class CloudUploadWorkerPoolTest {
     fun smallImmichQueueUsesFastStartChecksumPath() {
         assertTrue(shouldDeferChecksumCheck(itemCount = 6, maxConcurrentUploads = 3))
         assertTrue(!shouldDeferChecksumCheck(itemCount = 7, maxConcurrentUploads = 3))
+    }
+
+    @Test
+    fun hashVerifiedRevisionSurvivesMetadataOnlyRefresh() {
+        val verifiedHash = "000102030405060708090a0b0c0d0e0f10111213"
+
+        assertTrue(!shouldInvalidateBackupRevision("1234|5678", false, verifiedHash))
+        assertTrue(shouldInvalidateBackupRevision("different-hash", true, verifiedHash))
+        assertTrue(shouldInvalidateBackupRevision("1234|5679", false, "1234|5678"))
+    }
+
+    @Test
+    fun webDavChecksumCacheRequiresServerValidator() {
+        assertTrue(!canCacheWebDavChecksum(""))
+        assertTrue(canCacheWebDavChecksum("etag"))
+    }
+
+    @Test
+    fun webDavChecksumStreamsRemoteContent() {
+        val server = MockWebServer()
+        server.start()
+        try {
+            server.enqueue(MockResponse().setBody("verified"))
+            val client = WebDavClient(
+                OkHttpClient(),
+                server.url("/dav").toString(),
+                "user",
+                "password",
+                ""
+            )
+
+            assertEquals("ec734b651574683f36974c7f12847fbbe084dbe2", client.sha1("album/photo.jpg"))
+        } finally {
+            server.shutdown()
+        }
     }
 
     @Test

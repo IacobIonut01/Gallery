@@ -26,6 +26,7 @@ import com.dot.gallery.cloud.sync.CloudSyncScheduler
 import com.dot.gallery.cloud.sync.CloudUploadWorker
 import com.dot.gallery.cloud.sync.backupLocalRevisionKey
 import com.dot.gallery.cloud.sync.backupRemoteRevisionKey
+import com.dot.gallery.cloud.sync.backupRevisionLocalUri
 import com.dot.gallery.cloud.sync.backupVerificationCutoff
 import com.dot.gallery.cloud.sync.cacheVerifiedBackupRevision
 import com.dot.gallery.cloud.sync.isActiveBackupWork
@@ -284,9 +285,18 @@ class CloudBackupViewModel @Inject constructor(
                     // each account's candidate media the SAME way the
                     // upload worker does — per enabled album via getMediaByAlbumId.
                     val scanned = perConfig.map { (cfg, provider, prefs) ->
-                        val media = prefs.flatMap { pref ->
-                            repository.getMediaByAlbumId(pref.albumId, skipBatching = true).first().data ?: emptyList()
-                        }.distinctBy { it.id }.filter { it.uri.scheme != "cloud" }
+                        val revisionProvider = provider
+                            ?: providerInitializer.createTransientProvider(cfg.providerType) as? SyncCapableProvider
+                        val mediaWithTargets = prefs.flatMap { pref ->
+                            val targetPath = pref.albumLabel.trim().ifBlank { null }
+                            (repository.getMediaByAlbumId(pref.albumId, skipBatching = true).first().data ?: emptyList())
+                                .map { it to targetPath }
+                        }.distinctBy { it.first.id to it.second }.filter { it.first.uri.scheme != "cloud" }
+                        val media = mediaWithTargets.distinctBy { it.first.id }.map { it.first }
+                        val targetPathsByMediaId = mediaWithTargets.groupBy(
+                            keySelector = { it.first.id },
+                            valueTransform = { it.second }
+                        ).mapValues { (_, targets) -> targets.distinct() }
                         // Immich stores the original filename in `label` (remoteId is an
                         // opaque UUID); path-based stores key by remote path — cover both.
                         val cached = cloudMediaDao.getByServerConfig(cfg.id).first()
@@ -314,17 +324,33 @@ class CloudBackupViewModel @Inject constructor(
                             emptySet()
                         }
                         val evidenceByMediaId = media.associate { item ->
-                            item.id to backupMatchEvidence(
-                                uri = item.getUri().toString(),
-                                mediaId = item.id,
-                                label = item.label,
-                                mimeType = item.mimeType,
-                                size = item.size,
-                                timestamp = item.timestamp,
-                                cachedNames = cachedNames,
-                                localRevisions = localRevisions,
-                                remoteRevisions = remoteRevisions
-                            )
+                            val revisionUris = targetPathsByMediaId[item.id].orEmpty()
+                                .map {
+                                    backupRevisionLocalUri(
+                                        item.getUri().toString(),
+                                        revisionProvider?.deterministicRemoteId(item, it)
+                                    )
+                                }
+                                .ifEmpty { listOf(item.getUri().toString()) }
+                                .distinct()
+                            val allTargetsVerified = revisionUris.all { revisionUri ->
+                                backupLocalRevisionKey(revisionUri, item.size, item.timestamp) in localRevisions
+                            }
+                            item.id to if (allTargetsVerified) {
+                                BackupMatchEvidence.VERIFIED_REVISION
+                            } else {
+                                backupMatchEvidence(
+                                    uri = revisionUris.first(),
+                                    mediaId = item.id,
+                                    label = item.label,
+                                    mimeType = item.mimeType,
+                                    size = item.size,
+                                    timestamp = item.timestamp,
+                                    cachedNames = cachedNames,
+                                    localRevisions = emptySet(),
+                                    remoteRevisions = remoteRevisions
+                                )
+                            }
                         }
                         ScannedAccount(
                             config = cfg,
@@ -332,6 +358,7 @@ class CloudBackupViewModel @Inject constructor(
                             connectionState = connectionStateOf(cfg.id),
                             enabledAlbumCount = prefs.size,
                             media = media,
+                            targetPathsByMediaId = targetPathsByMediaId,
                             evidenceByMediaId = evidenceByMediaId
                         )
                     }
@@ -362,19 +389,59 @@ class CloudBackupViewModel @Inject constructor(
                                     hashOf(media)?.let { hash -> media to hash }
                                 }
                                 if (hashed.isNotEmpty()) {
-                                    val present = try {
-                                        provider.bulkUploadCheck(hashed.map { it.second })
-                                            .onFailure { verificationFailed = true }
-                                            .getOrDefault(emptyMap())
-                                    } catch (e: CancellationException) {
-                                        throw e
-                                    } catch (_: Exception) {
-                                        verificationFailed = true
-                                        emptyMap()
+                                    val verified = if (provider.requiresUploadChecksum) {
+                                        val present = try {
+                                            provider.bulkUploadCheck(hashed.map { it.second })
+                                                .onFailure { verificationFailed = true }
+                                                .getOrDefault(emptyMap())
+                                        } catch (e: CancellationException) {
+                                            throw e
+                                        } catch (_: Exception) {
+                                            verificationFailed = true
+                                            emptyMap()
+                                        }
+                                        verifiedItemsByIndex(hashed, present)
+                                    } else {
+                                        hashed.mapNotNull { (media, hash) ->
+                                            val targets = s.targetPathsByMediaId[media.id].orEmpty()
+                                                .ifEmpty { listOf(null) }
+                                            val matches = targets.all { targetPath ->
+                                                val targetMatches = try {
+                                                    provider.verifyRemoteContent(media, targetPath, hash)
+                                                        .onFailure { verificationFailed = true }
+                                                        .getOrDefault(false)
+                                                } catch (e: CancellationException) {
+                                                    throw e
+                                                } catch (_: Exception) {
+                                                    verificationFailed = true
+                                                    false
+                                                }
+                                                if (targetMatches) {
+                                                    cacheVerifiedBackupRevision(
+                                                        cloudMediaDao,
+                                                        s.config.id,
+                                                        media,
+                                                        hash,
+                                                        provider,
+                                                        targetPath
+                                                    )
+                                                }
+                                                targetMatches
+                                            }
+                                            (media to hash).takeIf { matches }
+                                        }
                                     }
-                                    verifiedItemsByIndex(hashed, present).forEach { (media, hash) ->
+                                    verified.forEach { (media, hash) ->
                                         verifiedIds += media.id
-                                        cacheVerifiedBackupRevision(cloudMediaDao, s.config.id, media, hash)
+                                        if (provider.requiresUploadChecksum) {
+                                            cacheVerifiedBackupRevision(
+                                                cloudMediaDao,
+                                                s.config.id,
+                                                media,
+                                                hash,
+                                                provider
+                                            )
+                                        }
                                     }
                                 }
                                 refined[accountIndex] = s.toStatus(
@@ -415,6 +482,7 @@ class CloudBackupViewModel @Inject constructor(
         val connectionState: ConnectionState,
         val enabledAlbumCount: Int,
         val media: List<com.dot.gallery.feature_node.domain.model.Media.UriMedia>,
+        val targetPathsByMediaId: Map<Long, List<String?>>,
         val evidenceByMediaId: Map<Long, BackupMatchEvidence>
     ) {
         val verifiedIds: Set<Long> = evidenceByMediaId

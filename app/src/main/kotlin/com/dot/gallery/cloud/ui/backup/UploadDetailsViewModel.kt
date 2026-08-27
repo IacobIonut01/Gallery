@@ -19,6 +19,7 @@ import com.dot.gallery.cloud.data.dao.CloudServerConfigDao
 import com.dot.gallery.cloud.data.dao.CloudUploadPrefDao
 import com.dot.gallery.cloud.sync.CloudUploadWorker
 import com.dot.gallery.cloud.sync.backupLocalRevisionKey
+import com.dot.gallery.cloud.sync.backupRevisionLocalUri
 import com.dot.gallery.cloud.sync.backupVerificationCutoff
 import com.dot.gallery.cloud.sync.cacheVerifiedBackupRevision
 import com.dot.gallery.cloud.sync.isActiveBackupWork
@@ -157,12 +158,16 @@ class UploadDetailsViewModel @Inject constructor(
                     ).map { backupLocalRevisionKey(it.localUri, it.localSize, it.localTimestamp) }
                         .toSet()
                     for (pref in prefs) {
+                        val targetPath = pref.albumLabel.trim().ifBlank { null }
                         val media = (repository.getMediaByAlbumId(pref.albumId, skipBatching = true).first().data ?: emptyList())
                             .filter { it.uri.scheme != "cloud" }
                         if (media.isEmpty()) continue
                         val verifiedIds = media.filterTo(mutableListOf()) { item ->
                             backupLocalRevisionKey(
-                                item.getUri().toString(),
+                                backupRevisionLocalUri(
+                                    item.getUri().toString(),
+                                    provider.deterministicRemoteId(item, targetPath)
+                                ),
                                 item.size,
                                 item.timestamp
                             ) in localRevisions
@@ -184,13 +189,35 @@ class UploadDetailsViewModel @Inject constructor(
                             }
                             verifiedItemsByIndex(hashed, present).forEach { (item, hash) ->
                                 verifiedIds += item.id
-                                cacheVerifiedBackupRevision(cloudMediaDao, cfg.id, item, hash)
+                                cacheVerifiedBackupRevision(
+                                    cloudMediaDao,
+                                    cfg.id,
+                                    item,
+                                    hash,
+                                    provider,
+                                    targetPath
+                                )
                             }
                         } else {
-                            val targetPath = pref.albumLabel.trim().ifBlank { null }
                             unchecked.forEach { item ->
-                                if (runCatching { provider.remoteExists(item, targetPath) }.getOrDefault(false)) {
+                                val hash = hashOf(item) ?: return@forEach
+                                val verified = try {
+                                    provider.verifyRemoteContent(item, targetPath, hash).getOrDefault(false)
+                                } catch (e: CancellationException) {
+                                    throw e
+                                } catch (_: Exception) {
+                                    false
+                                }
+                                if (verified) {
                                     verifiedIds += item.id
+                                    cacheVerifiedBackupRevision(
+                                        cloudMediaDao,
+                                        cfg.id,
+                                        item,
+                                        hash,
+                                        provider,
+                                        targetPath
+                                    )
                                 }
                             }
                         }

@@ -17,6 +17,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.ByteArrayInputStream
 
 class NetworkFileSystemSupportTest {
 
@@ -63,6 +64,14 @@ class NetworkFileSystemSupportTest {
         assertNull(parseNetFsByteRange("bytes=1000-", 1_000L))
         assertNull(parseNetFsByteRange("bytes=200-100", 1_000L))
         assertNull(parseNetFsByteRange("bytes=0-1,4-5", 1_000L))
+    }
+
+    @Test
+    fun contentHashStreamsNetworkFileBytes() {
+        assertEquals(
+            "ec734b651574683f36974c7f12847fbbe084dbe2",
+            ByteArrayInputStream("verified".toByteArray()).use(::contentSha1)
+        )
     }
 
     @Test
