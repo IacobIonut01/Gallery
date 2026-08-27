@@ -71,8 +71,8 @@
     <string name="nav_timeline">Linha do tempo</string>
     <string name="location_cd">Localização da mídia</string>
     <string name="location_map_cd">Mapa de localização</string>
-    <string name="show_in_app">Show in app</string>
-    <string name="open_externally">Open externally</string>
+    <string name="show_in_app">Mostrar no aplicativo</string>
+    <string name="open_externally">Abrir externamente</string>
     <string name="no_map_app">Nenhum app está disponível para mostrar a localização</string>
     <string name="map_appearance_header">Mapa</string>
     <string name="map_appearance_title">Aparência do mapa</string>
@@ -148,9 +148,9 @@
     <string name="amoled_mode_title">Usar o Modo Amoled</string>
     <string name="amoled_mode_summary">Maior contraste, mais adequado para telas Amoled</string>
     <string name="amoled_mode_requires_dark">Disponível apenas enquanto o app usa o modo escuro</string>
-    <string name="use_system_font_title">Use system font</string>
-    <string name="use_system_font_summary">Use your device\'s default font instead of the built-in one</string>
-    <string name="use_system_font_description">When enabled, the app uses your device\'s system font instead of the built-in Google Sans font. This can improve readability if you use a custom system font.</string>
+    <string name="use_system_font_title">Usar fonte do sistema</string>
+    <string name="use_system_font_summary">Usar a fonte parão do seu dispositivo em vez da fonte integrada</string>
+    <string name="use_system_font_description">Quando esta opção estiver ativada, o aplicativo utiliza a fonte do seu sistema em vez da fonte Google Sans integrada. Isso pode aprimorar a legibilidade se você utilizar uma fonte personalizada no seu sistema.</string>
     <string name="color_palette_preview_description">Ícones, texto e outros elementos combinarão com as cores do papel de parede</string>
     <string name="color_palette_wallpaper_colors">Cores do papel de parede</string>
     <string name="color_palette_other_colors">Outras cores</string>
@@ -257,7 +257,7 @@
     <string name="raw_export_jpeg">JPEG</string>
     <string name="raw_export_png">PNG</string>
     <string name="raw_export_tiff8">TIFF (8-bit)</string>
-    <string name="raw_export_tiff16">TIFF (16-bit)</string>
+    <string name="raw_export_tiff16">TIFF (16 bits)</string>
     <string name="raw_export_choose_format">Salvar cópia desenvolvida</string>
     <string name="raw_export_choose_format_subtitle">Escolha um formato para seu RAW desenvolvido</string>
     <string name="raw_export_tiff_unavailable">TIFF mantém a profundidade total de bits, mas não pode incluir corte, filtros ou marcações — remova-os para exportar TIFF.</string>
