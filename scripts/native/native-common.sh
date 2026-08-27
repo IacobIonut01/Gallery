@@ -41,7 +41,7 @@ native_prepare_source() {
         cp -R "$source_dir"/. "$destination"/
         rm -rf "$destination/.git"
     else
-        local archive download_dir
+        local archive download_dir download actual_sha
         if [ -n "${NATIVE_SOURCE_ARCHIVES_DIR:-}" ]; then
             archive="$NATIVE_SOURCE_ARCHIVES_DIR/${url##*/}"
         else
@@ -60,11 +60,20 @@ native_prepare_source() {
                 echo "ERROR: Invalid vendored source archive for $key: $archive" >&2
                 exit 1
             fi
-            rm -f "$archive"
+            download="$(mktemp "$download_dir/.$key-$expected_sha.XXXXXX")"
             echo "==> Downloading $key"
-            curl -fsSL "$url" -o "$archive"
+            if ! curl -fsSL "$url" -o "$download"; then
+                rm -f "$download"
+                exit 1
+            fi
+            actual_sha="$(native_sha256 "$download")"
+            if [ "$actual_sha" != "$expected_sha" ]; then
+                rm -f "$download"
+                echo "ERROR: SHA-256 mismatch for $key: expected $expected_sha, got $actual_sha" >&2
+                exit 1
+            fi
+            mv -f "$download" "$archive"
         fi
-        local actual_sha
         actual_sha="$(native_sha256 "$archive")"
         if [ "$actual_sha" != "$expected_sha" ]; then
             echo "ERROR: SHA-256 mismatch for $key: expected $expected_sha, got $actual_sha" >&2
