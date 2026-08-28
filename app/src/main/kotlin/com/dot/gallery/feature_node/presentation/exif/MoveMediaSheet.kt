@@ -206,8 +206,18 @@ fun <T: Media> MoveMediaSheet(
                 return@launch
             }
             pendingCopies = copies
-            if (handler.deleteMedia(deleteRequest, localMedia) == MediaMutationResult.COMPLETED) {
-                finishMove()
+            when (handler.deleteMedia(deleteRequest, localMedia)) {
+                // The dialog drives the rest through deleteRequest.
+                MediaMutationResult.REQUEST_LAUNCHED -> Unit
+                MediaMutationResult.COMPLETED -> finishMove()
+                MediaMutationResult.FAILED -> {
+                    handler.discardMediaCopies(copies)
+                    pendingCopies = emptyList()
+                    progress = 0f
+                    toastError.show()
+                    delay(1000)
+                    sheetState.hide()
+                }
             }
         }
     }

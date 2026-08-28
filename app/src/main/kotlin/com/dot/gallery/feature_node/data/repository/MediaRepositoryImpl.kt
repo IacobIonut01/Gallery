@@ -111,7 +111,9 @@ import com.dot.gallery.feature_node.presentation.util.printError
 import com.dot.gallery.feature_node.presentation.util.mediaStoreVersion
 import com.dot.gallery.feature_node.presentation.util.printInfo
 import com.dot.gallery.feature_node.presentation.util.printWarning
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -612,16 +614,22 @@ class MediaRepositoryImpl(
     ): List<Uri> = withContext(Dispatchers.IO) {
         val (destVolume, destRelPath) = resolveMediaStoreVolume(newPath)
         val copies = mutableListOf<Uri>()
-        mediaList.forEachIndexed { index, media ->
-            val copiedUri = copyMediaTo(media, destVolume, destRelPath)
-            if (copiedUri == null) {
-                // Never leave half a move behind: the originals are still untouched at this
-                // point, so drop the copies we own and report the failure.
-                discardMediaCopies(copies)
-                return@withContext emptyList()
+        try {
+            mediaList.forEachIndexed { index, media ->
+                val copiedUri = copyMediaTo(media, destVolume, destRelPath)
+                if (copiedUri == null) {
+                    // Never leave half a move behind: the originals are still untouched at this
+                    // point, so drop the copies we own and report the failure.
+                    discardMediaCopies(copies)
+                    return@withContext emptyList()
+                }
+                copies += copiedUri
+                onProgress((index + 1).toFloat() / mediaList.size)
             }
-            copies += copiedUri
-            onProgress((index + 1).toFloat() / mediaList.size)
+        } catch (e: CancellationException) {
+            // Leaving the sheet mid-copy cancels this scope; clean up before giving up.
+            withContext(NonCancellable) { discardMediaCopies(copies) }
+            throw e
         }
         copies
     }
