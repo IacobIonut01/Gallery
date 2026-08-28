@@ -48,6 +48,11 @@ if [ -z "$NDK_VERSION" ] || [ ! -f "$TOOLCHAIN" ] ||
     echo "ERROR: Pinned NDK $NDK_VERSION not found or invalid. Install ndk;$NDK_VERSION." >&2
     exit 1
 fi
+NDK_CLANG="$(ls -d "$NDK_DIR"/toolchains/llvm/prebuilt/*/bin/clang 2>/dev/null | head -n1)"
+if [ -z "$NDK_CLANG" ] || [ ! -x "$NDK_CLANG" ]; then
+    echo "ERROR: NDK clang not found under $NDK_DIR" >&2
+    exit 1
+fi
 
 CMAKE_BIN="$SDK/cmake/$CMAKE_VERSION/bin/cmake"
 NINJA_BIN="$SDK/cmake/$CMAKE_VERSION/bin/ninja"
@@ -131,6 +136,7 @@ build_abi() {
         *)           AOM_CPU="generic" ;;
     esac
     "$CMAKE_BIN" -S "$AOM_SRC" -B "$WORK/aom-$ABI" "${COMMON[@]}" \
+        -DCMAKE_ASM_COMPILER="$NDK_CLANG" \
         -DENABLE_TESTS=OFF -DENABLE_EXAMPLES=OFF -DENABLE_DOCS=OFF -DENABLE_TOOLS=OFF \
         -DCONFIG_AV1_ENCODER=1 -DCONFIG_AV1_DECODER=1 -DAOM_TARGET_CPU="$AOM_CPU"
     "$CMAKE_BIN" --build "$WORK/aom-$ABI" --target install
