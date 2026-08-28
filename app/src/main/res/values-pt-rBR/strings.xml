@@ -73,7 +73,7 @@
     <string name="location_map_cd">Mapa de localização</string>
     <string name="show_in_app">Mostrar no aplicativo</string>
     <string name="open_externally">Abrir externamente</string>
-    <string name="no_map_app">Nenhum app está disponível para mostrar a localização</string>
+    <string name="no_map_app">Não há nenhum aplicativo disponível para mostrar a localização</string>
     <string name="map_appearance_header">Mapa</string>
     <string name="map_appearance_title">Aparência do mapa</string>
     <string name="map_appearance_description">Escolha se os mapas seguem a aparência do ReFra ou sempre usam cores de mapa claras ou escuras.</string>
