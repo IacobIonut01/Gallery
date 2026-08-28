@@ -17,6 +17,8 @@ import com.dot.gallery.cloud.core.ProviderType
 import com.dot.gallery.cloud.core.capabilities.RemoteMediaProvider
 import com.dot.gallery.cloud.image.CloudFetcherRegistryHolder
 import com.dot.gallery.core.util.ProgressThrottler
+import com.dot.gallery.core.util.ext.mediaDateModified
+import com.dot.gallery.core.util.ext.restoreMediaTimestamp
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.util.getUri
 import com.dot.gallery.feature_node.domain.util.resolveMediaStoreVolume
@@ -163,6 +165,7 @@ class MediaCopyWorker @AssistedInject constructor(
                     src.lastPathSegment ?: "media"
                 }
                 val isVideo = mediaType.startsWith("video")
+                val sourceDateModified = if (isCloudUri) 0L else cr.mediaDateModified(src)
                 val targetUri = cr.insert(
                     if (isVideo) MediaStore.Video.Media.getContentUri(volumeName)
                     else MediaStore.Images.Media.getContentUri(volumeName),
@@ -196,12 +199,12 @@ class MediaCopyWorker @AssistedInject constructor(
 
                 val updateValues = ContentValues().apply {
                     put(MediaStore.MediaColumns.IS_PENDING, 0)
-                    put(
-                        MediaStore.MediaColumns.DATE_MODIFIED,
-                        System.currentTimeMillis() / 1000
-                    )
                 }
-                return@withContext cr.update(targetUri, updateValues, null, null) > 0
+                val published = cr.update(targetUri, updateValues, null, null) > 0
+                // Keep the copy where the source sits in the timeline instead of sending it to
+                // the top of the destination album with today's date.
+                appContext.restoreMediaTimestamp(targetUri, mediaType, sourceDateModified)
+                return@withContext published
             } catch (e: IOException) {
                 if (e.message?.contains("ENOSPC") == true) return@withContext false
                 return@withContext false

@@ -34,6 +34,8 @@ import com.dot.gallery.core.metadata.SanitizationCapability
 import com.dot.gallery.core.metadata.SanitizationResult
 import com.dot.gallery.core.util.MediaStoreBuckets
 import com.dot.gallery.core.util.ext.mapAsResource
+import com.dot.gallery.core.util.ext.mediaDateModified
+import com.dot.gallery.core.util.ext.restoreMediaTimestamp
 import com.dot.gallery.core.util.ext.overrideImageEncoded
 import com.dot.gallery.core.util.ext.renameMedia
 import com.dot.gallery.core.util.ext.saveImage
@@ -567,6 +569,8 @@ class MediaRepositoryImpl(
             val mediaType = cr.getType(srcUri) ?: return@withContext null
             val isVideo = mediaType.startsWith("video")
 
+            val sourceDateModified = cr.mediaDateModified(srcUri)
+
             val targetUri = cr.insert(
                 if (isVideo) MediaStore.Video.Media.getContentUri(destVolume)
                 else MediaStore.Images.Media.getContentUri(destVolume),
@@ -592,6 +596,8 @@ class MediaRepositoryImpl(
                 ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 0) },
                 null, null
             )
+            // The copy belongs where the source was in the timeline, not at today's date.
+            context.restoreMediaTimestamp(targetUri, media.mimeType, sourceDateModified)
             targetUri
         } catch (e: Exception) {
             printWarning("Copy to $destRelPath failed: ${e.message}")
