@@ -61,7 +61,7 @@
     <string name="settings_open_trash_summary">Revisar, restaurar ou excluir itens permanentemente</string>
     <string name="move_album_to_trash">Mover o álbum para a lixeira</string>
     <string name="delete_album_permanently">Excluir álbum permanentemente</string>
-    <string name="album_trash_confirm_title">Mover álbum para Lixeira?</string>
+    <string name="album_trash_confirm_title">Mover o álbum para a Lixeira?</string>
     <string name="album_trash_confirm_summary">Todos os itens suportados neste álbum serão movidos para a Lixeira e podem ser restaurados posteriormente.</string>
     <string name="album_delete_confirm_title">Excluir álbum permanentemente?</string>
     <string name="album_delete_confirm_summary">Todos os itens neste álbum serão excluídos permanentemente. Isso não pode ser desfeito.</string>
@@ -351,7 +351,7 @@
     <string name="delete_vault">Excluir Cofre</string>
     <string name="unknown_vault">Cofre Desconhecido</string>
     <string name="hide">Ocultar</string>
-    <string name="ignored_albums_text">Selecione quais álbuns você não deseja ver na linha do tempo principal, na guia Álbuns ou em ambas.\n\nVocê pode selecionar álbuns individuais ou criar um padrão curinga para ocultar automaticamente qualquer álbum que corresponda a ele.</string>
+    <string name="ignored_albums_text">Selecione quais álbuns você não deseja ver na linha do tempo principal, na guia Álbuns ou em ambas.\n\nVocê pode selecionar álbuns individuais ou criar um padrão curinga para ocultar automaticamente qualquer álbum que o corresponda.</string>
     <string name="no_ignored_albums">Nenhum álbum ignorado</string>
     <string name="wildcard_summary_first">Curinga: %1$s\nÁlbuns combinados: %2$s</string>
     <string name="matched_albums">"Álbuns combinados: %1$s"</string>
@@ -365,7 +365,7 @@
     <string name="setup_location_options_timeline">Linha do Tempo</string>
     <string name="setup_location_options_both">Ambos</string>
     <string name="setup_location_type_title">Quem deve ser ignorado</string>
-    <string name="setup_location_type_subtitle">Você pode selecionar um único álbum ou criar um padrão Regex para corresponder a vários</string>
+    <string name="setup_location_type_subtitle">Você pode selecionar um único álbum ou criar um padrão de expressão regular para corresponder a vários</string>
     <string name="setup_location_types_single">Único Álbum</string>
     <string name="setup_location_types_multiple">Múltiplos Álbuns</string>
     <string name="setup_location_types_regex">Padrão Regex</string>
@@ -1078,7 +1078,7 @@
     <string name="media_type_gifs">GIFs</string>
     <string name="media_type_raw">Sem processamento</string>
     <string name="media_type_albums_setting_title">Mostrar álbuns por tipo de mídia</string>
-    <string name="media_type_albums_setting_summary">Adicionar álbuns rápidos para Vídeos, Fotos, GIFs e arquivos Raw no topo da aba Álbuns</string>
+    <string name="media_type_albums_setting_summary">Adicionar álbuns rápidos para Vídeos, Fotos, GIFs e arquivos RAW no topo da aba Álbuns</string>
     <!-- Album Sections -->
     <string name="album_sections_title">Organizar álbuns por seções</string>
     <string name="album_sections_summary">Categorizar automaticamente álbuns nas seções \"Comum\", \"Aplicativos\" e \"Outros\", com títulos</string>
