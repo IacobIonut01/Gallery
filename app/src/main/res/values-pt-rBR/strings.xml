@@ -1267,12 +1267,12 @@
     <string name="settings_security_summary">Encapsulamento, criptografia, pastas privadas</string>
     <string name="security_sandbox_header">Encapsulamento</string>
     <string name="security_metadata_isolation">Modo de isolamento de metadados</string>
-    <string name="security_metadata_isolation_summary">Controla como a análise de metadados é isolada entre os arquivos. Todos os modos são executados em um processo separado sem permissões — a diferença está na frequência com que esse processo é reiniciado.\n\Compartilhado — Todos os arquivos são analisados por meio de um único processo isolado de longa duração. Opção mais rápida, com sobrecarga mínima para a verificação da biblioteca. Se um arquivo malicioso travar o analisador, o processo é reiniciado automaticamente. Essa opção é recomendada para a maioria dos usuários.\n\nHíbrido — Os arquivos abertos no visualizador recebem um novo processo isolado; a indexação em segundo plano reutiliza um processo compartilhado. Os arquivos ativamente visualizados ficam totalmente isolados uns dos outros, enquanto as operações em lote permanecem rápidas. Essa opção é recomendada se você receber ocasionalmente arquivos de fontes não confiáveis.\n\nIndependente — Cada arquivo recebe seu próprio processo isolado, que é encerrado imediatamente após a análise. O isolamento mais robusto, sem qualquer contaminação cruzada, mas significativamente mais lento para bibliotecas grandes e consome mais bateria durante a varredura. Essa opção é recomendada apenas se você lida regularmente com arquivos não confiáveis.</string>
+    <string name="security_metadata_isolation_summary">Controla como a análise de metadados é isolada entre os arquivos. Todos os modos são executados em um processo separado sem permissões — a diferença está na frequência com que esse processo é reiniciado.\n\Compartilhado — Todos os arquivos são analisados por meio de um único processo isolado de longa duração. Opção mais rápida, com sobrecarga mínima para a verificação da biblioteca. Se um arquivo malicioso travar o analisador, o processo é reiniciado automaticamente. Essa opção é recomendada para a maioria dos usuários.\n\nHíbrido — Os arquivos abertos no visualizador recebem um novo processo isolado; a indexação em segundo plano reutiliza um processo compartilhado. Os arquivos ativamente visualizados ficam totalmente isolados uns dos outros, enquanto as operações em lote permanecem rápidas. Essa opção é recomendada se você receber ocasionalmente arquivos de fontes não confiáveis.\n\nIndividual — Cada arquivo recebe seu próprio processo isolado, que é encerrado imediatamente após a análise. O isolamento mais robusto, sem qualquer contaminação cruzada, mas significativamente mais lento para bibliotecas grandes e consome mais bateria durante a varredura. Essa opção é recomendada apenas se você lida regularmente com arquivos não confiáveis.</string>
     <string name="security_metadata_isolation_shared">Processo compartilhado</string>
     <string name="security_metadata_isolation_shared_summary">Processo único, reutilizado e isolado para todos os arquivos (padrão)</string>
     <string name="security_metadata_isolation_hybrid">Processo híbrido</string>
     <string name="security_metadata_isolation_hybrid_summary">Processo novo para arquivos abertos, compartilhado para indexação em lote</string>
-    <string name="security_metadata_isolation_per_file">Processo independente</string>
+    <string name="security_metadata_isolation_per_file">Processo individual</string>
     <string name="security_metadata_isolation_per_file_summary">Cada arquivo recebe seu próprio processo isolado (isolamento mais rigoroso, mais lento)</string>
     <string name="security_sandboxed_decode">Decodificação de imagens em ambiente encapsulado</string>
     <string name="security_sandboxed_decode_summary">Decodificar imagens HEIF/AVIF/JXL em um processo isolado</string>
@@ -1369,11 +1369,11 @@
     <string name="group_method_location">Mapas e localizações</string>
     <string name="customize_date_formats">Personalizar formatos de data</string>
     <!-- Story Cards -->
-    <string name="story_cards_settings_title">Cartões de história</string>
-    <string name="story_cards_settings_summary">Configurar cartões de história acima da linha do tempo</string>
-    <string name="story_cards_enabled">Mostrar cartões de história</string>
-    <string name="story_cards_enabled_summary">Exibir cartões de história acima da linha do tempo</string>
-    <string name="story_cards_order_title">Ordem e tipo dos cartões de história</string>
+    <string name="story_cards_settings_title">Cartões de lembranças</string>
+    <string name="story_cards_settings_summary">Configurar cartões de lembranças acima da linha do tempo</string>
+    <string name="story_cards_enabled">Mostrar cartões de lembranças</string>
+    <string name="story_cards_enabled_summary">Exibir cartões de lembranças acima da linha do tempo</string>
+    <string name="story_cards_order_title">Ordem e tipo dos cartões de lembranças</string>
     <string name="story_viewer_settings_title">Visualizador de histórias</string>
     <string name="story_viewer_auto_advance">Avanço automático</string>
     <string name="story_viewer_auto_advance_summary">Avançar automaticamente para a próxima foto</string>
