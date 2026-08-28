@@ -11,7 +11,9 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.os.CancellationSignal
 import android.provider.MediaStore
+import android.util.LruCache
 import android.util.Size
+import androidx.exifinterface.media.ExifInterface
 import com.bumptech.glide.Priority
 import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.Options
@@ -21,6 +23,7 @@ import com.bumptech.glide.load.model.ModelLoaderFactory
 import com.bumptech.glide.load.model.MultiModelLoaderFactory
 import com.bumptech.glide.request.target.Target
 import com.bumptech.glide.signature.ObjectKey
+import java.io.IOException
 
 /**
  * Phase 4 (#1076): dedicated local MediaStore motion-tier fast path.
@@ -43,6 +46,8 @@ class MediaStoreThumbnailModelLoader(
     private val contentResolver: ContentResolver
 ) : ModelLoader<Uri, Bitmap> {
 
+    private val bypassCache = LruCache<String, Boolean>(512)
+
     override fun handles(model: Uri): Boolean {
         return model.scheme == ContentResolver.SCHEME_CONTENT &&
                 model.authority == MediaStore.AUTHORITY
@@ -60,18 +65,42 @@ class MediaStoreThumbnailModelLoader(
         if (width <= 0 || height <= 0) return null
         if (width > MAX_DIMENSION || height > MAX_DIMENSION) return null
         // Key by uri + exact size so distinct tiers cache independently and stay stable.
-        val key = ObjectKey("mediastore-thumb:$model:${width}x$height")
+        val key = ObjectKey("mediastore-thumb-v2:$model:${width}x$height")
         return ModelLoader.LoadData(
             key,
-            MediaStoreThumbnailFetcher(contentResolver, model, width, height)
+            MediaStoreThumbnailFetcher(
+                contentResolver = contentResolver,
+                uri = model,
+                width = width,
+                height = height,
+                shouldBypass = { shouldBypassPlatformThumbnail(model) },
+            )
         )
+    }
+
+    private fun shouldBypassPlatformThumbnail(uri: Uri): Boolean {
+        val key = uri.toString()
+        bypassCache.get(key)?.let { return it }
+        val shouldBypass = runCatching {
+            if (contentResolver.getType(uri) != "image/jpeg") return@runCatching false
+            contentResolver.openFileDescriptor(uri, "r")?.use { descriptor ->
+                val exif = ExifInterface(descriptor.fileDescriptor)
+                shouldBypassPlatformThumbnail(
+                    hasEmbeddedThumbnail = exif.hasThumbnail(),
+                    lensModel = exif.getAttribute(ExifInterface.TAG_LENS_MODEL),
+                )
+            } ?: false
+        }.getOrDefault(false)
+        bypassCache.put(key, shouldBypass)
+        return shouldBypass
     }
 
     private class MediaStoreThumbnailFetcher(
         private val contentResolver: ContentResolver,
         private val uri: Uri,
         private val width: Int,
-        private val height: Int
+        private val height: Int,
+        private val shouldBypass: () -> Boolean,
     ) : DataFetcher<Bitmap> {
 
         private val cancellationSignal = CancellationSignal()
@@ -79,7 +108,13 @@ class MediaStoreThumbnailModelLoader(
 
         override fun loadData(priority: Priority, callback: DataFetcher.DataCallback<in Bitmap>) {
             if (cancelled) {
-                callback.onLoadFailed(java.io.IOException("cancelled"))
+                callback.onLoadFailed(IOException("cancelled"))
+                return
+            }
+            if (shouldBypass()) {
+                callback.onLoadFailed(
+                    IOException("Embedded front-camera thumbnail may not match the full image")
+                )
                 return
             }
             try {
@@ -127,3 +162,8 @@ class MediaStoreThumbnailModelLoader(
         private const val MAX_DIMENSION = 1080
     }
 }
+
+internal fun shouldBypassPlatformThumbnail(
+    hasEmbeddedThumbnail: Boolean,
+    lensModel: String?,
+): Boolean = hasEmbeddedThumbnail && lensModel?.contains("front camera", ignoreCase = true) == true
