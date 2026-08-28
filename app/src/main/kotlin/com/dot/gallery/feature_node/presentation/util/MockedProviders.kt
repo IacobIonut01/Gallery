@@ -141,6 +141,14 @@ class MockedMediaHandler: MediaHandler {
         newPath: String
     ): Boolean = false
 
+    override suspend fun <T : Media> copyMediaForMove(
+        mediaList: List<T>,
+        newPath: String,
+        onProgress: suspend (Float) -> Unit
+    ): List<Uri> = emptyList()
+
+    override suspend fun discardMediaCopies(uris: List<Uri>) = Unit
+
     override suspend fun probeMetadataSanitization(
         media: Media
     ): SanitizationCapability = SanitizationCapability(MediaContainerFormat.UNKNOWN, emptySet())

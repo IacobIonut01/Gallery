@@ -1,6 +1,7 @@
 package com.dot.gallery.feature_node.presentation.exif
 
 import android.media.MediaScannerConnection
+import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
@@ -59,6 +60,7 @@ import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.AlbumGroupWithAlbums
 import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.repository.MediaMutationResult
 import com.dot.gallery.feature_node.domain.util.isCloud
 import com.dot.gallery.feature_node.domain.util.mediaStoreVolumeName
 import com.dot.gallery.feature_node.domain.util.resolveMediaStoreVolume
@@ -75,6 +77,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -158,6 +161,57 @@ fun <T: Media> MoveMediaSheet(
 
     val request = rememberActivityResult { doMove() }
 
+    var pendingCopies by remember(mediaList) { mutableStateOf<List<Uri>>(emptyList()) }
+
+    val finishMove: () -> Unit = {
+        scope.launch {
+            context.contentResolver.notifyChange(
+                MediaStore.Files.getContentUri("external"), null
+            )
+            pendingCopies = emptyList()
+            sheetState.hide()
+            onFinish()
+        }
+    }
+
+    val deleteRequest = rememberActivityResult(
+        onResultCanceled = {
+            // The originals stay where they are, so drop the copies: a cancelled move must
+            // not leave a duplicate behind.
+            scope.launch {
+                handler.discardMediaCopies(pendingCopies)
+                pendingCopies = emptyList()
+                progress = 0f
+                sheetState.hide()
+            }
+        },
+        onResultOk = finishMove
+    )
+
+    /**
+     * Media stored in another app's `Android/media/<package>` folder cannot be renamed into an
+     * album. Copy the selection to the destination first, then let the system ask the user to
+     * confirm the removal of the originals - a single dialog for the whole batch.
+     */
+    fun startRestrictedMove(albumPath: String, localMedia: List<T>) {
+        scope.launch {
+            val copies = handler.copyMediaForMove(localMedia, albumPath) { copyProgress ->
+                withContext(Dispatchers.Main) { progress = copyProgress }
+            }
+            if (copies.isEmpty()) {
+                progress = 0f
+                toastError.show()
+                delay(1000)
+                sheetState.hide()
+                return@launch
+            }
+            pendingCopies = copies
+            if (handler.deleteMedia(deleteRequest, localMedia) == MediaMutationResult.COMPLETED) {
+                finishMove()
+            }
+        }
+    }
+
     fun startMove(albumPath: String) {
         val cloudMedia = mediaList.filter { it.isCloud }
         val localMedia = localMediaForDestination(albumPath)
@@ -167,12 +221,16 @@ fun <T: Media> MoveMediaSheet(
         }
         // For local media: use the standard write-request move flow
         if (localMedia.isNotEmpty()) {
-            scope.launch(Dispatchers.Main) {
-                newPath = albumPath
-                request.launchWriteRequest(
-                    localMedia.writeRequest(context.contentResolver),
-                    doMove
-                )
+            if (restrictedMoveSources(hasFullMediaAccess, localMedia).isNotEmpty()) {
+                startRestrictedMove(albumPath, localMedia)
+            } else {
+                scope.launch(Dispatchers.Main) {
+                    newPath = albumPath
+                    request.launchWriteRequest(
+                        localMedia.writeRequest(context.contentResolver),
+                        doMove
+                    )
+                }
             }
         } else {
             // All cloud — just finish after enqueue
@@ -424,13 +482,9 @@ fun <T: Media> MoveMediaSheet(
     AddAlbumSheet(
         sheetState = newAlbumSheetState,
         onFinish = { newAlbum ->
-            scope.launch(Dispatchers.Main) {
-                newPath = if (hasFullMediaAccess) newAlbum else "Pictures/$newAlbum"
-                request.launchWriteRequest(
-                    mediaList.writeRequest(context.contentResolver),
-                    doMove
-                )
-            }
+            // Same routing as an existing album so restricted sources reach the copy +
+            // delete-request path here too.
+            startMove(if (hasFullMediaAccess) newAlbum else "Pictures/$newAlbum")
         },
         onCancel = {
             if (newAlbumSheetState.isVisible) {
@@ -447,20 +501,6 @@ internal data class AlbumDestinationSource(
     val relativePath: String,
 )
 
-internal fun isAlbumDestinationEnabled(
-    hasFullMediaAccess: Boolean,
-    albumVolume: String,
-    albumRelativePath: String,
-    sources: List<AlbumDestinationSource>,
-    isCloudAlbum: Boolean = false,
-): Boolean {
-    if (isCloudAlbum) return false
-    if (hasFullMediaAccess) return true
-    return !albumRelativePath.isAndroidMediaPath() && sources.all {
-        it.volume == albumVolume && !it.relativePath.isAndroidMediaPath()
-    }
-}
-
 /**
  * A copy only reads the source through MediaStore and inserts a brand new file at the
  * destination, so restricted sources (another app's `Android/media/<package>` folder, or a
@@ -476,23 +516,36 @@ internal fun isAlbumCopyDestinationEnabled(
     return !albumRelativePath.isAndroidMediaPath()
 }
 
+/**
+ * A move needs the original gone once the destination holds it. Sources inside another app's
+ * `Android/media/<package>` folder cannot be renamed, so they take the copy + delete-request
+ * path instead: the destination rules are the same as for a copy, plus a source that actually
+ * differs from the destination folder.
+ */
 internal fun isAlbumMoveDestinationEnabled(
     hasFullMediaAccess: Boolean,
     albumVolume: String,
     albumRelativePath: String,
     sources: List<AlbumDestinationSource>,
     isCloudAlbum: Boolean = false,
-): Boolean = isAlbumDestinationEnabled(
-    hasFullMediaAccess = hasFullMediaAccess,
-    albumVolume = albumVolume,
-    albumRelativePath = albumRelativePath,
-    sources = sources,
-    isCloudAlbum = isCloudAlbum,
-) && (sources.isEmpty() || sources.any {
-    it.volume != albumVolume || it.relativePath.trim('/') != albumRelativePath.trim('/')
-})
+): Boolean {
+    if (!isAlbumCopyDestinationEnabled(hasFullMediaAccess, albumRelativePath, isCloudAlbum)) {
+        return false
+    }
+    if (!hasFullMediaAccess && sources.any { it.volume != albumVolume }) return false
+    return sources.isEmpty() || sources.any {
+        it.volume != albumVolume || it.relativePath.trim('/') != albumRelativePath.trim('/')
+    }
+}
 
-private fun String.isAndroidMediaPath(): Boolean = trim('/').let {
+/** Sources that only a copy + delete request can take out of their folder. */
+internal fun <T : Media> restrictedMoveSources(
+    hasFullMediaAccess: Boolean,
+    mediaList: List<T>,
+): List<T> = if (hasFullMediaAccess) emptyList()
+    else mediaList.filter { it.relativePath.isAndroidMediaPath() }
+
+internal fun String.isAndroidMediaPath(): Boolean = trim('/').let {
     it == "Android/media" || it.startsWith("Android/media/")
 }
 

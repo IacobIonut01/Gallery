@@ -540,10 +540,31 @@ class MediaRepositoryImpl(
         destVolume: String,
         destRelPath: String
     ): Boolean = withContext(Dispatchers.IO) {
-        val cr = context.contentResolver
+        val copiedUri = copyMediaTo(media, destVolume, destRelPath)
+            ?: return@withContext false
+        try {
+            contentResolver.delete(media.getUri(), null, null)
+            true
+        } catch (e: Exception) {
+            printWarning("Cross-volume move failed: ${e.message}")
+            contentResolver.delete(copiedUri, null, null)
+            false
+        }
+    }
+
+    /**
+     * Writes a copy of [media] into [destRelPath] on [destVolume] and returns its uri, or null
+     * when the copy could not be completed. Nothing is written on failure.
+     */
+    private suspend fun <T : Media> copyMediaTo(
+        media: T,
+        destVolume: String,
+        destRelPath: String
+    ): Uri? = withContext(Dispatchers.IO) {
+        val cr = contentResolver
         try {
             val srcUri = media.getUri()
-            val mediaType = cr.getType(srcUri) ?: return@withContext false
+            val mediaType = cr.getType(srcUri) ?: return@withContext null
             val isVideo = mediaType.startsWith("video")
 
             val targetUri = cr.insert(
@@ -555,7 +576,7 @@ class MediaRepositoryImpl(
                     put(MediaStore.MediaColumns.RELATIVE_PATH, destRelPath)
                     put(MediaStore.MediaColumns.IS_PENDING, 1)
                 }
-            ) ?: return@withContext false
+            ) ?: return@withContext null
 
             cr.openInputStream(srcUri)?.use { input ->
                 cr.openOutputStream(targetUri)?.use { output ->
@@ -563,23 +584,46 @@ class MediaRepositoryImpl(
                 }
             } ?: run {
                 cr.delete(targetUri, null, null)
-                return@withContext false
+                return@withContext null
             }
 
             cr.update(
                 targetUri,
-                ContentValues().apply {
-                    put(MediaStore.MediaColumns.IS_PENDING, 0)
-                    put(MediaStore.MediaColumns.DATE_MODIFIED, System.currentTimeMillis() / 1000)
-                },
+                ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 0) },
                 null, null
             )
-
-            cr.delete(srcUri, null, null)
-            true
+            targetUri
         } catch (e: Exception) {
-            printWarning("Cross-volume move failed: ${e.message}")
-            false
+            printWarning("Copy to $destRelPath failed: ${e.message}")
+            null
+        }
+    }
+
+    override suspend fun <T : Media> copyMediaForMove(
+        mediaList: List<T>,
+        newPath: String,
+        onProgress: suspend (Float) -> Unit
+    ): List<Uri> = withContext(Dispatchers.IO) {
+        val (destVolume, destRelPath) = resolveMediaStoreVolume(newPath)
+        val copies = mutableListOf<Uri>()
+        mediaList.forEachIndexed { index, media ->
+            val copiedUri = copyMediaTo(media, destVolume, destRelPath)
+            if (copiedUri == null) {
+                // Never leave half a move behind: the originals are still untouched at this
+                // point, so drop the copies we own and report the failure.
+                discardMediaCopies(copies)
+                return@withContext emptyList()
+            }
+            copies += copiedUri
+            onProgress((index + 1).toFloat() / mediaList.size)
+        }
+        copies
+    }
+
+    override suspend fun discardMediaCopies(uris: List<Uri>) = withContext(Dispatchers.IO) {
+        uris.forEach {
+            runCatching { contentResolver.delete(it, null, null) }
+                .onFailure { error -> printWarning("Failed to discard copy: ${error.message}") }
         }
     }
 

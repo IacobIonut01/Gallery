@@ -181,6 +181,15 @@ class MediaHandlerImpl @Inject constructor(
         newPath: String
     ): Boolean = repository.moveMedia(media, newPath)
 
+    override suspend fun <T : Media> copyMediaForMove(
+        mediaList: List<T>,
+        newPath: String,
+        onProgress: suspend (Float) -> Unit
+    ): List<Uri> = repository.copyMediaForMove(mediaList, newPath, onProgress)
+
+    override suspend fun discardMediaCopies(uris: List<Uri>) =
+        repository.discardMediaCopies(uris)
+
     override suspend fun probeMetadataSanitization(
         media: Media
     ): SanitizationCapability = repository.probeMetadataSanitization(media)

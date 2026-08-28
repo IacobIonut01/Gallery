@@ -143,6 +143,20 @@ interface MediaRepository {
         newPath: String
     ): Boolean
 
+    /**
+     * Copies [mediaList] into [newPath] and returns the uris of the copies, or an empty list if
+     * any of them failed - in which case nothing is left behind. Used to move media the app
+     * cannot rename, the originals being removed afterwards through a delete request.
+     */
+    suspend fun <T: Media> copyMediaForMove(
+        mediaList: List<T>,
+        newPath: String,
+        onProgress: suspend (Float) -> Unit = {}
+    ): List<Uri>
+
+    /** Removes copies made by [copyMediaForMove], for instance when the move is cancelled. */
+    suspend fun discardMediaCopies(uris: List<Uri>)
+
     suspend fun probeMetadataSanitization(media: Media): SanitizationCapability
 
     suspend fun sanitizeMediaMetadata(

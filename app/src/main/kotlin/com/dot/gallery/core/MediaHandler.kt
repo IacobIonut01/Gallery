@@ -47,6 +47,14 @@ interface MediaHandler {
 
     suspend fun <T: Media> moveMedia(media: T, newPath: String): Boolean
 
+    suspend fun <T: Media> copyMediaForMove(
+        mediaList: List<T>,
+        newPath: String,
+        onProgress: suspend (Float) -> Unit = {}
+    ): List<Uri>
+
+    suspend fun discardMediaCopies(uris: List<Uri>)
+
     suspend fun probeMetadataSanitization(media: Media): SanitizationCapability
 
     suspend fun sanitizeMediaMetadata(
