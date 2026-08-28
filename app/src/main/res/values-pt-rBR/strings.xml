@@ -7,8 +7,8 @@
     <string name="smart_scan_notification_stage_progress">%1$s · %2$d de %3$d · %4$d%% no total</string>
     <string name="smart_scan_notification_stage_progress_eta">%1$s · %2$d de %3$d · %4$d%% no total · %5$s</string>
     <string name="smart_scan_notification_stage_preparing">%1$s · Preparando</string>
-    <string name="change_app_name">Nome do app</string>
-    <string name="change_app_name_summary">Altera o nome do app exibido no seu iniciador</string>
+    <string name="change_app_name">Nome do aplicativo</string>
+    <string name="change_app_name_summary">Altera o nome do aplicativo exibido na sua tela inicial</string>
     <string name="favorite_icon_on_thumbnails">Ícone de favorito na miniatura</string>
     <string name="fav_position_disabled">Esconder</string>
     <string name="fav_position_bottom_end">Inferior direito</string>
@@ -76,7 +76,7 @@
     <string name="no_map_app">Não há nenhum aplicativo disponível para mostrar a localização</string>
     <string name="map_appearance_header">Mapa</string>
     <string name="map_appearance_title">Aparência do mapa</string>
-    <string name="map_appearance_description">Escolha se os mapas seguem a aparência do ReFra ou sempre usam cores de mapa claras ou escuras.</string>
+    <string name="map_appearance_description">Escolha se os mapas seguem a aparência do ReFra ou sempre usam cores de mapa claras/escuras.</string>
     <string name="map_appearance_system">Seguir aparência do app</string>
     <string name="map_appearance_light">Claro</string>
     <string name="map_appearance_dark">Escuro</string>
@@ -475,7 +475,7 @@
     <string name="no_metadata_found">Nenhum metadado encontrado</string>
     <string name="loading_metadata">Carregando metadados...</string>
     <string name="categorise_your_media">Categorize sua mídia</string>
-    <string name="disclaimer_classification">Sua mídia não é carregada em nenhum servidor, toda a classificação é feita localmente em seu dispositivo usando o TensorFlow-Lite com um modelo pré-treinado disponível nos ativos do aplicativo.</string>
+    <string name="disclaimer_classification">Sua mídia não é carregada em nenhum servidor, toda a classificação é feita localmente em seu dispositivo usando o TensorFlow-Lite com um modelo pré-treinado disponível nos recursos do aplicativo.</string>
     <string name="ai_category">Recursos inteligentes</string>
     <!-- AI Model Management -->
     <string name="ai_models_not_installed">Nenhum modelo de inteligência artificial está instalado. Acesse Configurações &gt; Recursos inteligentes e baixe um modelo de sua preferência.</string>
@@ -489,7 +489,7 @@
     <string name="ai_models_delete_confirm">Você tem certeza de que deseja excluir os modelos de inteligência artificial? Você irá precisar baixá-los novamente para poder usar os recursos de inteligência artificial.</string>
     <string name="ai_models_size">Tamanho do modelo: %s</string>
     <string name="ai_models_unavailable">Indisponível — requer um modelo de inteligência artificial</string>
-    <string name="ai_models_description">AI models enable intelligent image search and automatic media classification. The app uses CLIP (Contrastive Language-Image Pretraining) models in ONNX format to understand the content of your photos.</string>
+    <string name="ai_models_description">Os modelos de inteligência artificial permitem a pesquisa inteligente de imagens, a classificação automática de mídias e a extração interativa de objetos. O aplicativo utiliza os modelos CLIP (Contrastive Language-Image Pretraining) e MobileSAM (Segment Anything) no formato ONNX para compreender o conteúdo das suas fotos e segmentar os objetos.</string>
     <string name="ai_models_privacy_description">Todo o processamento de inteligência artificial é realizado inteiramente no seu dispositivo. Nenhuma imagem, consulta ou dado de classificação sai do seu celular. Os modelos são executados localmente usando o ONNX Runtime e não exigem conexão com a internet após serem baixados. O seu conteúdo multimídia permanece totalmente privado.</string>
     <string name="ai_models_source">Fonte</string>
     <string name="ai_models_source_url">github.com/IacobIonut01/ReFra</string>
@@ -579,7 +579,7 @@
     <string name="categories">Categorias</string>
     <string name="classified_media">Mídia %1$s classificada</string>
     <string name="scan_for_new_categories">Digitalizar para novas categorias</string>
-    <string name="ai_models_not_available">Nenhum modelo de inteligência artificial foi baixado. Acesse Configurações &gt; Recursos inteligentes e baixe um modelo de sua preferência.</string>
+    <string name="ai_models_not_available">Nenhum modelo de inteligência artificial foi baixado. Acesse Configurações → Recursos inteligentes e baixe um modelo de sua preferência.</string>
     <string name="scanning_media">Escaneando mídias…</string>
     <string name="date_header_title">Cabeçalho de data</string>
     <string name="media_view">Visualização de mídia</string>
@@ -598,7 +598,7 @@
     <string name="date_format_info_standard_section">Formatos comuns</string>
     <string name="auto_play_video">Reprodução automática de vídeo</string>
     <string name="auto_play_video_summary">Reproduzir o vídeo automaticamente durante a visualização de mídia</string>
-    <string name="video_surface_rebind">Corrigir vídeo preto ao ocultar</string>
+    <string name="video_surface_rebind">Corrigir o problema do vídeo preto ao ocultar</string>
     <string name="video_surface_rebind_summary">Atualizar a área do vídeo ao ocultar ou exibir os controles</string>
     <string name="shared_elements">Animar itens de mídia</string>
     <string name="shared_elements_summary">Animar o clique/retorno de itens de mídia usando transições de elementos compartilhados</string>
@@ -781,7 +781,7 @@
     <string name="refresh_persons">Atualizar pessoas</string>
     <string name="refresh_persons_summary">Verificar fotos locais e visualizações disponíveis na nuvem em busca de rostos</string>
     <string name="refresh_all_smart_features">Atualizar todos os Recursos Inteligentes</string>
-    <string name="refresh_all_smart_features_summary">Executar metadados, pesquisa, categorias e pessoas em série</string>
+    <string name="refresh_all_smart_features_summary">Executar em sequência metadados, pesquisa, categorias e pessoas</string>
     <string name="smart_features_include_ignored_albums">Incluir álbuns ignorados</string>
     <string name="smart_features_include_ignored_albums_summary">Incluir mídia oculta na linha do tempo nos Recursos Inteligentes e Pesquisa Inteligente. Alterar isso inicia uma atualização completa; álbuns bloqueados permanecem privados.</string>
     <string name="smart_features_include_ignored_albums_scan_running">Indisponível durante uma Verificação Inteligente. Aguarde a conclusão ou cancele-a no gerenciador da Verificação Inteligente.</string>
@@ -1459,7 +1459,7 @@
     <string name="cloud_nextcloud_signed_in_as">Conectado como %1$s</string>
     <string name="cloud_nextcloud_manual">Usar uma senha de app manualmente</string>
     <string name="cloud_nextcloud_app_password">Senha do app</string>
-    <string name="cloud_nextcloud_flow_unsupported">Este servidor não suporta login pelo navegador. Digite uma senha de app manualmente.</string>
+    <string name="cloud_nextcloud_flow_unsupported">Este servidor não permite iniciar sessão pelo navegador. Digite uma senha de aplicativo manualmente.</string>
     <string name="cloud_nextcloud_expired">A solicitação de login expirou. Tente novamente.</string>
     <string name="cloud_nextcloud_cancelled">Login no Nextcloud foi cancelado.</string>
     <string name="cloud_nextcloud_invalid_url">Digite um endereço válido do servidor Nextcloud.</string>
