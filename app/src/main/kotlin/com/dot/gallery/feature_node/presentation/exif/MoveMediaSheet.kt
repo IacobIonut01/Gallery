@@ -461,6 +461,21 @@ internal fun isAlbumDestinationEnabled(
     }
 }
 
+/**
+ * A copy only reads the source through MediaStore and inserts a brand new file at the
+ * destination, so restricted sources (another app's `Android/media/<package>` folder, or a
+ * different storage volume) do not need write access. Only the destination has to be writable.
+ */
+internal fun isAlbumCopyDestinationEnabled(
+    hasFullMediaAccess: Boolean,
+    albumRelativePath: String,
+    isCloudAlbum: Boolean = false,
+): Boolean {
+    if (isCloudAlbum) return false
+    if (hasFullMediaAccess) return true
+    return !albumRelativePath.isAndroidMediaPath()
+}
+
 internal fun isAlbumMoveDestinationEnabled(
     hasFullMediaAccess: Boolean,
     albumVolume: String,

@@ -64,8 +64,6 @@ import com.dot.gallery.core.presentation.components.SecurityInfoSheet
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.util.isCloud
-import com.dot.gallery.feature_node.domain.util.mediaStoreVolumeName
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumComponent
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
@@ -101,16 +99,11 @@ fun <T: Media> CopyMediaSheet(
     var pendingLockedAlbumPath by remember { mutableStateOf<String?>(null) }
     var searchQuery by remember { mutableStateOf("") }
     val mutex = Mutex()
-    val sources = mediaList.filter { !it.isCloud }.map {
-        AlbumDestinationSource(it.mediaStoreVolumeName, it.relativePath)
-    }
 
     fun Album.isCopyDestinationEnabled(): Boolean = absolutePath.isNotBlank() &&
-        isAlbumDestinationEnabled(
+        isAlbumCopyDestinationEnabled(
             hasFullMediaAccess = hasFullMediaAccess,
-            albumVolume = volume,
             albumRelativePath = relativePath,
-            sources = sources,
             isCloudAlbum = uri.scheme == "cloud" || relativePath.startsWith("cloud/"),
         )
 

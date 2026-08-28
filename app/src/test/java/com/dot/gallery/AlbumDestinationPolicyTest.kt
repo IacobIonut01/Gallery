@@ -94,6 +94,56 @@ class AlbumDestinationPolicyTest {
     }
 
     @Test
+    fun copyFromRestrictedSourceStaysEnabledForWritableAlbum() {
+        // Copying a WhatsApp image (Android/media/com.whatsapp/...) into an existing album only
+        // reads the source and inserts a new file at the destination.
+        val restrictedSource = listOf(
+            AlbumDestinationSource(
+                "external_primary",
+                "Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Images/",
+            ),
+        )
+
+        assertTrue(
+            isAlbumCopyDestinationEnabled(
+                hasFullMediaAccess = false,
+                albumRelativePath = "Pictures/Target/",
+            )
+        )
+        assertFalse(
+            isAlbumMoveDestinationEnabled(
+                false,
+                "external_primary",
+                "Pictures/Target/",
+                restrictedSource,
+            )
+        )
+    }
+
+    @Test
+    fun copyToRestrictedOrCloudAlbumStaysDisabled() {
+        assertFalse(
+            isAlbumCopyDestinationEnabled(
+                hasFullMediaAccess = false,
+                albumRelativePath = "Android/media/example.app/Pictures/",
+            )
+        )
+        assertFalse(
+            isAlbumCopyDestinationEnabled(
+                hasFullMediaAccess = true,
+                albumRelativePath = "cloud/IMMICH/Album",
+                isCloudAlbum = true,
+            )
+        )
+        assertTrue(
+            isAlbumCopyDestinationEnabled(
+                hasFullMediaAccess = true,
+                albumRelativePath = "Android/media/example.app/Pictures/",
+            )
+        )
+    }
+
+    @Test
     fun moveDisablesExactSourceFolderButAllowsDifferentSameNamedFolder() {
         val sources = listOf(AlbumDestinationSource("external_primary", "DCIM/Camera/"))
 
