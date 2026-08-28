@@ -29,24 +29,38 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerDefaults
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.ArrowForward
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisallowComposableCalls
@@ -68,14 +82,22 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.onVisibilityChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
@@ -110,7 +132,9 @@ import com.dot.gallery.core.decoder.format.ImageReencoder
 import com.dot.gallery.core.metadata.MetadataRemovalMode
 import com.dot.gallery.core.metadata.MetadataSaveMode
 import com.dot.gallery.core.navigateUp
+import com.dot.gallery.core.presentation.components.DragHandle
 import com.dot.gallery.core.presentation.components.OverwriteFallbackSheet
+import com.dot.gallery.core.presentation.components.SetupButton
 import com.dot.gallery.core.presentation.components.util.swipe
 import com.dot.gallery.core.setFollowTheme
 import com.dot.gallery.core.util.HdrCapabilities
@@ -151,6 +175,7 @@ import com.dot.gallery.feature_node.presentation.mediaview.slideshow.resolveSlid
 import com.dot.gallery.feature_node.presentation.mediaview.slideshow.slideshowDwellMillis
 import com.dot.gallery.feature_node.presentation.mediaview.components.video.SubtitleBottomSheet
 import com.dot.gallery.feature_node.presentation.mediaview.components.video.VideoPlayerController
+import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.FullBrightnessWindow
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
 import com.dot.gallery.feature_node.presentation.util.ProvideInsets
@@ -175,6 +200,7 @@ import com.github.panpf.sketch.sketch
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -189,6 +215,236 @@ import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.math.abs
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+
+internal enum class TapNavigationZone {
+    Start,
+    Center,
+    End,
+}
+
+internal fun resolveTapNavigationZone(
+    tapX: Float,
+    viewportWidth: Int,
+    isRtl: Boolean,
+): TapNavigationZone {
+    if (viewportWidth <= 0 || !tapX.isFinite()) return TapNavigationZone.Center
+    val physicalZone = when {
+        tapX < viewportWidth / 3f -> TapNavigationZone.Start
+        tapX > viewportWidth * 2f / 3f -> TapNavigationZone.End
+        else -> TapNavigationZone.Center
+    }
+    if (!isRtl || physicalZone == TapNavigationZone.Center) return physicalZone
+    return if (physicalZone == TapNavigationZone.Start) TapNavigationZone.End
+    else TapNavigationZone.Start
+}
+
+internal fun resolveTapNavigationTarget(
+    zone: TapNavigationZone,
+    currentPage: Int,
+    pageCount: Int,
+): Int? {
+    if (currentPage !in 0 until pageCount) return null
+    return when (zone) {
+        TapNavigationZone.Start -> (currentPage - 1).takeIf { it >= 0 }
+        TapNavigationZone.End -> (currentPage + 1).takeIf { it < pageCount }
+        TapNavigationZone.Center -> null
+    }
+}
+
+internal fun shouldHandleTapImmediately(
+    tapNavigationEnabled: Boolean,
+    zone: TapNavigationZone,
+    canNavigate: Boolean,
+): Boolean = tapNavigationEnabled && zone != TapNavigationZone.Center && canNavigate
+
+internal fun isTapNavigationPromptEligible(
+    tapNavigationEnabled: Boolean,
+    isStandalone: Boolean,
+    slideshowActive: Boolean,
+    pageCount: Int,
+    initialPageSetup: Boolean,
+    isOrdinaryImage: Boolean,
+    viewerSettled: Boolean,
+): Boolean = !tapNavigationEnabled &&
+        !isStandalone &&
+        !slideshowActive &&
+        pageCount > 1 &&
+        initialPageSetup &&
+        isOrdinaryImage &&
+        viewerSettled
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TapNavigationPromptSheet(
+    state: AppBottomSheetState,
+    onEnable: () -> Unit,
+) {
+    val scope = rememberCoroutineScope()
+    if (state.isVisible) {
+        ModalBottomSheet(
+            sheetState = state.sheetState,
+            onDismissRequest = { scope.launch { state.hide() } },
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+            tonalElevation = 0.dp,
+            dragHandle = { DragHandle() },
+            contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
+        ) {
+            TapNavigationPromptContent(
+                onEnable = {
+                    onEnable()
+                    scope.launch { state.hide() }
+                },
+                onNotNow = { scope.launch { state.hide() } },
+            )
+        }
+    }
+}
+
+@Composable
+private fun TapNavigationPromptContent(
+    onEnable: () -> Unit,
+    onNotNow: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .widthIn(max = 600.dp)
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 24.dp)
+            .padding(top = 8.dp, bottom = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.tap_sides_to_navigate_prompt_title),
+            style = MaterialTheme.typography.headlineSmall,
+            textAlign = TextAlign.Center,
+        )
+        Text(
+            text = stringResource(R.string.tap_sides_to_navigate_prompt_description),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+        TapNavigationPreview(
+            enabled = true,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            SetupButton(
+                onClick = onNotNow,
+                modifier = Modifier.weight(1f),
+                applyHorizontalPadding = false,
+                applyBottomPadding = false,
+                applyInsets = false,
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                text = stringResource(R.string.tap_sides_to_navigate_not_now),
+            )
+            SetupButton(
+                onClick = onEnable,
+                modifier = Modifier.weight(1f),
+                applyHorizontalPadding = false,
+                applyBottomPadding = false,
+                applyInsets = false,
+                text = stringResource(R.string.tap_sides_to_navigate_enable),
+            )
+        }
+        Text(
+            text = stringResource(R.string.tap_sides_to_navigate_settings_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+@Composable
+internal fun TapNavigationPreview(
+    enabled: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .aspectRatio(16f / 10f)
+            .clip(RoundedCornerShape(20.dp)),
+    ) {
+        Image(
+            painter = painterResource(R.drawable.image_sample_2),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop,
+        )
+        Spacer(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.18f)),
+        )
+        if (enabled) {
+            Row(modifier = Modifier.fillMaxSize()) {
+                TapNavigationZonePreview(
+                    icon = Icons.AutoMirrored.Outlined.ArrowBack,
+                    label = stringResource(R.string.tap_sides_to_navigate_previous),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.32f)),
+                )
+                TapNavigationZonePreview(
+                    icon = null,
+                    label = stringResource(R.string.tap_sides_to_navigate_controls),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxSize(),
+                )
+                TapNavigationZonePreview(
+                    icon = Icons.AutoMirrored.Outlined.ArrowForward,
+                    label = stringResource(R.string.tap_sides_to_navigate_next),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.32f)),
+                )
+            }
+        } else {
+            TapNavigationZonePreview(
+                icon = null,
+                label = stringResource(R.string.tap_sides_to_navigate_controls),
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+    }
+}
+
+@Composable
+private fun TapNavigationZonePreview(
+    icon: ImageVector?,
+    label: String,
+    modifier: Modifier,
+) {
+    Column(
+        modifier = modifier.padding(8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        if (icon != null) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = Color.White,
+            )
+        }
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = Color.White,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
 
 internal data class MediaViewerInitialSelection(
     val pageIndex: Int,
@@ -429,6 +685,7 @@ fun <T : Media> MediaViewScreen(
     val initialPage = initialSelection.pageIndex
     var currentPage by rememberSaveable(initialPage) { mutableIntStateOf(initialPage) }
     var isVideoZoomed by rememberSaveable { mutableStateOf(false) }
+    var isImageZoomed by rememberSaveable { mutableStateOf(false) }
 
     val pagerState = rememberPagerState(
         initialPage = initialPage,
@@ -465,6 +722,7 @@ fun <T : Media> MediaViewScreen(
         groupMultiSelectMode = false
         groupMultiSelectedIds = emptySet()
         isVideoZoomed = false
+        isImageZoomed = false
     }
 
     // Reset selected member if it was deleted (no longer in group members)
@@ -553,6 +811,7 @@ fun <T : Media> MediaViewScreen(
         }
     }
     val canAutoPlay by rememberVideoAutoplay()
+    var tapSidesToNavigate by Settings.Misc.rememberTapSidesToNavigate()
     val playWhenReady by rememberedDerivedState(
         currentMedia,
         canAutoPlay,
@@ -718,6 +977,7 @@ fun <T : Media> MediaViewScreen(
     }
 
     val userScrollEnabled by rememberedDerivedState { sheetState.currentDetent != FullyExpanded }
+    val tapNavigationPromptState = rememberAppBottomSheetState()
 
     // Tap on the media. In a slideshow we only toggle the minimal transport bar (leaving the
     // full viewer chrome hidden); otherwise we toggle the normal chrome as before.
@@ -731,6 +991,57 @@ fun <T : Media> MediaViewScreen(
     }
 
     var isLocked by rememberSaveable { mutableStateOf(false) }
+    var viewerWidth by remember { mutableIntStateOf(0) }
+    val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    val tapZoneAt: (Offset) -> TapNavigationZone = { offset ->
+        resolveTapNavigationZone(
+            tapX = offset.x,
+            viewportWidth = viewerWidth,
+            isRtl = isRtl,
+        )
+    }
+    val canNavigateByTap = !isStandalone &&
+            !slideshowActive &&
+            !isLocked &&
+            !isImageZoomed &&
+            !isVideoZoomed &&
+            !isCutoutActive &&
+            sheetState.currentDetent == imageOnlyDetent &&
+            sheetState.progress(imageOnlyDetent, expandedDetent) == 0f &&
+            !pagerState.isScrollInProgress
+    val tapNavigationTarget: (TapNavigationZone) -> Int? = { zone ->
+        if (canNavigateByTap) {
+            resolveTapNavigationTarget(
+                zone = zone,
+                currentPage = pagerState.settledPage,
+                pageCount = pagerItems.size,
+            )
+        } else {
+            null
+        }
+    }
+    val onMediaTap: (TapNavigationZone) -> Unit = { zone ->
+        if (!tapSidesToNavigate || zone == TapNavigationZone.Center || !canNavigateByTap) {
+            onMediaClick()
+        } else {
+            tapNavigationTarget(zone)?.let { targetPage ->
+                scope.launch {
+                    if (targetPage in pagerItems.indices && !pagerState.isScrollInProgress) {
+                        pagerState.scrollToPage(targetPage)
+                    }
+                }
+            }
+        }
+    }
+    val onImageImmediateTap: (Offset) -> Boolean = { offset ->
+        val zone = tapZoneAt(offset)
+        if (shouldHandleTapImmediately(tapSidesToNavigate, zone, tapNavigationTarget(zone) != null)) {
+            onMediaTap(zone)
+            true
+        } else {
+            false
+        }
+    }
     // Override back button/gesture when locked
     BackHandler(enabled = isLocked) { }
 
@@ -738,6 +1049,46 @@ fun <T : Media> MediaViewScreen(
     // flight. The viewer stays composed and gesture-active during the animation, so a second
     // swipe would trigger another navigateUp and pop past the gallery, exiting the app.
     var isDismissing by remember { mutableStateOf(false) }
+    var tapNavigationPromptClaimed by rememberSaveable { mutableStateOf(false) }
+    val currentTapNavigationMetadata = currentMedia?.id?.let(metadataState.value.metadataMap::get)
+    val tapNavigationPromptEligible = isTapNavigationPromptEligible(
+        tapNavigationEnabled = tapSidesToNavigate,
+        isStandalone = isStandalone,
+        slideshowActive = slideshowActive,
+        pageCount = pagerItems.size,
+        initialPageSetup = initialPageSetup,
+        isOrdinaryImage = currentMedia?.isImage == true &&
+                currentTapNavigationMetadata != null &&
+                !currentTapNavigationMetadata.isPanorama &&
+                !currentTapNavigationMetadata.isPhotosphere,
+        viewerSettled = navigationChromeVisible &&
+                !isLocked &&
+                !isDismissing &&
+                !isImageZoomed &&
+                !isCutoutActive &&
+                !pagerState.isScrollInProgress &&
+                sheetState.currentDetent == imageOnlyDetent &&
+                sheetState.progress(imageOnlyDetent, expandedDetent) == 0f,
+    )
+    LaunchedEffect(tapNavigationPromptEligible) {
+        if (tapNavigationPromptEligible && !tapNavigationPromptClaimed) {
+            tapNavigationPromptClaimed = true
+            if (Settings.Misc.claimTapSidesToNavigatePrompt(context)) {
+                try {
+                    tapNavigationPromptState.show()
+                } catch (error: Throwable) {
+                    withContext(NonCancellable) {
+                        Settings.Misc.releaseTapSidesToNavigatePrompt(context)
+                    }
+                    throw error
+                }
+            }
+        }
+    }
+    TapNavigationPromptSheet(
+        state = tapNavigationPromptState,
+        onEnable = { tapSidesToNavigate = true },
+    )
 
 
     LaunchedEffect(mediaState.value) {
@@ -989,7 +1340,9 @@ fun <T : Media> MediaViewScreen(
                 .background(backgroundColor)
         ) {
             HorizontalPager(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .onSizeChanged { viewerWidth = it.width },
                 userScrollEnabled = if (isLocked || isVideoZoomed || isCutoutActive || (slideshowActive && !slideshowPaused)) false else userScrollEnabled,
                 state = pagerState,
                 flingBehavior = PagerDefaults.flingBehavior(
@@ -1142,7 +1495,10 @@ fun <T : Media> MediaViewScreen(
                                         (if (showRotationHelper.value) normalizedRotation else 0)
                                 },
                                 onItemClick = { onMediaClick() },
+                                onImageTap = { offset -> onMediaTap(tapZoneAt(offset)) },
+                                onImageImmediateTap = onImageImmediateTap,
                                 onZoomChange = { zoomed -> isVideoZoomed = zoomed },
+                                onImageZoomChange = { zoomed -> isImageZoomed = zoomed },
                                 // Only the settled/current page drives the top-bar loading
                                 // indicator; neighbour pages that transiently compose during a
                                 // fling must not toggle it.
@@ -1224,6 +1580,16 @@ fun <T : Media> MediaViewScreen(
                                     val videoConfiguration = LocalConfiguration.current
                                     val width =
                                         remember(videoConfiguration) { resources.displayMetrics.widthPixels }
+                                    val navigateEndImmediately = shouldHandleTapImmediately(
+                                        tapNavigationEnabled = tapSidesToNavigate,
+                                        zone = TapNavigationZone.End,
+                                        canNavigate = tapNavigationTarget(TapNavigationZone.End) != null,
+                                    )
+                                    val navigateStartImmediately = shouldHandleTapImmediately(
+                                        tapNavigationEnabled = tapSidesToNavigate,
+                                        zone = TapNavigationZone.Start,
+                                        canNavigate = tapNavigationTarget(TapNavigationZone.Start) != null,
+                                    )
                                     if (!isVideoZoomed) {
                                         Spacer(
                                             modifier = Modifier
@@ -1233,18 +1599,28 @@ fun <T : Media> MediaViewScreen(
                                                 }
                                                 .align(Alignment.TopEnd)
                                                 .clip(CircleShape)
-                                                .combinedClickable(
-                                                    interactionSource = remember { MutableInteractionSource() },
-                                                    indication = null,
-                                                    onDoubleClick = {
-                                                        scope.launch {
-                                                            currentTime.longValue += 10 * 1000
-                                                            player.seekTo(currentTime.longValue)
-                                                            delay(100.milliseconds)
-                                                            player.play()
-                                                        }
-                                                    },
-                                                    onClick = { onMediaClick() }
+                                                .then(
+                                                    if (navigateEndImmediately) {
+                                                        Modifier.clickable(
+                                                            interactionSource = remember { MutableInteractionSource() },
+                                                            indication = null,
+                                                            onClick = { onMediaTap(TapNavigationZone.End) },
+                                                        )
+                                                    } else {
+                                                        Modifier.combinedClickable(
+                                                            interactionSource = remember { MutableInteractionSource() },
+                                                            indication = null,
+                                                            onDoubleClick = {
+                                                                scope.launch {
+                                                                    currentTime.longValue += 10 * 1000
+                                                                    player.seekTo(currentTime.longValue)
+                                                                    delay(100.milliseconds)
+                                                                    player.play()
+                                                                }
+                                                            },
+                                                            onClick = { onMediaClick() },
+                                                        )
+                                                    }
                                                 )
                                                 .swipe(onOffset = { offset = it }) {
                                                     if (!isDismissing) {
@@ -1263,18 +1639,28 @@ fun <T : Media> MediaViewScreen(
                                                 }
                                                 .align(Alignment.TopStart)
                                                 .clip(CircleShape)
-                                                .combinedClickable(
-                                                    interactionSource = remember { MutableInteractionSource() },
-                                                    indication = null,
-                                                    onDoubleClick = {
-                                                        scope.launch {
-                                                            currentTime.longValue -= 10 * 1000
-                                                            player.seekTo(currentTime.longValue)
-                                                            delay(100.milliseconds)
-                                                            player.play()
-                                                        }
-                                                    },
-                                                    onClick = { onMediaClick() }
+                                                .then(
+                                                    if (navigateStartImmediately) {
+                                                        Modifier.clickable(
+                                                            interactionSource = remember { MutableInteractionSource() },
+                                                            indication = null,
+                                                            onClick = { onMediaTap(TapNavigationZone.Start) },
+                                                        )
+                                                    } else {
+                                                        Modifier.combinedClickable(
+                                                            interactionSource = remember { MutableInteractionSource() },
+                                                            indication = null,
+                                                            onDoubleClick = {
+                                                                scope.launch {
+                                                                    currentTime.longValue -= 10 * 1000
+                                                                    player.seekTo(currentTime.longValue)
+                                                                    delay(100.milliseconds)
+                                                                    player.play()
+                                                                }
+                                                            },
+                                                            onClick = { onMediaClick() },
+                                                        )
+                                                    }
                                                 )
                                                 .swipe(onOffset = { offset = it }) {
                                                     if (!isDismissing) {

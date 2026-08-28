@@ -124,6 +124,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.material.icons.outlined.Refresh
@@ -144,6 +146,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.DisposableEffect
@@ -266,7 +269,8 @@ fun <T : Media> ZoomablePagerImage(
     media: T,
     rotationDisabled: Boolean,
     onImageRotated: (newRotation: Int) -> Unit,
-    onItemClick: () -> Unit,
+    onItemClick: (Offset) -> Unit,
+    onImmediateTap: (Offset) -> Boolean = { false },
     onSwipeDown: () -> Unit,
     onSubsamplingLoadingChange: (Boolean) -> Unit = {},
     onZoomTransformChange: (Transform) -> Unit = {},
@@ -291,6 +295,7 @@ fun <T : Media> ZoomablePagerImage(
     )
     val zoomState = rememberSketchZoomState()
     val currentOnZoomTransformChange by rememberUpdatedState(onZoomTransformChange)
+    val currentOnImmediateTap by rememberUpdatedState(onImmediateTap)
     LaunchedEffect(zoomState.zoomable, isSelected) {
         if (isSelected) {
             snapshotFlow { zoomState.zoomable.userTransform }.collect {
@@ -637,6 +642,35 @@ fun <T : Media> ZoomablePagerImage(
     var swipeOffsetY by remember { mutableIntStateOf(0) }
     val imageModifier = Modifier
         .fillMaxSize()
+        .pointerInput(Unit) {
+            awaitEachGesture {
+                val down = awaitFirstDown(
+                    requireUnconsumed = false,
+                    pass = PointerEventPass.Initial,
+                )
+                var isTap = true
+                var tracked = down
+                while (tracked.pressed) {
+                    val event = awaitPointerEvent(PointerEventPass.Initial)
+                    if (event.changes.count { it.pressed } > 1) isTap = false
+                    val next = event.changes.firstOrNull { it.id == down.id }
+                    if (next == null) {
+                        isTap = false
+                        break
+                    }
+                    tracked = next
+                    if ((tracked.position - down.position).getDistance() > viewConfiguration.touchSlop) {
+                        isTap = false
+                    }
+                }
+                if (isTap &&
+                    tracked.uptimeMillis - down.uptimeMillis < viewConfiguration.longPressTimeoutMillis &&
+                    currentOnImmediateTap(tracked.position)
+                ) {
+                    tracked.consume()
+                }
+            }
+        }
         .swipe(onSwipeDown = onSwipeDown, onOffset = { swipeOffsetY = it.y })
         .graphicsLayer {
             rotationZ = if (isRotating) rotationAnimation else 0f
@@ -791,8 +825,8 @@ fun <T : Media> ZoomablePagerImage(
                 }
             }
         } else {
-            // No active session: normal tap toggles the UI chrome.
-            onItemClick()
+            // No active session: pass the tap to the viewer.
+            onItemClick(offset)
         }
     }
 

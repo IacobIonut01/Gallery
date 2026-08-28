@@ -771,6 +771,33 @@ object Settings {
         fun rememberFullBrightnessView() =
             rememberPreference(key = FULL_BRIGHTNESS_VIEW, defaultValue = false)
 
+        private val TAP_SIDES_TO_NAVIGATE = booleanPreferencesKey("tap_sides_to_navigate")
+        private val TAP_SIDES_TO_NAVIGATE_PROMPT_SHOWN =
+            booleanPreferencesKey("tap_sides_to_navigate_prompt_shown")
+
+        @Composable
+        fun rememberTapSidesToNavigate() =
+            rememberPreference(key = TAP_SIDES_TO_NAVIGATE, defaultValue = false)
+
+        suspend fun claimTapSidesToNavigatePrompt(context: Context): Boolean {
+            var shouldShow = false
+            context.activeDataStore.edit { preferences ->
+                if (!preferences.contains(TAP_SIDES_TO_NAVIGATE_PROMPT_SHOWN)) {
+                    shouldShow = !preferences.contains(TAP_SIDES_TO_NAVIGATE)
+                    preferences[TAP_SIDES_TO_NAVIGATE_PROMPT_SHOWN] = true
+                }
+            }
+            return shouldShow
+        }
+
+        suspend fun releaseTapSidesToNavigatePrompt(context: Context) {
+            context.activeDataStore.edit { it.remove(TAP_SIDES_TO_NAVIGATE_PROMPT_SHOWN) }
+        }
+
+        suspend fun markTapSidesToNavigatePromptShown(context: Context) {
+            context.activeDataStore.edit { it[TAP_SIDES_TO_NAVIGATE_PROMPT_SHOWN] = true }
+        }
+
         private val AUTO_HIDE_ON_VIDEO_PLAY = booleanPreferencesKey("auto_hide_on_video_play")
 
         @Composable

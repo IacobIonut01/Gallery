@@ -64,6 +64,18 @@ class BackupModelsTest {
     }
 
     @Test
+    fun tapNavigationChoiceIsPortableButItsPromptMarkerIsNot() {
+        assertEquals(
+            PortableSettingType.BOOLEAN,
+            PortableBackupSettings.typeFor("tap_sides_to_navigate")
+        )
+        assertEquals(
+            null,
+            PortableBackupSettings.typeFor("tap_sides_to_navigate_prompt_shown")
+        )
+    }
+
+    @Test
     fun schemaTwoRecordsShareStableBackupLocalAccountIdentity() {
         val sourceAccountId = backupSourceAccountId("IMMICH", 42L)
         val manifest = BackupManifest(

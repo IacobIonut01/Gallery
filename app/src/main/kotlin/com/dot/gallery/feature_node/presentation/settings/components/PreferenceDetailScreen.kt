@@ -98,6 +98,7 @@ fun <T> SwitchPreferenceDetailScreen(
     description: String,
     preview: (@Composable (isChecked: Boolean) -> Unit)? = null,
     useColumnLayout: Boolean = false,
+    previewBelowSwitch: Boolean = false,
     options: List<PreferenceOption<T>> = emptyList(),
     onOptionSelected: ((T) -> Unit)? = null,
     customContent: (@Composable () -> Unit)? = null,
@@ -107,10 +108,25 @@ fun <T> SwitchPreferenceDetailScreen(
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     val initialFocusRequester = remember { FocusRequester() }
     val listState = rememberLazyListState()
+    @Composable
+    fun SwitchItem() {
+        SettingsItem(
+            modifier = Modifier.focusRequester(initialFocusRequester),
+            item = SettingsEntity.SwitchPreference(
+                title = switchLabel,
+                isChecked = isChecked,
+                onCheck = { onCheckedChange(it) },
+                enabled = enabled,
+                screenPosition = Position.Alone
+            )
+        )
+    }
     RequestInitialSettingsFocus(
         focusRequester = initialFocusRequester,
         enabled = enabled,
-        prepareFocus = { listState.scrollToItem(if (preview != null) 1 else 0) },
+        prepareFocus = {
+            listState.scrollToItem(if (preview != null && !previewBelowSwitch) 1 else 0)
+        },
     )
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -136,6 +152,10 @@ fun <T> SwitchPreferenceDetailScreen(
             ),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            if (previewBelowSwitch) {
+                item(key = "switch") { SwitchItem() }
+            }
+
             // Preview area — shows both on and off states
             if (preview != null) {
                 item(key = "preview") {
@@ -205,17 +225,8 @@ fun <T> SwitchPreferenceDetailScreen(
             }
 
             // Switch row
-            item(key = "switch") {
-                SettingsItem(
-                    modifier = Modifier.focusRequester(initialFocusRequester),
-                    item = SettingsEntity.SwitchPreference(
-                        title = switchLabel,
-                        isChecked = isChecked,
-                        onCheck = { onCheckedChange(it) },
-                        enabled = enabled,
-                        screenPosition = Position.Alone
-                    )
-                )
+            if (!previewBelowSwitch) {
+                item(key = "switch") { SwitchItem() }
             }
 
             // Description
@@ -303,6 +314,7 @@ fun SwitchPreferenceDetailScreen(
     description: String,
     preview: (@Composable (isChecked: Boolean) -> Unit)? = null,
     useColumnLayout: Boolean = false,
+    previewBelowSwitch: Boolean = false,
     customContent: (@Composable () -> Unit)? = null,
     enabled: Boolean = true,
 ) {
@@ -314,6 +326,7 @@ fun SwitchPreferenceDetailScreen(
         description = description,
         preview = preview,
         useColumnLayout = useColumnLayout,
+        previewBelowSwitch = previewBelowSwitch,
         options = emptyList(),
         onOptionSelected = null,
         customContent = customContent,

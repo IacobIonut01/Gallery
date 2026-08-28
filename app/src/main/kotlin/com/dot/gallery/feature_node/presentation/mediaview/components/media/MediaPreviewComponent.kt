@@ -18,6 +18,7 @@ import androidx.compose.runtime.NonRestartableComposable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.IntOffset
 import androidx.media3.exoplayer.ExoPlayer
 import com.dot.gallery.feature_node.domain.model.Media
@@ -44,6 +45,8 @@ fun <T : Media> MediaPreviewComponent(
     uiEnabled: Boolean,
     playWhenReady: State<Boolean>,
     onItemClick: () -> Unit,
+    onImageTap: (Offset) -> Unit = { onItemClick() },
+    onImageImmediateTap: (Offset) -> Boolean = { false },
     onSwipeDown: () -> Unit,
     rotationDisabled: Boolean,
     onImageRotated: (newRotation: Int) -> Unit,
@@ -54,6 +57,7 @@ fun <T : Media> MediaPreviewComponent(
     motionPhotoState: MotionPhotoState? = null,
     currentVault: Vault? = null,
     onZoomChange: (Boolean) -> Unit = {},
+    onImageZoomChange: (Boolean) -> Unit = {},
     onSubsamplingLoadingChange: (Boolean) -> Unit = {},
     onCutoutStateChanged: (Boolean) -> Unit = {},
     onCutoutController: (CutoutController?) -> Unit = {},
@@ -123,11 +127,13 @@ fun <T : Media> MediaPreviewComponent(
                         media = media,
                         rotationDisabled = rotationDisabled,
                         onImageRotated = onImageRotated,
-                        onItemClick = onItemClick,
+                        onItemClick = onImageTap,
+                        onImmediateTap = onImageImmediateTap,
                         onSwipeDown = onSwipeDown,
                         onSubsamplingLoadingChange = onSubsamplingLoadingChange,
                         onZoomTransformChange = {
                             if (isSelected) {
+                                onImageZoomChange(it.scaleX > 1.01f || it.scaleY > 1.01f)
                                 motionPhotoState?.videoTransform = it.toMotionPhotoVideoTransform()
                             }
                         },
