@@ -52,20 +52,33 @@ sealed class Screen(val route: String) {
         fun idAndPerson(id: Long, configId: Long, personId: String) =
             "$route?mediaId=$id&configId=$configId&personId=${Uri.encode(personId)}"
 
-        fun idAndLocation() = "$route?mediaId={mediaId}&gpsLocationNameCity={gpsLocationNameCity}&gpsLocationNameCountry={gpsLocationNameCountry}"
+        fun idAndLocation() = "$route?mediaId={mediaId}&gpsLocationNameCity={gpsLocationNameCity}" +
+                "&gpsLocationNameCountry={gpsLocationNameCountry}&latitude={latitude}&longitude={longitude}"
 
-        fun idAndLocation(id: Long, gpsLocationNameCity: String, gpsLocationNameCountry: String) =
-            "$route?mediaId=$id&gpsLocationNameCity=${Uri.encode(gpsLocationNameCity)}" +
-                    "&gpsLocationNameCountry=${Uri.encode(gpsLocationNameCountry)}"
+        fun idAndLocation(
+            id: Long,
+            gpsLocationNameCity: String,
+            gpsLocationNameCountry: String,
+            latitude: Double? = null,
+            longitude: Double? = null,
+        ) = "$route?mediaId=$id&gpsLocationNameCity=${Uri.encode(gpsLocationNameCity)}" +
+                "&gpsLocationNameCountry=${Uri.encode(gpsLocationNameCountry)}" +
+                "&latitude=${latitude?.toString().orEmpty()}&longitude=${longitude?.toString().orEmpty()}"
     }
 
     data object LocationTimelineScreen : Screen("location_timeline_screen") {
 
-        fun location() = "$route?gpsLocationNameCity={gpsLocationNameCity}&gpsLocationNameCountry={gpsLocationNameCountry}"
+        fun location() = "$route?gpsLocationNameCity={gpsLocationNameCity}" +
+                "&gpsLocationNameCountry={gpsLocationNameCountry}&latitude={latitude}&longitude={longitude}"
 
-        fun location(gpsLocationNameCity: String, gpsLocationNameCountry: String) =
-            "$route?gpsLocationNameCity=${Uri.encode(gpsLocationNameCity)}" +
-                    "&gpsLocationNameCountry=${Uri.encode(gpsLocationNameCountry)}"
+        fun location(
+            gpsLocationNameCity: String,
+            gpsLocationNameCountry: String,
+            latitude: Double? = null,
+            longitude: Double? = null,
+        ) = "$route?gpsLocationNameCity=${Uri.encode(gpsLocationNameCity)}" +
+                "&gpsLocationNameCountry=${Uri.encode(gpsLocationNameCountry)}" +
+                "&latitude=${latitude?.toString().orEmpty()}&longitude=${longitude?.toString().orEmpty()}"
 
     }
 

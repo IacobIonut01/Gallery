@@ -64,7 +64,8 @@ import com.dot.gallery.core.presentation.components.SecurityInfoSheet
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.util.volume
+import com.dot.gallery.feature_node.domain.util.isCloud
+import com.dot.gallery.feature_node.domain.util.mediaStoreVolumeName
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumComponent
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
@@ -100,6 +101,18 @@ fun <T: Media> CopyMediaSheet(
     var pendingLockedAlbumPath by remember { mutableStateOf<String?>(null) }
     var searchQuery by remember { mutableStateOf("") }
     val mutex = Mutex()
+    val sources = mediaList.filter { !it.isCloud }.map {
+        AlbumDestinationSource(it.mediaStoreVolumeName, it.relativePath)
+    }
+
+    fun Album.isCopyDestinationEnabled(): Boolean = absolutePath.isNotBlank() &&
+        isAlbumDestinationEnabled(
+            hasFullMediaAccess = hasFullMediaAccess,
+            albumVolume = volume,
+            albumRelativePath = relativePath,
+            sources = sources,
+            isCloudAlbum = uri.scheme == "cloud" || relativePath.startsWith("cloud/"),
+        )
 
     fun copyMedia(path: String) {
         scope.launch(Dispatchers.IO) {
@@ -309,20 +322,10 @@ fun <T: Media> CopyMediaSheet(
                                 items = filteredGroupAlbums,
                                 key = { item -> "group_album_${item.id}" }
                             ) { item ->
-                                val mediaVolume = (mediaList.firstOrNull()?.volume ?: item.volume)
-                                val albumOwnership =
-                                    item.relativePath.substringBeforeLast("Android/media/", "allow")
-                                val mediaOwnership =
-                                    mediaList.firstOrNull()?.relativePath?.substringBeforeLast(
-                                        "Android/media/",
-                                        "allow"
-                                    ) ?: albumOwnership
                                 AlbumComponent(
                                     modifier = Modifier.animateItem(),
                                     album = item,
-                                    isEnabled = hasFullMediaAccess || (item.volume == mediaVolume
-                                            && albumOwnership == "allow"
-                                            && mediaOwnership == "allow"),
+                                    isEnabled = item.isCopyDestinationEnabled(),
                                     onItemClick = { album ->
                                         if (album.isLocked) {
                                             if (!biometricState.isSupported) {
@@ -368,19 +371,9 @@ fun <T: Media> CopyMediaSheet(
                                 items = filteredUngroupedAlbums,
                                 key = { item -> item.toString() }
                             ) { item ->
-                                val mediaVolume = (mediaList.firstOrNull()?.volume ?: item.volume)
-                                val albumOwnership =
-                                    item.relativePath.substringBeforeLast("Android/media/", "allow")
-                                val mediaOwnership =
-                                    mediaList.firstOrNull()?.relativePath?.substringBeforeLast(
-                                        "Android/media/",
-                                        "allow"
-                                    ) ?: albumOwnership
                                 AlbumComponent(
                                     album = item,
-                                    isEnabled = hasFullMediaAccess || (item.volume == mediaVolume
-                                            && albumOwnership == "allow"
-                                            && mediaOwnership == "allow"),
+                                    isEnabled = item.isCopyDestinationEnabled(),
                                     onItemClick = { album ->
                                         if (album.isLocked) {
                                             if (!biometricState.isSupported) {

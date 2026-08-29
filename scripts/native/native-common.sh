@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+
+native_sha256() {
+    if command -v sha256sum >/dev/null 2>&1; then
+        sha256sum "$1" | awk '{print $1}'
+    else
+        shasum -a 256 "$1" | awk '{print $1}'
+    fi
+}
+
+native_normalize_archives() {
+    local strip_bin
+    strip_bin="$(ls -d "$NDK_DIR"/toolchains/llvm/prebuilt/*/bin/llvm-strip 2>/dev/null | head -n1)"
+    if [ -z "$strip_bin" ] || [ ! -x "$strip_bin" ]; then
+        echo "ERROR: NDK llvm-strip not found under $NDK_DIR" >&2
+        exit 1
+    fi
+    "$strip_bin" -S "$@"
+}
+
+native_prepare_source() {
+    local env_name="$1"
+    local key="$2"
+    local destination="$3"
+    local url="$4"
+    local expected_sha="$5"
+    local sentinel="$6"
+    local source_dir
+    source_dir="$(printenv "$env_name" 2>/dev/null || true)"
+    if [ -z "$source_dir" ] && [ -n "${NATIVE_SOURCES_DIR:-}" ] && [ -d "$NATIVE_SOURCES_DIR/$key" ]; then
+        source_dir="$NATIVE_SOURCES_DIR/$key"
+    fi
+
+    rm -rf "$destination"
+    mkdir -p "$destination"
+    if [ -n "$source_dir" ]; then
+        if [ ! -d "$source_dir" ]; then
+            echo "ERROR: $env_name does not point to a directory: $source_dir" >&2
+            exit 1
+        fi
+        cp -R "$source_dir"/. "$destination"/
+        rm -rf "$destination/.git"
+    else
+        local archive download_dir download actual_sha
+        if [ -n "${NATIVE_SOURCE_ARCHIVES_DIR:-}" ]; then
+            archive="$NATIVE_SOURCE_ARCHIVES_DIR/${url##*/}"
+        else
+            download_dir="${NATIVE_DOWNLOAD_CACHE:-$WORK/downloads}"
+            archive="$download_dir/$key-$expected_sha.tar.gz"
+            mkdir -p "$download_dir"
+        fi
+        if [ ! -f "$archive" ] || [ "$(native_sha256 "$archive")" != "$expected_sha" ]; then
+            case "${NATIVE_OFFLINE:-0}" in
+                1|true|TRUE|yes|YES)
+                    echo "ERROR: Missing or invalid offline source archive for $key: $archive" >&2
+                    exit 1
+                    ;;
+            esac
+            if [ -n "${NATIVE_SOURCE_ARCHIVES_DIR:-}" ]; then
+                echo "ERROR: Invalid vendored source archive for $key: $archive" >&2
+                exit 1
+            fi
+            download="$(mktemp "$download_dir/.$key-$expected_sha.XXXXXX")"
+            echo "==> Downloading $key"
+            if ! curl -fsSL "$url" -o "$download"; then
+                rm -f "$download"
+                exit 1
+            fi
+            actual_sha="$(native_sha256 "$download")"
+            if [ "$actual_sha" != "$expected_sha" ]; then
+                rm -f "$download"
+                echo "ERROR: SHA-256 mismatch for $key: expected $expected_sha, got $actual_sha" >&2
+                exit 1
+            fi
+            mv -f "$download" "$archive"
+        fi
+        actual_sha="$(native_sha256 "$archive")"
+        if [ "$actual_sha" != "$expected_sha" ]; then
+            echo "ERROR: SHA-256 mismatch for $key: expected $expected_sha, got $actual_sha" >&2
+            exit 1
+        fi
+        tar -xzf "$archive" --strip-components=1 -C "$destination"
+    fi
+
+    if [ ! -e "$destination/$sentinel" ]; then
+        echo "ERROR: Invalid $key source; missing $sentinel in $destination" >&2
+        exit 1
+    fi
+}
+
+native_set_reproducible_env() {
+    export LC_ALL=C
+    export TZ=UTC
+    umask 022
+    if [ -z "${SOURCE_DATE_EPOCH:-}" ]; then
+        SOURCE_DATE_EPOCH="$(git -C "$REPO_ROOT" log -1 --format=%ct 2>/dev/null || printf '1')"
+        export SOURCE_DATE_EPOCH
+    fi
+    local work_real ndk_real
+    work_real="$(cd "$WORK" && pwd -P)"
+    ndk_real="$(cd "$NDK_DIR" && pwd -P)"
+    NATIVE_REPRO_FLAGS="-ffile-prefix-map=$WORK=/usr/src/refra-native -ffile-prefix-map=$work_real=/usr/src/refra-native -ffile-prefix-map=$NDK_DIR=/opt/android-ndk -ffile-prefix-map=$ndk_real=/opt/android-ndk"
+    export NATIVE_REPRO_FLAGS
+}

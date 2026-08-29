@@ -49,7 +49,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.dot.gallery.R
-import com.dot.gallery.core.AlbumMediaLoadMode
 import com.dot.gallery.core.Constants
 import com.dot.gallery.core.LocalMediaDistributor
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
@@ -71,6 +70,7 @@ import com.dot.gallery.core.Settings
 import com.dot.gallery.core.Settings.Misc.rememberTimelineGroupByMonth
 import com.dot.gallery.core.Settings.Misc.rememberTimelineGroupByYear
 import com.dot.gallery.core.navigate
+import com.dot.gallery.core.restorableAlbumTimelineMediaFlow
 import com.dot.gallery.core.presentation.components.util.OnLifecycleEvent
 import com.dot.gallery.core.presentation.components.util.permissionGranted
 import com.dot.gallery.core.presentation.vm.NavigationViewModel
@@ -588,7 +588,7 @@ fun NavigationComp(
                     backStackEntry.arguments?.getLong("albumId") ?: -1
                 }
                 val albumMediaFlow = remember(argumentAlbumId) {
-                    distributor.albumTimelineMediaFlow(argumentAlbumId)
+                    distributor.restorableAlbumTimelineMediaFlow(argumentAlbumId)
                 }
                 val albumMediaState = albumMediaFlow.collectAsStateWithLifecycle(initialValue = MediaState())
                 AlbumTimelineScreen(
@@ -755,7 +755,7 @@ fun NavigationComp(
                 } else null
                 val privateFolderState = privateFolderViewModel?.mediaState?.collectAsStateWithLifecycle()
                 val albumMediaFlow = remember(albumId) {
-                    distributor.albumTimelineMediaFlow(albumId, AlbumMediaLoadMode.Complete)
+                    distributor.restorableAlbumTimelineMediaFlow(albumId)
                 }
                 val albumMediaState = albumMediaFlow.collectAsStateWithLifecycle(initialValue = MediaState())
                 val mediaState by rememberedDerivedState(albumId, privateFolderState?.value, albumMediaState.value) {
@@ -1661,17 +1661,23 @@ fun NavigationComp(
 
             composable(Screen.LocationTimelineScreen.location()) { backStackEntry ->
                 val gpsLocationNameCity: String = remember(backStackEntry) {
-                    backStackEntry.arguments?.getString("gpsLocationNameCity", "null").toString()
+                    backStackEntry.arguments?.getString("gpsLocationNameCity").orEmpty()
                 }
                 val gpsLocationNameCountry: String = remember(backStackEntry) {
-                    backStackEntry.arguments?.getString("gpsLocationNameCountry", "null").toString()
+                    backStackEntry.arguments?.getString("gpsLocationNameCountry").orEmpty()
+                }
+                val latitude = remember(backStackEntry) {
+                    backStackEntry.arguments?.getString("latitude")?.toDoubleOrNull()
+                }
+                val longitude = remember(backStackEntry) {
+                    backStackEntry.arguments?.getString("longitude")?.toDoubleOrNull()
                 }
 
                 val locationsViewModel =
                     hiltViewModel<LocationsViewModel, LocationsViewModel.Factory>(
                         key = "LocationViewModel",
                         creationCallback = { factory ->
-                            factory.create(gpsLocationNameCity, gpsLocationNameCountry)
+                            factory.create(gpsLocationNameCity, gpsLocationNameCountry, latitude, longitude)
                         }
                     )
                 val mediaState = locationsViewModel.mediaState.collectAsStateWithLifecycle()
@@ -1680,6 +1686,8 @@ fun NavigationComp(
                 LocationTimelineScreen(
                     gpsLocationNameCity = gpsLocationNameCity,
                     gpsLocationNameCountry = gpsLocationNameCountry,
+                    latitude = latitude,
+                    longitude = longitude,
                     mediaState = mediaState,
                     latestGeoMedia = latestGeoMedia,
                     metadataState = metadataState,
@@ -1724,10 +1732,16 @@ fun NavigationComp(
                     backStackEntry.arguments?.getString("mediaId")?.toLongOrNull() ?: -1
                 }
                 val gpsLocationNameCity: String = remember(backStackEntry) {
-                    backStackEntry.arguments?.getString("gpsLocationNameCity", "null").toString()
+                    backStackEntry.arguments?.getString("gpsLocationNameCity").orEmpty()
                 }
                 val gpsLocationNameCountry: String = remember(backStackEntry) {
-                    backStackEntry.arguments?.getString("gpsLocationNameCountry", "null").toString()
+                    backStackEntry.arguments?.getString("gpsLocationNameCountry").orEmpty()
+                }
+                val latitude = remember(backStackEntry) {
+                    backStackEntry.arguments?.getString("latitude")?.toDoubleOrNull()
+                }
+                val longitude = remember(backStackEntry) {
+                    backStackEntry.arguments?.getString("longitude")?.toDoubleOrNull()
                 }
                 val parentEntry = remember(backStackEntry) {
                     navController.getBackStackEntry(Screen.LocationTimelineScreen.location())
@@ -1738,7 +1752,7 @@ fun NavigationComp(
                         viewModelStoreOwner = parentEntry,
                         key = "LocationViewModel",
                         creationCallback = { factory ->
-                            factory.create(gpsLocationNameCity, gpsLocationNameCountry)
+                            factory.create(gpsLocationNameCity, gpsLocationNameCountry, latitude, longitude)
                         }
                     )
                 val mediaState = locationsViewModel.mediaState.collectAsStateWithLifecycle()
@@ -1751,7 +1765,7 @@ fun NavigationComp(
                     metadataState = metadataState,
                     albumsState = albumsState,
                     vaultState = vaultState,
-                    target = "location_${gpsLocationNameCity}_$gpsLocationNameCountry",
+                    target = "location_${gpsLocationNameCity}_${gpsLocationNameCountry}_${latitude}_$longitude",
                     allowBlur = allowBlur,
                     sharedTransitionScope = this@SharedTransitionLayout,
                     animatedContentScope = this

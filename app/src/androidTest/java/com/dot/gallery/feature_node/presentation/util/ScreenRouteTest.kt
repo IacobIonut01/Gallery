@@ -24,12 +24,22 @@ class ScreenRouteTest {
                 mapOf("configId" to "11", "personId" to value),
             ),
             RouteCase(
-                Screen.MediaViewScreen.idAndLocation(7L, value, otherValue),
-                mapOf("gpsLocationNameCity" to value, "gpsLocationNameCountry" to otherValue),
+                Screen.MediaViewScreen.idAndLocation(7L, value, otherValue, 0.0, 0.0),
+                mapOf(
+                    "gpsLocationNameCity" to value,
+                    "gpsLocationNameCountry" to otherValue,
+                    "latitude" to "0.0",
+                    "longitude" to "0.0",
+                ),
             ),
             RouteCase(
-                Screen.LocationTimelineScreen.location(value, otherValue),
-                mapOf("gpsLocationNameCity" to value, "gpsLocationNameCountry" to otherValue),
+                Screen.LocationTimelineScreen.location(value, otherValue, 0.0, 0.0),
+                mapOf(
+                    "gpsLocationNameCity" to value,
+                    "gpsLocationNameCountry" to otherValue,
+                    "latitude" to "0.0",
+                    "longitude" to "0.0",
+                ),
             ),
             RouteCase(Screen.CategoryViewScreen.category(value), mapOf("category" to value)),
             RouteCase(
@@ -60,6 +70,17 @@ class ScreenRouteTest {
             }
             assertReservedCharactersAreEncoded(case.route)
         }
+    }
+
+    @Test
+    fun coordinateOnlyLocationRouteKeepsZeroCoordinates() {
+        val route = Screen.LocationTimelineScreen.location("", "", 0.0, 0.0)
+        val parsed = Uri.parse(route)
+
+        assertEquals("", parsed.getQueryParameter("gpsLocationNameCity"))
+        assertEquals("", parsed.getQueryParameter("gpsLocationNameCountry"))
+        assertEquals("0.0", parsed.getQueryParameter("latitude"))
+        assertEquals("0.0", parsed.getQueryParameter("longitude"))
     }
 
     private fun assertReservedCharactersAreEncoded(route: String) {

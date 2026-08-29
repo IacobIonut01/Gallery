@@ -1,0 +1,14 @@
+What's new in 5.1.2:
+
+• Safer editor overwrites and lossless metadata removal
+• Trustworthy backup verification for WebDAV, SMB, and NFS
+• Reliable browsing and streaming for large NAS libraries
+
+Improvements:
+
+• Reproducible full native codec packaging
+
+Bug fixes:
+
+• Restored album move targets and deep scroll positions
+• Fixed JPEG XL metadata, location navigation, and external video launches

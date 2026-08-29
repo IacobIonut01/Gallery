@@ -38,6 +38,7 @@ import com.dot.gallery.cloud.immich.data.api.ImmichApiService
 import com.dot.gallery.cloud.immich.data.api.ImmichAuthInterceptor
 import com.dot.gallery.cloud.immich.data.dto.ImmichAssetDto
 import com.dot.gallery.cloud.immich.data.dto.ImmichBulkCheckItemDto
+import com.dot.gallery.cloud.immich.data.dto.ImmichBulkCheckResultItemDto
 import com.dot.gallery.cloud.immich.data.dto.ImmichBulkUploadCheckDto
 import com.dot.gallery.cloud.immich.data.dto.ImmichLoginDto
 import com.dot.gallery.cloud.immich.data.dto.ImmichSearchDto
@@ -70,12 +71,23 @@ import java.io.File
 import java.io.IOException
 import java.security.SecureRandom
 import java.security.cert.X509Certificate
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
+
+internal fun verifiedImmichAssetHashes(
+    hashes: List<String>,
+    results: List<ImmichBulkCheckResultItemDto>
+): Map<String, String> = results.mapNotNull { item ->
+    val index = item.id.toIntOrNull() ?: return@mapNotNull null
+    val hash = hashes.getOrNull(index) ?: return@mapNotNull null
+    val assetId = item.assetId?.takeIf { item.isSafeDuplicate() } ?: return@mapNotNull null
+    assetId to hash
+}.toMap()
 
 private class ContentResolverRequestBody(
     private val context: Context,
@@ -119,6 +131,7 @@ class ImmichProvider @Inject constructor(
     private var currentConfig: CloudServerConfig? = null
     private var baseUrl: String = ""
     private var apiService: ImmichApiService? = null
+    private val verifiedAssetIdsByHash = ConcurrentHashMap<String, String>()
 
     // Binds LAN-destined sockets to Wi-Fi so a local server is reachable even when that Wi-Fi
     // has no internet (Android would otherwise route via mobile data and time out).
@@ -134,6 +147,7 @@ class ImmichProvider @Inject constructor(
         authInterceptor.apiKey = null
         authInterceptor.accessToken = null
         baseUrl = ""
+        verifiedAssetIdsByHash.clear()
     }
 
     private fun applyInsecureTls(builder: OkHttpClient.Builder) {
@@ -166,6 +180,7 @@ class ImmichProvider @Inject constructor(
 
     override fun configure(config: CloudServerConfig) {
         currentConfig = config
+        verifiedAssetIdsByHash.clear()
         baseUrl = config.serverUrl.trimEnd('/')
         authInterceptor.apiKey = config.apiKey
         apiService = createApiService(baseUrl)
@@ -902,12 +917,16 @@ class ImmichProvider @Inject constructor(
             val items = hashes.mapIndexed { i, hash ->
                 ImmichBulkCheckItemDto(id = i.toString(), checksum = hash)
             }
-            val response = requireApi().bulkUploadCheck(ImmichBulkUploadCheckDto(assets = items))
+            val api = requireApi()
+            val response = api.bulkUploadCheck(ImmichBulkUploadCheckDto(assets = items))
             if (response.isSuccessful) {
-                val results = response.body()?.results?.associate {
-                    it.id to it.isSafeDuplicate()
-                } ?: emptyMap()
-                Result.success(results)
+                val configId = requireConfigId()
+                val responseItems = response.body()?.results.orEmpty()
+                verifiedImmichAssetHashes(hashes, responseItems).forEach { (assetId, hash) ->
+                    verifiedAssetIdsByHash[hash.lowercase()] = assetId
+                    cloudMediaDao.updateContentHash(assetId, ProviderType.IMMICH, configId, hash)
+                }
+                Result.success(responseItems.associate { it.id to it.isSafeDuplicate() })
             } else {
                 Result.failure(Exception("Bulk check failed: ${response.code()}"))
             }
@@ -917,6 +936,9 @@ class ImmichProvider @Inject constructor(
             Result.failure(e)
         }
     }
+
+    override fun verifiedRemoteId(contentHash: String): String? =
+        verifiedAssetIdsByHash[contentHash.lowercase()]
 
     // === Archive ===
 

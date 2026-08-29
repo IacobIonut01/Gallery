@@ -28,6 +28,14 @@ interface SyncCapableProvider : MediaCapabilityProvider {
     suspend fun downloadAsset(remoteId: String): Result<Uri>
     suspend fun getChangedSince(timestamp: Long): Result<List<CloudMediaEntity>>
     suspend fun bulkUploadCheck(hashes: List<String>): Result<Map<String, Boolean>>
+    suspend fun verifyRemoteContent(
+        localMedia: Media,
+        targetPath: String?,
+        contentHash: String
+    ): Result<Boolean> = bulkUploadCheck(listOf(contentHash)).map { it["0"] == true }
+
+    fun deterministicRemoteId(localMedia: Media, targetPath: String?): String? = null
+    fun verifiedRemoteId(contentHash: String): String? = null
 
     /**
      * Whether [localMedia] is already present at its deterministic upload target.

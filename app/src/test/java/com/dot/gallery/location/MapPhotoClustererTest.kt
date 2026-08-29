@@ -6,6 +6,10 @@ import com.dot.gallery.feature_node.presentation.location.AccountCloudMapMarker
 import com.dot.gallery.feature_node.presentation.location.MapGeoBounds
 import com.dot.gallery.feature_node.presentation.location.MapPhotoClusterer
 import com.dot.gallery.feature_node.presentation.location.MapPhotoPoint
+import com.dot.gallery.feature_node.domain.model.locationCoordinateKey
+import com.dot.gallery.feature_node.domain.model.locationLabelKey
+import com.dot.gallery.feature_node.domain.model.matchesLocationCoordinates
+import com.dot.gallery.feature_node.domain.model.matchesLocationName
 import com.dot.gallery.feature_node.presentation.location.mapMediaViewerRoute
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -134,6 +138,40 @@ class MapPhotoClustererTest {
 
         assertEquals("media_screen?mediaId=-42&albumId=-1&slideshow=false", route)
         assertFalse(route.contains("location_timeline_screen"))
+    }
+
+    @Test
+    fun visuallyIdenticalLocationLabelsShareOneIdentity() {
+        assertEquals(
+            locationLabelKey("Costinesti, Romania"),
+            locationLabelKey(" costinesti,\u00A0ROMANIA "),
+        )
+        assertTrue(matchesLocationName(null, "Costinesti, Romania", "Costinesti", "Romania"))
+        assertTrue(matchesLocationName("", "Costinesti, Romania", "Costinesti", "Romania"))
+        assertTrue(matchesLocationName("\u00A0", "Costinesti, Romania", "Costinesti", "Romania"))
+        assertTrue(matchesLocationName("Costinesti, Romania", "", "Costinesti", "Romania"))
+    }
+
+    @Test
+    fun partialLocationNameMatchesAvailableComponents() {
+        assertTrue(matchesLocationName("Cardiff", "United Kingdom", "", "united kingdom"))
+        assertTrue(matchesLocationName("Bristol", "United Kingdom", " bristol ", ""))
+        assertFalse(matchesLocationName("Bristol", "United Kingdom", "", ""))
+    }
+
+    @Test
+    fun zeroCoordinatesRemainAValidTimelineIdentity() {
+        assertTrue(matchesLocationCoordinates(0.0, 0.0, 0.0, 0.0))
+        assertEquals(locationCoordinateKey(-0.0, -0.0), locationCoordinateKey(0.0, 0.0))
+        assertFalse(matchesLocationCoordinates(0.0, 1.0, 0.0, 0.0))
+    }
+
+    @Test
+    fun coordinatesThatRoundToTheSameLabelKeepDistinctIdentity() {
+        assertNotEquals(
+            locationCoordinateKey(10.00001, 20.00001),
+            locationCoordinateKey(10.00002, 20.00002),
+        )
     }
 
     private fun point(id: Long, latitude: Double, longitude: Double, timestamp: Long) =

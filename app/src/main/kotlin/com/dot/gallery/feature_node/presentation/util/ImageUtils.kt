@@ -60,6 +60,7 @@ import kotlinx.coroutines.withContext
 import com.dot.gallery.cloud.util.CloudMediaDownloader
 import java.io.File
 import java.io.FileOutputStream
+import java.security.MessageDigest
 
 @Composable
 fun rememberBitmapPainter(bitmap: Bitmap): State<Painter> {
@@ -185,6 +186,33 @@ fun Uri.writeRequest(
         null
     }
 }
+
+fun Uri.trashRequest(contentResolver: ContentResolver): IntentSenderRequest? {
+    if (!SdkCompat.supportsTrash) return null
+    return try {
+        IntentSenderRequest.Builder(MediaStore.createTrashRequest(contentResolver, listOf(this), true))
+            .build()
+    } catch (e: IllegalArgumentException) {
+        printWarning("trashRequest: not a trashable media item: ${e.message}")
+        null
+    }
+}
+
+suspend fun Uri.matchesSha256(contentResolver: ContentResolver, expected: String): Boolean =
+    withContext(Dispatchers.IO) {
+        runCatching {
+            contentResolver.openInputStream(this@matchesSha256)?.use { input ->
+                val digest = MessageDigest.getInstance("SHA-256")
+                val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+                while (true) {
+                    val count = input.read(buffer)
+                    if (count < 0) break
+                    digest.update(buffer, 0, count)
+                }
+                digest.digest().joinToString("") { "%02x".format(it) } == expected
+            } ?: false
+        }.getOrDefault(false)
+    }
 
 /**
  * Launch an [IntentSenderRequest] or, if [request] is null (API 29 with legacy storage),

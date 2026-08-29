@@ -39,18 +39,26 @@ import com.dot.gallery.feature_node.domain.util.getUri
 import com.dot.gallery.feature_node.presentation.util.printDebug
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.runInterruptible
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
+import java.util.concurrent.ConcurrentHashMap
 import javax.net.ssl.SSLException
+
+internal fun canCacheWebDavChecksum(etag: String): Boolean = etag.isNotBlank()
 
 /**
  * Generic WebDAV-backed [RemoteMediaProvider]. All server-agnostic behavior lives
@@ -75,6 +83,13 @@ open class WebDavMediaProvider(
     private var currentConfig: CloudServerConfig? = null
     private var session: WebDavSession? = null
     private val webDavClient: WebDavClient? get() = session?.webDavClient
+    private val checksumMutex = Mutex()
+    private val remoteChecksumCache = ConcurrentHashMap<String, CachedRemoteChecksum>()
+
+    private data class CachedRemoteChecksum(
+        val revision: String,
+        val hash: String
+    )
 
     override val isAvailable: Boolean
         get() = currentConfig != null && _connectionState.value == ConnectionState.CONNECTED
@@ -93,10 +108,12 @@ open class WebDavMediaProvider(
         _connectionState.value = ConnectionState.DISCONNECTED
         currentConfig = null
         session = null
+        remoteChecksumCache.clear()
     }
 
     override fun configure(config: CloudServerConfig) {
         currentConfig = config
+        remoteChecksumCache.clear()
         val baseUrl = config.serverUrl.trimEnd('/')
         val username = config.username ?: ""
         val password = config.password ?: ""
@@ -404,6 +421,9 @@ open class WebDavMediaProvider(
 
     // === Sync ===
 
+    override fun deterministicRemoteId(localMedia: Media, targetPath: String?): String =
+        (targetPath?.trimEnd('/') ?: dialect.defaultUploadFolder) + "/${localMedia.label}"
+
     override suspend fun uploadAsset(localMedia: Media, targetPath: String?): Result<CloudMediaEntity> =
         withContext(Dispatchers.IO) {
             try {
@@ -412,7 +432,7 @@ open class WebDavMediaProvider(
                 val inputStream = context.contentResolver.openInputStream(localMedia.getUri())
                     ?: return@withContext Result.failure(Exception("Cannot open media file"))
                 val fileName = localMedia.label
-                val remotePath = (targetPath?.trimEnd('/') ?: dialect.defaultUploadFolder) + "/$fileName"
+                val remotePath = deterministicRemoteId(localMedia, targetPath)
                 val mimeType = localMedia.mimeType
                 val tempFile = File(context.cacheDir, "wd_upload_${System.currentTimeMillis()}_$fileName")
                 try {
@@ -469,7 +489,45 @@ open class WebDavMediaProvider(
     }
 
     override suspend fun bulkUploadCheck(hashes: List<String>): Result<Map<String, Boolean>> =
-        Result.success(hashes.associateWith { false })
+        Result.success(hashes.indices.associate { it.toString() to false })
+
+    override suspend fun verifyRemoteContent(
+        localMedia: Media,
+        targetPath: String?,
+        contentHash: String
+    ): Result<Boolean> = withContext(Dispatchers.IO) {
+        try {
+            val client = webDavClient ?: throw IllegalStateException("Not configured")
+            val configId = currentConfig?.id ?: throw IllegalStateException("Not configured")
+            val remotePath = deterministicRemoteId(localMedia, targetPath)
+            val resource = client.propFind(remotePath, depth = 0).firstOrNull()
+                ?.takeUnless { it.isCollection }
+                ?: return@withContext Result.success(false)
+            currentCoroutineContext().ensureActive()
+            val revision = "${resource.etag}|${resource.contentLength}|${resource.lastModified}"
+            val canCache = canCacheWebDavChecksum(resource.etag)
+            val remoteHash = checksumMutex.withLock {
+                val cached = remoteChecksumCache[remotePath]
+                    ?.takeIf { canCache && it.revision == revision }
+                    ?.hash
+                cached ?: runInterruptible { client.sha1(remotePath) }.also { hash ->
+                    if (canCache) {
+                        remoteChecksumCache[remotePath] = CachedRemoteChecksum(revision, hash)
+                    } else {
+                        remoteChecksumCache.remove(remotePath)
+                    }
+                }
+            }
+            if (cloudMediaDao.updateContentHash(remotePath, dialect.providerType, configId, remoteHash) == 0) {
+                cloudMediaDao.insert(resource.toCloudMediaEntity(configId).copy(contentHash = remoteHash))
+            }
+            Result.success(remoteHash.equals(contentHash, ignoreCase = true))
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 
     /**
      * Plain WebDAV has no content-hash index, so an asset is "already uploaded" when a
@@ -482,7 +540,7 @@ open class WebDavMediaProvider(
         withContext(Dispatchers.IO) {
             try {
                 val client = webDavClient ?: return@withContext false
-                val remotePath = (targetPath?.trimEnd('/') ?: dialect.defaultUploadFolder) + "/${localMedia.label}"
+                val remotePath = deterministicRemoteId(localMedia, targetPath)
                 val resource = runCatching { client.propFind(remotePath, depth = 0) }
                     .getOrNull()?.firstOrNull() ?: return@withContext false
                 if (resource.isCollection) return@withContext false
@@ -636,7 +694,6 @@ open class WebDavMediaProvider(
             timestamp = ts,
             size = contentLength,
             syncState = SyncState.REMOTE_ONLY,
-            contentHash = etag.trim('"'),
             favorite = dialect.readsFavoriteFlag && favorite,
             thumbnailUrl = thumbUrl ?: (webDavClient?.getDownloadUrl(remotePath) ?: ""),
             originalUrl = webDavClient?.getDownloadUrl(remotePath) ?: "",

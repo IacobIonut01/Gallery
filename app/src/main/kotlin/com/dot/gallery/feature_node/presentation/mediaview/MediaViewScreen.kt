@@ -107,6 +107,8 @@ import com.dot.gallery.core.Settings.Misc.rememberExtendedDateHeaderFormat
 import com.dot.gallery.core.Settings.Misc.rememberShowMediaViewDateHeader
 import com.dot.gallery.core.Settings.Misc.rememberVideoAutoplay
 import com.dot.gallery.core.decoder.format.ImageReencoder
+import com.dot.gallery.core.metadata.MetadataRemovalMode
+import com.dot.gallery.core.metadata.MetadataSaveMode
 import com.dot.gallery.core.navigateUp
 import com.dot.gallery.core.presentation.components.OverwriteFallbackSheet
 import com.dot.gallery.core.presentation.components.util.swipe
@@ -188,6 +190,38 @@ import kotlin.math.abs
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
+internal data class MediaViewerInitialSelection(
+    val pageIndex: Int,
+    val memberId: Long?,
+    val found: Boolean,
+)
+
+internal fun shouldDismissMissingMediaTarget(
+    isLoading: Boolean,
+    targetFound: Boolean,
+    hasMedia: Boolean,
+    isStandalone: Boolean,
+): Boolean = !isLoading && !targetFound && hasMedia && !isStandalone
+
+internal fun resolveMediaViewerInitialSelection(
+    mediaId: Long,
+    pagerMediaIds: List<Long>,
+    mediaGroupIds: Map<Long, List<Long>>,
+): MediaViewerInitialSelection {
+    val directIndex = pagerMediaIds.indexOf(mediaId)
+    if (directIndex >= 0) {
+        return MediaViewerInitialSelection(directIndex, null, true)
+    }
+    val groupEntry = mediaGroupIds.entries.firstOrNull { mediaId in it.value }
+        ?: return MediaViewerInitialSelection(0, null, false)
+    val groupIndex = pagerMediaIds.indexOf(groupEntry.key)
+    return if (groupIndex >= 0) {
+        MediaViewerInitialSelection(groupIndex, mediaId, true)
+    } else {
+        MediaViewerInitialSelection(0, null, false)
+    }
+}
+
 @Composable
 fun <T> rememberedDerivedState(
     key: Any? = Unit,
@@ -220,6 +254,7 @@ fun <T : Media> MediaViewScreenRoute(
     toggleRotate: () -> Unit,
     paddingValues: PaddingValues,
     isStandalone: Boolean = false,
+    initialUiVisible: Boolean = true,
     mediaId: Long,
     target: String? = null,
     mediaState: State<MediaState<out T>>,
@@ -239,6 +274,7 @@ fun <T : Media> MediaViewScreenRoute(
         toggleRotate = toggleRotate,
         paddingValues = paddingValues,
         isStandalone = isStandalone,
+        initialUiVisible = initialUiVisible,
         mediaId = mediaId,
         target = target,
         mediaState = mediaState,
@@ -276,6 +312,7 @@ fun <T : Media> MediaViewScreen(
     toggleRotate: () -> Unit,
     paddingValues: PaddingValues,
     isStandalone: Boolean = false,
+    initialUiVisible: Boolean = true,
     mediaId: Long,
     target: String? = null,
     mediaState: State<MediaState<out T>>,
@@ -297,7 +334,7 @@ fun <T : Media> MediaViewScreen(
         MediaViewViewModel.MetadataSanitizationUiState.Idle
     ),
     probeMetadataSanitization: (Media) -> Unit = {},
-    sanitizeMetadata: (Media, com.dot.gallery.core.metadata.MetadataRemovalMode) -> Unit = { _, _ -> },
+    sanitizeMetadata: (Media, MetadataRemovalMode, MetadataSaveMode) -> Unit = { _, _, _ -> },
     resetMetadataSanitization: () -> Unit = {},
     motionPhotoStateFactory: @Composable (Media?) -> MotionPhotoState = { remember { MotionPhotoState() } },
 ) = CompositionLocalProvider(
@@ -375,10 +412,21 @@ fun <T : Media> MediaViewScreen(
         } else filtered
     }
 
-    // Use only primitive ids/sizes as saveable keys (avoid passing full media list object)
-    val initialPage = rememberSaveable(mediaId, pagerItems.size) {
-        pagerItems.indexOfFirst { it.id == mediaId }.coerceAtLeast(0)
+    val initialSelection by rememberedDerivedState(
+        mediaId,
+        pagerItems,
+        mediaState.value.mediaGroups,
+    ) {
+        resolveMediaViewerInitialSelection(
+            mediaId = mediaId,
+            pagerMediaIds = pagerItems.map { it.id },
+            mediaGroupIds = mediaState.value.mediaGroups.mapValues { (_, members) ->
+                members.map { it.id }
+            },
+        )
     }
+    // Use only primitive ids/sizes as saveable keys (avoid passing full media list object)
+    val initialPage = initialSelection.pageIndex
     var currentPage by rememberSaveable(initialPage) { mutableIntStateOf(initialPage) }
     var isVideoZoomed by rememberSaveable { mutableStateOf(false) }
 
@@ -397,7 +445,12 @@ fun <T : Media> MediaViewScreen(
     }
 
     // Track which group member is selected (null = show representative/pager item)
-    var selectedMemberOverrideId by rememberSaveable { mutableStateOf<Long?>(null) }
+    var selectedMemberOverrideId by rememberSaveable(mediaId, initialSelection.memberId) {
+        mutableStateOf(initialSelection.memberId)
+    }
+    var selectedMemberPage by rememberSaveable(mediaId, initialPage) {
+        mutableIntStateOf(initialPage)
+    }
 
     // Multi-select state for group members
     var groupMultiSelectMode by rememberSaveable { mutableStateOf(false) }
@@ -405,7 +458,10 @@ fun <T : Media> MediaViewScreen(
 
     // Select first group member when swiping to a different page
     LaunchedEffect(currentPage) {
-        selectedMemberOverrideId = null
+        if (initialPageSetup && currentPage != selectedMemberPage) {
+            selectedMemberOverrideId = null
+            selectedMemberPage = currentPage
+        }
         groupMultiSelectMode = false
         groupMultiSelectedIds = emptySet()
         isVideoZoomed = false
@@ -438,12 +494,26 @@ fun <T : Media> MediaViewScreen(
         ensureMetadataAvailable(currentMedia, metadataState.value)
     }
 
-    LaunchedEffect(mediaId, initialPage, mediaState.value.isLoading) {
-        if (!mediaState.value.isLoading && !initialPageSetup) {
+    LaunchedEffect(mediaId, initialPage, initialSelection.found, mediaState.value.isLoading) {
+        if (!mediaState.value.isLoading && initialSelection.found && !initialPageSetup) {
             if (pagerState.currentPage != initialPage) {
                 pagerState.scrollToPage(initialPage)
             }
+            currentPage = initialPage
+            selectedMemberPage = initialPage
+            selectedMemberOverrideId = initialSelection.memberId
             initialPageSetup = true
+        }
+    }
+    LaunchedEffect(mediaState.value.isLoading, initialSelection.found, pagerItems.isNotEmpty()) {
+        if (shouldDismissMissingMediaTarget(
+                isLoading = mediaState.value.isLoading,
+                targetFound = initialSelection.found,
+                hasMedia = pagerItems.isNotEmpty(),
+                isStandalone = isStandalone,
+            )
+        ) {
+            eventHandler.navigateUp()
         }
     }
 
@@ -499,7 +569,7 @@ fun <T : Media> MediaViewScreen(
     // and all source writes are unavailable.
     val showInfo by rememberedDerivedState { currentMedia?.trashed == 0 }
 
-    var showUI by rememberSaveable { mutableStateOf(true) }
+    var showUI by rememberSaveable { mutableStateOf(initialUiVisible) }
     val navigationChromeVisible = !animatedContentScope.transition.isRunning
     val showViewerChrome = showUI && navigationChromeVisible
     // True while the current cloud/remote page is downloading its full-size original for
@@ -558,6 +628,10 @@ fun <T : Media> MediaViewScreen(
         MediaViewViewModel.RotationStage.SAVING -> stringResource(R.string.rotate_stage_saving)
         MediaViewViewModel.RotationStage.UPLOADING -> stringResource(R.string.rotate_stage_uploading)
         null -> null
+    }
+
+    LaunchedEffect(initialUiVisible, showUI) {
+        if (!initialUiVisible && !showUI) windowInsetsController.toggleSystemBars(show = false)
     }
 
     BackHandler(!showUI && !slideshowActive) {
@@ -1114,7 +1188,7 @@ fun <T : Media> MediaViewScreen(
                                 ) {
                                     val hideUiOnPlay by rememberAutoHideOnVideoPlay()
                                     var uiInteracted by remember { mutableStateOf(false) }
-                                    LaunchedEffect(isPlaying.value, hideUiOnPlay) {
+                                    LaunchedEffect(isPlaying.value, hideUiOnPlay, showUI) {
                                         if (isPlaying.value && showUI && hideUiOnPlay && !uiInteracted) {
                                             // Wait up to 2s, but abort the auto-hide the moment the
                                             // user starts dragging the info sheet. During an active

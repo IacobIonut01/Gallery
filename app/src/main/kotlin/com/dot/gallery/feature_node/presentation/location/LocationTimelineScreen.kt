@@ -72,6 +72,7 @@ import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.util.Locale
 
 @OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3Api::class,
     ExperimentalFoundationApi::class
@@ -80,6 +81,8 @@ import kotlinx.coroutines.withContext
 fun LocationTimelineScreen(
     gpsLocationNameCity: String,
     gpsLocationNameCountry: String,
+    latitude: Double?,
+    longitude: Double?,
     mediaState: State<MediaState<Media.UriMedia>>,
     latestGeoMedia: GeoMedia?,
     metadataState: State<MediaMetadataState>,
@@ -91,6 +94,18 @@ fun LocationTimelineScreen(
     val eventHandler = LocalEventHandler.current
     val selector = LocalMediaSelector.current
     val selectedMedia = selector.selectedMedia.collectAsStateWithLifecycle()
+    val locationTitle = remember(gpsLocationNameCity, gpsLocationNameCountry, latitude, longitude) {
+        listOf(gpsLocationNameCity, gpsLocationNameCountry)
+            .filter(String::isNotBlank)
+            .joinToString(", ")
+            .ifBlank {
+                if (latitude != null && longitude != null) {
+                    String.format(Locale.getDefault(), "%.4f, %.4f", latitude, longitude)
+                } else {
+                    ""
+                }
+            }
+    }
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
         state = rememberTopAppBarState(),
@@ -113,14 +128,14 @@ fun LocationTimelineScreen(
                     ),
                     title = {
                         TwoLinedDateToolbarTitle(
-                            albumName = "$gpsLocationNameCity, $gpsLocationNameCountry",
+                            albumName = locationTitle,
                             dateHeader = mediaState.value.dateHeader
                         )
                     },
                     navigationIcon = {
                         NavigationButton(
                             albumId = -1,
-                            target = "location_${gpsLocationNameCity}_$gpsLocationNameCountry",
+                            target = "location_${gpsLocationNameCity}_${gpsLocationNameCountry}_${latitude}_$longitude",
                             alwaysGoBack = true,
                         )
                     },
@@ -164,7 +179,15 @@ fun LocationTimelineScreen(
                 sharedTransitionScope = sharedTransitionScope,
                 animatedContentScope = animatedContentScope,
                 onMediaClick = {
-                    eventHandler.navigate(Screen.MediaViewScreen.idAndLocation(it.id, gpsLocationNameCity, gpsLocationNameCountry))
+                    eventHandler.navigate(
+                        Screen.MediaViewScreen.idAndLocation(
+                            id = it.id,
+                            gpsLocationNameCity = gpsLocationNameCity,
+                            gpsLocationNameCountry = gpsLocationNameCountry,
+                            latitude = latitude,
+                            longitude = longitude,
+                        )
+                    )
                 },
             )
         }

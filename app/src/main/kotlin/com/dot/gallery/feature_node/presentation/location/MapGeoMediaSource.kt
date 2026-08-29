@@ -15,6 +15,10 @@ import com.dot.gallery.cloud.data.dao.CloudServerConfigDao
 import com.dot.gallery.cloud.data.entity.CloudMediaEntity
 import com.dot.gallery.feature_node.domain.model.GeoMedia
 import com.dot.gallery.feature_node.domain.model.LocationMedia
+import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.domain.model.MediaState
+import com.dot.gallery.feature_node.domain.model.locationCoordinateKey
+import com.dot.gallery.feature_node.domain.model.locationLabelKey
 import com.dot.gallery.feature_node.domain.util.isCloud
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -98,22 +102,73 @@ class MapGeoMediaSource @Inject constructor(
         combine(flows) { accountResults -> accountResults.flatMap { it } }
     }
 
-    fun mergedGeoMedia(localGeoMedia: Flow<List<GeoMedia>>): Flow<List<GeoMedia>> = combine(
+    fun mergedGeoMedia(
+        localGeoMedia: Flow<List<GeoMedia>>,
+        timelineMedia: Flow<MediaState<Media.UriMedia>>,
+    ): Flow<List<GeoMedia>> = combine(
         localGeoMedia,
         activeCachedMedia,
         liveMarkers,
-        ::mergeAccountQualifiedGeoMedia,
-    )
+        timelineMedia,
+    ) { local, cached, markers, timeline ->
+        val timelineById = timeline.media.associateBy { it.id }
+        val backupOwnerByCloudId = buildMap {
+            timeline.cloudBackups.forEach { (localId, copies) ->
+                copies.forEach { put(it.id, localId) }
+            }
+        }
+        val result = LinkedHashMap<Long, GeoMedia>()
+        mergeAccountQualifiedGeoMedia(local, cached, markers).forEach { item ->
+            val resolved = when (val ownerId = backupOwnerByCloudId[item.mediaId]) {
+                null -> timelineById[item.mediaId]?.let { item.copy(media = it) }
+                else -> timelineById[ownerId]?.let { item.copy(mediaId = ownerId, media = it) }
+            } ?: return@forEach
+            val existing = result[resolved.mediaId]
+            val hasName = !resolved.locationCity.isNullOrBlank() || !resolved.locationCountry.isNullOrBlank()
+            val existingHasName = existing != null &&
+                    (!existing.locationCity.isNullOrBlank() || !existing.locationCountry.isNullOrBlank())
+            if (existing == null || hasName && !existingHasName) result[resolved.mediaId] = resolved
+        }
+        result.values.sortedByDescending { it.media.definedTimestamp }
+    }
 
     fun mergedLocations(
         localLocations: Flow<List<LocationMedia>>,
         geoMedia: Flow<List<GeoMedia>>,
+        timelineMedia: Flow<MediaState<Media.UriMedia>>,
     ): Flow<List<LocationMedia>> = combine(
         localLocations,
         geoMedia,
         activeCachedMedia,
-        ::buildActionableLocations,
-    )
+        timelineMedia,
+    ) { local, geo, cached, timeline ->
+        val timelineById = timeline.media.associateBy { it.id }
+        val backupOwnerByCloudId = buildMap {
+            timeline.cloudBackups.forEach { (localId, copies) ->
+                copies.forEach { put(it.id, localId) }
+            }
+        }
+        val backupLocations = cached.mapNotNull { entity ->
+            val owner = backupOwnerByCloudId[entity.globalMediaId]?.let(timelineById::get)
+                ?: return@mapNotNull null
+            val city = entity.city?.trim()?.takeIf(String::isNotBlank)
+            val country = entity.country?.trim()?.takeIf(String::isNotBlank)
+            if (city == null && country == null) return@mapNotNull null
+            LocationMedia(
+                media = owner,
+                location = locationLabel(city, country, entity.latitude, entity.longitude),
+                city = city,
+                country = country,
+                latitude = entity.latitude,
+                longitude = entity.longitude,
+            )
+        }
+        buildActionableLocations(
+            localLocations = backupLocations + local.filter { it.media.id in timelineById },
+            geoMedia = geo,
+            cachedCloudMedia = cached.filter { it.globalMediaId in timelineById },
+        )
+    }
 }
 
 internal fun mergeAccountQualifiedGeoMedia(
@@ -150,44 +205,94 @@ internal fun mergeAccountQualifiedGeoMedia(
     return result.values.sortedByDescending { it.media.definedTimestamp }
 }
 
+private data class ActionableLocationCandidate(
+    val item: LocationMedia,
+    val latitude: Double?,
+    val longitude: Double?,
+)
+
 internal fun buildActionableLocations(
     localLocations: List<LocationMedia>,
     geoMedia: List<GeoMedia>,
     cachedCloudMedia: List<CloudMediaEntity>,
 ): List<LocationMedia> {
-    val newestByLocation = LinkedHashMap<String, LocationMedia>()
+    val locationByMediaId = LinkedHashMap<Long, ActionableLocationCandidate>()
 
-    fun add(item: LocationMedia, key: String) {
+    fun addMedia(item: LocationMedia, latitude: Double?, longitude: Double?) {
+        val existing = locationByMediaId[item.media.id]
+        val hasName = !item.city.isNullOrBlank() || !item.country.isNullOrBlank()
+        val existingHasName = existing != null &&
+                (!existing.item.city.isNullOrBlank() || !existing.item.country.isNullOrBlank())
+        if (existing == null || hasName || !existingHasName) {
+            locationByMediaId[item.media.id] = ActionableLocationCandidate(item, latitude, longitude)
+        }
+    }
+
+    cachedCloudMedia.forEach { entity ->
+        val city = entity.city?.trim()?.takeIf(String::isNotBlank)
+        val country = entity.country?.trim()?.takeIf(String::isNotBlank)
+        if (city == null && country == null) return@forEach
+        addMedia(
+            LocationMedia(
+                media = entity.toUriMedia(),
+                location = locationLabel(city, country, entity.latitude, entity.longitude),
+                city = city,
+                country = country,
+                latitude = entity.latitude,
+                longitude = entity.longitude,
+            ),
+            entity.latitude,
+            entity.longitude,
+        )
+    }
+    localLocations.forEach { item ->
+        val city = item.city?.trim()?.takeIf(String::isNotBlank)
+        val country = item.country?.trim()?.takeIf(String::isNotBlank)
+        addMedia(
+            item.copy(
+                location = locationLabel(city, country, item.latitude, item.longitude),
+                city = city,
+                country = country,
+            ),
+            item.latitude,
+            item.longitude,
+        )
+    }
+    geoMedia.forEach { item ->
+        val city = item.locationCity?.trim()?.takeIf(String::isNotBlank)
+        val country = item.locationCountry?.trim()?.takeIf(String::isNotBlank)
+        addMedia(
+            LocationMedia(
+                media = item.media,
+                location = locationLabel(city, country, item.latitude, item.longitude),
+                city = city,
+                country = country,
+                latitude = item.latitude,
+                longitude = item.longitude,
+            ),
+            item.latitude,
+            item.longitude,
+        )
+    }
+
+    val newestByLocation = LinkedHashMap<String, LocationMedia>()
+    locationByMediaId.values.forEach { candidate ->
+        val item = candidate.item
+        val key = if (!item.city.isNullOrBlank() || !item.country.isNullOrBlank()) {
+            "name:${locationLabelKey(item.location)}"
+        } else {
+            coordinateLocationGroupKey(
+                candidate.latitude,
+                candidate.longitude,
+                item.media.id,
+            )
+        }
         val existing = newestByLocation[key]
         if (existing == null || item.media.definedTimestamp > existing.media.definedTimestamp) {
             newestByLocation[key] = item
         }
     }
-
-    localLocations.forEach { item ->
-        val city = item.city?.takeIf(String::isNotBlank)
-        val country = item.country?.takeIf(String::isNotBlank)
-        add(item, locationGroupKey(city, country, null, null, item.media.id))
-    }
-    geoMedia.forEach { item ->
-        val city = item.locationCity?.takeIf(String::isNotBlank)
-        val country = item.locationCountry?.takeIf(String::isNotBlank)
-        val location = locationLabel(city, country, item.latitude, item.longitude)
-        add(
-            LocationMedia(item.media, location, city, country),
-            locationGroupKey(city, country, item.latitude, item.longitude, item.mediaId),
-        )
-    }
-    cachedCloudMedia.forEach { entity ->
-        val city = entity.city?.takeIf(String::isNotBlank)
-        val country = entity.country?.takeIf(String::isNotBlank)
-        if (city == null && country == null) return@forEach
-        add(
-            LocationMedia(entity.toUriMedia(), locationLabel(city, country, null, null), city, country),
-            locationGroupKey(city, country, entity.latitude, entity.longitude, entity.globalMediaId),
-        )
-    }
-    return newestByLocation.values.sortedBy { it.location.lowercase(Locale.getDefault()) }
+    return newestByLocation.values.sortedBy { it.location.lowercase(Locale.ROOT) }
 }
 
 private fun CloudMediaEntity.toGeoMedia(
@@ -213,7 +318,10 @@ private fun locationLabel(
     latitude: Double?,
     longitude: Double?,
 ): String {
-    val named = listOfNotNull(city, country).joinToString(", ")
+    val named = listOfNotNull(
+        city?.trim()?.takeIf(String::isNotBlank),
+        country?.trim()?.takeIf(String::isNotBlank),
+    ).joinToString(", ")
     if (named.isNotBlank()) return named
     if (latitude != null && longitude != null) {
         return String.format(Locale.getDefault(), "%.4f, %.4f", latitude, longitude)
@@ -221,14 +329,10 @@ private fun locationLabel(
     return "Unknown location"
 }
 
-private fun locationGroupKey(
-    city: String?,
-    country: String?,
+private fun coordinateLocationGroupKey(
     latitude: Double?,
     longitude: Double?,
     mediaId: Long,
-): String = when {
-    city != null || country != null -> "name:${city.orEmpty().lowercase()}/${country.orEmpty().lowercase()}"
-    latitude != null && longitude != null -> "coordinates:$latitude/$longitude"
-    else -> "media:$mediaId"
-}
+): String = locationCoordinateKey(latitude, longitude)
+    ?.let { "coordinates:$it" }
+    ?: "media:$mediaId"

@@ -5,7 +5,6 @@
 
 package com.dot.gallery.cloud.netfs.bridge
 
-import android.util.Base64
 import com.dot.gallery.cloud.core.CloudTrace
 import com.dot.gallery.cloud.core.ProviderType
 import com.dot.gallery.cloud.core.ThumbnailSize
@@ -15,6 +14,7 @@ import fi.iki.elonen.NanoHTTPD
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.security.SecureRandom
+import java.util.Base64
 
 /**
  * Stream source the loopback server reads from. Implemented by `NetworkFileSystemProvider`
@@ -27,12 +27,73 @@ interface NetFsLoopbackSource {
     fun loopbackThumbnail(path: String, size: ThumbnailSize): ByteArray?
 }
 
+internal data class NetFsLoopbackRoute(
+    val providerType: ProviderType,
+    val configId: Long,
+    val kind: String,
+    val sizeName: String,
+    val path: String
+)
+
+internal fun buildNetFsLoopbackPath(
+    token: String,
+    providerType: ProviderType,
+    configId: Long,
+    kind: String,
+    sizeName: String,
+    path: String
+): String {
+    val encoded = Base64.getUrlEncoder().withoutPadding().encodeToString(path.toByteArray())
+    return "/$token/${providerType.name}/$configId/$kind/$sizeName/$encoded"
+}
+
+internal fun parseNetFsLoopbackRoute(uri: String, expectedToken: String): NetFsLoopbackRoute? {
+    val parts = uri.trimStart('/').split('/')
+    if (parts.size !in 5..6 || parts[0] != expectedToken) return null
+    val providerType = runCatching { ProviderType.valueOf(parts[1]) }.getOrNull() ?: return null
+    val hasConfigId = parts.size == 6
+    val configId = if (hasConfigId) parts[2].toLongOrNull() ?: return null else -1L
+    val offset = if (hasConfigId) 1 else 0
+    val path = runCatching {
+        String(Base64.getUrlDecoder().decode(parts[4 + offset]))
+    }.getOrNull() ?: return null
+    return NetFsLoopbackRoute(
+        providerType = providerType,
+        configId = configId,
+        kind = parts[2 + offset],
+        sizeName = parts[3 + offset],
+        path = path
+    )
+}
+
+internal data class NetFsByteRange(val start: Long, val end: Long)
+
+internal fun parseNetFsByteRange(header: String, total: Long): NetFsByteRange? {
+    if (total <= 0L || !header.startsWith("bytes=") || ',' in header) return null
+    val value = header.removePrefix("bytes=").trim()
+    val separator = value.indexOf('-')
+    if (separator < 0) return null
+    val startValue = value.substring(0, separator).trim()
+    val endValue = value.substring(separator + 1).trim()
+    if (startValue.isEmpty()) {
+        val suffixLength = endValue.toLongOrNull()?.takeIf { it > 0L } ?: return null
+        return NetFsByteRange((total - suffixLength).coerceAtLeast(0L), total - 1L)
+    }
+    val start = startValue.toLongOrNull()?.takeIf { it in 0 until total } ?: return null
+    val end = if (endValue.isEmpty()) {
+        total - 1L
+    } else {
+        endValue.toLongOrNull()?.takeIf { it >= start }?.coerceAtMost(total - 1L) ?: return null
+    }
+    return NetFsByteRange(start, end)
+}
+
 /**
  * On-device HTTP bridge that exposes SMB/NFS streams as `http://127.0.0.1` URLs so the
  * existing cloud media pipeline (Glide / Sketch / ZoomImage / ExoPlayer) can consume them
  * unchanged, including `Range` seeking for video.
  *
- * URL shape: `http://127.0.0.1:{port}/{token}/{PROVIDER}/{kind}/{size}/{base64url(path)}`
+ * URL shape: `http://127.0.0.1:{port}/{token}/{PROVIDER}/{configId}/{kind}/{size}/{base64url(path)}`
  *  - `kind`  = `original` | `thumb`
  *  - `size`  = `orig` | `preview` | `thumbnail`
  * The random per-process [token] prevents other local apps from reading the port.
@@ -41,42 +102,38 @@ internal class NetFsLoopbackServer : NanoHTTPD(LOOPBACK_HOST, 0) {
 
     override fun serve(session: IHTTPSession): Response {
         val uri = session.uri ?: return notFound()
-        // /{token}/{provider}/{kind}/{size}/{b64}
-        val parts = uri.trimStart('/').split('/', limit = 5)
-        if (parts.size < 5) return notFound()
-        val (token, providerName, kind, sizeName) = parts
-        val b64 = parts[4]
-
-        if (token != NetFsLoopback.token) {
+        if (uri.trimStart('/').substringBefore('/') != NetFsLoopback.token) {
             return newFixedLengthResponse(Response.Status.FORBIDDEN, MIME_PLAINTEXT, "Forbidden")
         }
-
-        val providerType = runCatching { ProviderType.valueOf(providerName) }.getOrNull() ?: return notFound()
-        val source = CloudFetcherRegistryHolder.registry?.get(providerType) as? NetFsLoopbackSource
+        val route = parseNetFsLoopbackRoute(uri, NetFsLoopback.token) ?: return notFound()
+        val registry = CloudFetcherRegistryHolder.registry
+        val provider = if (route.configId > 0L) {
+            registry?.getByConfigId(route.configId)
+        } else {
+            registry?.get(route.providerType)
+        }
+        if (provider?.providerType != route.providerType) return notFound()
+        val source = provider as? NetFsLoopbackSource
             ?: return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, MIME_PLAINTEXT, "No provider")
 
-        val path = runCatching {
-            String(Base64.decode(b64, Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING))
-        }.getOrNull() ?: return notFound()
-
         return try {
-            if (kind == KIND_THUMB) {
-                val size = if (sizeName == "thumbnail") ThumbnailSize.THUMBNAIL else ThumbnailSize.PREVIEW
-                val bytes = CloudTrace.time("Loopback[$providerName] thumb/$sizeName generate '$path'") {
-                    source.loopbackThumbnail(path, size)
+            if (route.kind == KIND_THUMB) {
+                val size = if (route.sizeName == "thumbnail") ThumbnailSize.THUMBNAIL else ThumbnailSize.PREVIEW
+                val bytes = CloudTrace.time("Loopback[${route.providerType}] thumb/${route.sizeName} generate '${route.path}'") {
+                    source.loopbackThumbnail(route.path, size)
                 } ?: return notFound()
-                CloudTrace.d("Loopback[$providerName] thumb/$sizeName '$path' -> ${CloudTrace.bytes(bytes.size.toLong())}")
+                CloudTrace.d("Loopback[${route.providerType}] thumb/${route.sizeName} '${route.path}' -> ${CloudTrace.bytes(bytes.size.toLong())}")
                 newFixedLengthResponse(
                     Response.Status.OK, "image/jpeg",
                     ByteArrayInputStream(bytes), bytes.size.toLong()
                 )
             } else {
-                serveOriginal(session, source, path)
+                serveOriginal(session, source, route.path)
             }
         } catch (e: Exception) {
             // Surface the real cause: Sketch/Glide only log the bare "HTTP 500" status line, so
             // without this the underlying SMB/NFS read failure is invisible.
-            printError("NetFsLoopback: $providerName $kind/$sizeName failed for '$path': ${e.javaClass.simpleName}: ${e.message}")
+            printError("NetFsLoopback: ${route.providerType} ${route.kind}/${route.sizeName} failed for '${route.path}': ${e.javaClass.simpleName}: ${e.message}")
             newFixedLengthResponse(Response.Status.INTERNAL_ERROR, MIME_PLAINTEXT, "Error: ${e.message}")
         }
     }
@@ -86,16 +143,26 @@ internal class NetFsLoopbackServer : NanoHTTPD(LOOPBACK_HOST, 0) {
         val mime = source.loopbackMime(path)
         val rangeHeader = session.headers["range"]
 
-        if (rangeHeader != null && total > 0) {
-            val range = rangeHeader.removePrefix("bytes=").trim()
-            val bits = range.split("-")
-            val start = bits.getOrNull(0)?.toLongOrNull() ?: 0L
-            val end = bits.getOrNull(1)?.takeIf { it.isNotBlank() }?.toLongOrNull() ?: (total - 1)
-            val length = (end - start + 1).coerceAtLeast(0L)
-            CloudTrace.d("Loopback original '$path' range=$start-$end/$total (${CloudTrace.bytes(length)}, $mime)")
-            val stream = TracingInputStream("Loopback original '$path' bytes=$start-$end", source.loopbackOpen(path, start))
+        if (total <= 0L) {
+            val stream = TracingInputStream("Loopback original '$path' full", source.loopbackOpen(path, 0L))
+            return newChunkedResponse(Response.Status.OK, mime, stream).apply {
+                addHeader("Accept-Ranges", "none")
+            }
+        }
+
+        if (rangeHeader != null) {
+            val range = parseNetFsByteRange(rangeHeader, total)
+                ?: return newFixedLengthResponse(
+                    Response.Status.RANGE_NOT_SATISFIABLE, MIME_PLAINTEXT, "Range Not Satisfiable"
+                ).apply { addHeader("Content-Range", "bytes */$total") }
+            val length = range.end - range.start + 1L
+            CloudTrace.d("Loopback original '$path' range=${range.start}-${range.end}/$total (${CloudTrace.bytes(length)}, $mime)")
+            val stream = TracingInputStream(
+                "Loopback original '$path' bytes=${range.start}-${range.end}",
+                source.loopbackOpen(path, range.start)
+            )
             return newFixedLengthResponse(Response.Status.PARTIAL_CONTENT, mime, stream, length).apply {
-                addHeader("Content-Range", "bytes $start-$end/$total")
+                addHeader("Content-Range", "bytes ${range.start}-${range.end}/$total")
                 addHeader("Accept-Ranges", "bytes")
             }
         }
@@ -180,17 +247,18 @@ object NetFsLoopback {
         return s.listeningPort
     }
 
-    private fun base(): String = "http://${NetFsLoopbackServer.LOOPBACK_HOST}:${ensureStarted()}/$token"
+    private fun base(): String = "http://${NetFsLoopbackServer.LOOPBACK_HOST}:${ensureStarted()}"
 
-    private fun encode(path: String): String =
-        Base64.encodeToString(path.toByteArray(), Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)
+    fun originalUrl(type: ProviderType, configId: Long, path: String): String =
+        base() + buildNetFsLoopbackPath(
+            token, type, configId, NetFsLoopbackServer.KIND_ORIGINAL, "orig", path
+        )
 
-    fun originalUrl(type: ProviderType, path: String): String =
-        "${base()}/${type.name}/${NetFsLoopbackServer.KIND_ORIGINAL}/orig/${encode(path)}"
-
-    fun thumbnailUrl(type: ProviderType, path: String, size: ThumbnailSize): String {
+    fun thumbnailUrl(type: ProviderType, configId: Long, path: String, size: ThumbnailSize): String {
         val sizeName = if (size == ThumbnailSize.THUMBNAIL) "thumbnail" else "preview"
-        return "${base()}/${type.name}/${NetFsLoopbackServer.KIND_THUMB}/$sizeName/${encode(path)}"
+        return base() + buildNetFsLoopbackPath(
+            token, type, configId, NetFsLoopbackServer.KIND_THUMB, sizeName, path
+        )
     }
 
     @Synchronized
@@ -203,6 +271,6 @@ object NetFsLoopback {
     private fun randomToken(): String {
         val bytes = ByteArray(16)
         SecureRandom().nextBytes(bytes)
-        return Base64.encodeToString(bytes, Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes)
     }
 }

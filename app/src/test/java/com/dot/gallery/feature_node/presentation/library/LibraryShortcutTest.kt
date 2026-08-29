@@ -2,6 +2,10 @@ package com.dot.gallery.feature_node.presentation.library
 
 import androidx.compose.ui.graphics.Color
 import com.dot.gallery.cloud.core.ProviderCapability
+import com.dot.gallery.cloud.core.ProviderType
+import com.dot.gallery.cloud.data.entity.CloudMediaEntity
+import com.dot.gallery.core.expandLocationMediaIds
+import com.dot.gallery.core.matchingLocationMediaIds
 import com.dot.gallery.feature_node.presentation.library.components.LibraryShortcut
 import com.dot.gallery.feature_node.presentation.library.components.LibraryShortcutPref
 import com.dot.gallery.feature_node.presentation.library.components.LibraryShortcutSpan
@@ -91,6 +95,53 @@ class LibraryShortcutTest {
         assertTrue(availability.hasArchive)
         assertTrue(availability.hasMap)
         assertTrue(availability.hasShareLink)
+    }
+
+    @Test
+    fun cloudBackupLocationSelectsItsLocalTimelineOwner() {
+        assertEquals(
+            setOf(-7L, 42L),
+            expandLocationMediaIds(
+                matchingMediaIds = setOf(-7L),
+                cloudBackupIdsByLocalId = mapOf(42L to listOf(-7L, -8L)),
+            ),
+        )
+    }
+
+    @Test
+    fun locationTimelineIncludesCloudMediaFromTheSelectedPlace() {
+        val matchingCloudMedia = CloudMediaEntity(
+            remoteId = "matching",
+            providerType = ProviderType.IMMICH,
+            serverConfigId = 7L,
+            city = "bristol",
+            country = "UNITED KINGDOM",
+        )
+        val malformedMatchingCloudMedia = CloudMediaEntity(
+            remoteId = "malformed-matching",
+            providerType = ProviderType.IMMICH,
+            serverConfigId = 7L,
+            city = "\u00A0",
+            country = "Bristol, United Kingdom",
+        )
+        val otherCloudMedia = CloudMediaEntity(
+            remoteId = "other",
+            providerType = ProviderType.IMMICH,
+            serverConfigId = 7L,
+            city = "Cardiff",
+            country = "United Kingdom",
+        )
+
+        assertEquals(
+            setOf(42L, 99L, matchingCloudMedia.globalMediaId, malformedMatchingCloudMedia.globalMediaId),
+            matchingLocationMediaIds(
+                localMediaIds = setOf(42L),
+                cloudMedia = listOf(matchingCloudMedia, malformedMatchingCloudMedia, otherCloudMedia),
+                city = "Bristol",
+                country = "United Kingdom",
+                additionalMediaIds = setOf(99L),
+            ),
+        )
     }
 
     private fun runtimeShortcut(shortcut: LibraryShortcut) = RuntimeShortcut(

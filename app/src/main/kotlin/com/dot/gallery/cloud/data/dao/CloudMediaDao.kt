@@ -46,6 +46,18 @@ data class CloudMediaSmartFeatureRevision(
     val size: Long
 )
 
+internal fun shouldInvalidateBackupRevision(
+    incomingFingerprint: String,
+    incomingHasContentHash: Boolean,
+    storedFingerprint: String
+): Boolean {
+    val canonicalStored = canonicalBackupChecksum(storedFingerprint)
+    val storedHasContentHash = canonicalStored.length == 40 && canonicalStored.all {
+        it in '0'..'9' || it in 'a'..'f'
+    }
+    return (!storedHasContentHash || incomingHasContentHash) && incomingFingerprint != canonicalStored
+}
+
 @Dao
 interface CloudMediaDao {
 
@@ -165,6 +177,19 @@ interface CloudMediaDao {
 
     @Query(
         """
+        UPDATE cloud_media SET contentHash = :contentHash
+        WHERE remoteId = :remoteId AND providerType = :providerType AND serverConfigId = :serverConfigId
+        """
+    )
+    suspend fun updateContentHash(
+        remoteId: String,
+        providerType: ProviderType,
+        serverConfigId: Long,
+        contentHash: String
+    ): Int
+
+    @Query(
+        """
         SELECT * FROM cloud_media
         WHERE contentHash IN (:hashes) AND serverConfigId = :serverConfigId
         LIMIT 1
@@ -233,8 +258,11 @@ interface CloudMediaDao {
                 val incomingByRemoteId = chunk.associateBy { it.remoteId }
                 getBackupRevisions(configId, remoteIds).forEach { revision ->
                     val incoming = incomingByRemoteId[revision.remoteId]
-                    if (incoming != null &&
-                        incoming.backupFingerprint() != canonicalBackupChecksum(revision.remoteFingerprint)
+                    if (incoming != null && shouldInvalidateBackupRevision(
+                            incomingFingerprint = incoming.backupFingerprint(),
+                            incomingHasContentHash = !incoming.contentHash.isNullOrBlank(),
+                            storedFingerprint = revision.remoteFingerprint
+                        )
                     ) {
                         deleteBackupRevision(configId, revision.localUri)
                     }

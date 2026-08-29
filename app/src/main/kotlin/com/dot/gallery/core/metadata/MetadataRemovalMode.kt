@@ -6,6 +6,11 @@ enum class MetadataRemovalMode {
     EVERYTHING
 }
 
+enum class MetadataSaveMode {
+    SAVE_COPY,
+    REPLACE_ORIGINAL
+}
+
 enum class MetadataCategory {
     LOCATION,
     TIMESTAMPS,

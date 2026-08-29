@@ -1,15 +1,20 @@
 package com.dot.gallery.core.metadata
 
 object MetadataCapabilities {
-    private val commonRasterModes = MetadataRemovalMode.entries.toSet()
+    private val locationOnly = setOf(MetadataRemovalMode.LOCATION)
 
     fun forFormat(format: MediaContainerFormat): SanitizationCapability = when (format) {
         MediaContainerFormat.JPEG,
         MediaContainerFormat.PNG,
-        MediaContainerFormat.WEBP -> SanitizationCapability(format, commonRasterModes)
+        MediaContainerFormat.WEBP -> SanitizationCapability(
+            format,
+            locationOnly,
+            limitation = "Only location metadata can currently be removed with complete verification."
+        )
         MediaContainerFormat.GIF -> SanitizationCapability(
             format,
-            setOf(MetadataRemovalMode.PRIVACY, MetadataRemovalMode.EVERYTHING)
+            emptySet(),
+            limitation = "GIF metadata cannot yet be removed comprehensively without risking hidden application data."
         )
         MediaContainerFormat.BMP -> SanitizationCapability(
             format,
@@ -24,8 +29,8 @@ object MetadataCapabilities {
         MediaContainerFormat.JP2,
         MediaContainerFormat.JXL -> SanitizationCapability(
             format,
-            setOf(MetadataRemovalMode.EVERYTHING),
-            limitation = "Selective metadata removal is not available for this box container."
+            emptySet(),
+            limitation = "Nested box metadata cannot yet be removed and verified comprehensively."
         )
         MediaContainerFormat.PSD,
         MediaContainerFormat.J2K,

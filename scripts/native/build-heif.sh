@@ -25,7 +25,8 @@ CMAKE_VERSION="3.31.6"                   # must be a 3.x SDK CMake, not 4.x
 # --- Paths -----------------------------------------------------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-OUT_ROOT="$REPO_ROOT/app/src/main/cpp/heif"
+source "$SCRIPT_DIR/native-common.sh"
+OUT_ROOT="${NATIVE_OUTPUT_BASE:-$REPO_ROOT/app/src/main/cpp}/heif"
 
 # Resolve the Android SDK from local.properties (sdk.dir) or the environment.
 SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
@@ -62,15 +63,15 @@ echo "Out      = $OUT_ROOT"
 # --- Source download (cached in a temp dir) --------------------------------------------------
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
-DE265_SRC="$WORK/libde265-$LIBDE265_VERSION"
-HEIF_SRC="$WORK/libheif-$LIBHEIF_VERSION"
-
-echo "==> Downloading libde265 $LIBDE265_VERSION"
-curl -fsSL "https://github.com/strukturag/libde265/releases/download/v$LIBDE265_VERSION/libde265-$LIBDE265_VERSION.tar.gz" \
-    | tar -xz -C "$WORK"
-echo "==> Downloading libheif $LIBHEIF_VERSION"
-curl -fsSL "https://github.com/strukturag/libheif/releases/download/v$LIBHEIF_VERSION/libheif-$LIBHEIF_VERSION.tar.gz" \
-    | tar -xz -C "$WORK"
+DE265_SRC="$WORK/libde265"
+HEIF_SRC="$WORK/libheif"
+native_set_reproducible_env
+native_prepare_source LIBDE265_SOURCE_DIR libde265 "$DE265_SRC" \
+    "https://github.com/strukturag/libde265/releases/download/v$LIBDE265_VERSION/libde265-$LIBDE265_VERSION.tar.gz" \
+    "00251986c29d34d3af7117ed05874950c875dd9292d016be29d3b3762666511d" CMakeLists.txt
+native_prepare_source LIBHEIF_SOURCE_DIR libheif "$HEIF_SRC" \
+    "https://github.com/strukturag/libheif/releases/download/v$LIBHEIF_VERSION/libheif-$LIBHEIF_VERSION.tar.gz" \
+    "6c4a5b08e6eae66d199977468859dea3b5e059081db8928f7c7c16e53836c906" CMakeLists.txt
 
 build_abi() {
     local ABI="$1"
@@ -88,6 +89,8 @@ build_abi() {
         -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN" \
         -DANDROID_ABI="$ABI" -DANDROID_PLATFORM="android-$ANDROID_API" \
         -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_C_FLAGS="$NATIVE_REPRO_FLAGS" -DCMAKE_CXX_FLAGS="$NATIVE_REPRO_FLAGS" \
+        -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_SKIP_RPATH=ON \
         -DBUILD_SHARED_LIBS=OFF \
         -DENABLE_SDL=OFF -DENABLE_DECODER=OFF -DENABLE_ENCODER=OFF \
         -DCMAKE_INSTALL_PREFIX="$STAGE"
@@ -99,6 +102,8 @@ build_abi() {
         -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN" \
         -DANDROID_ABI="$ABI" -DANDROID_PLATFORM="android-$ANDROID_API" \
         -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_C_FLAGS="$NATIVE_REPRO_FLAGS" -DCMAKE_CXX_FLAGS="$NATIVE_REPRO_FLAGS" \
+        -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_SKIP_RPATH=ON \
         -DBUILD_SHARED_LIBS=OFF \
         -DWITH_EXAMPLES=OFF -DWITH_GDK_PIXBUF=OFF -DBUILD_TESTING=OFF \
         -DWITH_AOM_DECODER=OFF -DWITH_AOM_ENCODER=OFF -DWITH_DAV1D=OFF \
@@ -120,6 +125,7 @@ build_abi() {
     cp -f "$STAGE/lib/libheif.a" "$OUT/lib/"
     cp -f "$STAGE/lib/libde265.a" "$OUT/lib/"
     cp -Rf "$STAGE/include/libheif" "$OUT/include/"
+    native_normalize_archives "$OUT/lib/"*.a
     echo "==> Installed $ABI: $(ls -1 "$OUT/lib")"
 }
 

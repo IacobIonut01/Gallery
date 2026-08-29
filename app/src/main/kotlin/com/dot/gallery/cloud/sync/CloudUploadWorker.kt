@@ -194,7 +194,10 @@ class CloudUploadWorker @AssistedInject constructor(
 
                     val candidates = albumMedia.filterNot { media ->
                         isBackupRevisionCached(
-                            uri = media.getUri().toString(),
+                            uri = backupRevisionLocalUri(
+                                media.getUri().toString(),
+                                syncProvider.deterministicRemoteId(media, albumTarget)
+                            ),
                             mediaId = media.id,
                             label = media.label,
                             mimeType = media.mimeType,
@@ -256,7 +259,14 @@ class CloudUploadWorker @AssistedInject constructor(
                                 .onSuccess { alreadyUploaded ->
                                     mediaWithHashes.forEachIndexed { idx, (media, hash) ->
                                         if (alreadyUploaded[idx.toString()] == true) {
-                                            cacheVerifiedBackupRevision(cloudMediaDao, config.id, media, hash)
+                                            cacheVerifiedBackupRevision(
+                                                cloudMediaDao,
+                                                config.id,
+                                                media,
+                                                hash,
+                                                syncProvider,
+                                                albumTarget
+                                            )
                                         } else {
                                             queue(media, hash)
                                         }
@@ -330,7 +340,8 @@ class CloudUploadWorker @AssistedInject constructor(
                                             cloudMediaDao,
                                             task.configId,
                                             task.media,
-                                            entity
+                                            entity,
+                                            task.provider.deterministicRemoteId(task.media, task.targetPath)
                                         )
                                         completedItems++
                                         completedFiles.add(task.media.label)
@@ -422,15 +433,27 @@ class CloudUploadWorker @AssistedInject constructor(
             val deleteAlbums = deleteLocalPrefDao.getEnabledAlbumIds().toSet()
             if (deleteAlbums.isEmpty()) return
             val allConfigs = configDao.getAll().first()
-            val albumIdsByConfig = allConfigs.associate { config ->
-                config.id to uploadPrefDao.getEnabledByConfigList(config.id).map { it.albumId }.toSet()
+            val uploadPrefsByConfig = allConfigs.associate { config ->
+                config.id to uploadPrefDao.getEnabledByConfigList(config.id)
+            }
+            val albumIdsByConfig = uploadPrefsByConfig.mapValues { (_, prefs) ->
+                prefs.map { it.albumId }.toSet()
             }
             for (albumId in deleteAlbums) {
                 val destinationIds = backupDestinationConfigIds(albumId, albumIdsByConfig)
                 val destConfigs = allConfigs.filter { it.id in destinationIds }
                 if (destConfigs.isEmpty()) continue
-                val destProviders = destConfigs.mapNotNull { registry.getByConfigId(it.id) as? SyncCapableProvider }
-                if (destProviders.size != destConfigs.size) {
+                val destinations = destConfigs.mapNotNull { config ->
+                    val provider = registry.getByConfigId(config.id) as? SyncCapableProvider
+                        ?: return@mapNotNull null
+                    val targetPath = uploadPrefsByConfig[config.id]
+                        ?.firstOrNull { it.albumId == albumId }
+                        ?.albumLabel
+                        ?.trim()
+                        ?.ifBlank { null }
+                    provider to targetPath
+                }
+                if (destinations.size != destConfigs.size) {
                     printDebug("CloudUploadWorker: delete-local skipped for album $albumId — a destination is unavailable")
                     continue
                 }
@@ -438,9 +461,17 @@ class CloudUploadWorker @AssistedInject constructor(
                 val mediaWithHashes = albumMedia.mapNotNull { m -> computeSha1(m)?.let { m to it } }
                 if (mediaWithHashes.isEmpty()) continue
                 val hashes = mediaWithHashes.map { it.second }
-                val presence = destProviders.map { p ->
+                val presence = destinations.map { (provider, targetPath) ->
                     try {
-                        p.bulkUploadCheck(hashes).getOrDefault(emptyMap())
+                        if (provider.requiresUploadChecksum) {
+                            provider.bulkUploadCheck(hashes).getOrThrow()
+                        } else {
+                            mediaWithHashes.mapIndexed { index, (media, hash) ->
+                                index.toString() to provider.verifyRemoteContent(media, targetPath, hash).getOrThrow()
+                            }.toMap()
+                        }
+                    } catch (e: CancellationException) {
+                        throw e
                     } catch (e: Exception) {
                         printDebug("CloudUploadWorker: delete-local coverage check failed: ${e.message}")
                         null
@@ -450,9 +481,10 @@ class CloudUploadWorker @AssistedInject constructor(
                 mediaWithHashes.forEachIndexed { idx, (media, _) ->
                     val onAllClouds = presence.all { it!![idx.toString()] == true }
                     if (onAllClouds) {
+                        currentCoroutineContext().ensureActive()
                         try {
                             applicationContext.contentResolver.delete(media.getUri(), null, null)
-                            printDebug("CloudUploadWorker: Deleted local ${media.label} (backed up to ${destProviders.size} clouds)")
+                            printDebug("CloudUploadWorker: Deleted local ${media.label} (backed up to ${destinations.size} clouds)")
                         } catch (e: Exception) {
                             printDebug("CloudUploadWorker: delete-local failed for ${media.label}: ${e.message}")
                         }
@@ -592,14 +624,27 @@ class CloudUploadWorker @AssistedInject constructor(
         hashCache: ConcurrentHashMap<String, String>
     ): UploadOutcome {
         return try {
+            var checksum = task.checksum
             if (task.provider.remoteExists(task.media, task.targetPath)) {
-                return UploadOutcome(alreadyPresent = true)
-            }
-            val checksum = task.checksum ?: if (task.provider.requiresUploadChecksum) {
-                cachedSha1(task.media, hashCache)
+                checksum = checksum ?: cachedSha1(task.media, hashCache)
                     ?: return UploadOutcome(kotlin.Result.failure(Exception("Could not read media for checksum")))
-            } else {
-                null
+                val verified = task.provider.verifyRemoteContent(task.media, task.targetPath, checksum)
+                    .getOrElse { return UploadOutcome(kotlin.Result.failure(it)) }
+                if (verified) {
+                    cacheVerifiedBackupRevision(
+                        cloudMediaDao,
+                        task.configId,
+                        task.media,
+                        checksum,
+                        task.provider,
+                        task.targetPath
+                    )
+                    return UploadOutcome(alreadyPresent = true)
+                }
+            }
+            if (checksum == null && task.provider.requiresUploadChecksum) {
+                checksum = cachedSha1(task.media, hashCache)
+                    ?: return UploadOutcome(kotlin.Result.failure(Exception("Could not read media for checksum")))
             }
             if (task.provider.requiresUploadChecksum && task.checksum == null) {
                 val requiredChecksum = checksum
@@ -607,7 +652,14 @@ class CloudUploadWorker @AssistedInject constructor(
                 val alreadyPresent = task.provider.bulkUploadCheck(listOf(requiredChecksum))
                     .getOrElse { return UploadOutcome(kotlin.Result.failure(it)) }["0"] == true
                 if (alreadyPresent) {
-                    cacheVerifiedBackupRevision(cloudMediaDao, task.configId, task.media, requiredChecksum)
+                    cacheVerifiedBackupRevision(
+                        cloudMediaDao,
+                        task.configId,
+                        task.media,
+                        requiredChecksum,
+                        task.provider,
+                        task.targetPath
+                    )
                     return UploadOutcome(alreadyPresent = true)
                 }
             }
@@ -764,6 +816,9 @@ internal const val BACKUP_VERIFICATION_MAX_AGE_MS = 7L * 24L * 60L * 60L * 1000L
 internal fun backupVerificationCutoff(now: Long = System.currentTimeMillis()): Long =
     now - BACKUP_VERIFICATION_MAX_AGE_MS
 
+internal fun backupRevisionLocalUri(uri: String, deterministicRemoteId: String?): String =
+    deterministicRemoteId?.let { "$uri\u001f$it" } ?: uri
+
 internal fun backupLocalRevisionKey(uri: String, size: Long, timestamp: Long): String =
     "$uri|$size|$timestamp"
 
@@ -771,11 +826,24 @@ internal suspend fun cacheVerifiedBackupRevision(
     cloudMediaDao: CloudMediaDao,
     configId: Long,
     media: Media,
-    hash: String
+    hash: String,
+    provider: SyncCapableProvider? = null,
+    targetPath: String? = null
 ): Boolean {
-    val remote = cloudMediaDao.getByContentHashes(backupChecksumVariants(hash), configId)
-        ?: return false
-    cacheSuccessfulBackupRevision(cloudMediaDao, configId, media, remote)
+    val deterministicRemoteId = provider?.deterministicRemoteId(media, targetPath)
+    val remoteId = deterministicRemoteId ?: provider?.verifiedRemoteId(hash)
+    val remote = if (remoteId != null && provider != null) {
+        cloudMediaDao.getByRemoteId(remoteId, provider.providerType, configId)
+            ?: CloudMediaEntity(
+                remoteId = remoteId,
+                providerType = provider.providerType,
+                serverConfigId = configId,
+                contentHash = hash
+            )
+    } else {
+        cloudMediaDao.getByContentHashes(backupChecksumVariants(hash), configId)
+    } ?: return false
+    cacheSuccessfulBackupRevision(cloudMediaDao, configId, media, remote, deterministicRemoteId)
     return true
 }
 
@@ -783,13 +851,14 @@ internal suspend fun cacheSuccessfulBackupRevision(
     cloudMediaDao: CloudMediaDao,
     configId: Long,
     media: Media,
-    remote: CloudMediaEntity
+    remote: CloudMediaEntity,
+    deterministicRemoteId: String? = null
 ) {
     cloudMediaDao.upsertBackupRevision(
         CloudBackupRevisionEntity(
             serverConfigId = configId,
             providerType = remote.providerType,
-            localUri = media.getUri().toString(),
+            localUri = backupRevisionLocalUri(media.getUri().toString(), deterministicRemoteId),
             localSize = media.size,
             localTimestamp = media.timestamp,
             remoteId = remote.remoteId,

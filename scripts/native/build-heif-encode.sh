@@ -28,7 +28,8 @@ CMAKE_VERSION="3.31.6"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-OUT_ROOT="$REPO_ROOT/app/src/main/cpp/heifenc"
+source "$SCRIPT_DIR/native-common.sh"
+OUT_ROOT="${NATIVE_OUTPUT_BASE:-$REPO_ROOT/app/src/main/cpp}/heifenc"
 
 SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
 if [ -z "$SDK" ] && [ -f "$REPO_ROOT/local.properties" ]; then
@@ -47,6 +48,11 @@ if [ -z "$NDK_VERSION" ] || [ ! -f "$TOOLCHAIN" ] ||
     echo "ERROR: Pinned NDK $NDK_VERSION not found or invalid. Install ndk;$NDK_VERSION." >&2
     exit 1
 fi
+NDK_CLANG="$(ls -d "$NDK_DIR"/toolchains/llvm/prebuilt/*/bin/clang 2>/dev/null | head -n1)"
+if [ -z "$NDK_CLANG" ] || [ ! -x "$NDK_CLANG" ]; then
+    echo "ERROR: NDK clang not found under $NDK_DIR" >&2
+    exit 1
+fi
 
 CMAKE_BIN="$SDK/cmake/$CMAKE_VERSION/bin/cmake"
 NINJA_BIN="$SDK/cmake/$CMAKE_VERSION/bin/ninja"
@@ -63,20 +69,23 @@ echo "Out      = $OUT_ROOT"
 
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
-DE265_SRC="$WORK/libde265-$LIBDE265_VERSION"
-HEIF_SRC="$WORK/libheif-$LIBHEIF_VERSION"
-X265_SRC="$WORK/x265_$X265_VERSION"
+DE265_SRC="$WORK/libde265"
+HEIF_SRC="$WORK/libheif"
+X265_SRC="$WORK/x265"
 AOM_SRC="$WORK/aom"
-
-echo "==> Downloading libde265 $LIBDE265_VERSION"
-curl -fsSL "https://github.com/strukturag/libde265/releases/download/v$LIBDE265_VERSION/libde265-$LIBDE265_VERSION.tar.gz" | tar -xz -C "$WORK"
-echo "==> Downloading libheif $LIBHEIF_VERSION"
-curl -fsSL "https://github.com/strukturag/libheif/releases/download/v$LIBHEIF_VERSION/libheif-$LIBHEIF_VERSION.tar.gz" | tar -xz -C "$WORK"
-echo "==> Downloading x265 $X265_VERSION"
-curl -fsSL "https://bitbucket.org/multicoreware/x265_git/downloads/x265_$X265_VERSION.tar.gz" | tar -xz -C "$WORK" \
-    || curl -fsSL "https://download.videolan.org/pub/videolan/x265/x265_$X265_VERSION.tar.gz" | tar -xz -C "$WORK"
-echo "==> Cloning aom $AOM_VERSION"
-git clone --depth 1 --branch "$AOM_VERSION" https://aomedia.googlesource.com/aom "$AOM_SRC"
+native_set_reproducible_env
+native_prepare_source LIBDE265_SOURCE_DIR libde265 "$DE265_SRC" \
+    "https://github.com/strukturag/libde265/releases/download/v$LIBDE265_VERSION/libde265-$LIBDE265_VERSION.tar.gz" \
+    "00251986c29d34d3af7117ed05874950c875dd9292d016be29d3b3762666511d" CMakeLists.txt
+native_prepare_source LIBHEIF_SOURCE_DIR libheif "$HEIF_SRC" \
+    "https://github.com/strukturag/libheif/releases/download/v$LIBHEIF_VERSION/libheif-$LIBHEIF_VERSION.tar.gz" \
+    "6c4a5b08e6eae66d199977468859dea3b5e059081db8928f7c7c16e53836c906" CMakeLists.txt
+native_prepare_source X265_SOURCE_DIR x265 "$X265_SRC" \
+    "https://download.videolan.org/pub/videolan/x265/x265_$X265_VERSION.tar.gz" \
+    "663531f341c5389f460d730e62e10a4fcca3428ca2ca109693867bc5fe2e2807" source/CMakeLists.txt
+native_prepare_source AOM_SOURCE_DIR aom "$AOM_SRC" \
+    "https://storage.googleapis.com/aom-releases/libaom-${AOM_VERSION#v}.tar.gz" \
+    "dba99fc1c28aaade28dda59821166b2fa91c06162d1bc99fde0ddaad7cecc50e" CMakeLists.txt
 
 build_abi() {
     local ABI="$1"
@@ -93,6 +102,10 @@ build_abi() {
         -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN"
         -DANDROID_ABI="$ABI" -DANDROID_PLATFORM="android-$ANDROID_API"
         -DCMAKE_BUILD_TYPE=Release
+        -DCMAKE_C_FLAGS="$NATIVE_REPRO_FLAGS"
+        -DCMAKE_CXX_FLAGS="$NATIVE_REPRO_FLAGS"
+        -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+        -DCMAKE_SKIP_RPATH=ON
         -DBUILD_SHARED_LIBS=OFF
         -DCMAKE_INSTALL_PREFIX="$STAGE"
         -DCMAKE_PREFIX_PATH="$STAGE"
@@ -106,7 +119,7 @@ build_abi() {
 
     # 2) x265 (HEVC encoder). Assembly OFF for portable, reliable cross-compile.
     "$CMAKE_BIN" -S "$X265_SRC/source" -B "$WORK/x265-$ABI" "${COMMON[@]}" \
-        -DENABLE_SHARED=OFF -DENABLE_CLI=OFF -DENABLE_ASSEMBLY=OFF -DHIGH_BIT_DEPTH=OFF
+        -DENABLE_SHARED=OFF -DENABLE_CLI=OFF -DENABLE_ASSEMBLY=OFF -DENABLE_PIC=ON -DHIGH_BIT_DEPTH=OFF
     "$CMAKE_BIN" --build "$WORK/x265-$ABI" --target install
     # x265 installs libx265.a; ensure the unversioned name exists.
     [ -f "$STAGE/lib/libx265.a" ] || { echo "ERROR: libx265.a not built" >&2; exit 1; }
@@ -123,6 +136,7 @@ build_abi() {
         *)           AOM_CPU="generic" ;;
     esac
     "$CMAKE_BIN" -S "$AOM_SRC" -B "$WORK/aom-$ABI" "${COMMON[@]}" \
+        -DCMAKE_ASM_COMPILER="$NDK_CLANG" \
         -DENABLE_TESTS=OFF -DENABLE_EXAMPLES=OFF -DENABLE_DOCS=OFF -DENABLE_TOOLS=OFF \
         -DCONFIG_AV1_ENCODER=1 -DCONFIG_AV1_DECODER=1 -DAOM_TARGET_CPU="$AOM_CPU"
     "$CMAKE_BIN" --build "$WORK/aom-$ABI" --target install
@@ -148,6 +162,7 @@ build_abi() {
     cp -f "$STAGE/lib/libx265.a" "$OUT/lib/"
     cp -f "$STAGE/lib/libaom.a" "$OUT/lib/"
     cp -Rf "$STAGE/include/libheif" "$OUT/include/"
+    native_normalize_archives "$OUT/lib/"*.a
     echo "==> Installed $ABI: $(ls -1 "$OUT/lib")"
 }
 

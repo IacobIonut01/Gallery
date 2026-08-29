@@ -105,6 +105,16 @@ interface MediaDistributor {
 
     fun locationBasedMedia(
         gpsLocationNameCity: String,
-        gpsLocationNameCountry: String
+        gpsLocationNameCountry: String,
+        latitude: Double?,
+        longitude: Double?,
+        additionalMediaIds: Flow<Set<Long>>,
     ): Flow<MediaState<Media.UriMedia>>
 }
+
+internal fun MediaDistributor.restorableAlbumTimelineMediaFlow(
+    albumId: Long
+): Flow<MediaState<Media.UriMedia>> = albumTimelineMediaFlow(
+    albumId = albumId,
+    loadMode = AlbumMediaLoadMode.Complete
+)
