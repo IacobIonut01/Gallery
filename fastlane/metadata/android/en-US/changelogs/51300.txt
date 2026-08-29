@@ -1,0 +1,14 @@
+What's new in 5.1.3:
+
+• Tap viewer edges for instant photo and video navigation
+• Safely move WhatsApp and other restricted media into albums
+
+Improvements:
+
+• Protect bundled AI models in offline builds
+• Preserve editor markup, GPS metadata, and original media dates
+
+Bug fixes:
+
+• Fixed mirrored front-camera thumbnails and black editor preview flashes
+• Improved transfer rollback and F-Droid ARM builds

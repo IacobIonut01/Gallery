@@ -1,20 +1,20 @@
-## What's new in 5.1.2
+## What's new in 5.1.3
 
-ReFra 5.1.2 focuses on safer media editing and metadata removal, trustworthy cloud backups, and more reliable browsing across large local, NAS, JPEG XL, video, and location libraries.
+ReFra 5.1.3 makes media navigation and organization faster and safer, while improving editor reliability, location indexing, offline AI models, and thumbnail accuracy.
+
+### New Features
+
+- **Instant tap navigation** — Optionally tap the left or right edge of the media viewer to move immediately between photos and videos, with an opt-in prompt, visual preview, RTL support, and a searchable setting (#1151)
+- **Safe moves from restricted folders** — Copy or move media from folders such as WhatsApp's `Android/media` storage through a verified transfer and Android deletion request, with original timestamps preserved and automatic rollback when the request is declined or fails (#1144)
 
 ### Improvements
 
-- **Reliable native codec packaging** — Clean, CI, release, and F-Droid builds now reproducibly build and include the full native image codecs instead of silently linking fallback stubs (#1068)
-- **Dependency maintenance** — Updated project dependencies, Gradle tooling, and supporting build components
+- **Safer offline AI models** — Offline builds protect bundled models from deletion and unavailable network actions, while model installation validates staged assets before replacing existing files atomically (#1118)
 
 ### Bug Fixes
 
-- **Trustworthy cloud backup verification** — WebDAV, SMB, and NFS backups are verified with streamed content hashes before ReFra trusts them for duplicate detection, backup status, or safe local-file deletion
-- **Reliable large NAS libraries** — Large SMB and NFS shares now use a complete reusable index for stable paging, albums, covers, thumbnails, video streaming, and account-aware routing (#1104)
-- **Lossless metadata removal** — Sanitized media is created and fully verified separately before an original can be moved to system trash, preventing source loss and keeping retries safe (#1124)
-- **Safer editor overwrites** — Existing originals remain published and visible during replacement, with rollback restoration after partial write failures (#1131)
-- **JPEG XL metadata** — Exif and XMP metadata now loads from both direct and Brotli-compressed JPEG XL container boxes (#1125)
-- **Album move destinations** — Existing folders on primary and removable storage can be selected as move destinations again (#1121)
-- **Deep album position restoration** — Large albums preserve deep grid and viewer positions after process or screen restoration (#965)
-- **Deterministic location navigation** — Equivalent local, cloud, and map locations are merged consistently while taps open the correct scoped timeline and media
-- **External video launches** — Videos opened from other apps no longer flash viewer controls over the first visible frame (#1126)
+- **Reliable editor markup and previews** — Blur, mosaic, highlighter, text, and borders are preserved across save and reopen operations, while live adjustment previews no longer flash black or lose pending edits (#1078)
+- **Preserved GPS metadata during scans** — Bulk metadata indexing keeps valid coordinates when reverse geocoding fails and requests unredacted location metadata when Android permits it (#1141)
+- **Correct front-camera thumbnails** — Mirrored embedded JPEG thumbnails are bypassed so timeline previews match the full photo (#1152)
+- **Safer media transfers** — Copied and moved media retain their original dates, partial transfers are cleaned up, and failed deletion flows do not leave unannounced duplicate files (#1144)
+- **Reliable F-Droid ARM builds** — The native AVIF and HEIF encoder build now uses the pinned NDK Clang toolchain for AOM assembly instead of relying on an unavailable host assembler (#1068)
