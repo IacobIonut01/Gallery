@@ -4,8 +4,17 @@ import com.dot.gallery.core.Settings
 import com.dot.gallery.core.metadata.MetadataCategory
 import com.dot.gallery.core.metadata.MetadataPolicy
 import com.dot.gallery.core.metadata.MetadataRemovalMode
+import com.dot.gallery.core.sandbox.openOriginalOrFallback
+import com.dot.gallery.core.sandbox.shouldRequestOriginalMetadata
 import com.dot.gallery.feature_node.data.repository.shouldUsePerFileMetadataIsolation
+import com.dot.gallery.feature_node.domain.model.MetadataParsingPolicy
+import com.dot.gallery.feature_node.domain.model.bestEffortReverseGeocode
+import com.dot.gallery.feature_node.domain.model.metadataParsingPolicy
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -52,6 +61,71 @@ class MetadataPolicyTest {
                 bulk = false
             )
         )
+    }
+
+    @Test
+    fun bulkMetadataSkipsReverseGeocoding() = runTest {
+        val policy = metadataParsingPolicy(bulk = true)
+        var lookupCalled = false
+
+        assertEquals(MetadataParsingPolicy.BULK_ISOLATED_ONLY, policy)
+        assertEquals(MetadataParsingPolicy.ON_DEMAND_COMPATIBLE, metadataParsingPolicy(bulk = false))
+        val result = bestEffortReverseGeocode(
+            enabled = policy.allowsReverseGeocoding,
+            latitude = 51.5,
+            longitude = -0.1
+        ) { _, _ ->
+            lookupCalled = true
+            "London"
+        }
+
+        assertNull(result)
+        assertFalse(lookupCalled)
+    }
+
+    @Test
+    fun reverseGeocoderFailureIsNonFatal() = runTest {
+        val result = bestEffortReverseGeocode<String>(
+            enabled = MetadataParsingPolicy.ON_DEMAND_COMPATIBLE.allowsReverseGeocoding,
+            latitude = 51.5,
+            longitude = -0.1
+        ) { _, _ -> throw IllegalStateException("geocoder unavailable") }
+
+        assertNull(result)
+    }
+
+    @Test(expected = CancellationException::class)
+    fun reverseGeocoderCancellationIsPreserved() = runTest {
+        bestEffortReverseGeocode<String>(
+            enabled = true,
+            latitude = 51.5,
+            longitude = -0.1
+        ) { _, _ -> throw CancellationException("cancelled") }
+    }
+
+    @Test
+    fun originalMetadataIsRequestedOnlyForGrantedMediaStoreAccess() {
+        assertTrue(shouldRequestOriginalMetadata(29, permissionGranted = true, isMediaStoreUri = true))
+        assertFalse(shouldRequestOriginalMetadata(28, permissionGranted = true, isMediaStoreUri = true))
+        assertFalse(shouldRequestOriginalMetadata(29, permissionGranted = false, isMediaStoreUri = true))
+        assertFalse(shouldRequestOriginalMetadata(29, permissionGranted = true, isMediaStoreUri = false))
+    }
+
+    @Test
+    fun originalMetadataFailureFallsBackToRegularAccess() {
+        var fallbackCalled = false
+
+        val result = openOriginalOrFallback(
+            requestOriginal = true,
+            openOriginal = { throw SecurityException("original denied") },
+            openFallback = {
+                fallbackCalled = true
+                "regular"
+            }
+        )
+
+        assertEquals("regular", result)
+        assertTrue(fallbackCalled)
     }
 
     @Test

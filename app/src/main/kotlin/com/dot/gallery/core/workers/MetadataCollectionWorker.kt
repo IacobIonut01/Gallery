@@ -18,6 +18,7 @@ import com.dot.gallery.core.util.ProgressThrottler
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
 import com.dot.gallery.feature_node.domain.model.MediaMetadata
 import com.dot.gallery.feature_node.domain.model.MediaVersion
+import com.dot.gallery.feature_node.domain.model.metadataParsingPolicy
 import com.dot.gallery.feature_node.domain.model.retrieveExtraMediaMetadata
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.presentation.util.isMetadataUpToDate
@@ -25,6 +26,7 @@ import com.dot.gallery.feature_node.presentation.util.mediaStoreVersion
 import com.dot.gallery.feature_node.presentation.util.printDebug
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
@@ -100,7 +102,13 @@ class MetadataCollectionWorker @AssistedInject constructor(
                 val pct =
                     if (total <= 1) 100 else (((index + 1).toFloat() / total.toFloat()) * 100f).roundToInt()
                 throttler.emit(pct) { setProgress(workDataOf("progress" to it)) }
-                appContext.retrieveExtraMediaMetadata(isolatedParser, geocoder, it, usePerFile)?.let { metadata ->
+                appContext.retrieveExtraMediaMetadata(
+                    isolatedParser = isolatedParser,
+                    geocoder = geocoder,
+                    media = it,
+                    usePerFileIsolation = usePerFile,
+                    policy = metadataParsingPolicy(bulk = true)
+                )?.let { metadata ->
                     database.getMetadataDao().addMetadata(metadata)
                 }
             }
@@ -114,6 +122,7 @@ class MetadataCollectionWorker @AssistedInject constructor(
         setProgress(workDataOf("progress" to 100))
         return Result.success()
     }.getOrElse { exception ->
+        if (exception is CancellationException) throw exception
         printDebug("MetadataCollectionWorker failed with exception: ${exception.message}")
         return Result.failure()
     }
@@ -176,8 +185,9 @@ class MetadataCollectionWorker @AssistedInject constructor(
                 count++
             }
             printDebug("collectCloudMediaMetadata: populated=$count, skipped=$skipped (already existed)")
-        } catch (e: Exception) {
-            printDebug("collectCloudMediaMetadata: error: ${e.message}")
+        } catch (error: Exception) {
+            if (error is CancellationException) throw error
+            printDebug("collectCloudMediaMetadata: error: ${error.message}")
         }
     }
 

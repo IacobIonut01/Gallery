@@ -74,7 +74,7 @@ import com.dot.gallery.feature_node.domain.model.Media.UriMedia
 import com.dot.gallery.feature_node.domain.model.MediaCategory
 import com.dot.gallery.feature_node.domain.model.MediaMetadata
 import com.dot.gallery.feature_node.domain.model.MediaVersion
-import com.dot.gallery.feature_node.domain.model.MetadataParsingPolicy
+import com.dot.gallery.feature_node.domain.model.metadataParsingPolicy
 import com.dot.gallery.core.Settings
 import com.dot.gallery.core.sandbox.IsolatedMetadataParser
 import com.dot.gallery.feature_node.domain.model.LockedAlbum
@@ -1241,7 +1241,7 @@ class MediaRepositoryImpl(
             geocoder = geocoder,
             media = media,
             usePerFileIsolation = shouldUsePerFileIsolation(bulk),
-            policy = if (bulk) MetadataParsingPolicy.BULK_ISOLATED_ONLY else MetadataParsingPolicy.ON_DEMAND_COMPATIBLE
+            policy = metadataParsingPolicy(bulk)
         )
         if (metadata != null) {
             database.getMetadataDao().addMetadata(metadata)

@@ -29,7 +29,6 @@ import com.dot.gallery.feature_node.domain.util.isImage
 import com.dot.gallery.feature_node.domain.util.isVideo
 import com.dot.gallery.feature_node.presentation.util.formattedAddress
 import com.dot.gallery.feature_node.presentation.util.printDebug
-import com.dot.gallery.feature_node.presentation.util.printWarning
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -37,8 +36,6 @@ import kotlinx.serialization.Serializable
 import java.math.RoundingMode
 import java.text.DecimalFormat
 import java.util.Locale
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 import kotlin.math.roundToInt
 
 @Entity(tableName = "media_metadata_core")
@@ -212,7 +209,28 @@ fun MediaMetadata.getIcon(): ImageVector? {
 
 enum class MetadataParsingPolicy {
     ON_DEMAND_COMPATIBLE,
-    BULK_ISOLATED_ONLY
+    BULK_ISOLATED_ONLY;
+
+    val allowsReverseGeocoding: Boolean
+        get() = this == ON_DEMAND_COMPATIBLE
+}
+
+internal fun metadataParsingPolicy(bulk: Boolean): MetadataParsingPolicy =
+    if (bulk) MetadataParsingPolicy.BULK_ISOLATED_ONLY else MetadataParsingPolicy.ON_DEMAND_COMPATIBLE
+
+internal suspend fun <T> bestEffortReverseGeocode(
+    enabled: Boolean,
+    latitude: Double?,
+    longitude: Double?,
+    lookup: suspend (Double, Double) -> T?
+): T? {
+    if (!enabled || latitude == null || longitude == null) return null
+    return try {
+        lookup(latitude, longitude)
+    } catch (error: Exception) {
+        if (error is CancellationException) throw error
+        null
+    }
 }
 
 @Suppress("DEPRECATION")
@@ -246,7 +264,8 @@ suspend fun Context.retrieveExtraMediaMetadata(
                         bundle,
                         geocoder,
                         this@retrieveExtraMediaMetadata,
-                        allowInProcessFallback = policy == MetadataParsingPolicy.ON_DEMAND_COMPATIBLE
+                        allowInProcessFallback = policy == MetadataParsingPolicy.ON_DEMAND_COMPATIBLE,
+                        allowReverseGeocoding = policy.allowsReverseGeocoding
                     )
                 } else if (policy == MetadataParsingPolicy.ON_DEMAND_COMPATIBLE) {
                     buildFallbackImageMetadata(media.id, uri, geocoder, this@retrieveExtraMediaMetadata)
@@ -284,30 +303,20 @@ private suspend fun mediaMetadataFromImageBundle(
     bundle: Bundle,
     geocoder: Geocoder?,
     context: Context,
-    allowInProcessFallback: Boolean
+    allowInProcessFallback: Boolean,
+    allowReverseGeocoding: Boolean
 ): MediaMetadata {
     val gpsLatitude = if (bundle.containsKey(Keys.KEY_GPS_LAT)) bundle.getDouble(Keys.KEY_GPS_LAT) else null
     val gpsLongitude = if (bundle.containsKey(Keys.KEY_GPS_LON)) bundle.getDouble(Keys.KEY_GPS_LON) else null
 
     // Geocoding runs in the main app process (needs network + GMS)
-    var gpsLocationName: String? = null
-    var gpsLocationCountry: String? = null
-    var gpsLocationCity: String? = null
-    if (gpsLatitude != null && gpsLongitude != null) {
-        if (geocoder != null) {
-            suspendCoroutine {
-                val address = geocoder.getFromLocation(gpsLatitude, gpsLongitude, 1)
-                    .orEmpty().firstOrNull()
-                gpsLocationName = address?.formattedAddress
-                gpsLocationCountry = address?.countryName
-                gpsLocationCity = address?.locality
-                it.resume(Unit)
-            }
-        } else {
-            printWarning("MetadataReader: Geocoder not available")
-        }
+    val address = bestEffortReverseGeocode(
+        enabled = allowReverseGeocoding && geocoder != null,
+        latitude = gpsLatitude,
+        longitude = gpsLongitude
+    ) { latitude, longitude ->
+        geocoder?.getFromLocation(latitude, longitude, 1).orEmpty().firstOrNull()
     }
-
     var imgW = bundle.getInt(Keys.KEY_IMAGE_WIDTH, 0)
     var imgH = bundle.getInt(Keys.KEY_IMAGE_HEIGHT, 0)
 
@@ -352,9 +361,9 @@ private suspend fun mediaMetadataFromImageBundle(
         iso = bundle.getString(Keys.KEY_ISO),
         gpsLatitude = gpsLatitude,
         gpsLongitude = gpsLongitude,
-        gpsLocationName = gpsLocationName,
-        gpsLocationNameCountry = gpsLocationCountry,
-        gpsLocationNameCity = gpsLocationCity,
+        gpsLocationName = address?.formattedAddress,
+        gpsLocationNameCountry = address?.countryName,
+        gpsLocationNameCity = address?.locality,
         imageWidth = imgW,
         imageHeight = imgH,
         imageResolutionX = if (bundle.containsKey(Keys.KEY_RES_X)) bundle.getDouble(Keys.KEY_RES_X) else null,
@@ -498,21 +507,12 @@ private suspend fun buildFallbackImageMetadata(
             iso != null || focalLength != null || gpsLatitude != null
     if (!hasAnything) return null
 
-    var gpsLocationName: String? = null
-    var gpsLocationCountry: String? = null
-    var gpsLocationCity: String? = null
-    val lat = gpsLatitude
-    val lon = gpsLongitude
-    if (lat != null && lon != null && geocoder != null) {
-        runCatching {
-            suspendCoroutine {
-                val address = geocoder.getFromLocation(lat, lon, 1).orEmpty().firstOrNull()
-                gpsLocationName = address?.formattedAddress
-                gpsLocationCountry = address?.countryName
-                gpsLocationCity = address?.locality
-                it.resume(Unit)
-            }
-        }
+    val address = bestEffortReverseGeocode(
+        enabled = geocoder != null,
+        latitude = gpsLatitude,
+        longitude = gpsLongitude
+    ) { latitude, longitude ->
+        geocoder?.getFromLocation(latitude, longitude, 1).orEmpty().firstOrNull()
     }
 
     return MediaMetadata(
@@ -527,9 +527,9 @@ private suspend fun buildFallbackImageMetadata(
         focalLength = focalLength,
         gpsLatitude = gpsLatitude,
         gpsLongitude = gpsLongitude,
-        gpsLocationName = gpsLocationName,
-        gpsLocationNameCountry = gpsLocationCountry,
-        gpsLocationNameCity = gpsLocationCity,
+        gpsLocationName = address?.formattedAddress,
+        gpsLocationNameCountry = address?.countryName,
+        gpsLocationNameCity = address?.locality,
         imageWidth = imgW,
         imageHeight = imgH,
         imageResolutionX = resX,
