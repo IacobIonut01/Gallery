@@ -33,7 +33,12 @@ import com.dot.gallery.core.metadata.MetadataSanitizer
 import com.dot.gallery.core.metadata.SanitizationCapability
 import com.dot.gallery.core.metadata.SanitizationResult
 import com.dot.gallery.core.util.MediaStoreBuckets
+import com.dot.gallery.core.util.ext.copyToCancellable
+import com.dot.gallery.core.util.ext.isVerifiedMediaCopy
 import com.dot.gallery.core.util.ext.mapAsResource
+import com.dot.gallery.core.util.ext.mediaDateModified
+import com.dot.gallery.core.util.ext.mediaSize
+import com.dot.gallery.core.util.ext.restoreMediaTimestamp
 import com.dot.gallery.core.util.ext.overrideImageEncoded
 import com.dot.gallery.core.util.ext.renameMedia
 import com.dot.gallery.core.util.ext.saveImage
@@ -109,9 +114,13 @@ import com.dot.gallery.feature_node.presentation.util.printError
 import com.dot.gallery.feature_node.presentation.util.mediaStoreVersion
 import com.dot.gallery.feature_node.presentation.util.printInfo
 import com.dot.gallery.feature_node.presentation.util.printWarning
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.firstOrNull
@@ -122,6 +131,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.IOException
 
 internal fun shouldUsePerFileMetadataIsolation(mode: String, bulk: Boolean): Boolean = when (mode) {
     Settings.Security.METADATA_ISOLATION_PER_FILE -> true
@@ -478,22 +488,24 @@ class MediaRepositoryImpl(
             printWarning("Cannot delete Files collection items without all-files access")
             return MediaMutationResult.FAILED
         }
-        val intentSender = try {
-            MediaStore.createDeleteRequest(
+        return try {
+            val intentSender = MediaStore.createDeleteRequest(
                 contentResolver,
                 mediaList.map { it.getUri() }
             ).intentSender
-        } catch (e: IllegalArgumentException) {
-            printWarning("Failed to create delete request: ${e.message}")
-            return MediaMutationResult.FAILED
+            val senderRequest = IntentSenderRequest.Builder(intentSender)
+                .setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION, 0)
+                .build()
+            withContext(Dispatchers.Main.immediate) {
+                result.launch(senderRequest)
+            }
+            MediaMutationResult.REQUEST_LAUNCHED
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            printWarning("Failed to create or launch delete request: ${e.message}")
+            MediaMutationResult.FAILED
         }
-        val senderRequest: IntentSenderRequest = IntentSenderRequest.Builder(intentSender)
-            .setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION, 0)
-            .build()
-        withContext(Dispatchers.Main.immediate) {
-            result.launch(senderRequest)
-        }
-        return MediaMutationResult.REQUEST_LAUNCHED
     }
 
     override suspend fun <T : Media> copyMedia(
@@ -540,46 +552,131 @@ class MediaRepositoryImpl(
         destVolume: String,
         destRelPath: String
     ): Boolean = withContext(Dispatchers.IO) {
-        val cr = context.contentResolver
+        val copiedUri = copyMediaTo(media, destVolume, destRelPath)
+            ?: return@withContext false
+        try {
+            currentCoroutineContext().ensureActive()
+            if (contentResolver.delete(media.getUri(), null, null) <= 0) {
+                runCatching { contentResolver.delete(copiedUri, null, null) }
+                false
+            } else {
+                true
+            }
+        } catch (e: CancellationException) {
+            withContext(NonCancellable) {
+                runCatching { contentResolver.delete(copiedUri, null, null) }
+            }
+            throw e
+        } catch (e: Exception) {
+            printWarning("Cross-volume move failed: ${e.message}")
+            runCatching { contentResolver.delete(copiedUri, null, null) }
+            false
+        }
+    }
+
+    /**
+     * Writes a copy of [media] into [destRelPath] on [destVolume] and returns its uri, or null
+     * when the copy could not be completed. Nothing is written on failure.
+     */
+    private suspend fun <T : Media> copyMediaTo(
+        media: T,
+        destVolume: String,
+        destRelPath: String
+    ): Uri? = withContext(Dispatchers.IO) {
+        val cr = contentResolver
+        var targetUri: Uri? = null
+        var committed = false
         try {
             val srcUri = media.getUri()
-            val mediaType = cr.getType(srcUri) ?: return@withContext false
+            val mediaType = cr.getType(srcUri) ?: return@withContext null
             val isVideo = mediaType.startsWith("video")
+            val sourceDateModified = cr.mediaDateModified(srcUri)
+            val sourceSize = cr.mediaSize(srcUri)
 
-            val targetUri = cr.insert(
+            val insertedUri = cr.insert(
                 if (isVideo) MediaStore.Video.Media.getContentUri(destVolume)
                 else MediaStore.Images.Media.getContentUri(destVolume),
                 ContentValues().apply {
                     put(MediaStore.MediaColumns.DISPLAY_NAME, media.label)
-                    put(MediaStore.MediaColumns.MIME_TYPE, media.mimeType)
+                    put(MediaStore.MediaColumns.MIME_TYPE, mediaType)
                     put(MediaStore.MediaColumns.RELATIVE_PATH, destRelPath)
                     put(MediaStore.MediaColumns.IS_PENDING, 1)
                 }
-            ) ?: return@withContext false
+            ) ?: return@withContext null
+            targetUri = insertedUri
 
-            cr.openInputStream(srcUri)?.use { input ->
-                cr.openOutputStream(targetUri)?.use { output ->
-                    input.copyTo(output)
+            val copiedBytes = cr.openInputStream(srcUri)?.use { input ->
+                cr.openOutputStream(insertedUri)?.use { output ->
+                    input.copyToCancellable(output)
                 }
-            } ?: run {
-                cr.delete(targetUri, null, null)
-                return@withContext false
+            } ?: throw IOException("Unable to open media streams")
+            val targetSize = cr.mediaSize(insertedUri)
+            if (!isVerifiedMediaCopy(sourceSize, copiedBytes, targetSize)) {
+                throw IOException("Copied media size verification failed")
             }
-
-            cr.update(
-                targetUri,
-                ContentValues().apply {
-                    put(MediaStore.MediaColumns.IS_PENDING, 0)
-                    put(MediaStore.MediaColumns.DATE_MODIFIED, System.currentTimeMillis() / 1000)
-                },
-                null, null
-            )
-
-            cr.delete(srcUri, null, null)
-            true
+            currentCoroutineContext().ensureActive()
+            if (cr.update(
+                    insertedUri,
+                    ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 0) },
+                    null,
+                    null
+                ) <= 0
+            ) {
+                throw IOException("Unable to publish copied media")
+            }
+            // The copy belongs where the source was in the timeline, not at today's date.
+            context.restoreMediaTimestamp(insertedUri, mediaType, sourceDateModified)
+            committed = true
+            insertedUri
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            printWarning("Cross-volume move failed: ${e.message}")
-            false
+            printWarning("Copy to $destRelPath failed: ${e.message}")
+            null
+        } finally {
+            if (!committed) {
+                targetUri?.let { uri ->
+                    runCatching { cr.delete(uri, null, null) }
+                        .onFailure { error -> printWarning("Failed to discard partial copy: ${error.message}") }
+                }
+            }
+        }
+    }
+
+    override suspend fun <T : Media> copyMediaForMove(
+        mediaList: List<T>,
+        newPath: String,
+        onProgress: suspend (Float) -> Unit
+    ): List<Uri> = withContext(Dispatchers.IO) {
+        val (destVolume, destRelPath) = resolveMediaStoreVolume(newPath)
+        val copies = mutableListOf<Uri>()
+        try {
+            mediaList.forEachIndexed { index, media ->
+                val copiedUri = copyMediaTo(media, destVolume, destRelPath)
+                if (copiedUri == null) {
+                    // Never leave half a move behind: the originals are still untouched at this
+                    // point, so drop the copies we own and report the failure.
+                    discardMediaCopies(copies)
+                    return@withContext emptyList()
+                }
+                copies += copiedUri
+                onProgress((index + 1).toFloat() / mediaList.size)
+            }
+        } catch (e: CancellationException) {
+            // Leaving the sheet mid-copy cancels this scope; clean up before giving up.
+            withContext(NonCancellable) { discardMediaCopies(copies) }
+            throw e
+        } catch (e: Exception) {
+            withContext(NonCancellable) { discardMediaCopies(copies) }
+            throw e
+        }
+        copies
+    }
+
+    override suspend fun discardMediaCopies(uris: List<Uri>) = withContext(Dispatchers.IO) {
+        uris.forEach {
+            runCatching { contentResolver.delete(it, null, null) }
+                .onFailure { error -> printWarning("Failed to discard copy: ${error.message}") }
         }
     }
 

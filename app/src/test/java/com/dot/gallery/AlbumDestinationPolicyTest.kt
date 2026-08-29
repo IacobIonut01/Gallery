@@ -16,7 +16,7 @@ class AlbumDestinationPolicyTest {
     @Test
     fun matchingMediaStoreVolumesEnableExistingAlbum() {
         assertTrue(
-            isAlbumDestinationEnabled(
+            isAlbumMoveDestinationEnabled(
                 hasFullMediaAccess = false,
                 albumVolume = "external_primary",
                 albumRelativePath = "Pictures/Target/",
@@ -31,7 +31,7 @@ class AlbumDestinationPolicyTest {
     @Test
     fun anyDifferentMediaStoreVolumeDisablesBatchWithoutFullAccess() {
         assertFalse(
-            isAlbumDestinationEnabled(
+            isAlbumMoveDestinationEnabled(
                 hasFullMediaAccess = false,
                 albumVolume = "external_primary",
                 albumRelativePath = "Pictures/Target/",
@@ -44,14 +44,11 @@ class AlbumDestinationPolicyTest {
     }
 
     @Test
-    fun androidMediaSourceOrDestinationIsDisabledWithoutFullAccess() {
+    fun androidMediaDestinationIsDisabledWithoutFullAccess() {
         val regularSource = listOf(AlbumDestinationSource("external_primary", "DCIM/Camera/"))
-        val restrictedSource = listOf(
-            AlbumDestinationSource("external_primary", "Android/media/example.app/Pictures/"),
-        )
 
         assertFalse(
-            isAlbumDestinationEnabled(
+            isAlbumMoveDestinationEnabled(
                 false,
                 "external_primary",
                 "Android/media/example.app/Pictures/",
@@ -59,7 +56,57 @@ class AlbumDestinationPolicyTest {
             )
         )
         assertFalse(
-            isAlbumDestinationEnabled(
+            isAlbumCopyDestinationEnabled(
+                hasFullMediaAccess = false,
+                albumRelativePath = "Android/media/example.app/Pictures/",
+            )
+        )
+    }
+
+    @Test
+    fun fullAccessAllowsCrossVolumeButNeverCloudDestination() {
+        val sources = listOf(AlbumDestinationSource("external_primary", "DCIM/Camera/"))
+
+        assertTrue(isAlbumMoveDestinationEnabled(true, "71f8-2c0a", "Pictures/Target/", sources))
+        assertFalse(
+            isAlbumMoveDestinationEnabled(
+                true,
+                "IMMICH",
+                "cloud/IMMICH/Album",
+                sources,
+                isCloudAlbum = true,
+            )
+        )
+        assertTrue(
+            isAlbumMoveDestinationEnabled(
+                true,
+                "external_primary",
+                "cloud/LocalAlbum/",
+                sources,
+                isCloudAlbum = false,
+            )
+        )
+    }
+
+    @Test
+    fun restrictedSourceStaysEnabledForWritableAlbum() {
+        // A WhatsApp image (Android/media/com.whatsapp/...) can be copied into an existing album,
+        // and moved there through the copy + delete-request path.
+        val restrictedSource = listOf(
+            AlbumDestinationSource(
+                "external_primary",
+                "Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Images/",
+            ),
+        )
+
+        assertTrue(
+            isAlbumCopyDestinationEnabled(
+                hasFullMediaAccess = false,
+                albumRelativePath = "Pictures/Target/",
+            )
+        )
+        assertTrue(
+            isAlbumMoveDestinationEnabled(
                 false,
                 "external_primary",
                 "Pictures/Target/",
@@ -69,26 +116,24 @@ class AlbumDestinationPolicyTest {
     }
 
     @Test
-    fun fullAccessAllowsCrossVolumeButNeverCloudDestination() {
-        val sources = listOf(AlbumDestinationSource("external_primary", "DCIM/Camera/"))
-
-        assertTrue(isAlbumDestinationEnabled(true, "71f8-2c0a", "Pictures/Target/", sources))
+    fun copyToRestrictedOrCloudAlbumStaysDisabled() {
         assertFalse(
-            isAlbumDestinationEnabled(
-                true,
-                "IMMICH",
-                "cloud/IMMICH/Album",
-                sources,
+            isAlbumCopyDestinationEnabled(
+                hasFullMediaAccess = false,
+                albumRelativePath = "Android/media/example.app/Pictures/",
+            )
+        )
+        assertFalse(
+            isAlbumCopyDestinationEnabled(
+                hasFullMediaAccess = true,
+                albumRelativePath = "cloud/IMMICH/Album",
                 isCloudAlbum = true,
             )
         )
         assertTrue(
-            isAlbumDestinationEnabled(
-                true,
-                "external_primary",
-                "cloud/LocalAlbum/",
-                sources,
-                isCloudAlbum = false,
+            isAlbumCopyDestinationEnabled(
+                hasFullMediaAccess = true,
+                albumRelativePath = "Android/media/example.app/Pictures/",
             )
         )
     }
@@ -121,18 +166,32 @@ class AlbumDestinationPolicyTest {
                 sources + AlbumDestinationSource("external_primary", "Pictures/Camera/"),
             )
         )
+        assertFalse(
+            isAlbumMoveDestinationEnabled(
+                false,
+                "external_primary",
+                "dcim//camera/",
+                sources,
+            )
+        )
     }
 
     @Test
     fun cloudOnlySelectionCanTargetWritableLocalAlbum() {
         assertTrue(
-            isAlbumDestinationEnabled(
+            isAlbumMoveDestinationEnabled(
                 false,
                 "external_primary",
                 "Pictures/Target/",
                 emptyList(),
             )
         )
+    }
+
+    @Test
+    fun newAlbumUsesPicturesWithoutAllFilesAccess() {
+        assertEquals("Pictures/Receipts", resolveNewAlbumMovePath("Receipts", false))
+        assertEquals("Receipts", resolveNewAlbumMovePath("Receipts", true))
     }
 
     @Test

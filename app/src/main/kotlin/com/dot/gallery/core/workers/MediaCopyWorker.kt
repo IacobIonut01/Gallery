@@ -17,6 +17,11 @@ import com.dot.gallery.cloud.core.ProviderType
 import com.dot.gallery.cloud.core.capabilities.RemoteMediaProvider
 import com.dot.gallery.cloud.image.CloudFetcherRegistryHolder
 import com.dot.gallery.core.util.ProgressThrottler
+import com.dot.gallery.core.util.ext.copyToCancellable
+import com.dot.gallery.core.util.ext.isVerifiedMediaCopy
+import com.dot.gallery.core.util.ext.mediaDateModified
+import com.dot.gallery.core.util.ext.mediaSize
+import com.dot.gallery.core.util.ext.restoreMediaTimestamp
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.util.getUri
 import com.dot.gallery.feature_node.domain.util.resolveMediaStoreVolume
@@ -25,6 +30,7 @@ import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
@@ -149,6 +155,8 @@ class MediaCopyWorker @AssistedInject constructor(
     private suspend fun copyOne(src: Uri, destPath: String, mimeTypeHint: String? = null, labelHint: String? = null, onBytesCopied: suspend (Int) -> Unit = {}): Boolean =
         withContext(Dispatchers.IO) {
             val cr: ContentResolver = appContext.contentResolver
+            var targetUri: Uri? = null
+            var committed = false
             try {
                 val isCloudUri = src.scheme == "cloud"
                 val (volumeName, relPath) = resolveMediaStoreVolume(destPath)
@@ -163,7 +171,9 @@ class MediaCopyWorker @AssistedInject constructor(
                     src.lastPathSegment ?: "media"
                 }
                 val isVideo = mediaType.startsWith("video")
-                val targetUri = cr.insert(
+                val sourceDateModified = if (isCloudUri) 0L else cr.mediaDateModified(src)
+                val sourceSize = if (isCloudUri) -1L else cr.mediaSize(src)
+                val insertedUri = cr.insert(
                     if (isVideo) MediaStore.Video.Media.getContentUri(volumeName)
                     else MediaStore.Images.Media.getContentUri(volumeName),
                     ContentValues().apply {
@@ -173,38 +183,40 @@ class MediaCopyWorker @AssistedInject constructor(
                         put(MediaStore.MediaColumns.IS_PENDING, 1)
                     }
                 ) ?: return@withContext false
+                targetUri = insertedUri
 
-                val inputStream: InputStream? = if (isCloudUri) {
+                val inputStream: InputStream = if (isCloudUri) {
                     openCloudInputStream(src)
                 } else {
                     cr.openInputStream(src)
+                } ?: throw IOException("Unable to open source media")
+                val copiedBytes = inputStream.use { input ->
+                    val output = cr.openOutputStream(insertedUri)
+                        ?: throw IOException("Unable to open destination media")
+                    output.use { input.copyToCancellable(it, onBytesCopied) }
                 }
-
-                inputStream.use { input ->
-                    cr.openOutputStream(targetUri).use { output ->
-                        if (input != null && output != null) {
-                            val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
-                            while (true) {
-                                val read = input.read(buffer)
-                                if (read == -1) break
-                                output.write(buffer, 0, read)
-                                onBytesCopied(read)
-                            }
-                        }
-                    }
+                val targetSize = cr.mediaSize(insertedUri)
+                if (!isVerifiedMediaCopy(sourceSize, copiedBytes, targetSize)) {
+                    throw IOException("Copied media size verification failed")
                 }
-
+                currentCoroutineContext().ensureActive()
                 val updateValues = ContentValues().apply {
                     put(MediaStore.MediaColumns.IS_PENDING, 0)
-                    put(
-                        MediaStore.MediaColumns.DATE_MODIFIED,
-                        System.currentTimeMillis() / 1000
-                    )
                 }
-                return@withContext cr.update(targetUri, updateValues, null, null) > 0
+                if (cr.update(insertedUri, updateValues, null, null) <= 0) {
+                    throw IOException("Unable to publish copied media")
+                }
+                // Keep the copy where the source sits in the timeline instead of sending it to
+                // the top of the destination album with today's date.
+                appContext.restoreMediaTimestamp(insertedUri, mediaType, sourceDateModified)
+                committed = true
+                true
             } catch (e: IOException) {
-                if (e.message?.contains("ENOSPC") == true) return@withContext false
-                return@withContext false
+                false
+            } finally {
+                if (!committed) {
+                    targetUri?.let { uri -> runCatching { cr.delete(uri, null, null) } }
+                }
             }
         }
 

@@ -21,6 +21,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.ParcelFileDescriptor
 import android.provider.MediaStore
+import android.provider.OpenableColumns
 import androidx.annotation.RequiresApi
 import androidx.exifinterface.media.ExifInterface
 import com.dot.gallery.core.decoder.format.ImageReencoder
@@ -31,18 +32,103 @@ import com.dot.gallery.feature_node.presentation.util.printWarning
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
+import java.io.InputStream
 import java.io.OutputStream
 
 @RequiresApi(Build.VERSION_CODES.R)
+/** DATE_MODIFIED of [uri] in seconds, or 0 when it cannot be read. */
+fun ContentResolver.mediaDateModified(uri: Uri): Long {
+    runCatching {
+        query(uri, arrayOf(MediaStore.MediaColumns.DATE_MODIFIED), null, null, null)?.use {
+            if (it.moveToFirst() && !it.isNull(0)) return it.getLong(0)
+        }
+    }.onFailure { printWarning("Failed to read the date of $uri: ${it.message}") }
+    return 0L
+}
+
+fun ContentResolver.mediaSize(uri: Uri): Long {
+    runCatching {
+        query(uri, arrayOf(OpenableColumns.SIZE), null, null, null)?.use {
+            if (it.moveToFirst() && !it.isNull(0)) return it.getLong(0)
+        }
+    }.onFailure { printWarning("Failed to read the size of $uri: ${it.message}") }
+    return -1L
+}
+
+internal fun isVerifiedMediaCopy(sourceSize: Long, copiedBytes: Long, destinationSize: Long): Boolean =
+    copiedBytes > 0L &&
+        (sourceSize < 0L || copiedBytes == sourceSize) &&
+        (destinationSize < 0L || copiedBytes == destinationSize)
+
+internal suspend fun InputStream.copyToCancellable(
+    output: OutputStream,
+    onBytesCopied: suspend (Int) -> Unit = {},
+): Long {
+    val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+    var copiedBytes = 0L
+    while (true) {
+        currentCoroutineContext().ensureActive()
+        val read = read(buffer)
+        if (read == -1) break
+        currentCoroutineContext().ensureActive()
+        output.write(buffer, 0, read)
+        copiedBytes += read
+        onBytesCopied(read)
+    }
+    currentCoroutineContext().ensureActive()
+    return copiedBytes
+}
+
+/**
+ * Gives a freshly written copy the timestamp of the media it was copied from. MediaProvider
+ * ignores DATE_MODIFIED/DATE_TAKEN coming from an app and recomputes them from the file, so the
+ * timestamp has to be set on the file itself and picked up by a rescan - otherwise every copy
+ * jumps to the top of its album, ordered as if it had just been taken.
+ */
+suspend fun Context.restoreMediaTimestamp(
+    uri: Uri,
+    mimeType: String?,
+    dateModifiedSeconds: Long
+): Boolean {
+    if (dateModifiedSeconds <= 0L) return false
+    val path = runCatching {
+        contentResolver.query(
+            uri,
+            arrayOf(MediaStore.MediaColumns.DATA),
+            null,
+            null,
+            null
+        )?.use { if (it.moveToFirst()) it.getString(0) else null }
+    }.getOrNull() ?: return false
+    if (!File(path).setLastModified(dateModifiedSeconds * 1000)) return false
+    return withTimeoutOrNull(SCAN_TIMEOUT_MS) {
+        suspendCancellableCoroutine { continuation ->
+            MediaScannerConnection.scanFile(
+                this@restoreMediaTimestamp,
+                arrayOf(path),
+                arrayOf(mimeType)
+            ) { _, _ ->
+                if (continuation.isActive) continuation.resume(true) {  _, _, _ -> }
+            }
+        }
+    } ?: false
+}
+
+private const val SCAN_TIMEOUT_MS = 10_000L
+
 fun ContentResolver.querySteppedFlow(
     uri: Uri,
     projection: Array<String>? = null,
@@ -515,7 +601,7 @@ suspend fun <T : Media> Context.updateMediaExif(
             }
         } ?: throw IOException("PFD null")
         updateMedia(media, ContentValues().apply {
-            put(MediaStore.MediaColumns.DATE_MODIFIED, System.currentTimeMillis())
+            put(MediaStore.MediaColumns.DATE_MODIFIED, System.currentTimeMillis() / 1000)
         })
         postAction(media)
         true
