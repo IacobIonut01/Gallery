@@ -38,6 +38,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.graphicsLayer
@@ -54,6 +55,7 @@ import com.dot.gallery.feature_node.presentation.util.quantizeBlur
 import com.dot.gallery.feature_node.presentation.util.resizeBitmap
 import com.dot.gallery.feature_node.presentation.util.safeSystemGesturesPadding
 import com.github.panpf.zoomimage.GlideZoomAsyncImage
+import com.github.panpf.zoomimage.ZoomImage
 import com.github.panpf.zoomimage.compose.glide.ExperimentalGlideComposeApi
 import com.smarttoolfactory.cropper.ImageCropper
 import com.smarttoolfactory.cropper.model.AspectRatio
@@ -62,6 +64,11 @@ import com.smarttoolfactory.cropper.model.RectCropShape
 import com.smarttoolfactory.cropper.settings.CropDefaults
 import com.smarttoolfactory.cropper.settings.CropOutlineProperty
 
+
+internal fun shouldUseAsyncSourceRenderer(
+    showSourceSubsampling: Boolean,
+    hasSourceUri: Boolean,
+): Boolean = showSourceSubsampling && hasSourceUri
 
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
@@ -95,7 +102,7 @@ fun ImageViewer(
     setPreviousPosition: (Offset) -> Unit,
     setCurrentPath: (Path) -> Unit,
     setCurrentPathProperty: (PathProperties) -> Unit,
-    applyDrawing: (Bitmap, () -> Unit) -> Unit,
+    applyDrawing: (Bitmap, (Boolean) -> Unit) -> Unit,
     onNavigateBack: () -> Unit = {},
     requestApply: Boolean = false,
     onApplyHandled: () -> Unit = {},
@@ -136,7 +143,9 @@ fun ImageViewer(
             } else sharpMatrix
         }
     }
-
+    val previewColorFilter = remember(effectiveMatrix) {
+        ColorFilter.colorMatrix(effectiveMatrix ?: ColorMatrix())
+    }
 
     val surfaceColor = MaterialTheme.colorScheme.surfaceContainerLowest
     val animatedCornerRadius by animateDpAsState(
@@ -196,31 +205,34 @@ fun ImageViewer(
                 if (!showMarkup) {
                     // When the image is pristine (no baked-in edits) we feed the ORIGINAL source to
                     // zoomimage so the user can zoom to true 100% pixels via tile subsampling,
-                    // instead of the 2048 proxy. Live colour edits still preview via colorFilter.
-                    // Once edits are committed they are baked into the proxy, so we fall back to the
-                    // proxy bitmap to keep the displayed result correct.
-                    val baseModel: Any = if (showSourceSubsampling && sourceUri != null) {
-                        sourceUri
+                    // instead of the 2048 proxy. Preview modes use a synchronous bitmap painter so
+                    // live changes never wait for an asynchronous Glide request between frames.
+                    val previewBlurRadius = (blurRadius * 2f).quantizeBlur(2f).dp
+                    val previewModifier = Modifier
+                        .fillMaxSize()
+                        .blur(radiusX = previewBlurRadius, radiusY = previewBlurRadius)
+                    if (shouldUseAsyncSourceRenderer(showSourceSubsampling, sourceUri != null)) {
+                        GlideZoomAsyncImage(
+                            modifier = previewModifier,
+                            model = sourceUri,
+                            contentDescription = null,
+                            scrollBar = null,
+                            colorFilter = previewColorFilter,
+                            onLongPress = { onLongClick?.invoke() }
+                        )
                     } else {
-                        resizedBitmap!!
+                        val previewPainter = remember(resizedBitmap) {
+                            BitmapPainter(resizedBitmap!!.asImageBitmap())
+                        }
+                        ZoomImage(
+                            modifier = previewModifier,
+                            painter = previewPainter,
+                            contentDescription = null,
+                            scrollBar = null,
+                            colorFilter = previewColorFilter,
+                            onLongPress = { onLongClick?.invoke() }
+                        )
                     }
-                    GlideZoomAsyncImage(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .then(
-                                if (blurRadius > 0f) {
-                                    // Snap to fixed buckets so the GPU reuses a handful of blur
-                                    // shaders instead of compiling a new pipeline per slider step.
-                                    val r = (blurRadius * 2f).quantizeBlur(2f).dp
-                                    Modifier.blur(radiusX = r, radiusY = r)
-                                } else Modifier
-                            ),
-                        model = baseModel,
-                        contentDescription = null,
-                        scrollBar = null,
-                        colorFilter = effectiveMatrix?.let { ColorFilter.colorMatrix(it) },
-                        onLongPress = { onLongClick?.invoke() }
-                    )
                     // Vignette overlay — separate composable so it doesn't interfere with colorFilter
                     if (vignetteIntensity > 0f) {
                         val bmp = currentImage

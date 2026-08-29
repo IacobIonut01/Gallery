@@ -141,7 +141,9 @@ private fun MarkupSelectorPhone(
     isDetectingFaces: Boolean = false,
 ) {
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .defaultMinSize(minHeight = if (faceDetectAvailable) 212.dp else 160.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Tool type text tabs (Pen / Highlighter / Blur / Mosaic / Text)

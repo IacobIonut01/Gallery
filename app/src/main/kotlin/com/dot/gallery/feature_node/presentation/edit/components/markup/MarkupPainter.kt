@@ -75,7 +75,7 @@ fun MarkupPainter(
     currentPathProperty: PathProperties,
     setCurrentPathProperty: (PathProperties) -> Unit,
     currentImage: Bitmap?,
-    applyDrawing: (Bitmap, () -> Unit) -> Unit,
+    applyDrawing: (Bitmap, (Boolean) -> Unit) -> Unit,
     onNavigateBack: () -> Unit = {},
     requestApply: Boolean = false,
     onApplyHandled: () -> Unit = {},
@@ -156,11 +156,15 @@ fun MarkupPainter(
             delay(100)
             mutex.withLock {
                 val image = graphicsLayer.toImageBitmap().asAndroidBitmap()
-                applyDrawing(image) {
-                    onNavigateBack()
+                applyDrawing(image) { applied ->
+                    if (applied) {
+                        onTextAnnotationsChange(emptyList())
+                        onSelectedTextIndexChange(-1)
+                        onNavigateBack()
+                    }
+                    onApplyHandled()
                 }
             }
-            onApplyHandled()
         } else if (requestApply) {
             onApplyHandled()
         }

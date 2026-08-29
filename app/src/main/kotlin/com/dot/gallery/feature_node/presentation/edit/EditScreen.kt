@@ -62,6 +62,7 @@ import androidx.compose.material3.adaptive.layout.SupportingPaneScaffoldRole
 import androidx.compose.material3.adaptive.navigation.rememberSupportingPaneScaffoldNavigator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -114,6 +115,11 @@ import com.smarttoolfactory.cropper.model.AspectRatio
 import dev.chrisbanes.haze.hazeSource
 import kotlin.math.roundToInt
 
+internal fun shouldShowSourceSubsampling(
+    hasAppliedAdjustments: Boolean,
+    usesProxyPreview: Boolean,
+): Boolean = !hasAppliedAdjustments && !usesProxyPreview
+
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun EditScreen2(
@@ -157,7 +163,7 @@ fun EditScreen2(
     setDrawType: (DrawType) -> Unit,
     setCurrentPath: (Path) -> Unit,
     setCurrentPathProperty: (PathProperties) -> Unit,
-    applyDrawing: (Bitmap, () -> Unit) -> Unit,
+    applyDrawing: (Bitmap, (Boolean) -> Unit) -> Unit,
     undoLastPath: () -> Unit,
     redoLastPath: () -> Unit,
     clearDrawing: () -> Unit = {},
@@ -205,6 +211,7 @@ fun EditScreen2(
     )
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val visibleEntries by navController.visibleEntries.collectAsState()
 
     // Track if we're in actual drawing mode (MarkupDraw), not the Markup tool-picker tab
     val isMarkupDrawing by rememberedDerivedState {
@@ -216,13 +223,27 @@ fun EditScreen2(
         isMarkupDrawing ||
         navBackStackEntry?.destination?.hasRoute<EditorDestination.AdjustDetail>() == true
     }
+    val usesProxyPreview by rememberedDerivedState {
+        isProcessing || visibleEntries.any { entry ->
+            entry.destination.hasRoute<EditorDestination.AdjustDetail>() ||
+                entry.destination.hasRoute<EditorDestination.MarkupDraw>() ||
+                entry.destination.hasRoute<EditorDestination.Filters>() ||
+                entry.destination.hasRoute<EditorDestination.Develop>()
+        }
+    }
+
+    // Text annotation state
+    var textAnnotations by remember { mutableStateOf<List<TextAnnotation>>(emptyList()) }
+    var showTextOverlay by remember { mutableStateOf(false) }
+    var selectedTextIndex by remember { mutableIntStateOf(-1) }
 
     var requestMarkupApply by remember { mutableStateOf(false) }
 
     // Auto-apply markup when leaving drawing mode
     var wasDrawing by remember { mutableStateOf(false) }
     LaunchedEffect(isMarkupDrawing) {
-        if (wasDrawing && !isMarkupDrawing && paths.isNotEmpty()) {
+        if (wasDrawing && !isMarkupDrawing && (paths.isNotEmpty() || textAnnotations.isNotEmpty())) {
+            navController.navigate(EditorDestination.MarkupDraw) { launchSingleTop = true }
             requestMarkupApply = true
         }
         wasDrawing = isMarkupDrawing
@@ -318,11 +339,6 @@ fun EditScreen2(
     var selectedAspectRatio by remember { mutableStateOf(AspectRatio.Original) }
     var showAspectMenu by remember { mutableStateOf(false) }
 
-    // Text annotation state
-    var textAnnotations by remember { mutableStateOf<List<TextAnnotation>>(emptyList()) }
-    var showTextOverlay by remember { mutableStateOf(false) }
-    var selectedTextIndex by remember { mutableIntStateOf(-1) }
-
     val onRequestTextInput: () -> Unit = { showTextOverlay = true }
 
     // Apply (or cancel) markup on a back press while still in drawing mode, so the
@@ -342,7 +358,7 @@ fun EditScreen2(
     // (the painter is already gone and can't handle it), clear the flag so the
     // loading/blur overlay can never hang indefinitely (#955).
     LaunchedEffect(requestMarkupApply, isMarkupDrawing) {
-        if (requestMarkupApply && !isMarkupDrawing) {
+        if (requestMarkupApply && !isMarkupDrawing && paths.isEmpty() && textAnnotations.isEmpty()) {
             requestMarkupApply = false
         }
     }
@@ -464,7 +480,7 @@ fun EditScreen2(
                 ) {
                     Button(
                         onClick = onSaveCopy,
-                        enabled = isChanged && canSave && !isProcessing && !isSaving,
+                        enabled = isChanged && canSave && !isMarkupDrawing && !isProcessing && !isSaving,
                         shape = CircleShape,
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                         colors = ButtonDefaults.buttonColors(
@@ -497,7 +513,7 @@ fun EditScreen2(
                     Box {
                         IconButton(
                             onClick = { showMenu = true },
-                            enabled = !isProcessing && !isSaving,
+                            enabled = !isMarkupDrawing && !isProcessing && !isSaving,
                             modifier = Modifier.size(40.dp)
                         ) {
                             Icon(
@@ -790,9 +806,12 @@ fun EditScreen2(
                             currentImage = currentImage,
                             sourceUri = targetUri,
                             // Show the original via tile subsampling (true 100% zoom) only while the
-                            // image is pristine; once edits are baked into the proxy we display the
-                            // proxy so the on-screen result stays correct.
-                            showSourceSubsampling = appliedAdjustments.isEmpty(),
+                            // image is pristine and no detail tool is previewing against the proxy.
+                            // Once edits are baked, the proxy keeps the on-screen result correct.
+                            showSourceSubsampling = shouldShowSourceSubsampling(
+                                hasAppliedAdjustments = appliedAdjustments.isNotEmpty(),
+                                usesProxyPreview = usesProxyPreview,
+                            ),
                             previewMatrix = previewMatrix,
                             previewRotation = previewRotation,
                             cropState = cropState,
@@ -955,6 +974,8 @@ fun EditScreen2(
                             IconButton(
                                 onClick = {
                                     clearDrawing()
+                                    textAnnotations = emptyList()
+                                    selectedTextIndex = -1
                                     navController.popBackStack()
                                 },
                                 modifier = Modifier

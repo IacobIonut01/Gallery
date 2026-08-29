@@ -17,7 +17,11 @@ import com.dot.gallery.feature_node.domain.model.editor.VariableFilter
 import com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.VariableFilterTypes
 import com.dot.gallery.feature_node.presentation.edit.components.core.HorizontalScrubber
 import com.dot.gallery.feature_node.presentation.edit.components.core.VerticalScrubber
+import kotlin.math.abs
 import kotlin.math.roundToInt
+
+internal fun shouldDispatchAdjustmentPreview(currentValue: Float, newValue: Float): Boolean =
+    abs(currentValue - newValue) > 1e-4f
 
 @Composable
 fun AdjustScrubber(
@@ -65,9 +69,11 @@ fun AdjustScrubber(
                 currentValue = currentValue,
                 displayValue = displayValue,
                 onValueChanged = { _, newValue ->
-                    currentValue = newValue
-                    currentAdjustment = adjustment.createFilter(newValue)
-                    onAdjustmentPreview(currentAdjustment)
+                    if (shouldDispatchAdjustmentPreview(currentValue, newValue)) {
+                        currentValue = newValue
+                        currentAdjustment = adjustment.createFilter(newValue)
+                        onAdjustmentPreview(currentAdjustment)
+                    }
                 }
             )
         }
@@ -81,9 +87,11 @@ fun AdjustScrubber(
             currentValue = currentValue,
             displayValue = displayValue,
             onValueChanged = { _, newValue ->
-                currentValue = newValue
-                currentAdjustment = adjustment.createFilter(newValue)
-                onAdjustmentPreview(currentAdjustment)
+                if (shouldDispatchAdjustmentPreview(currentValue, newValue)) {
+                    currentValue = newValue
+                    currentAdjustment = adjustment.createFilter(newValue)
+                    onAdjustmentPreview(currentAdjustment)
+                }
             }
         )
     }

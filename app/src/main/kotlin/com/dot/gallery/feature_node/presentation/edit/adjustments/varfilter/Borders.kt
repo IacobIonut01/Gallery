@@ -34,10 +34,18 @@ data class Borders(
         if (thickness <= 0) return bitmap
         val newWidth = bitmap.width + thickness * 2
         val newHeight = bitmap.height + thickness * 2
-        val result = createBitmap(newWidth, newHeight, bitmap.config ?: Bitmap.Config.ARGB_8888)
+        val config = bitmap.config?.takeUnless { it == Bitmap.Config.HARDWARE }
+            ?: Bitmap.Config.ARGB_8888
+        val result = createBitmap(newWidth, newHeight, config)
+        val drawableBitmap = if (bitmap.config == Bitmap.Config.HARDWARE) {
+            bitmap.copy(Bitmap.Config.ARGB_8888, false)
+        } else {
+            bitmap
+        }
         val canvas = Canvas(result)
         canvas.drawColor(color)
-        canvas.drawBitmap(bitmap, thickness.toFloat(), thickness.toFloat(), null)
+        canvas.drawBitmap(drawableBitmap, thickness.toFloat(), thickness.toFloat(), null)
+        if (drawableBitmap !== bitmap) drawableBitmap.recycle()
         return result
     }
 

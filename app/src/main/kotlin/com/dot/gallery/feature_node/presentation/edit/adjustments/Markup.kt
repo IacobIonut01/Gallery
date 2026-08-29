@@ -4,10 +4,8 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Matrix
 import android.graphics.Paint
-import androidx.core.graphics.scale
 import com.dot.gallery.feature_node.domain.model.editor.TileBehavior
 import com.dot.gallery.feature_node.domain.model.editor.TileableAdjustment
-import com.dot.gallery.feature_node.presentation.util.overlayBitmaps
 
 /**
  * Markup drawn as a transparent [overlay] (strokes, text, blur/mosaic regions) captured at the
@@ -20,12 +18,17 @@ import com.dot.gallery.feature_node.presentation.util.overlayBitmaps
 data class Markup(val overlay: Bitmap): TileableAdjustment {
 
     override fun apply(bitmap: Bitmap): Bitmap {
-        val scaled = if (overlay.width == bitmap.width && overlay.height == bitmap.height) {
-            overlay
-        } else {
-            overlay.scale(bitmap.width, bitmap.height)
+        val config = bitmap.config?.takeUnless { it == Bitmap.Config.HARDWARE }
+            ?: Bitmap.Config.ARGB_8888
+        val result = bitmap.copy(config, true)
+        val matrix = Matrix().apply {
+            setScale(
+                bitmap.width / overlay.width.toFloat(),
+                bitmap.height / overlay.height.toFloat()
+            )
         }
-        return overlayBitmaps(bitmap, scaled)
+        Canvas(result).drawBitmap(overlay, matrix, Paint(Paint.FILTER_BITMAP_FLAG))
+        return result
     }
 
     override fun applyTile(

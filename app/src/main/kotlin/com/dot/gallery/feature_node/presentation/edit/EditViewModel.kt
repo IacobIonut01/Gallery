@@ -19,7 +19,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.core.graphics.scale
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bumptech.glide.Glide
@@ -64,7 +63,6 @@ import com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.Deno
 import com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.Sharpness
 import com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.Vignette
 import com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.VariableFilterTypes
-import com.dot.gallery.feature_node.presentation.util.overlayBitmaps
 import com.dot.gallery.feature_node.presentation.util.applyColorMatrix
 import com.dot.gallery.feature_node.presentation.util.resizeBitmap
 import com.dot.gallery.core.workers.EditBackupWorker
@@ -1181,88 +1179,94 @@ class EditViewModel @Inject constructor(
     }
 
     fun applyAdjustment(adjustment: Adjustment) {
+        _isProcessing.value = true
         viewModelScope.launch(Dispatchers.IO) {
-            _isProcessing.value = true
-            printDebug("Applying adjustment: $adjustment")
-            val filters = _appliedAdjustments.value
-            clearRedoStack()
+            applyAdjustmentAndWait(adjustment)
+        }
+    }
 
-            // Update applied-adjustments list (dedup same-kind for VariableFilter / ImageFilter).
-            // adjustmentsWithout is the list with any previous entry of this kind removed; it is
-            // also what we fall back to when the new adjustment turns out to be a no-op (#957/#961).
-            val adjustmentsWithout: List<Adjustment> = when (adjustment) {
-                is VariableFilter -> filters.filterNot { it.name.equals(adjustment.name, ignoreCase = true) }
-                is ImageFilter -> filters.filterNot { it is ImageFilter }
-                else -> filters
+    private suspend fun applyAdjustmentAndWait(adjustment: Adjustment) {
+        _isProcessing.value = true
+        printDebug("Applying adjustment: $adjustment")
+        val filters = _appliedAdjustments.value
+        clearRedoStack()
+
+        // Update applied-adjustments list (dedup same-kind for VariableFilter / ImageFilter).
+        // adjustmentsWithout is the list with any previous entry of this kind removed; it is
+        // also what we fall back to when the new adjustment turns out to be a no-op (#957/#961).
+        val adjustmentsWithout: List<Adjustment> = when (adjustment) {
+            is VariableFilter -> filters.filterNot { it.name.equals(adjustment.name, ignoreCase = true) }
+            is ImageFilter -> filters.filterNot { it is ImageFilter }
+            else -> filters
+        }
+
+        // Always create a new bitmap (original behaviour)
+        _currentBitmap.value?.let {
+            if (adjustment is ImageFilter) {
+                bitmaps.removeAll { entry -> entry.second is ImageFilter }
+                _targetBitmap.value = bitmaps.lastOrNull()?.first
             }
-            _appliedAdjustments.value = adjustmentsWithout + adjustment
+            if (adjustment is VariableFilter) {
+                bitmaps.removeAll { entry -> entry.second?.name.equals(adjustment.name, ignoreCase = true) }
+                _targetBitmap.value = bitmaps.lastOrNull()?.first
+            }
 
-            // Always create a new bitmap (original behaviour)
-            _currentBitmap.value?.let {
-                if (adjustment is ImageFilter) {
-                    bitmaps.removeAll { entry -> entry.second is ImageFilter }
-                    _targetBitmap.value = bitmaps.lastOrNull()?.first
-                }
-                if (adjustment is VariableFilter) {
-                    bitmaps.removeAll { entry -> entry.second?.name.equals(adjustment.name, ignoreCase = true) }
-                    _targetBitmap.value = bitmaps.lastOrNull()?.first
-                }
+            val baseBitmap =
+                if (adjustment is VariableFilter || adjustment is ImageFilter)
+                    _targetBitmap.value ?: _originalBitmap.value ?: it
+                else
+                    bitmaps.lastOrNull()?.first ?: it
 
-                val baseBitmap =
-                    if (adjustment is VariableFilter || adjustment is ImageFilter)
-                        _targetBitmap.value ?: _originalBitmap.value ?: it
-                    else
-                        bitmaps.lastOrNull()?.first ?: it
-
-                val newBitmap = adjustment.apply(baseBitmap)
-                // No-op guard: drop adjustments that produce no visible change so the tool icon
-                // stops showing as "modified" (#957) and identical actions don't stack on the
-                // undo/revert history (#961). A variable filter scrubbed back to its default
-                // value is treated as a no-op directly: pixel comparison alone is unreliable
-                // because some filters aren't perfectly pixel-identical at their default and,
-                // when this is the only filter, the base falls back to the already-filtered
-                // bitmap. Falling back to adjustmentsWithout removes the filter entirely.
-                val isDefaultVariableFilter = adjustment is VariableFilter &&
-                        kotlin.math.abs(adjustment.value - adjustment.defaultValue) < 1e-4f
-                if (isDefaultVariableFilter || newBitmap.sameAs(baseBitmap)) {
-                    _appliedAdjustments.value = adjustmentsWithout
-                    withContext(Dispatchers.Main) {
-                        _currentBitmap.value = baseBitmap
-                        _previewMatrix.value = null
-                        if (adjustment is Rotate) _previewRotation.value = 0f
-                        if (adjustment is Rotate90CW) _previewRotation90.value = 0f
-                        if (adjustment is Flip) _previewFlipH.value = false
-                        clearGpuPreviewEffects()
-                    }
-                    updateUndoRedoState()
-                    _isProcessing.value = false
-                    return@launch
-                }
-                _currentBitmap.value = newBitmap
-                if (adjustment !is ImageFilter) {
-                    _targetBitmap.value = newBitmap
-                }
-                bitmaps.add(newBitmap to adjustment)
-                // Clear previews on Main after bitmap is set, so the UI
-                // renders the new bitmap before the preview overlay disappears
+            val newBitmap = adjustment.apply(baseBitmap)
+            // No-op guard: drop adjustments that produce no visible change so the tool icon
+            // stops showing as "modified" (#957) and identical actions don't stack on the
+            // undo/revert history (#961). A variable filter scrubbed back to its default
+            // value is treated as a no-op directly: pixel comparison alone is unreliable
+            // because some filters aren't perfectly pixel-identical at their default and,
+            // when this is the only filter, the base falls back to the already-filtered
+            // bitmap. Falling back to adjustmentsWithout removes the filter entirely.
+            val isDefaultVariableFilter = adjustment is VariableFilter &&
+                    kotlin.math.abs(adjustment.value - adjustment.defaultValue) < 1e-4f
+            if (isDefaultVariableFilter || newBitmap.sameAs(baseBitmap)) {
+                if (newBitmap !== baseBitmap && !newBitmap.isRecycled) newBitmap.recycle()
+                _appliedAdjustments.value = adjustmentsWithout
                 withContext(Dispatchers.Main) {
+                    _currentBitmap.value = baseBitmap
                     _previewMatrix.value = null
-                    if (adjustment is Rotate) {
-                        _previewRotation.value = 0f
-                    }
-                    if (adjustment is Rotate90CW) {
-                        _previewRotation90.value = 0f
-                    }
-                    if (adjustment is Flip) {
-                        _previewFlipH.value = false
-                    }
+                    if (adjustment is Rotate) _previewRotation.value = 0f
+                    if (adjustment is Rotate90CW) _previewRotation90.value = 0f
+                    if (adjustment is Flip) _previewFlipH.value = false
                     clearGpuPreviewEffects()
                 }
-            } ?: printError("Current bitmap is null")
+                updateUndoRedoState()
+                _isProcessing.value = false
+                return
+            }
+            _appliedAdjustments.value = adjustmentsWithout + adjustment
+            _currentBitmap.value = newBitmap
+            if (adjustment !is ImageFilter) {
+                _targetBitmap.value = newBitmap
+            }
+            bitmaps.add(newBitmap to adjustment)
+            // Clear previews on Main after bitmap is set, so the UI
+            // renders the new bitmap before the preview overlay disappears
+            withContext(Dispatchers.Main) {
+                _previewMatrix.value = null
+                if (adjustment is Rotate) {
+                    _previewRotation.value = 0f
+                }
+                if (adjustment is Rotate90CW) {
+                    _previewRotation90.value = 0f
+                }
+                if (adjustment is Flip) {
+                    _previewFlipH.value = false
+                }
+                clearGpuPreviewEffects()
+            }
+        } ?: printError("Current bitmap is null")
 
-            updateUndoRedoState()
-            _isProcessing.value = false
-        }
+        updateUndoRedoState()
+        _isProcessing.value = false
     }
 
     fun applyRotate90() {
@@ -1277,43 +1281,35 @@ class EditViewModel @Inject constructor(
         applyAdjustment(Flip(horizontal = true))
     }
 
-    private var applyDrawingJob: Job? = null
-
-    fun applyDrawing(graphicsImage: Bitmap, onFinish: () -> Unit) {
-        applyDrawingJob?.cancel()
-        applyDrawingJob = viewModelScope.launch(Dispatchers.IO) {
+    fun applyDrawing(graphicsImage: Bitmap, onFinish: (Boolean) -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
             mutex.withLock {
                 // Flatten any pending matrix adjustments before markup
                 flattenComposedMatrix()
                 val currentImage = lastRealBitmap()
-                if (currentImage != null) {
-                    try {
-                        val newWidth = currentImage.width
-                        val newHeight = currentImage.height
-                        if (newWidth > 0 && newHeight > 0) {
-                            // graphicsImage is a transparent overlay captured at the markup canvas
-                            // resolution. Compose it against the base only to detect a no-op; the
-                            // adjustment stores the raw overlay so the bake engine can re-composite
-                            // it onto the full-resolution original (Markup.apply scales as needed).
-                            val finalBitmap = overlayBitmaps(
-                                currentImage,
-                                graphicsImage.scale(newWidth, newHeight)
-                            )
-                            if (!currentImage.sameAs(finalBitmap)) {
-                                applyAdjustment(Markup(graphicsImage))
-                            }
-                        }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
+                if (currentImage == null) {
+                    withContext(Dispatchers.Main) { onFinish(false) }
+                    return@withLock
                 }
-                clearDrawingBoard()
-                withContext(Dispatchers.Main) {
-                    onFinish()
+                try {
+                    if (currentImage.width > 0 && currentImage.height > 0) {
+                        // graphicsImage is a transparent overlay captured at the markup canvas
+                        // resolution. Markup.apply composes it against the base for the no-op
+                        // check and stores the raw overlay so the bake engine can re-composite
+                        // it onto the full-resolution original (scaling as needed).
+                        applyAdjustmentAndWait(Markup(graphicsImage))
+                    }
+                    clearDrawingBoard()
+                    withContext(Dispatchers.Main) { onFinish(true) }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    _isProcessing.value = false
+                    printError("Failed to apply markup: ${e.message}")
+                    withContext(Dispatchers.Main) { onFinish(false) }
                 }
             }
         }
-
     }
 
     fun toggleFilter(filter: ImageFilter) {
