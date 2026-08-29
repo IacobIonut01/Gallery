@@ -45,6 +45,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.BlendMode
@@ -250,19 +251,22 @@ private fun ModelGroupSection(
     val info by viewModel.downloadInfo(group).collectAsStateWithLifecycle()
     val error by viewModel.errorMessage(group).collectAsStateWithLifecycle()
     var showDeleteDialog by remember { mutableStateOf(false) }
+    // Offline flavor strips android.permission.INTERNET at build time; use that as the signal.
+    val hasInternetPermission = viewModel.hasInternetPermission
+    val action = resolveModelManagementAction(status, hasInternetPermission)
 
     val actionTitle: String
     val actionSummary: String
-    val actionClick: () -> Unit
-    when (status) {
-        ModelStatus.READY -> {
+    val actionClick: (() -> Unit)?
+    when (action) {
+        ModelManagementAction.DELETE -> {
             val sizeStr = Formatter.formatFileSize(context, viewModel.installedSize(group))
             actionTitle = stringResource(R.string.ai_models_delete)
             actionSummary = readySummary + "\n" + stringResource(R.string.ai_models_size, sizeStr)
             actionClick = { showDeleteDialog = true }
         }
-        ModelStatus.DOWNLOADING, ModelStatus.COPYING -> {
-            actionTitle = stringResource(R.string.ai_models_downloading)
+        ModelManagementAction.CANCEL_DOWNLOAD -> {
+            actionTitle = stringResource(R.string.ai_models_cancel_download)
             val speedStr = Formatter.formatFileSize(context, info.speed)
             val downloadedStr = Formatter.formatFileSize(context, info.downloadedBytes)
             val totalStr = Formatter.formatFileSize(context, info.totalBytes)
@@ -277,15 +281,30 @@ private fun ModelGroupSection(
             }
             actionClick = { viewModel.cancelDownload(group) }
         }
-        ModelStatus.ERROR -> {
+        ModelManagementAction.DOWNLOAD -> {
             actionTitle = stringResource(R.string.ai_models_download)
-            actionSummary = error ?: "Unknown error"
+            actionSummary = error ?: downloadSummary
             actionClick = { viewModel.downloadModels(group) }
         }
-        ModelStatus.NOT_INSTALLED -> {
-            actionTitle = stringResource(R.string.ai_models_download)
-            actionSummary = downloadSummary
-            actionClick = { viewModel.downloadModels(group) }
+        ModelManagementAction.COPYING -> {
+            actionTitle = stringResource(R.string.ai_models_preparing)
+            actionSummary = stringResource(R.string.ai_models_preparing_summary)
+            actionClick = null
+        }
+        ModelManagementAction.INSTALLED_OFFLINE -> {
+            val sizeStr = Formatter.formatFileSize(context, viewModel.installedSize(group))
+            actionTitle = stringResource(R.string.ai_models_installed)
+            actionSummary = readySummary + "\n" + stringResource(R.string.ai_models_size, sizeStr) +
+                    "\n" + stringResource(R.string.ai_models_offline_installed_summary)
+            actionClick = null
+        }
+        ModelManagementAction.UNAVAILABLE_OFFLINE -> {
+            actionTitle = stringResource(R.string.ai_models_offline_unavailable)
+            actionSummary = listOfNotNull(
+                error,
+                stringResource(R.string.ai_models_offline_unavailable_summary)
+            ).joinToString("\n")
+            actionClick = null
         }
     }
 
@@ -295,6 +314,7 @@ private fun ModelGroupSection(
         value = if (status == ModelStatus.READY) viewModel.getFileInfos(group) else emptyList()
     }
     val isDownloading = status == ModelStatus.DOWNLOADING || status == ModelStatus.COPYING
+    val actionAlpha = if (action.enabled || action == ModelManagementAction.COPYING) 1f else 0.5f
 
     Column(
         modifier = Modifier
@@ -325,9 +345,10 @@ private fun ModelGroupSection(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .alpha(actionAlpha)
                 .clip(RoundedCornerShape(16.dp))
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                .clickable { actionClick() }
+                .clickable(enabled = action.enabled) { actionClick?.invoke() }
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {

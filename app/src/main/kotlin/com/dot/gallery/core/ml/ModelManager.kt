@@ -21,6 +21,10 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.IOException
+import java.io.InputStream
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import java.security.MessageDigest
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
@@ -46,6 +50,45 @@ enum class ModelStatus {
     DOWNLOADING,
     READY,
     ERROR
+}
+
+internal fun installBundledModel(
+    destinationFile: File,
+    expectedChecksum: String?,
+    openInput: () -> InputStream,
+) {
+    val tempFile = File(destinationFile.parentFile, "${destinationFile.name}.bundled.tmp")
+    destinationFile.parentFile?.mkdirs()
+    try {
+        openInput().use { input ->
+            tempFile.outputStream().use { output ->
+                input.copyTo(output, bufferSize = 65536)
+            }
+        }
+        if (tempFile.length() == 0L || expectedChecksum != null && tempFile.sha256() != expectedChecksum) {
+            throw IOException("Bundled model validation failed: ${destinationFile.name}")
+        }
+        Files.move(
+            tempFile.toPath(),
+            destinationFile.toPath(),
+            StandardCopyOption.REPLACE_EXISTING,
+            StandardCopyOption.ATOMIC_MOVE,
+        )
+    } finally {
+        tempFile.delete()
+    }
+}
+
+private fun File.sha256(): String {
+    val digest = MessageDigest.getInstance("SHA-256")
+    inputStream().use { stream ->
+        val buffer = ByteArray(65536)
+        var read: Int
+        while (stream.read(buffer).also { read = it } != -1) {
+            digest.update(buffer, 0, read)
+        }
+    }
+    return digest.digest().joinToString("") { "%02x".format(it) }
 }
 
 /**
@@ -148,6 +191,9 @@ class ModelManager @Inject constructor(
      */
     suspend fun initializeModels() = mutex.withLock {
         withContext(Dispatchers.IO) {
+            if (BuildConfig.ML_MODELS_BUNDLED) {
+                ModelGroup.entries.forEach { group -> flows(group).status.value = ModelStatus.COPYING }
+            }
             ModelGroup.entries.forEach { group -> initializeGroup(group) }
         }
     }
@@ -162,7 +208,7 @@ class ModelManager @Inject constructor(
             copyBundledModels(group)
             if (checkModelsPresent(group)) {
                 flows(group).status.value = ModelStatus.READY
-            } else {
+            } else if (flows(group).status.value != ModelStatus.ERROR) {
                 flows(group).status.value = ModelStatus.NOT_INSTALLED
                 printInfo("ModelManager: ${group.name} bundled copy pass completed, but some files are missing (will download on-demand)")
             }
@@ -250,36 +296,26 @@ class ModelManager @Inject constructor(
         infos
     }
 
-    private fun File.sha256(): String {
-        val digest = MessageDigest.getInstance("SHA-256")
-        inputStream().use { stream ->
-            val buffer = ByteArray(65536)
-            var read: Int
-            while (stream.read(buffer).also { read = it } != -1) {
-                digest.update(buffer, 0, read)
-            }
-        }
-        return digest.digest().joinToString("") { "%02x".format(it) }
-    }
-
     /**
      * Delete all downloaded/copied model files.
      */
-    suspend fun deleteModels(group: ModelGroup) = mutex.withLock {
-        withContext(Dispatchers.IO) {
-            val dir = File(modelsDir, group.subDir)
-            if (dir.exists()) {
-                dir.deleteRecursively()
-                printInfo("ModelManager: ${group.name} models deleted")
+    suspend fun deleteModels(group: ModelGroup) {
+        if (!hasInternetPermission) return
+        mutex.withLock {
+            withContext(Dispatchers.IO) {
+                val dir = File(modelsDir, group.subDir)
+                if (dir.exists()) {
+                    dir.deleteRecursively()
+                    printInfo("ModelManager: ${group.name} models deleted")
+                }
+                fileInfoCache.remove(group)
+                flows(group).apply {
+                    status.value = ModelStatus.NOT_INSTALLED
+                    progress.value = 0f
+                    error.value = null
+                    info.value = DownloadInfo()
+                }
             }
-            fileInfoCache.remove(group)
-            flows(group).apply {
-                status.value = ModelStatus.NOT_INSTALLED
-                progress.value = 0f
-                error.value = null
-                info.value = DownloadInfo()
-            }
-            Unit
         }
     }
 
@@ -332,14 +368,11 @@ class ModelManager @Inject constructor(
             val totalFiles = group.files.size
             group.files.forEachIndexed { index, fileName ->
                 val destFile = getDestinationFile(fileName)
-                destFile.parentFile?.mkdirs()
-                if (!destFile.exists() || destFile.length() == 0L) {
+                if (!isModelFileValid(fileName)) {
                     try {
                         printDebug("ModelManager: Copying asset $fileName to filesDir")
-                        assetManager.open(fileName).use { input ->
-                            destFile.outputStream().use { output ->
-                                input.copyTo(output, bufferSize = 65536)
-                            }
+                        installBundledModel(destFile, EXPECTED_CHECKSUMS[fileName]) {
+                            assetManager.open(fileName)
                         }
                     } catch (e: java.io.FileNotFoundException) {
                         printWarning("ModelManager: Bundled asset $fileName not found in assets, skipping copy.")

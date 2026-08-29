@@ -35,6 +35,37 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+internal enum class ModelManagementAction(val enabled: Boolean) {
+    DELETE(true),
+    CANCEL_DOWNLOAD(true),
+    DOWNLOAD(true),
+    COPYING(false),
+    INSTALLED_OFFLINE(false),
+    UNAVAILABLE_OFFLINE(false),
+}
+
+internal fun resolveModelManagementAction(
+    status: ModelStatus,
+    hasInternetPermission: Boolean,
+): ModelManagementAction = when (status) {
+    ModelStatus.COPYING -> ModelManagementAction.COPYING
+    ModelStatus.READY -> if (hasInternetPermission) {
+        ModelManagementAction.DELETE
+    } else {
+        ModelManagementAction.INSTALLED_OFFLINE
+    }
+    ModelStatus.DOWNLOADING -> if (hasInternetPermission) {
+        ModelManagementAction.CANCEL_DOWNLOAD
+    } else {
+        ModelManagementAction.UNAVAILABLE_OFFLINE
+    }
+    ModelStatus.ERROR, ModelStatus.NOT_INSTALLED -> if (hasInternetPermission) {
+        ModelManagementAction.DOWNLOAD
+    } else {
+        ModelManagementAction.UNAVAILABLE_OFFLINE
+    }
+}
+
 @HiltViewModel
 class SmartFeaturesViewModel @Inject constructor(
     private val modelManager: ModelManager,
@@ -93,11 +124,12 @@ class SmartFeaturesViewModel @Inject constructor(
         )
 
     fun downloadModels(group: ModelGroup) {
-        if (!modelManager.hasInternetPermission) return
+        if (modelManagementAction(group) != ModelManagementAction.DOWNLOAD) return
         workManager.downloadModels(group)
     }
 
     fun cancelDownload(group: ModelGroup) {
+        if (modelManagementAction(group) != ModelManagementAction.CANCEL_DOWNLOAD) return
         workManager.cancelModelDownload(group)
         viewModelScope.launch {
             modelManager.deleteModels(group)
@@ -105,10 +137,14 @@ class SmartFeaturesViewModel @Inject constructor(
     }
 
     fun deleteModels(group: ModelGroup) {
+        if (modelManagementAction(group) != ModelManagementAction.DELETE) return
         viewModelScope.launch {
             modelManager.deleteModels(group)
         }
     }
+
+    private fun modelManagementAction(group: ModelGroup): ModelManagementAction =
+        resolveModelManagementAction(modelManager.status(group).value, modelManager.hasInternetPermission)
 
     fun setIncludeIgnoredAlbums(include: Boolean) {
         viewModelScope.launch {

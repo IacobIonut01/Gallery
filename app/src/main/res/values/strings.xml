@@ -502,6 +502,13 @@
     <string name="ai_models_download">Download AI Models</string>
     <string name="ai_models_download_summary">Download AI models for image search and classification (~147 MB)</string>
     <string name="ai_models_downloading">Downloading AI Models…</string>
+    <string name="ai_models_cancel_download">Cancel AI Model Download</string>
+    <string name="ai_models_preparing">Preparing AI Models…</string>
+    <string name="ai_models_preparing_summary">Bundled models are being prepared for use</string>
+    <string name="ai_models_installed">AI Models Installed</string>
+    <string name="ai_models_offline_installed_summary">Bundled models cannot be deleted from this offline build</string>
+    <string name="ai_models_offline_unavailable">AI Models Unavailable</string>
+    <string name="ai_models_offline_unavailable_summary">This offline build cannot download missing models.</string>
     <string name="ai_models_ready_summary">AI-powered search and classification are available</string>
     <string name="ai_models_error">AI Model Error</string>
     <string name="ai_models_delete">Delete AI Models</string>
