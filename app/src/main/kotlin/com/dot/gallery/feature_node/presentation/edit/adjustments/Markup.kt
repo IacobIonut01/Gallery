@@ -17,6 +17,20 @@ import com.dot.gallery.feature_node.domain.model.editor.TileableAdjustment
  */
 data class Markup(val overlay: Bitmap): TileableAdjustment {
 
+    /**
+     * [overlay] is captured with `GraphicsLayer.toImageBitmap()`, which hands back a
+     * [Bitmap.Config.HARDWARE] bitmap on some devices/renderers. A software [Canvas] silently draws
+     * nothing from a hardware bitmap, so the composite came out identical to the base and the
+     * editor's no-op guard dropped the whole markup (#1078). Composite from a software copy instead.
+     */
+    private val drawableOverlay: Bitmap by lazy {
+        if (overlay.config == Bitmap.Config.HARDWARE) {
+            overlay.copy(Bitmap.Config.ARGB_8888, false)
+        } else {
+            overlay
+        }
+    }
+
     override fun apply(bitmap: Bitmap): Bitmap {
         val config = bitmap.config?.takeUnless { it == Bitmap.Config.HARDWARE }
             ?: Bitmap.Config.ARGB_8888
@@ -27,7 +41,7 @@ data class Markup(val overlay: Bitmap): TileableAdjustment {
                 bitmap.height / overlay.height.toFloat()
             )
         }
-        Canvas(result).drawBitmap(overlay, matrix, Paint(Paint.FILTER_BITMAP_FLAG))
+        Canvas(result).drawBitmap(drawableOverlay, matrix, Paint(Paint.FILTER_BITMAP_FLAG))
         return result
     }
 
@@ -50,7 +64,7 @@ data class Markup(val overlay: Bitmap): TileableAdjustment {
             )
             postTranslate(-tileX.toFloat(), -tileY.toFloat())
         }
-        canvas.drawBitmap(overlay, matrix, Paint(Paint.FILTER_BITMAP_FLAG))
+        canvas.drawBitmap(drawableOverlay, matrix, Paint(Paint.FILTER_BITMAP_FLAG))
         return result
     }
 
