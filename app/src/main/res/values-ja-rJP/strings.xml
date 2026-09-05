@@ -757,8 +757,8 @@
     <string name="group_edited_copies_summary">編集後の拡張子を持つファイルを元のファイルと統合します。\n\n検出されるパターン：\n• (1), (2) — コピー/重複番号\n• ~2, ~3 — チルダ付き重複\n• _edited, -edited\n• _HDR\n• .NIGHT, .PORTRAIT, .LONG_EXPOSURE\n• .ORIGINAL, .PANO, .COVER</string>
     <string name="group_burst_sequences_title">バーストシーケンス</string>
     <string name="group_burst_sequences_summary">タイムスタンプが一致する写真を統合させます。\n\n検出されるパターン:\n• Samsung — 20151021_072800_007\n• Pixel/Motorola — IMG_20151021_072800_BURST002\n• Sony — DSC_0007_BURST20151021072800\n• OnePlus — IMG_20151021_072800_BURST(007)\n• Generic — _BURST###, _COVER suffixes</string>
-    <string name="group_cloud_local_title">Cloud + local copies</string>
-    <string name="group_cloud_local_summary">Groups cloud and local copies of the same file. Shows a cloud badge on the thumbnail to indicate a matched pair.</string>
+    <string name="group_cloud_local_title">クラウドとローカルのコピー</string>
+    <string name="group_cloud_local_summary">同じファイルのクラウド版とローカル版をグループ化します。一致したペアであることを示すため、サムネイルにクラウドのバッジが表示されます。</string>
     <string name="allow_gif_animation_description">有効にすると、GIF 画像はタイムラインとアルバムのグリッドで直接アニメーションを再生します。 これを無効にすると、多くのGIFを持つフォルダのラグを減らすことができる代わりに、固定サムネイルを表示します。</string>
     <string name="hide_timeline_for_albums_description">アルバム内の日付セクションのヘッダーを削除し、メディアの継続的なグリッドを表示します。</string>
     <string name="merge_albums_by_name_description">異なるストレージの場所から同じ名前が一致するアルバムを一つのアルバムにまとめます。 メディアが内部ストレージとSDカードに広がっている場合に便利です。</string>
