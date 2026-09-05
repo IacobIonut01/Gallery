@@ -154,12 +154,12 @@
     <string name="help_tip_personalize_app_name_p1_s3">Gallary または Refra を選択</string>
     <string name="help_tip_personalize_app_name_p1_s4">ホーム画面のアイコンのラベルが更新されます</string>
     <!-- TIMELINE &amp; ALBUMS -->
-    <string name="help_tip_timeline_group_month_title">Group media by month</string>
-    <string name="help_tip_timeline_group_month_subtitle">See your photos organized into monthly sections</string>
-    <string name="help_tip_timeline_group_month_p1_title">Monthly grouping</string>
-    <string name="help_tip_timeline_group_month_p1_desc">Your timeline automatically groups photos by month with clear date headers, making it easy to scroll back to a specific time period. Today\'s and yesterday\'s photos get special labels. The scrollbar on the right edge lets you jump between months quickly. This grouping is always on and works with both grid and mosaic layouts.</string>
-    <string name="help_tip_timeline_layout_type_title">Grid vs mosaic layout</string>
-    <string name="help_tip_timeline_layout_type_subtitle">Switch between uniform grid and dynamic mosaic</string>
+    <string name="help_tip_timeline_group_month_title">メディアを月ごとにグループ化</string>
+    <string name="help_tip_timeline_group_month_subtitle">月ごとのセクションに整理された写真を見る</string>
+    <string name="help_tip_timeline_group_month_p1_title">月ごとのグループ分け</string>
+    <string name="help_tip_timeline_group_month_p1_desc">タイムラインでは、写真が月ごとに自動的にグループ化され、日付のヘッダーが明確に表示されるため、特定の期間に簡単にスクロールして戻ることができます。今日と昨日の写真には特別なラベルが付きます。右端にあるスクロールバーを使えば、月間をすばやく移動できます。このグループ化機能は常に有効になっており、グリッドレイアウトとモザイクレイアウトの両方で機能します。</string>
+    <string name="help_tip_timeline_layout_type_title">グリッドレイアウトとモザイクレイアウト</string>
+    <string name="help_tip_timeline_layout_type_subtitle">均一なグリッドと動的なモザイクを切り替える</string>
     <string name="help_tip_timeline_layout_type_p1_title">Choose your layout</string>
     <string name="help_tip_timeline_layout_type_p1_desc">The Timeline offers two distinct layouts. Grid shows uniform-sized thumbnails in neat rows — clean and predictable. Mosaic creates a dynamic layout with varied tile sizes based on photo aspect ratios — more visually interesting and gives you a better sense of each photo\'s composition at a glance.</string>
     <string name="help_tip_timeline_layout_type_p2_title">Switch layouts</string>
