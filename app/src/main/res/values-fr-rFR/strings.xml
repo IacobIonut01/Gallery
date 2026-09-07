@@ -440,8 +440,8 @@
     <string name="click_to_copy">Cliquer pour copier</string>
     <string name="full_brightness_view_title">Luminosité maximale lors du visionnage</string>
     <string name="full_brightness_view_summary">Augmenter la luminosité de l\'écran au maximum lors du visionnage d\'images ou de vidéos</string>
-    <string name="tap_sides_to_navigate_title">Tap sides to navigate</string>
-    <string name="tap_sides_to_navigate_summary">Tap either side of a photo or video to open the previous or next item</string>
+    <string name="tap_sides_to_navigate_title">Appuyez sur les côtés pour naviguer</string>
+    <string name="tap_sides_to_navigate_summary">Touchez l\'un ou l\'autre côté d\'une photo ou d\'une vidéo pour ouvrir l\'élément précédent ou suivant</string>
     <string name="tap_sides_to_navigate_description">When enabled, tap the left or right side of an unzoomed photo or video to move through the viewer instantly. Tap the center to show or hide controls. Side taps take priority over video seeking; panoramas, slideshows, and locked or standalone viewers keep their existing gestures.</string>
     <string name="tap_sides_to_navigate_prompt_title">Navigate media faster?</string>
     <string name="tap_sides_to_navigate_prompt_description">Tap either side of a photo or video to jump to the previous or next item. The center still shows or hides the viewer controls.</string>
