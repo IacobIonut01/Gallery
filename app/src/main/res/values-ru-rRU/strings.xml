@@ -468,7 +468,7 @@
     <string name="metadata_mode_everything_description">Удаляет все необязательные метаданные, оставляя только данные, необходимые для воспроизведения или отображения медиа.</string>
     <string name="metadata_save_destination_title">Save result</string>
     <string name="metadata_save_copy">Сохранить копию</string>
-    <string name="metadata_save_copy_description">Creates a verified sanitized copy in the same folder and leaves the original unchanged.</string>
+    <string name="metadata_save_copy_description">Создает проверенную очищенную копию в той же папке, оставляя исходный файл без изменений.</string>
     <string name="metadata_replace_original">Replace original</string>
     <string name="metadata_replace_original_description">Creates and verifies the replacement first, then moves the original to system trash so it can still be recovered.</string>
     <string name="metadata_save_copy_action">Save copy</string>
@@ -662,7 +662,7 @@
     <string name="vault_custom_password">Использовать пользовательский пароль</string>
     <string name="vault_custom_password_summary">Установите отдельный пароль для этого хранилища вместо использования безопасности устройства</string>
     <string name="vault_remove_custom_password">Удалить пользовательский пароль</string>
-    <string name="vault_remove_custom_password_summary">This will remove the custom password and revert to device security for unlocking this vault</string>
+    <string name="vault_remove_custom_password_summary">Это удалит пользовательский пароль и вернет к безопасности устройства для разблокировки этого хранилища</string>
     <string name="vault_actions">Действия с хранилищем</string>
     <string name="more_options">Больше вариантов</string>
     <string name="vault_enter_password">Введите пароль хранилища</string>
