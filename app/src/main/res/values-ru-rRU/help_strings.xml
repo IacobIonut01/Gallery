@@ -29,8 +29,8 @@
     <string name="help_tip_basics_select_media_p1_s3">Or drag across photos for quick multi-select</string>
     <string name="help_tip_basics_select_media_p1_s4">Use the action bar to share, delete, or manage</string>
     <string name="help_tip_basics_select_media_p2_title">Batch actions</string>
-    <string name="help_tip_basics_select_media_p2_desc">Once you\'ve selected items, a bottom action sheet slides up with all available actions: Share, Delete, Copy to album, Move to album, Hide in vault, and more. You can customize which actions appear and their order in Settings &gt; Navigation &gt; Customize selection actions. Tip: to select all photos in a date group, tap the date header.</string>
-    <string name="help_tip_basics_share_title">Share photos and videos</string>
+    <string name="help_tip_basics_select_media_p2_desc">После выбора элементов, снизу появляется панель со всеми возможными действиями: Поделиться, Удалить, Копировать, Переместить, Скрыть, и другие. Кастомизировать появляющиеся действия и их последовательность можно, перейдя в Настройки &gt; Навигация &gt; Действия при выделении. Подсказка: чтобы выбрать все фото по дате, нажмите на заголовок с датой.</string>
+    <string name="help_tip_basics_share_title">Поделиться фото и видео</string>
     <string name="help_tip_basics_share_subtitle">Share media with other apps and people</string>
     <string name="help_tip_basics_share_p1_title">Share your media</string>
     <string name="help_tip_basics_share_p1_desc">Open a photo or video, then tap the share button in the bottom bar to send it via any app on your device — messaging apps, email, social media, cloud storage, and more. You can also share multiple photos at once by selecting them first in the grid. The share sheet shows your most-used apps at the top for quick access.</string>
