@@ -450,7 +450,7 @@
     <string name="tap_sides_to_navigate_settings_hint">You can change this later in Settings → Media Viewer.</string>
     <string name="tap_sides_to_navigate_previous">Previous</string>
     <string name="tap_sides_to_navigate_controls">Controls</string>
-    <string name="tap_sides_to_navigate_next">Next</string>
+    <string name="tap_sides_to_navigate_next">Далее</string>
     <string name="disable_smoothing_title">Отключить сглаживание</string>
     <string name="disable_smoothing_summary">Отображать четкие квадратные пиксели при увеличении вместо размытых сглаженных изображений</string>
     <string name="disable_smoothing_description">При включении изображения масштабируются с использованием метода ближайшего соседа, так что при увеличении пиксельной графики пиксели остаются четкими и резкими, а не размытыми. Оставьте выключенным для плавного масштабирования фотографий.</string>
@@ -467,7 +467,7 @@
     <string name="metadata_mode_everything">Все, что можно удалить</string>
     <string name="metadata_mode_everything_description">Удаляет все необязательные метаданные, оставляя только данные, необходимые для воспроизведения или отображения медиа.</string>
     <string name="metadata_save_destination_title">Save result</string>
-    <string name="metadata_save_copy">Save a copy</string>
+    <string name="metadata_save_copy">Сохранить копию</string>
     <string name="metadata_save_copy_description">Creates a verified sanitized copy in the same folder and leaves the original unchanged.</string>
     <string name="metadata_replace_original">Replace original</string>
     <string name="metadata_replace_original_description">Creates and verifies the replacement first, then moves the original to system trash so it can still be recovered.</string>
