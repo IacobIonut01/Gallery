@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<string name="vault_items_encrypted">%1$d Element(e) erfolgreich verschlüsselt</string>
+<string name="vault_encrypt_failed">Fehler beim Verschlüsseln von %1$d Element(en)</string>
+<string name="vault_restored_to">%1$d Element(e) wiederhergestellt auf %2$s</string>
+<string name="vault_item_deleted">Eintrag aus Tresor gelöscht</string>
+</resources>

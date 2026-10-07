@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="location">Розташування</string>
+    <string name="pause_video">Призупинити відео</string>
+    <string name="play_video">Відтворити відео</string>
+    <string name="close">Закрити</string>
+    <string name="rotate_screen_cd">Обернути екран</string>
+    <string name="toggle_audio_cd">Увімк. / Вимк. звук</string>
+    <string name="auto">Авто</string>
+    <string name="change_playback_speed_cd">Змінити швидкість відтворення</string>
+    <string name="change_subtitle_track_cd">Змінити доріжку субтитрів</string>
+    <string name="more_options_cd">Більше опцій</string>
+    <string name="rotate">Обернути</string>
+    <string name="decrypt_failed_tap_to_retry">Не вдалося розшифрувати. Натисніть, щоб повторити.</string>
+    <string name="media_load_failed_tap_to_retry">Не вдалося завантажити цей медіафайл. Торкніться, щоб повторити спробу.</string>
+    <string name="frame_picker_shots_heading">Кадри на цьому фото</string>
+    <string name="cutout_no_object">Об'єкт під довгим натисканням не виявлено</string>
+    <string name="cutout_init_failed">Не вдалося ініціалізувати механізм вирізання</string>
+    <string name="cutout_refining">Уточнюємо вирізку…</string>
+    <string name="cutout_include">Включити</string>
+    <string name="cutout_exclude">Виключити</string>
+    <string name="cutout_undo">Скасувати</string>
+    <string name="cutout_redo">Повторити</string>
+    <string name="cutout_reset">Скинути</string>
+    <string name="cutout_close">Закрити вирізку</string>
+    <string name="cutout_copy">Копіювати</string>
+    <string name="cutout_share">Поділитися</string>
+    <string name="cutout_save">Зберегти</string>
+</resources>

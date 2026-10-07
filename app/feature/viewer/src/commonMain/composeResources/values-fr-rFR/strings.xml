@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="location">Emplacement</string>
+    <string name="pause_video">Suspendre la vidéo</string>
+    <string name="play_video">Lire la vidéo</string>
+    <string name="close">Fermer</string>
+    <string name="rotate_screen_cd">Pivoter l'écran</string>
+    <string name="toggle_audio_cd">Utiliser/Couper le son</string>
+    <string name="auto">Auto</string>
+    <string name="change_playback_speed_cd">Modifier la vitesse de lecture</string>
+    <string name="change_subtitle_track_cd">Changer de piste de sous-titres</string>
+    <string name="more_options_cd">Plus d'options</string>
+    <string name="rotate">Tourner</string>
+    <string name="decrypt_failed_tap_to_retry">Échec du déchiffrement. Appui pour réessayer.</string>
+    <string name="media_load_failed_tap_to_retry">Impossible de charger ce média. Appuyez pour réessayer.</string>
+    <string name="frame_picker_shots_heading">Photos dans cette image</string>
+    <string name="cutout_no_object">Aucun objet détecté sous l'appui prolongé</string>
+    <string name="cutout_init_failed">Échec de l'initialisation du moteur de découpe</string>
+    <string name="cutout_refining">Affinement du découpage…</string>
+    <string name="cutout_include">Inclure</string>
+    <string name="cutout_exclude">Exclure</string>
+    <string name="cutout_undo">Annuler</string>
+    <string name="cutout_redo">Rétablir</string>
+    <string name="cutout_reset">Réinitialiser</string>
+    <string name="cutout_close">Fermer la découpe</string>
+    <string name="cutout_copy">Copier</string>
+    <string name="cutout_share">Partager</string>
+    <string name="cutout_save">Enregistrer</string>
+</resources>

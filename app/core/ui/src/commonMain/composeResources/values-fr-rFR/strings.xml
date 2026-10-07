@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cutout_save_choice_title">Enregistrer le découpage sous</string>
+    <string name="cutout_save_transparent_png">PNG transparent</string>
+    <string name="cutout_save_flatten_white">Aplatir sur fond blanc</string>
+    <string name="cutout_save_flatten_black">Aplatir sur fond noir</string>
+    <string name="overwrite_unavailable_title">Impossible d'écraser ce format</string>
+    <string name="overwrite_unavailable_summary">Ce format d'image ne peut pas être ré-encodé sur votre appareil, donc l'original ne peut pas être écrasé. Une nouvelle copie PNG sera créée à la place.</string>
+    <string name="overwrite_unavailable_create_copy">Créer une copie</string>
+    <string name="copied_to_clipboard">Copié dans le presse-papier</string>
+    <string name="error_copying_to_clipboard">Échec de la copie dans le presse-papier</string>
+    <string name="cutout_copy_failed">Échec de la copie de l'objet découpé</string>
+    <string name="cutout_share_failed">Échec du partage de l'objet découpé</string>
+    <string name="cutout_save_failed">Échec de l'enregistrement de l'objet découpé</string>
+    <string name="cutout_saved">Découpé sauvegardé dans Images/Découpages</string>
+</resources>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cutout_save_choice_title">Сохранить вырезку как</string>
+    <string name="cutout_save_transparent_png">Прозрачный PNG</string>
+    <string name="cutout_save_flatten_white">Объединить на белом фоне</string>
+    <string name="cutout_save_flatten_black">Объединить на черном фоне</string>
+    <string name="overwrite_unavailable_title">Невозможно перезаписать этот формат</string>
+    <string name="overwrite_unavailable_summary">Этот формат изображения не может быть перекодирован на вашем устройстве, поэтому оригинал нельзя перезаписать. Вместо этого будет создана новая копия в формате PNG.</string>
+    <string name="overwrite_unavailable_create_copy">Создать копию</string>
+    <string name="copied_to_clipboard">Copied to clipboard</string>
+    <string name="error_copying_to_clipboard">Failed to copy to clipboard</string>
+    <string name="cutout_copy_failed">Не удалось скопировать объект вырезки</string>
+    <string name="cutout_share_failed">Не удалось поделиться объектом вырезки</string>
+    <string name="cutout_save_failed">Не удалось сохранить объект вырезки</string>
+    <string name="cutout_saved">Сохранено вырезанное изображение в Pictures/Cutouts</string>
+</resources>

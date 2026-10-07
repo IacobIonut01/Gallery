@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="location">Location</string>
+    <string name="pause_video">Pause video</string>
+    <string name="play_video">Play video</string>
+    <string name="close">Close</string>
+    <string name="rotate_screen_cd">Rotate Screen</string>
+    <string name="toggle_audio_cd">Toggle audio</string>
+    <string name="auto">Auto</string>
+    <string name="change_playback_speed_cd">Change playback speed</string>
+    <string name="change_subtitle_track_cd">Change subtitle track</string>
+    <string name="more_options_cd">More options</string>
+    <string name="rotate">Rotate</string>
+    <string name="decrypt_failed_tap_to_retry">Decrypt failed. Tap to retry.</string>
+    <string name="media_load_failed_tap_to_retry">Kon nie hierdie media laai nie. Tik om weer te probeer.</string>
+    <string name="frame_picker_shots_heading">Skote in hierdie foto</string>
+    <string name="cutout_no_object">Geen voorwerp bespeur onder langdruk nie</string>
+    <string name="cutout_init_failed">Kon nie uitsny-enjin inisialiseer nie</string>
+    <string name="cutout_refining">Verfyn tans uitknipsel …</string>
+    <string name="cutout_include">Sluit in</string>
+    <string name="cutout_exclude">Sluit uit</string>
+    <string name="cutout_undo">Ontdoen</string>
+    <string name="cutout_redo">Herhaal</string>
+    <string name="cutout_reset">Stel terug</string>
+    <string name="cutout_close">Maak uitsny toe</string>
+    <string name="cutout_copy">Kopieer</string>
+    <string name="cutout_share">Deel</string>
+    <string name="cutout_save">Stoor</string>
+</resources>

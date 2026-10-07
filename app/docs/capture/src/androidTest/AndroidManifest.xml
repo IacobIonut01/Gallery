@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <!-- Opaque host for createAndroidComposeRule in DocsCaptureTest. The
+             androidx.test EmptyActivity default is translucent and stays
+             invisible in instrumentation, which produces blank captures. -->
+        <activity
+            android:name="com.dot.gallery.docs.capture.DocsCaptureActivity"
+            android:theme="@android:style/Theme.Material.Light.NoActionBar"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>

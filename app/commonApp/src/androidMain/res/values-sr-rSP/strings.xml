@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Manifest/widget/XML-referenced strings. UI strings live in commonMain/composeResources. -->
+<resources>
+    <string name="app_name">ReFra</string>
+    <string name="app_name_gallery">Галерија</string>
+    <string name="location_cd">Локација медија</string>
+    <string name="set_wallpaper">Позадина</string>
+    <string name="widget_single_label">Једна фотографија</string>
+    <string name="widget_single_description">Прикажите појединачну фотографију на почетном екрану</string>
+    <string name="widget_grid_label">Мрежа фотографија</string>
+    <string name="widget_grid_description">Прикажите мрежу фотографија на почетном екрану (2×2, 4×4 или 6×6 у зависности од величине)</string>
+    <string name="editor_crop">Исеци</string>
+</resources>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<string name="vault_items_encrypted">%1$d item(s) encrypted successfully</string>
+<string name="vault_encrypt_failed">Не удалось зашифровать %1$d элемент(а/ов)</string>
+<string name="vault_restored_to">%1$d item(s) restored to %2$s</string>
+<string name="vault_item_deleted">Item deleted from vault</string>
+</resources>

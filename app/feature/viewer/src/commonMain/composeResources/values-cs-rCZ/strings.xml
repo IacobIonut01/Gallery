@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="location">Umístění</string>
+    <string name="pause_video">Pozastavit video</string>
+    <string name="play_video">Přehrát video</string>
+    <string name="close">Zavřít</string>
+    <string name="rotate_screen_cd">Otáčení obrazovky</string>
+    <string name="toggle_audio_cd">Přepnout zvuk</string>
+    <string name="auto">Automatické</string>
+    <string name="change_playback_speed_cd">Změnit rychlost přehrávání</string>
+    <string name="change_subtitle_track_cd">Change subtitle track</string>
+    <string name="more_options_cd">More options</string>
+    <string name="rotate">Rotate</string>
+    <string name="decrypt_failed_tap_to_retry">Decrypt failed. Tap to retry.</string>
+    <string name="media_load_failed_tap_to_retry">Toto médium se nepodařilo načíst. Klepnutím to zkuste znovu.</string>
+    <string name="frame_picker_shots_heading">Záběry na této fotografii</string>
+    <string name="cutout_no_object">Při dlouhém stisknutí nebyl zjištěn žádný objekt</string>
+    <string name="cutout_init_failed">Inicializace vypínacího motoru se nezdařila</string>
+    <string name="cutout_refining">Upřesnění výřezu…</string>
+    <string name="cutout_include">Zahrnout</string>
+    <string name="cutout_exclude">Vyloučit</string>
+    <string name="cutout_undo">Vrátit zpět</string>
+    <string name="cutout_redo">Znovu</string>
+    <string name="cutout_reset">Resetovat</string>
+    <string name="cutout_close">Zavřete výřez</string>
+    <string name="cutout_copy">Kopírovat</string>
+    <string name="cutout_share">Sdílejte</string>
+    <string name="cutout_save">Uložit</string>
+</resources>

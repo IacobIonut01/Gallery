@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="location">地點</string>
+    <string name="pause_video">暫停影片</string>
+    <string name="play_video">播放影片</string>
+    <string name="close">關閉</string>
+    <string name="rotate_screen_cd">旋轉螢幕</string>
+    <string name="toggle_audio_cd">切換音訊</string>
+    <string name="auto">自動</string>
+    <string name="change_playback_speed_cd">更改播放速度</string>
+    <string name="change_subtitle_track_cd">切換字幕聲道</string>
+    <string name="more_options_cd">更多選項</string>
+    <string name="rotate">旋轉</string>
+    <string name="decrypt_failed_tap_to_retry">解密失敗。點擊以重新嘗試。</string>
+    <string name="media_load_failed_tap_to_retry">無法載入此媒體。輕觸即可重試。</string>
+    <string name="frame_picker_shots_heading">此照片中的鏡頭</string>
+    <string name="cutout_no_object">長按下未檢測到物件</string>
+    <string name="cutout_init_failed">剪裁引擎初始化失敗</string>
+    <string name="cutout_refining">正在精煉剪裁…</string>
+    <string name="cutout_include">包含</string>
+    <string name="cutout_exclude">排除</string>
+    <string name="cutout_undo">復原</string>
+    <string name="cutout_redo">重做</string>
+    <string name="cutout_reset">重設</string>
+    <string name="cutout_close">關閉剪裁</string>
+    <string name="cutout_copy">複製</string>
+    <string name="cutout_share">分享</string>
+    <string name="cutout_save">儲存</string>
+</resources>

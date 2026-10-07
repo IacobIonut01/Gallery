@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<string name="vault_items_encrypted">%1$d elemento(s) cifrado(s) correctamente</string>
+<string name="vault_encrypt_failed">Error al cifrar %1$d elemento(s)</string>
+<string name="vault_restored_to">%1$d elemento(s) restaurados a %2$s</string>
+<string name="vault_item_deleted">Elemento eliminado de la caja fuerte</string>
+</resources>

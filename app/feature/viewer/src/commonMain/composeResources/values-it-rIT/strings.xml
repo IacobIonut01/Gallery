@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="location">Posizione</string>
+    <string name="pause_video">Pausa</string>
+    <string name="play_video">Riproduci</string>
+    <string name="close">Chiudi</string>
+    <string name="rotate_screen_cd">Ruota lo schermo</string>
+    <string name="toggle_audio_cd">Attiva/Disattiva audio</string>
+    <string name="auto">Auto</string>
+    <string name="change_playback_speed_cd">Cambia la velocità di riproduzione</string>
+    <string name="change_subtitle_track_cd">Change subtitle track</string>
+    <string name="more_options_cd">More options</string>
+    <string name="rotate">Ruota</string>
+    <string name="decrypt_failed_tap_to_retry">Decrypt failed. Tap to retry.</string>
+    <string name="media_load_failed_tap_to_retry">Impossibile caricare questo contenuto. Tocca per riprovare.</string>
+    <string name="frame_picker_shots_heading">Scatti in questa foto</string>
+    <string name="cutout_no_object">Nessun oggetto rilevato premendo a lungo</string>
+    <string name="cutout_init_failed">Impossibile inizializzare il motore di interruzione</string>
+    <string name="cutout_refining">Perfezionamento del ritaglio…</string>
+    <string name="cutout_include">Includi</string>
+    <string name="cutout_exclude">Escludere</string>
+    <string name="cutout_undo">Annulla</string>
+    <string name="cutout_redo">Rifare</string>
+    <string name="cutout_reset">Ripristina</string>
+    <string name="cutout_close">Chiudere il ritaglio</string>
+    <string name="cutout_copy">Copia</string>
+    <string name="cutout_share">Condividi</string>
+    <string name="cutout_save">Salva</string>
+</resources>

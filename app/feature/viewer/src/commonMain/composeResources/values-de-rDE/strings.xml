@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="location_access_row_hint">Zugriff erlauben, um Foto-Standorte zu lesen</string>
+    <string name="location">Standort</string>
+    <string name="pause_video">Video pausieren</string>
+    <string name="play_video">Video abspielen</string>
+    <string name="close">Schließen</string>
+    <string name="rotate_screen_cd">Bildschirm drehen</string>
+    <string name="toggle_audio_cd">Audio umschalten</string>
+    <string name="auto">Auto</string>
+    <string name="change_playback_speed_cd">Wiedergabegeschwindigkeit ändern</string>
+    <string name="change_subtitle_track_cd">Untertitelspur wechseln</string>
+    <string name="more_options_cd">Weitere Optionen</string>
+    <string name="rotate">Drehen</string>
+    <string name="decrypt_failed_tap_to_retry">Entschlüsselung fehlgeschlagen. Tippen Sie, um es erneut zu versuchen.</string>
+    <string name="media_load_failed_tap_to_retry">Dieses Medium konnte nicht geladen werden. Tippe, um es erneut zu versuchen.</string>
+    <string name="frame_picker_shots_heading">Aufnahmen in diesem Foto</string>
+    <string name="cutout_no_object">Kein Objekt bei Langdruck erkannt</string>
+    <string name="cutout_init_failed">Fehler beim Initialisieren der Ausschneidemaschine</string>
+    <string name="cutout_refining">Ausschnitt verfeinern…</string>
+    <string name="cutout_include">Einbeziehen</string>
+    <string name="cutout_exclude">Ausnehmen</string>
+    <string name="cutout_undo">Rückgängig</string>
+    <string name="cutout_redo">Wiederholen</string>
+    <string name="cutout_reset">Zurücksetzen</string>
+    <string name="cutout_close">Ausschnitt schließen</string>
+    <string name="cutout_copy">Kopieren</string>
+    <string name="cutout_share">Teilen</string>
+    <string name="cutout_save">Speichern</string>
+</resources>

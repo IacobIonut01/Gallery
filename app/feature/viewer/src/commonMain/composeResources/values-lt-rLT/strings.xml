@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="location">Vietovė</string>
+    <string name="pause_video">Pristabdyti vaizdo įrašą</string>
+    <string name="play_video">Paleisti vaizdo įrašą</string>
+    <string name="close">Uždaryti</string>
+    <string name="rotate_screen_cd">Pasukti ekraną</string>
+    <string name="toggle_audio_cd">Įjungti ar išjungti garsą</string>
+    <string name="auto">Automatiškai</string>
+    <string name="change_playback_speed_cd">Pakeisti vaizdo įrašų greitį</string>
+    <string name="change_subtitle_track_cd">Change subtitle track</string>
+    <string name="more_options_cd">More options</string>
+    <string name="rotate">Rotate</string>
+    <string name="decrypt_failed_tap_to_retry">Iššifravimas nepavyko. Palieskite, kad pakartotumėte.</string>
+    <string name="media_load_failed_tap_to_retry">Nepavyko įkelti šios medijos. Palieskite ir bandykite dar kartą.</string>
+    <string name="frame_picker_shots_heading">Kadrai šioje nuotraukoje</string>
+    <string name="cutout_no_object">Ilgai paspaudus neaptiktas joks objektas</string>
+    <string name="cutout_init_failed">Nepavyko inicijuoti išjungimo variklio</string>
+    <string name="cutout_refining">Patikslinama išpjova…</string>
+    <string name="cutout_include">Įtraukti</string>
+    <string name="cutout_exclude">Išskirti</string>
+    <string name="cutout_undo">Anuliuoti</string>
+    <string name="cutout_redo">Perdaryti</string>
+    <string name="cutout_reset">Nustatyti iš naujo</string>
+    <string name="cutout_close">Uždaryti išpjovą</string>
+    <string name="cutout_copy">Kopijuoti</string>
+    <string name="cutout_share">Dalintis</string>
+    <string name="cutout_save">Išsaugoti</string>
+</resources>

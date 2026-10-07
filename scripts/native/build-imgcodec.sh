@@ -5,7 +5,7 @@
 #
 # Cross-compiles zlib + libpng + libjpeg-turbo (static) for Android using the NDK CMake toolchain
 # and installs the resulting static libs + headers into
-#   app/src/main/cpp/imgcodec/<abi>/{include,lib}
+#   app/androidApp/src/main/cpp/imgcodec/<abi>/{include,lib}
 # so the app's CMakeLists can link them into the `imgstream` JNI library for memory-bounded,
 # scanline (row-streaming) JPEG/PNG encode — the editor bake writes the full-resolution result one
 # strip at a time without ever holding the whole output bitmap in RAM.
@@ -28,7 +28,7 @@ CMAKE_VERSION="3.31.6"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 source "$SCRIPT_DIR/native-common.sh"
-OUT_ROOT="${NATIVE_OUTPUT_BASE:-$REPO_ROOT/app/src/main/cpp}/imgcodec"
+OUT_ROOT="${NATIVE_OUTPUT_BASE:-$REPO_ROOT/app/androidApp/src/main/cpp}/imgcodec"
 
 SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
 if [ -z "$SDK" ] && [ -f "$REPO_ROOT/local.properties" ]; then

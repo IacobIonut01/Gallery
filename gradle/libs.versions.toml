@@ -24,6 +24,7 @@ okhttp = "5.5.0"
 okhttpLogging = "5.5.0"
 kotlinCoroutinesVersion = "1.11.0"
 ksp = "2.3.11"
+buildkonfig = "0.22.0"
 core-ktx = "1.19.0"
 junit = "4.13.2"
 androidx-test-ext-junit = "1.3.0"
@@ -31,8 +32,6 @@ espresso-core = "3.7.0"
 maplibreNative = "13.5.1"
 lifecycle-runtime = "2.11.0"
 activity-compose = "1.13.0"
-hilt = "2.60.1"
-hiltCommon = "1.4.0"
 material = "1.14.0"
 material3 = "1.5.0-alpha26"
 media3Exoplayer = "1.11.0"
@@ -43,22 +42,38 @@ profileinstaller = "1.4.1"
 retrofit = "3.0.0"
 retrofitKotlinxSerialization = "2.1.0"
 room = "2.8.4"
+room3 = "3.0.3"
+androidxSqlite = "2.7.1"
 accompanist = "0.37.3"
 datastore = "1.2.1"
 securityCrypto = "1.1.0"
 sqlcipherAndroid = "4.18.0"
 sqliteKtx = "2.7.0"
 sketch = "4.6.0"
+ktor = "3.4.3"
 startupRuntime = "1.2.0"
 uiautomator = "2.4.0"
 composealpha = "1.12.0"
 kotlinxSerializationJson = "1.11.0"
-workRuntimeKtx = "2.12.0-rc01"
+kotlinxDatetime = "0.7.1"
+cmpMaterialIconsExtended = "1.7.3"
+kotlinxBrowser = "0.3"
+uriKmp = "0.0.21"
+kmpworkmanager = "3.5.0"
 zoomimage = "1.6.0"
 lifecycleProcess = "2.11.0"
-glide-compose = "1.0.0-beta10"
-glide-ksp = "5.0.7"
 desugarJdkLibs = "2.1.5"
+composeMultiplatform = "1.12.0"
+glideCompose = "1.0.0-beta10"
+glideKsp = "5.0.7"
+# Latest stable CMP navigation fork (2.9.2) — pairs with androidx nav 2.9.x API.
+cmpNavigation = "2.9.2"
+# CMP 1.12 pins org.jetbrains.compose.material3 to its own 1.9.0 line
+# (the redirector was removed for 1.12.0); resolves to androidx m3 alpha22.
+cmpMaterial3 = "1.12.0-alpha03"
+materialKolor = "5.0.1"
+koin = "4.2.2"
+kotlinInject = "0.9.0"
 
 [libraries]
 # AndroidX
@@ -75,6 +90,9 @@ androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", versi
 androidx-exifinterface = { module = "androidx.exifinterface:exifinterface", version.ref = "exifinterface" }
 androidx-graphics-shapes = { module = "androidx.graphics:graphics-shapes", version.ref = "graphicsShapes" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle-runtime" }
+androidx-lifecycle-viewmodel = { group = "androidx.lifecycle", name = "lifecycle-viewmodel", version.ref = "lifecycle-runtime" }
+androidx-lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycle-runtime" }
+androidx-lifecycle-viewmodel-savedstate = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-savedstate", version.ref = "lifecycle-runtime" }
 androidx-media3-exoplayer-dash = { module = "androidx.media3:media3-exoplayer-dash", version.ref = "media3Exoplayer" }
 androidx-media3-exoplayer-hls = { module = "androidx.media3:media3-exoplayer-hls", version.ref = "media3Exoplayer" }
 androidx-media3-ui = { module = "androidx.media3:media3-ui", version.ref = "media3Exoplayer" }
@@ -90,8 +108,11 @@ androidx-profileinstaller = { module = "androidx.profileinstaller:profileinstall
 androidx-security-crypto = { module = "androidx.security:security-crypto", version.ref = "securityCrypto" }
 androidx-startup-runtime = { module = "androidx.startup:startup-runtime", version.ref = "startupRuntime" }
 androidx-uiautomator = { module = "androidx.test.uiautomator:uiautomator", version.ref = "uiautomator" }
-androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
-androidx-work-testing = { module = "androidx.work:work-testing", version.ref = "workRuntimeKtx" }
+kmpworkmanager = { module = "dev.brewkits:kmpworkmanager", version.ref = "kmpworkmanager" }
+kmpworkmanager-http = { module = "dev.brewkits:kmpworkmanager-http", version.ref = "kmpworkmanager" }
+kmpworker-annotations = { module = "dev.brewkits:kmpworker-annotations", version.ref = "kmpworkmanager" }
+kmpworker-ksp = { module = "dev.brewkits:kmpworker-ksp", version.ref = "kmpworkmanager" }
+kmpworker-testing = { module = "dev.brewkits:kmpworker-testing", version.ref = "kmpworkmanager" }
 avif-coder-coil = { module = "io.github.awxkee:avif-coder-coil", version.ref = "avifCoderCoil" }
 
 # Compose
@@ -115,14 +136,11 @@ compose-shimmer = { group = "com.valentinilk.shimmer", name = "compose-shimmer",
 compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4", version.ref = "composealpha" }
 compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 
-# Dagger
+# DI
 core = { module = "com.composables:core", version.ref = "core" }
-dagger-hilt = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
-dagger-hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
-androidx-hilt-common = { group = "androidx.hilt", name = "hilt-common", version.ref = "hiltCommon" }
-androidx-hilt-work = { group = "androidx.hilt", name = "hilt-work", version.ref = "hiltCommon" }
-androidx-hilt-compiler = { group = "androidx.hilt", name = "hilt-compiler", version.ref = "hiltCommon" }
-androidx-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hiltCommon" }
+javax-inject = { group = "javax.inject", name = "javax.inject", version = "1" }
+kotlin-inject-runtime = { group = "me.tatarka.inject", name = "kotlin-inject-runtime", version.ref = "kotlinInject" }
+kotlin-inject-compiler-ksp = { group = "me.tatarka.inject", name = "kotlin-inject-compiler-ksp", version.ref = "kotlinInject" }
 
 # Room
 haze = { module = "dev.chrisbanes.haze:haze", version.ref = "haze" }
@@ -149,10 +167,20 @@ retrofit-kotlinx-serialization = { module = "com.squareup.retrofit2:converter-ko
 retrofit-converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "retrofit" }
 
 onnxruntime-android = { module = "com.microsoft.onnxruntime:onnxruntime-android", version.ref = "onnxruntimeAndroid" }
+room-common = { group = "androidx.room", name = "room-common", version.ref = "room" }
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 room-testing = { group = "androidx.room", name = "room-testing", version.ref = "room" }
+room3-runtime = { group = "androidx.room3", name = "room3-runtime", version.ref = "room3" }
+room3-compiler = { group = "androidx.room3", name = "room3-compiler", version.ref = "room3" }
+room3-common = { group = "androidx.room3", name = "room3-common", version.ref = "room3" }
+room3-migration = { group = "androidx.room3", name = "room3-migration", version.ref = "room3" }
+room3-testing = { group = "androidx.room3", name = "room3-testing", version.ref = "room3" }
+androidx-sqlite = { module = "androidx.sqlite:sqlite", version.ref = "androidxSqlite" }
+sqlite-async = { module = "androidx.sqlite:sqlite-async", version.ref = "androidxSqlite" }
+sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "androidxSqlite" }
+sqlite-web = { module = "androidx.sqlite:sqlite-web", version.ref = "androidxSqlite" }
 sqlcipher-android = { module = "net.zetetic:sqlcipher-android", version.ref = "sqlcipherAndroid" }
 sqlite-ktx = { module = "androidx.sqlite:sqlite-ktx", version.ref = "sqliteKtx" }
 
@@ -164,15 +192,27 @@ accompanist-permissions = { group = "com.google.accompanist", name = "accompanis
 accompanist-drawablepainter = { module = "com.google.accompanist:accompanist-drawablepainter", version.ref = "accompanist" }
 
 # Sketch
+sketch-animated-core = { module = "io.github.panpf.sketch4:sketch-animated-core", version.ref = "sketch" }
 sketch-animated-gif = { module = "io.github.panpf.sketch4:sketch-animated-gif", version.ref = "sketch" }
 sketch-animated-heif = { module = "io.github.panpf.sketch4:sketch-animated-heif", version.ref = "sketch" }
 sketch-animated-webp = { module = "io.github.panpf.sketch4:sketch-animated-webp", version.ref = "sketch" }
 sketch-compose = { module = "io.github.panpf.sketch4:sketch-compose", version.ref = "sketch" }
+sketch-core = { module = "io.github.panpf.sketch4:sketch-core", version.ref = "sketch" }
 sketch-extensions-compose = { module = "io.github.panpf.sketch4:sketch-extensions-compose", version.ref = "sketch" }
 sketch-http-ktor = { module = "io.github.panpf.sketch4:sketch-http-ktor3", version.ref = "sketch" }
+
+# Ktor client — commonMain seam for cloud fakes/impls (version matches sketch-http-ktor3's transitive)
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
+ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktor" }
 sketch-svg = { module = "io.github.panpf.sketch4:sketch-svg", version.ref = "sketch" }
 sketch-video = { module = "io.github.panpf.sketch4:sketch-video", version.ref = "sketch" }
 sketch-view = { module = "io.github.panpf.sketch4:sketch-view", version.ref = "sketch" }
+
+# Okio (transitive via sketch/ktor; declared for direct use in moved decoder sources)
+okio = { module = "com.squareup.okio:okio", version = "3.9.1" }
 
 # Kotlinx
 kotlinx-collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinCollectionsImmutable" }
@@ -185,16 +225,16 @@ material = { module = "com.google.android.material:material", version.ref = "mat
 # Fuzzy Search
 fuzzywuzzy-kotlin = { module = "com.github.jens-muenker:fuzzywuzzy-kotlin", version.ref = "fuzzywuzzyKotlin" }
 
-# Glide
-glide-compose = { module = "com.github.bumptech.glide:compose", version.ref = "glide-compose" }
-glide-ksp = { module = "com.github.bumptech.glide:ksp", version.ref = "glide-ksp" }
 
 # Core library desugaring
 desugar-jdk-libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugarJdkLibs" }
 
 # Zoomable
-zoomimage-compose-glide = { module = "io.github.panpf.zoomimage:zoomimage-compose-glide", version.ref = "zoomimage" }
+glide = { module = "com.github.bumptech.glide:glide", version.ref = "glideKsp" }
+glide-compose = { module = "com.github.bumptech.glide:compose", version.ref = "glideCompose" }
+glide-ksp = { module = "com.github.bumptech.glide:ksp", version.ref = "glideKsp" }
 zoomimage-compose-sketch = { module = "io.github.panpf.zoomimage:zoomimage-compose-sketch4", version.ref = "zoomimage" }
+zoomimage-core = { module = "io.github.panpf.zoomimage:zoomimage-core", version.ref = "zoomimage" }
 
 # Tests
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -204,17 +244,43 @@ mockwebserver = { module = "com.squareup.okhttp3:mockwebserver", version.ref = "
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinCoroutinesVersion" }
 
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
+kotlinx-browser = { module = "org.jetbrains.kotlinx:kotlinx-browser", version.ref = "kotlinxBrowser" }
 androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycleProcess" }
+
+# KMP port (DOCS_SITE_PLAN.md §3)
+material-kolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
+material-kolor-utilities = { module = "com.materialkolor:material-color-utilities", version.ref = "materialKolor" }
+koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin" }
+# Compose Multiplatform redirector coords — carry the wasmJs public-package-json
+# variant the androidx-published artifacts lack. Versioned by the CMP release.
+cmp-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "composeMultiplatform" }
+cmp-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "composeMultiplatform" }
+cmp-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "composeMultiplatform" }
+cmp-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "cmpMaterial3" }
+cmp-material-icons-extended = { module = "org.jetbrains.compose.material:material-icons-extended", version.ref = "cmpMaterialIconsExtended" }
+cmp-components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "composeMultiplatform" }
+uri-kmp = { module = "com.eygraber:uri-kmp", version.ref = "uriKmp" }
+cmp-components-ui-tooling-preview = { module = "org.jetbrains.compose.components:components-ui-tooling-preview", version.ref = "composeMultiplatform" }
+cmp-ui-backhandler = { module = "org.jetbrains.compose.ui:ui-backhandler", version.ref = "composeMultiplatform" }
+# CMP fork of androidx navigation-compose — the androidx artifact ships no wasmJs
+# variant; this one delegates its Android target to real androidx.navigation.
+cmp-navigation = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "cmpNavigation" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 androidLibrary = { id = "com.android.library", version.ref = "agp" }
+androidKmpLibrary = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 androidTest = { id = "com.android.test", version.ref = "agp" }
+buildkonfig = { id = "com.codingfeline.buildkonfig", version.ref = "buildkonfig" }
 kspAndroid = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 roomPlugin = { id = "androidx.room", version.ref = "room" }
-hiltAndroid = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
+room3Plugin = { id = "androidx.room3", version.ref = "room3" }
 baselineProfilePlugin = { id = "androidx.baselineprofile", version.ref = "benchmarkMacroJunit4" }
 kotlin-compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+kotlinParcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }
 [bundles]
 

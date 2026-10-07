@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cutout_save_choice_title">שמור גזרה בשם</string>
+    <string name="cutout_save_transparent_png">PNG שקוף</string>
+    <string name="cutout_save_flatten_white">לשטח על לבן</string>
+    <string name="cutout_save_flatten_black">לשטח על שחור</string>
+    <string name="overwrite_unavailable_title">לא ניתן להחליף את הפורמט הזה</string>
+    <string name="overwrite_unavailable_summary">לא ניתן לקודד מחדש את פורמט התמונה במכשיר שלך, כך שלא ניתן להחליף את המקור. במקום זאת ייווצר עותק PNG חדש.</string>
+    <string name="overwrite_unavailable_create_copy">צור עותק</string>
+    <string name="copied_to_clipboard">הועתק ללוח</string>
+    <string name="error_copying_to_clipboard">העתקה ללוח נכשלה</string>
+    <string name="cutout_copy_failed">ההעתקה של אובייקט הגזירה נכשלה</string>
+    <string name="cutout_share_failed">שיתוף אובייקט הגזירה נכשל</string>
+    <string name="cutout_save_failed">שמירת אובייקט הגזירה נכשלה</string>
+    <string name="cutout_saved">גזרה נשמרה לתמונות/גזרות</string>
+</resources>

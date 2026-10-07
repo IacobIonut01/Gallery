@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="location">Ubicación</string>
+    <string name="pause_video">Pausar vídeo</string>
+    <string name="play_video">Reproducir vídeo</string>
+    <string name="close">Cerrar</string>
+    <string name="rotate_screen_cd">Girar pantalla</string>
+    <string name="toggle_audio_cd">Activar sonido</string>
+    <string name="auto">Automático</string>
+    <string name="change_playback_speed_cd">Cambiar velocidad de reproducción</string>
+    <string name="change_subtitle_track_cd">Cambiar la pista de subtítulos</string>
+    <string name="more_options_cd">Más opciones</string>
+    <string name="rotate">Girar</string>
+    <string name="decrypt_failed_tap_to_retry">Error de descifrado. Pulse para volver a intentarlo.</string>
+    <string name="media_load_failed_tap_to_retry">No se ha podido cargar este contenido. Toca para reintentar.</string>
+    <string name="frame_picker_shots_heading">Tomas en esta foto</string>
+    <string name="cutout_no_object">No se detectó objeto al mantener presionado</string>
+    <string name="cutout_init_failed">Error al inicializar el motor de recorte</string>
+    <string name="cutout_refining">Refinando recorte…</string>
+    <string name="cutout_include">Incluir</string>
+    <string name="cutout_exclude">Excluir</string>
+    <string name="cutout_undo">Deshacer</string>
+    <string name="cutout_redo">Rehacer</string>
+    <string name="cutout_reset">Restablecer</string>
+    <string name="cutout_close">Cerrar recorte</string>
+    <string name="cutout_copy">Copiar</string>
+    <string name="cutout_share">Compartir</string>
+    <string name="cutout_save">Guardar</string>
+</resources>

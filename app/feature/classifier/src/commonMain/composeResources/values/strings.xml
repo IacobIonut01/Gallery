@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Categories screen -->
+    <string name="categories">Categories</string>
+    <string name="classified_media">%1$s classified media</string>
+    <string name="categories_settings">Categories Settings</string>
+    <string name="categories_settings_subtitle">Manage scanning, categories and classification</string>
+    <string name="add_category">Add category</string>
+    <string name="new_category">New category</string>
+    <string name="edit_category">Edit category</string>
+    <string name="category_media_count">%1$d items</string>
+    <string name="no_categories_found">No categories found</string>
+    <string name="category_name">Category name</string>
+    <string name="category_name_hint">e.g., Nature, Food, Travel</string>
+    <string name="category_created">Category created — classifying photos…</string>
+    <string name="category_updated">Category updated — reclassifying…</string>
+    <string name="category_deleted">Category deleted</string>
+    <string name="delete_category_title">Delete category?</string>
+    <string name="delete_category_confirmation">Are you sure you want to delete this category? This action cannot be undone.</string>
+
+    <!-- Category editor -->
+    <string name="quick_start">Quick start</string>
+    <string name="quick_start_subtitle">Tap a suggestion to get started</string>
+    <string name="describe_content">Describe what to include</string>
+    <string name="describe_content_hint">Describe what photos this category should contain</string>
+    <string name="describe_content_example">e.g., photos of my dog at the beach</string>
+    <string name="sensitivity">Sensitivity</string>
+    <string name="sensitivity_broad">Broad</string>
+    <string name="sensitivity_broad_desc">Include loosely related photos</string>
+    <string name="sensitivity_balanced">Balanced</string>
+    <string name="sensitivity_balanced_desc">Good mix of relevance</string>
+    <string name="sensitivity_strict">Strict</string>
+    <string name="sensitivity_strict_desc">Only strong matches</string>
+    <string name="sensitivity_exact">Exact</string>
+    <string name="sensitivity_exact_desc">Near-perfect matches only</string>
+    <string name="fine_tune">Fine-tune</string>
+    <string name="more_results">More results</string>
+    <string name="more_accurate">More accurate</string>
+    <string name="matching_preview">Preview</string>
+    <string name="matching_photos">Matching photos</string>
+    <string name="matching_photos_count">%1$d matching</string>
+    <string name="see_all_matches">See all %1$d matches</string>
+    <string name="no_matching_photos">No matching photos found</string>
+    <string name="best_match">Best Match</string>
+    <string name="reference_images">Reference photos</string>
+    <string name="reference_images_hint">Add photos to find visually similar ones</string>
+    <string name="add_reference_photos">Add photos</string>
+    <string name="reference_images_count">%1$d selected</string>
+    <string name="search_terms">Search terms</string>
+    <string name="search_terms_hint">Comma-separated keywords to match images</string>
+    <string name="search_terms_example">sunset, sunrise, golden hour, sky</string>
+    <string name="accuracy_threshold">Accuracy threshold</string>
+    <string name="recommended">recommended</string>
+    <string name="category_helper_text">Add a name, search terms and adjust the accuracy to create your category</string>
+
+    <!-- Search -->
+    <string name="search_images_videos"><![CDATA[Search images & videos]]></string>
+    <string name="find_similar">Find similar</string>
+    <string name="search_by_image">Search by image</string>
+    <string name="visual_search">Visual search</string>
+    <string name="image_search_preview">Image search preview</string>
+    <string name="remove_image">Remove image</string>
+    <string name="pick_another">Pick another</string>
+    <string name="no_results_found">No results found</string>
+    <string name="no_media_found">No media found</string>
+    <string name="sort_most_accurate">Most accurate</string>
+    <string name="sort_by_date">Date</string>
+    <string name="suggestions">Suggestions</string>
+    <string name="screenshots">Screenshots</string>
+    <string name="videos">Videos</string>
+    <string name="selfies">Selfies</string>
+    <string name="browse_categories">Browse categories</string>
+    <string name="media_types">Media Types</string>
+    <string name="camera_models">Camera Models</string>
+    <string name="special_modes">Special Modes</string>
+    <string name="media_groupings">Media Groupings</string>
+    <string name="smart_scan_eta_under_minute">Less than a minute remaining</string>
+    <string name="smart_scan_eta_hours">About %1$d hr %2$d min remaining</string>
+    <string name="smart_scan_eta_minutes">About %1$d min remaining</string>
+    <string name="smart_search_index_title">Updating Smart Search</string>
+    <string name="smart_search_index_progress">Indexed %1$d of %2$d images · Stage %3$d of %4$d</string>
+    <string name="smart_search_index_preparing">Preparing the search index · Stage %1$d of %2$d</string>
+    <string name="smart_search_index_waiting">Waiting for earlier stages · Stage %1$d of %2$d</string>
+
+    <!-- Shared chrome -->
+    <string name="locations">Locations</string>
+    <string name="timeline">Timeline</string>
+    <string name="albums">Albums</string>
+    <string name="back_cd">Back</string>
+    <string name="close">Close</string>
+    <string name="save">Save</string>
+    <string name="create">Create</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="header_today">Today</string>
+    <string name="header_yesterday">Yesterday</string>
+    <string name="s_items">%1$s items</string>
+</resources>

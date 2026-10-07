@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cutout_save_choice_title">切り抜きを名前を付けて保存</string>
+    <string name="cutout_save_transparent_png">透過PNG</string>
+    <string name="cutout_save_flatten_white">白を平らにする</string>
+    <string name="cutout_save_flatten_black">黒を平らにする</string>
+    <string name="overwrite_unavailable_title">この形式は上書きできません</string>
+    <string name="overwrite_unavailable_summary">この画像形式はデバイスで再エンコードできないため、元の画像形式を上書きすることはできません。代わりに、新しい PNG コピーが作成されます。</string>
+    <string name="overwrite_unavailable_create_copy">コピーの作成</string>
+    <string name="copied_to_clipboard">クリップボードにコピーしました</string>
+    <string name="error_copying_to_clipboard">クリップボードへのコピーに失敗しました</string>
+    <string name="cutout_copy_failed">切り抜きオブジェクトのコピーに失敗しました</string>
+    <string name="cutout_share_failed">切り抜きオブジェクトの共有に失敗しました</string>
+    <string name="cutout_save_failed">切り抜きオブジェクトの保存に失敗しました</string>
+    <string name="cutout_saved">カットアウトを写真/カットアウトに保存しました</string>
+</resources>

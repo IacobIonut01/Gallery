@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="location">Τοποθεσία</string>
+    <string name="pause_video">Παύση βίντεο</string>
+    <string name="play_video">Αναπαραγωγή βίντεο</string>
+    <string name="close">Κλείσιμο</string>
+    <string name="rotate_screen_cd">Rotate Screen</string>
+    <string name="toggle_audio_cd">Toggle audio</string>
+    <string name="auto">Auto</string>
+    <string name="change_playback_speed_cd">Change playback speed</string>
+    <string name="change_subtitle_track_cd">Change subtitle track</string>
+    <string name="more_options_cd">More options</string>
+    <string name="rotate">Rotate</string>
+    <string name="decrypt_failed_tap_to_retry">Decrypt failed. Tap to retry.</string>
+    <string name="media_load_failed_tap_to_retry">Δεν ήταν δυνατή η φόρτωση αυτού του πολυμέσου. Πατήστε για να δοκιμάσετε ξανά.</string>
+    <string name="frame_picker_shots_heading">Λήψεις σε αυτή τη φωτογραφία</string>
+    <string name="cutout_no_object">Δεν ανιχνεύθηκε αντικείμενο κάτω από το μακρύ πάτημα</string>
+    <string name="cutout_init_failed">Αποτυχία εκκίνησης μηχανής αποκοπής</string>
+    <string name="cutout_refining">Βελτίωση αποκοπής…</string>
+    <string name="cutout_include">Συμπερίληψη</string>
+    <string name="cutout_exclude">Αποκλεισμός</string>
+    <string name="cutout_undo">Αναίρεση</string>
+    <string name="cutout_redo">Επανάληψη</string>
+    <string name="cutout_reset">Επαναφορά</string>
+    <string name="cutout_close">Κλείσιμο αποκοπής</string>
+    <string name="cutout_copy">Αντιγραφή</string>
+    <string name="cutout_share">Κοινή χρήση</string>
+    <string name="cutout_save">Αποθήκευση</string>
+</resources>

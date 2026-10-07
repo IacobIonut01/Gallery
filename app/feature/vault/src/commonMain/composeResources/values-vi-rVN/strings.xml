@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<string name="vault_items_encrypted">%1$d mục đã được mã hóa thành công(s)</string>
+<string name="vault_encrypt_failed">Không thể mã hóa %1$d mục(đã chọn)</string>
+<string name="vault_restored_to">Đã khôi phục %1$d mục(đã chọn) vào %2$s</string>
+<string name="vault_item_deleted">Item deleted from vault</string>
+</resources>

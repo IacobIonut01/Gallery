@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="location">Miejsce</string>
+    <string name="pause_video">Wstrzymaj film</string>
+    <string name="play_video">Odtwórz film</string>
+    <string name="close">Zamknij</string>
+    <string name="rotate_screen_cd">Obróć Ekran</string>
+    <string name="toggle_audio_cd">Przełącz dźwięk</string>
+    <string name="auto">Automatycznie</string>
+    <string name="change_playback_speed_cd">Zmień prędkość odtwarzania</string>
+    <string name="change_subtitle_track_cd">Zmień ścieżkę napisów</string>
+    <string name="more_options_cd">Więcej opcji</string>
+    <string name="rotate">Obróć</string>
+    <string name="decrypt_failed_tap_to_retry">Odszyfrowanie nie powiodło się. Dotknij, aby spróbować ponownie.</string>
+    <string name="media_load_failed_tap_to_retry">Nie udało się wczytać tego pliku multimedialnego. Dotknij, aby spróbować ponownie.</string>
+    <string name="frame_picker_shots_heading">Ujęcia na tym zdjęciu</string>
+    <string name="cutout_no_object">Nie wykryto obiektu podczas przytrzymania</string>
+    <string name="cutout_init_failed">Nie udało się zainicjalizować silnika wycinania</string>
+    <string name="cutout_refining">Dopracowywanie wycięcia…</string>
+    <string name="cutout_include">Uwzględnij</string>
+    <string name="cutout_exclude">Wyklucz</string>
+    <string name="cutout_undo">Cofnij</string>
+    <string name="cutout_redo">Ponów</string>
+    <string name="cutout_reset">Resetuj</string>
+    <string name="cutout_close">Zamknij wycięcie</string>
+    <string name="cutout_copy">Kopiuj</string>
+    <string name="cutout_share">Udostępnij</string>
+    <string name="cutout_save">Zapisz</string>
+</resources>

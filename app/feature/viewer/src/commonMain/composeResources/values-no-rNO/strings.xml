@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="location">Location</string>
+    <string name="pause_video">Pause video</string>
+    <string name="play_video">Play video</string>
+    <string name="close">Lukk</string>
+    <string name="rotate_screen_cd">Roter skjermen</string>
+    <string name="toggle_audio_cd">Toggle audio</string>
+    <string name="auto">Auto</string>
+    <string name="change_playback_speed_cd">Change playback speed</string>
+    <string name="change_subtitle_track_cd">Change subtitle track</string>
+    <string name="more_options_cd">More options</string>
+    <string name="rotate">Rotate</string>
+    <string name="decrypt_failed_tap_to_retry">Decrypt failed. Tap to retry.</string>
+    <string name="media_load_failed_tap_to_retry">Kunne ikke laste inn dette mediet. Trykk for å prøve på nytt.</string>
+    <string name="frame_picker_shots_heading">Skudd på dette bildet</string>
+    <string name="cutout_no_object">Ingen gjenstand oppdaget under lang trykk</string>
+    <string name="cutout_init_failed">Kunne ikke initialisere utkoblingsmotoren</string>
+    <string name="cutout_refining">Finjusterer utskjæringen …</string>
+    <string name="cutout_include">Inkluder</string>
+    <string name="cutout_exclude">Ekskluder</string>
+    <string name="cutout_undo">Angre</string>
+    <string name="cutout_redo">Gjenta</string>
+    <string name="cutout_reset">Tilbakestill</string>
+    <string name="cutout_close">Lukk utskjæringen</string>
+    <string name="cutout_copy">Kopier</string>
+    <string name="cutout_share">Del</string>
+    <string name="cutout_save">Lagre</string>
+</resources>

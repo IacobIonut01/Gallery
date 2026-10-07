@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cutout_save_choice_title">Spremi izrezak kao</string>
+    <string name="cutout_save_transparent_png">Prozirni PNG</string>
+    <string name="cutout_save_flatten_white">Zalijepi na bijelo</string>
+    <string name="cutout_save_flatten_black">Zalijepi na crno</string>
+    <string name="overwrite_unavailable_title">Ne može se prepisati ovaj format</string>
+    <string name="overwrite_unavailable_summary">Ovaj format slike ne može se ponovno kodirati na vašem uređaju, pa se izvornik ne može prepisati. Umjesto toga će se stvoriti nova PNG kopija.</string>
+    <string name="overwrite_unavailable_create_copy">Stvori kopiju</string>
+    <string name="copied_to_clipboard">Kopirano u međuspremnik</string>
+    <string name="error_copying_to_clipboard">Kopiranje u međuspremnik nije uspjelo</string>
+    <string name="cutout_copy_failed">Neuspjelo kopiranje objekta za izrezivanje</string>
+    <string name="cutout_share_failed">Neuspjelo dijeljenje objekta za izrezivanje</string>
+    <string name="cutout_save_failed">Neuspjelo spremanje objekta za izrezivanje</string>
+    <string name="cutout_saved">Izrezivanje spremljeno u Slike/Izrezci</string>
+</resources>

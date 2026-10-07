@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cutout_save_choice_title">କଟାଉଟକୁ ଏହା ଭାବରେ ସେଭ୍ କରନ୍ତୁ</string>
+    <string name="cutout_save_transparent_png">ପାରଦର୍ଶୀ PNG</string>
+    <string name="cutout_save_flatten_white">ସୁଦା ବର୍ଣ୍ଣରେ ସମତଳ କରନ୍ତୁ</string>
+    <string name="cutout_save_flatten_black">କଳା ବର୍ଣ୍ଣରେ ସମତଳ କରନ୍ତୁ</string>
+    <string name="overwrite_unavailable_title">ଏହି ଫର୍ମାଟ୍ ଉପରେ ଲେଖାକୁ ସ୍ଥାନାନ୍ତର କରିପାରିବେନି</string>
+    <string name="overwrite_unavailable_summary">ଆପଣଙ୍କ ଉପକରଣରେ ଏହି ଛବି ଫର୍ମାଟ୍ ପୁନଃ ସଂକୋଡ଼ କରାଯାଇପାରିବେନି, ତେଣୁ ମୂଳକୁ ଅପଡେଟ୍ କରାଯାଇପାରିବ ନାହିଁ। ସ୍ଥାନାନ୍ତର ହିସାବରେ ଗୋଟିଏ ନୂତନ PNG କପି ସୃଷ୍ଟି କରାଯିବ।</string>
+    <string name="overwrite_unavailable_create_copy">କପି ସୃଷ୍ଟି କରନ୍ତୁ</string>
+    <string name="copied_to_clipboard">Copied to clipboard</string>
+    <string name="error_copying_to_clipboard">Failed to copy to clipboard</string>
+    <string name="cutout_copy_failed">କଟଆଉଟ୍ ବସ୍ତୁ କପି କରିବାରେ ବିଫଳ</string>
+    <string name="cutout_share_failed">କଟଆଉଟ୍ ବସ୍ତୁ ସଂବାଦ କରିବାରେ ବିଫଳ</string>
+    <string name="cutout_save_failed">କଟଆଉଟ୍ ଓବ୍ଜେକ୍ଟ୍ ସଞ୍ଚୟ କରିବାରେ ବିଫଳ</string>
+    <string name="cutout_saved">Pictures/Cutouts କୁ କଟଆଉଟ୍ ସଞ୍ଚୟ ହେଲା</string>
+</resources>

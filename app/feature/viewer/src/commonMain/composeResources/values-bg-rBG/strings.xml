@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="location">Location</string>
+    <string name="pause_video">Pause video</string>
+    <string name="play_video">Play video</string>
+    <string name="close">Close</string>
+    <string name="rotate_screen_cd">Rotate Screen</string>
+    <string name="toggle_audio_cd">Toggle audio</string>
+    <string name="auto">Auto</string>
+    <string name="change_playback_speed_cd">Change playback speed</string>
+    <string name="change_subtitle_track_cd">Change subtitle track</string>
+    <string name="more_options_cd">More options</string>
+    <string name="rotate">Rotate</string>
+    <string name="decrypt_failed_tap_to_retry">Decrypt failed. Tap to retry.</string>
+    <string name="media_load_failed_tap_to_retry">Тази мултимедия не можа да се зареди. Докоснете за нов опит.</string>
+    <string name="frame_picker_shots_heading">Кадри в тази снимка</string>
+    <string name="cutout_no_object">Не е открит обект при продължително натискане</string>
+    <string name="cutout_init_failed">Неуспешно инициализиране на двигателя за прекъсване</string>
+    <string name="cutout_refining">Изрязването се прецизира...</string>
+    <string name="cutout_include">Включете</string>
+    <string name="cutout_exclude">Изключете</string>
+    <string name="cutout_undo">Отмяна</string>
+    <string name="cutout_redo">Повторете</string>
+    <string name="cutout_reset">Нулиране</string>
+    <string name="cutout_close">Затворен изрез</string>
+    <string name="cutout_copy">копие</string>
+    <string name="cutout_share">Споделете</string>
+    <string name="cutout_save">Запазване</string>
+</resources>

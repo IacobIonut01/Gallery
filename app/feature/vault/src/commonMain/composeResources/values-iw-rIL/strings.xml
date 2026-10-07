@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<string name="vault_items_encrypted">%1$d פריטים הוצפנו בהצלחה</string>
+<string name="vault_encrypt_failed">הצפנת %1$d פריטים נכשלה</string>
+<string name="vault_restored_to">%1$d פריטים שוחזרו אל %2$s</string>
+<string name="vault_item_deleted">הפריט נמחק מהכספת</string>
+</resources>

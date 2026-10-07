@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="location">Location</string>
+    <string name="pause_video">Pause video</string>
+    <string name="play_video">Play video</string>
+    <string name="close">Close</string>
+    <string name="rotate_screen_cd">Rotate Screen</string>
+    <string name="toggle_audio_cd">Toggle audio</string>
+    <string name="auto">Auto</string>
+    <string name="change_playback_speed_cd">Change playback speed</string>
+    <string name="change_subtitle_track_cd">Change subtitle track</string>
+    <string name="more_options_cd">More options</string>
+    <string name="rotate">Rotate</string>
+    <string name="decrypt_failed_tap_to_retry">Decrypt failed. Tap to retry.</string>
+    <string name="media_load_failed_tap_to_retry">Couldn't load this media. Tap to retry.</string>
+    <string name="frame_picker_shots_heading">Shots in this photo</string>
+    <string name="cutout_no_object">No object detected under long-press</string>
+    <string name="cutout_init_failed">Failed to initialize cutout engine</string>
+    <string name="cutout_refining">Refining cutout…</string>
+    <string name="cutout_include">Include</string>
+    <string name="cutout_exclude">Exclude</string>
+    <string name="cutout_undo">Undo</string>
+    <string name="cutout_redo">Redo</string>
+    <string name="cutout_reset">Reset</string>
+    <string name="cutout_close">Close cutout</string>
+    <string name="cutout_copy">Copy</string>
+    <string name="cutout_share">Share</string>
+    <string name="cutout_save">Save</string>
+</resources>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cutout_save_choice_title">Запазване на изрязването като</string>
+    <string name="cutout_save_transparent_png">Прозрачен PNG</string>
+    <string name="cutout_save_flatten_white">Заравнете върху бяло</string>
+    <string name="cutout_save_flatten_black">Изравнете върху черно</string>
+    <string name="overwrite_unavailable_title">Не може да презапише този формат</string>
+    <string name="overwrite_unavailable_summary">Този формат на изображението не може да бъде повторно кодиран на вашето устройство, така че оригиналът не може да бъде презаписан. Вместо това ще бъде създадено ново PNG копие.</string>
+    <string name="overwrite_unavailable_create_copy">Създайте копие</string>
+    <string name="copied_to_clipboard">Copied to clipboard</string>
+    <string name="error_copying_to_clipboard">Failed to copy to clipboard</string>
+    <string name="cutout_copy_failed">Неуспешно копиране на изрязан обект</string>
+    <string name="cutout_share_failed">Неуспешно споделяне на изрязан обект</string>
+    <string name="cutout_save_failed">Неуспешно запазване на изрязан обект</string>
+    <string name="cutout_saved">Запазен изрез в Pictures/Cutouts</string>
+</resources>

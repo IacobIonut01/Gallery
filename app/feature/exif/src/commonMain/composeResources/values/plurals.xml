@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="cloud_copy_failed_count">
+        <item quantity="one">%1$d of %2$d items could not be copied</item>
+        <item quantity="other">%1$d of %2$d items could not be copied</item>
+    </plurals>
+</resources>

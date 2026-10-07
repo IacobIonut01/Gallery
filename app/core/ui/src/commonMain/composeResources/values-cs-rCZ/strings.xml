@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cutout_save_choice_title">Uložit výřez jako</string>
+    <string name="cutout_save_transparent_png">Průhledný PNG</string>
+    <string name="cutout_save_flatten_white">Vyrovnat na bílé</string>
+    <string name="cutout_save_flatten_black">Narovnat na černou</string>
+    <string name="overwrite_unavailable_title">Tento formát nelze přepsat</string>
+    <string name="overwrite_unavailable_summary">Tento formát obrázku nelze na vašem zařízení překódovat, takže originál nelze přepsat. Místo toho bude vytvořena nová kopie PNG.</string>
+    <string name="overwrite_unavailable_create_copy">Vytvořit kopii</string>
+    <string name="copied_to_clipboard">Copied to clipboard</string>
+    <string name="error_copying_to_clipboard">Failed to copy to clipboard</string>
+    <string name="cutout_copy_failed">Kopírování vyříznutého objektu se nezdařilo</string>
+    <string name="cutout_share_failed">Sdílení vyříznutého objektu se nezdařilo</string>
+    <string name="cutout_save_failed">Uložení vyříznutého objektu se nezdařilo</string>
+    <string name="cutout_saved">Uložený výřez do Obrázky/Výřezy</string>
+</resources>

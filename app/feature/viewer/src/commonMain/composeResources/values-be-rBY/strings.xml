@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="location">Location</string>
+    <string name="pause_video">Pause video</string>
+    <string name="play_video">Play video</string>
+    <string name="close">Close</string>
+    <string name="rotate_screen_cd">Rotate Screen</string>
+    <string name="toggle_audio_cd">Toggle audio</string>
+    <string name="auto">Auto</string>
+    <string name="change_playback_speed_cd">Change playback speed</string>
+    <string name="change_subtitle_track_cd">Change subtitle track</string>
+    <string name="more_options_cd">More options</string>
+    <string name="rotate">Rotate</string>
+    <string name="decrypt_failed_tap_to_retry">Decrypt failed. Tap to retry.</string>
+    <string name="media_load_failed_tap_to_retry">Не ўдалося загрузіць гэты медыяфайл. Націсніце, каб паўтарыць.</string>
+    <string name="frame_picker_shots_heading">Кадры на гэтым фота</string>
+    <string name="cutout_no_object">Пры доўгім націсканні аб'ект не выяўлены</string>
+    <string name="cutout_init_failed">Не ўдалося ініцыялізаваць механізм адключэння</string>
+    <string name="cutout_refining">Удакладненне выраза…</string>
+    <string name="cutout_include">Уключыць</string>
+    <string name="cutout_exclude">Выключыць</string>
+    <string name="cutout_undo">Адмяніць</string>
+    <string name="cutout_redo">Паўтарыць</string>
+    <string name="cutout_reset">Скінуць</string>
+    <string name="cutout_close">Закрыць выраз</string>
+    <string name="cutout_copy">Копія</string>
+    <string name="cutout_share">падзяліцца</string>
+    <string name="cutout_save">Захаваць</string>
+</resources>

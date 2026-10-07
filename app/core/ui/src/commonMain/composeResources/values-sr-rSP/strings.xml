@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cutout_save_choice_title">Сачувај изрез као</string>
+    <string name="cutout_save_transparent_png">Прозирни PNG</string>
+    <string name="cutout_save_flatten_white">Спљошти на бело</string>
+    <string name="cutout_save_flatten_black">Спљошти на црно</string>
+    <string name="overwrite_unavailable_title">Не могу се преписати ову фомрат</string>
+    <string name="overwrite_unavailable_summary">Овај формат слике не може бити поново кодирани на вашем уређају, па оригинал не може бити преписан. Уместо тога биће креирана нова PNG копија.</string>
+    <string name="overwrite_unavailable_create_copy">Креирај копију</string>
+    <string name="copied_to_clipboard">Копирано у оставу</string>
+    <string name="error_copying_to_clipboard">Неуспешно копирање у оставу</string>
+    <string name="cutout_copy_failed">Неуспело копирање cutout објекта</string>
+    <string name="cutout_share_failed">Неуспело делјење cutout објекта</string>
+    <string name="cutout_save_failed">Неуспело чување cutout објекта</string>
+    <string name="cutout_saved">Сачуван изрез у Фотографије/Изрези</string>
+</resources>

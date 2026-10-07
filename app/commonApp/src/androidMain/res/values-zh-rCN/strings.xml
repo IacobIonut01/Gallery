@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Manifest/widget/XML-referenced strings. UI strings live in commonMain/composeResources. -->
+<resources>
+    <string name="app_name">ReFra</string>
+    <string name="app_name_gallery">图库</string>
+    <string name="location_cd">媒体位置</string>
+    <string name="set_wallpaper">壁纸</string>
+    <string name="widget_single_label">单张照片</string>
+    <string name="widget_single_description">在主屏幕上显示单张照片</string>
+    <string name="widget_grid_label">照片网格</string>
+    <string name="widget_grid_description">在主屏幕上显示照片网格（2×2, 4×4 或 6×6 布局，视尺寸而定）</string>
+    <string name="editor_crop">裁剪</string>
+</resources>

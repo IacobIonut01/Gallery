@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="location">Konum</string>
+    <string name="pause_video">Videoyu duraklat</string>
+    <string name="play_video">Videoyu oynat</string>
+    <string name="close">Kapat</string>
+    <string name="rotate_screen_cd">Ekranı döndür</string>
+    <string name="toggle_audio_cd">Sesi değiştir</string>
+    <string name="auto">Otomatik</string>
+    <string name="change_playback_speed_cd">Oynatma hızını değiştir</string>
+    <string name="change_subtitle_track_cd">Change subtitle track</string>
+    <string name="more_options_cd">Diğer seçenekler</string>
+    <string name="rotate">Döndür</string>
+    <string name="decrypt_failed_tap_to_retry">Şifre çözülemedi. Tekrar denemek için dokunun.</string>
+    <string name="media_load_failed_tap_to_retry">Bu medya yüklenemedi. Tekrar denemek için dokunun.</string>
+    <string name="frame_picker_shots_heading">Bu fotoğraftaki çekimler</string>
+    <string name="cutout_no_object">Uzun basma altında nesne algılanmadı</string>
+    <string name="cutout_init_failed">Kesme motoru başlatılamadı</string>
+    <string name="cutout_refining">Kesilen parça geliştiriliyor…</string>
+    <string name="cutout_include">Dahil et</string>
+    <string name="cutout_exclude">Hariç tut</string>
+    <string name="cutout_undo">Geri al</string>
+    <string name="cutout_redo">Yinele</string>
+    <string name="cutout_reset">Sıfırla</string>
+    <string name="cutout_close">Kesilen parçayı kapat</string>
+    <string name="cutout_copy">Kopyala</string>
+    <string name="cutout_share">Paylaş</string>
+    <string name="cutout_save">Kaydet</string>
+</resources>

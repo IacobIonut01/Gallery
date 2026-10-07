@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="location">Lokasi</string>
+    <string name="pause_video">Jeda video</string>
+    <string name="play_video">Putar video</string>
+    <string name="close">Tutup</string>
+    <string name="rotate_screen_cd">Putar Layar</string>
+    <string name="toggle_audio_cd">Alihkan audio</string>
+    <string name="auto">Otomatis</string>
+    <string name="change_playback_speed_cd">Ubah kecepatan pemutaran</string>
+    <string name="change_subtitle_track_cd">Change subtitle track</string>
+    <string name="more_options_cd">More options</string>
+    <string name="rotate">Rotate</string>
+    <string name="decrypt_failed_tap_to_retry">Decrypt failed. Tap to retry.</string>
+    <string name="media_load_failed_tap_to_retry">Media ini tidak dapat dimuat. Ketuk untuk mencoba lagi.</string>
+    <string name="frame_picker_shots_heading">Tangkapan dalam foto ini</string>
+    <string name="cutout_no_object">Tidak ada objek yang terdeteksi saat menekan lama</string>
+    <string name="cutout_init_failed">Gagal menginisialisasi mesin potong</string>
+    <string name="cutout_refining">Menyempurnakan potongan…</string>
+    <string name="cutout_include">Sertakan</string>
+    <string name="cutout_exclude">Kecualikan</string>
+    <string name="cutout_undo">Batalkan</string>
+    <string name="cutout_redo">Ulangi</string>
+    <string name="cutout_reset">Atur ulang</string>
+    <string name="cutout_close">Tutup potongan</string>
+    <string name="cutout_copy">Salin</string>
+    <string name="cutout_share">Bagikan</string>
+    <string name="cutout_save">Simpan</string>
+</resources>

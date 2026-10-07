@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="location">Local</string>
+    <string name="pause_video">Pausar vídeo</string>
+    <string name="play_video">Reproduzir vídeo</string>
+    <string name="close">Fechar</string>
+    <string name="rotate_screen_cd">Girar Tela</string>
+    <string name="toggle_audio_cd">Alternar áudio</string>
+    <string name="auto">Auto</string>
+    <string name="change_playback_speed_cd">Alterar a velocidade de reprodução</string>
+    <string name="change_subtitle_track_cd">Mudar faixa da legenda</string>
+    <string name="more_options_cd">More options</string>
+    <string name="rotate">Rotacionar</string>
+    <string name="decrypt_failed_tap_to_retry">Falha na descriptografia. Toque para tentar novamente.</string>
+    <string name="media_load_failed_tap_to_retry">Não foi possível carregar esta mídia. Toque para tentar novamente.</string>
+    <string name="frame_picker_shots_heading">Fotos nesta imagem</string>
+    <string name="cutout_no_object">Nenhum objeto detectado ao pressionar longamente</string>
+    <string name="cutout_init_failed">Falha ao inicializar o motor de recorte</string>
+    <string name="cutout_refining">Refinando recorte…</string>
+    <string name="cutout_include">Incluir</string>
+    <string name="cutout_exclude">Excluir</string>
+    <string name="cutout_undo">Desfazer</string>
+    <string name="cutout_redo">Refazer</string>
+    <string name="cutout_reset">Redefinir</string>
+    <string name="cutout_close">Fechar recorte</string>
+    <string name="cutout_copy">Copiar</string>
+    <string name="cutout_share">Compartilhar</string>
+    <string name="cutout_save">Salvar</string>
+</resources>

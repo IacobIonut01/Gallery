@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Manifest/widget/XML-referenced strings. UI strings live in commonMain/composeResources. -->
+<resources>
+    <string name="app_name">ReFra</string>
+    <string name="app_name_gallery">Galerija</string>
+    <string name="location_cd">Lokacija medija</string>
+    <string name="set_wallpaper">Pozadina</string>
+    <string name="widget_single_label">Jedna fotografija</string>
+    <string name="widget_single_description">Prikaži jednu fotografiju na početnom zaslonu</string>
+    <string name="widget_grid_label">Mreža fotografija</string>
+    <string name="widget_grid_description">Prikaži mrežu fotografija na početnom zaslonu (2×2, 4×4 ili 6×6, ovisno o veličini)</string>
+    <string name="editor_crop">Izreži</string>
+</resources>

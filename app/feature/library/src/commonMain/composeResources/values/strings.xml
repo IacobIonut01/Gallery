@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Settings</string>
+    <string name="locations">Locations</string>
+    <string name="cloud_people">People</string>
+    <string name="categories">Categories</string>
+    <string name="category_media_count">%1$d items</string>
+    <string name="categorise_your_media">Categorise your media</string>
+    <string name="library_customize_title">Customize shortcuts</string>
+    <string name="library_customize_hint">Drag tiles to reorder, drag the side handle to resize, tap × to remove.</string>
+    <string name="library_edit_done">Done</string>
+    <string name="library_customize">Customize shortcuts</string>
+    <string name="library_shortcut_hide">Hide shortcut</string>
+    <string name="library_shortcut_size_half">Half width</string>
+    <string name="library_shortcut_size_full">Full width</string>
+    <string name="library_section_hidden">Hidden</string>
+    <string name="library_shortcut_show">Show shortcut</string>
+    <string name="library_section_locations_empty">No locations to show yet</string>
+    <string name="library_section_people_unavailable">No people to show yet</string>
+    <string name="library_section_categories_unavailable">Smart categories are turned off</string>
+    <string name="library_sections_title">Sections</string>
+    <string name="trash">Trash</string>
+    <string name="favorites">Favorites</string>
+    <string name="vault">Vault</string>
+    <string name="ignored">Ignored</string>
+    <string name="security_private_folder">Private folder</string>
+    <string name="cloud_archive">Archive</string>
+    <string name="cloud_shared_links">Shared Links</string>
+    <string name="cloud_backup_and_sync">Backup &amp; Sync</string>
+    <string name="cloud_accounts">Cloud Accounts</string>
+    <string name="favorites_group_by_date">Group by date</string>
+    <string name="favorites_info_title">Your Favorites</string>
+    <string name="favorites_info_summary">Long press on any photo or video to select it, then tap the heart icon to add it to your favorites. Items added here are a shortcut and won't be removed from their original album.</string>
+    <string name="unknown_location">Unknown Location</string>
+</resources>

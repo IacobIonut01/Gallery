@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="location">Lokacija</string>
+    <string name="pause_video">Zaustavi videozapis</string>
+    <string name="play_video">Reproduciraj videozapis</string>
+    <string name="close">Zatvori</string>
+    <string name="rotate_screen_cd">Zakreni zaslon</string>
+    <string name="toggle_audio_cd">Uključi/isključi zvuk</string>
+    <string name="auto">Automatski</string>
+    <string name="change_playback_speed_cd">Promijeni brzinu reprodukcije</string>
+    <string name="change_subtitle_track_cd">Promijeni titl</string>
+    <string name="more_options_cd">Više opcija</string>
+    <string name="rotate">Zakreni</string>
+    <string name="decrypt_failed_tap_to_retry">Dekriptiranje nije uspjelo. Dodirnite za ponovni pokušaj.</string>
+    <string name="media_load_failed_tap_to_retry">Nije moguće učitati ovaj medij. Dodirnite za ponovni pokušaj.</string>
+    <string name="frame_picker_shots_heading">Udarci na ovoj fotografiji</string>
+    <string name="cutout_no_object">Nije otkriven objekt pod dugim pritiskom</string>
+    <string name="cutout_init_failed">Neuspjelo pokretanje motora za izrezivanje</string>
+    <string name="cutout_refining">Usavršavanje izrezivanja...</string>
+    <string name="cutout_include">Uključi</string>
+    <string name="cutout_exclude">Isključi</string>
+    <string name="cutout_undo">Poništi</string>
+    <string name="cutout_redo">Ponovi</string>
+    <string name="cutout_reset">Resetiraj</string>
+    <string name="cutout_close">Zatvori izrezak</string>
+    <string name="cutout_copy">Kopiraj</string>
+    <string name="cutout_share">Podijeli</string>
+    <string name="cutout_save">Spremi</string>
+</resources>

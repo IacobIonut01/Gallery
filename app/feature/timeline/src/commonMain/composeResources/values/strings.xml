@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="timeline_controls">Timeline controls</string>
+    <string name="order_by">Order by</string>
+    <string name="capture_time">Capture time</string>
+    <string name="capture_time_summary">Embedded photo or video date, with modified time as a fallback</string>
+    <string name="sort_by_date_modified">Date modified</string>
+    <string name="modified_time_summary">When the file was last changed</string>
+    <string name="sort_descending">Newest first</string>
+    <string name="sort_ascending">Oldest first</string>
+    <string name="capture_time_indexing">Checking capture dates: %1$d%%</string>
+    <string name="filter_type">Type</string>
+    <string name="filter_all">All</string>
+    <string name="photos">Photos</string>
+    <string name="videos">Videos</string>
+    <string name="filter_status">Status</string>
+    <string name="favorites">Favorites</string>
+    <string name="filter_time">Time</string>
+    <string name="filter_source">Source</string>
+    <string name="filter_reset">Reset</string>
+    <string name="filter_apply">Apply</string>
+    <string name="sort_and_filter">Sort and filter</string>
+    <string name="story_this_year">This year</string>
+    <string name="story_highlight_count">%1$d highlights from %2$d items</string>
+    <plurals name="story_years_ago">
+        <item quantity="one">%1$d year ago</item>
+        <item quantity="other">%1$d years ago</item>
+    </plurals>
+    <plurals name="story_item_count">
+        <item quantity="one">%1$d item</item>
+        <item quantity="other">%1$d items</item>
+    </plurals>
+</resources>

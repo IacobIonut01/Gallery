@@ -1,0 +1,525 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:targetSandboxVersion="2"
+    tools:ignore="SelectedPhotoAccess, ProtectedPermissions">
+
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- Required to query Android Advanced Protection Mode (AAPM) state on Android 16+ -->
+    <uses-permission android:name="android.permission.QUERY_ADVANCED_PROTECTION_MODE" />
+
+    <!-- Required to access images for SDK 33+ -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+
+    <!-- Required to access videos for SDK 33+ -->
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+
+    <!-- Required to retain Android 14+ selected-photos access between sessions -->
+    <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
+
+    <!-- Optional: allows reading GPS Data embedded in Media -->
+    <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION" />
+
+    <!-- Required to download Map Preview for Media and FCast media serving -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!-- Android 17+ requires runtime approval for direct connections to LAN addresses. -->
+    <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK"/>
+
+    <!-- Required for FCast device discovery and media streaming -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE"/>
+
+    <!-- Required to read the current Wi-Fi SSID for cloud local/external URL switching.
+         Stripped from the offline variant (see manifestConfig in app/build.gradle.kts). -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+
+    <!-- Remove unwanted permissions from being added -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" tools:node="remove"/>
+
+    <!-- Required to access media for SDK < 33 -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+
+    <!-- Required to modify/delete media on SDK 29 (Android 10) -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="29" />
+
+    <!--
+        (OPTIONAL)
+        Requested to bypass another user confirmation requested by
+        ScopedStorage when the user wants to trash, delete or add/remove favorites media
+    -->
+    <uses-permission android:name="android.permission.MANAGE_MEDIA" />
+
+    <!--
+        (OPTIONAL)
+        Requested to create albums outside Internal Storage/Pictures or Internal Storage/DCIM
+    -->
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>
+    <!-- Foreground service type required for encryption/decryption background tasks on SDK 34+ -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROCESSING" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.EDIT" />
+            <data android:mimeType="image/*" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.EDIT" />
+            <data android:mimeType="video/*" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.SEND" />
+            <data android:mimeType="image/*" />
+        </intent>
+    </queries>
+
+    <application
+        android:name="com.dot.gallery.GalleryApp"
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:enableOnBackInvokedCallback="true"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:requestLegacyExternalStorage="true"
+        android:largeHeap="true"
+        android:hardwareAccelerated="true"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Gallery"
+        tools:targetApi="33">
+        <activity
+            android:name="com.dot.gallery.app.presentation.main.MainActivity"
+            android:exported="true"
+            android:configChanges="orientation|keyboard|keyboardHidden|screenSize|screenLayout|smallestScreenSize|uiMode"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.Gallery.Splash">
+        </activity>
+
+        <activity-alias
+            android:name="com.dot.gallery.Launcher_ReFra"
+            android:label="@string/app_name"
+            android:icon="@mipmap/ic_launcher"
+            android:roundIcon="@mipmap/ic_launcher_round"
+            android:targetActivity="com.dot.gallery.app.presentation.main.MainActivity"
+            android:exported="true"
+            android:enabled="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+                <category android:name="android.intent.category.APP_GALLERY"/>
+                <category android:name="android.intent.category.INFO"/>
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name="com.dot.gallery.Launcher_Gallery"
+            android:label="@string/app_name_gallery"
+            android:icon="@mipmap/ic_launcher"
+            android:roundIcon="@mipmap/ic_launcher_round"
+            android:targetActivity="com.dot.gallery.app.presentation.main.MainActivity"
+            android:exported="true"
+            android:enabled="false">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+                <category android:name="android.intent.category.APP_GALLERY"/>
+                <category android:name="android.intent.category.INFO"/>
+            </intent-filter>
+        </activity-alias>
+
+        <!-- App name "ReFra" with the legacy Gallery launcher logo -->
+        <activity-alias
+            android:name="com.dot.gallery.Launcher_ReFra_GalleryLogo"
+            android:label="@string/app_name"
+            android:icon="@mipmap/ic_launcher_gallery"
+            android:roundIcon="@mipmap/ic_launcher_gallery_round"
+            android:targetActivity="com.dot.gallery.app.presentation.main.MainActivity"
+            android:exported="true"
+            android:enabled="false">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+                <category android:name="android.intent.category.APP_GALLERY"/>
+                <category android:name="android.intent.category.INFO"/>
+            </intent-filter>
+        </activity-alias>
+
+        <!-- App name "Gallery" with the legacy Gallery launcher logo -->
+        <activity-alias
+            android:name="com.dot.gallery.Launcher_Gallery_GalleryLogo"
+            android:label="@string/app_name_gallery"
+            android:icon="@mipmap/ic_launcher_gallery"
+            android:roundIcon="@mipmap/ic_launcher_gallery_round"
+            android:targetActivity="com.dot.gallery.app.presentation.main.MainActivity"
+            android:exported="true"
+            android:enabled="false">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+                <category android:name="android.intent.category.APP_GALLERY"/>
+                <category android:name="android.intent.category.INFO"/>
+            </intent-filter>
+        </activity-alias>
+
+        <!-- App name "ReFra" with the monochrome launcher logo -->
+        <activity-alias
+            android:name="com.dot.gallery.Launcher_ReFra_Mono"
+            android:label="@string/app_name"
+            android:icon="@mipmap/ic_launcher_mono"
+            android:roundIcon="@mipmap/ic_launcher_mono_round"
+            android:targetActivity="com.dot.gallery.app.presentation.main.MainActivity"
+            android:exported="true"
+            android:enabled="false">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+                <category android:name="android.intent.category.APP_GALLERY"/>
+                <category android:name="android.intent.category.INFO"/>
+            </intent-filter>
+        </activity-alias>
+
+        <!-- App name "Gallery" with the monochrome launcher logo -->
+        <activity-alias
+            android:name="com.dot.gallery.Launcher_Gallery_Mono"
+            android:label="@string/app_name_gallery"
+            android:icon="@mipmap/ic_launcher_mono"
+            android:roundIcon="@mipmap/ic_launcher_mono_round"
+            android:targetActivity="com.dot.gallery.app.presentation.main.MainActivity"
+            android:exported="true"
+            android:enabled="false">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+                <category android:name="android.intent.category.APP_GALLERY"/>
+                <category android:name="android.intent.category.INFO"/>
+            </intent-filter>
+        </activity-alias>
+
+        <!-- App name "ReFra" with the monochrome Gallery launcher logo -->
+        <activity-alias
+            android:name="com.dot.gallery.Launcher_ReFra_GalleryMono"
+            android:label="@string/app_name"
+            android:icon="@mipmap/ic_launcher_gallery_mono"
+            android:roundIcon="@mipmap/ic_launcher_gallery_mono_round"
+            android:targetActivity="com.dot.gallery.app.presentation.main.MainActivity"
+            android:exported="true"
+            android:enabled="false">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+                <category android:name="android.intent.category.APP_GALLERY"/>
+                <category android:name="android.intent.category.INFO"/>
+            </intent-filter>
+        </activity-alias>
+
+        <!-- App name "Gallery" with the monochrome Gallery launcher logo -->
+        <activity-alias
+            android:name="com.dot.gallery.Launcher_Gallery_GalleryMono"
+            android:label="@string/app_name_gallery"
+            android:icon="@mipmap/ic_launcher_gallery_mono"
+            android:roundIcon="@mipmap/ic_launcher_gallery_mono_round"
+            android:targetActivity="com.dot.gallery.app.presentation.main.MainActivity"
+            android:exported="true"
+            android:enabled="false">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+                <category android:name="android.intent.category.APP_GALLERY"/>
+                <category android:name="android.intent.category.INFO"/>
+            </intent-filter>
+        </activity-alias>
+
+        <activity
+            android:name="com.dot.gallery.app.presentation.standalone.StandaloneActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:documentLaunchMode="never"
+            android:taskAffinity=""
+            android:configChanges="orientation|keyboard|keyboardHidden|screenSize|screenLayout|smallestScreenSize|uiMode"
+            android:theme="@style/Theme.Gallery">
+            <intent-filter android:label="@string/app_name">
+                <action android:name="android.intent.action.VIEW" />
+                <action android:name="com.android.camera.action.REVIEW" />
+                <action android:name="android.provider.action.REVIEW" />
+
+                <data android:scheme="content"/>
+                <data android:scheme="file"/>
+                <data android:mimeType="image/*"/>
+                <data android:mimeType="video/*"/>
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <action android:name="com.android.camera.action.REVIEW" />
+                <action android:name="android.provider.action.REVIEW" />
+
+                <data android:scheme="content"/>
+                <data android:scheme="http"/>
+                <data android:scheme="file"/>
+
+                <!-- Hacky way to open JPEG-XL files -->
+                <data android:mimeType="image/jxl"/>
+                <data android:host="*" />
+
+                <data android:mimeType="*/*" />
+                <data android:pathPattern=".*\\.jxl" />
+                <data android:pathPattern=".*\\..*\\.jxl" />
+                <data android:pathPattern=".*\\..*\\..*\\.jxl" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.jxl" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <data android:scheme="content"/>
+                <data android:scheme="file"/>
+
+                <!-- Open APNG files -->
+                <data android:mimeType="image/apng"/>
+                <data android:host="*" />
+
+                <data android:mimeType="*/*" />
+                <data android:pathPattern=".*\\.apng" />
+                <data android:pathPattern=".*\\..*\\.apng" />
+                <data android:pathPattern=".*\\..*\\..*\\.apng" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.apng" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+            </intent-filter>
+        </activity>
+
+        <!--
+            Dedicated entry point for secure reviews (ACTION_REVIEW_SECURE).
+            android:showWhenLocked / android:turnScreenOn are declared here so the
+            review reliably opens on top of a secure keyguard on the first frame
+            instead of prompting the user to unlock first. Kept separate from the
+            main viewer so normal VIEW/REVIEW launches never bypass the lock screen.
+        -->
+        <activity
+            android:name="com.dot.gallery.app.presentation.standalone.SecureStandaloneActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:taskAffinity=""
+            android:excludeFromRecents="true"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:configChanges="orientation|keyboard|keyboardHidden|screenSize|screenLayout|smallestScreenSize|uiMode"
+            android:theme="@style/Theme.Gallery">
+            <intent-filter android:label="@string/app_name">
+                <action android:name="android.provider.action.REVIEW_SECURE" />
+
+                <data android:scheme="content"/>
+                <data android:scheme="file"/>
+                <data android:mimeType="image/*"/>
+                <data android:mimeType="video/*"/>
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name="com.dot.gallery.app.presentation.picker.PickerActivity"
+            android:exported="true"
+            android:configChanges="orientation|keyboard|keyboardHidden|screenSize|screenLayout|smallestScreenSize|uiMode"
+            android:theme="@style/Theme.Gallery">
+            <intent-filter android:label="@string/app_name">
+                <action android:name="android.intent.action.PICK"/>
+                <action android:name="android.intent.action.GET_CONTENT"/>
+
+                <data android:mimeType="image/*"/>
+                <data android:mimeType="video/*"/>
+                <data android:mimeType="vnd.android.cursor.dir/image"/>
+                <data android:mimeType="vnd.android.cursor.dir/video"/>
+
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.OPENABLE"/>
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name="com.dot.gallery.app.presentation.wallpaper.SetWallpaperActivity"
+            android:exported="true"
+            android:configChanges="orientation|keyboard|keyboardHidden|screenSize|screenLayout|smallestScreenSize|uiMode"
+            android:launchMode="singleInstance">
+            <intent-filter android:label="@string/set_wallpaper">
+                <action android:name="android.intent.action.ATTACH_DATA"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:mimeType="image/*"/>
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name="com.dot.gallery.app.presentation.frameextract.FramePickerActivity"
+            android:exported="false"
+            android:configChanges="orientation|keyboard|keyboardHidden|screenSize|screenLayout|smallestScreenSize|uiMode"
+            android:screenOrientation="fullSensor"
+            android:theme="@style/Theme.Gallery" />
+
+        <activity
+            android:name="com.dot.gallery.app.presentation.edit.EditActivity"
+            android:configChanges="orientation|keyboard|keyboardHidden|screenSize|screenLayout|smallestScreenSize|uiMode"
+            android:screenOrientation="fullUser"
+            tools:ignore="DiscouragedApi"
+            android:launchMode="singleTop"
+            android:exported="true">
+            <intent-filter android:label="@string/app_name">
+                <action android:name="android.intent.action.EDIT"/>
+
+                <category android:name="android.intent.category.DEFAULT"/>
+
+                <data android:mimeType="image/*"/>
+                <data android:mimeType="vnd.android.cursor.dir/image"/>
+            </intent-filter>
+        </activity>
+
+        <!--
+            Handles the legacy crop intent so ReFra can crop images for callers such as the
+            Settings AvatarPicker (profile picture), matching Gallery2/Google Photos (#997).
+        -->
+        <activity
+            android:name="com.dot.gallery.app.presentation.crop.CropActivity"
+            android:exported="true"
+            android:configChanges="orientation|keyboard|keyboardHidden|screenSize|screenLayout|smallestScreenSize|uiMode"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.Gallery">
+            <intent-filter android:label="@string/editor_crop">
+                <action android:name="com.android.camera.action.CROP"/>
+
+                <category android:name="android.intent.category.DEFAULT"/>
+
+                <data android:mimeType="image/*"/>
+            </intent-filter>
+        </activity>
+
+        <!-- Widget Configuration Activity -->
+        <activity
+            android:name="com.dot.gallery.app.presentation.widget.WidgetConfigActivity"
+            android:exported="true"
+            android:configChanges="orientation|keyboard|keyboardHidden|screenSize|screenLayout|smallestScreenSize|uiMode"
+            android:theme="@style/Theme.Gallery">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
+        <!-- Single Media Widget -->
+        <receiver
+            android:name="com.dot.gallery.app.presentation.widget.SingleMediaWidgetReceiver"
+            android:label="@string/widget_single_label"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/single_media_widget_info" />
+        </receiver>
+
+        <!-- Grid Media Widget -->
+        <receiver
+            android:name="com.dot.gallery.app.presentation.widget.GridMediaWidgetReceiver"
+            android:label="@string/widget_grid_label"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/grid_media_widget_info" />
+        </receiver>
+
+        <service
+            android:name="com.dot.gallery.app.presentation.widget.GridMediaWidgetService"
+            android:permission="android.permission.BIND_REMOTEVIEWS" />
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${appProvider}"
+            android:enabled="true"
+            android:grantUriPermissions="true"
+            android:exported="false">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/filepaths" />
+        </provider>
+
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:ignore="RemoveWorkManagerInitializer"
+            tools:node="replace">
+            <meta-data
+                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+                android:value="androidx.startup" />
+            <meta-data
+                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+                tools:node="remove" />
+            <meta-data
+                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+                tools:node="remove" />
+            <meta-data
+                android:name="okhttp3.internal.platform.PlatformInitializer"
+                tools:node="remove" />
+            <!-- kmpworkmanager initializes the underlying WorkManager itself with its
+                 KmpWorkerFactory — letting androidx.startup init it first would leave
+                 workers unresolvable through the generated factory. -->
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                tools:node="remove" />
+        </provider>
+
+        <!-- Isolated-process service for sandboxed metadata parsing.
+             Runs under a fake UID with no permissions, no app data, and no network.
+             Parser bugs in metadata-extractor or MediaMetadataRetriever cannot
+             reach the user's media library or network from this process. -->
+        <service
+            android:name="com.dot.gallery.core.sandbox.IsolatedMetadataService"
+            android:exported="false"
+            android:isolatedProcess="true" />
+
+        <!-- Isolated-process service for sandboxed image decoding (HEIF/AVIF/JXL).
+             Codec bugs in HeifCoder or JxlCoder cannot reach the main app process.
+             Data is exchanged via SharedMemory for zero-copy IPC. -->
+        <service
+            android:name="com.dot.gallery.core.sandbox.IsolatedDecoderService"
+            android:exported="false"
+            android:isolatedProcess="true" />
+
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:exported="false"
+            tools:node="merge"
+            android:foregroundServiceType="dataSync|mediaProcessing" />
+
+    </application>
+
+</manifest>

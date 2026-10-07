@@ -5,7 +5,7 @@
 #
 # Cross-compiles x265 (HEVC encoder) + aom (AV1 encoder) + libde265 (HEVC decoder) + libheif
 # (WITH encoders) as static libs for Android, installing into
-#   app/src/main/cpp/heifenc/<abi>/{include,lib}
+#   app/androidApp/src/main/cpp/heifenc/<abi>/{include,lib}
 # so the app's CMakeLists can link the `heifenc` JNI library for memory-bounded TILED HEIC/AVIF
 # encode (libheif grid images: each tile encoded separately, whole decoded image never in RAM).
 #
@@ -29,7 +29,7 @@ CMAKE_VERSION="3.31.6"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 source "$SCRIPT_DIR/native-common.sh"
-OUT_ROOT="${NATIVE_OUTPUT_BASE:-$REPO_ROOT/app/src/main/cpp}/heifenc"
+OUT_ROOT="${NATIVE_OUTPUT_BASE:-$REPO_ROOT/app/androidApp/src/main/cpp}/heifenc"
 
 SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
 if [ -z "$SDK" ] && [ -f "$REPO_ROOT/local.properties" ]; then

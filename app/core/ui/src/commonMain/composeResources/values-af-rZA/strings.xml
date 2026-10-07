@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cutout_save_choice_title">Stoor uitknipsel as</string>
+    <string name="cutout_save_transparent_png">Deursigtige PNG</string>
+    <string name="cutout_save_flatten_white">Druk plat op wit</string>
+    <string name="cutout_save_flatten_black">Druk plat op swart</string>
+    <string name="overwrite_unavailable_title">Kan nie hierdie formaat oorskryf nie</string>
+    <string name="overwrite_unavailable_summary">Hierdie prentformaat kan nie weer op jou toestel geënkodeer word nie, so die oorspronklike kan nie oorgeskryf word nie. 'n Nuwe PNG-kopie sal eerder geskep word.</string>
+    <string name="overwrite_unavailable_create_copy">Skep kopie</string>
+    <string name="copied_to_clipboard">Copied to clipboard</string>
+    <string name="error_copying_to_clipboard">Failed to copy to clipboard</string>
+    <string name="cutout_copy_failed">Kon nie uitknipvoorwerp kopieer nie</string>
+    <string name="cutout_share_failed">Kon nie uitknipvoorwerp deel nie</string>
+    <string name="cutout_save_failed">Kon nie uitknipvoorwerp stoor nie</string>
+    <string name="cutout_saved">Gestoor uitsny na Prente/Uitknipsels</string>
+</resources>

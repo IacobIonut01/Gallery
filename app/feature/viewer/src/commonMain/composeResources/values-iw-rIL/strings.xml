@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="location">מיקום</string>
+    <string name="pause_video">השהיית וידאו</string>
+    <string name="play_video">הפעלת וידאו</string>
+    <string name="close">סגירה</string>
+    <string name="rotate_screen_cd">סיבוב המסך</string>
+    <string name="toggle_audio_cd">החלפת שמע</string>
+    <string name="auto">אוטומטי</string>
+    <string name="change_playback_speed_cd">שינוי מהירות ההפעלה</string>
+    <string name="change_subtitle_track_cd">שינוי ערוץ הכתוביות</string>
+    <string name="more_options_cd">אפשרויות נוספות</string>
+    <string name="rotate">סיבוב</string>
+    <string name="decrypt_failed_tap_to_retry">הפענוח נכשל. הקש כדי לנסות שוב.</string>
+    <string name="media_load_failed_tap_to_retry">לא ניתן לטעון את המדיה הזו. יש להקיש כדי לנסות שוב.</string>
+    <string name="frame_picker_shots_heading">צילומים בתמונה זו</string>
+    <string name="cutout_no_object">לא זוהה אובייקט בלחיצה ארוכה</string>
+    <string name="cutout_init_failed">אתחול מנוע הניתוק נכשל</string>
+    <string name="cutout_refining">מחדד את הגזרה...</string>
+    <string name="cutout_include">כלול</string>
+    <string name="cutout_exclude">אל תכלול</string>
+    <string name="cutout_undo">בטל</string>
+    <string name="cutout_redo">בצע מחדש</string>
+    <string name="cutout_reset">אפס</string>
+    <string name="cutout_close">סגור גזירה</string>
+    <string name="cutout_copy">העתק</string>
+    <string name="cutout_share">שתף</string>
+    <string name="cutout_save">שמור</string>
+</resources>

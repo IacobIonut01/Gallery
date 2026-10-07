@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cutout_save_choice_title">Tallenna leikkaus nimellä</string>
+    <string name="cutout_save_transparent_png">Läpinäkyvä PNG</string>
+    <string name="cutout_save_flatten_white">Tasoita valkoiselle</string>
+    <string name="cutout_save_flatten_black">Tasoita mustalle</string>
+    <string name="overwrite_unavailable_title">Tätä formaattia ei voi ylikirjoittaa</string>
+    <string name="overwrite_unavailable_summary">Tätä kuvatiedostoformaattia ei voi uudelleenkoodata laitteessasi, joten alkuperäistä ei voi ylikirjoittaa. Sen sijaan luodaan uusi PNG-kopio.</string>
+    <string name="overwrite_unavailable_create_copy">Luo kopio</string>
+    <string name="copied_to_clipboard">Copied to clipboard</string>
+    <string name="error_copying_to_clipboard">Failed to copy to clipboard</string>
+    <string name="cutout_copy_failed">Epäonnistui leikkauskohteen kopioiminen</string>
+    <string name="cutout_share_failed">Epäonnistui leikkauskohteen jakaminen</string>
+    <string name="cutout_save_failed">Epäonnistui leikkauskohteen tallentaminen</string>
+    <string name="cutout_saved">Tallennettu leikkaus Kohteet/Leikkaukset</string>
+</resources>

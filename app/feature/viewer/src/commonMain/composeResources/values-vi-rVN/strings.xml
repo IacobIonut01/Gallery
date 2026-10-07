@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="location">Vị trí</string>
+    <string name="pause_video">Tạm dừng đoạn phim</string>
+    <string name="play_video">Phát đoạn phim</string>
+    <string name="close">Đóng</string>
+    <string name="rotate_screen_cd">Xoay màn hình</string>
+    <string name="toggle_audio_cd">Chuyển đổi âm thanh</string>
+    <string name="auto">Tự động</string>
+    <string name="change_playback_speed_cd">Thay đổi tốc độ phát lại</string>
+    <string name="change_subtitle_track_cd">Thay đổi bản phụ đề</string>
+    <string name="more_options_cd">Thêm tùy chọn</string>
+    <string name="rotate">Xoay</string>
+    <string name="decrypt_failed_tap_to_retry">Giải mã không thành công. Nhấn để thử lại.</string>
+    <string name="media_load_failed_tap_to_retry">Không thể tải phương tiện này. Nhấn để thử lại.</string>
+    <string name="frame_picker_shots_heading">Các cảnh trong bức ảnh này</string>
+    <string name="cutout_no_object">Không có đối tượng nào được phát hiện khi nhấn giữ</string>
+    <string name="cutout_init_failed">Khởi tạo công cụ cắt thất bại</string>
+    <string name="cutout_refining">Đang tinh chỉnh hình cắt…</string>
+    <string name="cutout_include">Bao gồm</string>
+    <string name="cutout_exclude">Loại trừ</string>
+    <string name="cutout_undo">Hoàn tác</string>
+    <string name="cutout_redo">Làm lại</string>
+    <string name="cutout_reset">Đặt lại</string>
+    <string name="cutout_close">Đóng hình cắt</string>
+    <string name="cutout_copy">Sao chép</string>
+    <string name="cutout_share">Chia sẻ</string>
+    <string name="cutout_save">Lưu</string>
+</resources>

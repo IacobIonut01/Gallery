@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cutout_save_choice_title">컷아웃을 다른 이름으로 저장</string>
+    <string name="cutout_save_transparent_png">투명한 PNG</string>
+    <string name="cutout_save_flatten_white">흰색으로 편평화</string>
+    <string name="cutout_save_flatten_black">검정으로 편평화</string>
+    <string name="overwrite_unavailable_title">이 형식을 덮어쓸 수 없습니다.</string>
+    <string name="overwrite_unavailable_summary">이 이미지 형식은 기기에서 다시 인코딩할 수 없으므로 원본을 덮어쓸 수 없습니다. 대신 새 PNG 사본이 생성됩니다.</string>
+    <string name="overwrite_unavailable_create_copy">사본 만들기</string>
+    <string name="copied_to_clipboard">Copied to clipboard</string>
+    <string name="error_copying_to_clipboard">Failed to copy to clipboard</string>
+    <string name="cutout_copy_failed">컷아웃 개체를 복사하지 못했습니다.</string>
+    <string name="cutout_share_failed">컷아웃 개체를 공유하지 못했습니다.</string>
+    <string name="cutout_save_failed">컷아웃 개체를 저장하지 못했습니다.</string>
+    <string name="cutout_saved">컷아웃을 사진/컷아웃에 저장했습니다.</string>
+</resources>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="location">Locatie</string>
+    <string name="pause_video">Video pauzeren</string>
+    <string name="play_video">Video afspelen</string>
+    <string name="close">Sluiten</string>
+    <string name="rotate_screen_cd">Scherm draaien</string>
+    <string name="toggle_audio_cd">Schakel audio</string>
+    <string name="auto">Automatisch</string>
+    <string name="change_playback_speed_cd">Afspeelsnelheid wijzigen</string>
+    <string name="change_subtitle_track_cd">Change subtitle track</string>
+    <string name="more_options_cd">More options</string>
+    <string name="rotate">Rotate</string>
+    <string name="decrypt_failed_tap_to_retry">Decrypt failed. Tap to retry.</string>
+    <string name="media_load_failed_tap_to_retry">Kan deze media niet laden. Tik om het opnieuw te proberen.</string>
+    <string name="frame_picker_shots_heading">Opnames op deze foto</string>
+    <string name="cutout_no_object">Geen object gedetecteerd bij lang indrukken</string>
+    <string name="cutout_init_failed">Kan de uitschakelmotor niet initialiseren</string>
+    <string name="cutout_refining">Uitsnijding verfijnen...</string>
+    <string name="cutout_include">Inclusief</string>
+    <string name="cutout_exclude">Uitsluiten</string>
+    <string name="cutout_undo">Ongedaan maken</string>
+    <string name="cutout_redo">Opnieuw uitvoeren</string>
+    <string name="cutout_reset">Opnieuw instellen</string>
+    <string name="cutout_close">Uitsnede sluiten</string>
+    <string name="cutout_copy">Kopieer</string>
+    <string name="cutout_share">Deel</string>
+    <string name="cutout_save">Opslaan</string>
+</resources>

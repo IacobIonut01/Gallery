@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cutout_save_choice_title">Salva ritaglio con nome</string>
+    <string name="cutout_save_transparent_png">PNG trasparente</string>
+    <string name="cutout_save_flatten_white">Appiattire su bianco</string>
+    <string name="cutout_save_flatten_black">Appiattire sul nero</string>
+    <string name="overwrite_unavailable_title">Impossibile sovrascrivere questo formato</string>
+    <string name="overwrite_unavailable_summary">Questo formato immagine non può essere ricodificato sul tuo dispositivo, quindi l'originale non può essere sovrascritto. Verrà invece creata una nuova copia PNG.</string>
+    <string name="overwrite_unavailable_create_copy">Crea copia</string>
+    <string name="copied_to_clipboard">Copied to clipboard</string>
+    <string name="error_copying_to_clipboard">Failed to copy to clipboard</string>
+    <string name="cutout_copy_failed">Impossibile copiare l'oggetto ritagliato</string>
+    <string name="cutout_share_failed">Impossibile condividere l'oggetto ritagliato</string>
+    <string name="cutout_save_failed">Impossibile salvare l'oggetto ritagliato</string>
+    <string name="cutout_saved">Ritaglio salvato in Immagini/Ritagli</string>
+</resources>

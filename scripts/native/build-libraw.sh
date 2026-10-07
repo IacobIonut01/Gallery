@@ -5,7 +5,7 @@
 #
 # Cross-compiles LibRaw (+ libtiff, and the zlib/libjpeg-turbo they depend on) as static libraries
 # for Android using the NDK CMake toolchain, installing the resulting static libs + headers into
-#   app/src/main/cpp/rawcodec/<abi>/{include,lib}
+#   app/androidApp/src/main/cpp/rawcodec/<abi>/{include,lib}
 # so the app's CMakeLists can link them into the `rawcodec` JNI library. That JNI bridge gives the
 # app true native RAW decoding (demosaic) for every LibRaw-supported camera format, plus a 16-bit
 # TIFF export path via libtiff.
@@ -29,7 +29,7 @@ CMAKE_VERSION="3.31.6"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 source "$SCRIPT_DIR/native-common.sh"
-OUT_ROOT="${NATIVE_OUTPUT_BASE:-$REPO_ROOT/app/src/main/cpp}/rawcodec"
+OUT_ROOT="${NATIVE_OUTPUT_BASE:-$REPO_ROOT/app/androidApp/src/main/cpp}/rawcodec"
 
 SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
 if [ -z "$SDK" ] && [ -f "$REPO_ROOT/local.properties" ]; then

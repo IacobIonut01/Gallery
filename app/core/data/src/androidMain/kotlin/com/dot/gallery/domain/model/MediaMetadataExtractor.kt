@@ -1,0 +1,485 @@
+/*
+ * SPDX-FileCopyrightText: 2023-2026 IacobIacob01
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package com.dot.gallery.domain.model
+
+import android.content.ContentUris
+import android.content.Context
+import android.graphics.BitmapFactory
+import android.location.Geocoder
+import android.media.MediaMetadataRetriever
+import android.net.Uri
+import android.os.Bundle
+import android.provider.MediaStore
+import androidx.exifinterface.media.ExifInterface
+import com.dot.gallery.core.decoder.format.SpecialFormatProbe
+import com.dot.gallery.core.util.SafeExif
+import com.dot.gallery.core.sandbox.IsolatedMetadataParser
+import com.dot.gallery.data.entity.MediaMetadata
+import com.dot.gallery.data.entity.MetadataParsingPolicy
+import com.dot.gallery.domain.model.Media
+import com.dot.gallery.domain.util.getUri
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.util.Locale
+import java.text.DecimalFormat
+import java.math.RoundingMode
+import kotlin.math.roundToInt
+import com.dot.gallery.core.sandbox.IsolatedMetadataService.Companion as Keys
+import com.dot.gallery.domain.util.isImage
+import com.dot.gallery.domain.util.isVideo
+import com.dot.gallery.domain.util.formattedAddress
+import com.dot.gallery.domain.util.locationGroupName
+import com.dot.gallery.core.util.openUnredactedFileDescriptor
+import com.dot.gallery.core.logging.printDebug
+import com.dot.gallery.data.entity.isRedactedCoordinate
+import com.dot.gallery.core.logging.printError
+
+private const val TAG = "db.media"
+
+suspend fun <T> bestEffortReverseGeocode(
+    enabled: Boolean,
+    latitude: Double?,
+    longitude: Double?,
+    lookup: suspend (Double, Double) -> T?
+): T? {
+    if (!enabled || latitude == null || longitude == null) return null
+    if (!latitude.isFinite() || !longitude.isFinite() ||
+        latitude !in -90.0..90.0 || longitude !in -180.0..180.0 ||
+        (latitude == 0.0 && longitude == 0.0)
+    ) return null
+    return try {
+        lookup(latitude, longitude)
+    } catch (error: Exception) {
+        if (error is CancellationException) throw error
+        null
+    }
+}
+
+@Suppress("DEPRECATION")
+suspend fun Context.retrieveExtraMediaMetadata(
+    isolatedParser: IsolatedMetadataParser,
+    geocoder: Geocoder?,
+    media: Media,
+    usePerFileIsolation: Boolean = false,
+    policy: MetadataParsingPolicy = MetadataParsingPolicy.ON_DEMAND_COMPATIBLE
+): MediaMetadata? =
+    withContext(Dispatchers.IO) {
+        runCatching {
+            val uri = media.getUri()
+            val label = media.label
+            printDebug("Retrieving extra metadata for ${media.id} - $uri (perFile=$usePerFileIsolation)")
+
+            if (media.isImage) {
+                val bundle = if (usePerFileIsolation) {
+                    isolatedParser.parseImageMetadataPerFile(
+                        uri,
+                        label,
+                        media.id,
+                        fallbackToShared = policy == MetadataParsingPolicy.ON_DEMAND_COMPATIBLE
+                    )
+                } else {
+                    isolatedParser.parseImageMetadata(uri, label)
+                }
+                if (bundle != null) {
+                    mediaMetadataFromImageBundle(
+                        media.id,
+                        bundle,
+                        geocoder,
+                        this@retrieveExtraMediaMetadata,
+                        allowInProcessFallback = policy == MetadataParsingPolicy.ON_DEMAND_COMPATIBLE
+                    )
+                } else if (policy == MetadataParsingPolicy.ON_DEMAND_COMPATIBLE) {
+                    buildFallbackImageMetadata(media.id, uri, geocoder, this@retrieveExtraMediaMetadata)
+                } else null
+            } else if (media.isVideo) {
+                val bundle = if (usePerFileIsolation) {
+                    isolatedParser.parseVideoMetadataPerFile(
+                        uri,
+                        media.id,
+                        fallbackToShared = policy == MetadataParsingPolicy.ON_DEMAND_COMPATIBLE
+                    )
+                } else {
+                    isolatedParser.parseVideoMetadata(uri)
+                }
+                // The service-side MediaMetadataRetriever cannot reach the mediaextractor
+                // daemon from an isolated UID on Android 12, and that failure takes the
+                // whole IPC reply down with it (#1267). Probe in-process and backfill
+                // whatever the isolated pass could not produce.
+                val probe = if (policy == MetadataParsingPolicy.ON_DEMAND_COMPATIBLE &&
+                    bundle.videoProbeNeeded()
+                ) {
+                    probeVideoMetadataInProcess(this@retrieveExtraMediaMetadata, uri)
+                } else null
+                if (bundle == null && probe == null) null
+                else mediaMetadataFromVideoBundle(media.id, bundle, probe)
+            } else {
+                null
+            }?.also {
+                printDebug("Retrieved metadata for ${media.id} - $uri\n$it")
+            }
+        }.getOrElse {
+            if (it is CancellationException) throw it
+            printError(TAG, "Failed to retrieve extra metadata for ${media.id}", it)
+            null
+        }
+    }
+
+/**
+ * Converts the [Bundle] returned by the isolated image parser into a [MediaMetadata],
+ * performing Geocoder lookup in the main process (Geocoder needs network + Play Services).
+ */
+@Suppress("DEPRECATION")
+private suspend fun mediaMetadataFromImageBundle(
+    mediaId: Long,
+    bundle: Bundle,
+    geocoder: Geocoder?,
+    context: Context,
+    allowInProcessFallback: Boolean
+): MediaMetadata {
+    val rawLatitude = if (bundle.containsKey(Keys.KEY_GPS_LAT)) bundle.getDouble(Keys.KEY_GPS_LAT) else null
+    val rawLongitude = if (bundle.containsKey(Keys.KEY_GPS_LON)) bundle.getDouble(Keys.KEY_GPS_LON) else null
+    // Defensive gate for bundles produced by an older isolated service that stored the
+    // redacted 0,0 pair — keep them absent so nothing downstream renders a fake fix.
+    val (gpsLatitude, gpsLongitude) =
+        if (rawLatitude != null && rawLongitude != null && isRedactedCoordinate(rawLatitude, rawLongitude)) {
+            null to null
+        } else rawLatitude to rawLongitude
+
+    // Geocoding runs in the main app process (needs network + GMS)
+    val address = bestEffortReverseGeocode(
+        enabled = geocoder != null,
+        latitude = gpsLatitude,
+        longitude = gpsLongitude
+    ) { latitude, longitude ->
+        geocoder?.getFromLocation(latitude, longitude, 1).orEmpty().firstOrNull()
+    }
+    var imgW = bundle.getInt(Keys.KEY_IMAGE_WIDTH, 0)
+    var imgH = bundle.getInt(Keys.KEY_IMAGE_HEIGHT, 0)
+
+    // BitmapFactory fallback runs in main process (needs ContentResolver)
+    if (allowInProcessFallback && (imgW == 0 || imgH == 0)) {
+        // We need the URI again for the fallback — reconstruct from mediaId
+        // This is a rare path so we tolerate the extra cost
+        val uri = ContentUris.withAppendedId(
+            MediaStore.Files.getContentUri("external"),
+            mediaId
+        )
+        runCatching {
+            context.contentResolver.openInputStream(uri)?.use { fallbackStream ->
+                val options = BitmapFactory.Options().apply {
+                    inJustDecodeBounds = true
+                }
+                BitmapFactory.decodeStream(fallbackStream, null, options)
+                if (options.outWidth > 0 && options.outHeight > 0) {
+                    imgW = options.outWidth
+                    imgH = options.outHeight
+                }
+            }
+        }
+        // BitmapFactory can't decode JXL/JP2/PSD/SVG — recover dimensions via native probes so
+        // even EXIF-carrying special formats report their resolution.
+        if (imgW == 0 || imgH == 0) {
+            SpecialFormatProbe.getSize(context, uri)?.let {
+                imgW = it.width
+                imgH = it.height
+            }
+        }
+    }
+
+    return MediaMetadata(
+        mediaId = mediaId,
+        imageDescription = bundle.getString(Keys.KEY_IMAGE_DESCRIPTION),
+        dateTimeOriginal = bundle.getString(Keys.KEY_DATETIME_ORIGINAL),
+        manufacturerName = bundle.getString(Keys.KEY_MANUFACTURER),
+        modelName = bundle.getString(Keys.KEY_MODEL),
+        aperture = bundle.getString(Keys.KEY_APERTURE),
+        exposureTime = bundle.getString(Keys.KEY_EXPOSURE_TIME),
+        iso = bundle.getString(Keys.KEY_ISO),
+        gpsLatitude = gpsLatitude,
+        gpsLongitude = gpsLongitude,
+        gpsLocationName = address?.formattedAddress,
+        gpsLocationNameCountry = address?.countryName,
+        gpsLocationNameCity = address?.locationGroupName,
+        imageWidth = imgW,
+        imageHeight = imgH,
+        imageResolutionX = if (bundle.containsKey(Keys.KEY_RES_X)) bundle.getDouble(Keys.KEY_RES_X) else null,
+        imageResolutionY = if (bundle.containsKey(Keys.KEY_RES_Y)) bundle.getDouble(Keys.KEY_RES_Y) else null,
+        resolutionUnit = if (bundle.containsKey(Keys.KEY_RES_UNIT)) bundle.getInt(Keys.KEY_RES_UNIT) else null,
+        durationMs = null,
+        videoWidth = null,
+        videoHeight = null,
+        frameRate = null,
+        bitRate = null,
+        isNightMode = bundle.getBoolean(Keys.KEY_IS_NIGHT_MODE),
+        isPanorama = bundle.getBoolean(Keys.KEY_IS_PANORAMA),
+        isPhotosphere = bundle.getBoolean(Keys.KEY_IS_PHOTOSPHERE),
+        isLongExposure = bundle.getBoolean(Keys.KEY_IS_LONG_EXPOSURE),
+        isMotionPhoto = bundle.getBoolean(Keys.KEY_IS_MOTION_PHOTO)
+    )
+}
+
+private fun mediaMetadataFromVideoBundle(mediaId: Long, bundle: Bundle?, probe: VideoProbe?): MediaMetadata {
+    return MediaMetadata(
+        mediaId = mediaId,
+        imageDescription = null,
+        dateTimeOriginal = null,
+        manufacturerName = null,
+        modelName = null,
+        aperture = null,
+        exposureTime = null,
+        iso = null,
+        gpsLatitude = null,
+        gpsLongitude = null,
+        gpsLocationName = null,
+        gpsLocationNameCountry = null,
+        gpsLocationNameCity = null,
+        imageWidth = 0,
+        imageHeight = 0,
+        imageResolutionX = null,
+        imageResolutionY = null,
+        resolutionUnit = null,
+        durationMs = if (bundle?.containsKey(Keys.KEY_DURATION_MS) == true) bundle.getLong(Keys.KEY_DURATION_MS) else probe?.durationMs,
+        videoWidth = if (bundle?.containsKey(Keys.KEY_VIDEO_WIDTH) == true) bundle.getInt(Keys.KEY_VIDEO_WIDTH) else probe?.videoWidth,
+        videoHeight = if (bundle?.containsKey(Keys.KEY_VIDEO_HEIGHT) == true) bundle.getInt(Keys.KEY_VIDEO_HEIGHT) else probe?.videoHeight,
+        frameRate = if (bundle?.containsKey(Keys.KEY_FRAME_RATE) == true) bundle.getFloat(Keys.KEY_FRAME_RATE) else probe?.frameRate,
+        bitRate = if (bundle?.containsKey(Keys.KEY_BIT_RATE) == true) bundle.getInt(Keys.KEY_BIT_RATE) else probe?.bitRate,
+        isNightMode = false,
+        isPanorama = false,
+        isPhotosphere = false,
+        isLongExposure = false,
+        isMotionPhoto = false
+    )
+}
+
+/**
+ * Video fields read by an in-process [MediaMetadataRetriever] — the fallback for
+ * everything the isolated service's video reply could not carry. The retriever
+ * delegates untrusted container parsing to the platform's sandboxed mediaextractor
+ * daemon, so probing in-process does not weaken the parser isolation (which exists
+ * to contain metadata-extractor), unlike the equivalent image fallback.
+ */
+data class VideoProbe(
+    val durationMs: Long? = null,
+    val videoWidth: Int? = null,
+    val videoHeight: Int? = null,
+    val frameRate: Float? = null,
+    val bitRate: Int? = null
+) {
+    val isEmpty: Boolean
+        get() = durationMs == null && videoWidth == null && videoHeight == null &&
+                frameRate == null && bitRate == null
+
+    /** Present fields win; [other] only backfills what this probe lacks. */
+    fun mergeMissing(other: VideoProbe?): VideoProbe =
+        if (other == null) this else VideoProbe(
+            durationMs = durationMs ?: other.durationMs,
+            videoWidth = videoWidth ?: other.videoWidth,
+            videoHeight = videoHeight ?: other.videoHeight,
+            frameRate = frameRate ?: other.frameRate,
+            bitRate = bitRate ?: other.bitRate
+        )
+}
+
+/**
+ * A video needs the in-process probe whenever duration or dimensions never made it
+ * through IPC — e.g. Android 12, where the isolated retriever leg dies before the
+ * reply is sent.
+ */
+fun videoProbeNeeded(hasDuration: Boolean, hasWidth: Boolean, hasHeight: Boolean): Boolean =
+    !hasDuration || !hasWidth || !hasHeight
+
+private fun Bundle?.videoProbeNeeded(): Boolean = this == null || videoProbeNeeded(
+    hasDuration = containsKey(Keys.KEY_DURATION_MS),
+    hasWidth = containsKey(Keys.KEY_VIDEO_WIDTH),
+    hasHeight = containsKey(Keys.KEY_VIDEO_HEIGHT)
+)
+
+/**
+ * Reads duration/dimensions/bitrate/fps for [uri] with an in-process
+ * [MediaMetadataRetriever]. Returns null when the file cannot be opened or yields
+ * nothing — callers then keep the historical "no metadata" outcome.
+ */
+private fun probeVideoMetadataInProcess(context: Context, uri: Uri): VideoProbe? =
+    runCatching {
+        context.openUnredactedFileDescriptor(uri)?.use { pfd ->
+            val retriever = MediaMetadataRetriever()
+            try {
+                retriever.setDataSource(pfd.fileDescriptor)
+                val durationMs = retriever
+                    .extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+                    ?.toLongOrNull()
+                val frameRate = retriever
+                    .extractMetadata(MediaMetadataRetriever.METADATA_KEY_CAPTURE_FRAMERATE)
+                    ?.toFloatOrNull()
+                    ?: retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_FRAME_COUNT)
+                        ?.toFloatOrNull()
+                        ?.let { frames -> durationMs?.takeIf { it > 0 }?.let { frames / (it / 1000f) } }
+                VideoProbe(
+                    durationMs = durationMs,
+                    videoWidth = retriever
+                        .extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)
+                        ?.toIntOrNull(),
+                    videoHeight = retriever
+                        .extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)
+                        ?.toIntOrNull(),
+                    frameRate = frameRate,
+                    bitRate = retriever
+                        .extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE)
+                        ?.toIntOrNull()
+                )
+            } finally {
+                retriever.release()
+            }
+        }
+    }.onFailure {
+        if (it is CancellationException) throw it
+        printError(TAG, "In-process video probe failed for $uri", it)
+    }.getOrNull()?.takeUnless { it.isEmpty }
+
+/**
+ * In-process fallback used when the isolated metadata parser returns nothing for an image
+ * (e.g. metadata-extractor cannot read the format, or the isolated service is unavailable on the
+ * device). Reads the dimensions via [BitmapFactory] bounds and EXIF via the platform
+ * [ExifInterface] so that at least resolution, size and any embedded EXIF (date, camera, ISO,
+ * shutter, aperture, GPS) still appear instead of an empty properties sheet (#1002).
+ *
+ * This uses the same in-process [BitmapFactory]/[ContentResolver] reads that the primary path
+ * already relies on for its dimension fallback, so it does not weaken the sandbox guarantee
+ * (which only applies to the isolated primary parse).
+ */
+@Suppress("DEPRECATION")
+private suspend fun buildFallbackImageMetadata(
+    mediaId: Long,
+    uri: Uri,
+    geocoder: Geocoder?,
+    context: Context
+): MediaMetadata? {
+    val resolver = context.contentResolver
+
+    var imgW = 0
+    var imgH = 0
+    runCatching {
+        resolver.openInputStream(uri)?.use { stream ->
+            val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            BitmapFactory.decodeStream(stream, null, options)
+            if (options.outWidth > 0 && options.outHeight > 0) {
+                imgW = options.outWidth
+                imgH = options.outHeight
+            }
+        }
+    }
+
+    // BitmapFactory can't decode JXL/JP2/PSD/SVG (and some HEIF/AVIF/TIFF), so recover the
+    // intrinsic dimensions from the same native decoders used for rendering. This guarantees the
+    // properties sheet shows resolution + size instead of nothing for those formats (#1002).
+    if (imgW == 0 || imgH == 0) {
+        SpecialFormatProbe.getSize(context, uri)?.let {
+            imgW = it.width
+            imgH = it.height
+        }
+    }
+
+    var description: String? = null
+    var dateTimeOriginal: String? = null
+    var make: String? = null
+    var model: String? = null
+    var aperture: String? = null
+    var exposureTime: String? = null
+    var iso: String? = null
+    var focalLength: Double? = null
+    var resX: Double? = null
+    var resY: Double? = null
+    var resUnit: Int? = null
+    var gpsLatitude: Double? = null
+    var gpsLongitude: Double? = null
+
+    runCatching {
+        // Seekable-FD ExifInterface (via SafeExif) instead of an InputStream: the latter buffers up
+        // to the strip offset and OOMs on large 16-bit TIFFs (the file IS the TIFF/EXIF structure).
+        SafeExif.open(context, uri)?.let { exif ->
+            description = exif.getAttribute(ExifInterface.TAG_IMAGE_DESCRIPTION)
+            dateTimeOriginal = exif.getAttribute(ExifInterface.TAG_DATETIME_ORIGINAL)
+                ?: exif.getAttribute(ExifInterface.TAG_DATETIME)
+            make = exif.getAttribute(ExifInterface.TAG_MAKE)
+            model = exif.getAttribute(ExifInterface.TAG_MODEL)
+            exif.getAttributeDouble(ExifInterface.TAG_F_NUMBER, 0.0)
+                .takeIf { it > 0 }?.let { aperture = "f/${it.stripTrailingZero()}" }
+            exif.getAttributeDouble(ExifInterface.TAG_EXPOSURE_TIME, 0.0)
+                .takeIf { it > 0 }?.let { exposureTime = it.toExposureString() }
+            iso = exif.getAttribute(ExifInterface.TAG_PHOTOGRAPHIC_SENSITIVITY)
+                ?: exif.getAttribute(ExifInterface.TAG_ISO_SPEED_RATINGS)
+            focalLength = exif.getAttributeDouble(ExifInterface.TAG_FOCAL_LENGTH, 0.0)
+                .takeIf { it > 0 }
+            resX = exif.getAttributeDouble(ExifInterface.TAG_X_RESOLUTION, 0.0).takeIf { it > 0 }
+            resY = exif.getAttributeDouble(ExifInterface.TAG_Y_RESOLUTION, 0.0).takeIf { it > 0 }
+            resUnit = exif.getAttributeInt(ExifInterface.TAG_RESOLUTION_UNIT, 0).takeIf { it > 0 }
+            exif.latLong?.takeUnless { isRedactedCoordinate(it[0], it[1]) }?.let {
+                gpsLatitude = it[0]
+                gpsLongitude = it[1]
+            }
+            if (imgW == 0) imgW = exif.getAttributeInt(ExifInterface.TAG_IMAGE_WIDTH, 0)
+            if (imgH == 0) imgH = exif.getAttributeInt(ExifInterface.TAG_IMAGE_LENGTH, 0)
+        }
+    }.onFailure { printError(TAG, "Failed to read fallback EXIF metadata for $uri", it) }
+
+    // Nothing usable could be read — behave as before and show no properties sheet.
+    val hasAnything = imgW > 0 || imgH > 0 || description != null || dateTimeOriginal != null ||
+            make != null || model != null || aperture != null || exposureTime != null ||
+            iso != null || focalLength != null || gpsLatitude != null
+    if (!hasAnything) return null
+
+    val address = bestEffortReverseGeocode(
+        enabled = geocoder != null,
+        latitude = gpsLatitude,
+        longitude = gpsLongitude
+    ) { latitude, longitude ->
+        geocoder?.getFromLocation(latitude, longitude, 1).orEmpty().firstOrNull()
+    }
+
+    return MediaMetadata(
+        mediaId = mediaId,
+        imageDescription = description,
+        dateTimeOriginal = dateTimeOriginal,
+        manufacturerName = make,
+        modelName = model,
+        aperture = aperture,
+        exposureTime = exposureTime,
+        iso = iso,
+        focalLength = focalLength,
+        gpsLatitude = gpsLatitude,
+        gpsLongitude = gpsLongitude,
+        gpsLocationName = address?.formattedAddress,
+        gpsLocationNameCountry = address?.countryName,
+        gpsLocationNameCity = address?.locationGroupName,
+        imageWidth = imgW,
+        imageHeight = imgH,
+        imageResolutionX = resX,
+        imageResolutionY = resY,
+        resolutionUnit = resUnit,
+        durationMs = null,
+        videoWidth = null,
+        videoHeight = null,
+        frameRate = null,
+        bitRate = null,
+        isNightMode = false,
+        isPanorama = false,
+        isPhotosphere = false,
+        isLongExposure = false,
+        isMotionPhoto = false
+    )
+}
+
+/** Formats a plain double without a trailing ".0" (e.g. 2.0 -> "2", 2.2 -> "2.2"). */
+private fun Double.stripTrailingZero(): String =
+    if (this == toLong().toDouble()) toLong().toString() else toString()
+
+/**
+ * Formats an exposure time in seconds the same way the summary row expects: a "num/den sec"
+ * fraction for sub-second exposures (e.g. 0.008 -> "1/125 sec") or a plain value otherwise.
+ */
+private fun Double.toExposureString(): String =
+    if (this >= 1.0) "${stripTrailingZero()} sec" else "1/${(1.0 / this).roundToInt()} sec"

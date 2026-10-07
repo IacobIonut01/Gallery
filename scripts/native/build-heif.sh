@@ -5,7 +5,7 @@
 #
 # Cross-compiles libde265 (HEVC decoder) + libheif (decode-only, static) for Android using the
 # NDK CMake toolchain, and installs the resulting static libs + headers into
-#   app/src/main/cpp/heif/<abi>/{include,lib}
+#   app/androidApp/src/main/cpp/heif/<abi>/{include,lib}
 # so the app's CMakeLists can link them without any build-time downloads.
 #
 # Run once per machine (and again only when bumping LIBHEIF_VERSION / LIBDE265_VERSION):
@@ -26,7 +26,7 @@ CMAKE_VERSION="3.31.6"                   # must be a 3.x SDK CMake, not 4.x
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 source "$SCRIPT_DIR/native-common.sh"
-OUT_ROOT="${NATIVE_OUTPUT_BASE:-$REPO_ROOT/app/src/main/cpp}/heif"
+OUT_ROOT="${NATIVE_OUTPUT_BASE:-$REPO_ROOT/app/androidApp/src/main/cpp}/heif"
 
 # Resolve the Android SDK from local.properties (sdk.dir) or the environment.
 SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"

@@ -1,0 +1,293 @@
+/*
+ * SPDX-FileCopyrightText: 2023 The LineageOS Project
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package com.dot.gallery.data.mediastore.queries
+
+import android.content.ContentResolver
+import android.content.ContentUris
+import android.database.Cursor
+import android.net.Uri
+import android.os.Build
+import android.os.Bundle
+import android.provider.MediaStore
+import com.dot.gallery.domain.date.FULL_DATE_FORMAT
+import com.dot.gallery.core.util.MediaStoreBuckets
+import com.dot.gallery.core.util.PickerUtils
+import com.dot.gallery.core.util.Query
+import com.dot.gallery.core.util.SdkCompat
+import com.dot.gallery.core.util.and
+import com.dot.gallery.core.util.eq
+import com.dot.gallery.core.util.inValues
+import com.dot.gallery.core.util.ext.mapEachRow
+import com.dot.gallery.core.util.ext.queryFlow
+import com.dot.gallery.core.util.ext.tryGetLong
+import com.dot.gallery.core.util.ext.tryGetString
+import com.dot.gallery.core.util.join
+import com.dot.gallery.data.mediastore.MediaQuery
+import com.dot.gallery.domain.model.CaptureTimeOrigin
+import com.dot.gallery.domain.model.Media
+import com.dot.gallery.domain.model.MediaType
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import com.dot.gallery.domain.model.UriMedia
+import com.dot.gallery.cloud.core.matches
+import com.dot.gallery.core.util.or
+import com.dot.gallery.domain.util.isTrashed
+import com.dot.gallery.domain.uri.path
+import com.dot.gallery.domain.uri.query
+import com.dot.gallery.domain.uri.scheme
+import com.dot.gallery.domain.util.isFavorite
+import com.dot.gallery.core.logging.printError
+import com.dot.gallery.domain.date.parseTimestampFromFilename
+import com.dot.gallery.core.logging.printWarning
+import com.dot.gallery.domain.date.getDate
+
+
+private const val TAG = "db.mediastore"
+
+/**
+ * Media uri flow
+ *
+ * This class is responsible for fetching media from the media store based on the provided uris
+ *
+ * @property contentResolver
+ * @property mimeType
+ * @property uris
+ * @property onlyMatchingUris If true, only media that matches the provided uris will be returned
+ */
+class MediaUriFlow(
+    private val contentResolver: ContentResolver,
+    private val mimeType: String? = null,
+    private val uris: List<Uri>,
+    private val onlyMatchingUris: Boolean = false,
+) : QueryFlow<UriMedia>() {
+
+    private var buckedId: Long = MediaStoreBuckets.MEDIA_STORE_BUCKET_TIMELINE.id
+
+    override fun flowCursor(): Flow<Cursor?> {
+        val uri = MediaQuery.MediaStoreFileUri
+        val projection = MediaQuery.MediaProjection
+        val imageOrVideo = PickerUtils.mediaTypeFromGenericMimeType(mimeType)?.let {
+            when (it) {
+                MediaType.IMAGE -> MediaQuery.Selection.image
+                MediaType.VIDEO -> MediaQuery.Selection.video
+            }
+        } ?: MediaQuery.Selection.imageOrVideo
+        val albumFilter = when (buckedId) {
+            MediaStoreBuckets.MEDIA_STORE_BUCKET_FAVORITES.id ->
+                if (SdkCompat.supportsFavorites)
+                    MediaStore.Files.FileColumns.IS_FAVORITE eq 1
+                else null
+
+            MediaStoreBuckets.MEDIA_STORE_BUCKET_TRASH.id ->
+                if (SdkCompat.supportsTrash)
+                    MediaStore.Files.FileColumns.IS_TRASHED eq 1
+                else null
+
+            MediaStoreBuckets.MEDIA_STORE_BUCKET_TIMELINE.id,
+            MediaStoreBuckets.MEDIA_STORE_BUCKET_PHOTOS.id,
+            MediaStoreBuckets.MEDIA_STORE_BUCKET_VIDEOS.id -> null
+
+            else -> MediaStore.Files.FileColumns.BUCKET_ID eq Query.ARG
+        }
+        val rawMimeType = mimeType?.takeIf { PickerUtils.isMimeTypeNotGeneric(it) }
+        val mimeTypeQuery = rawMimeType?.let {
+            MediaStore.Files.FileColumns.MIME_TYPE eq Query.ARG
+        }
+
+        // #1282: scope the scan to the requested media IDs instead of walking the whole
+        // MediaStore table and filtering in memory — the full scan could return nothing
+        // usable on large libraries, silently producing an empty add-to-vault batch.
+        val idFilter = if (onlyMatchingUris && candidateIds.isNotEmpty()) {
+            MediaStore.Files.FileColumns._ID inValues candidateIds
+        } else null
+
+        // Join all the non-null queries
+        val selection = listOfNotNull(
+            imageOrVideo,
+            albumFilter,
+            mimeTypeQuery,
+            idFilter,
+        ).join(Query::and)
+
+        val selectionArgs = listOfNotNull(
+            buckedId.takeIf {
+                MediaStoreBuckets.entries.toTypedArray().none { bucket -> it == bucket.id }
+            }?.toString(),
+            rawMimeType,
+        ).toTypedArray()
+
+        val sortOrder = when (buckedId) {
+            MediaStoreBuckets.MEDIA_STORE_BUCKET_TRASH.id ->
+                if (SdkCompat.supportsTrash) "${MediaStore.Files.FileColumns.DATE_EXPIRES} DESC"
+                else "${MediaStore.Files.FileColumns.DATE_MODIFIED} DESC"
+
+            else -> "${MediaStore.Files.FileColumns.DATE_MODIFIED} DESC"
+        }
+
+        val queryArgs = Bundle().apply {
+            putString(ContentResolver.QUERY_ARG_SQL_SELECTION, selection?.build())
+            putStringArray(ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS, selectionArgs)
+            putString(ContentResolver.QUERY_ARG_SQL_SORT_ORDER, sortOrder)
+
+            // Exclude trashed media unless we want data for the trashed album
+            // QUERY_ARG_MATCH_TRASHED is only available on API 30+
+            if (SdkCompat.supportsTrash) {
+                putInt(
+                    MediaStore.QUERY_ARG_MATCH_TRASHED, when (buckedId) {
+                        MediaStoreBuckets.MEDIA_STORE_BUCKET_TRASH.id -> MediaStore.MATCH_ONLY
+
+                        else -> MediaStore.MATCH_EXCLUDE
+                    }
+                )
+            }
+        }
+
+        return contentResolver.queryFlow(
+            uri,
+            projection,
+            queryArgs,
+        )
+    }
+
+    // Derive candidate media IDs from provided URIs. These may be either
+    // MediaStore content:// URIs or file:// URIs that represent encrypted
+    // vault files whose filenames follow the pattern <originalId>.enc
+    private val candidateIds: List<Long> by lazy {
+        uris.mapNotNull { uri -> parseCandidateId(uri) }.distinct()
+    }
+
+    override fun flowData() =
+        flowCursor().mapEachRow(MediaQuery.MediaProjection) { it, indexCache ->
+            var i = 0
+
+            val id = it.getLong(indexCache[i++])
+            val volumeName = it.tryGetString(indexCache[i++]).orEmpty()
+                .ifEmpty { MediaStore.VOLUME_EXTERNAL }
+            val path = it.tryGetString(indexCache[i++]).orEmpty()
+            val relativePath = it.tryGetString(indexCache[i++]).orEmpty()
+            val title = it.tryGetString(indexCache[i++]).orEmpty()
+            val albumID = it.getLong(indexCache[i++])
+            val albumLabel = it.tryGetString(indexCache[i++], Build.MODEL)
+            val mediaStoreTakenTimestamp = it.tryGetLong(indexCache[i++])?.takeIf { value -> value != 0L }
+            val filenameTimestamp = if (mediaStoreTakenTimestamp == null) {
+                title.parseTimestampFromFilename()
+            } else null
+            val takenTimestamp = mediaStoreTakenTimestamp ?: filenameTimestamp
+            val captureTimeOrigin = when {
+                mediaStoreTakenTimestamp != null -> CaptureTimeOrigin.MEDIA_STORE
+                filenameTimestamp != null -> CaptureTimeOrigin.FILENAME
+                else -> CaptureTimeOrigin.MODIFIED_FALLBACK
+            }
+            val modifiedTimestamp = it.getLong(indexCache[i++])
+            val duration = it.tryGetString(indexCache[i++])
+            val size = it.getLong(indexCache[i++])
+            val mimeType = MediaQuery.normalizeImageMimeType(
+                path,
+                it.tryGetString(indexCache[i++]).orEmpty()
+            )
+            // IS_FAVORITE and IS_TRASHED are only available on API 30+
+            val isFavorite = if (SdkCompat.supportsFavorites) it.getInt(indexCache[i++]) else 0
+            val isTrashed = if (SdkCompat.supportsTrash) it.getInt(indexCache[i]) else 0
+            val uri = MediaQuery.mediaStoreItemUri(id, mimeType, path, volumeName)
+            val formattedDate = (takenTimestamp?.div(1000) ?: modifiedTimestamp).getDate(FULL_DATE_FORMAT)
+            UriMedia(
+                id = id,
+                label = title,
+                uri = uri,
+                path = path,
+                relativePath = relativePath,
+                albumID = albumID,
+                albumLabel = albumLabel ?: Build.MODEL,
+                timestamp = modifiedTimestamp,
+                takenTimestamp = takenTimestamp,
+                captureTimeOrigin = captureTimeOrigin,
+                expiryTimestamp = null,
+                fullDate = formattedDate,
+                duration = duration,
+                favorite = isFavorite,
+                trashed = isTrashed,
+                size = size,
+                mimeType = mimeType
+            )
+        }.let { flow ->
+            val ids = candidateIds
+            if (onlyMatchingUris) {
+                flow.map { mediaList ->
+                    mediaList.filter { media -> ids.contains(media.id) && !media.isTrashed }
+                }
+            } else {
+                val bucketId = getBucketIdFromFirstUri()
+                flow.map { mediaList ->
+                    mediaList.filter { media ->
+                        bucketId?.let {
+                            media.albumID == bucketId && !media.isTrashed
+                        } ?: ids.contains(media.id) && !media.isTrashed
+                    }
+                }
+            }
+        }
+
+    private fun getBucketIdFromFirstUri(): Long? {
+        val firstUri = uris.firstOrNull() ?: return null
+        // Bucket lookup only makes sense for MediaStore content URIs. File based
+        // (encrypted) URIs won't have a bucket; skip early.
+        if (firstUri.scheme != ContentResolver.SCHEME_CONTENT) return null
+        val id = try {
+            ContentUris.parseId(firstUri)
+        } catch (e: NumberFormatException) {
+            printError(TAG, "Failed to parse content URI id: $firstUri", e)
+            return null
+        }
+        val projection = arrayOf(MediaStore.Files.FileColumns.BUCKET_ID)
+        val selection = "${MediaStore.Files.FileColumns._ID} = ?"
+        val selectionArgs = arrayOf(id.toString())
+        contentResolver.query(
+            MediaQuery.MediaStoreFileUri,
+            projection,
+            selection,
+            selectionArgs,
+            null
+        )?.use { cursor ->
+            if (cursor.moveToFirst()) {
+                return cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.BUCKET_ID))
+            }
+        }
+        return null
+    }
+
+    /**
+     * Attempt to derive a stable numeric media ID from a supplied URI.
+     *  - For content:// URIs we delegate to [ContentUris.parseId].
+     *  - For file:// URIs pointing to encrypted vault files we strip a trailing
+     *    ".enc" extension and parse the remaining filename as a Long.
+     * Returns null (instead of a random fabricated ID) if parsing fails so the
+     * caller can simply exclude the unmatched entry. This prevents accidental
+     * association with unrelated media rows and avoids decryption failures due
+     * to ID skew.
+     */
+    private fun parseCandidateId(uri: Uri): Long? {
+        return if (uri.scheme == ContentResolver.SCHEME_CONTENT) {
+            try {
+                ContentUris.parseId(uri)
+            } catch (e: NumberFormatException) {
+                // Unexpected malformed content URI; exclude.
+                printWarning("MediaUriFlow: Failed to parse content URI id: $uri -> ${e.message}")
+                null
+            }
+        } else {
+            // file:// or other scheme; check for encrypted vault naming pattern
+            val name = uri.lastPathSegment ?: return null
+            val numericPart = if (name.endsWith(".enc", ignoreCase = true)) {
+                name.removeSuffix(".enc")
+            } else name
+            numericPart.toLongOrNull().also { parsed ->
+                if (parsed == null) {
+                    printWarning("MediaUriFlow: Unable to derive id from URI filename '$name'")
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cutout_save_choice_title">Ausschnitt speichern als</string>
+    <string name="cutout_save_transparent_png">Transparente PNG</string>
+    <string name="cutout_save_flatten_white">Auf Weiß zusammenführen</string>
+    <string name="cutout_save_flatten_black">Auf Schwarz zusammenführen</string>
+    <string name="overwrite_unavailable_title">Dieses Format kann nicht überschrieben werden</string>
+    <string name="overwrite_unavailable_summary">Dieses Bildformat kann auf Ihrem Gerät nicht neu kodiert werden, daher kann das Original nicht überschrieben werden. Stattdessen wird eine neue PNG-Kopie erstellt.</string>
+    <string name="overwrite_unavailable_create_copy">Kopie erstellen</string>
+    <string name="copied_to_clipboard">In die Zwischenablage kopiert</string>
+    <string name="error_copying_to_clipboard">Fehler beim Kopieren in die Zwischenablage</string>
+    <string name="cutout_copy_failed">Fehler beim Kopieren des ausgeschnittenen Objekts</string>
+    <string name="cutout_share_failed">Fehler beim Teilen des ausgeschnittenen Objekts</string>
+    <string name="cutout_save_failed">Fehler beim Speichern des ausgeschnittenen Objekts</string>
+    <string name="cutout_saved">Ausgeschnittenes Objekt gespeichert in Bilder/Ausschnitte</string>
+</resources>

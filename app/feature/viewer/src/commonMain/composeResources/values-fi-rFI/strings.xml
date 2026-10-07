@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="location">Location</string>
+    <string name="pause_video">Pysäytä video</string>
+    <string name="play_video">Toista video</string>
+    <string name="close">Sulje</string>
+    <string name="rotate_screen_cd">Kierrä näyttöä</string>
+    <string name="toggle_audio_cd">Toggle audio</string>
+    <string name="auto">Auto</string>
+    <string name="change_playback_speed_cd">Muuta toistonopeutta</string>
+    <string name="change_subtitle_track_cd">Change subtitle track</string>
+    <string name="more_options_cd">More options</string>
+    <string name="rotate">Rotate</string>
+    <string name="decrypt_failed_tap_to_retry">Decrypt failed. Tap to retry.</string>
+    <string name="media_load_failed_tap_to_retry">Tätä mediaa ei voitu ladata. Yritä uudelleen napauttamalla.</string>
+    <string name="frame_picker_shots_heading">Kuvat tässä valokuvassa</string>
+    <string name="cutout_no_object">Ei kohdetta havaittu pitkän painalluksen alla</string>
+    <string name="cutout_init_failed">Epäonnistui leikkausmoottorin alustaminen</string>
+    <string name="cutout_refining">Parannetaan leikkausta…</string>
+    <string name="cutout_include">Sisällytä</string>
+    <string name="cutout_exclude">Poissulje</string>
+    <string name="cutout_undo">Kumoa</string>
+    <string name="cutout_redo">Tee uudelleen</string>
+    <string name="cutout_reset">Nollaa</string>
+    <string name="cutout_close">Sulje leikkaus</string>
+    <string name="cutout_copy">Kopioi</string>
+    <string name="cutout_share">Jaa</string>
+    <string name="cutout_save">Tallenna</string>
+</resources>

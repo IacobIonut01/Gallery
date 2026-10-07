@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="location">Location</string>
+    <string name="pause_video">동영상 일시 정지</string>
+    <string name="play_video">동영상 재생</string>
+    <string name="close">닫기</string>
+    <string name="rotate_screen_cd">화면 회전</string>
+    <string name="toggle_audio_cd">Toggle audio</string>
+    <string name="auto">자동</string>
+    <string name="change_playback_speed_cd">재생 속도 변경</string>
+    <string name="change_subtitle_track_cd">Change subtitle track</string>
+    <string name="more_options_cd">More options</string>
+    <string name="rotate">Rotate</string>
+    <string name="decrypt_failed_tap_to_retry">Decrypt failed. Tap to retry.</string>
+    <string name="media_load_failed_tap_to_retry">이 미디어를 불러올 수 없습니다. 탭하여 다시 시도하세요.</string>
+    <string name="frame_picker_shots_heading">이 사진의 샷</string>
+    <string name="cutout_no_object">길게 눌러도 물체가 감지되지 않습니다</string>
+    <string name="cutout_init_failed">컷아웃 엔진을 초기화하지 못했습니다.</string>
+    <string name="cutout_refining">컷아웃 다듬기…</string>
+    <string name="cutout_include">포함</string>
+    <string name="cutout_exclude">제외</string>
+    <string name="cutout_undo">실행 취소</string>
+    <string name="cutout_redo">다시 실행</string>
+    <string name="cutout_reset">재설정</string>
+    <string name="cutout_close">컷아웃 닫기</string>
+    <string name="cutout_copy">복사</string>
+    <string name="cutout_share">공유</string>
+    <string name="cutout_save">저장</string>
+</resources>

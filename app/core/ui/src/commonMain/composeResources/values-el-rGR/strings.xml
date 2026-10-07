@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cutout_save_choice_title">Αποθήκευση αποκοπής ως</string>
+    <string name="cutout_save_transparent_png">Διαφανές PNG</string>
+    <string name="cutout_save_flatten_white">Σύντηξη σε λευκό</string>
+    <string name="cutout_save_flatten_black">Σύντηξη σε μαύρο</string>
+    <string name="overwrite_unavailable_title">Δεν είναι δυνατή η αντικατάσταση αυτού του τύπου αρχείου</string>
+    <string name="overwrite_unavailable_summary">Αυτή η μορφή εικόνας δεν μπορεί να κωδικοποιηθεί ξανά στη συσκευή σας, οπότε το αρχικό δεν μπορεί να αντικατασταθεί. Αντίθετα, θα δημιουργηθεί ένα καινούργιο αντίγραφο PNG.</string>
+    <string name="overwrite_unavailable_create_copy">Δημιουργία αντιγράφου</string>
+    <string name="copied_to_clipboard">Copied to clipboard</string>
+    <string name="error_copying_to_clipboard">Failed to copy to clipboard</string>
+    <string name="cutout_copy_failed">Αποτυχία αντιγραφής αντικειμένου αποκοπής</string>
+    <string name="cutout_share_failed">Αποτυχία κοινής χρήσης αντικειμένου αποκοπής</string>
+    <string name="cutout_save_failed">Αποτυχία αποθήκευσης αντικειμένου αποκοπής</string>
+    <string name="cutout_saved">Αποθηκεύτηκε η αποκοπή στο Pictures/Cutouts</string>
+</resources>

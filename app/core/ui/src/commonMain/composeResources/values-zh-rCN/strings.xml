@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cutout_save_choice_title">另存剪裁为</string>
+    <string name="cutout_save_transparent_png">透明 PNG</string>
+    <string name="cutout_save_flatten_white">白色背景合并</string>
+    <string name="cutout_save_flatten_black">黑色背景合并</string>
+    <string name="overwrite_unavailable_title">无法覆盖此格式</string>
+    <string name="overwrite_unavailable_summary">此图像格式无法在您的设备上重新编码，因此无法覆盖原文件。将改为创建新的 PNG 复制。</string>
+    <string name="overwrite_unavailable_create_copy">创建副本</string>
+    <string name="copied_to_clipboard">已复制到剪贴板</string>
+    <string name="error_copying_to_clipboard">无法复制到剪贴板</string>
+    <string name="cutout_copy_failed">复制裁剪对象失败</string>
+    <string name="cutout_share_failed">共享裁剪对象失败</string>
+    <string name="cutout_save_failed">保存裁剪对象失败</string>
+    <string name="cutout_saved">已将剪裁保存到图片/剪裁文件夹</string>
+</resources>

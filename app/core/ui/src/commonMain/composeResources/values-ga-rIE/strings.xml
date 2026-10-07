@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cutout_save_choice_title">Sábháil gearradh amach mar</string>
+    <string name="cutout_save_transparent_png">PNG trédhearcach</string>
+    <string name="cutout_save_flatten_white">Déan cothrom ar bhán</string>
+    <string name="cutout_save_flatten_black">Déan cothrom ar dhubh</string>
+    <string name="overwrite_unavailable_title">Ní féidir an fhormáid seo a scríobh thart</string>
+    <string name="overwrite_unavailable_summary">Ní féidir an fhormáid íomhá seo a athchódú ar do ghléas, mar sin ní féidir an bhunaidh a scríobh thart. Cruthófar cóip nua PNG ina ionad.</string>
+    <string name="overwrite_unavailable_create_copy">Cruthaigh cóip</string>
+    <string name="copied_to_clipboard">Copied to clipboard</string>
+    <string name="error_copying_to_clipboard">Failed to copy to clipboard</string>
+    <string name="cutout_copy_failed">Theip ar chóipeáil réad gearradh amach</string>
+    <string name="cutout_share_failed">Theip ar roinnt réad gearradh amach</string>
+    <string name="cutout_save_failed">Theip ar shábháil réad gearradh amach</string>
+    <string name="cutout_saved">Sábháilte gearradh amach go Pictures/Cutouts</string>
+</resources>

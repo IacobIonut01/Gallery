@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cutout_save_choice_title">Lưu hình cắt như</string>
+    <string name="cutout_save_transparent_png">PNG trong suốt</string>
+    <string name="cutout_save_flatten_white">Gộp trên nền trắng</string>
+    <string name="cutout_save_flatten_black">Gộp trên nền đen</string>
+    <string name="overwrite_unavailable_title">Không thể ghi đè định dạng này</string>
+    <string name="overwrite_unavailable_summary">Định dạng hình ảnh này không thể mã hóa lại trên thiết bị của bạn, vì vậy tệp gốc không thể bị ghi đè. Thay vào đó sẽ tạo một bản sao PNG mới.</string>
+    <string name="overwrite_unavailable_create_copy">Tạo bản sao</string>
+    <string name="copied_to_clipboard">Đã sao chép vào bộ nhớ tạm</string>
+    <string name="error_copying_to_clipboard">Sao chép vào bộ nhớ tạm thất bại</string>
+    <string name="cutout_copy_failed">Sao chép đối tượng cắt thất bại</string>
+    <string name="cutout_share_failed">Chia sẻ đối tượng cắt thất bại</string>
+    <string name="cutout_save_failed">Lưu đối tượng cắt thất bại</string>
+    <string name="cutout_saved">Đã lưu hình cắt vào Pictures/Cutouts</string>
+</resources>

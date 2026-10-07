@@ -1,5 +1,21 @@
 files:
-  - source: /app/src/main/res/values/string*.xml
-    translation: /app/src/main/res/values-%android_code%/%original_file_name%
-  - source: /app/src/main/res/values/help_strings.xml
-    translation: /app/src/main/res/values-%android_code%/%original_file_name%
+  # Master UI string catalog — consumed via com.dot.gallery.generated.resources.Res
+  - source: /app/commonApp/src/commonMain/composeResources/values/strings.xml
+    translation: /app/commonApp/src/commonMain/composeResources/values-%android_code%/%original_file_name%
+  # English source stays in commonApp so the existing Crowdin file (and its stored
+  # translations) keeps mapping; help tips render through feature/help's own Res
+  # catalog, so translations must land in that module to be seen at runtime.
+  - source: /app/commonApp/src/commonMain/composeResources/values/help_strings.xml
+    translation: /app/feature/help/src/commonMain/composeResources/values-%android_code%/%original_file_name%
+  # Manifest/widget/layout-referenced strings — platform XML resolves R.string only,
+  # so these keep an Android res/ copy (same 9 keys also exist in composeResources
+  # for Kotlin call sites; Crowdin TM keeps both translations consistent).
+  - source: /app/commonApp/src/androidMain/res/values/strings.xml
+    translation: /app/commonApp/src/androidMain/res/values-%android_code%/%original_file_name%
+  # Feature-module catalogs that already ship translations
+  - source: /app/feature/editor/src/commonMain/composeResources/values/strings.xml
+    translation: /app/feature/editor/src/commonMain/composeResources/values-%android_code%/%original_file_name%
+  - source: /app/feature/vault/src/commonMain/composeResources/values/strings.xml
+    translation: /app/feature/vault/src/commonMain/composeResources/values-%android_code%/%original_file_name%
+  - source: /app/feature/viewer/src/commonMain/composeResources/values/strings.xml
+    translation: /app/feature/viewer/src/commonMain/composeResources/values-%android_code%/%original_file_name%

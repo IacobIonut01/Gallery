@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="location">Location</string>
+    <string name="pause_video">Pause video</string>
+    <string name="play_video">Play video</string>
+    <string name="close">Close</string>
+    <string name="rotate_screen_cd">Rotate Screen</string>
+    <string name="toggle_audio_cd">Toggle audio</string>
+    <string name="auto">Auto</string>
+    <string name="change_playback_speed_cd">Change playback speed</string>
+    <string name="change_subtitle_track_cd">Change subtitle track</string>
+    <string name="more_options_cd">More options</string>
+    <string name="rotate">Rotate</string>
+    <string name="decrypt_failed_tap_to_retry">Decrypt failed. Tap to retry.</string>
+    <string name="media_load_failed_tap_to_retry">No s’ha pogut carregar aquest contingut multimèdia. Toca per tornar-ho a provar.</string>
+    <string name="frame_picker_shots_heading">Imatges d'aquesta foto</string>
+    <string name="cutout_no_object">No s'ha detectat cap objecte amb una pressió llarga</string>
+    <string name="cutout_init_failed">No s'ha pogut inicialitzar el motor de tall</string>
+    <string name="cutout_refining">S'està afinant el retall...</string>
+    <string name="cutout_include">Inclou</string>
+    <string name="cutout_exclude">Exclou</string>
+    <string name="cutout_undo">Desfer</string>
+    <string name="cutout_redo">Refer</string>
+    <string name="cutout_reset">Restableix</string>
+    <string name="cutout_close">Tanca el tall</string>
+    <string name="cutout_copy">Còpia</string>
+    <string name="cutout_share">Comparteix</string>
+    <string name="cutout_save">Desa</string>
+</resources>

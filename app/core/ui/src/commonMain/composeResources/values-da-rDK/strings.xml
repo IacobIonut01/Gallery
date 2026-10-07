@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cutout_save_choice_title">Gem udskæring som</string>
+    <string name="cutout_save_transparent_png">Transparent PNG</string>
+    <string name="cutout_save_flatten_white">Fladtryk på hvid</string>
+    <string name="cutout_save_flatten_black">Fladtryk på sort</string>
+    <string name="overwrite_unavailable_title">Kan ikke overskrive dette format</string>
+    <string name="overwrite_unavailable_summary">Dette billedformat kan ikke genkodes på din enhed, så originalen kan ikke overskrives. I stedet vil der blive oprettet en ny PNG-kopi.</string>
+    <string name="overwrite_unavailable_create_copy">Opret kopi</string>
+    <string name="copied_to_clipboard">Copied to clipboard</string>
+    <string name="error_copying_to_clipboard">Failed to copy to clipboard</string>
+    <string name="cutout_copy_failed">Kunne ikke kopiere cutout-objekt</string>
+    <string name="cutout_share_failed">Kunne ikke dele cutout-objekt</string>
+    <string name="cutout_save_failed">Kunne ikke gemme udskåret objekt</string>
+    <string name="cutout_saved">Gemte udskæring til Billeder/Udskæringer</string>
+</resources>

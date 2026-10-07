@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Generic actions -->
+    <string name="action_cancel">Cancel</string>
+    <string name="action_confirm">Confirm</string>
+    <string name="close">Close</string>
+    <string name="copy">Copy</string>
+    <string name="done">Done</string>
+    <string name="ok">OK</string>
+    <string name="search">Search</string>
+    <string name="search_albums">Search albums</string>
+
+    <!-- Album picker -->
+    <string name="album_name">Album Name</string>
+    <string name="create_new_album">Create new album</string>
+    <string name="location_new_album">Location: Internal-Storage/%1$s</string>
+    <string name="move_to_another_album">Move to another album</string>
+    <string name="n_albums">%1$d albums</string>
+    <string name="open_album">Open album</string>
+    <string name="open_media">Open item</string>
+    <string name="transfer_on_device">On this device</string>
+    <string name="transfer_unavailable_cloud">Unavailable cloud albums</string>
+
+    <!-- Transfer progress / completion -->
+    <string name="category_media_count">%1$d items</string>
+    <string name="cloud_copy_incomplete">Copy incomplete</string>
+    <string name="cloud_move_incomplete">Move incomplete</string>
+    <string name="cloud_move_removing_originals">Removing originals…</string>
+    <string name="retry_failed_items">Retry failed items</string>
+    <string name="transfer_complete_summary">%1$d items · %2$s</string>
+    <string name="transfer_copy_complete">Copy complete</string>
+    <string name="transfer_copy_failed">The copy could not be completed. Your originals are unchanged.</string>
+    <string name="transfer_copying">Copying</string>
+    <string name="transfer_move_complete">Move complete</string>
+    <string name="transfer_moving">Moving</string>
+    <string name="transfer_original_retained">Copied; original retained</string>
+
+    <!-- Transfer destination status -->
+    <string name="cloud_copy_account_unavailable">Cloud account unavailable</string>
+    <string name="cloud_copy_offline">Connect to copy to this album</string>
+    <string name="cloud_copy_provider_unsupported">This provider does not support album copies</string>
+    <string name="cloud_copy_read_only">Cloud account is read-only</string>
+    <string name="cloud_copy_source_unsupported">This source cannot be transferred</string>
+    <string name="cloud_move_mixed_unsupported">Move local and cloud items separately</string>
+    <string name="cloud_move_unsupported">This selection cannot be safely moved to that album; use Copy instead</string>
+
+    <!-- Locked albums -->
+    <string name="locked">Locked</string>
+    <string name="locked_album_security_error">Please set up a phone security measure (PIN, pattern, password or biometrics) before locking or unlocking albums.</string>
+
+    <!-- Metadata view -->
+    <string name="all_metadata">All Metadata</string>
+    <string name="loading_metadata">Loading metadata…</string>
+    <string name="no_metadata_found">No metadata found</string>
+
+    <!-- Metadata edit -->
+    <string name="description">Description</string>
+    <string name="edit_metadata">Edit Metadata</string>
+    <string name="label">Label</string>
+    <string name="video_description_local_only">Video descriptions are stored locally and won't be written to the file</string>
+
+    <!-- Capture date edit -->
+    <string name="capture_date_date">Date</string>
+    <string name="capture_date_may_move">Changing this date may move the item on your Timeline.</string>
+    <string name="capture_date_time">Time</string>
+    <string name="create_copy">Create copy</string>
+    <string name="dated_copy_created">Dated copy created</string>
+    <string name="dated_copy_created_summary">The new copy contains your selected capture date.</string>
+    <string name="dated_copy_loss_summary">The copy is a flattened image and may not preserve animation, HDR, layers, or original sensor data. The original will be kept.</string>
+    <string name="dated_copy_required">Create a dated copy?</string>
+    <string name="dated_copy_required_summary">This file cannot store a capture date directly. ReFra can create a PNG copy containing the selected date.</string>
+    <string name="edit_capture_date">Edit capture date</string>
+    <string name="keep_both">Keep both</string>
+    <string name="move_original_to_trash">Move original to Trash</string>
+    <string name="save_date">Save date</string>
+    <string name="set_capture_date">Set capture date</string>
+</resources>

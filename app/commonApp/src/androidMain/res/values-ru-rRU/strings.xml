@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Manifest/widget/XML-referenced strings. UI strings live in commonMain/composeResources. -->
+<resources>
+    <string name="app_name">ReFra</string>
+    <string name="app_name_gallery">Галерея</string>
+    <string name="location_cd">Расположение медиа</string>
+    <string name="set_wallpaper">Обои</string>
+    <string name="widget_single_label">Single Photo</string>
+    <string name="widget_single_description">Display a single photo on your home screen</string>
+    <string name="widget_grid_label">Сетка фотографий</string>
+    <string name="widget_grid_description">Отображение сетки фотографий на домашнем экране (2×2, 4×4 или 6×6 в зависимости от размера)</string>
+    <string name="editor_crop">Обрезать</string>
+</resources>

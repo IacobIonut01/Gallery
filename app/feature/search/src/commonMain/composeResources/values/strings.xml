@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <string name="ai_models_not_installed">AI models are not installed. Download them from Settings > Smart Features.</string>
+    <string name="night_mode">Night Mode</string>
+    <string name="panoramas">Panoramas</string>
+    <string name="photospheres">Photospheres</string>
+    <string name="long_exposures">Long Exposures</string>
+    <string name="motion_photos">Motion Photos</string>
+    <string name="group_type_bursts">Bursts</string>
+    <string name="group_type_raw_jpg">RAW + JPG</string>
+    <string name="group_type_edits">Edits</string>
+    <string name="visual_search_failed">Visual search could not process this image</string>
+    <string name="search_failed">Search could not be completed</string>
+</resources>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cutout_save_choice_title">Зберегти вирізку як</string>
+    <string name="cutout_save_transparent_png">Прозорий PNG</string>
+    <string name="cutout_save_flatten_white">Згладити на білому</string>
+    <string name="cutout_save_flatten_black">Згладити на чорному</string>
+    <string name="overwrite_unavailable_title">Не можна перезаписати цей формат</string>
+    <string name="overwrite_unavailable_summary">Цей формат зображення не можна перекодувати на вашому пристрої, тому оригінал не можна перезаписати. Натомість буде створено нову копію у форматі PNG.</string>
+    <string name="overwrite_unavailable_create_copy">Створити копію</string>
+    <string name="copied_to_clipboard">Скопійовано в буфер</string>
+    <string name="error_copying_to_clipboard">Не вдалося скопіювати в буфер</string>
+    <string name="cutout_copy_failed">Не вдалося скопіювати об'єкт вирізання</string>
+    <string name="cutout_share_failed">Не вдалося поділитися об'єктом вирізання</string>
+    <string name="cutout_save_failed">Не вдалося зберегти об'єкт вирізання</string>
+    <string name="cutout_saved">Вирізано та збережено у Pictures/Cutouts</string>
+</resources>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="location">Placering</string>
+    <string name="pause_video">Sæt videoen på pause</string>
+    <string name="play_video">Afspil video</string>
+    <string name="close">Luk</string>
+    <string name="rotate_screen_cd">Roter skærm</string>
+    <string name="toggle_audio_cd">Slå lyd til/fra</string>
+    <string name="auto">Auto</string>
+    <string name="change_playback_speed_cd">Skift afspilningshastighed</string>
+    <string name="change_subtitle_track_cd">Change subtitle track</string>
+    <string name="more_options_cd">More options</string>
+    <string name="rotate">Roter</string>
+    <string name="decrypt_failed_tap_to_retry">Decrypt failed. Tap to retry.</string>
+    <string name="media_load_failed_tap_to_retry">Dette medie kunne ikke indlæses. Tryk for at prøve igen.</string>
+    <string name="frame_picker_shots_heading">Billeder i dette foto</string>
+    <string name="cutout_no_object">Ingen objekt registreret ved langt tryk</string>
+    <string name="cutout_init_failed">Kunne ikke initialisere cutout-motor</string>
+    <string name="cutout_refining">Forfiner udskæring…</string>
+    <string name="cutout_include">Inkluder</string>
+    <string name="cutout_exclude">Udeluk</string>
+    <string name="cutout_undo">Fortryd</string>
+    <string name="cutout_redo">Annuller fortryd</string>
+    <string name="cutout_reset">Nulstil</string>
+    <string name="cutout_close">Luk udskæring</string>
+    <string name="cutout_copy">Kopier</string>
+    <string name="cutout_share">Del</string>
+    <string name="cutout_save">Gem</string>
+</resources>

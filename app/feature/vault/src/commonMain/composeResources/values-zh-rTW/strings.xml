@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<string name="vault_items_encrypted">%1$d 項目已成功加密</string>
+<string name="vault_encrypt_failed">無法加密 %1$d 個項目</string>
+<string name="vault_restored_to">%1$d 個項目已恢復至 %2$s</string>
+<string name="vault_item_deleted">項目已從保險庫刪除</string>
+</resources>

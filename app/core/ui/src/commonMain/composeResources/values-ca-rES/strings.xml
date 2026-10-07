@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cutout_save_choice_title">Desa el retall com a</string>
+    <string name="cutout_save_transparent_png">PNG transparent</string>
+    <string name="cutout_save_flatten_white">Aplanar sobre blanc</string>
+    <string name="cutout_save_flatten_black">Aplanar en negre</string>
+    <string name="overwrite_unavailable_title">No es pot sobreescriure aquest format</string>
+    <string name="overwrite_unavailable_summary">Aquest format d'imatge no es pot tornar a codificar al dispositiu, de manera que l'original no es pot sobreescriure. En lloc d'això, es crearà una còpia PNG nova.</string>
+    <string name="overwrite_unavailable_create_copy">Crea una còpia</string>
+    <string name="copied_to_clipboard">Copied to clipboard</string>
+    <string name="error_copying_to_clipboard">Failed to copy to clipboard</string>
+    <string name="cutout_copy_failed">No s'ha pogut copiar l'objecte retallat</string>
+    <string name="cutout_share_failed">No s'ha pogut compartir l'objecte retallat</string>
+    <string name="cutout_save_failed">No s'ha pogut desar l'objecte retallat</string>
+    <string name="cutout_saved">Retall desat a Imatges/Retalls</string>
+</resources>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="location">Plats</string>
+    <string name="pause_video">Pausa video</string>
+    <string name="play_video">Spela upp video</string>
+    <string name="close">Stäng</string>
+    <string name="rotate_screen_cd">Rotera skärm</string>
+    <string name="toggle_audio_cd">Växla ljud</string>
+    <string name="auto">Auto</string>
+    <string name="change_playback_speed_cd">Ändra uppspelningshastighet</string>
+    <string name="change_subtitle_track_cd">Change subtitle track</string>
+    <string name="more_options_cd">More options</string>
+    <string name="rotate">Rotate</string>
+    <string name="decrypt_failed_tap_to_retry">Decrypt failed. Tap to retry.</string>
+    <string name="media_load_failed_tap_to_retry">Det gick inte att läsa in detta medium. Tryck för att försöka igen.</string>
+    <string name="frame_picker_shots_heading">Bilder i detta foto</string>
+    <string name="cutout_no_object">Inget objekt upptäckt vid långtryck</string>
+    <string name="cutout_init_failed">Misslyckades med att initiera utskärningsmotor</string>
+    <string name="cutout_refining">Förfinar utskuret…</string>
+    <string name="cutout_include">Inkludera</string>
+    <string name="cutout_exclude">Exkludera</string>
+    <string name="cutout_undo">Ångra</string>
+    <string name="cutout_redo">Gör om</string>
+    <string name="cutout_reset">Återställ</string>
+    <string name="cutout_close">Stäng utskuret</string>
+    <string name="cutout_copy">Kopiera</string>
+    <string name="cutout_share">Dela</string>
+    <string name="cutout_save">Spara</string>
+</resources>

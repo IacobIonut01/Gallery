@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="location">الموقع</string>
+    <string name="pause_video">إيقاف الفيديو مؤقتًا</string>
+    <string name="play_video">تشغيل الفيديو</string>
+    <string name="close">إغلاق</string>
+    <string name="rotate_screen_cd">تدوير الشاشة</string>
+    <string name="toggle_audio_cd">تبديل الصوت</string>
+    <string name="auto">تلقائي</string>
+    <string name="change_playback_speed_cd">غيِّر سرعة التشغيل</string>
+    <string name="change_subtitle_track_cd">Change subtitle track</string>
+    <string name="more_options_cd">خيارات أكثر</string>
+    <string name="rotate">تدوير</string>
+    <string name="decrypt_failed_tap_to_retry">فشل فك التشفير. اضغط لإعادة المحاولة.</string>
+    <string name="media_load_failed_tap_to_retry">تعذر تحميل هذه الوسائط. انقر لإعادة المحاولة.</string>
+    <string name="frame_picker_shots_heading">لقطات في هذه الصورة</string>
+    <string name="cutout_no_object">لم يتم اكتشاف أي كائن تحت الضغط لفترة طويلة</string>
+    <string name="cutout_init_failed">فشل في تهيئة محرك القطع</string>
+    <string name="cutout_refining">تكرير انقطاع…</string>
+    <string name="cutout_include">تضمين</string>
+    <string name="cutout_exclude">استبعاد</string>
+    <string name="cutout_undo">تراجع</string>
+    <string name="cutout_redo">إعادة</string>
+    <string name="cutout_reset">إعادة تعيين</string>
+    <string name="cutout_close">إغلاق انقطاع</string>
+    <string name="cutout_copy">نسخ</string>
+    <string name="cutout_share">شارك</string>
+    <string name="cutout_save">حفظ</string>
+</resources>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cutout_save_choice_title">Kesilen parçayı şu şekilde kaydet</string>
+    <string name="cutout_save_transparent_png">Şeffaf PNG</string>
+    <string name="cutout_save_flatten_white">Beyaz üzerine düzleştir</string>
+    <string name="cutout_save_flatten_black">Siyah üzerine düzleştir</string>
+    <string name="overwrite_unavailable_title">Bu format üzerine yazılamaz</string>
+    <string name="overwrite_unavailable_summary">Bu resim formatı cihazınızda yeniden kodlanamaz, bu nedenle orijinalin üzerine yazılamaz. Bunun yerine yeni bir PNG kopyası oluşturulacak.</string>
+    <string name="overwrite_unavailable_create_copy">Kopya oluştur</string>
+    <string name="copied_to_clipboard">Panoya kopyalandı</string>
+    <string name="error_copying_to_clipboard">Panoya kopyalama başarısız</string>
+    <string name="cutout_copy_failed">Kesme nesnesi kopyalanamadı</string>
+    <string name="cutout_share_failed">Kesme nesnesi paylaşılamadı</string>
+    <string name="cutout_save_failed">Kesme nesnesi kaydedilemedi</string>
+    <string name="cutout_saved">Kesilen parça Pictures/Cutouts klasörüne kaydedildi</string>
+</resources>

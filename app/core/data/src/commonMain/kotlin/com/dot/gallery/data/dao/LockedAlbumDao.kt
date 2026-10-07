@@ -1,0 +1,40 @@
+/*
+ * SPDX-FileCopyrightText: 2023-2026 IacobIacob01
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package com.dot.gallery.data.dao
+
+import androidx.room3.Dao
+import androidx.room3.Delete
+import androidx.room3.Query
+import androidx.room3.Upsert
+import com.dot.gallery.domain.model.LockedAlbum
+import kotlinx.coroutines.flow.Flow
+
+
+@Dao
+interface LockedAlbumDao {
+
+    @Query("SELECT * FROM locked_table")
+    fun getLockedAlbums(): Flow<List<LockedAlbum>>
+
+    @Upsert
+    suspend fun insertLockedAlbum(lockedAlbum: LockedAlbum)
+
+    @Upsert
+    suspend fun insertLockedAlbums(lockedAlbums: List<LockedAlbum>)
+
+    @Delete
+    suspend fun removeLockedAlbum(lockedAlbum: LockedAlbum)
+
+    @Query("DELETE FROM locked_table WHERE id IN (:albumIds)")
+    suspend fun removeLockedAlbums(albumIds: List<Long>)
+
+    @Query("SELECT EXISTS(SELECT * FROM locked_table WHERE id = :albumId)")
+    suspend fun albumIsLocked(albumId: Long): Boolean
+
+    @Query("SELECT id FROM locked_table")
+    suspend fun getLockedAlbumIds(): List<Long>
+
+}

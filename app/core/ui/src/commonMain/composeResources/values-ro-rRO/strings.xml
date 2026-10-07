@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cutout_save_choice_title">Salvează decupajul ca</string>
+    <string name="cutout_save_transparent_png">PNG transparent</string>
+    <string name="cutout_save_flatten_white">Aplatizează pe alb</string>
+    <string name="cutout_save_flatten_black">Aplatizează pe negru</string>
+    <string name="overwrite_unavailable_title">Nu se poate suprascrie acest format</string>
+    <string name="overwrite_unavailable_summary">Acest format de imagine nu poate fi re-encodat pe dispozitivul tău, astfel încât originalul nu poate fi suprascris. În schimb, va fi creată o copie nouă în format PNG.</string>
+    <string name="overwrite_unavailable_create_copy">Creează copie</string>
+    <string name="copied_to_clipboard">Copied to clipboard</string>
+    <string name="error_copying_to_clipboard">Failed to copy to clipboard</string>
+    <string name="cutout_copy_failed">Copierea obiectului decupat a eșuat</string>
+    <string name="cutout_share_failed">Partajarea obiectului decupat a eșuat</string>
+    <string name="cutout_save_failed">Salvarea obiectului decupat a eșuat</string>
+    <string name="cutout_saved">Decupaj salvat în Imagini/Decupaje</string>
+</resources>

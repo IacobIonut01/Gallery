@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Manifest/widget/XML-referenced strings. UI strings live in commonMain/composeResources. -->
+<resources>
+    <string name="app_name">ReFra</string>
+    <string name="app_name_gallery">Galerie</string>
+    <string name="location_cd">Medienstandort</string>
+    <string name="set_wallpaper">Hintergrundbild</string>
+    <string name="widget_single_label">Einzelnes Foto</string>
+    <string name="widget_single_description">Ein einzelnes Foto auf Ihrem Startbildschirm anzeigen</string>
+    <string name="widget_grid_label">Foto-Raster</string>
+    <string name="widget_grid_description">Zeige ein Raster mit Fotos auf deinem Startbildschirm an (2×2, 4×4 oder 6×6, je nach Größe)</string>
+    <string name="editor_crop">Zuschneiden</string>
+</resources>

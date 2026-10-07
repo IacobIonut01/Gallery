@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="location">Location</string>
+    <string name="pause_video">Parar vídeo</string>
+    <string name="play_video">Reproducir vídeo</string>
+    <string name="close">Pechar</string>
+    <string name="rotate_screen_cd">Rotar pantalla</string>
+    <string name="toggle_audio_cd">Toggle audio</string>
+    <string name="auto">Auto</string>
+    <string name="change_playback_speed_cd">Change playback speed</string>
+    <string name="change_subtitle_track_cd">Change subtitle track</string>
+    <string name="more_options_cd">More options</string>
+    <string name="rotate">Rotate</string>
+    <string name="decrypt_failed_tap_to_retry">Decrypt failed. Tap to retry.</string>
+    <string name="media_load_failed_tap_to_retry">Non se puido cargar este contido. Toca para tentar de novo.</string>
+    <string name="frame_picker_shots_heading">Tomas nesta foto</string>
+    <string name="cutout_no_object">Ningún obxecto detectado baixo a pulsación prolongada</string>
+    <string name="cutout_init_failed">Fallou a inicialización do motor de recorte</string>
+    <string name="cutout_refining">Refinando recorte…</string>
+    <string name="cutout_include">Incluir</string>
+    <string name="cutout_exclude">Excluir</string>
+    <string name="cutout_undo">Desfacer</string>
+    <string name="cutout_redo">Refacer</string>
+    <string name="cutout_reset">Restablecer</string>
+    <string name="cutout_close">Pechar recorte</string>
+    <string name="cutout_copy">Copiar</string>
+    <string name="cutout_share">Compartir</string>
+    <string name="cutout_save">Gardar</string>
+</resources>

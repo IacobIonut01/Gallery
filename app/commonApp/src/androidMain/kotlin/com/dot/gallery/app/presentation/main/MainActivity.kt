@@ -1,0 +1,426 @@
+/*
+ * SPDX-FileCopyrightText: 2023-2026 IacobIacob01
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package com.dot.gallery.app.presentation.main
+
+import android.content.Intent
+import android.graphics.Color
+import android.os.Bundle
+import android.view.WindowManager
+import androidx.activity.SystemBarStyle
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.core.view.WindowCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import androidx.datastore.preferences.core.emptyPreferences
+import com.dot.gallery.core.AppConstants
+import com.dot.gallery.core.MediaDistributor
+import com.dot.gallery.core.MediaHandler
+import com.dot.gallery.core.MediaSelector
+import com.dot.gallery.core.LocalScrollToTop
+import com.dot.gallery.core.ScrollToTopController
+import com.dot.gallery.core.Settings
+import com.dot.gallery.core.presentation.components.util.permissionGranted
+import com.dot.gallery.core.presentation.components.AppBarContainer
+import com.dot.gallery.core.presentation.components.NavigationComp
+import com.dot.gallery.core.startup.LocalStartupWorkGate
+import com.dot.gallery.core.startup.StartupContentEffect
+import com.dot.gallery.core.util.LocalInitialPreferences
+import com.dot.gallery.core.util.SetupMediaProviders
+import com.dot.gallery.domain.model.UIEvent
+import com.dot.gallery.domain.util.EventHandler
+import com.dot.gallery.core.LocalMediaViewerOverlayController
+import com.dot.gallery.app.presentation.mediaview.MediaViewerOverlayHost
+import com.dot.gallery.app.presentation.mediaview.canPresentMediaViewerOverlay
+import com.dot.gallery.app.presentation.mediaview.rememberMediaViewerOverlayController
+import com.dot.gallery.app.presentation.storycards.StoryViewerScreen
+import com.dot.gallery.feature.timeline.storycards.StoryViewerSnapshot
+import com.dot.gallery.core.presentation.util.LocalHazeGlassEnabled
+import com.dot.gallery.core.presentation.util.LocalHazeState
+import com.dot.gallery.core.presentation.util.Screen
+import com.dot.gallery.app.presentation.util.applyLauncherSplashTheme
+import com.dot.gallery.app.presentation.util.currentLauncherAlias
+import com.dot.gallery.app.presentation.util.toggleOrientation
+import com.dot.gallery.app.presentation.widget.data.WidgetDeepLink
+import com.dot.gallery.ui.theme.GalleryTheme
+import com.dot.gallery.core.image.thumbnail.ThumbnailTelemetry
+import com.dot.gallery.core.metrics.StartupTracer
+import com.dot.gallery.injection.ComponentOwner
+import dev.chrisbanes.haze.blur.LocalHazeBlurStyle
+import dev.chrisbanes.haze.blur.materials.HazeMaterials
+import dev.chrisbanes.haze.rememberHazeState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.IOException
+import com.dot.gallery.ui.theme.seed
+import com.dot.gallery.feature.viewer.ViewerDismissState
+import com.dot.gallery.ui.theme.AppThemeLocals
+import com.dot.gallery.app.presentation.setup.SetupScreen
+import com.dot.gallery.core.navigate
+import com.dot.gallery.core.startup.StartupPrefill
+import com.dot.gallery.core.startup.StartupWorkGate
+import com.dot.gallery.feature.timeline.storycards.StoryCardsViewModel
+import com.dot.gallery.core.Settings.Misc.getSecureMode
+import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
+import com.dot.gallery.core.Settings.Misc.rememberAllowGlass
+import com.dot.gallery.core.Settings.Misc.rememberForceTheme
+import com.dot.gallery.core.Settings.Misc.rememberIsDarkMode
+import com.dot.gallery.domain.settings.DataStoreSettingsStore
+import com.dot.gallery.core.ui.settings.LocalSettingsStore
+import com.dot.gallery.core.ui.settings.LocalPreferenceSnapshot
+import com.dot.gallery.core.activeDataStore
+import com.dot.gallery.domain.settings.toSnapshotMap
+import com.dot.gallery.core.logging.printWarning
+import com.dot.gallery.injection.injectViewModel
+
+
+class MainActivity : AppCompatActivity() {
+
+    private val component get() = (application as ComponentOwner).component
+    val eventHandler: EventHandler get() = component.eventHandler
+    val mediaDistributor: MediaDistributor get() = component.mediaDistributor
+    val mediaHandler: MediaHandler get() = component.mediaHandler
+    val mediaSelector: MediaSelector get() = component.mediaSelector
+    val startupWorkGate: StartupWorkGate get() = component.startupWorkGate
+    val startupPrefill: StartupPrefill get() = component.startupPrefill
+
+    private var startupContentInstalled = false
+
+    /**
+     * Pending home-screen widget tap → photo deep link (#1268). Widget
+     * PendingIntents carry the media id in [WidgetDeepLink.EXTRA_WIDGET_MEDIA_ID];
+     * the value is held here until the composition's navigation actions exist.
+     */
+    private val widgetMediaDeepLink = MutableStateFlow(-1L)
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        val activitySpan = StartupTracer.begin("MainActivity.onCreate")
+        // Match the splash icon to the enabled launcher alias before the theme is
+        // read by installSplashScreen (and to re-assert the persisted override).
+        applyLauncherSplashTheme(currentLauncherAlias())
+        val splashScreen = StartupTracer.trace("MainActivity.installSplashScreen") { installSplashScreen() }
+        splashScreen.setKeepOnScreenCondition { !startupContentInstalled }
+        StartupTracer.trace("MainActivity.super.onCreate") {
+            super.onCreate(savedInstanceState)
+        }
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        enforceSecureFlag()
+        enableEdgeToEdge()
+        // Set permission state eagerly so media queries start immediately
+        // instead of waiting for a LaunchedEffect after the first Compose frame.
+        if (permissionGranted(AppConstants.PERMISSIONS)) {
+            mediaDistributor.hasPermission.value = true
+        }
+        StartupTracer.end(activitySpan)
+        consumeWidgetDeepLink(intent)
+        lifecycleScope.launch {
+            val initialPreferences = withContext(Dispatchers.IO) {
+                try {
+                    activeDataStore.data.first()
+                } catch (e: IOException) {
+                    printWarning("MainActivity: failed to read initial preferences (${e.javaClass.simpleName})")
+                    emptyPreferences()
+                }
+            }
+            if (Settings.Misc.secureMode(initialPreferences)) {
+                window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+            }
+            val initialStartDestination = Settings.Misc.startupDestination(
+                initialPreferences,
+                permissionGranted(AppConstants.PERMISSIONS)
+            )
+            startupPrefill.prepare(initialStartDestination)
+            setContent {
+                StartupTracer.trace("MainActivity.firstComposition") {}
+                val preferences by remember {
+                    activeDataStore.data
+                }.collectAsStateWithLifecycle(initialValue = initialPreferences)
+                val settingsStore = remember { DataStoreSettingsStore(activeDataStore) }
+                CompositionLocalProvider(
+                    LocalInitialPreferences provides preferences,
+                    LocalSettingsStore provides settingsStore,
+                    LocalPreferenceSnapshot provides preferences.toSnapshotMap(),
+                    LocalStartupWorkGate provides startupWorkGate
+                ) {
+                    AppThemeLocals {
+                        GalleryTheme {
+                        LaunchedEffect(Unit) {
+                            StartupTracer.trace("MainActivity.firstCompositionApplied") {}
+                            StartupTracer.dump()
+                        }
+                        StartupContentEffect(
+                            route = "MainActivity",
+                            ready = true,
+                            releaseGate = false,
+                            committedLabel = "MainActivity.firstFrameCommitted",
+                            drawnLabel = "MainActivity.firstDrawn"
+                        )
+                        val allowBlur by rememberAllowBlur()
+                        val allowGlass by rememberAllowGlass()
+                        val hazeState = rememberHazeState()
+                        val navController = rememberNavController()
+                        val mediaViewerOverlayController = rememberMediaViewerOverlayController()
+                        val storyCardsViewModel = injectViewModel<StoryCardsViewModel> {storyCardsViewModel}
+                        val storyViewerSnapshot by storyCardsViewModel.viewerSnapshot.collectAsStateWithLifecycle()
+                        val retainedStoryViewerSnapshot = remember {
+                            mutableStateOf<StoryViewerSnapshot?>(null)
+                        }
+                        var storyViewerOpenCount by remember { mutableIntStateOf(0) }
+                        LaunchedEffect(storyViewerSnapshot) {
+                            if (storyViewerSnapshot != null) {
+                                retainedStoryViewerSnapshot.value = storyViewerSnapshot
+                                mediaViewerOverlayController.clearRetained()
+                                storyViewerOpenCount++
+                            }
+                        }
+                        val navBackStackEntry by navController.currentBackStackEntryAsState()
+                        val isStoryViewerRoute = navBackStackEntry?.destination?.route
+                            ?.contains(Screen.StoryViewerScreen.route) == true
+                        val storyViewerOverlayVisible = storyViewerSnapshot != null && !isStoryViewerRoute
+                        val appOverlayVisible = storyViewerOverlayVisible || mediaViewerOverlayController.visible
+                        val isScrolling = remember { mutableStateOf(false) }
+                        val bottomBarState = rememberSaveable { mutableStateOf(true) }
+                        val systemBarFollowThemeState = rememberSaveable { mutableStateOf(true) }
+                        val forcedTheme by rememberForceTheme()
+                        val localDarkTheme by rememberIsDarkMode()
+                        val systemDarkTheme = isSystemInDarkTheme()
+                        val darkTheme by remember(forcedTheme, localDarkTheme, systemDarkTheme) {
+                            mutableStateOf(if (forcedTheme) localDarkTheme else systemDarkTheme)
+                        }
+                        LaunchedEffect(eventHandler, navController, mediaViewerOverlayController) {
+                            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                                val navigateAction: (String) -> Unit = { route ->
+                                    if (
+                                        canPresentMediaViewerOverlay(
+                                            route = route,
+                                            originRoute = navController.currentDestination?.route,
+                                        ) && mediaViewerOverlayController.open(route)
+                                    ) {
+                                        retainedStoryViewerSnapshot.value = null
+                                    } else {
+                                        navController.navigate(route) {
+                                            launchSingleTop = true
+                                            restoreState = true
+                                        }
+                                    }
+                                }
+                                val toggleNavigationBarAction: (Boolean) -> Unit = { isVisible ->
+                                    bottomBarState.value = isVisible
+                                }
+                                val navigateUpAction: () -> Unit = { navController.navigateUp() }
+                                val setFollowThemeAction: (Boolean) -> Unit = { followTheme ->
+                                    systemBarFollowThemeState.value = followTheme
+                                }
+                                eventHandler.navigateAction = navigateAction
+                                eventHandler.toggleNavigationBarAction = toggleNavigationBarAction
+                                eventHandler.navigateUpAction = navigateUpAction
+                                eventHandler.setFollowThemeAction = setFollowThemeAction
+                                // Widget tap → open that photo in the viewer. albumId=-1
+                                // routes through the unified timeline and presents as the
+                                // overlay viewer; a missing/deleted id auto-dismisses.
+                                val widgetDeepLinkJob = launch {
+                                    // consumeWidgetDeepLink can seed the flow before the
+                                    // NavHost inside NavigationComp attaches the graph —
+                                    // navigating then throws "Navigation graph has not
+                                    // been set". The first back-stack entry is emitted
+                                    // exactly when the graph exists, so wait for it.
+                                    navController.currentBackStackEntryFlow.first()
+                                    widgetMediaDeepLink.collect { mediaId ->
+                                        if (mediaId == -1L) return@collect
+                                        // Consume before navigating so a repeated tap on
+                                        // the same widget is not swallowed by conflation.
+                                        widgetMediaDeepLink.value = -1L
+                                        if (initialStartDestination == Screen.SetupScreen.route) {
+                                            return@collect
+                                        }
+                                        navigateAction(
+                                            Screen.MediaViewScreen.idAndAlbum(mediaId, -1L)
+                                        )
+                                    }
+                                }
+                                try {
+                                    eventHandler.updaterFlow.collect { event ->
+                                        when (event) {
+                                            UIEvent.UpdateDatabase -> Unit
+                                            UIEvent.NavigationUpEvent -> eventHandler.navigateUpAction()
+                                            is UIEvent.NavigationRouteEvent -> eventHandler.navigateAction(event.route)
+                                            is UIEvent.ToggleNavigationBarEvent ->
+                                                eventHandler.toggleNavigationBarAction(event.isVisible)
+                                            is UIEvent.SetFollowThemeEvent ->
+                                                eventHandler.setFollowThemeAction(event.followTheme)
+                                        }
+                                    }
+                                } finally {
+                                    widgetDeepLinkJob.cancel()
+                                    eventHandler.navigateAction = {}
+                                    eventHandler.toggleNavigationBarAction = {}
+                                    eventHandler.navigateUpAction = {}
+                                    eventHandler.setFollowThemeAction = {}
+                                }
+                            }
+                        }
+                        LaunchedEffect(darkTheme, systemBarFollowThemeState.value) {
+                            enableEdgeToEdge(
+                                statusBarStyle = SystemBarStyle.auto(
+                                    Color.TRANSPARENT,
+                                    Color.TRANSPARENT,
+                                ) { darkTheme || !systemBarFollowThemeState.value },
+                                navigationBarStyle = SystemBarStyle.auto(
+                                    Color.TRANSPARENT,
+                                    Color.TRANSPARENT,
+                                ) { darkTheme || !systemBarFollowThemeState.value }
+                            )
+                        }
+                        val scrollToTopController = remember { ScrollToTopController() }
+                        CompositionLocalProvider(
+                            LocalHazeState provides hazeState,
+                            LocalScrollToTop provides scrollToTopController,
+                            LocalMediaViewerOverlayController provides mediaViewerOverlayController,
+                            LocalHazeBlurStyle provides HazeMaterials.regular(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+                            ).then { blurEnabled(allowBlur) },
+                            LocalHazeGlassEnabled provides (allowBlur && allowGlass)
+                        ) {
+                            SetupMediaProviders(
+                                eventHandler = eventHandler,
+                                mediaDistributor = mediaDistributor,
+                                mediaHandler = mediaHandler,
+                                mediaSelector = mediaSelector
+                            ) {
+                                Scaffold(
+                                    modifier = Modifier.fillMaxSize(),
+                                    content = { paddingValues ->
+                                        AppBarContainer(
+                                            navController = navController,
+                                            paddingValues = paddingValues,
+                                            bottomBarState = bottomBarState.value,
+                                            isScrolling = isScrolling.value,
+                                            overlayVisible = appOverlayVisible,
+                                            overlayContent = { sharedTransitionScope, animatedVisibilityScope, dismissBridge ->
+                                                // One call site per overlay content type so the
+                                                // composition (and each viewer's ViewerDismissState)
+                                                // survives the active → retained hand-off while the
+                                                // return-to-origin animation and the exit fade run.
+                                                val mediaRoute = mediaViewerOverlayController.route
+                                                    ?: mediaViewerOverlayController.retainedRoute
+                                                val snapshot = storyViewerSnapshot
+                                                    ?: retainedStoryViewerSnapshot.value
+                                                if (mediaRoute != null && storyViewerSnapshot == null) {
+                                                    MediaViewerOverlayHost(
+                                                        route = mediaRoute,
+                                                        controller = mediaViewerOverlayController,
+                                                        navController = navController,
+                                                        paddingValues = paddingValues,
+                                                        allowBlur = allowBlur,
+                                                        toggleRotate = ::toggleOrientation,
+                                                        sharedTransitionScope = sharedTransitionScope,
+                                                        animatedVisibilityScope = animatedVisibilityScope,
+                                                        dismissBridge = dismissBridge,
+                                                    )
+                                                } else if (snapshot != null) {
+                                                    val metadata by storyCardsViewModel.metadataFlow
+                                                        .collectAsStateWithLifecycle()
+                                                    val metadataMap = remember(metadata) {
+                                                        metadata.associateBy { it.mediaId }
+                                                    }
+                                                    StoryViewerScreen(
+                                                        cards = snapshot.cards,
+                                                        initialCardId = snapshot.initialCardId,
+                                                        metadataMap = metadataMap,
+                                                        onEnsureMetadata = storyCardsViewModel::ensureMetadataAvailable,
+                                                        onDismiss = storyCardsViewModel::clearViewerSnapshot,
+                                                        sharedTransitionScope = sharedTransitionScope,
+                                                        animatedVisibilityScope = animatedVisibilityScope,
+                                                        sessionKey = storyViewerOpenCount,
+                                                        dismissBridge = dismissBridge,
+                                                    )
+                                                }
+                                            },
+                                        ) { sharedTransitionScope ->
+                                            NavigationComp(
+                                                navController = navController,
+                                                sharedTransitionScope = sharedTransitionScope,
+                                                paddingValues = paddingValues,
+                                                bottomBarState = bottomBarState,
+                                                systemBarFollowThemeState = systemBarFollowThemeState,
+                                                toggleRotate = ::toggleOrientation,
+                                                isScrolling = isScrolling,
+                                                storyCardsViewModel = storyCardsViewModel,
+                                                initialStartDestination = initialStartDestination
+                                            )
+                                            CrashReportPrompt()
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+                    }
+                }
+            }
+            startupContentInstalled = true
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        // singleTop: a widget tap while the app is running lands here, not onCreate.
+        setIntent(intent)
+        consumeWidgetDeepLink(intent)
+    }
+
+    private fun consumeWidgetDeepLink(intent: Intent?) {
+        val mediaId = intent?.getLongExtra(WidgetDeepLink.EXTRA_WIDGET_MEDIA_ID, -1L) ?: -1L
+        if (mediaId != -1L) {
+            widgetMediaDeepLink.value = mediaId
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // Phase 1 (#1076): flush bounded thumbnail telemetry when backgrounding so a scroll/soak
+        // session's latency + cache-source distribution can be read from logcat (staging/debug only).
+        ThumbnailTelemetry.logDump()
+        // #1276: disk-cache occupancy + persistent-thumbnail-store counters alongside the dump.
+        ThumbnailTelemetry.logStorageStats(this)
+    }
+
+    private fun enforceSecureFlag() {
+        lifecycleScope.launch {
+            getSecureMode(this@MainActivity).collectLatest { enabled ->
+                if (enabled) {
+                    window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                } else {
+                    window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                }
+            }
+        }
+    }
+
+}

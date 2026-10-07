@@ -13,6 +13,7 @@ api.properties
 /.vscode
 /.windsurf
 /.devin
+/.claude
 AGENTS.md
 CONTEXT.md
 **/build
@@ -28,11 +29,15 @@ skills-lock.json
 .agents/
 yolo_vs_sam/
 
-ml-models/segment/
+app/ml-models-pack/segment/
 
-# >>> ml-models split (managed)
-ml-models/src/main/assets/arcface.onnx
+# >>> ml-models split (managed) — reassembled at build time, do not commit
+app/ml-models-pack/src/main/assets/arcface.onnx
 # <<< ml-models split (managed)
 
 /scripts/native/sources/
 /testing
+
+# docs-capture generated frames
+/docs-out/
+app/commonApp/src/androidDeviceTest/assets/com.dot.gallery.data.InternalDatabase

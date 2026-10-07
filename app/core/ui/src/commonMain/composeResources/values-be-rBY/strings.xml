@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cutout_save_choice_title">Захаваць выразку як</string>
+    <string name="cutout_save_transparent_png">Празрысты PNG</string>
+    <string name="cutout_save_flatten_white">Разраўнаваць па бел</string>
+    <string name="cutout_save_flatten_black">Разраўнаваць па чорным</string>
+    <string name="overwrite_unavailable_title">Немагчыма перазапісаць гэты фармат</string>
+    <string name="overwrite_unavailable_summary">Гэты фармат выявы не можа быць перакадзіраваны на вашай прыладзе, таму арыгінал нельга перазапісаць. Замест гэтага будзе створана новая копія PNG.</string>
+    <string name="overwrite_unavailable_create_copy">Стварыць копію</string>
+    <string name="copied_to_clipboard">Copied to clipboard</string>
+    <string name="error_copying_to_clipboard">Failed to copy to clipboard</string>
+    <string name="cutout_copy_failed">Не ўдалося скапіраваць выразаны аб'ект</string>
+    <string name="cutout_share_failed">Не ўдалося абагуліць выразаны аб'ект</string>
+    <string name="cutout_save_failed">Не ўдалося захаваць выразаны аб'ект</string>
+    <string name="cutout_saved">Выраз захаваны ў Фотаздымкі/Выразы</string>
+</resources>

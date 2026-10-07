@@ -1,0 +1,166 @@
+/*
+ * SPDX-FileCopyrightText: 2023-2026 IacobIacob01
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package com.dot.gallery.cloud.webdav.data.api
+
+import okhttp3.Credentials
+import okhttp3.FormBody
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import org.xml.sax.InputSource
+import java.io.StringReader
+import javax.xml.parsers.DocumentBuilderFactory
+import com.dot.gallery.core.presentation.util.add
+import com.dot.gallery.domain.uri.path
+
+
+data class OcsShareInfo(
+    val id: String,
+    val url: String,
+    val token: String = "",
+    val path: String = "",
+    val permissions: Int = 1
+)
+
+data class OcsCapabilities(
+    val version: String = "",
+    val versionString: String = "",
+    val edition: String = ""
+)
+
+data class OcsUserInfo(
+    val id: String = "",
+    val email: String = "",
+    val displayName: String = "",
+    val quota: OcsQuota = OcsQuota()
+)
+
+data class OcsQuota(
+    val used: Long = 0L,
+    val total: Long = 0L,
+    val free: Long = 0L
+)
+
+/**
+ * OCS API client for ownCloud / Nextcloud (`/ocs/v2.php`). Used by their dialects
+ * for capabilities, user/quota info and public share creation. Generic WebDAV
+ * servers do not expose OCS and simply never construct this.
+ */
+class OcsApiClient(
+    private val okHttpClient: OkHttpClient,
+    baseUrl: String,
+    private val username: String,
+    private val password: String
+) {
+    private val credentials = Credentials.basic(username, password)
+    private val apiBase = "${baseUrl.trimEnd('/')}/ocs/v2.php"
+
+    fun getCapabilities(): OcsCapabilities =
+        okHttpClient.newCall(buildOcsRequest("$apiBase/cloud/capabilities")).execute().use { response ->
+            if (!response.isSuccessful) throw Exception("OCS capabilities failed: ${response.code}")
+            parseCapabilities(response.body.string())
+        }
+
+    fun getCurrentUser(): OcsUserInfo =
+        okHttpClient.newCall(buildOcsRequest("$apiBase/cloud/user")).execute().use { response ->
+            if (!response.isSuccessful) throw Exception("OCS user info failed: ${response.code}")
+            parseUserInfo(response.body.string())
+        }
+
+    fun createPublicShare(
+        path: String,
+        permissions: Int = 1, // 1=read
+        expirationDate: String? = null
+    ): OcsShareInfo {
+        val bodyBuilder = FormBody.Builder()
+            .add("shareType", "3") // public link
+            .add("path", path)
+            .add("permissions", permissions.toString())
+        expirationDate?.let { bodyBuilder.add("expireDate", it) }
+
+        val request = Request.Builder()
+            .url("$apiBase/apps/files_sharing/api/v1/shares")
+            .post(bodyBuilder.build())
+            .header("Authorization", credentials)
+            .header("OCS-APIREQUEST", "true")
+            .header("Accept", "application/xml")
+            .build()
+        return okHttpClient.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) throw Exception("Create share failed: ${response.code}")
+            parseShareResponse(response.body.string())
+        }
+    }
+
+    private fun buildOcsRequest(url: String): Request = Request.Builder()
+        .url(url)
+        .get()
+        .header("Authorization", credentials)
+        .header("OCS-APIREQUEST", "true")
+        .header("Accept", "application/xml")
+        .build()
+
+    private fun parseCapabilities(xml: String): OcsCapabilities {
+        val doc = parseXml(xml) ?: return OcsCapabilities()
+        val version = doc.getElementsByTagName("version")
+        if (version.length > 0) {
+            val versionEl = version.item(0) as? org.w3c.dom.Element
+            return OcsCapabilities(
+                version = getEl(versionEl, "string") ?: "",
+                versionString = getEl(versionEl, "string") ?: "",
+                edition = getEl(versionEl, "edition") ?: ""
+            )
+        }
+        return OcsCapabilities()
+    }
+
+    private fun parseUserInfo(xml: String): OcsUserInfo {
+        val doc = parseXml(xml) ?: return OcsUserInfo()
+        val data = doc.getElementsByTagName("data")
+        if (data.length > 0) {
+            val dataEl = data.item(0) as? org.w3c.dom.Element
+            val quotaEl = dataEl?.getElementsByTagName("quota")?.item(0) as? org.w3c.dom.Element
+            return OcsUserInfo(
+                id = getEl(dataEl, "id") ?: "",
+                email = getEl(dataEl, "email") ?: "",
+                displayName = getEl(dataEl, "display-name") ?: getEl(dataEl, "displayname") ?: "",
+                quota = OcsQuota(
+                    used = getEl(quotaEl, "used")?.toLongOrNull() ?: 0L,
+                    total = getEl(quotaEl, "total")?.toLongOrNull() ?: 0L,
+                    free = getEl(quotaEl, "free")?.toLongOrNull() ?: 0L
+                )
+            )
+        }
+        return OcsUserInfo()
+    }
+
+    private fun parseShareResponse(xml: String): OcsShareInfo {
+        val doc = parseXml(xml) ?: return OcsShareInfo(id = "", url = "")
+        val data = doc.getElementsByTagName("data")
+        if (data.length > 0) {
+            val dataEl = data.item(0) as? org.w3c.dom.Element
+            return OcsShareInfo(
+                id = getEl(dataEl, "id") ?: "",
+                url = getEl(dataEl, "url") ?: "",
+                token = getEl(dataEl, "token") ?: "",
+                path = getEl(dataEl, "path") ?: "",
+                permissions = getEl(dataEl, "permissions")?.toIntOrNull() ?: 1
+            )
+        }
+        return OcsShareInfo(id = "", url = "")
+    }
+
+    private fun parseXml(xml: String): org.w3c.dom.Document? = try {
+        DocumentBuilderFactory.newInstance().newDocumentBuilder()
+            .parse(InputSource(StringReader(xml)))
+    } catch (_: Exception) {
+        null
+    }
+
+    private fun getEl(parent: org.w3c.dom.Element?, tagName: String): String? {
+        parent ?: return null
+        val nodes = parent.getElementsByTagName(tagName)
+        return if (nodes.length > 0) nodes.item(0).textContent else null
+    }
+}

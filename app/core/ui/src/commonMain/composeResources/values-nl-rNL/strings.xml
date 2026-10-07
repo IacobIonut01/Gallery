@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cutout_save_choice_title">Uitsnede opslaan als</string>
+    <string name="cutout_save_transparent_png">Transparante PNG</string>
+    <string name="cutout_save_flatten_white">Plat op wit</string>
+    <string name="cutout_save_flatten_black">Plat op zwart</string>
+    <string name="overwrite_unavailable_title">Kan dit formaat niet overschrijven</string>
+    <string name="overwrite_unavailable_summary">Dit afbeeldingsformaat kan niet opnieuw worden gecodeerd op uw apparaat, dus het origineel kan niet worden overschreven. In plaats daarvan wordt een nieuwe PNG-kopie gemaakt.</string>
+    <string name="overwrite_unavailable_create_copy">Kopie maken</string>
+    <string name="copied_to_clipboard">Copied to clipboard</string>
+    <string name="error_copying_to_clipboard">Failed to copy to clipboard</string>
+    <string name="cutout_copy_failed">Kan uitgesneden object niet kopiëren</string>
+    <string name="cutout_share_failed">Kan uitgesneden object niet delen</string>
+    <string name="cutout_save_failed">Kan uitgesneden object niet opslaan</string>
+    <string name="cutout_saved">Knipsel opgeslagen in afbeeldingen/knipsels</string>
+</resources>

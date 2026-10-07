@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cutout_save_choice_title">Save cutout as</string>
+    <string name="cutout_save_transparent_png">Transparent PNG</string>
+    <string name="cutout_save_flatten_white">Flatten on white</string>
+    <string name="cutout_save_flatten_black">Flatten on black</string>
+    <string name="overwrite_unavailable_title">Can't overwrite this format</string>
+    <string name="overwrite_unavailable_summary">This image format can't be re-encoded on your device, so the original can't be overwritten. A new PNG copy will be created instead.</string>
+    <string name="overwrite_unavailable_create_copy">Create copy</string>
+    <string name="copied_to_clipboard">Copied to clipboard</string>
+    <string name="error_copying_to_clipboard">Failed to copy to clipboard</string>
+    <string name="cutout_copy_failed">Failed to copy cutout object</string>
+    <string name="cutout_share_failed">Failed to share cutout object</string>
+    <string name="cutout_save_failed">Failed to save cutout object</string>
+    <string name="cutout_saved">Saved cutout to Pictures/Cutouts</string>
+</resources>

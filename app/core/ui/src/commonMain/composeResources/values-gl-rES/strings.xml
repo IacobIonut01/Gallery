@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cutout_save_choice_title">Gardar recorte como</string>
+    <string name="cutout_save_transparent_png">PNG transparente</string>
+    <string name="cutout_save_flatten_white">Aplanar sobre branco</string>
+    <string name="cutout_save_flatten_black">Aplanar sobre negro</string>
+    <string name="overwrite_unavailable_title">Non se pode sobrescribir este formato</string>
+    <string name="overwrite_unavailable_summary">Este formato de imaxe non se pode re-codificar no teu dispositivo, polo que non se pode sobrescribir o orixinal. En cambio, crearase unha nova copia en PNG.</string>
+    <string name="overwrite_unavailable_create_copy">Crear copia</string>
+    <string name="copied_to_clipboard">Copied to clipboard</string>
+    <string name="error_copying_to_clipboard">Failed to copy to clipboard</string>
+    <string name="cutout_copy_failed">Fallou ao copiar o obxecto de recorte</string>
+    <string name="cutout_share_failed">Fallou ao compartir o obxecto de recorte</string>
+    <string name="cutout_save_failed">Fallou ao gardar o obxecto de recorte</string>
+    <string name="cutout_saved">Recorte gardado en Imaxes/Recortes</string>
+</resources>

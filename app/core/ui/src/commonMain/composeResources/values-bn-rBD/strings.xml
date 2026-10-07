@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cutout_save_choice_title">কাটআউট হিসাবে সংরক্ষণ করুন</string>
+    <string name="cutout_save_transparent_png">স্বচ্ছ PNG</string>
+    <string name="cutout_save_flatten_white">সাদা উপর চ্যাপ্টা</string>
+    <string name="cutout_save_flatten_black">কালো উপর চ্যাপ্টা</string>
+    <string name="overwrite_unavailable_title">এই বিন্যাসটি ওভাররাইট করা যাবে না</string>
+    <string name="overwrite_unavailable_summary">এই চিত্র বিন্যাসটি আপনার ডিভাইসে পুনরায় এনকোড করা যাবে না, তাই আসলটি ওভাররাইট করা যাবে না। পরিবর্তে একটি নতুন PNG কপি তৈরি করা হবে।</string>
+    <string name="overwrite_unavailable_create_copy">কপি তৈরি করুন</string>
+    <string name="copied_to_clipboard">Copied to clipboard</string>
+    <string name="error_copying_to_clipboard">Failed to copy to clipboard</string>
+    <string name="cutout_copy_failed">কাটআউট বস্তু অনুলিপি করতে ব্যর্থ হয়েছে</string>
+    <string name="cutout_share_failed">কাটআউট বস্তু শেয়ার করতে ব্যর্থ হয়েছে</string>
+    <string name="cutout_save_failed">কাটআউট বস্তু সংরক্ষণ করতে ব্যর্থ হয়েছে</string>
+    <string name="cutout_saved">ছবি/কাটআউটে কাটআউট সংরক্ষিত</string>
+</resources>

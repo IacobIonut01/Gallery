@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cutout_save_choice_title">Išsaugoti išpjovą kaip</string>
+    <string name="cutout_save_transparent_png">Skaidrus PNG</string>
+    <string name="cutout_save_flatten_white">Išlyginti ant balto</string>
+    <string name="cutout_save_flatten_black">Išlyginti ant juodos spalvos</string>
+    <string name="overwrite_unavailable_title">Negalima perrašyti šio formato</string>
+    <string name="overwrite_unavailable_summary">Šio vaizdo formato negalima iš naujo užkoduoti įrenginyje, todėl originalo negalima perrašyti. Vietoj to bus sukurta nauja PNG kopija.</string>
+    <string name="overwrite_unavailable_create_copy">Sukurti kopiją</string>
+    <string name="copied_to_clipboard">Copied to clipboard</string>
+    <string name="error_copying_to_clipboard">Failed to copy to clipboard</string>
+    <string name="cutout_copy_failed">Nepavyko nukopijuoti iškirpto objekto</string>
+    <string name="cutout_share_failed">Nepavyko bendrinti iškirpto objekto</string>
+    <string name="cutout_save_failed">Nepavyko išsaugoti iškirpto objekto</string>
+    <string name="cutout_saved">Išsaugotas iškirpimas paveikslėliuose / iškarpose</string>
+</resources>

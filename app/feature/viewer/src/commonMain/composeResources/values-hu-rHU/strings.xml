@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="location">Location</string>
+    <string name="pause_video">Videó szüneteltetése</string>
+    <string name="play_video">Videó lejátszása</string>
+    <string name="close">Bezárás</string>
+    <string name="rotate_screen_cd">Képernyő elforgatása</string>
+    <string name="toggle_audio_cd">Toggle audio</string>
+    <string name="auto">Auto</string>
+    <string name="change_playback_speed_cd">Change playback speed</string>
+    <string name="change_subtitle_track_cd">Change subtitle track</string>
+    <string name="more_options_cd">More options</string>
+    <string name="rotate">Rotate</string>
+    <string name="decrypt_failed_tap_to_retry">Decrypt failed. Tap to retry.</string>
+    <string name="media_load_failed_tap_to_retry">Nem sikerült betölteni ezt a médiát. Koppintson az újrapróbálkozáshoz.</string>
+    <string name="frame_picker_shots_heading">Képek ebben a fotóban</string>
+    <string name="cutout_no_object">Nem észlelhető objektum a hosszan nyomás alatt</string>
+    <string name="cutout_init_failed">A kivágó motor inicializálása sikertelen</string>
+    <string name="cutout_refining">Kivágás finomítása…</string>
+    <string name="cutout_include">Belefoglal</string>
+    <string name="cutout_exclude">Kizár</string>
+    <string name="cutout_undo">Visszavonás</string>
+    <string name="cutout_redo">Újra</string>
+    <string name="cutout_reset">Visszaállítás</string>
+    <string name="cutout_close">Kivágás bezárása</string>
+    <string name="cutout_copy">Másolás</string>
+    <string name="cutout_share">Megosztás</string>
+    <string name="cutout_save">Mentés</string>
+</resources>

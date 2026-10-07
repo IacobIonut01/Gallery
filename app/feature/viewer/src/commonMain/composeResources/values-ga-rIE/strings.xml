@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="location">Location</string>
+    <string name="pause_video">Pause video</string>
+    <string name="play_video">Play video</string>
+    <string name="close">Close</string>
+    <string name="rotate_screen_cd">Rotate Screen</string>
+    <string name="toggle_audio_cd">Toggle audio</string>
+    <string name="auto">Auto</string>
+    <string name="change_playback_speed_cd">Change playback speed</string>
+    <string name="change_subtitle_track_cd">Change subtitle track</string>
+    <string name="more_options_cd">More options</string>
+    <string name="rotate">Rotate</string>
+    <string name="decrypt_failed_tap_to_retry">Decrypt failed. Tap to retry.</string>
+    <string name="media_load_failed_tap_to_retry">Níorbh fhéidir na meáin seo a lódáil. Tapáil chun triail eile a bhaint as.</string>
+    <string name="frame_picker_shots_heading">Scannáin sa ghrianghraf seo</string>
+    <string name="cutout_no_object">Níor aimsíodh aon réad faoin bhrú fada</string>
+    <string name="cutout_init_failed">Theip ar thosú innill gearradh amach</string>
+    <string name="cutout_refining">Ag réiteach gearradh amach…</string>
+    <string name="cutout_include">Cuir san áireamh</string>
+    <string name="cutout_exclude">Bain amach</string>
+    <string name="cutout_undo">Cealaigh</string>
+    <string name="cutout_redo">Athdhéan</string>
+    <string name="cutout_reset">Athshocraigh</string>
+    <string name="cutout_close">Dún gearradh amach</string>
+    <string name="cutout_copy">Cóipeáil</string>
+    <string name="cutout_share">Comhroinn</string>
+    <string name="cutout_save">Sábháil</string>
+</resources>

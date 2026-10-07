@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cutout_save_choice_title">حفظ انقطاع باسم</string>
+    <string name="cutout_save_transparent_png">شفافة بابوا نيو غينيا</string>
+    <string name="cutout_save_flatten_white">تتسطح على الأبيض</string>
+    <string name="cutout_save_flatten_black">تتسطح على الأسود</string>
+    <string name="overwrite_unavailable_title">لا يمكن الكتابة فوق هذا التنسيق</string>
+    <string name="overwrite_unavailable_summary">لا يمكن إعادة ترميز تنسيق الصورة هذا على جهازك، لذا لا يمكن الكتابة فوق التنسيق الأصلي. سيتم إنشاء نسخة PNG جديدة بدلاً من ذلك.</string>
+    <string name="overwrite_unavailable_create_copy">إنشاء نسخة</string>
+    <string name="copied_to_clipboard">نُسخ إلى الحافظة</string>
+    <string name="error_copying_to_clipboard">تعذّر النسخ إلى الحافظة</string>
+    <string name="cutout_copy_failed">فشل في نسخ الكائن المقطوع</string>
+    <string name="cutout_share_failed">فشلت مشاركة الكائن المقطوع</string>
+    <string name="cutout_save_failed">فشل حفظ الكائن المقطوع</string>
+    <string name="cutout_saved">انقطاع المحفوظة للصور / القواطع</string>
+</resources>

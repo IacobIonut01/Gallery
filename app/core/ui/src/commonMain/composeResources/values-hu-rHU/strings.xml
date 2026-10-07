@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cutout_save_choice_title">Kivágás mentése másként</string>
+    <string name="cutout_save_transparent_png">Átlátszó PNG</string>
+    <string name="cutout_save_flatten_white">Fehérre lapítva</string>
+    <string name="cutout_save_flatten_black">Feketébe lapítva</string>
+    <string name="overwrite_unavailable_title">Nem lehet felülírni ezt a formátumot</string>
+    <string name="overwrite_unavailable_summary">Ezt a képformátumot nem lehet újra kódolni az eszközön, ezért az eredeti nem írható felül. Helyette egy új PNG másolat jön létre.</string>
+    <string name="overwrite_unavailable_create_copy">Másolat létrehozása</string>
+    <string name="copied_to_clipboard">Vágólapra másolva</string>
+    <string name="error_copying_to_clipboard">Nem sikerült a vágólapra másolni</string>
+    <string name="cutout_copy_failed">A kivágott objektum másolása sikertelen</string>
+    <string name="cutout_share_failed">A kivágott objektum megosztása sikertelen</string>
+    <string name="cutout_save_failed">A kivágott objektum mentése sikertelen</string>
+    <string name="cutout_saved">Kivágott mentve a Képek/Kivágások mappába</string>
+</resources>

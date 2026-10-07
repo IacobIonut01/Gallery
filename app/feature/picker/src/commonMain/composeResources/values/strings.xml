@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="timeline">Timeline</string>
+    <string name="albums">Albums</string>
+    <string name="navigate_up">Navigate up</string>
+    <string name="preview">Preview</string>
+    <string name="close">Close</string>
+    <string name="security_private_folder">Private folder</string>
+    <string name="cloud">Cloud</string>
+    <string name="vault">Vault</string>
+    <string name="action_add">Add</string>
+    <string name="action_add_count">Add (%1$d)</string>
+    <string name="action_ok">OK</string>
+    <string name="add_media">Add media</string>
+    <string name="picker_preparing">Preparing %1$d of %2$d…</string>
+    <string name="picker_preparing_generic">Preparing…</string>
+    <string name="picker_prepare_failed">Some items could not be prepared</string>
+    <string name="locked">Locked</string>
+    <string name="locked_album_security_error">Please set up a phone security measure (PIN, pattern, password or biometrics) before locking or unlocking albums.</string>
+    <string name="header_today">Today</string>
+    <string name="header_yesterday">Yesterday</string>
+</resources>

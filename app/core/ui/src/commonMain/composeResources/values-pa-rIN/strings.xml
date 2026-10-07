@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cutout_save_choice_title">ਕੱਟਿਆ ਹੋਇਆ ਇਹਨਾਂ ਦੇ ਤੌਰ 'ਤੇ ਸੇਵ ਕਰੋ</string>
+    <string name="cutout_save_transparent_png">ਪਾਰਦਰਸ਼ੀ PNG</string>
+    <string name="cutout_save_flatten_white">ਸਫ਼ੇਦ 'ਤੇ ਪਤਲਾ</string>
+    <string name="cutout_save_flatten_black">ਕਾਲੇ 'ਤੇ ਪਤਲਾ</string>
+    <string name="overwrite_unavailable_title">ਇਸ ਫਾਰਮੈਟ ਨੂੰ ਓਵਰਰਾਈਟ ਨਹੀਂ ਕੀਤਾ ਜਾ ਸਕਦਾ</string>
+    <string name="overwrite_unavailable_summary">ਇਸ ਇਮੇਜ ਫਾਰਮੈਟ ਨੂੰ ਤੁਹਾਡੇ ਡਿਵਾਈਸ 'ਤੇ ਮੁੜ-ਕੋਡ ਨਹੀਂ ਕੀਤਾ ਜਾ ਸਕਦਾ, ਇਸ ਲਈ ਮੂਲ ਨੂੰ ਓਵਰਰਾਈਟ ਨਹੀਂ ਕੀਤਾ ਜਾ ਸਕਦਾ। ਇਸ ਦੀ ਬਜਾਏ ਨਵੀਂ PNG ਕਾਪੀ ਬਣਾਈ ਜਾਵੇਗੀ।</string>
+    <string name="overwrite_unavailable_create_copy">ਕਾਪੀ ਬਣਾਓ</string>
+    <string name="copied_to_clipboard">Copied to clipboard</string>
+    <string name="error_copying_to_clipboard">Failed to copy to clipboard</string>
+    <string name="cutout_copy_failed">ਕੱਟਆਉਟ ਵਸਤੂ ਕਾਪੀ ਕਰਨ ਵਿੱਚ ਅਸਫਲ</string>
+    <string name="cutout_share_failed">ਕੱਟਆਉਟ ਵਸਤੂ ਸਾਂਝਾ ਕਰਨ ਵਿੱਚ ਅਸਫਲ</string>
+    <string name="cutout_save_failed">ਕੱਟਆਉਟ ਵਸਤੂ ਸੇਵ ਕਰਨ ਵਿੱਚ ਅਸਫਲ</string>
+    <string name="cutout_saved">ਕੱਟਿਆ ਹੋਇਆ ਹਿੱਸਾ ਸੇਵ ਕੀਤਾ Pictures/Cutouts ਵਿੱਚ</string>
+</resources>

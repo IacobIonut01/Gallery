@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="location">Путь</string>
+    <string name="pause_video">Пауза</string>
+    <string name="play_video">Воспроизвести</string>
+    <string name="close">Закрыть</string>
+    <string name="rotate_screen_cd">Повернуть экран</string>
+    <string name="toggle_audio_cd">Переключение звука</string>
+    <string name="auto">Авто</string>
+    <string name="change_playback_speed_cd">Изменение скорости воспроизведения</string>
+    <string name="change_subtitle_track_cd">Change subtitle track</string>
+    <string name="more_options_cd">More options</string>
+    <string name="rotate">Повернуть</string>
+    <string name="decrypt_failed_tap_to_retry">Расшифровка не удалась. Нажмите, чтобы повторить.</string>
+    <string name="media_load_failed_tap_to_retry">Не удалось загрузить этот медиафайл. Нажмите, чтобы повторить попытку.</string>
+    <string name="frame_picker_shots_heading">Снимки на этом фото</string>
+    <string name="cutout_no_object">Объект под длительным нажатием не обнаружен</string>
+    <string name="cutout_init_failed">Не удалось инициализировать движок вырезок</string>
+    <string name="cutout_refining">Уточнение вырезки…</string>
+    <string name="cutout_include">Включить</string>
+    <string name="cutout_exclude">Исключить</string>
+    <string name="cutout_undo">Отменить</string>
+    <string name="cutout_redo">Повторить</string>
+    <string name="cutout_reset">Сбросить</string>
+    <string name="cutout_close">Закрыть вырезку</string>
+    <string name="cutout_copy">Копировать</string>
+    <string name="cutout_share">Поделиться</string>
+    <string name="cutout_save">Сохранить</string>
+</resources>

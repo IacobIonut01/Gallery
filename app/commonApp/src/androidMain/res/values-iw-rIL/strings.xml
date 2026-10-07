@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Manifest/widget/XML-referenced strings. UI strings live in commonMain/composeResources. -->
+<resources>
+    <string name="app_name">ReFra</string>
+    <string name="app_name_gallery">גלריה</string>
+    <string name="location_cd">מיקום המדיה</string>
+    <string name="set_wallpaper">טפט</string>
+    <string name="widget_single_label">תמונה בודדת</string>
+    <string name="widget_single_description">הצגת תמונה אחת במסך הבית</string>
+    <string name="widget_grid_label">רשת תמונות</string>
+    <string name="widget_grid_description">הצגת רשת תמונות במסך הבית (2×2, 4×4 או 6×6 בהתאם לגודל)</string>
+    <string name="editor_crop">Crop</string>
+</resources>

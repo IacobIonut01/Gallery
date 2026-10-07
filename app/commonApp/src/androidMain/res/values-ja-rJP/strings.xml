@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Manifest/widget/XML-referenced strings. UI strings live in commonMain/composeResources. -->
+<resources>
+    <string name="app_name">ReFra</string>
+    <string name="app_name_gallery">ギャラリー</string>
+    <string name="location_cd">メディアの位置情報</string>
+    <string name="set_wallpaper">壁紙</string>
+    <string name="widget_single_label">一枚の写真</string>
+    <string name="widget_single_description">ホーム画面に一枚の写真を表示する</string>
+    <string name="widget_grid_label">フォトグリッド</string>
+    <string name="widget_grid_description">ホーム画面に写真のグリッドを表示します (サイズによって2×2、4×4、6×6)</string>
+    <string name="editor_crop">Crop</string>
+</resources>

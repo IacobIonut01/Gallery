@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cutout_save_choice_title">Spara utskuret som</string>
+    <string name="cutout_save_transparent_png">Transparent PNG</string>
+    <string name="cutout_save_flatten_white">Platta på vit</string>
+    <string name="cutout_save_flatten_black">Platta på svart</string>
+    <string name="overwrite_unavailable_title">Kan inte skriva över detta format</string>
+    <string name="overwrite_unavailable_summary">Detta bildformat kan inte kodas om på din enhet, så originalet kan inte skrivas över. En ny PNG-kopia kommer istället att skapas.</string>
+    <string name="overwrite_unavailable_create_copy">Skapa kopia</string>
+    <string name="copied_to_clipboard">Copied to clipboard</string>
+    <string name="error_copying_to_clipboard">Failed to copy to clipboard</string>
+    <string name="cutout_copy_failed">Misslyckades med att kopiera utskärningsobjekt</string>
+    <string name="cutout_share_failed">Misslyckades med att dela utskärningsobjekt</string>
+    <string name="cutout_save_failed">Misslyckades med att spara utskärningsobjekt</string>
+    <string name="cutout_saved">Sparade utskuret till Bilder/Utskärningar</string>
+</resources>

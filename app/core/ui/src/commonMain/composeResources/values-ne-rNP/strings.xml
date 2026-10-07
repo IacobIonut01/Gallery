@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cutout_save_choice_title">यस रूपमा कटआउट बचत गर्नुहोस्</string>
+    <string name="cutout_save_transparent_png">पारदर्शी PNG</string>
+    <string name="cutout_save_flatten_white">सेतोमा समतल</string>
+    <string name="cutout_save_flatten_black">कालोमा समतल</string>
+    <string name="overwrite_unavailable_title">यो ढाँचा अधिलेखन गर्न सकिँदैन</string>
+    <string name="overwrite_unavailable_summary">यो छवि ढाँचा तपाईंको उपकरणमा पुन: इन्कोड गर्न सकिँदैन, त्यसैले मूल ओभरराइट गर्न सकिँदैन। यसको सट्टामा नयाँ PNG प्रतिलिपि बनाइनेछ।</string>
+    <string name="overwrite_unavailable_create_copy">प्रतिलिपि बनाउनुहोस्</string>
+    <string name="copied_to_clipboard">Copied to clipboard</string>
+    <string name="error_copying_to_clipboard">Failed to copy to clipboard</string>
+    <string name="cutout_copy_failed">कटआउट वस्तु प्रतिलिपि गर्न असफल भयो</string>
+    <string name="cutout_share_failed">कटआउट वस्तु साझेदारी गर्न असफल भयो</string>
+    <string name="cutout_save_failed">कटआउट वस्तु बचत गर्न असफल भयो</string>
+    <string name="cutout_saved">फोटो/कटआउटहरूमा कटआउट सुरक्षित गरियो</string>
+</resources>

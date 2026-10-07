@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="delete_scope_backed_up_info">
+        <item quantity="one">%1$d item is on your device and in the cloud</item>
+        <item quantity="other">%1$d items are on your device and in the cloud</item>
+    </plurals>
+</resources>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cutout_save_choice_title">Zapisz wycięcie jako</string>
+    <string name="cutout_save_transparent_png">Przezroczyste PNG</string>
+    <string name="cutout_save_flatten_white">Scal na białym tle</string>
+    <string name="cutout_save_flatten_black">Scal na czarnym tle</string>
+    <string name="overwrite_unavailable_title">Nie można nadpisać tego formatu</string>
+    <string name="overwrite_unavailable_summary">Ten format obrazu nie może być ponownie zakodowany na Twoim urządzeniu, więc oryginał nie może zostać nadpisany. Zamiast tego zostanie utworzona nowa kopia PNG.</string>
+    <string name="overwrite_unavailable_create_copy">Utwórz kopię</string>
+    <string name="copied_to_clipboard">Skopiowane do schowka</string>
+    <string name="error_copying_to_clipboard">Kopiowanie do schowka nie powiodło się</string>
+    <string name="cutout_copy_failed">Nie udało się skopiować obiektu wycięcia</string>
+    <string name="cutout_share_failed">Nie udało się udostępnić obiektu wycięcia</string>
+    <string name="cutout_save_failed">Nie udało się zapisać obiektu wycięcia</string>
+    <string name="cutout_saved">Zapisano wycięcie w folderze Obrazy/Wycięcia</string>
+</resources>

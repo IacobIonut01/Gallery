@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="location">Location</string>
+    <string name="pause_video">Pause video</string>
+    <string name="play_video">Play video</string>
+    <string name="close">Close</string>
+    <string name="rotate_screen_cd">Rotate Screen</string>
+    <string name="toggle_audio_cd">Toggle audio</string>
+    <string name="auto">Auto</string>
+    <string name="change_playback_speed_cd">Change playback speed</string>
+    <string name="change_subtitle_track_cd">Change subtitle track</string>
+    <string name="more_options_cd">More options</string>
+    <string name="rotate">Rotate</string>
+    <string name="decrypt_failed_tap_to_retry">Decrypt failed. Tap to retry.</string>
+    <string name="media_load_failed_tap_to_retry">ਇਹ ਮੀਡੀਆ ਲੋਡ ਨਹੀਂ ਹੋ ਸਕਿਆ। ਮੁੜ ਕੋਸ਼ਿਸ਼ ਲਈ ਟੈਪ ਕਰੋ।</string>
+    <string name="frame_picker_shots_heading">ਇਸ ਫੋਟੋ ਵਿੱਚ ਸ਼ੋਟ</string>
+    <string name="cutout_no_object">ਲੰਬੇ ਦਬਾਅ ਹੇਠਾਂ ਕੋਈ ਵਸਤੂ ਨਹੀਂ ਮਿਲੀ</string>
+    <string name="cutout_init_failed">ਕੱਟਆਉਟ ਇੰਜਣ ਸ਼ੁਰੂ ਕਰਨ ਵਿਚ ਅਸਫਲ</string>
+    <string name="cutout_refining">ਕੱਟਿਆ ਹੋਇਆ ਹਿੱਸਾ ਸੁਧਾਰਨਾ…</string>
+    <string name="cutout_include">ਸ਼ਾਮਿਲ ਕਰੋ</string>
+    <string name="cutout_exclude">ਬਾਹਰ ਕਰੋ</string>
+    <string name="cutout_undo">ਅਣਗੋਲ ਕਰੋ</string>
+    <string name="cutout_redo">ਮੁੜ ਕਰੋ</string>
+    <string name="cutout_reset">ਰੀਸੈੱਟ ਕਰੋ</string>
+    <string name="cutout_close">ਕੱਟਿਆ ਹੋਇਆ ਬੰਦ ਕਰੋ</string>
+    <string name="cutout_copy">ਕਾਪੀ ਕਰੋ</string>
+    <string name="cutout_share">ਸਾਂਝਾ ਕਰੋ</string>
+    <string name="cutout_save">ਸੇਵ ਕਰੋ</string>
+</resources>

@@ -1,0 +1,146 @@
+/*
+ * SPDX-FileCopyrightText: 2023-2026 IacobIacob01
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package com.dot.gallery.feature.settings.ui
+
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.dp
+import com.dot.gallery.core.presentation.components.NavigationBackButton
+import com.dot.gallery.core.ui.components.settings
+import org.jetbrains.compose.resources.stringResource
+import com.dot.gallery.feature.settings.generated.resources.Res
+import com.dot.gallery.feature.settings.generated.resources.ai_category
+import com.dot.gallery.feature.settings.generated.resources.ai_models_manager
+import com.dot.gallery.feature.settings.generated.resources.categories
+import com.dot.gallery.feature.settings.generated.resources.database
+import com.dot.gallery.feature.settings.generated.resources.edit_backups
+import com.dot.gallery.feature.settings.generated.resources.edit_backups_storage
+import com.dot.gallery.feature.settings.generated.resources.edit_backups_summary
+import com.dot.gallery.feature.settings.generated.resources.smart_features_cloud_indexing_summary
+import com.dot.gallery.feature.settings.generated.resources.smart_features_cloud_section
+import com.dot.gallery.feature.settings.generated.resources.smart_features_include_ignored_albums
+import com.dot.gallery.feature.settings.generated.resources.smart_features_include_ignored_albums_scan_running
+import com.dot.gallery.feature.settings.generated.resources.smart_features_include_ignored_albums_summary
+import com.dot.gallery.feature.settings.generated.resources.smart_scan_manager_title
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SmartFeaturesScreenContent(
+    state: SmartFeaturesScreenState,
+    actions: SmartFeaturesScreenActions = SmartFeaturesScreenActions(),
+) {
+    val scrollBehavior =
+        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+
+    Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        topBar = {
+            LargeTopAppBar(
+                title = { Text(stringResource(Res.string.ai_category)) },
+                navigationIcon = { NavigationBackButton() },
+                scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.topAppBarColors(
+                    scrolledContainerColor = MaterialTheme.colorScheme.surface
+                )
+            )
+        }
+    ) { padding ->
+        // Resolve strings outside the non-composable settings{} DSL
+        val smartFeaturesHeader = stringResource(Res.string.ai_category)
+        val includeIgnoredAlbumsTitle = stringResource(Res.string.smart_features_include_ignored_albums)
+        val includeIgnoredAlbumsSummary = stringResource(
+            if (state.scanRunning) {
+                Res.string.smart_features_include_ignored_albums_scan_running
+            } else {
+                Res.string.smart_features_include_ignored_albums_summary
+            }
+        )
+        val aiModelsManagerTitle = if (state.aiAvailable) stringResource(Res.string.ai_models_manager) else ""
+        val categoriesTitle = if (state.aiAvailable) stringResource(Res.string.categories) else ""
+        val databaseHeader = stringResource(Res.string.database)
+        val scanManagerTitle = stringResource(Res.string.smart_scan_manager_title)
+        val storageHeader = stringResource(Res.string.edit_backups_storage)
+        val editBackupsTitle = stringResource(Res.string.edit_backups)
+        val editBackupsSummary = stringResource(Res.string.edit_backups_summary)
+        val cloudIndexingTitle = stringResource(Res.string.smart_features_cloud_section)
+        val cloudIndexingSummary = stringResource(Res.string.smart_features_cloud_indexing_summary)
+
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                start = padding.calculateStartPadding(LocalLayoutDirection.current),
+                end = padding.calculateEndPadding(LocalLayoutDirection.current),
+                top = 16.dp + padding.calculateTopPadding(),
+                bottom = padding.calculateBottomPadding()
+            )
+        ) {
+            settings {
+                if (state.aiAvailable) {
+                    Header(smartFeaturesHeader)
+
+                    SwitchPreference(
+                        title = includeIgnoredAlbumsTitle,
+                        summary = includeIgnoredAlbumsSummary,
+                        enabled = !state.scanRunning,
+                        isChecked = state.includeIgnoredAlbums,
+                        onCheck = actions.onIncludeIgnoredAlbumsChange
+                    )
+
+                    Preference(
+                        title = aiModelsManagerTitle,
+                        summary = state.modelSummary,
+                        onClick = actions.onOpenAiModels
+                    )
+
+                    Preference(
+                        title = categoriesTitle,
+                        summary = state.categoriesSummary,
+                        enabled = state.modelsReady,
+                        onClick = actions.onOpenCategories
+                    )
+                }
+
+                if (state.hasCloudProviders) {
+                    Preference(
+                        title = cloudIndexingTitle,
+                        summary = cloudIndexingSummary,
+                        onClick = actions.onOpenCloudIndexing
+                    )
+                }
+
+                Header(databaseHeader)
+
+                Preference(
+                    title = scanManagerTitle,
+                    summary = state.scanSummary,
+                    onClick = actions.onOpenScanManager
+                )
+
+                Header(storageHeader)
+
+                Preference(
+                    title = editBackupsTitle,
+                    summary = editBackupsSummary,
+                    onClick = actions.onOpenEditBackups
+                )
+            }
+        }
+    }
+}

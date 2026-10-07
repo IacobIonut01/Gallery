@@ -1,0 +1,418 @@
+/*
+ * SPDX-FileCopyrightText: 2023-2026 IacobIacob01
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package com.dot.gallery.data.repository
+
+import com.dot.gallery.domain.uri.Uri
+import com.dot.gallery.core.Resource
+import com.dot.gallery.core.decoder.format.ImageReencoder
+import com.dot.gallery.core.metadata.MetadataRemovalMode
+import com.dot.gallery.core.metadata.MetadataSaveMode
+import com.dot.gallery.core.metadata.SanitizationCapability
+import com.dot.gallery.core.metadata.SanitizationResult
+import com.dot.gallery.data.dao.CategoryWithMediaCount
+import com.dot.gallery.domain.model.Album
+import com.dot.gallery.domain.model.AlbumGroup
+import com.dot.gallery.domain.model.AlbumGroupMember
+import com.dot.gallery.domain.model.AlbumSection
+import com.dot.gallery.domain.model.AlbumSectionMember
+import com.dot.gallery.domain.model.AlbumThumbnail
+import com.dot.gallery.domain.model.Category
+import com.dot.gallery.domain.model.Collection
+import com.dot.gallery.domain.model.CollectionWithCount
+import com.dot.gallery.domain.model.IgnoredAlbum
+import com.dot.gallery.domain.model.ImageEmbedding
+import com.dot.gallery.domain.model.Media
+import com.dot.gallery.domain.model.ClassifiedMedia
+import com.dot.gallery.domain.model.UriMedia
+import com.dot.gallery.data.entity.MediaMetadata
+import com.dot.gallery.domain.model.LockedAlbum
+import com.dot.gallery.domain.model.MergedSubfolderAlbum
+import com.dot.gallery.domain.model.PinnedAlbum
+import com.dot.gallery.domain.model.TimelineSettings
+import com.dot.gallery.domain.model.Vault
+import com.dot.gallery.domain.util.MediaOrder
+import com.dot.gallery.domain.model.AllowedMedia
+import kotlinx.coroutines.flow.Flow
+import com.dot.gallery.core.util.or
+import com.dot.gallery.domain.uri.path
+import com.dot.gallery.domain.util.getCategory
+
+/**
+ * The platform-neutral media repository contract — everything that does not
+ * take Android consent-launcher / bitmap / file types. Android-only mutations
+ * (consent-gated writes, bitmap re-encodes, vault bulk-delete) live on the
+ * androidMain [MediaRepository] sub-interface.
+ */
+interface CoreMediaRepository {
+
+    suspend fun updateInternalDatabase()
+
+    fun getMedia(): Flow<Resource<List<UriMedia>>>
+
+    fun getCompleteMedia(): Flow<Resource<List<UriMedia>>>
+
+    fun getMediaByType(allowedMedia: AllowedMedia): Flow<Resource<List<UriMedia>>>
+
+    fun getFavorites(mediaOrder: MediaOrder): Flow<Resource<List<UriMedia>>>
+
+    fun getTrashed(): Flow<Resource<List<UriMedia>>>
+
+    fun getAlbums(mediaOrder: MediaOrder): Flow<Resource<List<Album>>>
+
+    fun getCategoryThumbnailMedia(ids: List<Long>): Flow<List<UriMedia>>
+
+    fun getAlbum(albumId: Long): Flow<Resource<Album>>
+
+    suspend fun insertPinnedAlbum(pinnedAlbum: PinnedAlbum)
+
+    suspend fun insertPinnedAlbums(pinnedAlbums: List<PinnedAlbum>)
+
+    suspend fun removePinnedAlbum(pinnedAlbum: PinnedAlbum)
+
+    suspend fun removePinnedAlbums(albumIds: List<Long>)
+
+    fun getPinnedAlbums(): Flow<List<PinnedAlbum>>
+
+    suspend fun insertLockedAlbum(lockedAlbum: LockedAlbum)
+
+    suspend fun insertLockedAlbums(lockedAlbums: List<LockedAlbum>)
+
+    suspend fun removeLockedAlbum(lockedAlbum: LockedAlbum)
+
+    suspend fun removeLockedAlbums(albumIds: List<Long>)
+
+    fun getLockedAlbums(): Flow<List<LockedAlbum>>
+
+    suspend fun addBlacklistedAlbum(ignoredAlbum: IgnoredAlbum)
+
+    suspend fun removeBlacklistedAlbum(ignoredAlbum: IgnoredAlbum)
+
+    fun getBlacklistedAlbums(): Flow<List<IgnoredAlbum>>
+
+    suspend fun getBlacklistedAlbumsAsync(): List<IgnoredAlbum>
+
+    fun getMediaByAlbumId(albumId: Long, skipBatching: Boolean = false): Flow<Resource<List<UriMedia>>>
+
+    fun getMediaByAlbumIds(albumIds: Set<Long>, skipBatching: Boolean = false): Flow<Resource<List<UriMedia>>>
+
+    fun getMediaByAlbumIdWithType(
+        albumId: Long,
+        allowedMedia: AllowedMedia
+    ): Flow<Resource<List<UriMedia>>>
+
+    fun getAlbumsWithType(allowedMedia: AllowedMedia): Flow<Resource<List<Album>>>
+
+    fun getMediaListByUris(listOfUris: List<Uri>, reviewMode: Boolean, onlyMatching: Boolean = false): Flow<Resource<List<UriMedia>>>
+
+    suspend fun <T: Media> copyMedia(
+        from: T,
+        path: String
+    )
+
+    suspend fun <T: Media> copyMedia(vararg sets: Pair<T, String>)
+
+    /**
+     * Whether local media can be deleted without showing a system consent
+     * request — true with All Files Access, the media-management role, or on
+     * pre-scoped-storage releases where direct deletes are allowed.
+     */
+    val canDeleteMediaSilently: Boolean
+
+    /**
+     * Deletes local media through MediaStore without launching a consent
+     * request. Only permitted when [canDeleteMediaSilently] — returns false
+     * immediately otherwise. Returns false when any item could not be removed.
+     */
+    suspend fun <T: Media> deleteMediaDirectly(mediaList: List<T>): Boolean
+
+    suspend fun <T: Media> renameMedia(
+        media: T,
+        newName: String
+    ): Boolean
+
+    suspend fun <T: Media> moveMedia(
+        media: T,
+        newPath: String
+    ): Boolean
+
+    /**
+     * Copies [mediaList] into [newPath] and returns the uris of the copies, or an empty list if
+     * any of them failed - in which case nothing is left behind. Used to move media the app
+     * cannot rename, the originals being removed afterwards through a delete request.
+     */
+    suspend fun <T: Media> copyMediaForMove(
+        mediaList: List<T>,
+        newPath: String,
+        onProgress: suspend (Float) -> Unit = {}
+    ): List<Uri>
+
+    /** Removes copies made by [copyMediaForMove], for instance when the move is cancelled. */
+    suspend fun discardMediaCopies(uris: List<Uri>)
+
+    suspend fun probeMetadataSanitization(media: Media): SanitizationCapability
+
+    suspend fun sanitizeMediaMetadata(
+        media: Media,
+        mode: MetadataRemovalMode,
+        saveMode: MetadataSaveMode
+    ): SanitizationResult
+
+    suspend fun refreshMetadataFor(media: Media)
+
+    suspend fun probeCaptureDateEdit(media: Media): CaptureDateEditCapability
+
+    suspend fun updateMediaCaptureDate(media: Media, timestampMillis: Long): CaptureDateEditResult
+
+    suspend fun createDatedCopy(media: Media, timestampMillis: Long): CaptureDateEditResult
+
+    suspend fun <T: Media> updateMediaDescription(
+        media: T,
+        description: String
+    ): Boolean
+
+    fun getVaults(): Flow<Resource<List<Vault>>>
+
+    suspend fun createVault(
+        vault: Vault,
+        transferable: Boolean = false,
+        onSuccess: () -> Unit,
+        onFailed: (reason: String) -> Unit
+    )
+
+    suspend fun deleteVault(
+        vault: Vault,
+        onSuccess: () -> Unit,
+        onFailed: (reason: String) -> Unit
+    )
+
+    fun getEncryptedMedia(vault: Vault?): Flow<Resource<List<UriMedia>>>
+
+    suspend fun <T: Media> addMedia(vault: Vault, media: T): Boolean
+
+    suspend fun <T: Media> restoreMedia(vault: Vault, media: T): Boolean
+
+    suspend fun <T: Media> transferMedia(sourceVault: Vault, targetVault: Vault, media: T, copy: Boolean): Boolean
+
+    suspend fun <T: Media> deleteEncryptedMedia(vault: Vault, media: T): Boolean
+
+    suspend fun getUnmigratedVaultMediaSize(): Int
+
+    suspend fun importPortableVault(
+        vault: Vault,
+        base64Key: String,
+        force: Boolean = false
+    ): Boolean
+
+    suspend fun migrateVaultToPortable(
+        vault: Vault,
+        onProgress: (current: Int, total: Int) -> Unit = { _, _ -> }
+    ): Boolean
+
+    suspend fun migrateVault()
+
+    suspend fun restoreVault(vault: Vault)
+
+    fun getTimelineSettings(): Flow<TimelineSettings?>
+
+    suspend fun updateTimelineSettings(settings: TimelineSettings)
+
+    // ============ Legacy Classification (to be deprecated) ============
+    fun getClassifiedCategories(): Flow<List<String>>
+
+    fun getClassifiedMediaByCategory(category: String?): Flow<List<ClassifiedMedia>>
+
+    fun getClassifiedMediaByMostPopularCategory(): Flow<List<ClassifiedMedia>>
+
+    fun getCategoriesWithMedia(): Flow<List<ClassifiedMedia>>
+
+    fun getClassifiedMediaCount(): Flow<Int>
+
+    fun getClassifiedMediaCountAtCategory(category: String): Flow<Int>
+
+    fun getClassifiedMediaThumbnailByCategory(category: String): Flow<ClassifiedMedia?>
+
+    suspend fun getCategoryForMediaId(mediaId: Long): String?
+    suspend fun changeCategory(mediaId: Long, newCategory: String)
+
+    suspend fun deleteClassifications()
+
+    // ============ New Category System ============
+    
+    // Category CRUD
+    suspend fun createCategory(category: Category): Long
+    suspend fun updateCategory(category: Category)
+    suspend fun deleteCategory(categoryId: Long)
+    fun getCategory(categoryId: Long): Flow<Category?>
+    suspend fun getCategoryAsync(categoryId: Long): Category?
+    fun getAllCategories(): Flow<List<Category>>
+    suspend fun getAllCategoriesAsync(): List<Category>
+    fun getCategoriesWithMediaCount(): Flow<List<CategoryWithMediaCount>>
+    fun getDistinctClassifiedMediaCount(): Flow<Int>
+    fun getCategoryCount(): Flow<Int>
+    fun getTopCategories(limit: Int = 10): Flow<List<CategoryWithMediaCount>>
+    
+    // Category settings
+    suspend fun updateCategoryThreshold(categoryId: Long, threshold: Float)
+    suspend fun updateCategoryName(categoryId: Long, name: String)
+    suspend fun toggleCategoryPinned(categoryId: Long, isPinned: Boolean)
+    
+    // Media-Category associations
+    fun getMediaIdsInCategory(categoryId: Long): Flow<List<Long>>
+    suspend fun getMediaIdsInCategoryAsync(categoryId: Long): List<Long>
+    fun getCategoriesForMedia(mediaId: Long): Flow<List<Category>>
+    suspend fun addMediaToCategory(mediaId: Long, categoryId: Long, similarity: Float = 1f, isManual: Boolean = true)
+    suspend fun removeMediaFromCategory(mediaId: Long, categoryId: Long)
+    fun getMediaCountInCategory(categoryId: Long): Flow<Int>
+    fun getThumbnailMediaIdForCategory(categoryId: Long): Flow<Long?>
+    
+    // Category initialization and management
+    suspend fun initializeDefaultCategories()
+    suspend fun resetCategoryData()
+
+    // Video memberships excluded from categorisation (#948)
+    suspend fun getVideoCategoryMembershipCount(): Int
+    suspend fun deleteVideoCategoryMemberships(): Int
+
+    fun getMetadata(): Flow<List<MediaMetadata>>
+
+    fun getMetadata(media: Media): Flow<MediaMetadata>
+
+    suspend fun updateAlbumThumbnail(albumId: Long, thumbnail: Uri)
+
+    suspend fun deleteAlbumThumbnail(albumId: Long)
+
+    fun getAlbumThumbnail(albumId: Long): Flow<AlbumThumbnail?>
+
+    fun getAlbumThumbnails(): Flow<List<AlbumThumbnail>>
+
+    fun hasAlbumThumbnail(albumId: Long): Flow<Boolean>
+
+    suspend fun collectMetadataFor(media: Media, bulk: Boolean = false)
+
+    suspend fun addImageEmbedding(imageEmbedding: ImageEmbedding)
+
+    suspend fun getRecord(id: Long): ImageEmbedding?
+
+    fun getImageEmbeddings(): Flow<List<ImageEmbedding>>
+
+    // ============ Album Groups ============
+
+    suspend fun insertAlbumGroup(group: AlbumGroup): Long
+
+    suspend fun updateAlbumGroup(group: AlbumGroup)
+
+    suspend fun deleteAlbumGroup(groupId: Long)
+
+    fun getAllAlbumGroups(): Flow<List<AlbumGroup>>
+
+    fun getAlbumGroup(groupId: Long): Flow<AlbumGroup?>
+
+    suspend fun getAlbumGroupAsync(groupId: Long): AlbumGroup?
+
+    suspend fun addAlbumToGroup(member: AlbumGroupMember)
+
+    suspend fun removeAlbumFromGroup(member: AlbumGroupMember)
+
+    suspend fun removeAllAlbumsFromGroup(groupId: Long)
+
+    fun getAlbumIdsInGroup(groupId: Long): Flow<List<Long>>
+
+    fun getAllGroupMembers(): Flow<List<AlbumGroupMember>>
+
+    suspend fun getGroupIdForAlbum(albumId: Long): Long?
+
+    // ============ Merged Subfolder Albums ============
+
+    suspend fun insertMergedSubfolderAlbum(mergedSubfolderAlbum: MergedSubfolderAlbum)
+
+    suspend fun removeMergedSubfolderAlbum(mergedSubfolderAlbum: MergedSubfolderAlbum)
+
+    suspend fun updateMergedSubfolderDisplayMode(id: Long, displayMode: String)
+
+    fun getMergedSubfolderAlbums(): Flow<List<MergedSubfolderAlbum>>
+
+    // ============ Collections ============
+
+    suspend fun insertCollection(collection: Collection): Long
+
+    suspend fun updateCollection(collection: Collection)
+
+    suspend fun deleteCollection(collectionId: Long)
+
+    fun getCollection(collectionId: Long): Flow<Collection?>
+
+    suspend fun getCollectionAsync(collectionId: Long): Collection?
+
+    fun getAllCollections(): Flow<List<Collection>>
+
+    fun getCollectionsWithCount(): Flow<List<CollectionWithCount>>
+
+    suspend fun updateCollectionLabel(collectionId: Long, label: String)
+
+    suspend fun toggleCollectionPinned(collectionId: Long, isPinned: Boolean)
+
+    suspend fun updateCollectionCover(collectionId: Long, mediaId: Long?)
+
+    suspend fun addMediaToCollection(collectionId: Long, mediaId: Long)
+
+    suspend fun addMediaListToCollection(collectionId: Long, mediaIds: List<Long>)
+
+    suspend fun removeMediaFromCollection(collectionId: Long, mediaId: Long)
+
+    fun getMediaIdsInCollection(collectionId: Long): Flow<List<Long>>
+
+    suspend fun getMediaIdsInCollectionAsync(collectionId: Long): List<Long>
+
+    fun getMediaCountInCollection(collectionId: Long): Flow<Int>
+
+    fun getCollectionIdsForMedia(mediaId: Long): Flow<List<Long>>
+
+    suspend fun cleanupOrphanedCollectionMedia(validMediaIds: List<Long>)
+
+    suspend fun addAlbumsToCollection(collectionId: Long, albumIds: List<Long>)
+
+    suspend fun removeAlbumFromCollection(collectionId: Long, albumId: Long)
+
+    suspend fun replaceAlbumsInCollection(collectionId: Long, albumIds: List<Long>)
+
+    fun getAllAlbumIdsInCollections(): Flow<List<Long>>
+
+    fun getAlbumIdsInCollection(collectionId: Long): Flow<List<Long>>
+
+    // ============ Album Sections ============
+
+    suspend fun insertAlbumSection(section: AlbumSection): Long
+
+    suspend fun updateAlbumSection(section: AlbumSection)
+
+    suspend fun deleteAlbumSection(sectionId: Long)
+
+    fun getAllAlbumSections(): Flow<List<AlbumSection>>
+
+    suspend fun getAllAlbumSectionsAsync(): List<AlbumSection>
+
+    suspend fun getAlbumSectionAsync(sectionId: Long): AlbumSection?
+
+    suspend fun getAlbumSectionByType(type: Int): AlbumSection?
+
+    suspend fun updateSectionDisplayOrder(sectionId: Long, order: Int)
+
+    suspend fun updateSectionVisibility(sectionId: Long, visible: Boolean)
+
+    suspend fun updateSectionExpanded(sectionId: Long, expanded: Boolean)
+
+    suspend fun getAlbumSectionCount(): Int
+
+    suspend fun addAlbumToSection(member: AlbumSectionMember)
+
+    suspend fun removeAlbumFromSection(member: AlbumSectionMember)
+
+    suspend fun removeAlbumFromAllSections(albumId: Long)
+
+    fun getAllSectionMembers(): Flow<List<AlbumSectionMember>>
+
+    suspend fun getSectionIdForAlbum(albumId: Long): Long?
+}

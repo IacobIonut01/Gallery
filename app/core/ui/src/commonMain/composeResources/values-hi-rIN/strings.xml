@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cutout_save_choice_title">कटआउट को इस नाम से सहेजें</string>
+    <string name="cutout_save_transparent_png">पारदर्शी PNG</string>
+    <string name="cutout_save_flatten_white">सफेद पर फ्लैट करें</string>
+    <string name="cutout_save_flatten_black">काले पर फ्लैट करें</string>
+    <string name="overwrite_unavailable_title">इस फ़ॉर्मेट को अधिलेखित नहीं किया जा सकता</string>
+    <string name="overwrite_unavailable_summary">इस छवि फ़ॉर्मेट को आपके डिवाइस पर पुनः एन्कोड नहीं किया जा सकता, इसलिए मूल को अधिलेखित नहीं किया जा सकता। इसके बजाय एक नई PNG कॉपी बनाई जाएगी।</string>
+    <string name="overwrite_unavailable_create_copy">कॉपी बनाएं</string>
+    <string name="copied_to_clipboard">Copied to clipboard</string>
+    <string name="error_copying_to_clipboard">Failed to copy to clipboard</string>
+    <string name="cutout_copy_failed">कटआउट ऑब्जेक्ट को कॉपी करने में विफल</string>
+    <string name="cutout_share_failed">कटआउट ऑब्जेक्ट को साझा करने में विफल</string>
+    <string name="cutout_save_failed">कटआउट ऑब्जेक्ट को सहेजने में विफल</string>
+    <string name="cutout_saved">कटआउट को Pictures/Cutouts में सहेजा गया</string>
+</resources>
