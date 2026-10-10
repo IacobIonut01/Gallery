@@ -1,0 +1,51 @@
+---
+title: Developer tools and session logs
+summary: A running record of what the app did, grouped by screen or task, with crash reporting built in.
+area: utilities
+path:
+  - Settings
+  - Developer
+related: [settings-overview, backup-restore]
+scenes: [settings-developer, settings-session-logs]
+order: 2
+---
+
+ReFra keeps a running record of what it does (screens visited, tasks run, errors) meant for reporting bugs and diagnosing problems. It is hidden by default and most people never need it.
+
+## Unlock the Developer section
+
+1. Open **Settings**.
+2. **Touch and hold** the version label in the app header at the top. (If the banner was moved to the bottom, hold the version shown in the compact bar there.)
+3. The **Developer** row appears in the hub.
+
+## The Developer screen
+
+The top shows a diagnostics summary: sessions recorded, entries captured, size, and crashes. If a crash log from an earlier session was never reported, a banner offers to **Report a bug** or **Dismiss** it.
+
+- **Session logs**: browses every captured entry.
+- **Latest errors**: the most recent errors for a quick check.
+- **Report a bug**, **Share zip**, **Copy logs**, **Clear**: export or wipe the logs. Clearing asks first; every recorded session and crash log is deleted.
+- **Minimum log level**: entries below the chosen level are discarded at capture time.
+- **Record breadcrumbs**: records the screens and actions leading up to an error, which makes a report much more useful.
+- **Log a test error**: writes a synthetic error so you can see what one looks like.
+- **Disable developer mode**: stops collection and deletes every log, after confirmation.
+
+## Read the session logs
+
+<PreviewCollection feature="session-logs" section="read-the-session-logs" />
+
+1. Open **Settings › Developer › Session logs**.
+2. Switch between **By area** (entries grouped by the part of the app that wrote them, a screen or a background task such as an upload) and **Recent** (a flat newest-first list).
+3. Filter with the **Search logs** field, the severity chips (**verbose**, **debug**, **info**, **warn**, **error**, **crash**, **event**, roughly "routine detail" up to "something broke"), and the time-range chips: **1h**, **24h**, **7d**, **All**, or a custom **Range**.
+4. Tap an entry for its detail sheet: the message, its **Context** (extra details the app recorded alongside it), the **Stack trace** (the chain of code locations when an error occurred) when there is one, and the **Breadcrumbs** (the screens and actions leading up to it). **Copy** takes it to the clipboard and **Report** attaches it to a bug report.
+
+## Privacy
+
+Logs exist so problems can be explained, and they can contain file names, paths, and server addresses. Review what you are sending before sharing a zip or pasting entries into a report.
+
+## Example: report a crash
+
+1. After the app crashes, reopen it and go to **Settings › Developer**. The crash banner appears.
+2. Tap **Report a bug**, or open **Session logs** and find the error entry for details.
+3. **Share zip** to send the whole log bundle, or **Copy** the single entry.
+4. If you are done diagnosing, **Clear** or disable developer mode to wipe everything.

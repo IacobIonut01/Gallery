@@ -65,11 +65,13 @@ private val textPresetColors = listOf(
 @Composable
 fun TextMarkupOverlay(
     modifier: Modifier = Modifier,
+    initialText: String = "",
+    initialColor: Color = Color.White,
     onDone: (text: String, color: Color) -> Unit,
     onRemove: () -> Unit,
 ) {
-    var text by remember { mutableStateOf("") }
-    var selectedColor by remember { mutableStateOf(Color.White) }
+    var text by remember { mutableStateOf(initialText) }
+    var selectedColor by remember { mutableStateOf(initialColor) }
     val focusRequester = remember { FocusRequester() }
 
     LaunchedEffect(Unit) {

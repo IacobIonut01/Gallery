@@ -1,0 +1,844 @@
+---
+/**
+ * VariantPicker — direct download chooser for the published APK matrix.
+ *
+ * Server renders the frozen snapshot (registry/releases.json, written by
+ * `npm run releases:sync`) so the default Standard + Universal link is a real
+ * download URL before any JS runs. At runtime the element refreshes each
+ * channel once against the GitHub Releases API and normalizes the response
+ * through the same parser — a download URL is only ever taken from a matched
+ * asset's own browser_download_url, never synthesized.
+ */
+import {
+  ARCHITECTURES,
+  RELEASES_URL,
+  VARIANTS,
+  findAsset,
+  formatDate,
+  formatSize,
+} from '../lib/releases.mjs';
+import snapshotJson from '../../registry/releases.json';
+import BrandMark from './BrandMark.astro';
+
+const snapshot = snapshotJson as {
+  checkedAt: string;
+  stable: any;
+  nightly: any;
+};
+
+const uid = Math.random().toString(36).slice(2, 9);
+const channelName = `vp-channel-${uid}`;
+const variantName = `vp-variant-${uid}`;
+
+const initial = snapshot?.stable ?? null;
+const defaultAsset = initial ? findAsset(initial, 'standard', 'universal') : null;
+const hasStandardMl = (rel: any) =>
+  !!rel?.assets?.some((a: any) => a.variant === 'standard-ml');
+const variantAvailable = (rel: any, variant: string) =>
+  !!rel?.assets?.some((a: any) => a.variant === variant);
+const channelLabel = (rel: any) =>
+  rel ? `Published ${formatDate(rel.publishedAt)}` : 'No release published';
+---
+
+<variant-picker class="picker">
+  <script
+    type="application/json"
+    data-releases
+    set:html={JSON.stringify(snapshot).replace(/</g, '\\u003c')}
+  />
+  <div class="picker-area">
+    <div class="picker-form">
+      <fieldset class="picker-group picker-channels" data-channels disabled>
+        <legend>Release channel</legend>
+        <div class="channel-row" role="presentation">
+          <label class="channel">
+            <input type="radio" name={channelName} value="stable" checked />
+            <span>Stable</span>
+          </label>
+          <label class="channel">
+            <input type="radio" name={channelName} value="nightly" />
+            <span>Nightly</span>
+          </label>
+        </div>
+        <p class="channel-status" data-channel-status>
+          Stable release {initial?.tag}, published {initial && formatDate(initial.publishedAt)}.
+        </p>
+        <p class="channel-warning" data-channel-warning hidden>
+          Nightly builds are for testing and may be less stable.
+        </p>
+      </fieldset>
+
+      <fieldset class="picker-group" data-variants disabled>
+        <legend>Build</legend>
+        <p class="group-note">
+          The offline build removes maps and cloud providers; its AI models
+          cannot be added after installation. Choose Offline with AI if you need
+          them on that build.
+        </p>
+        {
+          VARIANTS.map((v) => (
+            <label
+              class="variant-row"
+              data-variant={v.id}
+              hidden={v.id === 'standard-ml' && !hasStandardMl(initial)}
+            >
+              <input
+                type="radio"
+                name={variantName}
+                value={v.id}
+                checked={v.id === 'standard'}
+                disabled={v.id !== 'standard-ml' && !variantAvailable(initial, v.id)}
+              />
+              <span class="variant-text">
+                <span class="variant-title">
+                  {v.title}
+                  <span class="variant-detail">{v.detail}</span>
+                </span>
+                <span class="variant-desc">{v.description}</span>
+                <span class="variant-availability" hidden>
+                  Not published for this release channel.
+                </span>
+              </span>
+            </label>
+          ))
+        }
+      </fieldset>
+
+      <div class="picker-group picker-arch">
+        <label class="arch-label" for={`vp-abi-${uid}`}>CPU architecture</label>
+        <select id={`vp-abi-${uid}`} class="arch-select" data-abi disabled>
+          {
+            ARCHITECTURES.map((a) => (
+              <option value={a.id} selected={a.id === 'universal'}>
+                {a.label} · {a.id}
+              </option>
+            ))
+          }
+        </select>
+        <p class="arch-note" data-arch-note>{ARCHITECTURES[0].description}</p>
+      </div>
+
+      <p class="picker-freshness" data-freshness>
+        Saved release information.
+      </p>
+      <noscript>
+        <p class="picker-freshness">
+          JavaScript is needed to choose another build. The Standard Universal
+          download is available below.
+        </p>
+      </noscript>
+      <div class="picker-error" data-error hidden>
+        <p data-error-text></p>
+        <button type="button" class="btn btn-outline" data-retry>Retry</button>
+        <a href={RELEASES_URL} rel="noopener">View all releases</a>
+      </div>
+    </div>
+
+    <div class="picker-receipt">
+      <div class="receipt-title">
+        <BrandMark size={28} />
+        <h2 class="receipt-version" data-version>
+          {initial ? `ReFra ${initial.tag}` : 'No release published'}
+        </h2>
+      </div>
+      <p class="receipt-channel" data-receipt-channel>Stable release</p>
+      <p class="receipt-meta" data-receipt-meta>{channelLabel(initial)}</p>
+      <p class="receipt-choice" data-receipt-choice>Standard · Universal</p>
+      <p class="receipt-desc" data-receipt-desc>
+        {VARIANTS.find((v) => v.id === 'standard')?.description}
+      </p>
+      <p class="receipt-file" data-receipt-file>
+        {
+          defaultAsset
+            ? `${formatSize(defaultAsset.size)} · APK · Android 10 or later`
+            : 'APK · Android 10 or later'
+        }
+      </p>
+      <a
+        class:list={['btn btn-primary receipt-download', { 'is-disabled': !defaultAsset }]}
+        data-download
+        href={defaultAsset?.url}
+        download={defaultAsset?.name}
+        aria-label={defaultAsset ? `Download ReFra ${initial.tag} Standard APK (Universal)` : undefined}
+        aria-disabled={defaultAsset ? undefined : 'true'}
+      >
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <path
+            d="M12 3v12m0 0 4.5-4.5M12 15l-4.5-4.5M4.5 19.5h15"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.9"
+            stroke-linecap="round"
+            stroke-linejoin="round"></path>
+        </svg>
+        Download APK
+      </a>
+      <p class="receipt-filename">
+        <code data-filename>{defaultAsset?.name}</code>
+      </p>
+      <p class="receipt-helper">
+        Download starts from GitHub.{' '}
+        {
+          initial && (
+            <a data-notes href={initial.url}>
+              Release notes
+            </a>
+          )
+        }
+      </p>
+      <p class="receipt-unavailable" data-unavailable hidden></p>
+      <details class="receipt-sha" data-sha hidden={!defaultAsset?.sha256}>
+        <summary>SHA-256 checksum</summary>
+        <code class="receipt-hash" data-hash>{defaultAsset?.sha256}</code>
+        <div class="receipt-sha-actions">
+          <button type="button" class="btn btn-outline" data-copy>Copy checksum</button>
+        </div>
+      </details>
+      <p class="receipt-checksum-missing" data-checksum-missing hidden={!defaultAsset || !!defaultAsset?.sha256}>
+        A checksum is not supplied for this file. Check the release notes.
+      </p>
+      <p class="receipt-status" data-status aria-live="polite"></p>
+    </div>
+  </div>
+  <p class="picker-links">
+    <a href={RELEASES_URL} rel="noopener">View every build on GitHub Releases</a>
+  </p>
+</variant-picker>
+
+<script>
+  import {
+    RELEASE_API,
+    RELEASES_URL,
+    ARCHITECTURES,
+    VARIANTS,
+    findAsset,
+    formatDate,
+    formatSize,
+    normalizeRelease,
+    selectNightly,
+  } from '../lib/releases.mjs';
+
+  const HEADERS = { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' };
+
+  class VariantPicker extends HTMLElement {
+    connectedCallback() {
+      try {
+        this.snapshot = JSON.parse(this.querySelector('script[data-releases]')?.textContent || 'null');
+      } catch {
+        this.snapshot = null;
+      }
+      // Per-channel cache seeded from the frozen snapshot.
+      this.cache = {
+        stable: { release: this.snapshot?.stable || null, checkedAt: this.snapshot?.checkedAt || null, failed: false },
+        nightly: { release: this.snapshot?.nightly || null, checkedAt: this.snapshot?.checkedAt || null, failed: false },
+      };
+      this.channel = 'stable';
+      this.variant = 'standard';
+      this.abi = 'universal';
+      this.requests = new Map();
+      this.checking = new Set();
+      this.controllers = new Set();
+
+      this.el = {
+        fieldsets: [...this.querySelectorAll('fieldset')],
+        channelStatus: this.querySelector('[data-channel-status]'),
+        channelWarning: this.querySelector('[data-channel-warning]'),
+        variantRows: [...this.querySelectorAll('.variant-row')],
+        abi: this.querySelector('[data-abi]'),
+        archNote: this.querySelector('[data-arch-note]'),
+        freshness: this.querySelector('[data-freshness]'),
+        error: this.querySelector('[data-error]'),
+        errorText: this.querySelector('[data-error-text]'),
+        retry: this.querySelector('[data-retry]'),
+        receiptChannel: this.querySelector('[data-receipt-channel]'),
+        version: this.querySelector('[data-version]'),
+        meta: this.querySelector('[data-receipt-meta]'),
+        choice: this.querySelector('[data-receipt-choice]'),
+        desc: this.querySelector('[data-receipt-desc]'),
+        file: this.querySelector('[data-receipt-file]'),
+        download: this.querySelector('[data-download]'),
+        filename: this.querySelector('[data-filename]'),
+        notes: this.querySelector('[data-notes]'),
+        unavailable: this.querySelector('[data-unavailable]'),
+        sha: this.querySelector('[data-sha]'),
+        hash: this.querySelector('[data-hash]'),
+        copy: this.querySelector('[data-copy]'),
+        checksumMissing: this.querySelector('[data-checksum-missing]'),
+        status: this.querySelector('[data-status]'),
+      };
+
+      this.querySelectorAll(`input[name^="vp-channel-"]`).forEach((radio) =>
+        radio.addEventListener('change', () => {
+          if (!radio.checked) return;
+          this.channel = radio.value;
+          this.render();
+          this.ensureFresh(this.channel);
+        }),
+      );
+      this.querySelectorAll(`input[name^="vp-variant-"]`).forEach((radio) =>
+        radio.addEventListener('change', () => {
+          if (!radio.checked) return;
+          this.variant = radio.value;
+          this.render();
+        }),
+      );
+      this.el.abi.addEventListener('change', () => {
+        this.abi = this.el.abi.value;
+        this.render();
+      });
+      this.el.retry.addEventListener('click', () => {
+        this.requests.delete(this.channel);
+        this.cache[this.channel].failed = false;
+        this.ensureFresh(this.channel);
+      });
+      this.el.download.addEventListener('click', () => {
+        if (this.el.download.hasAttribute('href'))
+          this.announce('Your browser will handle the APK download.');
+      });
+      this.el.copy.addEventListener('click', async () => {
+        const hash = this.el.hash.textContent;
+        try {
+          await navigator.clipboard.writeText(hash);
+          this.announce('Checksum copied');
+        } catch {
+          this.announce('Could not copy. Select the checksum below.');
+        }
+      });
+
+      // The fieldsets ship disabled so a no-JS page cannot advertise a choice
+      // the static receipt would not honor; controls unlock once state is set.
+      for (const fs of this.el.fieldsets) fs.disabled = false;
+      this.el.abi.disabled = false;
+
+      this.render();
+      this.ensureFresh('stable');
+    }
+
+    disconnectedCallback() {
+      for (const c of this.controllers) c.abort();
+      this.controllers.clear();
+    }
+
+    announce(text) {
+      this.el.status.textContent = text;
+    }
+
+    /** One request per channel per component lifetime; retry clears it. */
+    ensureFresh(channel) {
+      if (this.requests.has(channel)) return this.requests.get(channel);
+      this.checking.add(channel);
+      if (this.channel === channel) this.renderChecking(channel);
+      const request = this.fetchChannel(channel)
+        .then((release) => {
+          this.cache[channel] = { release, checkedAt: new Date().toISOString(), failed: false };
+        })
+        .catch(() => {
+          this.cache[channel].failed = true;
+        })
+        .finally(() => {
+          this.checking.delete(channel);
+          if (this.channel === channel) this.render();
+        });
+      this.requests.set(channel, request);
+      return request;
+    }
+
+    async fetchChannel(channel) {
+      const controller = new AbortController();
+      this.controllers.add(controller);
+      const timer = setTimeout(() => controller.abort(), 10000);
+      try {
+        const url = channel === 'stable' ? `${RELEASE_API}/latest` : `${RELEASE_API}?per_page=100`;
+        const res = await fetch(url, { headers: HEADERS, signal: controller.signal });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+        if (channel === 'stable') {
+          const rel = normalizeRelease(json);
+          // A prerelease must never land on the stable channel.
+          if (!rel || rel.prerelease) throw new Error('no valid stable release');
+          return rel;
+        }
+        return selectNightly(json);
+      } finally {
+        clearTimeout(timer);
+        this.controllers.delete(controller);
+      }
+    }
+
+    renderChecking(channel) {
+      const entry = this.cache[channel];
+      this.el.freshness.hidden = false;
+      this.el.freshness.textContent = entry?.release
+        ? `Saved release information, published ${formatDate(entry.release.publishedAt)}. Checking for a newer ${channel} release…`
+        : `Checking for a ${channel} release…`;
+      this.announce(
+        entry?.release
+          ? `Checking for a newer ${channel} release…`
+          : `Checking for a ${channel} release…`,
+      );
+    }
+
+    render() {
+      this.el.status.textContent = '';
+      const entry = this.cache[this.channel];
+      const release = entry?.release || null;
+
+      // --- channel row ---------------------------------------------------
+      this.el.channelStatus.textContent = release
+        ? `${this.channel === 'stable' ? 'Stable release' : 'Nightly build'} ${release.tag}, published ${formatDate(release.publishedAt)}.`
+        : this.channel === 'nightly'
+          ? 'No nightly build is published right now.'
+          : 'No release information is available.';
+      const nightlyOlder =
+        this.channel === 'nightly' &&
+        release &&
+        this.cache.stable?.release &&
+        Date.parse(release.publishedAt) < Date.parse(this.cache.stable.release.publishedAt);
+      this.el.channelWarning.hidden = this.channel !== 'nightly';
+      this.el.channelWarning.textContent =
+        'Nightly builds are for testing and may be less stable.' +
+        (nightlyOlder
+          ? ` This nightly was published before the current stable release (${formatDate(this.cache.stable.release.publishedAt)}).`
+          : '');
+
+      // --- build rows ----------------------------------------------------
+      for (const row of this.el.variantRows) {
+        const id = row.dataset.variant;
+        const input = row.querySelector('input');
+        const note = row.querySelector('.variant-availability');
+        if (id === 'standard-ml') {
+          row.hidden = !release?.assets?.some((a) => a.variant === 'standard-ml');
+          input.disabled = row.hidden;
+          continue;
+        }
+        const available = !!release?.assets?.some((a) => a.variant === id);
+        input.disabled = !available;
+        note.hidden = available;
+      }
+
+      // --- architecture ---------------------------------------------------
+      const arch = ARCHITECTURES.find((a) => a.id === this.abi) || ARCHITECTURES[0];
+      this.el.archNote.textContent = arch.description;
+
+      // --- freshness / error ---------------------------------------------
+      if (entry?.failed) {
+        this.el.error.hidden = false;
+        this.el.errorText.textContent = entry.release
+          ? `Could not check for newer releases. Showing saved release information from ${formatDate(entry.checkedAt)}.`
+          : 'Could not check for releases.';
+        this.el.freshness.hidden = true;
+      } else {
+        this.el.error.hidden = true;
+        // renderChecking owns the label while a request is in flight.
+        this.el.freshness.hidden = !this.checking.has(this.channel);
+      }
+
+      // --- receipt ---------------------------------------------------------
+      const variantMeta = VARIANTS.find((v) => v.id === this.variant);
+      const asset = release ? findAsset(release, this.variant, this.abi) : null;
+
+      this.el.receiptChannel.textContent =
+        this.channel === 'nightly' ? 'Nightly build' : 'Stable release';
+      this.el.version.textContent = release ? `ReFra ${release.tag}` : 'No release published';
+      this.el.meta.textContent = release ? `Published ${formatDate(release.publishedAt)}` : '';
+      if (release) {
+        if (this.el.notes) {
+          this.el.notes.setAttribute('href', release.url);
+          this.el.notes.hidden = false;
+        } else {
+          const a = document.createElement('a');
+          a.dataset.notes = '';
+          a.href = release.url;
+          a.rel = 'noopener';
+          a.textContent = 'Release notes';
+          this.querySelector('.receipt-helper').append(a);
+          this.el.notes = a;
+        }
+      } else if (this.el.notes) {
+        this.el.notes.hidden = true;
+        this.el.notes.removeAttribute('href');
+      }
+      this.el.choice.textContent = `${variantMeta?.title || this.variant} · ${arch.label}`;
+      this.el.desc.textContent = variantMeta?.description || '';
+      this.el.file.textContent = asset
+        ? `${formatSize(asset.size)} · APK · Android 10 or later`
+        : 'APK · Android 10 or later';
+
+      if (asset) {
+        this.el.download.setAttribute('href', asset.url);
+        this.el.download.setAttribute('download', asset.name);
+        this.el.download.setAttribute(
+          'aria-label',
+          `Download ReFra ${release.tag} ${variantMeta?.title} APK (${arch.label})`,
+        );
+        this.el.download.classList.remove('is-disabled');
+        this.el.download.removeAttribute('aria-disabled');
+        this.el.filename.textContent = asset.name;
+        this.el.unavailable.hidden = true;
+        this.el.sha.hidden = !asset.sha256;
+        this.el.hash.textContent = asset.sha256 || '';
+        this.el.copy.hidden = !asset.sha256;
+        this.el.checksumMissing.hidden = !!asset.sha256;
+      } else {
+        this.el.download.removeAttribute('href');
+        this.el.download.removeAttribute('download');
+        this.el.download.setAttribute('aria-disabled', 'true');
+        this.el.download.setAttribute('aria-label', 'Download unavailable');
+        this.el.download.classList.add('is-disabled');
+        this.el.filename.textContent = '';
+        this.el.sha.hidden = true;
+        this.el.checksumMissing.hidden = true;
+        this.el.unavailable.hidden = false;
+        this.el.unavailable.textContent = !release
+          ? 'Release information is not available. Use the releases page on GitHub instead.'
+          : 'This build is not published for the selected architecture. Choose another build or architecture.';
+      }
+
+      // Announce after the DOM settle: in-flight refresh keeps its own label,
+      // failures keep the honest saved-data status, selections get a receipt.
+      if (this.checking.has(this.channel)) {
+        this.renderChecking(this.channel);
+      } else if (entry?.failed) {
+        this.announce(
+          entry.release
+            ? 'Could not refresh release information. Saved downloads are available.'
+            : 'Could not check for releases.',
+        );
+      } else if (!release || !asset) {
+        this.announce(this.el.unavailable.textContent);
+      } else {
+        this.announce(`${variantMeta?.title || this.variant} for ${arch.label} selected.`);
+      }
+    }
+  }
+
+  if (!customElements.get('variant-picker')) {
+    customElements.define('variant-picker', VariantPicker);
+  }
+</script>
+
+<style>
+  .picker {
+    display: block;
+    margin: 1.5rem 0;
+  }
+  .picker script {
+    display: none;
+  }
+  .picker-area {
+    display: grid;
+    grid-template-columns: 1.35fr 0.85fr;
+    gap: 32px;
+    align-items: start;
+  }
+  .picker-form {
+    background: var(--md-surface-container-low);
+    border: 1px solid var(--md-outline-variant);
+    border-radius: 16px;
+    padding: 28px;
+  }
+  .picker-group {
+    border: 0;
+    margin: 0 0 24px;
+    padding: 0;
+    min-width: 0;
+  }
+  .picker-group:last-child {
+    margin-bottom: 0;
+  }
+  .picker-group legend,
+  .arch-label {
+    display: block;
+    padding: 0;
+    margin: 0 0 10px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--md-on-surface);
+  }
+  .group-note {
+    margin: 0 0 12px;
+    font-size: 0.85rem;
+    color: var(--md-on-surface-variant);
+    max-width: 52ch;
+  }
+
+  .channel-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .channel {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 16px;
+    border: 1px solid var(--md-outline-variant);
+    border-radius: 999px;
+    font-size: 0.9rem;
+    color: var(--md-on-surface);
+    cursor: pointer;
+    background: var(--md-surface-container);
+  }
+  .channel input {
+    accent-color: var(--md-primary);
+    margin: 0;
+  }
+  .channel:has(input:checked) {
+    border-color: var(--md-primary);
+    background: var(--md-primary-container);
+    color: var(--md-on-primary-container);
+  }
+  .channel-status,
+  .channel-warning {
+    margin: 10px 0 0;
+    font-size: 0.85rem;
+    color: var(--md-on-surface-variant);
+  }
+  .channel-warning {
+    color: var(--md-on-surface);
+    font-weight: 500;
+  }
+
+  .variant-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    min-height: 44px;
+    padding: 12px 14px;
+    border: 1px solid var(--md-outline-variant);
+    border-radius: 12px;
+    background: var(--md-surface-container);
+    cursor: pointer;
+  }
+  .variant-row + .variant-row {
+    margin-top: 8px;
+  }
+  .variant-row input {
+    accent-color: var(--md-primary);
+    margin: 4px 0 0;
+    flex: none;
+  }
+  .variant-row:has(input:checked) {
+    border-color: var(--md-primary);
+    background: color-mix(in srgb, var(--md-primary-container) 45%, var(--md-surface-container));
+  }
+  .variant-row:has(input:disabled) {
+    opacity: 0.65;
+    cursor: default;
+  }
+  .variant-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+  .variant-title {
+    font-weight: 600;
+    color: var(--md-on-surface);
+  }
+  .variant-detail {
+    font-weight: 400;
+    font-size: 0.82rem;
+    color: var(--md-on-surface-variant);
+    margin-left: 8px;
+  }
+  .variant-desc {
+    font-size: 0.85rem;
+    color: var(--md-on-surface-variant);
+  }
+  .variant-availability {
+    font-size: 0.8rem;
+    color: var(--md-outline);
+    font-style: italic;
+  }
+
+  .arch-select {
+    font: inherit;
+    color: var(--md-on-surface);
+    background: var(--md-surface-container);
+    border: 1px solid var(--md-outline-variant);
+    border-radius: 12px;
+    min-height: 44px;
+    padding: 0 12px;
+    width: 100%;
+    max-width: 340px;
+  }
+  .arch-note {
+    margin: 8px 0 0;
+    font-size: 0.85rem;
+    color: var(--md-on-surface-variant);
+  }
+
+  .picker-freshness {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--md-on-surface-variant);
+  }
+  .picker-error {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: 0.85rem;
+    color: var(--md-on-surface-variant);
+  }
+  .picker-error p {
+    margin: 0;
+    flex: 1 1 220px;
+  }
+
+  .picker-receipt {
+    background: var(--md-primary-container);
+    color: var(--md-on-primary-container);
+    border-radius: 16px;
+    padding: 28px;
+    position: sticky;
+    top: 104px;
+  }
+  .receipt-channel {
+    margin: 4px 0 0;
+    font-size: 0.85rem;
+    font-weight: 500;
+    opacity: 0.85;
+  }
+  .receipt-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .receipt-title .brand-mark {
+    flex: none;
+  }
+  .receipt-version {
+    margin: 0;
+    font-size: 1.75rem;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    color: inherit;
+    min-width: 0;
+    overflow-wrap: break-word;
+  }
+  .receipt-meta {
+    margin: 6px 0 18px;
+    font-size: 0.85rem;
+    opacity: 0.85;
+  }
+  .receipt-choice {
+    margin: 0 0 2px;
+    font-weight: 600;
+  }
+  .receipt-desc {
+    margin: 0 0 14px;
+    font-size: 0.88rem;
+    opacity: 0.9;
+    max-width: 40ch;
+  }
+  .receipt-file {
+    margin: 0 0 16px;
+    font-size: 0.88rem;
+  }
+  .receipt-download {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    min-height: 48px;
+    font-weight: 600;
+    background: var(--md-primary);
+    color: var(--md-on-primary);
+  }
+  .receipt-download.is-disabled {
+    opacity: 0.55;
+    cursor: default;
+    pointer-events: none;
+  }
+  .receipt-filename {
+    margin: 12px 0 0;
+  }
+  .receipt-filename code {
+    font-size: 0.78rem;
+    word-break: break-all;
+    background: color-mix(in srgb, var(--md-on-primary-container) 10%, transparent);
+    padding: 2px 6px;
+    border-radius: 6px;
+  }
+  .receipt-helper {
+    margin: 12px 0 0;
+    font-size: 0.82rem;
+    opacity: 0.85;
+  }
+  .receipt-helper a {
+    color: inherit;
+    font-weight: 600;
+  }
+  .receipt-unavailable {
+    margin: 12px 0 0;
+    font-size: 0.85rem;
+  }
+  .receipt-sha {
+    margin-top: 16px;
+    font-size: 0.85rem;
+  }
+  .receipt-sha summary {
+    cursor: pointer;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+  }
+  .receipt-sha summary::after {
+    content: '';
+    margin-left: auto;
+    width: 8px;
+    height: 8px;
+    border-right: 1.8px solid currentColor;
+    border-bottom: 1.8px solid currentColor;
+    transform: rotate(45deg);
+    transition: transform var(--dur-fast) var(--ease-standard);
+  }
+  .receipt-sha[open] summary::after {
+    transform: rotate(225deg);
+  }
+  .receipt-hash {
+    display: block;
+    font-size: 0.75rem;
+    word-break: break-all;
+    margin: 8px 0;
+    background: color-mix(in srgb, var(--md-on-primary-container) 10%, transparent);
+    padding: 8px 10px;
+    border-radius: 8px;
+  }
+  .receipt-sha-actions {
+    margin-top: 8px;
+  }
+  .receipt-sha .btn {
+    min-height: 44px;
+  }
+  .receipt-checksum-missing {
+    margin: 12px 0 0;
+    font-size: 0.82rem;
+    opacity: 0.85;
+  }
+  .receipt-status {
+    margin: 14px 0 0;
+    font-size: 0.82rem;
+    min-height: 1.2em;
+  }
+
+  .picker-links {
+    margin: 18px 0 0;
+    font-size: 0.88rem;
+  }
+
+  @media (max-width: 959px) {
+    .picker-area {
+      grid-template-columns: 1fr;
+    }
+    .picker-receipt {
+      position: static;
+      order: 2;
+    }
+  }
+</style>

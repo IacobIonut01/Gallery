@@ -44,7 +44,17 @@ kotlin {
 // Same packaging gap as :app:androidApp — scenes render through CMP `Font(path, assets)`,
 // which reads only AssetManager. Library composeResources ride the classpath in
 // the test APK, so merge them into the androidTest variant's real assets.
-val captureResModules = listOf(":app:docs:showcase", ":app:core:ui", ":app:core:domain", ":app:feature:settings")
+val captureResModules = listOf(
+    ":app:docs:showcase",
+    ":app:core:ui",
+    ":app:core:domain",
+    ":app:feature:settings",
+    // Native scenes pull typefaces from these modules' composeResources too —
+    // without them the editor/viewer text renders in the fallback font.
+    ":app:commonApp",
+    ":app:feature:editor",
+    ":app:feature:viewer",
+)
     .map(::project)
     .filter {
         file("${it.projectDir}/src/commonMain/composeResources").isDirectory ||
@@ -82,6 +92,28 @@ androidComponents.onVariants { variant ->
         mergeComposeResAssetsForAndroidTest
     ) { it.output }
 }
+
+// Stage ONLY the two Subject-Cutout SAM models as androidTest assets — the
+// subject-cutout scene copies them through the real ModelManager (validation,
+// checksum, onDownloadComplete) into the isolated docs app's private files.
+val prepareDocsCutoutModels by tasks.registering(Sync::class) {
+    from(rootProject.file("app/ml-models-pack/src/main/assets")) {
+        include("mobile_sam_image_encoder.onnx", "sam_mask_decoder_single.onnx")
+    }
+    into(layout.buildDirectory.dir("generated/docsCutoutModels"))
+}
+// srcDir() equivalent for the generated dir: AGP 9's `android.sourceSets` DSL no
+// longer supports `getByName("androidTest")` from Kotlin (the decorated source set
+// does not implement the legacy AndroidLibrarySourceSet interface — ClassCastException),
+// so register the dir through the variant sources API and pin task ordering onto the
+// merge task, which is what a producer-tracked srcDir provider would have done.
+androidComponents.onVariants { variant ->
+    variant.androidTest?.sources?.assets?.addStaticSourceDirectory(
+        layout.buildDirectory.dir("generated/docsCutoutModels").get().asFile.absolutePath
+    )
+}
+tasks.matching { it.name == "mergeDebugAndroidTestAssets" }
+    .configureEach { dependsOn(prepareDocsCutoutModels) }
 
 dependencies {
     implementation(project(":app:docs:showcase"))

@@ -1,0 +1,1438 @@
+{
+  "schemaVersion": 1,
+  "features": {
+    "appearance": [
+      {
+        "scene": "settings-appearance",
+        "title": "Choose your appearance",
+        "caption": "Try the theme, blur, and animation controls on this example screen.",
+        "section": "theme"
+      }
+    ],
+    "navigation": [
+      {
+        "scene": "settings-navigation",
+        "title": "Navigation options",
+        "caption": "Choose a launch screen and change how the bars behave.",
+        "section": "options"
+      }
+    ],
+    "general-settings": [
+      {
+        "scene": "settings-general",
+        "title": "General settings",
+        "caption": "See the trash, app identity, and vault options.",
+        "section": "trash"
+      }
+    ],
+    "timeline-albums": [
+      {
+        "scene": "settings-timeline-albums",
+        "title": "Arrange your library",
+        "caption": "Explore the grid, grouping, and album display options.",
+        "section": "timeline"
+      }
+    ],
+    "viewer-settings": [
+      {
+        "scene": "settings-media-viewer",
+        "title": "Viewer options",
+        "caption": "See the photo and video controls described below.",
+        "section": "media-view"
+      }
+    ],
+    "security": [
+      {
+        "scene": "settings-security",
+        "state": "default",
+        "title": "Security options",
+        "caption": "An example of the protection settings available in ReFra.",
+        "section": "sandbox"
+      },
+      {
+        "scene": "settings-security",
+        "state": "aapm",
+        "title": "Advanced Protection enabled",
+        "caption": "Some choices are controlled by Android when Advanced Protection is enabled.",
+        "section": "data-protection"
+      }
+    ],
+    "settings-overview": [
+      {
+        "scene": "settings-hub",
+        "state": "banner",
+        "title": "Find a settings section",
+        "caption": "Open a section to explore its controls.",
+        "section": "the-sections"
+      }
+    ],
+    "private-folder": [
+      {
+        "scene": "settings-private-folder",
+        "state": "configured",
+        "title": "A configured private folder",
+        "caption": "This example folder can be changed or removed from this settings screen.",
+        "section": "change-or-remove-it"
+      },
+      {
+        "scene": "private-folder-security",
+        "title": "Private folder lock",
+        "caption": "Choose how the private folder is protected.",
+        "section": "set-it-up"
+      }
+    ],
+    "slideshow": [
+      {
+        "scene": "settings-slideshow",
+        "title": "Slideshow settings",
+        "caption": "Choose the timing and order for your next slideshow.",
+        "section": "options"
+      },
+      {
+        "scene": "slideshow-controls",
+        "title": "While it plays",
+        "caption": "Play, pause, and step controls during a slideshow.",
+        "section": "while-it-plays"
+      }
+    ],
+    "smart-features": [
+      {
+        "scene": "settings-smart-features",
+        "state": "ai-ready",
+        "title": "Smart Features settings",
+        "caption": "The hub after the required models have been installed.",
+        "section": "the-hub-rows"
+      }
+    ],
+    "smart-scan": [
+      {
+        "scene": "settings-smart-scan",
+        "state": "running",
+        "title": "A scan in progress",
+        "caption": "Read the stage and progress while ReFra checks the example library.",
+        "section": "reading-the-status"
+      }
+    ],
+    "categories": [
+      {
+        "scene": "settings-categories",
+        "state": "idle",
+        "title": "Category scan settings",
+        "caption": "The controls for scanning and managing category data.",
+        "section": "categories-settings"
+      }
+    ],
+    "backup-restore": [
+      {
+        "scene": "settings-backup",
+        "title": "Backup and restore",
+        "caption": "Start an export or choose a backup file to restore.",
+        "section": "export-a-backup"
+      },
+      {
+        "scene": "settings-backup-wizard",
+        "title": "The backup wizard",
+        "caption": "Choose what the backup file should contain.",
+        "section": "restore-a-backup"
+      }
+    ],
+    "cloud-search": [
+      {
+        "scene": "settings-cloud-indexing",
+        "state": "configured",
+        "title": "Choose where cloud search runs",
+        "caption": "Compare on-device indexing with server-side search.",
+        "section": "what-it-takes"
+      }
+    ],
+    "session-logs": [
+      {
+        "scene": "settings-session-logs",
+        "state": "recent",
+        "title": "Recent log entries",
+        "caption": "An example log list, with filters for finding an error.",
+        "section": "read-the-session-logs"
+      }
+    ],
+    "timeline": [
+      {
+        "scene": "browse-timeline",
+        "state": "grid",
+        "title": "The photo timeline",
+        "caption": "Your photos grouped by day. Try scrolling and opening an album filter.",
+        "section": "browse-the-grid"
+      },
+      {
+        "scene": "browse-timeline",
+        "state": "mosaic",
+        "title": "Mosaic layout",
+        "caption": "The same timeline with staggered tile sizes.",
+        "section": "browse-the-grid"
+      },
+      {
+        "scene": "browse-timeline",
+        "state": "selected",
+        "title": "Selecting photos",
+        "caption": "Long-press and drag across photos to select them.",
+        "section": "open-select-act"
+      },
+      {
+        "scene": "timeline-filters",
+        "state": "open",
+        "title": "Sort and filter",
+        "caption": "The filter sheet over the timeline. Try changing a filter, then Apply.",
+        "section": "sorting-and-filtering"
+      }
+    ],
+    "albums": [
+      {
+        "scene": "browse-albums",
+        "state": "folders",
+        "title": "Your albums",
+        "caption": "Folders on this example device, newest photo on top.",
+        "section": "browse-and-find-an-album"
+      },
+      {
+        "scene": "browse-albums",
+        "state": "pinned",
+        "title": "Pinned albums",
+        "caption": "Pinned albums stay at the top of the list.",
+        "section": "album-actions"
+      },
+      {
+        "scene": "browse-albums",
+        "state": "collections",
+        "title": "Collections row",
+        "caption": "Collections appear above your folders on the Albums tab.",
+        "section": "album-actions"
+      }
+    ],
+    "album-organization": [
+      {
+        "scene": "browse-albums",
+        "state": "pinned",
+        "title": "Pinned first",
+        "caption": "Pin an album to keep it at the top.",
+        "section": "pin-an-album"
+      }
+    ],
+    "library": [
+      {
+        "scene": "browse-library",
+        "state": "overview",
+        "title": "The Library tab",
+        "caption": "Shortcuts and category previews for this example library.",
+        "section": "what-is-on-the-screen"
+      },
+      {
+        "scene": "browse-library",
+        "state": "editing",
+        "title": "Editing shortcuts",
+        "caption": "Reorder, resize, or hide the shortcut tiles.",
+        "section": "customize-the-shortcuts-and-sections"
+      }
+    ],
+    "main-navigation": [
+      {
+        "scene": "navigation-bar",
+        "state": "floating",
+        "title": "Floating navigation bar",
+        "caption": "The default bar \u2014 tap a tab to switch in the live preview.",
+        "section": "the-navigation-bar"
+      },
+      {
+        "scene": "navigation-bar",
+        "state": "classic",
+        "title": "Classic navigation bar",
+        "caption": "The classic bar style.",
+        "section": "making-the-bar-yours"
+      }
+    ],
+    "timeline-filters": [
+      {
+        "scene": "timeline-filters",
+        "state": "open",
+        "title": "The filter sheet",
+        "caption": "Sort order, media type, and source filters on the example timeline.",
+        "section": "options"
+      }
+    ],
+    "collections": [
+      {
+        "scene": "collection-grid",
+        "state": "empty",
+        "title": "A new collection",
+        "caption": "An empty collection waiting for its first photos.",
+        "section": "create-a-collection"
+      },
+      {
+        "scene": "collection-grid",
+        "state": "filled",
+        "title": "A filled collection",
+        "caption": "Photos gathered from different folders into one collection.",
+        "section": "manage-a-collection"
+      }
+    ],
+    "search": [
+      {
+        "scene": "search-library",
+        "state": "suggestions",
+        "title": "Search suggestions",
+        "caption": "Recent and suggested searches before you type.",
+        "section": "before-you-type"
+      },
+      {
+        "scene": "search-library",
+        "state": "results",
+        "title": "Search results",
+        "caption": "Try searching this example library by filename.",
+        "section": "search-by-text"
+      },
+      {
+        "scene": "search-library",
+        "state": "empty",
+        "title": "No matches",
+        "caption": "A query that matches nothing in the example library.",
+        "section": "if-search-finds-nothing"
+      }
+    ],
+    "first-launch": [
+      {
+        "scene": "setup-wizard",
+        "state": "welcome",
+        "title": "Welcome",
+        "caption": "The first page of the setup wizard.",
+        "section": "the-steps"
+      },
+      {
+        "scene": "setup-wizard",
+        "state": "permissions",
+        "title": "Permissions step",
+        "caption": "Choose what ReFra may access during setup.",
+        "section": "permissions"
+      },
+      {
+        "scene": "setup-wizard",
+        "state": "appearance",
+        "title": "Appearance step",
+        "caption": "Pick a look before the tour ends.",
+        "section": "the-steps"
+      },
+      {
+        "scene": "setup-wizard",
+        "state": "cloud",
+        "title": "Cloud step",
+        "caption": "Optional cloud providers offered during setup.",
+        "section": "the-steps"
+      },
+      {
+        "scene": "setup-wizard",
+        "state": "models",
+        "title": "On-device models",
+        "caption": "Example setup screens; no models are downloaded in the preview.",
+        "section": "the-steps"
+      }
+    ],
+    "permissions": [
+      {
+        "scene": "setup-wizard",
+        "state": "permissions",
+        "title": "Permission choices",
+        "caption": "Full or selected photo access, shown on the setup page.",
+        "section": "media-access"
+      }
+    ],
+    "vault": [
+      {
+        "scene": "vault-setup",
+        "state": "available",
+        "title": "Create a vault",
+        "caption": "Name a new encrypted vault.",
+        "section": "create-a-vault"
+      },
+      {
+        "scene": "vault-gate",
+        "title": "Choose the vault lock",
+        "caption": "None, device lock, or a separate code for this vault.",
+        "section": "protect-the-vault-list-itself"
+      },
+      {
+        "scene": "vault-list",
+        "title": "Your vaults",
+        "caption": "Two example vaults in the vault list.",
+        "section": "open-and-manage-a-vault"
+      }
+    ],
+    "hidden-content": [
+      {
+        "scene": "ignored-rules",
+        "title": "Ignored rules",
+        "caption": "Example ignore rules keeping clutter out of the timeline.",
+        "section": "managing-ignored-content"
+      }
+    ],
+    "ignored-albums": [
+      {
+        "scene": "ignored-rules",
+        "title": "Existing rules",
+        "caption": "An album rule and a path-pattern rule on the example list.",
+        "section": "manage-existing-rules"
+      }
+    ],
+    "media-picker": [
+      {
+        "scene": "picker-photos",
+        "state": "default",
+        "title": "The ReFra picker",
+        "caption": "Timeline and Albums tabs inside the picker sheet.",
+        "section": "pick-media-for-another-app"
+      },
+      {
+        "scene": "picker-photos",
+        "state": "selected",
+        "title": "A selection ready to send",
+        "caption": "Three photos selected; Preview and Add become available.",
+        "section": "pick-media-for-another-app"
+      }
+    ],
+    "copy-move-rename": [
+      {
+        "scene": "transfer-progress",
+        "state": "copying",
+        "title": "Copy in progress",
+        "caption": "Progress while files copy to another album.",
+        "section": "copy-to-another-album"
+      },
+      {
+        "scene": "transfer-progress",
+        "state": "complete",
+        "title": "Copy finished",
+        "caption": "The completion panel after a successful copy.",
+        "section": "copy-to-another-album"
+      },
+      {
+        "scene": "album-transfer",
+        "state": "complete",
+        "title": "Copy result",
+        "caption": "The finished transfer sheet offers Open to jump to the destination album.",
+        "section": "copy-to-another-album"
+      },
+      {
+        "scene": "media-quick-actions",
+        "title": "Rename from the viewer",
+        "caption": "The photo actions bar with its rename action.",
+        "section": "rename-a-file"
+      },
+      {
+        "scene": "photo-more-actions",
+        "title": "Copy and Move entries",
+        "caption": "Actions in the photo information panel.",
+        "section": "pick-a-destination",
+        "interactive": false
+      },
+      {
+        "scene": "album-transfer",
+        "state": "destinations",
+        "title": "Destination sheet",
+        "caption": "The destination sheet lists local albums and the connected cloud accounts.",
+        "section": "pick-a-destination"
+      }
+    ],
+    "cloud-transfer": [
+      {
+        "scene": "transfer-progress",
+        "state": "copying",
+        "title": "Transfer progress",
+        "caption": "The same progress panel the app shows for longer copies.",
+        "section": "how-a-transfer-runs",
+        "interactive": false
+      },
+      {
+        "scene": "album-transfer",
+        "state": "complete",
+        "title": "Transfer finished",
+        "caption": "The finished sheet shows the result and offers Open for the destination album.",
+        "section": "verify-before-deleting"
+      },
+      {
+        "scene": "album-transfer",
+        "state": "destinations",
+        "title": "Picking a cloud destination",
+        "caption": "The destination sheet lists On this device and the connected accounts.",
+        "section": "example-copy-one-photo-to-the-nas"
+      }
+    ],
+    "cloud-albums": [
+      {
+        "scene": "cloud-albums-browser",
+        "title": "Cloud albums",
+        "caption": "Cloud albums group under their provider. Shared albums carry a Shared badge.",
+        "section": "browse-cloud-albums"
+      }
+    ],
+    "cloud-archive-memories": [
+      {
+        "scene": "cloud-archive",
+        "title": "Cloud archive",
+        "caption": "The cloud archive, with example photos and the app's archive explanation.",
+        "section": "cloud-archive"
+      },
+      {
+        "scene": "memories-viewer",
+        "title": "Cloud memories",
+        "caption": "The same story viewer used for local memories, not a fabricated cloud fetch.",
+        "section": "cloud-memories"
+      }
+    ],
+    "manage-media": [
+      {
+        "scene": "browse-timeline",
+        "state": "selected",
+        "title": "Selecting on the grid",
+        "caption": "Long-press and drag to select; the count is shown in the bar.",
+        "section": "select-items"
+      },
+      {
+        "scene": "selection-controls",
+        "state": "selected",
+        "title": "Selection controls",
+        "caption": "Selection count and Select all controls.",
+        "section": "select-items"
+      }
+    ],
+    "favorites": [
+      {
+        "scene": "media-quick-actions",
+        "title": "The favorite heart",
+        "caption": "Tap the heart on the photo actions bar in the live preview.",
+        "section": "mark-a-favorite"
+      },
+      {
+        "scene": "browse-favorites",
+        "state": "filled",
+        "title": "The Favorites screen",
+        "caption": "Every item marked with a heart, grouped by date. The empty state is a second pose.",
+        "section": "browse-favorites"
+      }
+    ],
+    "sharing": [
+      {
+        "scene": "media-quick-actions",
+        "title": "Share from the viewer",
+        "caption": "The share action on the photo actions bar.",
+        "section": "share-a-single-item"
+      },
+      {
+        "scene": "photo-more-actions",
+        "title": "Share and clipboard actions",
+        "caption": "Actions in the photo information panel.",
+        "section": "copy-to-clipboard-instead",
+        "interactive": false
+      }
+    ],
+    "media-viewer": [
+      {
+        "scene": "viewer-photo",
+        "state": "photo",
+        "title": "The photo viewer",
+        "caption": "An opened photo with its date header and quick actions.",
+        "section": "moving-around"
+      },
+      {
+        "scene": "viewer-photo",
+        "state": "details",
+        "title": "Media Info panel",
+        "caption": "Media Info slides the details panel up over the open photo.",
+        "section": "groups-and-the-action-drawer"
+      },
+      {
+        "scene": "group-members",
+        "state": "single",
+        "title": "Burst group strip",
+        "caption": "Members of a burst group under the photo.",
+        "section": "groups-and-the-action-drawer"
+      },
+      {
+        "scene": "group-members",
+        "state": "multi",
+        "title": "Picking group members",
+        "caption": "Select members of a burst for a group action.",
+        "section": "groups-and-the-action-drawer"
+      },
+      {
+        "scene": "viewer-photo",
+        "state": "paging-demo",
+        "title": "Swipe between photos",
+        "caption": "Swipe left for the next photo and right to go back.",
+        "section": "moving-around"
+      }
+    ],
+    "in-app-help": [
+      {
+        "scene": "help-browser",
+        "title": "Built-in help",
+        "caption": "The same help articles inside the app, searchable.",
+        "section": "finding-help"
+      }
+    ],
+    "date-formats": [
+      {
+        "scene": "settings-date-formats",
+        "title": "Date format settings",
+        "caption": "Every date field with its live pattern editor.",
+        "section": "the-fields"
+      }
+    ],
+    "ai-models": [
+      {
+        "scene": "settings-ai-models",
+        "title": "Model downloads",
+        "caption": "Each model group with its download state.",
+        "section": "the-model-groups"
+      }
+    ],
+    "selection-actions": [
+      {
+        "scene": "settings-selection-actions",
+        "title": "Selection action settings",
+        "caption": "Reorder and toggle the actions on the selection sheet.",
+        "section": "reorder-add-remove"
+      },
+      {
+        "scene": "selection-controls",
+        "state": "all",
+        "title": "Selection controls",
+        "caption": "Selection count and Select all controls.",
+        "section": "the-actions-and-their-zones"
+      }
+    ],
+    "editor": [
+      {
+        "scene": "editor-photo",
+        "state": "lighting",
+        "title": "The editor",
+        "caption": "The Lighting tab of the editor on an example photo.",
+        "section": "layout",
+        "interactive": false
+      }
+    ],
+    "crop-rotate": [
+      {
+        "scene": "editor-photo",
+        "state": "crop",
+        "title": "Crop and rotate controls",
+        "caption": "The editor canvas with the crop frame tools and rotate controls.",
+        "section": "crop",
+        "interactive": false
+      }
+    ],
+    "lighting-colour": [
+      {
+        "scene": "editor-photo",
+        "state": "lighting",
+        "title": "Lighting controls",
+        "caption": "Brightness, contrast, and tone sliders in the Lighting tab.",
+        "section": "lighting",
+        "interactive": false
+      },
+      {
+        "scene": "editor-photo",
+        "state": "colour",
+        "title": "Colour controls",
+        "caption": "The Colour tab's tint and tone tools on an example photo.",
+        "section": "colour",
+        "interactive": false
+      }
+    ],
+    "filters-effects": [
+      {
+        "scene": "editor-photo",
+        "state": "filters",
+        "title": "Filters",
+        "caption": "The filter strip with a real look applied to the preview.",
+        "section": "filters",
+        "interactive": false
+      },
+      {
+        "scene": "editor-photo",
+        "state": "effects",
+        "title": "Effects",
+        "caption": "The Effects tab \u2014 vignette and texture controls.",
+        "section": "effects",
+        "interactive": false
+      }
+    ],
+    "markup": [
+      {
+        "scene": "editor-photo",
+        "state": "markup",
+        "title": "Markup tools",
+        "caption": "Draw, text, and blur tools in the Markup tab.",
+        "section": "tools",
+        "interactive": false
+      },
+      {
+        "scene": "markup-text",
+        "title": "Adding text",
+        "caption": "The text overlay with its colour picker \u2014 an example caption in blue.",
+        "section": "text",
+        "interactive": false
+      }
+    ],
+    "raw-development": [
+      {
+        "scene": "editor-raw",
+        "state": "white-balance",
+        "title": "White balance",
+        "caption": "The RAW controls, shown with an example photo.",
+        "section": "white-balance",
+        "interactive": false
+      },
+      {
+        "scene": "editor-raw",
+        "state": "tone",
+        "title": "Tone",
+        "caption": "Exposure and tone controls for the RAW develop.",
+        "section": "tone",
+        "interactive": false
+      },
+      {
+        "scene": "editor-raw",
+        "state": "detail",
+        "title": "Detail",
+        "caption": "Sharpening and noise controls for the RAW develop.",
+        "section": "detail",
+        "interactive": false
+      },
+      {
+        "scene": "editor-raw",
+        "state": "colour",
+        "title": "Colour",
+        "caption": "Colour controls for the RAW develop.",
+        "section": "colour",
+        "interactive": false
+      },
+      {
+        "scene": "editor-raw",
+        "state": "output",
+        "title": "Output",
+        "caption": "Output size and colour-space controls for the RAW develop.",
+        "section": "output",
+        "interactive": false
+      },
+      {
+        "scene": "raw-export",
+        "state": "all-formats",
+        "title": "Export formats",
+        "caption": "JPEG, PNG, and TIFF choices when saving a developed copy.",
+        "section": "saving",
+        "interactive": false
+      },
+      {
+        "scene": "raw-export",
+        "state": "edits-applied",
+        "title": "With edits applied",
+        "caption": "TIFF is unavailable once editor adjustments exist; the sheet explains why.",
+        "section": "saving",
+        "interactive": false
+      }
+    ],
+    "save-edits": [
+      {
+        "scene": "editor-photo",
+        "state": "save-menu",
+        "title": "Save options",
+        "caption": "The More menu with overwrite and revert choices on a changed edit.",
+        "section": "save-copy-versus-overwrite",
+        "interactive": false
+      }
+    ],
+    "subject-cutout": [
+      {
+        "scene": "subject-cutout",
+        "title": "Subject selection",
+        "caption": "A subject selection with include points and the cutout tools.",
+        "section": "refine"
+      },
+      {
+        "scene": "cutout-tools",
+        "title": "The cutout tools",
+        "caption": "Copy, Share, and Save act on the cut subject \u2014 Save writes a transparent PNG.",
+        "section": "use-the-result"
+      }
+    ],
+    "frame-extraction": [
+      {
+        "scene": "frame-picker",
+        "state": "selected",
+        "title": "Picked frames",
+        "caption": "Two frames selected in the picker on an example clip.",
+        "section": "pick",
+        "interactive": false
+      },
+      {
+        "scene": "frame-format",
+        "state": "jpeg",
+        "title": "Export format",
+        "caption": "The JPEG or PNG choice before saving.",
+        "section": "format",
+        "interactive": false
+      }
+    ],
+    "widgets": [
+      {
+        "scene": "widget-style",
+        "state": "photo",
+        "title": "Original photo",
+        "caption": "The widget previewed as the original photo.",
+        "section": "style",
+        "interactive": false
+      },
+      {
+        "scene": "widget-style",
+        "state": "grayscale",
+        "title": "Black & white",
+        "caption": "The same pick in the monochrome style.",
+        "section": "style",
+        "interactive": false
+      },
+      {
+        "scene": "widget-style",
+        "state": "icon",
+        "title": "Icon or emoji",
+        "caption": "An emoji replaces the photo; tapping still opens it.",
+        "section": "style",
+        "interactive": false
+      },
+      {
+        "scene": "widget-style",
+        "state": "grid",
+        "title": "Photo Grid",
+        "caption": "The grid widget configuration with several photos.",
+        "section": "behavior",
+        "interactive": false
+      }
+    ],
+    "metadata": [
+      {
+        "scene": "viewer-photo",
+        "state": "details",
+        "title": "The details panel",
+        "caption": "Media Info expanded over the open photo, on the example image.",
+        "section": "what-the-panel-shows"
+      },
+      {
+        "scene": "metadata-fields",
+        "title": "All metadata",
+        "caption": "Every metadata directory ReFra reads, on an example photo.",
+        "section": "what-the-panel-shows"
+      },
+      {
+        "scene": "metadata-edit",
+        "title": "Edit label and description",
+        "caption": "Rename the file and edit its description.",
+        "section": "editing"
+      },
+      {
+        "scene": "capture-date",
+        "state": "edit",
+        "title": "Edit capture date",
+        "caption": "Change the date fields in this example.",
+        "section": "editing"
+      }
+    ],
+    "metadata-privacy": [
+      {
+        "scene": "metadata-removal",
+        "state": "location-supported",
+        "title": "Remove metadata",
+        "caption": "Only the removal modes this format supports are enabled.",
+        "section": "what-location-only-removes"
+      },
+      {
+        "scene": "metadata-removal",
+        "state": "unsupported-format",
+        "title": "Unsupported format",
+        "caption": "A format with no removable metadata disables every mode.",
+        "section": "what-location-only-removes"
+      }
+    ],
+    "cloud-overview": [
+      {
+        "scene": "cloud-accounts",
+        "state": "empty",
+        "title": "No accounts yet",
+        "caption": "The Add server choices shown before any account exists; sample providers only.",
+        "section": "accounts",
+        "interactive": false
+      },
+      {
+        "scene": "cloud-accounts",
+        "state": "connected",
+        "title": "Connected accounts",
+        "caption": "Two sample accounts \u2014 an Immich server and an SMB share \u2014 each reporting Connected.",
+        "section": "accounts",
+        "interactive": false
+      }
+    ],
+    "cloud-accounts": [
+      {
+        "scene": "cloud-accounts",
+        "state": "empty",
+        "title": "No accounts yet",
+        "caption": "The Add server choices shown before any account exists; sample providers only.",
+        "section": "list",
+        "interactive": false
+      },
+      {
+        "scene": "cloud-accounts",
+        "state": "connected",
+        "title": "Connected accounts",
+        "caption": "Two sample accounts \u2014 an Immich server and an SMB share \u2014 each reporting Connected.",
+        "section": "list",
+        "interactive": false
+      },
+      {
+        "scene": "cloud-accounts",
+        "state": "error",
+        "title": "Connection error off the local network",
+        "caption": "An SMB account in error while the phone is off the local network; the banner explains why.",
+        "section": "list",
+        "interactive": false
+      }
+    ],
+    "cloud-immich": [
+      {
+        "scene": "cloud-setup-immich",
+        "state": "server",
+        "title": "Server step",
+        "caption": "The Server URL field of the Immich wizard, on a sample address.",
+        "section": "wizard",
+        "interactive": false
+      },
+      {
+        "scene": "cloud-setup-immich",
+        "state": "credentials",
+        "title": "Credentials step",
+        "caption": "API key or email/password, the display name field, and Test connection \u2014 sample values only.",
+        "section": "wizard",
+        "interactive": false
+      }
+    ],
+    "cloud-nextcloud": [
+      {
+        "scene": "cloud-setup-nextcloud",
+        "state": "server",
+        "title": "Server step",
+        "caption": "The Server URL field of the Nextcloud wizard, on a sample address.",
+        "section": "wizard",
+        "interactive": false
+      },
+      {
+        "scene": "cloud-setup-nextcloud",
+        "state": "browser",
+        "title": "Browser sign-in",
+        "caption": "The default Credentials step offers Sign in with Nextcloud; no browser is opened here.",
+        "section": "wizard",
+        "interactive": false
+      },
+      {
+        "scene": "cloud-setup-nextcloud",
+        "state": "manual",
+        "title": "Manual app password",
+        "caption": "The same step with the manual username and app-password form open.",
+        "section": "wizard",
+        "interactive": false
+      }
+    ],
+    "cloud-owncloud": [
+      {
+        "scene": "cloud-setup-owncloud",
+        "state": "server",
+        "title": "Server step",
+        "caption": "The Server URL field of the ownCloud wizard, on a sample address.",
+        "section": "wizard",
+        "interactive": false
+      },
+      {
+        "scene": "cloud-setup-owncloud",
+        "state": "credentials",
+        "title": "Credentials step",
+        "caption": "Username and password (or an app password), the display name field, and Test connection.",
+        "section": "wizard",
+        "interactive": false
+      }
+    ],
+    "cloud-webdav": [
+      {
+        "scene": "cloud-setup-webdav",
+        "state": "server",
+        "title": "Server step",
+        "caption": "The Server URL field of the WebDAV wizard, on a sample endpoint.",
+        "section": "wizard",
+        "interactive": false
+      },
+      {
+        "scene": "cloud-setup-webdav",
+        "state": "credentials",
+        "title": "Credentials step",
+        "caption": "Username and password, the display name field, and Test connection.",
+        "section": "wizard",
+        "interactive": false
+      }
+    ],
+    "cloud-smb": [
+      {
+        "scene": "cloud-setup-smb",
+        "state": "server",
+        "title": "Server step",
+        "caption": "The Server URL field of the SMB wizard takes an smb:// share address.",
+        "section": "wizard",
+        "interactive": false
+      },
+      {
+        "scene": "cloud-setup-smb",
+        "state": "credentials",
+        "title": "Credentials step",
+        "caption": "Share username and password, the display name field, and Test connection.",
+        "section": "wizard",
+        "interactive": false
+      },
+      {
+        "scene": "cloud-setup-smb",
+        "state": "guest",
+        "title": "Guest access",
+        "caption": "Leaving the username blank asks the share for guest access.",
+        "section": "wizard",
+        "interactive": false
+      }
+    ],
+    "cloud-nfs": [
+      {
+        "scene": "cloud-setup-nfs",
+        "state": "server",
+        "title": "Server step",
+        "caption": "The Server URL field of the NFS wizard takes an nfs:// export address.",
+        "section": "wizard",
+        "interactive": false
+      },
+      {
+        "scene": "cloud-setup-nfs",
+        "state": "credentials",
+        "title": "Credentials step",
+        "caption": "The optional uid:gid identity field and a display name, on a sample export.",
+        "section": "wizard",
+        "interactive": false
+      }
+    ],
+    "cloud-networking": [
+      {
+        "scene": "cloud-network-options",
+        "state": "local",
+        "title": "On the local network",
+        "caption": "An account's Networking page while the local URL is in effect; sample Wi-Fi name and URLs.",
+        "section": "setup",
+        "interactive": false
+      },
+      {
+        "scene": "cloud-network-options",
+        "state": "external",
+        "title": "External address active",
+        "caption": "The same account away from the home Wi-Fi, using the external URL.",
+        "section": "setup",
+        "interactive": false
+      }
+    ],
+    "cloud-backup": [
+      {
+        "scene": "cloud-setup-options",
+        "state": "folders",
+        "title": "Back up local folders in the setup wizard",
+        "caption": "The add-server wizard's Sync step picks which local folders upload to the account.",
+        "section": "folders",
+        "interactive": false
+      },
+      {
+        "scene": "cloud-backup-options",
+        "state": "immich",
+        "title": "Backup options (Immich)",
+        "caption": "Cellular, charging and album-sync options on a sample Immich account \u2014 no upload-folder rows.",
+        "section": "options",
+        "interactive": false
+      },
+      {
+        "scene": "cloud-backup-options",
+        "state": "folders",
+        "title": "Backup options (folder provider)",
+        "caption": "A sample SMB account gets the upload-folder destination rows Immich lacks.",
+        "section": "options",
+        "interactive": false
+      },
+      {
+        "scene": "cloud-backup-dashboard",
+        "state": "overview",
+        "title": "Backup & Sync dashboard",
+        "caption": "The backup hub on a sample account: health bar with verified vs filename-assumed items, per-service cards and the global actions. The state picker also shows an active upload and remote indexing.",
+        "section": "dashboard",
+        "interactive": false
+      },
+      {
+        "scene": "cloud-upload-details",
+        "state": "uploading",
+        "title": "Upload details",
+        "caption": "What the Upload Details screen shows mid-run \u2014 live progress and the pending queue grouped by account and album. Switch to the queued state for the idle queue view.",
+        "section": "dashboard",
+        "interactive": false
+      }
+    ],
+    "cloud-settings": [
+      {
+        "scene": "cloud-account-settings",
+        "state": "overview",
+        "title": "Account settings",
+        "caption": "A connected sample account's page \u2014 status card, sync and download switches, and the section links.",
+        "section": "overview",
+        "interactive": false
+      },
+      {
+        "scene": "cloud-notification-options",
+        "title": "Notification options",
+        "caption": "Total progress, per-file progress and failure notifications for a sample account.",
+        "section": "preferences",
+        "interactive": false
+      },
+      {
+        "scene": "cloud-viewer-options",
+        "title": "Viewer options",
+        "caption": "Loop videos is the per-account viewer switch.",
+        "section": "preferences",
+        "interactive": false
+      },
+      {
+        "scene": "cloud-advanced-options",
+        "state": "normal",
+        "title": "Advanced options",
+        "caption": "Verbose logging, read-only mode, remote-deletion sync and the global cache clear.",
+        "section": "advanced",
+        "interactive": false
+      }
+    ],
+    "cloud-sync": [
+      {
+        "scene": "cloud-account-settings",
+        "state": "syncing",
+        "title": "Sync running",
+        "caption": "Sync now mid-run on a sample account \u2014 the row shows progress and disables itself.",
+        "section": "controls",
+        "interactive": false
+      },
+      {
+        "scene": "cloud-account-dialog",
+        "state": "interval",
+        "title": "Sync interval",
+        "caption": "The interval choices offered by Auto-sync.",
+        "section": "controls",
+        "interactive": false
+      },
+      {
+        "scene": "cloud-sync-status",
+        "title": "Sync Status card",
+        "caption": "A sample account's index counts \u2014 cached listings, synced, remote-only and pending-upload items \u2014 plus the Download all remote media and Sync now actions.",
+        "section": "status",
+        "interactive": false
+      }
+    ],
+    "cloud-downloads": [
+      {
+        "scene": "cloud-account-dialog",
+        "state": "download",
+        "title": "Download confirmation",
+        "caption": "The confirmation shown before downloading remote media \u2014 example count and size; nothing downloads.",
+        "section": "download",
+        "interactive": false
+      },
+      {
+        "scene": "cloud-account-dialog",
+        "state": "remove-copies",
+        "title": "Remove downloaded copies",
+        "caption": "The confirmation for removing app-downloaded copies \u2014 an example only; nothing is removed.",
+        "section": "remove",
+        "interactive": false
+      }
+    ],
+    "cloud-destinations": [
+      {
+        "scene": "cloud-destinations",
+        "state": "accounts",
+        "title": "Destinations per album",
+        "caption": "Each sample album row shows which clouds it backs up to: Camera targets both example accounts, Download only the NAS, Screenshots none.",
+        "section": "assign",
+        "interactive": false
+      },
+      {
+        "scene": "cloud-destinations",
+        "state": "choose-clouds",
+        "title": "\"Where should this album back up?\"",
+        "caption": "The per-album sheet opened on Camera: an All clouds master switch, per-account switches, and Delete from device after backup once a destination exists.",
+        "section": "assign",
+        "interactive": false
+      }
+    ],
+    "cloud-offline": [
+      {
+        "scene": "cloud-offline-cache",
+        "state": "ready",
+        "title": "Offline & Cache",
+        "caption": "The global offline screen on a sample account: force-offline switch, cache-while-browsing options, the shared storage bar, and one pinned account.",
+        "section": "modes",
+        "interactive": false
+      },
+      {
+        "scene": "cloud-offline-cache",
+        "state": "budget",
+        "title": "Cache size limit",
+        "caption": "The fixed-size choices the Cache size limit dialog offers (256 MB up to 5 GB) over a 512 MB sample budget.",
+        "section": "modes",
+        "interactive": false
+      },
+      {
+        "scene": "cloud-offline-cache",
+        "state": "account-cache",
+        "title": "Cached data by account",
+        "caption": "The per-account sheet lists cache by album with per-album clear actions and the account-wide clear \u2014 sample numbers only.",
+        "section": "cache",
+        "interactive": false
+      }
+    ],
+    "cloud-free-up-space": [
+      {
+        "scene": "cloud-free-space",
+        "state": "ready",
+        "title": "Free Up Space",
+        "caption": "After a scan, one sample photo (over 90 days old, not a favorite) is verified as backed up and offered as 'Remove 1 local copies'.",
+        "section": "review",
+        "interactive": false
+      },
+      {
+        "scene": "cloud-free-space",
+        "state": "automatic",
+        "title": "Automatic cleanup",
+        "caption": "Run automatically enabled on a sample account, with the Every day / Every 3 days / Every week frequency choices.",
+        "section": "automatic",
+        "interactive": false
+      }
+    ],
+    "cloud-shared-links": [
+      {
+        "scene": "cloud-shared-links",
+        "state": "list",
+        "title": "Existing shared links",
+        "caption": "The list for a sample account: an existing album link with its expiry and Download badge, plus the All / Albums / Individual shares filter.",
+        "section": "browse",
+        "interactive": false
+      },
+      {
+        "scene": "cloud-shared-links",
+        "state": "edit",
+        "title": "Edit a shared link",
+        "caption": "The edit sheet on the sample link: description, password, expiry choices, and the download/upload/metadata switches.",
+        "section": "edit",
+        "interactive": false
+      }
+    ],
+    "video-playback": [
+      {
+        "scene": "viewer-video",
+        "state": "controls",
+        "title": "Playback controls",
+        "caption": "Seek bar, play, and time readout over a paused clip.",
+        "section": "playing-and-seeking"
+      },
+      {
+        "scene": "viewer-video",
+        "state": "paused",
+        "title": "Paused video",
+        "caption": "The chrome hides and the current frame stays on screen.",
+        "section": "playing-and-seeking"
+      },
+      {
+        "scene": "viewer-video",
+        "state": "seeking-demo",
+        "title": "Seek through a video",
+        "caption": "Drag the seek bar to move forward or back through the clip.",
+        "section": "playing-and-seeking"
+      }
+    ],
+    "casting": [
+      {
+        "scene": "cast-devices",
+        "state": "nearby",
+        "title": "Device picker",
+        "caption": "An FCast receiver discovered on the local network.",
+        "section": "connect-and-cast"
+      },
+      {
+        "scene": "cast-devices",
+        "state": "connected",
+        "title": "Connected receiver",
+        "caption": "Cast this media, stop the current cast, or disconnect.",
+        "section": "connect-and-cast"
+      }
+    ],
+    "panoramas": [
+      {
+        "scene": "panorama-viewer",
+        "title": "Inside a photo sphere",
+        "caption": "Drag to look around inside a spherical panorama.",
+        "section": "looking-around"
+      }
+    ],
+    "memories": [
+      {
+        "scene": "memories-viewer",
+        "title": "Story viewer",
+        "caption": "A memory card playing full screen, first of three items.",
+        "section": "the-story-viewer"
+      }
+    ],
+    "trash": [
+      {
+        "scene": "browse-trash",
+        "state": "filled",
+        "title": "The Trash screen",
+        "caption": "Trashed items stay recoverable for the stated period; Restore all and Delete all permanently act on everything.",
+        "section": "open-the-trash"
+      }
+    ],
+    "motion-photos": [
+      {
+        "scene": "motion-photo-controls",
+        "title": "Motion photo controls",
+        "caption": "The motion-photo frame strip and Extract frames action.",
+        "section": "in-the-viewer",
+        "interactive": false
+      }
+    ],
+    "open-with-wallpaper": [
+      {
+        "scene": "photo-more-actions",
+        "title": "The photo action drawer",
+        "caption": "Actions in the photo information panel.",
+        "section": "use-as-wallpaper",
+        "interactive": false
+      }
+    ],
+    "visual-search": [
+      {
+        "scene": "visual-search-options",
+        "state": "default",
+        "title": "Visual search settings",
+        "caption": "The visual search detail screen: provider, button position, vault, and format options.",
+        "section": "turn-it-on"
+      }
+    ],
+    "people": [
+      {
+        "scene": "people-browser",
+        "state": "named",
+        "title": "People groups",
+        "caption": "Named and unnamed groups, scan progress, and hidden people.",
+        "section": "scan-and-group"
+      },
+      {
+        "scene": "person-controls",
+        "title": "A person's controls",
+        "caption": "The person header: name, photo count, date range, and the birthday, cover and hide actions.",
+        "section": "work-with-a-person"
+      }
+    ],
+    "edit-backups": [
+      {
+        "scene": "edit-backups-viewer",
+        "state": "edited",
+        "title": "The edited photo",
+        "caption": "The Edited tab shows the current photo; the header keeps the running storage total.",
+        "section": "the-backups-screen"
+      },
+      {
+        "scene": "edit-backups-viewer",
+        "state": "original",
+        "title": "The kept original",
+        "caption": "The Original tab shows the pre-edit backup the app kept for reverting.",
+        "section": "the-backups-screen"
+      },
+      {
+        "scene": "edit-backups-viewer",
+        "state": "options",
+        "title": "Cleanup actions",
+        "caption": "The menu exposes Auto-cleanup for backups older than 90 days and Delete All Backups.",
+        "section": "cleanup-rules"
+      }
+    ],
+    "maps-location": [
+      {
+        "scene": "map-locations",
+        "title": "Photos on the map",
+        "caption": "Photos with coordinates appear as markers. The panel groups example photos by date and lists a named location.",
+        "section": "using-the-map"
+      }
+    ],
+    "accessibility": [
+      {
+        "scene": "selection-controls",
+        "state": "selected",
+        "title": "Selection controls",
+        "caption": "Selection count and Select all controls.",
+        "section": "alternatives-to-gestures"
+      },
+      {
+        "scene": "settings-navigation",
+        "title": "Text labels",
+        "caption": "Navigation settings include text labels for selection actions.",
+        "section": "knowing-what-a-control-does"
+      }
+    ],
+    "external-storage": [
+      {
+        "scene": "settings-private-folder",
+        "state": "saf-uri",
+        "title": "Folder location",
+        "caption": "The folder-location control used to choose a private folder.",
+        "section": "files-android-does-not-index"
+      }
+    ],
+    "image-formats": [
+      {
+        "scene": "raw-export",
+        "state": "all-formats",
+        "title": "RAW export",
+        "caption": "RAW export format and quality choices.",
+        "section": "what-opens"
+      }
+    ],
+    "troubleshooting": [
+      {
+        "scene": "ignored-rules",
+        "title": "Ignore rules",
+        "caption": "Ignore rules can hide photos from Timeline or Albums.",
+        "section": "photos-are-missing"
+      }
+    ],
+    "gestures": [
+      {
+        "scene": "viewer-photo",
+        "state": "paging-demo",
+        "title": "Swipe between photos",
+        "caption": "Swipe left for the next photo and right to go back.",
+        "section": "viewer"
+      },
+      {
+        "scene": "viewer-video",
+        "state": "seeking-demo",
+        "title": "Seek through a video",
+        "caption": "Drag the seek bar to move forward or back through the clip.",
+        "section": "viewer"
+      }
+    ]
+  }
+}

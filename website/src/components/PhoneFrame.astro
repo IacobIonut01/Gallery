@@ -1,0 +1,105 @@
+---
+/**
+ * PhoneFrame — glass phone shell used by the landing hero. The slot is where
+ * a LiveEmbed mounts.
+ */
+import { DEVICE_PRESETS, PHONE_STATUS_BAR_HEIGHT } from '@lib/constants';
+
+interface Props {
+  /** Logical screen width in px; height follows the phone aspect ratio. */
+  width?: number;
+}
+const { width = 300 } = Astro.props;
+const preset = DEVICE_PRESETS.phone;
+---
+
+<div
+  class="phone glass"
+  style={`--pw: ${width}px; --ph: ${preset.height}px; --statusbar-dp: ${PHONE_STATUS_BAR_HEIGHT}`}
+>
+  <div class="phone-screen">
+    <div class="phone-statusbar" aria-hidden="true">
+      <span class="phone-statusbar-time">9:41</span>
+      <span class="phone-statusbar-icons">
+        <svg viewBox="0 0 24 24" width="16" height="16"><path d="M3 20v-3h3v3H3zm5 0v-7h3v7H8zm5 0V8h3v12h-3zm5 0V3h3v17h-3z" fill="currentColor" /></svg>
+        <svg viewBox="0 0 24 24" width="16" height="16"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8 3 3 3-3a4.23 4.23 0 0 0-6 0zM5 13l2 2a7.07 7.07 0 0 1 10 0l2-2c-3.87-3.87-10.13-3.87-14 0z" fill="currentColor" /></svg>
+        <svg viewBox="0 0 24 24" width="16" height="16"><rect x="3" y="7" width="16" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.7" /><rect x="5" y="9" width="12" height="6" rx=".5" fill="currentColor" /><rect x="20" y="10" width="2" height="4" rx=".5" fill="currentColor" /></svg>
+      </span>
+    </div>
+    <slot />
+    <div class="phone-gesture" aria-hidden="true"></div>
+  </div>
+</div>
+
+<style>
+  .phone {
+    width: min(calc(var(--pw) + 20px), 100%);
+    border-radius: 40px;
+    padding: 10px;
+    box-shadow:
+      0 40px 80px color-mix(in srgb, var(--md-shadow) 30%, transparent),
+      inset 0 0 0 1px color-mix(in srgb, var(--md-outline) 30%, transparent);
+  }
+  .phone-screen {
+    width: 100%;
+    aspect-ratio: 412 / 915;
+    border-radius: 32px;
+    overflow: hidden;
+    background: var(--md-surface-container-lowest);
+    position: relative;
+    container-type: inline-size;
+  }
+  /* Decorative OS chrome over the embed — no interaction, no layout cost.
+     Every metric scales off the real screen width (cqw) so the glyphs track
+     the logical 412dp frame, not the configured --pw. */
+  .phone-statusbar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 2;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: calc(100cqw * var(--statusbar-dp) / 412);
+    padding-inline: calc(100cqw * 32 / 412);
+    font-size: calc(100cqw * 14 / 412);
+    font-weight: 600;
+    line-height: 1;
+    color: var(--md-on-surface);
+  }
+  .phone-statusbar-icons {
+    display: flex;
+    align-items: center;
+    gap: calc(100cqw * 4 / 412);
+  }
+  .phone-statusbar-icons svg {
+    width: calc(100cqw * 16 / 412);
+    height: calc(100cqw * 16 / 412);
+  }
+  .phone-gesture {
+    position: absolute;
+    z-index: 2;
+    pointer-events: none;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: calc(100cqw * 10 / 412);
+    width: calc(100cqw * 108 / 412);
+    height: calc(100cqw * 4 / 412);
+    border-radius: 999px;
+    background: var(--md-on-surface);
+  }
+  .phone-screen :global(live-embed) {
+    height: 100%;
+  }
+  .phone-screen :global(.embed-shell) {
+    border: 0;
+    border-radius: 0;
+    height: 100%;
+    background: transparent;
+  }
+  .phone-screen :global(.embed-stage) {
+    height: 100%;
+  }
+</style>

@@ -1,0 +1,64 @@
+---
+title: Timeline and albums settings
+summary: Every grid, grouping, sorting, and album-display option under Timeline & Albums.
+area: customize
+path:
+  - Settings
+  - Timeline & Albums
+related: [timeline, albums, album-organization, date-formats]
+scenes: [settings-timeline-albums]
+order: 3
+---
+
+**Settings › Timeline & Albums** controls how media is laid out, grouped, and labeled across the app. The page has three blocks: timeline behavior, album behavior, and per-screen display options.
+
+## Timeline
+
+<PreviewCollection feature="timeline-albums" section="timeline" />
+
+- **Timeline layout**: **Grid** shows equal-sized thumbnails; **Mosaic** varies tile sizes for a denser, magazine-like look. Pinch the grid to change its density; the chosen range differs per layout.
+- **Timeline order**: the date that places and groups items. **Capture time** uses the date embedded in the photo or video, falling back to the file's modified date when none exists. **Date modified** uses when the file last changed. Each choice offers **Newest first** and **Oldest first**.
+- **Group similar photos**: collapses related items into one tile so the grid stays tidy; grouped items open together in the viewer. Four switches control what counts as similar:
+  - **RAW+JPG pairs**: a RAW file and its processed counterpart sharing name and folder.
+  - **Edited copies**: files with copy or edit suffixes such as `(1)`, `_edited`, or `.NIGHT`.
+  - **Burst sequences**: burst shots that share a timestamp.
+  - **Cloud + local copies**: the same file present on the device and on a cloud account; the tile gets a cloud badge.
+- **Animate GIFs in grid**: plays GIF animations in the timeline and album grids. Turn it off if folders full of GIFs feel laggy.
+- **Recheck capture dates**: re-reads the embedded dates of visible local media. Useful after copying files whose modified dates no longer reflect when they were taken.
+- **Timeline controls**: shows the filter icon inside the timeline search bar. Turn it off if you never filter.
+- **Favorite button**: shows a heart next to the search bar that jumps straight to favorites.
+- **Story cards**: opens the story card settings; see [memories](/ReFra/features/memories).
+- **Date formats**: opens the per-context date pattern editor; see [date formats](/ReFra/features/date-formats).
+
+## Albums
+
+- **Merge albums by name**: shows same-named albums from different storage locations as one album; the folders stay separate on disk.
+- **Update modified date**: moves copied, renamed, edited, and rotated media to the top when sorting by modified date.
+- **Organize albums by sections**: sorts albums into labeled, collapsible sections such as Common and Apps. **Manage sections** inside it lets you create, rename, delete, reorder, and show or hide sections; see [album organization](/ReFra/features/album-organization).
+- **Pinned albums as tiles**: shows pinned albums as regular tiles above the rest instead of a scrolling banner.
+- **Show media type albums**: adds quick albums for all Videos, Photos, GIFs, and RAW files at the top of the Albums tab.
+
+## Display
+
+- **Favorite icon on thumbnails**: where the heart badge sits on thumbnails: **Hidden**, or any of the four corners.
+- **Date separators**: a switch per section (Timeline, Albums, Favorites, Vault, Cloud archive) controlling whether media is split under date headers.
+- **Media grouping**: per section (Timeline, Albums, Favorites, Vault, Cloud archive), choose **Daily**, **Monthly**, or **Yearly** grouping. Changes apply across the app right away.
+
+## Library
+
+- **People**, **Location categories**, **Categories**: show or hide the matching section on the Library tab. The same switches appear in the Library's own edit mode; see [library](/ReFra/features/library).
+
+## Example: clean up after a big import
+
+You imported an old camera archive and everything landed under today's modified date:
+
+1. Open **Settings › Timeline & Albums**.
+2. Set **Timeline order** to **Capture time**, **Newest first**.
+3. Tap **Recheck capture dates** so items whose dates were never read get placed correctly.
+4. If albums look too crowded, set **Media grouping** for Timeline to **Monthly**.
+
+## If an option seems to do nothing
+
+- Grouping switches only affect items that actually match: RAW pairing needs both files to share a name and folder, and cloud+local pairing needs a connected cloud account.
+- Sorting by **Date modified** is only useful with **Update modified date** expectations: a file you never touched keeps the modified date it arrived with.
+- Section switches hide the section, not its content; a hidden People section does not delete any people groups.

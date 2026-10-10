@@ -54,7 +54,11 @@ kotlin {
             implementation(libs.cmp.ui.backhandler)
             // api: StringResource appears on public types (e.g. SelectionAction.labelRes)
             api(libs.cmp.components.resources)
+            // components-uiToolingPreview is the only artifact shipping
+            // org.jetbrains.compose.ui.tooling.preview on wasmJs — the new
+            // ui-tooling-preview jar publishes only the androidx package there.
             implementation(libs.cmp.components.ui.tooling.preview)
+            implementation(libs.ui.tooling.preview)
             implementation(libs.cmp.material.icons.extended)
             implementation(libs.material.kolor)
             implementation(libs.kotlinx.collections.immutable)

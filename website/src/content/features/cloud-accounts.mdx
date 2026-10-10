@@ -1,0 +1,45 @@
+---
+title: Manage cloud accounts
+summary: "The Cloud Accounts list: status, storage, sync, editing credentials, and removing a server."
+area: cloud
+path:
+  - Settings
+  - Cloud Accounts
+related: [cloud-overview, cloud-settings, cloud-sync]
+scenes: [cloud-accounts]
+order: 7
+---
+
+**Settings › Cloud Accounts** lists every connected server grouped by provider, with an **Add** action per provider family and **Add another account** for a second server of the same type, so two Immich servers or a work and personal Nextcloud can coexist.
+
+## Reading the list
+
+<PreviewCollection feature="cloud-accounts" section="list" />
+
+Each account row shows:
+
+- A **status**: **Connected**, **Syncing…**, **Authenticating…**, **Disconnected**, or **Error**.
+- **Synced N items** once a sync has run, and the provider's **Server Storage** usage where it reports it.
+- A **Local / VPN** marker on providers such as SMB and NFS that only work on local networks.
+- Capability icons for what that account supports: photos, albums, sync, share links, people, map, smart search, search, OCR, archive, memories, tags.
+- **Sync now** and a settings gear for the account's own options; see [per-account cloud settings](/ReFra/features/cloud-settings).
+
+## Edit an account
+
+1. Open **Settings › Cloud Accounts** and tap the account's gear.
+2. **Credentials** reopens the sign-in step of the wizard on its own; there is no backup-folder step when editing. Updating credentials invalidates the account's local cache, so previews re-fetch afterward.
+3. **Networking** edits the local/external URL switching; see [automatic URL switching](/ReFra/features/cloud-networking).
+
+## Remove an account
+
+1. Open the account's settings and choose **Delete Cloud Provider**.
+2. The confirmation warns that the local cache will be cleared; confirm with **Remove**. Removing takes several moments and can fail with **Could not finish removing this server. Try again.**
+3. Removal clears the account's configuration, cached previews, and offline pins. It does **not** delete anything from the server; the photos stay there.
+
+Removing downloaded originals is a separate action, **Remove downloaded copies**, on the same settings page; see [cloud downloads](/ReFra/features/cloud-downloads).
+
+## Example: two Immich servers
+
+1. Connect your home Immich as described in [connect Immich](/ReFra/features/cloud-immich).
+2. Back on Cloud Accounts, tap **Add Immich** again and sign in to the work server.
+3. Both appear under the Immich heading with independent statuses; sync, backup, and download options apply per account, so the work server can stay read-only while the home one backs up Camera.

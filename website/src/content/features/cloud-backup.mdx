@@ -1,0 +1,53 @@
+---
+title: Cloud backup
+summary: Upload selected local albums to your connected accounts, with network and charging rules.
+area: cloud
+path:
+  - Library
+  - Backup & Sync
+related: [cloud-destinations, cloud-sync, cloud-downloads]
+scenes: [cloud-setup-options, cloud-backup-options, cloud-backup-dashboard, cloud-upload-details]
+order: 10
+---
+
+**Backup** copies local photos and videos *to* your servers, the opposite direction of sync, which only fetches listings. The hub is **Library › Backup & Sync**, and each account also has its own backup section under [cloud settings](/ReFra/features/cloud-settings).
+
+## The dashboard
+
+- **Services** lists the connected accounts, or **Add a service** when none exist.
+- Per account: a progress line (**N / M backed up**), **Backup albums** with the count selected and **Select albums** to change it, **Back up now** to start, and **Rescan backup status** to recheck what still needs uploading.
+- **Back up all now** runs every account's pending uploads.
+- **Upload Details** shows what the current run is doing: **Checking existing backups** while it verifies, then per-group progress (**Uploading N of M**, **N completed**, **N failed**). **No active uploads** appears when nothing is running, and **Everything is backed up** when the queue is empty.
+
+<PreviewCollection feature="cloud-backup" section="dashboard" />
+
+## Backup options
+
+**Backup Options** holds network, charging, and album-sync settings. Options edited under **Global** apply the changed values to all current accounts; they are not defaults for future accounts; an account's own section overrides where set.
+
+- **Use cellular data for photos / videos**: allow uploads on mobile data, separately per media type.
+- **Require charging**: only back up while the device is charging.
+- **Sync albums to server**: create and update server albums matching the local albums (where the provider supports albums).
+- **Upload folder**: the remote folder uploads go into; each backed-up album becomes a subfolder. Empty uses the provider default (**Photos**), and you can type a remote path such as `Backups/Phone`. Path-based destinations apply to folder-oriented providers; Immich manages its own library instead.
+- **Videos folder**: an optional separate remote folder for videos; empty keeps them with photos. Per album, a **Custom remote folder** can override the account default.
+
+<PreviewCollection feature="cloud-backup" section="options" />
+
+## Choosing what to back up
+
+**Select albums** picks which local albums upload to that account. Albums show **Queued**, **Syncing**, or progress while running. For choosing *which clouds* an album goes to, and deleting local copies after backup, see [backup destinations](/ReFra/features/cloud-destinations).
+
+<PreviewCollection feature="cloud-backup" section="folders" />
+
+## Deleting a remote copy from the details panel
+
+A photo's [Media Info](/ReFra/features/metadata) panel shows a **Backed up** row when a cloud account holds a copy. Tapping it lists the providers holding that backup, and each entry can be deleted from that provider.
+
+**Deleting from a provider permanently removes that remote copy immediately; the sheet gives no extra confirmation, and this is not Move to Trash.** The local original and copies held by other accounts are not touched. Check backups through this sheet when you need to see where a file lives; do not use the delete action as part of a routine check.
+
+## Example: camera backup at home
+
+1. **Library › Backup & Sync**, open the NAS account's **Backup albums › Select albums**, and tick `Camera`.
+2. In **Backup Options**, leave cellular off and turn on **Require charging**.
+3. Tap **Back up now** once to confirm the first upload lands on the server, then let the background backup continue.
+4. Before deleting any local photos later, open the account on the server and confirm the files are actually there.

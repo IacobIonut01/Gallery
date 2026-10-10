@@ -1,0 +1,306 @@
+---
+import { withBase } from '@lib/paths';
+import { REPO } from '@lib/constants';
+import ThemeToggle from './ThemeToggle.astro';
+import BrandMark from './BrandMark.astro';
+
+const links = [
+  { href: '/overview', label: 'Overview' },
+  { href: '/features/', label: 'Features' },
+  { href: '/build', label: 'Build' },
+  { href: '/support', label: 'Support' },
+];
+const current = Astro.url.pathname;
+
+const normalizePath = (path: string) => path.replace(/\/+$/, '') || '/';
+/** Active on exact match; /features/ also matches its children. */
+const isActive = (href: string) => {
+  const target = normalizePath(withBase(href));
+  const path = normalizePath(current);
+  return path === target || (href === '/features/' && path.startsWith(`${target}/`));
+};
+---
+
+<header class="site-header glass" data-pagefind-ignore>
+  <div class="container header-row">
+    <a class="wordmark" href={withBase('/')} aria-label="ReFra home">
+      <BrandMark size={32} />
+      <span class="wordmark-name">ReFra</span>
+      <span class="wordmark-sub">Docs</span>
+    </a>
+    <nav class="main-nav" aria-label="Site">
+      {
+        links.map((l) => (
+          <a
+            href={withBase(l.href)}
+            class:list={['nav-link', { active: isActive(l.href) }]}
+            aria-current={isActive(l.href) ? 'page' : undefined}
+          >
+            {l.label}
+          </a>
+        ))
+      }
+    </nav>
+    <div class="header-actions">
+      <a class="search-link" href={withBase('/search')} aria-label="Search docs">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"></circle>
+          <path d="m16 16 4.5 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+        </svg>
+        <span class="search-text">Search docs</span>
+      </a>
+      <a class="nav-icon github-link" href={REPO} rel="noopener" aria-label="GitHub repository" title="GitHub">
+        <svg viewBox="0 0 16 16" width="19" height="19" aria-hidden="true" fill="currentColor">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path>
+        </svg>
+      </a>
+      <ThemeToggle />
+      <a class="btn btn-primary header-cta" href={withBase('/download')}>Download</a>
+      <details class="mobile-nav">
+        <summary aria-label="Open navigation">
+          <svg class="icon-menu" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"></path>
+          </svg>
+          <svg class="icon-close" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+            <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"></path>
+          </svg>
+        </summary>
+        <nav class="mobile-panel" aria-label="Site">
+          {
+            links.map((l) => (
+              <a
+                href={withBase(l.href)}
+                class:list={['mobile-link', { active: isActive(l.href) }]}
+                aria-current={isActive(l.href) ? 'page' : undefined}
+              >
+                {l.label}
+              </a>
+            ))
+          }
+          <a
+            href={withBase('/download')}
+            class:list={['mobile-link', { active: isActive('/download') }]}
+            aria-current={isActive('/download') ? 'page' : undefined}
+          >
+            Download
+          </a>
+          <a
+            href={withBase('/search')}
+            class:list={['mobile-link', { active: isActive('/search') }]}
+            aria-current={isActive('/search') ? 'page' : undefined}
+          >
+            Search docs
+          </a>
+        </nav>
+      </details>
+    </div>
+  </div>
+</header>
+
+<script>
+  // Escape closes the compact menu and returns focus to its trigger.
+  document.querySelectorAll('.mobile-nav').forEach((nav) => {
+    nav.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && nav.open) {
+        nav.open = false;
+        nav.querySelector('summary')?.focus();
+      }
+    });
+  });
+</script>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    border-left: 0;
+    border-right: 0;
+    border-top: 0;
+    border-radius: 0;
+  }
+
+  .header-row {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    height: 72px;
+  }
+  .wordmark {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    color: var(--md-on-surface);
+  }
+  .wordmark:hover {
+    text-decoration: none;
+  }
+  .wordmark-name {
+    font-weight: 700;
+    font-size: 1.15rem;
+    letter-spacing: -0.01em;
+  }
+  .wordmark-sub {
+    font-size: 0.95rem;
+    color: var(--md-on-surface-variant);
+  }
+  .main-nav {
+    display: none;
+    gap: 2px;
+    flex: 1;
+  }
+  .nav-link {
+    padding: 7px 13px;
+    border-radius: 999px;
+    color: var(--md-on-surface-variant);
+    font-size: 0.92rem;
+    white-space: nowrap;
+    transition:
+      background var(--dur-fast) var(--ease-standard),
+      color var(--dur-fast) var(--ease-standard);
+  }
+  .nav-link:hover {
+    color: var(--md-on-surface);
+    background: var(--md-surface-container-high);
+    text-decoration: none;
+  }
+  .nav-link.active {
+    color: var(--md-on-primary-container);
+    background: var(--md-primary-container);
+  }
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+  }
+  .search-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 44px;
+    padding: 0 10px;
+    border-radius: 999px;
+    color: var(--md-on-surface-variant);
+    font-size: 0.9rem;
+    transition:
+      background var(--dur-fast) var(--ease-standard),
+      color var(--dur-fast) var(--ease-standard);
+  }
+  .search-link:hover {
+    color: var(--md-on-surface);
+    background: var(--md-surface-container-high);
+    text-decoration: none;
+  }
+  .search-text {
+    display: none;
+  }
+  .nav-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    color: var(--md-on-surface-variant);
+    transition:
+      background var(--dur-fast) var(--ease-standard),
+      color var(--dur-fast) var(--ease-standard);
+  }
+  .nav-icon:hover {
+    color: var(--md-on-surface);
+    background: var(--md-surface-container-high);
+  }
+  .github-link {
+    display: none;
+  }
+  .header-cta {
+    min-height: 40px;
+    padding: 8px 18px;
+    font-size: 0.9rem;
+    flex: none;
+  }
+  .mobile-nav {
+    position: static;
+    display: block;
+  }
+  .mobile-nav summary {
+    display: inline-grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    color: var(--md-on-surface-variant);
+    cursor: pointer;
+    list-style: none;
+  }
+  .mobile-nav summary::-webkit-details-marker {
+    display: none;
+  }
+  .mobile-nav summary:hover {
+    color: var(--md-on-surface);
+    background: var(--md-surface-container-high);
+  }
+  .mobile-nav .icon-close {
+    display: none;
+  }
+  .mobile-nav[open] .icon-menu {
+    display: none;
+  }
+  .mobile-nav[open] .icon-close {
+    display: block;
+  }
+  .mobile-panel {
+    position: fixed;
+    top: 80px;
+    left: var(--gutter);
+    right: var(--gutter);
+    padding: 8px;
+    border: 1px solid var(--md-outline-variant);
+    border-radius: 16px;
+    background: var(--md-surface-container);
+    box-shadow: 0 16px 40px color-mix(in srgb, var(--md-shadow) 24%, transparent);
+  }
+  .mobile-nav:not([open]) .mobile-panel {
+    display: none;
+  }
+  .mobile-link {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 14px;
+    border-radius: 10px;
+    color: var(--md-on-surface);
+    font-size: 0.95rem;
+  }
+  .mobile-link:hover {
+    background: var(--md-surface-container-high);
+    text-decoration: none;
+  }
+  .mobile-link.active {
+    color: var(--md-on-primary-container);
+    background: var(--md-primary-container);
+  }
+  /* Compact bar: keep the wordmark, theme and menu. Search and Download are
+     reachable from the panel; the full wordmark returns at 720px. */
+  @media (max-width: 719px) {
+    .wordmark-sub,
+    .header-cta,
+    .search-link {
+      display: none;
+    }
+  }
+  @media (min-width: 1280px) {
+    .main-nav {
+      display: flex;
+    }
+    .mobile-nav {
+      display: none;
+    }
+    .search-text {
+      display: inline;
+    }
+    .github-link {
+      display: inline-grid;
+    }
+  }
+</style>

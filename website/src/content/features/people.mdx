@@ -1,0 +1,57 @@
+---
+title: People
+summary: Faces grouped into people, browsable from the library, with naming, merging, and privacy controls.
+area: discover
+path:
+  - Library
+  - People
+related: [smart-features, ai-models, search, library]
+scenes: [people-browser, person-controls]
+order: 3
+---
+
+People groups photos by the faces in them. The grouping runs on your device with the face models installed; a connected provider such as Immich can also expose its own people groups. Either way the Library's **People** section lists them with a photo count.
+
+## Scan and group
+
+<PreviewCollection feature="people" section="scan-and-group" />
+
+1. Open **Library › People**.
+2. Tap **Scan for people** to run the first scan; progress shows "Scanning photos" with a counter, and you can cancel.
+3. **Re-group faces** re-runs the grouping when new photos arrive or a merge went wrong.
+4. Newly found groups appear under **New people**; tap **Add a name** to label one.
+
+Without the face detection and recognition models, grouping is not available; install them under **Settings › Smart Features › AI Models Manager**. See [AI models](/ReFra/features/ai-models).
+
+## Work with a person
+
+<PreviewCollection feature="people" section="work-with-a-person" />
+
+Opening a person shows their photos, a date range, and their controls:
+
+- **Edit name**: renames the person everywhere.
+- **Add a birthday**: stores a birthday on the person.
+- **Set cover**: pick the face thumbnail used for the person (tap the avatar). Available for on-device people.
+- **Merge** / **Looks similar to**: when the app suspects two groups are the same person, it lists them under **Possible duplicates** on the list, or **Looks similar to** on the person page. Confirm with **Same person**, or reject with **Different**. Merging asks "Merge X into Y?" before combining.
+- **Detected faces** (on-device people): the strip of individual faces. Touch and hold a face and choose **Remove face** to stop counting it as that person.
+- **Remove from person** (on-device people): select photos in the person's grid and remove them from the group; the photos stay in your library, they just stop counting as this person.
+- **Hide** / **Unhide**: hidden people move to a **Hidden** section; the list's **Hide hidden people** / **Show hidden people** controls whether that section is visible at all.
+- **Blur everywhere**: obscures this person's face in every photo they appear in and saves the results as new copies; your originals are not overwritten.
+- **Delete person**: removes the group and excludes their faces from future grouping. The confirmation is explicit: your photos are not deleted.
+
+## Local and cloud people
+
+The controls above describe on-device people fully. On a cloud account, which actions exist depends on what that provider supports; selections on a cloud person fall back to the normal media actions instead of the face-specific ones.
+
+## Example: fix a wrong merge
+
+1. Two different friends got grouped as one person. Open that person.
+2. Scroll to **Detected faces**, touch and hold each face that is the wrong friend, and tap **Remove face**.
+3. If the faces form their own group, name it under **New people**.
+4. If instead two existing people should be one, open either and use **Looks similar to** to merge; confirm with **Same person**.
+
+## If people are missing
+
+- The section needs both face models; check the AI Models Manager.
+- A person you hid sits in the **Hidden** section; enable **Show hidden people** to see it.
+- Scanning runs through **Smart Features data**; a scan marked Needs attention there explains why.

@@ -209,7 +209,7 @@ fun PersonDetailScreen(
         },
         aboveGridContent = {
             Column(modifier = Modifier.fillMaxWidth()) {
-                PersonHeader(
+                PersonHeaderContent(
                     state = state,
                     isLocalPerson = viewModel.isLocalPerson,
                     photoCount = personMedia.size,
@@ -563,7 +563,7 @@ private fun personDateRange(media: List<UriMedia>): Pair<String, String>? {
     return format.format(java.util.Date(stamps.min())) to format.format(java.util.Date(stamps.max()))
 }
 
-/** Small action chip used by the single-scroll action row in [PersonHeader]. */
+/** Small action chip used by the single-scroll action row in [PersonHeaderContent]. */
 @Composable
 private fun PersonActionChip(
     onClick: () -> Unit,
@@ -593,7 +593,7 @@ private fun PersonActionChip(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun PersonHeader(
+fun PersonHeaderContent(
     state: PersonDetailUiState,
     isLocalPerson: Boolean = false,
     photoCount: Int = 0,

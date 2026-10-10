@@ -1,0 +1,106 @@
+---
+import { withBase } from '@lib/paths';
+import { AREA_LABELS } from '@lib/constants';
+import previewsRegistry from '../../registry/previews.json';
+import scenesRegistry from '../../registry/scenes.json';
+
+interface Props {
+  id: string;
+  title: string;
+  summary: string;
+  area: string;
+  /** Kept for caller compatibility; previews return later. */
+  scenes?: string[];
+}
+const { id, title, summary, area } = Astro.props;
+
+/* The badge reflects actually published artifacts only — a binding whose scene
+   has no live catalog entry and no captured frames stays a plain "Guide". */
+const boundScenes = (previewsRegistry.features[id] ?? [])
+  .map((b) => scenesRegistry.scenes[b.scene])
+  .filter(Boolean);
+const anyLive = boundScenes.some((s) => s.live);
+const anyCapture = boundScenes.some((s) => Object.keys(s.themes ?? {}).length > 0);
+const badge = anyLive ? 'Interactive preview' : anyCapture ? 'Preview' : 'Guide';
+---
+
+<a class="feature-row" href={withBase(`/features/${id}`)} data-area={area}>
+  <span class="feature-body">
+    <span class="feature-title">{title}</span>
+    <span class="feature-meta">
+      <span class="feature-area">{AREA_LABELS[area] ?? area}</span>
+      <span class="feature-fidelity">{badge}</span>
+    </span>
+    <span class="feature-summary">{summary}</span>
+  </span>
+  <svg class="feature-arrow" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+    <path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+  </svg>
+</a>
+
+<style>
+  .feature-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 4px;
+    color: var(--md-on-surface);
+    border-bottom: 1px solid var(--md-outline-variant);
+  }
+  .feature-row:hover {
+    text-decoration: none;
+  }
+  .feature-row:hover .feature-title {
+    color: var(--md-primary);
+  }
+  .feature-row:hover .feature-arrow {
+    transform: translateX(3px);
+    color: var(--md-primary);
+  }
+  .feature-body {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+  }
+  .feature-title {
+    font-weight: 650;
+    font-size: 1.2rem;
+    letter-spacing: -0.01em;
+    transition: color var(--dur-fast) var(--ease-standard);
+  }
+  .feature-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.78rem;
+    color: var(--md-on-surface-variant);
+  }
+  .feature-area {
+    font-weight: 600;
+    color: var(--md-primary);
+  }
+  .feature-fidelity::before {
+    content: '·';
+    margin-right: 8px;
+    color: var(--md-outline-variant);
+  }
+  .feature-summary {
+    color: var(--md-on-surface-variant);
+    font-size: 0.92rem;
+    max-width: 56ch;
+  }
+  .feature-arrow {
+    flex: none;
+    margin-left: auto;
+    color: var(--md-on-surface-variant);
+    transition:
+      transform var(--dur-fast) var(--ease-standard),
+      color var(--dur-fast) var(--ease-standard);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .feature-row:hover .feature-arrow {
+      transform: none;
+    }
+  }
+</style>

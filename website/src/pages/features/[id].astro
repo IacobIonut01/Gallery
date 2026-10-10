@@ -1,0 +1,23 @@
+---
+import { getCollection, render } from 'astro:content';
+import Feature from '@layouts/Feature.astro';
+import PathTrace from '@components/PathTrace.astro';
+import DeviceStage from '@components/DeviceStage.astro';
+import LiveEmbed from '@components/LiveEmbed.astro';
+import PreviewCollection from '@components/PreviewCollection.astro';
+
+export async function getStaticPaths() {
+  const features = await getCollection('features');
+  return features.map((entry) => ({
+    params: { id: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content, headings } = await render(entry);
+---
+
+<Feature entry={entry} headings={headings}>
+  <Content components={{ PathTrace, DeviceStage, LiveEmbed, PreviewCollection }} />
+</Feature>

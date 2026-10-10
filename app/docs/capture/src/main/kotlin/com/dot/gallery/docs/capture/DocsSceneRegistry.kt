@@ -42,11 +42,21 @@ object DocsSceneRegistry {
     /**
      * States to render per scene. A scene with no declared states captures once
      * (null state); [filter] narrows to a single named state and fails fast on
-     * a name the scene does not declare.
+     * a name the scene does not declare. States in [DocsScene.recordedStates]
+     * are clip material, not stills: an unfiltered run skips them and an
+     * explicit filter naming one fails — it must be produced by the recording
+     * workflow, never overwritten by a still.
      */
     fun statesOf(scene: DocsScene, filter: String?): List<String?> {
         val declared = scene.states.ifEmpty { listOf(null) }
-        if (filter.isNullOrBlank()) return declared
+        if (filter.isNullOrBlank()) return declared.filter { it !in scene.recordedStates }
+        if (filter in scene.recordedStates) {
+            error(
+                "State '$filter' of scene '${scene.id}' is a recorded state — capture it with " +
+                    "the recording workflow (DocsCaptureActivity + --ez recordBounds true + " +
+                    "screenrecord), not a still capture."
+            )
+        }
         require(filter in scene.states) {
             "Scene '${scene.id}' has no state '$filter'. Declared: ${scene.states.joinToString()}"
         }

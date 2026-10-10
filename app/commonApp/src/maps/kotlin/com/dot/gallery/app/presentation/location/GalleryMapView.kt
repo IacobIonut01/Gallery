@@ -36,6 +36,12 @@ fun GalleryMapView(
     onMapClick: ((LatLng) -> Boolean)? = null,
     onCameraMoved: ((GalleryCameraPosition) -> Unit)? = null,
     onUserInteraction: (() -> Unit)? = null,
+    /**
+     * Fires when MapLibre reports a fully-rendered frame — style loaded AND all
+     * tiles for the current viewport fetched/drawn. Stronger than
+     * [GalleryMapState.isStyleLoaded], which only tracks the style JSON.
+     */
+    onFullyRendered: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -43,6 +49,7 @@ fun GalleryMapView(
     val currentOnMapClick = rememberUpdatedState(onMapClick)
     val currentOnCameraMoved = rememberUpdatedState(onCameraMoved)
     val currentOnUserInteraction = rememberUpdatedState(onUserInteraction)
+    val currentOnFullyRendered = rememberUpdatedState(onFullyRendered)
     val currentIsLogoEnabled = rememberUpdatedState(isLogoEnabled)
     val currentIsAttributionEnabled = rememberUpdatedState(isAttributionEnabled)
     val currentIsCompassEnabled = rememberUpdatedState(isCompassEnabled)
@@ -69,6 +76,7 @@ fun GalleryMapView(
         var tearingDown = false
         var attachedMap: MapLibreMap? = null
         var failureListener: MapView.OnDidFailLoadingMapListener? = null
+        var renderedListener: MapView.OnDidFinishRenderingMapListener? = null
         var cameraMoveListener: MapLibreMap.OnCameraMoveListener? = null
         var cameraMoveStartedListener: MapLibreMap.OnCameraMoveStartedListener? = null
         var mapClickListener: MapLibreMap.OnMapClickListener? = null
@@ -104,6 +112,8 @@ fun GalleryMapView(
         fun detachListeners() {
             failureListener?.let(mapView::removeOnDidFailLoadingMapListener)
             failureListener = null
+            renderedListener?.let(mapView::removeOnDidFinishRenderingMapListener)
+            renderedListener = null
             attachedMap?.let { mapLibreMap ->
                 cameraMoveListener?.let(mapLibreMap::removeOnCameraMoveListener)
                 cameraMoveStartedListener?.let(mapLibreMap::removeOnCameraMoveStartedListener)
@@ -134,6 +144,13 @@ fun GalleryMapView(
             }
         }
         mapView.addOnDidFailLoadingMapListener(requireNotNull(failureListener))
+
+        renderedListener = MapView.OnDidFinishRenderingMapListener { fully ->
+            if (fully && !disposed && !destroyed && !tearingDown) {
+                currentOnFullyRendered.value?.invoke()
+            }
+        }
+        mapView.addOnDidFinishRenderingMapListener(requireNotNull(renderedListener))
 
         mapView.getMapAsync { mapLibreMap ->
             if (disposed || destroyed) return@getMapAsync

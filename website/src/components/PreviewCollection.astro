@@ -1,0 +1,940 @@
+---
+/**
+ * PreviewCollection — quiet preview figures for a feature guide.
+ *
+ * Bindings are authored in registry/previews.json (feature → entries with a
+ * scene id, optional state, title, caption, and the section anchor they
+ * illustrate). Each figure renders a captured poster by default and, when the
+ * published live catalog covers the scene, a "Try preview" button that swaps
+ * in the wasm bundle on demand — never auto-loading live frames for a whole
+ * page of figures.
+ *
+ * Entries with neither a capture nor a live scene are skipped entirely, so no
+ * pending notices ever sit in the reading flow. Posters are shown only for
+ * the exact theme+state they depict; a missing combination never falls back
+ * to a frame of a different state.
+ */
+import previewsRegistry from '../../registry/previews.json';
+import scenesRegistry from '../../registry/scenes.json';
+
+interface Props {
+  /** Feature id (matches a key in registry/previews.json). */
+  feature: string;
+  /** Optional section anchor — renders only that section's entries. */
+  section?: string;
+}
+
+const { feature, section } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
+
+const bindings = (previewsRegistry.features[feature] ?? []).filter(
+  (b) => !section || b.section === section,
+);
+const scenes = scenesRegistry.scenes;
+
+interface PreviewEntry {
+  sceneId: string;
+  state: string | null;
+  title: string;
+  caption: string;
+  presentation: string;
+  widthDp: number;
+  heightDp: number;
+  live: boolean;
+  /** theme -> state -> asset src (site-rooted), light first */
+  posters: Record<string, Record<string, string>>;
+  /** theme -> state -> recording src — only for video assets */
+  videos: Record<string, Record<string, string>>;
+  themes: string[];
+  states: string[];
+}
+
+const assetFor = (
+  map: Record<string, Record<string, string>>,
+  theme: string,
+  state: string | null,
+): string | undefined => {
+  const states = map[theme];
+  if (!states) return undefined;
+  // Exact state match only; an unspecified/default state may alias 'default'.
+  if (!state || state === 'default') return states.default;
+  return states[state];
+};
+
+const entries: PreviewEntry[] = [];
+for (const b of bindings) {
+  const scene = scenes[b.scene];
+  if (!scene) continue;
+  const posters: Record<string, Record<string, string>> = {};
+  const videos: Record<string, Record<string, string>> = {};
+  for (const [theme, devices] of Object.entries(scene.themes ?? {})) {
+    // Phone figures only — a tablet frame must never stand in for the
+    // phone-sized preview a docs collection advertises.
+    const phone = devices.phone;
+    if (!phone) continue;
+    posters[theme] = {};
+    videos[theme] = {};
+    for (const [state, asset] of Object.entries(phone)) {
+      // A recording keeps its first-frame WebP as the <video> poster, so the
+      // still under the clip is the same frame the camera measured.
+      if (asset.type === 'video' && asset.poster) {
+        videos[theme][state] = `${base}/${asset.src.replace(/^\/+/, '')}`;
+        posters[theme][state] = `${base}/${asset.poster.replace(/^\/+/, '')}`;
+      } else {
+        posters[theme][state] = `${base}/${asset.src.replace(/^\/+/, '')}`;
+      }
+    }
+    if (!Object.keys(videos[theme]).length) delete videos[theme];
+  }
+  const hasAnyPoster = Object.keys(posters).length > 0;
+  if (!hasAnyPoster && !scene.live) continue;
+  entries.push({
+    sceneId: b.scene,
+    state: b.state ?? scene.states?.find((s) =>
+      Object.values(posters).some((states) => states[s]),
+    ) ?? scene.states?.[0] ?? null,
+    title: b.title,
+    caption: b.caption,
+    presentation: scene.presentation ?? 'screen',
+    widthDp: scene.widthDp ?? 412,
+    heightDp: scene.heightDp ?? 915,
+    live: Boolean(scene.live) && b.interactive !== false,
+    posters,
+    videos,
+    themes: Object.keys(posters),
+    states: scene.states ?? [],
+  });
+}
+
+const STATE_LABELS: Record<string, string> = {
+  aapm: 'Advanced Protection',
+  'ai-ready': 'Models ready',
+  'ai-unavailable': 'Models unavailable',
+  'banner-dismissed': 'Compact header',
+  'paging-demo': 'Swipe between photos',
+  'saf-uri': 'Removable storage',
+  'seeking-demo': 'Seek through video',
+};
+const humanize = (s: string) =>
+  STATE_LABELS[s] ??
+  s.replaceAll('-', ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+---
+
+{
+  entries.length > 0 && (
+    <div class="pvcollection" data-base={base}>
+      <p class="pv-hint">Previews use example data. Changes stay in the preview.</p>
+      {entries.map((e) => {
+        const posterTheme = e.posters.light ? 'light' : e.themes[0];
+        const initialState = e.state ?? 'default';
+        const poster = assetFor(e.posters, posterTheme, initialState);
+        const video = assetFor(e.videos, posterTheme, initialState);
+        const captureThemes = new Set(e.themes);
+        const themeChoices = e.live ? ['light', 'dark'] : e.themes;
+        const stateChoices =
+          e.states.length > 0
+            ? e.states.filter(
+                (s) => e.live || e.themes.some((t) => assetFor(e.posters, t, s)),
+              )
+            : [];
+        return (
+          <preview-figure
+            class="pv"
+            data-scene={e.sceneId}
+            data-state={e.state ?? ''}
+            data-live={e.live ? 'true' : 'false'}
+            data-theme={posterTheme}
+            data-title={e.title}
+            data-width={e.widthDp}
+            data-height={e.heightDp}
+            data-posters={JSON.stringify(e.posters)}
+            data-videos={JSON.stringify(e.videos)}
+            data-themes={JSON.stringify(e.themes)}
+          >
+            <figure class:list={['pv-card', `pv-${e.presentation}`]}>
+              <figcaption class="pv-info">
+                <span class="pv-heading">
+                  <span class="pv-title">{e.title}</span>
+                  <span class="pv-badge" data-badge>
+                    {e.live
+                      ? 'Interactive preview available'
+                      : video
+                        ? 'Recorded preview'
+                        : 'Captured preview'}
+                  </span>
+                </span>
+                <span class="pv-caption">{e.caption}</span>
+                <span class="pv-controls">
+                  {stateChoices.length > 1 && (
+                    <label class="pv-field">
+                      <span class="visually-hidden">Screen state</span>
+                      <select data-state-picker aria-label="Screen state">
+                        {stateChoices.map((s) => (
+                          <option value={s} selected={s === initialState}>
+                            {humanize(s)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
+                  {(themeChoices.includes('dark') ||
+                    themeChoices.includes('light')) && (
+                    <span class="pv-field" role="group" aria-label="Preview theme" data-theme-group>
+                      {(['light', 'dark'] as const).map((t) => (
+                        <button
+                          type="button"
+                          class:list={['pv-theme', { active: t === posterTheme }]}
+                          data-theme={t}
+                          aria-pressed={t === posterTheme ? 'true' : 'false'}
+                          disabled={!e.live && !assetFor(e.posters, t, initialState)}
+                        >
+                          {t === 'light' ? 'Light' : 'Dark'}
+                        </button>
+                      ))}
+                    </span>
+                  )}
+                  {e.live && (
+                    <button type="button" class="pv-try" data-try>
+                      Try preview
+                    </button>
+                  )}
+                  <button type="button" class="pv-reset" data-reset hidden>
+                    Reset
+                  </button>
+                  <button type="button" class="pv-expand" data-expand aria-label="Enlarge preview">
+                    <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+                      <path
+                        d="M9 4H4v5m0-5l6 6M15 4h5v5m0-5l-6 6M9 20H4v-5m0 5l6-6m5 6h5v-5m0 5l-6-6"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.7"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </button>
+                </span>
+              </figcaption>
+              <div
+                class="pv-frame"
+                style={`--pv-w:${e.widthDp};--pv-h:${e.heightDp}`}
+                data-frame
+              >
+                {video ? (
+                  <video
+                    class="pv-media"
+                    src={video}
+                    poster={poster}
+                    controls
+                    muted
+                    playsinline
+                    preload="none"
+                    data-poster
+                    aria-label={`${e.title} — recorded example`}
+                  />
+                ) : poster ? (
+                  <img
+                    class="pv-media"
+                    src={poster}
+                    alt={`${e.title} — ReFra example screen`}
+                    loading="lazy"
+                    data-poster
+                  />
+                ) : (
+                  <div class="pv-media pv-media-static" data-poster>
+                    <span class="pv-media-label">{e.title}</span>
+                  </div>
+                )}
+                <div class="pv-note" hidden data-note />
+              </div>
+              <dialog class="pv-dialog" data-dialog>
+                <div class="pv-dialog-head">
+                  <span class="pv-dialog-title">{e.title}</span>
+                  <button type="button" class="pv-dialog-close" data-close aria-label="Close">
+                    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                      <path
+                        d="M6 6l12 12M18 6L6 18"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.7"
+                        stroke-linecap="round"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                <div class="pv-dialog-body" data-dialog-body />
+              </dialog>
+            </figure>
+          </preview-figure>
+        );
+      })}
+    </div>
+  )
+}
+
+<script>
+  class PreviewFigure extends HTMLElement {
+    iframe = null;
+    ready = false;
+    readyTimer = 0;
+    observer = null;
+    frameHome = null;
+    placeholder = null;
+
+    connectedCallback() {
+      this.frame = this.querySelector('[data-frame]');
+      this.poster = this.querySelector('[data-poster]');
+      this.note = this.querySelector('[data-note]');
+      this.badge = this.querySelector('[data-badge]');
+      this.tryBtn = this.querySelector('[data-try]');
+      this.resetBtn = this.querySelector('[data-reset]');
+      this.statePicker = this.querySelector('[data-state-picker]');
+      this.themeGroup = this.querySelector('[data-theme-group]');
+      this.dialog = this.querySelector('[data-dialog]');
+      this.dialogBody = this.querySelector('[data-dialog-body]');
+      this.expandBtn = this.querySelector('[data-expand]');
+      this.posters = JSON.parse(this.dataset.posters || '{}');
+      this.videos = JSON.parse(this.dataset.videos || '{}');
+      this.themes = JSON.parse(this.dataset.themes || '[]');
+      this.base = this.closest('.pvcollection')?.dataset.base || '';
+      this.w = Number(this.dataset.width) || 412;
+      this.h = Number(this.dataset.height) || 915;
+
+      this.observer = new ResizeObserver(() => this.fit());
+      this.observer.observe(this.frame);
+
+      this.tryBtn?.addEventListener('click', () => this.activate());
+      this.resetBtn?.addEventListener('click', () => this.reset());
+      this.statePicker?.addEventListener('change', () =>
+        this.setState(this.statePicker.value),
+      );
+      this.themeGroup?.querySelectorAll('[data-theme]').forEach((b) =>
+        b.addEventListener('click', () => this.setTheme(b.dataset.theme)),
+      );
+      this.expandBtn?.addEventListener('click', () => this.openDialog());
+      this.querySelector('[data-close]')?.addEventListener('click', () => this.dialog?.close());
+      this.dialog?.addEventListener('click', (e) => {
+        if (e.target === this.dialog) this.dialog.close();
+      });
+      this.dialog?.addEventListener('close', () => this.closeDialog());
+      // The SSR video is adopted as the poster — showPoster only wires the
+      // play listener on elements it creates, so attach it here too.
+      if (this.poster?.tagName === 'VIDEO') {
+        this.poster.addEventListener('play', () =>
+          document.dispatchEvent(
+            new CustomEvent('pv:activate', { detail: this }),
+          ),
+        );
+      }
+      // One live iframe per page: a sibling activating unloads ours.
+      // A recording starting playback counts as activation too — pause ours.
+      document.addEventListener('pv:activate', this.onSiblingActivate);
+      window.addEventListener('message', this.onMessage);
+      // Missing theme/state combos hide the poster and show a note —
+      // showPoster owns that rule for every path (init, picker, deactivate).
+      if (!this.posterFor(this.theme, this.state)) this.showPoster(this.state);
+    }
+
+    disconnectedCallback() {
+      document.removeEventListener('pv:activate', this.onSiblingActivate);
+      window.removeEventListener('message', this.onMessage);
+      this.observer?.disconnect();
+      this.pauseVideo();
+      this.clearTimer();
+    }
+
+    onSiblingActivate = (event) => {
+      if (event.detail === this) return;
+      this.pauseVideo();
+      if (this.iframe) this.deactivate('Captured preview');
+    };
+
+    get state() {
+      return this.dataset.state || null;
+    }
+    get theme() {
+      return this.dataset.theme || 'light';
+    }
+    get live() {
+      return this.dataset.live === 'true';
+    }
+
+    posterFor(theme, state) {
+      return this.assetFor(this.posters, theme, state);
+    }
+
+    videoFor(theme, state) {
+      return this.assetFor(this.videos, theme, state);
+    }
+
+    assetFor(map, theme, state) {
+      const states = map[theme] || {};
+      // Exact state match only; null/'default' may alias the default frame.
+      if (!state || state === 'default') return states.default || null;
+      return states[state] || null;
+    }
+
+    pauseVideo() {
+      if (this.poster?.tagName === 'VIDEO') this.poster.pause();
+    }
+
+    syncControls() {
+      // Theme buttons reflect the CURRENT state — a state absent in one theme
+      // re-enables/disables the buttons, not just the pressed styling.
+      this.themeGroup?.querySelectorAll('.pv-theme').forEach((b) => {
+        const t = b.dataset.theme;
+        const active = t === this.theme;
+        b.classList.toggle('active', active);
+        b.setAttribute('aria-pressed', String(active));
+        b.disabled = !this.live && !this.posterFor(t, this.state);
+      });
+      if (this.statePicker && this.statePicker.value !== (this.state ?? '')) {
+        this.statePicker.value = this.state ?? '';
+      }
+    }
+
+    setState(state) {
+      this.dataset.state = state;
+      if (this.iframe) {
+        this.push({ state });
+        this.syncControls();
+        return;
+      }
+      // Capture-only figure: a state that exists only in another theme moves
+      // the figure to that theme — never keep a wrong-state poster on screen.
+      if (!this.live && !this.posterFor(this.theme, state)) {
+        const alt = this.themes.find((t) => this.posterFor(t, state));
+        if (alt) this.dataset.theme = alt;
+      }
+      this.syncControls();
+      this.showPoster(state);
+    }
+
+    setTheme(theme) {
+      this.dataset.theme = theme;
+      this.syncControls();
+      if (this.iframe) {
+        this.push({ theme });
+        return;
+      }
+      this.showPoster(this.state);
+    }
+
+    showPoster(state) {
+      if (this.iframe) return;
+      const posterSrc = this.posterFor(this.theme, state);
+      const videoSrc = posterSrc ? this.videoFor(this.theme, state) : null;
+      if (videoSrc) {
+        let el = this.poster?.tagName === 'VIDEO' ? this.poster : null;
+        if (!el) {
+          el = document.createElement('video');
+          el.className = 'pv-media';
+          el.controls = true;
+          el.muted = true;
+          el.playsInline = true;
+          el.preload = 'none';
+          el.dataset.poster = '';
+          el.setAttribute(
+            'aria-label',
+            `${this.dataset.title || ''} — recorded example`,
+          );
+          // Playing a clip activates this figure — siblings pause/unload.
+          el.addEventListener('play', () =>
+            document.dispatchEvent(
+              new CustomEvent('pv:activate', { detail: this }),
+            ),
+          );
+          this.poster = el;
+        }
+        el.pause();
+        if (el.src !== new URL(videoSrc, location.href).href) el.src = videoSrc;
+        el.poster = posterSrc;
+        el.hidden = false;
+        this.frame.replaceChildren(el, this.note);
+        this.hideNote();
+      } else if (posterSrc) {
+        this.pauseVideo();
+        let img = this.poster?.tagName === 'IMG' ? this.poster : null;
+        if (!img) {
+          // The server-rendered placeholder has no src — swap in a real img.
+          img = document.createElement('img');
+          img.className = 'pv-media';
+          img.alt = `${this.dataset.title || ''} — ReFra example screen`;
+          img.loading = 'lazy';
+          img.dataset.poster = '';
+          this.poster = img;
+        }
+        img.src = posterSrc;
+        img.hidden = false;
+        this.frame.replaceChildren(img, this.note);
+        this.hideNote();
+      } else {
+        // Never leave a stale frame visible under the notice — a missing
+        // combination shows the note alone.
+        this.pauseVideo();
+        if (this.poster) this.poster.hidden = true;
+        this.showNote(
+          this.live
+            ? 'Open the interactive preview for this combination.'
+            : 'No captured frame for this combination yet.',
+        );
+      }
+      if (!this.live) {
+        this.setBadge(videoSrc ? 'Recorded preview' : 'Captured preview');
+      }
+    }
+
+    fit() {
+      if (!this.iframe || !this.frame) return;
+      const s = Math.min(
+        this.frame.clientWidth / this.w,
+        this.frame.clientHeight / this.h,
+      );
+      this.iframe.style.transform = `scale(${s})`;
+    }
+
+    activate() {
+      // One live frame per figure; a second click just keeps it.
+      if (this.iframe) return;
+      const iframe = document.createElement('iframe');
+      const q = new URLSearchParams({ scene: this.dataset.scene, theme: this.theme });
+      if (this.state) q.set('state', this.state);
+      iframe.src = `${this.base}/live/index.html?${q}`;
+      iframe.className = 'pv-media pv-live';
+      iframe.title = this.dataset.title || `${this.dataset.scene} live preview`;
+      // Render at the real logical size, then scale uniformly into the frame.
+      iframe.style.width = `${this.w}px`;
+      iframe.style.height = `${this.h}px`;
+      iframe.style.transformOrigin = 'top left';
+      this.iframe = iframe;
+      this.ready = false;
+      this.setNote('Loading live preview…');
+      iframe.addEventListener('load', () => {
+        if (this.iframe !== iframe || this.ready) return;
+        this.readyTimer = setTimeout(() => {
+          if (this.iframe === iframe && !this.ready) this.liveFailed();
+        }, 15000);
+      });
+      iframe.addEventListener('error', () => this.liveFailed());
+      this.frame.replaceChildren(iframe, this.note);
+      this.fit();
+      document.dispatchEvent(new CustomEvent('pv:activate', { detail: this }));
+      this.setBadge('Interactive preview');
+      this.tryBtn && (this.tryBtn.hidden = true);
+      this.resetBtn && (this.resetBtn.hidden = false);
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      this.frame.scrollIntoView({
+        block: 'nearest',
+        behavior: reduce ? 'auto' : 'smooth',
+      });
+    }
+
+    deactivate(badgeText) {
+      this.clearTimer();
+      this.iframe?.remove();
+      this.iframe = null;
+      this.ready = false;
+      // showPoster renders whatever the current theme+state calls for —
+      // a recording's <video>, a still, or the missing-combination note.
+      this.showPoster(this.state);
+      if (badgeText) this.setBadge(badgeText);
+      this.tryBtn && (this.tryBtn.hidden = false);
+      this.resetBtn && (this.resetBtn.hidden = true);
+    }
+
+    reset() {
+      if (this.iframe) this.push({ reset: true });
+    }
+
+    liveFailed() {
+      this.clearTimer();
+      const hasFrame = Boolean(this.posterFor(this.theme, this.state));
+      this.iframe?.remove();
+      this.iframe = null;
+      if (hasFrame) {
+        this.showPoster(this.state);
+        // Keep the failure note visible above whatever showPoster rendered.
+        this.setNote('The live preview could not load — this is the captured frame.');
+        this.setBadge(this.videoFor(this.theme, this.state)
+          ? 'Recorded preview'
+          : 'Captured preview');
+        this.tryBtn && (this.tryBtn.hidden = false);
+      } else {
+        const box = document.createElement('div');
+        box.className = 'pv-media pv-error';
+        box.textContent = 'The live preview could not be loaded.';
+        const retry = document.createElement('button');
+        retry.type = 'button';
+        retry.className = 'pv-try';
+        retry.textContent = 'Retry';
+        retry.addEventListener('click', () => {
+          box.remove();
+          this.activate();
+        });
+        box.appendChild(retry);
+        this.frame.replaceChildren(box, this.note);
+        this.setNote('');
+        this.setBadge('Preview unavailable');
+      }
+      this.resetBtn && (this.resetBtn.hidden = true);
+    }
+
+    push(patch) {
+      if (!this.iframe?.contentWindow) return;
+      const url = new URL(this.iframe.src, location.href);
+      const sameOrigin = url.origin === location.origin;
+      this.iframe.contentWindow.postMessage(
+        JSON.stringify({ type: 'docs:set', ...patch }),
+        sameOrigin ? location.origin : '*',
+      );
+    }
+
+    onMessage = (event) => {
+      if (!this.iframe || event.source !== this.iframe.contentWindow) return;
+      if (
+        new URL(this.iframe.src, location.href).origin === location.origin &&
+        event.origin !== location.origin
+      ) {
+        return;
+      }
+      let msg = event.data;
+      if (typeof msg === 'string') {
+        try {
+          msg = JSON.parse(msg);
+        } catch {
+          return;
+        }
+      }
+      if (msg?.type === 'docs:ready' && (!msg.scene || msg.scene === this.dataset.scene)) {
+        this.ready = true;
+        this.clearTimer();
+        this.setNote('');
+        // A reparented iframe reloads; push the current selection again so the
+        // restored view matches what the user had chosen.
+        this.push({ theme: this.theme, state: this.state });
+      }
+      if (msg?.type === 'docs:error') this.liveFailed();
+    };
+
+    openDialog() {
+      if (!this.dialog || !this.frame) return;
+      // Move the live frame itself into the dialog — no second wasm load and
+      // the same iframe keeps whatever the user already changed.
+      this.placeholder = document.createElement('div');
+      this.placeholder.hidden = true;
+      this.frameHome = { parent: this.frame.parentElement, next: this.frame.nextSibling };
+      this.frame.parentElement.insertBefore(this.placeholder, this.frame);
+      this.dialogBody.appendChild(this.frame);
+      this.dialog.showModal();
+      this.fit();
+    }
+
+    closeDialog() {
+      this.pauseVideo();
+      if (this.frameHome && this.frame) {
+        this.frameHome.parent.insertBefore(this.frame, this.frameHome.next);
+        this.placeholder?.remove();
+        this.frameHome = null;
+        this.placeholder = null;
+        this.fit();
+      }
+      this.expandBtn?.focus();
+    }
+
+    setBadge(text) {
+      if (this.badge) this.badge.textContent = text;
+    }
+
+    setNote(text) {
+      if (!this.note) return;
+      this.note.textContent = text;
+      this.note.hidden = !text;
+    }
+    showNote(text) {
+      this.setNote(text);
+    }
+    hideNote() {
+      this.setNote('');
+    }
+    clearTimer() {
+      if (this.readyTimer) {
+        clearTimeout(this.readyTimer);
+        this.readyTimer = 0;
+      }
+    }
+  }
+
+  if (!customElements.get('preview-figure')) {
+    customElements.define('preview-figure', PreviewFigure);
+  }
+</script>
+
+<style>
+  .pvcollection {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin: 1.25rem 0;
+  }
+  .pv-hint {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--md-on-surface-variant);
+  }
+  .pv-card {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .pv-frame {
+    position: relative;
+    align-self: flex-start;
+    border: 1px solid var(--md-outline-variant);
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--md-surface-container-lowest);
+    box-shadow: 0 10px 28px color-mix(in srgb, var(--md-shadow) 12%, transparent);
+  }
+  .pv-screen .pv-frame {
+    width: min(100%, calc(540px * var(--pv-w) / var(--pv-h)));
+    aspect-ratio: var(--pv-w) / var(--pv-h);
+  }
+  .pv-component .pv-frame {
+    width: min(100%, calc(var(--pv-w) * 1px));
+    aspect-ratio: var(--pv-w) / var(--pv-h);
+  }
+  .pv-media-static {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--md-on-surface-variant);
+    font-size: 0.9rem;
+    padding: 16px;
+    text-align: center;
+  }
+  .pv-note {
+    position: absolute;
+    inset: auto 0 0 0;
+    padding: 6px 10px;
+    font-size: 0.78rem;
+    color: var(--md-on-surface-variant);
+    background: color-mix(in srgb, var(--md-surface) 88%, transparent);
+  }
+  .pv-note[hidden] {
+    display: none;
+  }
+  .pv-info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .pv-heading {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .pv-title {
+    font-weight: 600;
+    color: var(--md-on-surface);
+  }
+  .pv-badge {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--md-primary);
+    border: 1px solid color-mix(in srgb, var(--md-primary) 35%, transparent);
+    border-radius: 999px;
+    padding: 1px 9px;
+  }
+  .pv-caption {
+    color: var(--md-on-surface-variant);
+    font-size: 0.88rem;
+    max-width: 60ch;
+  }
+  .pv-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 2px;
+  }
+  .pv-field select {
+    font: inherit;
+    font-size: 0.82rem;
+    color: var(--md-on-surface);
+    background: var(--md-surface-container);
+    border: 1px solid var(--md-outline-variant);
+    border-radius: 999px;
+    min-height: 44px;
+    padding: 0 12px;
+  }
+  .pv-field[role='group'] {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 999px;
+    border: 1px solid var(--md-outline-variant);
+    background: var(--md-surface-container);
+  }
+  .pv-theme {
+    border: 0;
+    background: transparent;
+    color: var(--md-on-surface-variant);
+    border-radius: 999px;
+    min-height: 44px;
+    padding: 0 12px;
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.82rem;
+  }
+  .pv-theme.active {
+    background: var(--md-primary-container);
+    color: var(--md-on-primary-container);
+  }
+  .pv-theme:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+  .pv-try,
+  .pv-reset {
+    border: 1px solid var(--md-outline-variant);
+    background: var(--md-surface-container);
+    color: var(--md-on-surface);
+    border-radius: 999px;
+    min-height: 44px;
+    padding: 0 14px;
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+  }
+  .pv-try {
+    background: var(--md-primary);
+    border-color: var(--md-primary);
+    color: var(--md-on-primary);
+  }
+  .pv-expand {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--md-outline-variant);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--md-on-surface-variant);
+    cursor: pointer;
+  }
+  .pv-dialog {
+    border: 1px solid var(--md-outline-variant);
+    border-radius: 20px;
+    padding: 0;
+    background: var(--md-surface-container-low);
+    color: var(--md-on-surface);
+    max-width: min(96vw, 1100px);
+    max-height: 90vh;
+  }
+  .pv-dialog::backdrop {
+    background: color-mix(in srgb, var(--md-shadow) 45%, transparent);
+    backdrop-filter: blur(6px);
+  }
+  .pv-dialog-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--md-outline-variant);
+  }
+  .pv-dialog-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+  .pv-dialog-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--md-on-surface-variant);
+    cursor: pointer;
+  }
+  .pv-dialog-body {
+    padding: 16px;
+    overflow: auto;
+    display: flex;
+    justify-content: center;
+  }
+  /* The same .pv-frame moves into the dialog — give it a larger canvas there. */
+  .pv-dialog .pv-frame {
+    width: min(90vw, calc(78svh * var(--pv-w) / var(--pv-h)));
+    height: auto;
+  }
+  @media (max-width: 719px) {
+    .pv-screen .pv-frame {
+      width: min(100%, calc(70svh * var(--pv-w) / var(--pv-h)));
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pv-dialog::backdrop {
+      backdrop-filter: none;
+    }
+  }
+</style>
+
+<!-- Elements created at runtime (iframe, error box) never carry Astro's
+     scoping attribute, so their rules must live in a global block. -->
+<style is:global>
+  /* Runtime-created posters (state/theme swaps) carry no Astro scope
+     attribute, so the shared media rules live here. */
+  .pv-media {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    object-fit: contain;
+    background: var(--md-surface-container-lowest);
+  }
+  .pv-media[hidden] {
+    display: none;
+  }
+  .pv-live {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: block;
+    border: 0;
+    /* The iframe lays out at the scene's logical width and is scaled via
+       transform — the global img/iframe max-width rule must not shrink it. */
+    max-width: none;
+    background: var(--md-surface-container-lowest);
+  }
+  .pv-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    height: 100%;
+    color: var(--md-on-surface-variant);
+    font-size: 0.9rem;
+  }
+  .pv-error .pv-try {
+    border: 1px solid var(--md-primary);
+    background: var(--md-primary);
+    color: var(--md-on-primary);
+    border-radius: 999px;
+    min-height: 44px;
+    padding: 0 14px;
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+  }
+</style>

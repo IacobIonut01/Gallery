@@ -1,0 +1,49 @@
+---
+title: Cloud providers
+summary: Connect Immich, Nextcloud, ownCloud, WebDAV, SMB, or NFS servers and browse their media next to your local library.
+area: cloud
+path:
+  - Settings
+  - Cloud Accounts
+related: [cloud-accounts, cloud-sync, timeline]
+scenes: [settings-cloud-indexing, cloud-accounts]
+order: 0
+---
+
+ReFra can connect to remote servers and show their photos and videos alongside the ones stored on the phone. Six providers are supported: **Immich**, **Nextcloud**, **ownCloud**, **WebDAV**, **SMB**, and **NFS**. Open **Settings › Cloud Accounts** to see the accounts you have connected, grouped by provider, or the **Add server** prompts when none exist yet.
+
+Which providers appear depends on the installed build: a build can ship all of them, a subset, or none, and an offline build shows no cloud section at all. Google Photos is not among the providers.
+
+<PreviewCollection feature="cloud-overview" section="accounts" />
+
+## Local, cloud, and the copies in between
+
+Cloud media is not the same as local media, and the app is explicit about where each item lives:
+
+- A **remote** item exists only on the server. The timeline shows a small cloud badge on it.
+- A **cached preview** is a smaller copy the app fetched so you can browse offline; see [offline access](/ReFra/features/cloud-offline). It is not the original file.
+- A **downloaded copy** is the full original saved to this device; see [cloud downloads](/ReFra/features/cloud-downloads).
+- A **backed-up** item is a local photo whose copy was uploaded to the server; the original stays on the phone unless you choose otherwise. See [cloud backup](/ReFra/features/cloud-backup).
+
+## What an account can do
+
+Each account row lists capability icons for the things that provider supports; remote photos and albums, sync, share links, people, map, smart search, text search, OCR, archive, memories, and tags. An Immich server can offer most of them; a plain SMB share offers file browsing and upload but no server-side search or memories. The per-provider pages explain what each one needs:
+
+- [Immich](/ReFra/features/cloud-immich)
+- [Nextcloud](/ReFra/features/cloud-nextcloud)
+- [ownCloud](/ReFra/features/cloud-owncloud)
+- [WebDAV](/ReFra/features/cloud-webdav)
+- [SMB](/ReFra/features/cloud-smb)
+- [NFS](/ReFra/features/cloud-nfs)
+
+## After connecting
+
+- Browse the merged library in the [timeline](/ReFra/features/timeline), or open an account's own section under Albums.
+- Keep listings fresh with [sync](/ReFra/features/cloud-sync), upload with [backup](/ReFra/features/cloud-backup), and fetch originals with [downloads](/ReFra/features/cloud-downloads).
+- Manage each account under [cloud accounts](/ReFra/features/cloud-accounts) and its options under [per-account cloud settings](/ReFra/features/cloud-settings).
+
+## Example: add your first account
+
+1. **Settings › Cloud Accounts**, tap **Add server** next to Immich, and finish the connect steps from [connect Immich](/ReFra/features/cloud-immich).
+2. Back on the accounts list, the new account shows **Connected** with its capability icons.
+3. Run **Sync now** on it (see [sync](/ReFra/features/cloud-sync)), then return to the timeline; remote photos start appearing with their cloud badge.

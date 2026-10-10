@@ -68,11 +68,12 @@ fun LazyListScope.SettingsOptionLayout(
     optionList: List<SettingsEntity>,
     slimLayout: Boolean = false,
     swipeToDismiss: Boolean = false,
+    itemKey: ((Int, SettingsEntity) -> Any)? = { _, item -> item.toString() },
     onDismiss: ((SettingsEntity) -> Unit)? = null
 ) {
     itemsIndexed(
         items = optionList,
-        key = { _, item -> item.toString() }
+        key = itemKey
     ) { index, item ->
         val position: Position = remember(index, item) {
             when (index) {

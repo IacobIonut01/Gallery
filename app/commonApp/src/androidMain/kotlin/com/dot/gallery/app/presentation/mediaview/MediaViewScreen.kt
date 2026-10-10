@@ -45,6 +45,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -228,6 +229,7 @@ import com.dot.gallery.core.presentation.util.update
 import com.dot.gallery.feature.viewer.LocalMediaViewerVisualPolicy
 import com.dot.gallery.feature.viewer.MediaViewerVisualPolicy
 import com.dot.gallery.app.presentation.cast.FCastViewModel
+import com.dot.gallery.app.presentation.cast.MediaViewerCastController
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION
@@ -785,6 +787,12 @@ fun <T : Media> MediaViewScreen(
     sanitizeMetadata: (Media, MetadataRemovalMode, MetadataSaveMode) -> Unit = { _, _, _ -> },
     resetMetadataSanitization: () -> Unit = {},
     motionPhotoStateFactory: @Composable (Media?) -> MotionPhotoState = { remember { MotionPhotoState() } },
+    // Optional host seams — docs captures inject a local cast surface and swap the
+    // quick-actions/details rows; null keeps the production wiring untouched.
+    castController: MediaViewerCastController? = null,
+    quickActionsContent: (@Composable RowScope.(T?, Boolean, Boolean, Boolean) -> Unit)? = null,
+    detailsContent: (@Composable (T?) -> Unit)? = null,
+    initialInfoExpanded: Boolean = false,
 ) = CompositionLocalProvider(
     LocalMediaViewerVisualPolicy provides MediaViewerVisualPolicy(
         allowBlur = allowBlur,
@@ -837,7 +845,8 @@ fun <T : Media> MediaViewScreen(
         var failedMediaIds by rememberSaveable { mutableStateOf(emptySet<Long>()) }
 
         // FCast
-        val fcastVm: FCastViewModel = injectViewModel { fCastViewModel }
+        val fcastVm: MediaViewerCastController =
+            castController ?: injectViewModel<FCastViewModel> { fCastViewModel }
         val fcastState by fcastVm.state.collectAsStateWithLifecycle()
         var showCastPicker by rememberSaveable { mutableStateOf(false) }
         var showCastPermissions by rememberSaveable { mutableStateOf(false) }
@@ -1394,7 +1403,7 @@ fun <T : Media> MediaViewScreen(
         // taking the same code path as opening fresh in landscape (which always worked). (#929)
         val sheetState = key(imageOnlyHeight) {
             rememberBottomSheetState(
-                initialDetent = imageOnlyDetent,
+                initialDetent = if (initialInfoExpanded) expandedDetent else imageOnlyDetent,
                 detents = listOf(imageOnlyDetent, expandedDetent),
                 positionalThreshold = { it },
                 velocityThreshold = { 1000.dp }
@@ -3008,7 +3017,15 @@ fun <T : Media> MediaViewScreen(
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.spacedBy(4.dp),
                                     ) {
-                                        MediaViewQuickBottomBar(
+                                        if (quickActionsContent != null) {
+                                            quickActionsContent(
+                                                currentMedia,
+                                                viewerInteractive && showViewerChrome &&
+                                                        sheetState.currentDetent == imageOnlyDetent,
+                                                isBottomDark,
+                                                autoContrast,
+                                            )
+                                        } else MediaViewQuickBottomBar(
                                             currentMedia = currentMedia,
                                             showDeleteButton = !isReadOnly,
                                             // Only interactive while the action bar is actually visible
@@ -3063,7 +3080,9 @@ fun <T : Media> MediaViewScreen(
                                 currentMedia?.let { mediaState.value.cloudBackups[it.id] }
                                     ?: emptyList()
                             }
-                            MediaViewSheetDetails(
+                            if (detailsContent != null) {
+                                detailsContent(currentMedia)
+                            } else MediaViewSheetDetails(
                                 albumsState = albumsState,
                                 vaultState = vaultState,
                                 metadataState = metadataState,

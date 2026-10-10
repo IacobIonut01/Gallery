@@ -58,6 +58,7 @@ kotlinxSerializationJson = "1.11.0"
 kotlinxDatetime = "0.7.1"
 cmpMaterialIconsExtended = "1.7.3"
 kotlinxBrowser = "0.3"
+uiToolingPreview = "1.12.1"
 uriKmp = "0.0.21"
 kmpworkmanager = "3.5.0"
 zoomimage = "1.6.0"
@@ -233,6 +234,7 @@ desugar-jdk-libs = { module = "com.android.tools:desugar_jdk_libs", version.ref 
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glideKsp" }
 glide-compose = { module = "com.github.bumptech.glide:compose", version.ref = "glideCompose" }
 glide-ksp = { module = "com.github.bumptech.glide:ksp", version.ref = "glideKsp" }
+ui-tooling-preview = { module = "org.jetbrains.compose.ui:ui-tooling-preview", version.ref = "uiToolingPreview" }
 zoomimage-compose-sketch = { module = "io.github.panpf.zoomimage:zoomimage-compose-sketch4", version.ref = "zoomimage" }
 zoomimage-core = { module = "io.github.panpf.zoomimage:zoomimage-core", version.ref = "zoomimage" }
 

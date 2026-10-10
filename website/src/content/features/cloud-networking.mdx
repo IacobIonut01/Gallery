@@ -1,0 +1,42 @@
+---
+title: Automatic URL switching
+summary: Give an account a local and an external address so it picks the faster one on your home Wi-Fi.
+area: cloud
+path:
+  - Settings
+  - Cloud Accounts
+  - Networking
+related: [cloud-accounts, cloud-sync, cloud-offline]
+scenes: [cloud-network-options]
+order: 8
+---
+
+Some servers have two addresses: a fast local one at home and a public one everywhere else. Per account, **Networking** can switch between them automatically based on the Wi-Fi network you are on. It only changes which address the app contacts, not caching or offline copies; see [offline access](/ReFra/features/cloud-offline) for that.
+
+## Set it up
+
+1. Open the account's settings and tap **Networking**.
+2. Turn on **Automatic URL switching**.
+3. Under **Local network**, tap **Wi-Fi name** and pick the home network that should use the local address. The picker lists the currently connected Wi-Fi when it can be read (Android requires location permission for that) and offers a **Network name** field to type one manually, plus **Disable switching** to clear it. Leaving the name blank disables switching; **Save** applies, **Cancel** backs out.
+4. Tap **Local server URL** to edit the local address, then **Save**.
+5. Under **External network**, **Add external URL** stores the public address; an account can keep more than one. Swipe an external URL row sideways to delete it.
+
+For SMB and NFS accounts the local address must keep its own scheme: an `smb://` or `nfs://` URL, not an HTTP substitute.
+
+<PreviewCollection feature="cloud-networking" section="setup" />
+
+The **Connection** section shows which address is active right now: **On local network — using local URL** or its off-network counterpart for the external address. Switching happens only when the Wi-Fi name matches and a local URL is set; on any other network the external address is used.
+
+## Certificates and local addresses
+
+Switching to a local address changes what the server presents for the secure connection:
+
+- If the local URL uses a name or IP the certificate does not cover, validation can fail; do not ignore certificate errors. The clean fix is a name that resolves on the LAN and is on the certificate, for example `https://photos.home.example.com`. An `https://` address pointing at a bare IP only works if the server's certificate was actually issued for that IP.
+- A plain `http://` local address works but is unencrypted; the app warns about insecure connections, and it is your choice whether the local network is trusted enough for that.
+
+## Example
+
+1. Your Immich is `https://photos.example.com` away from home and `https://photos.home.example.com` on your LAN, a name that resolves locally and is on the server's certificate.
+2. In the account's **Networking**, enable **Automatic URL switching**.
+3. Set **Wi-Fi name** to your home network, **Local server URL** to `https://photos.home.example.com`, and confirm the external URL already holds `https://photos.example.com`.
+4. At home the status shows the local-network wording; away it flips to the external address.

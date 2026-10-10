@@ -92,7 +92,6 @@ import com.dot.gallery.generated.resources.people_show_hidden
 import com.dot.gallery.generated.resources.scan_for_people
 
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PeopleListScreen(
     onPersonClick: (PersonInfo) -> Unit
@@ -100,6 +99,33 @@ fun PeopleListScreen(
     val viewModel = injectViewModel<PeopleListViewModel> {peopleListViewModel}
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val scanState by viewModel.scanState.collectAsStateWithLifecycle()
+    PeopleListContent(
+        state = state,
+        scanState = scanState,
+        localScanAvailable = viewModel.localScanAvailable,
+        actions = PeopleListActions(
+            onPersonClick = onPersonClick,
+            scanForPeople = viewModel::scanForPeople,
+            regroupFaces = viewModel::regroupFaces,
+            setShowHidden = viewModel::setShowHidden,
+            cancelScan = viewModel::cancelScan,
+            hidePerson = viewModel::hidePerson,
+            unhidePerson = viewModel::unhidePerson,
+            confirmMerge = viewModel::confirmMerge,
+            rejectMerge = viewModel::rejectMerge,
+            renamePerson = viewModel::renamePerson,
+        )
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PeopleListContent(
+    state: PeopleListUiState,
+    scanState: PeopleScanUiState,
+    localScanAvailable: Boolean,
+    actions: PeopleListActions = PeopleListActions(),
+) {
     var showMergeReview by remember { mutableStateOf(false) }
     var renamingPerson by remember { mutableStateOf<PersonInfo?>(null) }
     var overflowOpen by remember { mutableStateOf(false) }
@@ -147,19 +173,19 @@ fun PeopleListScreen(
                             expanded = overflowOpen,
                             onDismissRequest = { overflowOpen = false }
                         ) {
-                            if (viewModel.localScanAvailable && !scanState.running) {
+                            if (localScanAvailable && !scanState.running) {
                                 DropdownMenuItem(
                                     text = { Text(stringResource(Res.string.scan_for_people)) },
                                     onClick = {
                                         overflowOpen = false
-                                        viewModel.scanForPeople()
+                                        actions.scanForPeople()
                                     }
                                 )
                                 DropdownMenuItem(
                                     text = { Text(stringResource(Res.string.people_regroup)) },
                                     onClick = {
                                         overflowOpen = false
-                                        viewModel.regroupFaces()
+                                        actions.regroupFaces()
                                     }
                                 )
                             }
@@ -174,7 +200,7 @@ fun PeopleListScreen(
                                 },
                                 onClick = {
                                     overflowOpen = false
-                                    viewModel.setShowHidden(!state.showHidden)
+                                    actions.setShowHidden(!state.showHidden)
                                 }
                             )
                         }
@@ -204,9 +230,9 @@ fun PeopleListScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(innerPadding),
-                    canScan = viewModel.localScanAvailable,
+                    canScan = localScanAvailable,
                     isScanning = scanState.running,
-                    onScan = { viewModel.scanForPeople() }
+                    onScan = actions.scanForPeople
                 )
             }
             else -> {
@@ -226,7 +252,7 @@ fun PeopleListScreen(
                         item(key = "scan_card", span = { GridItemSpan(maxLineSpan) }) {
                             PeopleScanCard(
                                 scanState = scanState,
-                                onCancel = { viewModel.cancelScan() }
+                                onCancel = actions.cancelScan
                             )
                         }
                     }
@@ -248,9 +274,9 @@ fun PeopleListScreen(
                         items(state.namedPeople, key = { it.accountKey }) { person ->
                             PersonGridItem(
                                 person = person,
-                                onClick = { onPersonClick(person) },
+                                onClick = { actions.onPersonClick(person) },
                                 onRename = { renamingPerson = person },
-                                onHide = { viewModel.hidePerson(person) }
+                                onHide = { actions.hidePerson(person) }
                             )
                         }
                     }
@@ -265,9 +291,9 @@ fun PeopleListScreen(
                             PersonGridItem(
                                 person = person,
                                 showAddName = true,
-                                onClick = { onPersonClick(person) },
+                                onClick = { actions.onPersonClick(person) },
                                 onRename = { renamingPerson = person },
-                                onHide = { viewModel.hidePerson(person) }
+                                onHide = { actions.hidePerson(person) }
                             )
                         }
                     }
@@ -283,9 +309,9 @@ fun PeopleListScreen(
                         items(state.hiddenPeople, key = { it.accountKey }) { person ->
                             PersonGridItem(
                                 person = person,
-                                onClick = { onPersonClick(person) },
+                                onClick = { actions.onPersonClick(person) },
                                 onRename = { renamingPerson = person },
-                                onUnhide = { viewModel.unhidePerson(person) }
+                                onUnhide = { actions.unhidePerson(person) }
                             )
                         }
                     }
@@ -299,7 +325,7 @@ fun PeopleListScreen(
                         items(section.people, key = { it.accountKey }) { person ->
                             PersonGridItem(
                                 person = person,
-                                onClick = { onPersonClick(person) }
+                                onClick = { actions.onPersonClick(person) }
                             )
                         }
                     }
@@ -312,8 +338,8 @@ fun PeopleListScreen(
         MergeReviewSheet(
             suggestions = state.mergeSuggestions,
             onDismiss = { showMergeReview = false },
-            onSamePerson = { viewModel.confirmMerge(it) },
-            onDifferent = { viewModel.rejectMerge(it) }
+            onSamePerson = { actions.confirmMerge(it) },
+            onDifferent = { actions.rejectMerge(it) }
         )
     }
 
@@ -323,7 +349,7 @@ fun PeopleListScreen(
             titleRes = if (person.name.isBlank()) Res.string.cloud_person_add_name
             else Res.string.cloud_person_edit_name,
             onDismiss = { renamingPerson = null },
-            onSave = { viewModel.renamePerson(person, it) }
+            onSave = { actions.renamePerson(person, it) }
         )
     }
 }

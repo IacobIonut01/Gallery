@@ -1,0 +1,41 @@
+---
+title: Connect Immich
+summary: Add an Immich server by URL with either an API key or your email and password.
+area: cloud
+path:
+  - Settings
+  - Cloud Accounts
+related: [cloud-overview, cloud-accounts, cloud-networking]
+scenes: [cloud-setup-immich]
+order: 1
+---
+
+Immich can offer albums, memories, archive, people, map, and server-side smart search in addition to plain photo browsing. The connection wizard walks through **Server**, **Credentials**, **Networking**, **Sync**, and **Review**.
+
+## Add an Immich server
+
+1. Open **Settings › Cloud Accounts › Add Immich**.
+2. **Server**: enter the full server address in **Server URL**, including `https://`, for example `https://photos.example.com`. If your Immich is installed under a path, include it.
+3. **Credentials**: sign in one of two ways:
+   - Paste an **API Key** created in Immich under Account Settings › API Keys. Choosing API key hides the email and password fields.
+   - Or enter the account's **Email** and **Password**.
+   Optionally set a **Display name** such as `Home Immich` so the account is recognizable later. Tap **Test connection**; it must succeed before **Next** becomes available.
+4. **Networking**: optionally add a faster local address used on your home Wi-Fi; see [automatic URL switching](/ReFra/features/cloud-networking). You can skip this step.
+5. **Sync**: under **Back up local folders**, pick which device folders upload to this server, or select none and set it up later under [cloud backup](/ReFra/features/cloud-backup).
+6. **Review**: check the provider, URLs, and folder selection, then **Save**. The account appears with a **Connected** status.
+
+<PreviewCollection feature="cloud-immich" section="wizard" />
+
+## Example: connect with an API key
+
+1. In Immich's web app, open Account Settings › API Keys and create a key, copying it once shown.
+2. In ReFra, **Settings › Cloud Accounts › Add Immich**, enter `https://photos.example.com`.
+3. Choose **API Key**, paste the key, set the display name `My server`, tap **Test connection**, then **Next**.
+4. Skip Networking, select the `Camera` folder on the Sync step, and confirm on Review. The server shows **Connected** and its photos join the timeline after the first sync.
+
+## If the connection fails
+
+- **Invalid URL format**: the address must be complete, including `https://`.
+- **Testing connection** that ends in failure: recheck the address, the credentials, and that the server is reachable from this network. A passing test proves the server answers now; it is not a guarantee about upload permissions.
+- An HTTP address raises an **Insecure connection** warning because the traffic is unencrypted; only continue on a network you trust.
+- A server on your home network can trigger Android's local-network permission prompt; **Grant Permissions** lets the app reach it directly.

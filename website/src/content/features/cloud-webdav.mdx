@@ -1,0 +1,38 @@
+---
+title: Connect WebDAV
+summary: Add a generic WebDAV endpoint with the full URL your host provides.
+area: cloud
+path:
+  - Settings
+  - Cloud Accounts
+related: [cloud-overview, cloud-accounts, cloud-networking]
+scenes: [cloud-setup-webdav]
+order: 4
+---
+
+**WebDAV** covers hosts that expose a plain WebDAV endpoint, such as storage providers, NAS boxes, and servers that are not Nextcloud or ownCloud. You need the full endpoint address exactly as the host publishes it.
+
+## Add a WebDAV server
+
+1. Open **Settings › Cloud Accounts › Add WebDAV**.
+2. **Server**: paste the complete endpoint in **Server URL**, for example `https://files.example.com/dav/photos/`. Include any path the host gave you; the app uses the address as-is and does not append your username or guess a path.
+3. **Credentials**: enter the WebDAV **Username** and **Password** (an app-specific password if the host issues one) and optionally a **Display name**, then tap **Test connection**. **Next** unlocks once it succeeds.
+4. **Networking**, **Sync** (back up local folders), and **Review** work as on the other provider pages; see [automatic URL switching](/ReFra/features/cloud-networking) and [cloud backup](/ReFra/features/cloud-backup). Save to finish.
+
+<PreviewCollection feature="cloud-webdav" section="wizard" />
+
+## What to expect
+
+- Browsing shows the folders under the endpoint you entered; uploads (for backups and copies) go there only if your server account has write permission.
+- WebDAV is a plain file protocol: there is no server-side trash, search, or sharing integration in the app beyond what the files themselves provide.
+
+## Example
+
+1. Your host documents its WebDAV endpoint as `https://files.example.com/dav/photos/` with account `alex`.
+2. **Add WebDAV**, paste that URL unchanged.
+3. Username `alex`, the password supplied by your server owner, display name `Files`, **Test connection**, then finish the wizard.
+
+## If it fails
+
+- If the test fails, start by checking the endpoint path; copy the URL from the host's documentation character for character, including a trailing slash if they show one.
+- If the test passes but uploads fail later, the server account may be read-only; check its permissions on the host side.

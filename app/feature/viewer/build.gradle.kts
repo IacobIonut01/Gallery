@@ -34,6 +34,7 @@ kotlin {
             implementation(libs.cmp.ui)
             implementation(libs.cmp.components.resources)
             implementation(libs.cmp.components.ui.tooling.preview)
+            implementation(compose.preview)
             implementation(libs.haze)
             implementation(libs.haze.blur)
             implementation(libs.haze.blur.materials)

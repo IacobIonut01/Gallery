@@ -1,0 +1,33 @@
+---
+title: Remove metadata
+summary: Strip location data from photos before sharing, with a verified copy or replace.
+area: edit
+path:
+  - Media viewer
+  - Media Info
+  - Remove metadata
+related: [metadata, sharing, save-edits]
+scenes: [metadata-removal]
+order: 11
+---
+
+**Remove metadata** on the details panel produces a sanitized file with chosen metadata stripped. In the current build, removal is supported for **JPEG, PNG, and WebP**, and only the **Location only** mode is available; the **Privacy related** and **Everything removable** options are visible in the sheet but disabled for every format right now. GIF, BMP, TIFF, RAW, JP2/J2K, JPEG XL, PSD, HEIF/HEIC, AVIF, SVG, and videos are not supported; on those the action does not run at all rather than silently succeeding.
+
+## What Location only removes
+
+<PreviewCollection feature="metadata-privacy" section="what-location-only-removes" />
+
+Coordinates, altitude, location names, directions, and GPS timestamps. It does **not** remove faces visible in the picture, the file name, or the ordinary "taken on" date; for a fuller privacy pass you would also rename the file or crop it separately. The sheet's own wording explains that encoded pixels, video and audio stay untouched; orientation, animation, colour, HDR data, and container structure are retained.
+
+## Save a copy or replace
+
+Choose your outcome first; ReFra then verifies the sanitized file during processing, before writing the copy or replacement and before the original is touched:
+
+- **Save a copy**: writes the verified copy in the same folder and leaves the original unchanged.
+- **Replace original**: verifies the replacement first, then moves the original to system Trash; this needs the trash available on your device; where it is not, the replace path is limited accordingly.
+
+## Example: a beach photo without the GPS pin
+
+1. Open the JPEG, **Media Info › Remove metadata**.
+2. **Location only** is the enabled mode; proceed.
+3. Choose **Save copy**, open the copy's details to confirm the Location row is gone, then share the copy.

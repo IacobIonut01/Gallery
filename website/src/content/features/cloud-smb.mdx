@@ -1,0 +1,36 @@
+---
+title: Connect SMB
+summary: Add a Windows/NAS network share over SMB2 or SMB3 on your local network.
+area: cloud
+path:
+  - Settings
+  - Cloud Accounts
+related: [cloud-overview, cloud-accounts, cloud-networking]
+scenes: [cloud-setup-smb]
+order: 5
+---
+
+**SMB** connects to network shares, the kind a NAS or Windows PC exposes on your home network. SMB2 and SMB3 are supported; the older SMB1 is not. The share must be reachable over the local network or a VPN route.
+
+## Add an SMB share
+
+1. Open **Settings › Cloud Accounts › Add SMB**.
+2. **Server**: enter the share address in **Server URL** as `smb://host/share/folder`, for example `smb://192.168.1.20/Photos/Family`. Everything after the host is the share name plus an optional folder inside it.
+3. **Credentials**: enter the share **Username** and **Password**, for example `alex`, or `DOMAIN\alex` when the share lives in a domain. Leaving the username blank asks for guest access, which only works if the server permits it. Optionally set a **Display name** for the account. Tap **Test connection**; **Next** unlocks once it succeeds.
+4. **Networking** is optional. The primary address is already an `smb://` address; the step only matters if you also run the server under an external URL. See [automatic URL switching](/ReFra/features/cloud-networking).
+5. **Sync** chooses under **Back up local folders** what uploads to the share, if the account allows writing.
+6. **Review** and **Save**.
+
+<PreviewCollection feature="cloud-smb" section="wizard" />
+
+## Requirements
+
+- The phone needs a network route to the share: same Wi-Fi/LAN, or a VPN that reaches it. The wizard warns when no such connection exists.
+- Android may ask for **direct local network access** the first time a local address is used; **Grant Permissions** to allow it.
+- The share itself must permit your account. If a connection is refused, ask whoever runs the NAS for the share name, path, and a login; the app cannot discover or reconfigure the server.
+
+## Example: a NAS photo share
+
+1. Your NAS is at `192.168.1.20` and exports a share `Photos`; you want the `Family` folder inside it.
+2. **Add SMB**, enter `smb://192.168.1.20/Photos/Family`.
+3. Username `alex`, the password supplied by your server owner, display name `MyNAS Photos`, **Test connection**, then save with no backup folders for now.

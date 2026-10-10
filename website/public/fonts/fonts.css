@@ -1,0 +1,55 @@
+/*
+ * Google Sans faces for the docs chrome — the same family the app bundles
+ * (app/core/ui composeResources font/google_sans_*.ttf, converted to woff2 for the
+ * web). Drop the woff2 files next to this stylesheet; missing files fall back
+ * to the system stack declared in --font-sans (see src/styles/global.css).
+ */
+@font-face {
+  font-family: 'Google Sans';
+  src: url('./google_sans_regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Google Sans';
+  src: url('./google_sans_italic.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Google Sans';
+  src: url('./google_sans_medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Google Sans';
+  src: url('./google_sans_medium_italic.woff2') format('woff2');
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Google Sans';
+  src: url('./google_sans_semibold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Google Sans';
+  src: url('./google_sans_bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Google Sans';
+  src: url('./google_sans_bold_italic.woff2') format('woff2');
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}

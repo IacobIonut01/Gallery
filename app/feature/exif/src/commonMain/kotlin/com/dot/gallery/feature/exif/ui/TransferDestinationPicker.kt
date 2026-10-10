@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
@@ -56,6 +57,7 @@ internal fun TransferDestinationPicker(
     onNewAlbumClick: () -> Unit,
     providerIcon: ProviderIconSlot?,
     modifier: Modifier = Modifier,
+    gridState: LazyGridState = rememberLazyGridState(),
 ) {
     val allGroups = albumGroups
     val groupedAlbumIds = remember(allGroups) {
@@ -106,7 +108,7 @@ internal fun TransferDestinationPicker(
     }
 
     LazyVerticalGrid(
-        state = rememberLazyGridState(),
+        state = gridState,
         modifier = modifier.padding(horizontal = 8.dp),
         columns = albumCellsList[gridSizeIndex.coerceIn(0, albumCellsList.lastIndex)],
         verticalArrangement = Arrangement.spacedBy(8.dp),

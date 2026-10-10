@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.dp
 
 /** Fixed-size device presets the docs site can switch between. */
 enum class DevicePreset(val width: Dp, val height: Dp, val corner: Dp) {
-    PHONE(412.dp, 892.dp, 24.dp),
+    PHONE(412.dp, 915.dp, 24.dp),
     FOLDABLE(768.dp, 932.dp, 18.dp),
     TABLET(840.dp, 1180.dp, 28.dp),
     FULL(0.dp, 0.dp, 0.dp);

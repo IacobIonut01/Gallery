@@ -1,0 +1,43 @@
+---
+title: Cloud downloads
+summary: Fetch full-quality originals of remote media to the device, and remove them again safely.
+area: cloud
+path:
+  - Settings
+  - Cloud Accounts
+related: [cloud-sync, cloud-offline, cloud-backup]
+scenes: [cloud-account-dialog]
+order: 12
+---
+
+Downloading saves the *original file* to the device, unlike the automatic preview cache, which only keeps smaller copies for browsing (see [offline access](/ReFra/features/cloud-offline)). Everything here is per account, under its [cloud settings](/ReFra/features/cloud-settings).
+
+## Download an account's remote media
+
+- **Download remote media** downloads every remote-only item on the account. Tapping it asks first and shows the count and approximate size; while the count is still being computed the dialog just warns that every remote-only item will be downloaded. Items already present on the device are linked rather than downloaded again.
+- **Download videos** sits under it and only appears while the parent switch is on; it controls whether videos are included, and it is **on by default** — check it before enabling account-wide downloads if you want photos only.
+- A single item can be fetched from its own view with the **Download** action.
+
+Downloads run in the background and individual items can fail. Before relying on them (for a trip, say), open the account and confirm the download actually finished rather than pressing the button once and assuming.
+
+Where files land is Android's media storage; open an item's **Media details** to see its path on the device.
+
+<PreviewCollection feature="cloud-downloads" section="download" />
+
+## Remove downloaded copies
+
+**Remove downloaded copies** shows how many files the app downloaded and their size, then confirms: it deletes only the files *this app downloaded*; they stay on the server and can be downloaded again. Turning sync off or removing an account does not clear already-downloaded files; this action does.
+
+<PreviewCollection feature="cloud-downloads" section="remove" />
+
+## When to use it
+
+- **Before a trip without coverage**: run **Download remote media** while on Wi-Fi so full-quality originals are on the phone; the preview cache alone is not the same thing.
+- **Reclaiming space**: **Remove downloaded copies** frees what the app fetched without touching the server; pair it with [free up space](/ReFra/features/cloud-free-up-space), which removes *local originals* that are already backed up, not downloads.
+
+## Example
+
+1. A two-week trip is coming; your Immich account holds 3 GB of remote-only photos.
+2. On Wi-Fi, open the account's settings and tap **Download remote media**; the confirmation shows the count and approximate size. Confirm, and let it finish.
+3. Check that the photos open before leaving coverage.
+4. After the trip, open the same page and use **Remove downloaded copies** to free the space; the server keeps everything.

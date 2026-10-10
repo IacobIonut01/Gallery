@@ -1,0 +1,44 @@
+---
+title: Copy and move between clouds
+summary: Use Copy and Move to transfer media between accounts, or between local storage and a cloud.
+area: cloud
+path:
+  - Timeline
+  - Selection
+related: [copy-move-rename, cloud-accounts, cloud-albums]
+scenes: [transfer-progress, album-transfer]
+order: 15
+---
+
+The same **Copy** and **Move** actions used for local media work across clouds. The destination picker lists **On this device** and the connected accounts; pick an account, then the album inside it. The mechanics of the picker are covered in [copy, move, and rename](/ReFra/features/copy-move-rename); this page covers what is different when a cloud is involved.
+
+## How a transfer runs
+
+<PreviewCollection feature="cloud-transfer" section="how-a-transfer-runs" />
+
+- A transfer shows progress while busy, lets you **retry** items that failed, and ends with **Open item**, **Open album**, or **Done**.
+- Some operations come back as messages instead of running: an item the destination treats as read-only, media that needs a connection that is offline, or a combination the provider does not support. The transfer sheet says which.
+
+## What is and is not supported
+
+<PreviewCollection feature="cloud-transfer" section="what-is-and-is-not-supported" />
+
+- **Move inside the same Immich account is not supported.** Immich albums are memberships rather than folders, so the app offers **Copy** to add an item to another album; that adds membership, not a promise that a second physical file exists.
+- **A mixed selection of local and cloud items cannot move as one batch.** Select each group separately.
+- On folder-style providers (WebDAV, SMB, NFS), a name collision produces a numbered copy such as `photo (1).jpg` rather than overwriting.
+
+## Verify before deleting
+
+<PreviewCollection feature="cloud-transfer" section="verify-before-deleting" />
+
+- After a copy, open the destination and confirm the items are there before deleting anything.
+- A partial move can report **Copied; original retained** for the items that could not move, leaving both copies; check the result and decide per item.
+- Do not "fix" a failed move by deleting the source first; retry the failed items or copy them again.
+
+## Example: copy one photo to the NAS
+
+<PreviewCollection feature="cloud-transfer" section="example-copy-one-photo-to-the-nas" />
+
+1. In the timeline, select a JPEG in `Camera` and choose **Copy**.
+2. In the destination picker, pick the `MyNAS` SMB account, then the `Family` album.
+3. Wait for **Done**, open `Family` on the NAS to confirm the file landed, and keep the local original; the copy on the NAS is a second file, not a move.

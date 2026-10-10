@@ -1,0 +1,124 @@
+---
+/**
+ * Docs — the reading shell: sticky sidebar navigation, the article column,
+ * and an "On this page" outline once the article has sections.
+ */
+import Base from './Base.astro';
+import DocsSidebar from '@components/DocsSidebar.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+  currentId?: string;
+  featureId?: string;
+  headings?: { depth: number; slug: string; text: string }[];
+}
+const { title, description, currentId, featureId, headings } = Astro.props;
+const toc = (headings ?? []).filter((h) => h.depth === 2);
+---
+
+<Base title={title} description={description}>
+  <div class="container docs-layout">
+    <aside class="docs-navigation" data-pagefind-ignore>
+      <DocsSidebar currentId={currentId} featureId={featureId} />
+    </aside>
+    <article class="docs-article"><slot /></article>
+    {
+      toc.length > 0 && (
+        <aside class="docs-toc" data-pagefind-ignore>
+          <nav aria-label="On this page">
+            <p>On this page</p>
+            <ul>
+              {toc.map((h) => (
+                <li>
+                  <a href={`#${h.slug}`}>{h.text}</a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </aside>
+      )
+    }
+  </div>
+</Base>
+
+<script>
+  // The sidebar is one <details> DOM: open it by default on wide viewports,
+  // leave it as a disclosure on compact ones.
+  const docsNav = document.querySelector('[data-docs-nav]');
+  if (docsNav) {
+    const mq = matchMedia('(min-width: 720px)');
+    const sync = () => {
+      docsNav.open = mq.matches;
+    };
+    sync();
+    mq.addEventListener('change', sync);
+  }
+</script>
+
+<style>
+  .docs-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding-top: 32px;
+    padding-bottom: 64px;
+  }
+  .docs-article {
+    min-width: 0;
+    max-width: var(--reading-max);
+  }
+  .docs-toc {
+    display: none;
+  }
+
+  @media (min-width: 720px) {
+    .docs-layout {
+      grid-template-columns: 190px minmax(0, 1fr);
+      gap: 24px;
+      padding-top: 48px;
+    }
+    .docs-navigation {
+      position: sticky;
+      top: 104px;
+      align-self: start;
+      max-height: calc(100dvh - 128px);
+      overflow-y: auto;
+    }
+  }
+  @media (min-width: 1280px) {
+    .docs-layout {
+      grid-template-columns: 216px minmax(0, 1fr) 176px;
+      gap: 32px;
+    }
+    .docs-toc {
+      display: block;
+      position: sticky;
+      top: 104px;
+      align-self: start;
+      max-height: calc(100dvh - 128px);
+      overflow-y: auto;
+      font-size: 0.82rem;
+    }
+    .docs-toc p {
+      margin: 0 0 8px;
+      font-weight: 600;
+      color: var(--md-on-surface);
+    }
+    .docs-toc ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      border-left: 1px solid var(--md-outline-variant);
+    }
+    .docs-toc a {
+      display: block;
+      padding: 5px 0 5px 14px;
+      color: var(--md-on-surface-variant);
+    }
+    .docs-toc a:hover {
+      color: var(--md-primary);
+      text-decoration: none;
+    }
+  }
+</style>

@@ -1,0 +1,35 @@
+---
+title: Map and locations
+summary: Browse geotagged photos on a map and open the timeline of a place.
+area: discover
+path:
+  - Library
+  - Locations
+related: [timeline, metadata, appearance]
+scenes: [map-locations]
+order: 4
+---
+
+Photos and videos that carry GPS coordinates appear under **Library › Locations** on a map of everywhere you have shot. Showing coordinates inside the app needs the **media location access** permission; the app reads the locations stored in your photos; it does not do live GPS tracking. Grant it from the prompt the Locations card shows, or in Android's app settings.
+
+## Using the map
+
+<PreviewCollection feature="maps-location" section="using-the-map" />
+
+- **Pan** and **pinch** to move and zoom; the usual map gestures apply.
+- Nearby markers group into numbered clusters. Tapping a cluster zooms until the items separate; when every item shares the spot or you reach maximum zoom, a **Photos in this location** sheet opens with the grid.
+- Tapping a marker scrolls the grid to that photo; scrolling the grid moves the selection on the map.
+- Tap a photo in the grid to open it in the viewer; the sheet's place header opens a per-location timeline.
+- The toolbar's appearance icon switches the map between **Follow app**, **Light**, and **Dark**. If tiles fail, **Couldn't load map** offers **Retry**.
+
+On builds without an interactive map (the offline flavor has no map tiles), Locations still works as a browsable list of places. In the viewer, a photo's **Location** row opens a detail sheet with **Show in app** and **Open externally**; the external option needs a map app installed, and on a build without the map it is the direct route.
+
+There is no in-app coordinate editing; to strip location entirely, use [remove metadata](/ReFra/features/metadata-privacy).
+
+Some builds show a **CARTO API key** row in [appearance settings](/ReFra/features/appearance); it only appears where no key is embedded, and it affects the map's style data, not your photos.
+
+## Example: revisit the city trip
+
+1. Grant media location access, then open **Library › Locations**.
+2. Zoom into the city cluster and tap it until the **Photos in this location** sheet opens.
+3. Scroll the grid while the map follows, tap a photo to view it, or tap the place header to browse that location's whole timeline.

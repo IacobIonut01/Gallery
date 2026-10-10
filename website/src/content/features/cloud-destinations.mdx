@@ -1,0 +1,42 @@
+---
+title: Backup destinations
+summary: Choose which cloud accounts each local album backs up to. One album can go to several clouds.
+area: cloud
+path:
+  - Library
+  - Backup & Sync
+  - Destinations
+related: [cloud-backup, cloud-accounts, cloud-free-up-space]
+scenes: [cloud-destinations]
+order: 11
+---
+
+The **Destinations** screen (**Library › Backup & Sync › Destinations**) works from the album side: choose an album, then choose its backup accounts. An album can go to several clouds for redundancy. This is the "which account" side of backup; **Select albums** inside each account's settings chooses the same thing from the account side.
+
+## Assign albums to clouds
+
+1. Open **Library › Backup & Sync › Destinations**. Each album row shows its item count, how many clouds it targets, and whether a backup is running.
+2. Tap an album to open **Where should this album back up?** and pick **All clouds** or tick specific accounts, then confirm.
+3. Removing every cloud from an album simply stops future uploads for it; the app does not need a destination on every album.
+
+<PreviewCollection feature="cloud-destinations" section="assign" />
+
+## Deleting local copies after backup
+
+Two places control whether originals leave the phone after they are safely uploaded:
+
+- On the destination sheet, **Delete from device after backup** removes local copies only once each item is verified backed up to *all* selected clouds; the summary says exactly that.
+- In an account's upload settings, the per-album **Delete local copy** toggle removes local files after a successful upload to that account. Turning it on shows a warning: the original files of every selected album are deleted from the device right after each upload finishes and is verified on the server, remaining available in the cloud.
+
+Treat the toggle as live deletion: once it is on, existing local files will be deleted as each upload verifies. Switch it on only for albums whose server copies you have already seen.
+
+## Find duplicates
+
+The upload settings also have a **Find duplicates** tool under **De-duplication**, which lists items that exist both locally and on the server. Local deletion there is temporarily unavailable while backup safety checks are being upgraded, so the screen is informational for now; there is no delete-duplicates button to press.
+
+## Example: Camera to two clouds, originals kept
+
+1. **Destinations › Camera › Where should this album back up?** and tick both the NAS account and the Immich account.
+2. Leave **Delete from device after backup** off for now.
+3. Run **Back up all now**, open both servers, and confirm the photos uploaded.
+4. Only after both copies verify, return and enable the delete-after-backup option if you want the phone copy removed.

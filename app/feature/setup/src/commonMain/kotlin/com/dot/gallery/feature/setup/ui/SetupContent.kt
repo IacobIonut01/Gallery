@@ -50,11 +50,15 @@ fun SetupContent(
     actions: SetupActions,
     logoPainter: @Composable (logoAlias: String) -> Painter,
     modifier: Modifier = Modifier,
+    /** Docs/test seam: opens the wizard directly on this page instead of the first. */
+    initialPage: SetupPage? = null,
 ) {
     var setupCompletedVersion by rememberPreference(SetupKeys.setupCompletedVersion)
     val appLogoAlias by rememberPreference(SettingsKeys.appLogoAlias)
 
-    var index by rememberSaveable { mutableIntStateOf(0) }
+    var index by rememberSaveable {
+        mutableIntStateOf(state.pages.indexOf(initialPage).coerceAtLeast(0))
+    }
     val safeIndex = index.coerceIn(0, state.pages.lastIndex)
     val totalSteps = state.pages.size - 1
 

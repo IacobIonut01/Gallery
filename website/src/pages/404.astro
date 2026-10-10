@@ -1,0 +1,14 @@
+---
+import Base from '@layouts/Base.astro';
+import { withBase } from '@lib/paths';
+---
+
+<Base title="Page not found" indexed={false}>
+  <div class="container">
+    <div class="page-head">
+      <h1>Page not found</h1>
+      <p class="summary">That URL does not exist in the docs.</p>
+    </div>
+    <p><a class="btn btn-primary" href={withBase('/')}>Back to the start</a></p>
+  </div>
+</Base>

@@ -14,7 +14,6 @@ import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.core.ExperimentalDeferredTransitionApi
@@ -25,33 +24,15 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.background
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Photo
 import androidx.compose.material.icons.outlined.PhotoLibrary
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
-import androidx.compose.material3.NavigationRail
-import androidx.compose.material3.NavigationRailItem
-import androidx.compose.material3.NavigationRailItemDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
@@ -64,15 +45,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import org.jetbrains.compose.resources.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavBackStackEntry
@@ -85,13 +62,10 @@ import com.dot.gallery.core.LocalViewerDismissBridge
 import com.dot.gallery.core.ViewerDismissBridge
 import com.dot.gallery.feature.viewer.components.media.ViewerDismissExitVisual
 import com.dot.gallery.feature.viewer.components.media.ViewerDismissFlightLayer
-import com.dot.gallery.core.presentation.util.LocalHazeState
 import com.dot.gallery.core.presentation.util.NavigationItem
 import com.dot.gallery.core.presentation.util.Screen
 import com.dot.gallery.core.presentation.util.rememberBottomBarInset
 import com.dot.gallery.ui.theme.ComponentSize
-import com.dot.gallery.ui.theme.Spacing
-import dev.chrisbanes.haze.blur.LocalHazeBlurStyle
 import com.dot.gallery.core.util.or
 import com.dot.gallery.feature.editor.adjustments.varfilter.Pop
 import com.dot.gallery.feature.viewer.ViewerDismissState
@@ -100,12 +74,10 @@ import com.dot.gallery.core.presentation.components.shape
 import com.dot.gallery.feature.editor.adjustments.filters.None
 import com.dot.gallery.app.presentation.library.LibraryScreen
 import com.dot.gallery.app.presentation.timeline.TimelineScreen
-import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
 import com.dot.gallery.core.Settings.Misc.rememberAutoHideNavBar
 import com.dot.gallery.core.Settings.Misc.rememberOldNavbar
 import com.dot.gallery.core.Settings.Misc.rememberSharedElements
 import com.dot.gallery.ui.core.icons.Albums
-import com.dot.gallery.core.presentation.util.hazeEffectScaled
 import com.dot.gallery.generated.resources.Res
 import com.dot.gallery.generated.resources.library
 import com.dot.gallery.generated.resources.nav_albums
@@ -350,65 +322,20 @@ private fun navigate(navController: NavController, route: String) {
     }
 }
 
+// The bar rendering itself lives in core/ui commonMain (GalleryNavigationBar-
+// Content etc.) so docs previews render the identical bars without a
+// NavController; these wrappers keep the original Android signatures.
 @Composable
 fun GalleryNavBar(
     modifier: Modifier,
     backStackEntry: NavBackStackEntry?,
     navigationItems: List<NavigationItem>,
     onClick: (route: String) -> Unit,
-) {
-    val allowBlur by rememberAllowBlur()
-    val surfaceColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
-    val navigationShape = MaterialTheme.shapes.extraLarge
-    val backgroundModifier = remember(allowBlur, surfaceColor, navigationShape) {
-        if (!allowBlur) {
-            Modifier.background(
-                color = surfaceColor,
-                shape = navigationShape,
-            )
-        } else {
-            Modifier
-        }
-    }
-    Row(
-        modifier = Modifier
-            .padding(horizontal = Spacing.ExtraLarge, vertical = Spacing.ExtraLarge)
-            .then(modifier)
-            .height(ComponentSize.NavigationBarHeight)
-            .clip(navigationShape)
-            .then(backgroundModifier)
-            .hazeEffectScaled(
-                state = LocalHazeState.current,
-                style = LocalHazeBlurStyle.current
-            ),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        navigationItems.forEach { item ->
-            val selected = remember(item, backStackEntry) {
-                item.route == backStackEntry?.destination?.route
-            }
-            GalleryNavBarItem(
-                navItem = item,
-                isSelected = selected,
-                onClick = onClick
-            )
-        }
-    }
-}
-
-@Stable
-@Composable
-private fun Label(item: NavigationItem) = Text(
-    text = item.name,
-    fontWeight = FontWeight.Medium,
-    style = MaterialTheme.typography.bodyMedium,
-)
-
-@Stable
-@Composable
-private fun Icon(item: NavigationItem) = Icon(
-    imageVector = item.icon,
-    contentDescription = item.name,
+) = GalleryNavigationBarContent(
+    modifier = modifier,
+    selectedRoute = backStackEntry?.destination?.route,
+    navigationItems = navigationItems,
+    onClick = onClick,
 )
 
 @Composable
@@ -416,96 +343,19 @@ fun ClassicNavBar(
     backStackEntry: NavBackStackEntry?,
     navigationItems: List<NavigationItem>,
     onClick: (route: String) -> Unit
-) {
-    NavigationBar(
-        containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
-    ) {
-        navigationItems.forEach { item ->
-            val selected = item.route == backStackEntry?.destination?.route
-            NavigationBarItem(
-                selected = selected,
-                colors = NavigationBarItemDefaults.colors(
-                    indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
-                    selectedIconColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                    selectedTextColor = MaterialTheme.colorScheme.onSurface,
-                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                ),
-                onClick = { onClick(item.route) },
-                label = { Label(item) },
-                icon = { Icon(item) }
-            )
-        }
-    }
-}
+) = ClassicNavigationBarContent(
+    selectedRoute = backStackEntry?.destination?.route,
+    navigationItems = navigationItems,
+    onClick = onClick,
+)
 
 @Composable
 private fun ClassicNavigationRail(
     backStackEntry: NavBackStackEntry?,
     navigationItems: List<NavigationItem>,
     onClick: (route: String) -> Unit
-) {
-    NavigationRail(
-        containerColor = MaterialTheme.colorScheme.surface
-    ) {
-        Spacer(Modifier.weight(1f))
-        navigationItems.forEach { item ->
-            val selected = item.route == backStackEntry?.destination?.route
-            NavigationRailItem(
-                selected = selected,
-                colors = NavigationRailItemDefaults.colors(
-                    indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
-                    selectedIconColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                ),
-                onClick = { onClick(item.route) },
-                label = { Label(item) },
-                icon = { Icon(item) }
-            )
-        }
-        Spacer(Modifier.weight(1f))
-    }
-
-}
-
-@Composable
-fun RowScope.GalleryNavBarItem(
-    navItem: NavigationItem,
-    isSelected: Boolean,
-    onClick: (route: String) -> Unit,
-) {
-    val selectedColor by animateColorAsState(
-        targetValue = if (isSelected) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent,
-        label = "selectedColor"
-    )
-    val selectedIconColor by animateColorAsState(
-        targetValue = if (isSelected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
-        label = "selectedIconColor"
-    )
-    Box(
-        modifier = Modifier
-            .height(ComponentSize.NavigationBarHeight)
-            .weight(1f)
-            .selectable(
-                selected = isSelected,
-                role = Role.Tab,
-                onClick = { onClick(navItem.route) },
-            ),
-        contentAlignment = Alignment.Center,
-    ) {
-        Box(
-            modifier = Modifier
-                .height(32.dp)
-                .width(ComponentSize.NavigationBarHeight)
-                .background(
-                    color = selectedColor,
-                    shape = RoundedCornerShape(percent = 100),
-                ),
-        )
-        Icon(
-            modifier = Modifier.size(22.dp),
-            imageVector = navItem.icon,
-            contentDescription = navItem.name,
-            tint = selectedIconColor,
-        )
-    }
-}
+) = ClassicNavigationRailContent(
+    selectedRoute = backStackEntry?.destination?.route,
+    navigationItems = navigationItems,
+    onClick = onClick,
+)

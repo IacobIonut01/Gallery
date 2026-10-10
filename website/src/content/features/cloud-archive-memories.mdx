@@ -1,0 +1,33 @@
+---
+title: Cloud archive and memories
+summary: Browse items archived on your server and the cloud memories that appear on your timeline.
+area: cloud
+path:
+  - Library
+  - Archive
+related: [cloud-overview, memories, cloud-albums]
+scenes: [cloud-archive, memories-viewer]
+order: 18
+---
+
+Some servers keep collections the app can surface, currently the kind of features an Immich account offers.
+
+## Cloud archive
+
+<PreviewCollection feature="cloud-archive-memories" section="cloud-archive" />
+
+**Library › Archive** lists items marked archived on the server: media hidden from the timeline but still stored remotely. The screen explains itself as "Archived photos and videos are hidden from your timeline but can still be found here," and shows **No archived items** when empty.
+
+There is no archive/unarchive button in the app's media viewer; archiving is done in the server's own interface, and this screen is where the results become browsable. Items inside behave like other cloud media, so the usual actions (view, share, download) apply as your account's access allows.
+
+## Cloud memories
+
+<PreviewCollection feature="cloud-archive-memories" section="cloud-memories" />
+
+Cloud memories arrive as story cards on the **Timeline** alongside your own [memories](/ReFra/features/memories) cards, groups like **On this day, N years ago** built by the server from past photos. Tapping one plays it like any memory card. Whether they appear depends on the provider's support and whether the account is syncing.
+
+## Example: find last year's hidden photo
+
+1. You archived some photos in Immich's web app and want them back on screen.
+2. Open **Library › Archive** and browse; they are all there, untouched on the server.
+3. To unarchive, mark them in the server's interface; the app reflects the change on the next sync.

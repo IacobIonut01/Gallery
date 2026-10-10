@@ -1,0 +1,188 @@
+---
+import Base from '@layouts/Base.astro';
+import VariantPicker from '@components/VariantPicker.astro';
+import { FDROID_URL, GPLAY_URL, OBTAINIUM_URL, REPO_RELEASES } from '@lib/constants';
+import { withBase } from '@lib/paths';
+
+const stores = [
+  {
+    name: 'F-Droid',
+    url: FDROID_URL,
+    note: 'Free, rebuilt from the tagged source by F-Droid. Updates arrive on the F-Droid schedule.',
+  },
+  {
+    name: 'Google Play',
+    url: GPLAY_URL,
+    note: 'Automatic updates through Play. The listing is paid; it is one way to support the project.',
+  },
+  {
+    name: 'Obtainium',
+    url: OBTAINIUM_URL,
+    note: 'Tracks GitHub Releases and updates your APK directly, without a store account.',
+  },
+];
+---
+
+<Base
+  title="Download ReFra"
+  description="Choose an APK for your Android device, or install through your preferred store."
+>
+  <div class="container download-page">
+    <div class="page-head">
+      <div class="download-title">
+        <img
+          src={withBase('/brand/app-icon.png')}
+          width="64"
+          height="64"
+          alt=""
+          class="download-app-icon"
+        />
+        <h1>Download ReFra</h1>
+      </div>
+      <p class="summary">
+        Choose an APK for your Android device, or install through your
+        preferred store.
+      </p>
+      <p class="download-intro">
+        <a href={withBase('/requirements')}>Android 10 or later</a> · Free and
+        open source, licensed Apache-2.0
+      </p>
+    </div>
+
+    <VariantPicker />
+
+    <div class="download-columns">
+      <section class="stores" aria-labelledby="stores-heading">
+        <h2 id="stores-heading">Other ways to install</h2>
+        <ul class="store-list">
+          {
+            stores.map((s) => (
+              <li>
+                <a class="store-link" href={s.url} rel="noopener">
+                  {s.name}
+                </a>
+                <span class="store-note">{s.note}</span>
+              </li>
+            ))
+          }
+          <li>
+            <a class="store-link" href={REPO_RELEASES} rel="noopener">
+              GitHub Releases archive
+            </a>
+            <span class="store-note">
+              Every published build, checksum, and release note.
+            </span>
+          </li>
+        </ul>
+        <p class="store-footnote">
+          For updates, keep using the same install source.
+        </p>
+      </section>
+
+      <section class="install" aria-labelledby="install-heading">
+        <h2 id="install-heading">Install the APK</h2>
+        <ol class="install-steps">
+          <li>Download the APK to your Android device.</li>
+          <li>
+            Open the file and allow installation from your browser or file
+            manager if Android asks.
+          </li>
+          <li>Complete installation, then open ReFra.</li>
+        </ol>
+        <p class="install-links">
+          <a href={withBase('/requirements')}>Requirements</a> ·{' '}
+          <a href={withBase('/support')}>Support</a>
+        </p>
+      </section>
+    </div>
+  </div>
+</Base>
+
+<style>
+  .download-page {
+    padding-bottom: 4rem;
+  }
+  .download-title {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .download-title h1 {
+    margin: 0;
+  }
+  .download-app-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    flex: none;
+  }
+  @media (min-width: 960px) {
+    .download-app-icon {
+      width: 64px;
+      height: 64px;
+    }
+  }
+  .download-intro {
+    margin: 6px 0 0;
+    font-size: 0.92rem;
+    color: var(--md-on-surface-variant);
+  }
+  .download-columns {
+    display: grid;
+    gap: 32px;
+    grid-template-columns: 1fr;
+    margin-top: 2.5rem;
+  }
+  @media (min-width: 960px) {
+    .download-columns {
+      grid-template-columns: 1fr 1fr;
+      gap: 56px;
+    }
+  }
+  .download-columns h2 {
+    margin: 0 0 14px;
+    font-size: 1.3rem;
+  }
+  .store-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--md-outline-variant);
+  }
+  .store-list li {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--md-outline-variant);
+  }
+  .store-link {
+    font-weight: 600;
+    width: fit-content;
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+  }
+  .store-note {
+    font-size: 0.88rem;
+    color: var(--md-on-surface-variant);
+  }
+  .store-footnote {
+    margin: 14px 0 0;
+    font-size: 0.82rem;
+    color: var(--md-on-surface-variant);
+  }
+  .install-steps {
+    margin: 0;
+    padding-left: 1.4em;
+    display: grid;
+    gap: 12px;
+  }
+  .install-steps li {
+    padding-left: 6px;
+  }
+  .install-links {
+    margin: 18px 0 0;
+    font-size: 0.88rem;
+  }
+</style>

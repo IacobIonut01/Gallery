@@ -1,0 +1,106 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { getCollection } from 'astro:content';
+import Docs from './Docs.astro';
+import PathTrace from '@components/PathTrace.astro';
+import { AREA_LABELS, REPO_BLOB } from '@lib/constants';
+import { withBase } from '@lib/paths';
+
+interface Props {
+  entry: CollectionEntry<'features'>;
+  headings?: { depth: number; slug: string; text: string }[];
+}
+const { entry, headings } = Astro.props;
+const { title, summary, area, path, related } = entry.data;
+
+const all = await getCollection('features');
+const relatedPages = related
+  .map((id) => all.find((f) => f.id === id))
+  .filter((f) => f !== undefined);
+
+const editUrl = `${REPO_BLOB}/website/src/content/features/${entry.id}.mdx`;
+---
+
+<Docs title={title} description={summary} featureId={entry.id} headings={headings}>
+  <div class="page-head">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href={withBase('/features/')}>Features</a>
+      <span class="breadcrumb-sep" aria-hidden="true">/</span>
+      <a href={withBase(`/features/#${area}`)}>{AREA_LABELS[area] ?? area}</a>
+    </nav>
+    <h1>{title}</h1>
+    <p class="summary">{summary}</p>
+    <PathTrace path={path} />
+  </div>
+
+  <div class="prose">
+    <slot />
+  </div>
+
+  {
+    relatedPages.length > 0 && (
+      <section class="related">
+        <h2>Related pages</h2>
+        <ul class="related-list">
+          {relatedPages.map((f) => (
+            <li>
+              <a href={withBase(`/features/${f.id}`)}>{f.data.title}</a>
+              <span class="related-summary">{f.data.summary}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+
+  <p class="edit-link">
+    <a href={editUrl} rel="noopener">Edit this page on GitHub</a>
+  </p>
+</Docs>
+
+<style>
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    margin-bottom: 10px;
+  }
+  .breadcrumb a {
+    color: var(--md-on-surface-variant);
+  }
+  .breadcrumb a:hover {
+    color: var(--md-primary);
+  }
+  .breadcrumb-sep {
+    color: var(--md-outline);
+  }
+  .related {
+    margin-top: 2.5rem;
+  }
+  .related-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-top: 1px solid var(--md-outline-variant);
+  }
+  .related-list li {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--md-outline-variant);
+  }
+  .related-list a {
+    font-weight: 600;
+  }
+  .related-summary {
+    font-size: 0.85rem;
+    color: var(--md-on-surface-variant);
+  }
+  .edit-link {
+    margin: 3rem 0 0;
+    font-size: 0.85rem;
+    color: var(--md-on-surface-variant);
+  }
+</style>

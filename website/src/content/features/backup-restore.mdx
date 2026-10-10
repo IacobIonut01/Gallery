@@ -1,0 +1,62 @@
+---
+title: Backup and restore
+summary: Export settings, favorites, vaults, and cloud accounts to a file and import them on another install.
+area: utilities
+path:
+  - Settings
+  - Backup & restore
+related: [vault, general-settings, settings-overview]
+scenes: [settings-backup, settings-backup-wizard]
+order: 1
+---
+
+**Settings › Backup & restore** saves a copy of your ReFra setup to a file and restores it later, on this device or another one. This is a manual export of the app's configuration, not a photo backup; it does not continuously protect your media.
+
+A backup can contain decrypted vault media and account credentials. The app warns you on the screen; keep the file somewhere safe and protect it with the password option.
+
+## Export a backup
+
+<PreviewCollection feature="backup-restore" section="export-a-backup" />
+
+1. Open **Settings › Backup & restore** and tap **Export backup**.
+2. Under **Include in backup**, tick what to take:
+   - **App settings**: the supported preferences and customizations; values tied to this specific device are not carried.
+   - **Local favorites**: re-applied on import where matching photos are found.
+   - **Cloud favorites**: favorites of synced cloud media.
+   - **Cloud accounts**: server configurations. These may need you to sign in again after import.
+   - **Vaults**: the full vault contents, decrypted into the backup file. Choosing this asks you to unlock each vault first.
+3. Tap **Next**.
+4. Optionally enable **Encrypt backup with a password**, type it twice, and use **Show password** to check it. The password cannot be recovered if forgotten.
+5. Tap **Save backup file** and pick a location in Android's file picker.
+
+The export ends with a confirmation showing what the file contains, including which ReFra version created it.
+
+## Restore a backup
+
+<PreviewCollection feature="backup-restore" section="restore-a-backup" />
+
+1. Open **Settings › Backup & restore** and tap **Import backup**.
+2. Tap **Choose file** and pick the backup file.
+3. If the file is password-protected, enter the password. A wrong password reports **Incorrect password**; retry with the right one.
+4. Under **Choose what to restore**, tick the sections to bring back. A file with nothing usable says it does not contain any restorable data.
+5. Tap **Restore** and wait for the import.
+
+Afterwards: cloud accounts may need re-authentication, and local favorites are re-applied where the matching photos still exist; Android may ask you to confirm media writes during that step.
+
+## What a backup does not contain
+
+Ordinary photos and videos outside vaults are not part of the backup; only vault contents travel, and they are stored decrypted inside the archive, which is why the archive password is the real protection. Collections are app-internal and are not covered.
+
+## Example: move your setup to a new phone
+
+1. On the old phone, export a backup including **App settings**, **Local favorites**, **Cloud accounts**, and **Vaults**; unlock the vault when asked and set a password.
+2. Copy the backup file to the new phone, for example through your file sync of choice.
+3. Copy the ordinary photo folders across too, before restoring: local favorites only re-apply where the matching photos exist on the new device.
+4. On the new phone, install ReFra, grant photo access, open **Settings › Backup & restore › Import backup**, pick the file, enter the password, and restore the sections.
+5. Sign in to the cloud accounts again when the app asks.
+
+## If the import fails
+
+- **Incorrect password**: recheck the password and try again.
+- **"This backup doesn't contain any restorable data"**: check that you picked the intended backup file; the file was exported with nothing selected, or it is not a ReFra backup.
+- For any other import error, keep the original backup file and report the error message it shows.

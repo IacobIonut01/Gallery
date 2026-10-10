@@ -1,0 +1,52 @@
+---
+title: Hidden and protected content
+summary: Four different ways to keep media out of sight, covering ignored albums, locked albums, the private folder, and vaults.
+area: organize-secure
+path:
+  - Library
+  - Ignored
+related: [ignored-albums, private-folder, vault, albums]
+scenes: [ignored-rules]
+order: 9
+---
+
+ReFra offers four ways to take media out of plain view, and they are not interchangeable. Picking the right one matters, because only one of them encrypts.
+
+## The four tools
+
+| Tool | What it does | Where it lives |
+| --- | --- | --- |
+| **Ignored** | Rules that hide chosen albums or paths from the Timeline, the Albums tab, or both. Files stay exactly where they are. | Managed under **Library › Ignored**; see [ignored albums](/ReFra/features/ignored-albums). |
+| **Locked albums** | An album stays visible but opening it asks for your device credential. Its cover stays concealed by default. | Lock and unlock from the album's long-press menu on the Albums tab. |
+| **Private folder** | A designated folder whose contents leave the timeline and other apps' media listings. Files are still ordinary files on storage. | **Settings › Security › Private folder**; see [private folder](/ReFra/features/private-folder). |
+| **Vault** | Real encryption: items are decrypted only while the vault is unlocked. | **Library › Vault**; see [vault](/ReFra/features/vault). |
+
+A rough ladder: ignored tidies your own browsing, locked albums keep a casual viewer out, the private folder keeps files out of other gallery apps, and the vault protects contents even from someone reading the storage directly.
+
+## Managing ignored content
+
+<PreviewCollection feature="hidden-content" section="managing-ignored-content" />
+
+1. Open **Library** and tap **Ignored**.
+2. The screen lists every active ignore rule with where it applies and what it matches.
+3. From a rule's options you can edit its albums or location, or delete the rule; deleting a rule brings the albums back and never touches files.
+4. A separate way in: touch and hold an album on the Albums tab and choose **Add to ignored albums**, which starts the same rule wizard.
+
+The rule wizard itself (Timeline vs Albums scope, single albums, multiple albums, and path patterns) is covered on [ignored albums](/ReFra/features/ignored-albums).
+
+## Ignored content and smart features
+
+A switch under **Settings › Smart Features**, **Include ignored albums**, decides whether timeline-hidden media still feeds Smart Features and search. Turning it on starts a full refresh; locked albums stay private regardless.
+
+## If something is more visible or less visible than expected
+
+- A folder gone from the Timeline but still in Albums (or the reverse) is an ignore rule scoped to one location; check its entry under **Library › Ignored**.
+- A locked album that keeps asking is working as designed; the credential prompt is the feature.
+- None of these is a substitute for caution with deletion: hiding never deletes files, and deleting a hidden item still deletes it.
+
+## Example: decluttered screenshots, protected scans
+
+1. `Screenshots` clutters the timeline but you still want it under Albums: touch and hold it, choose **Add to ignored albums**, and scope the rule to **Timeline**.
+2. Passport scans must stay unreadable even to someone browsing the files: select them in their album and use **Hide** to move them into a vault; see [vault](/ReFra/features/vault).
+3. Confirm the result in **Library › Ignored** for the rule and the **Vault** entry for the scans.
+4. Undoing either is non-destructive: delete the ignore rule, or restore the scans out of the vault.

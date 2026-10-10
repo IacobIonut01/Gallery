@@ -1,0 +1,46 @@
+---
+title: General settings
+summary: Trash behavior, secure mode, app name and icon, and the vault encrypt policy.
+area: customize
+path:
+  - Settings
+  - General
+related: [trash, vault, security]
+scenes: [settings-general]
+order: 4
+---
+
+**Settings › General** holds the options that do not belong to a single screen: trash behavior, deletion scope, secure mode, feedback, and how the app presents itself on your launcher.
+
+## Trash
+
+<PreviewCollection feature="general-settings" section="trash" />
+
+- **Use trash can**: when on, supported deleted photos and videos move to Trash so they can be restored. Android or your media provider controls how long they stay. When off, deletion is immediate and irreversible; the switch says so itself.
+- **Require confirmation on trash**: adds a dialog before items move to the trash. It can only be enabled while **Use trash can** is on; the summary explains that when the row is unavailable.
+- **Deleting backed-up items**: for items that exist both on the device and in the cloud, choose where Delete acts: **Ask every time**, **Delete from device**, **Delete from cloud**, or **Delete from both**.
+- **Open Trash**: a shortcut to the trash screen for restoring or permanently deleting items. See [trash](/ReFra/features/trash).
+
+## Other
+
+- **Secure Mode**: blocks the app's content from screenshots, the recent-apps overview, and screen recordings. It protects those capture surfaces; it does not encrypt your ordinary files.
+- **Allow vibrations**: haptic feedback on actions and gestures such as long-press selection and pinch transitions.
+- **App name**: the launcher name, **ReFra** or **Gallery**. The app restarts once to apply the change.
+- **App logo**: the launcher icon, with **ReFra**, **Gallery**, **Mono**, and **Gallery Mono** variants. The app restarts once to apply it.
+
+## Vault
+
+- **Vault encrypt behavior**: what happens to originals when you add media to a vault: **Always ask** (the sheet asks every time), **Always delete originals**, or **Always keep originals**. The per-use sheet can also remember your choice, which changes this setting. See [vault](/ReFra/features/vault).
+
+## Example: quieter deletion for a backed-up library
+
+1. Open **Settings › General**.
+2. Leave **Use trash can** on and turn on **Require confirmation on trash**.
+3. Under **Deleting backed-up items**, choose **Ask every time**.
+4. When you delete, check the location named in each confirmation before approving, so backed-up items never silently vanish from the side you meant to keep.
+
+## If a row is missing or disabled
+
+- **Require confirmation on trash** waits for **Use trash can**.
+- The trash itself needs Android 11 or later; on older versions the section does not appear.
+- **Deleting backed-up items** only matters once a cloud account holds copies; with none connected it has no effect.

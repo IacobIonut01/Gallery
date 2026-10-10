@@ -1,0 +1,36 @@
+---
+title: Cast to another screen
+summary: Send the photo or video you are viewing to an FCast receiver on your network.
+area: view-play
+path:
+  - Timeline
+  - Open a photo
+  - Cast
+related: [media-viewer, video-playback]
+scenes: [cast-devices]
+order: 8
+---
+
+The **Cast** button in the viewer sends what you are watching to an **FCast** receiver; a TV, computer, or streaming box running a compatible FCast app. The receiver must be reachable on your network; Chromecast and other proprietary cast protocols are not involved.
+
+## Connect and cast
+
+<PreviewCollection feature="casting" section="connect-and-cast" />
+
+1. Open a photo or video and tap **Cast**.
+2. The picker searches for receivers (**Searching for devices…**). Casting needs local-network access; if Android asks for **Direct local network access**, allow it. The other network permissions the feature lists (Internet, Wi-Fi state, network state, multicast) are granted at install, not toggles you manage.
+3. Pick a receiver, or choose **Connect manually** and enter its IP address and port (the port defaults to **46899**). A manual address is the fallback when discovery cannot cross your network segments; the receiver still has to be reachable.
+4. Connecting can start casting the current media automatically; while connected, **Cast this media** sends whatever is on screen. A mini bar shows **Casting to** that receiver with **Stop casting**; the sheet also offers **Stop current cast** and **Disconnect**.
+
+While casting, playback controls (pause, seek, speed on videos) drive the receiver. What actually plays depends on the receiver understanding the video format, so a clip that plays on the phone may not play on every receiver.
+
+## If nothing shows up
+
+- Confirm the receiver is on and running its FCast app on the same network, and that local-network access was allowed if Android asked for it.
+- If discovery finds nothing, use **Connect manually** with the receiver's IP (for example `192.168.1.30`) and port 46899.
+
+## Example: photos on the living-room TV
+
+1. On the TV, open the FCast receiver app and note its address.
+2. In ReFra, open a photo, tap **Cast**, pick the TV or enter `192.168.1.30` manually.
+3. Connecting can put the photo on the TV by itself; tap **Cast this media** if it does not. To show a different photo, open it, bring the cast sheet back up, and tap **Cast this media** again. **Stop casting** ends the session.

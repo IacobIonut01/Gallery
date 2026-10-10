@@ -1,0 +1,55 @@
+---
+title: Appearance
+summary: Theme palettes, dark and AMOLED modes, blur, and the look of every surface in the app.
+area: customize
+path:
+  - Settings
+  - Appearance
+related: [navigation, general-settings, settings-overview]
+scenes: [settings-appearance]
+order: 1
+---
+
+Appearance controls how ReFra looks: its color palette, light and dark behavior, viewer effects, and font. None of these options touches your photos.
+
+## Open Appearance
+
+1. Open **Library** and tap the gear icon.
+2. Tap **Appearance**.
+
+## Theme
+
+<PreviewCollection feature="appearance" section="theme" />
+
+- **Color palette**: pick the source of the app's accent colors. **Wallpaper colors** tints the interface to match your wallpaper. **Neutral** keeps a muted palette, and **Other colors** offers fixed accent colors to choose from.
+- **Follow System Theme**: the app switches between light and dark with your device. Turn it off to choose manually.
+- **Use Dark Mode**: forces dark mode regardless of the system setting. This switch only works while **Follow System Theme** is off.
+- **Use Amoled Mode**: replaces dark grey surfaces with pure black, which saves a little battery on AMOLED screens. It is only available while the app is currently in dark mode, so enable dark mode first.
+
+## Visual effects
+
+- **Fancy Blur**: blurs the background behind photos in the media viewer. Requires Android 12 or later; the row explains this when the device is too old.
+- **Auto Contrast (Beta)**: keeps the viewer's buttons and icons readable over bright or dark parts of an image by adjusting their contrast, including the status bar. It changes the controls, not the image itself.
+- **Animate media items**: plays a smooth zoom transition between a thumbnail and the full-screen viewer. Turn it off for instant, static transitions.
+
+## Font
+
+- **Use system font**: switches ReFra from its built-in font to your device's default font. Useful if you already set a more readable system font.
+
+## Map
+
+- **Map appearance**: choose whether the location maps follow the app's theme or always use light or dark map colors: **Follow app appearance**, **Light**, or **Dark**.
+- **CARTO basemap API key**: some builds need a personal key for map preview tiles; without one, tiles may be watermarked. Tap the row, paste the key the map service issued you, and tap **Save**. The row shows **Configured** or **Not configured** so you can tell the state at a glance.
+
+## Example: a quiet dark setup
+
+1. Under **Color palette**, choose **Neutral**.
+2. Turn off **Follow System Theme**, then turn on **Use Dark Mode** and **Use Amoled Mode**.
+3. Turn off **Animate media items** for instant transitions.
+4. Open a photo. The interface is black, muted, and still.
+
+## If a switch is missing
+
+- **Use Amoled Mode** waits until dark mode is active; turn on **Use Dark Mode** first.
+- **Fancy Blur** requires Android 12 or later.
+- **CARTO basemap API key** only appears on builds that do not ship a bundled key.

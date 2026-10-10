@@ -1,0 +1,95 @@
+---
+title: Build from source
+summary: Compile ReFra yourself with Gradle, and pick the flavors and flags that match your device.
+---
+
+## What you need
+
+- JDK 21. The Gradle daemon is pinned to JetBrains Java 21 in `gradle/gradle-daemon-jvm.properties`; Java 17 is the compilation target.
+- Android SDK Platform 37 and platform tools.
+- NDK `29.0.14206865` (r29) and CMake `3.31.6`. Install these through Android Studio's SDK Manager; the NDK version comes from `refra.ndkVersion` in `gradle.properties`.
+- A Bash-compatible shell for the native build scripts.
+- A checkout of the repository
+
+```bash
+git clone https://github.com/IacobIonut01/ReFra.git
+cd ReFra
+```
+
+## Configure the maps API token
+
+Interactive maps use OpenFreeMap. The smaller map preview images use CARTO tiles and accept a CARTO basemap API key.
+
+To include that key in your build, set the `CARTO_BASEMAP_KEY` environment variable in the same terminal where you run Gradle. Replace the example value with your own basemap key.
+
+In Bash or Zsh:
+
+```bash
+export CARTO_BASEMAP_KEY="your-carto-basemap-key"
+./gradlew :app:androidApp:assembleArm64-v8aNoMLDebug
+```
+
+In PowerShell:
+
+```powershell
+$env:CARTO_BASEMAP_KEY = "your-carto-basemap-key"
+.\gradlew.bat :app:androidApp:assembleArm64-v8aNoMLDebug
+```
+
+Gradle reads this variable directly; it is not an entry in `app.properties` or `local.properties`. The value is embedded in the APK, so use a key intended for client-side basemap access and keep real keys out of Git.
+
+You can build without the variable. Interactive maps still use OpenFreeMap; static previews request CARTO tiles without a key unless you enter one later under **Settings › Appearance › CARTO basemap API key**. That setting appears when the build has no embedded key. With `OFFLINE=true`, maps are excluded and the build ignores the token.
+
+## Build an APK
+
+Run commands from the repository root. The Android application module is `:app:androidApp`.
+
+For an ARM64 phone, build a debug APK without bundled machine-learning models:
+
+```bash
+./gradlew :app:androidApp:assembleArm64-v8aNoMLDebug
+```
+
+The APK is written under `app/androidApp/build/outputs/apk/`. Its name includes the version, model variant, CPU architecture, and build type.
+
+To build and install it on a connected device with USB debugging enabled:
+
+```bash
+./gradlew :app:androidApp:installArm64-v8aNoMLDebug
+```
+
+On Windows, use `.\gradlew.bat` in place of `./gradlew`.
+
+Choose the variant that matches what you need:
+
+- CPU architecture: `arm64-v8a`, `armeabi-v7a`, `x86`, or `x86_64`. `universal` includes all four and produces a larger APK.
+- Models: `WithML` bundles the model packs; `NoML` leaves them out. Online builds can download models later.
+- Build type: `debug`, `staging`, `release`, or `gplay`. Start with `debug`, which uses Android's debug signing. The other types use the project's release signing configuration and require your own signing setup.
+
+For example, to bundle the models in the ARM64 debug build:
+
+```bash
+./gradlew :app:androidApp:assembleArm64-v8aWithMLDebug
+```
+
+## Feature flags
+
+`app.properties` at the repository root controls provider and permission source sets:
+
+- `OFFLINE` removes every feature that needs a network connection: maps, cloud providers, and the settings that go with them
+- `ALL_FILES_ACCESS` controls the all-files access permission request
+- `INCLUDE_IMMICH`, `INCLUDE_OWNCLOUD`, `INCLUDE_NEXTCLOUD`, `INCLUDE_WEBDAV`, `INCLUDE_SMB`, `INCLUDE_NFS` toggle each cloud provider source set
+
+A provider set to `false` compiles its matching `no*` stub source set instead.
+
+## Native components
+
+The Android build runs the scripts under `scripts/native/` for the selected architectures and links their output through CMake. These tasks build the HEIF decoder and encoder, image codecs, RAW support, and JPEG 2000 support from pinned sources.
+
+The first build downloads source archives and caches them under `build/native-downloads/`. It needs network access even when you are compiling an offline APK.
+
+## Where to go next
+
+- Check the [requirements](/ReFra/requirements) before installing
+- Verify a downloaded APK against the checksums published with each [release](https://github.com/IacobIonut01/ReFra/releases)
+- Read how to [contribute](/ReFra/contribute) changes back

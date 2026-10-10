@@ -1,0 +1,61 @@
+---
+title: Categories
+summary: AI-built groups like "nature" or "receipts" that classify your photos by what they show.
+area: discover
+path:
+  - Library
+  - Categories
+related: [smart-features, ai-models, search, smart-scan]
+scenes: [settings-categories]
+order: 5
+---
+
+Categories group photos by what they contain rather than where they are stored. Classification runs on your device using the downloaded AI models; the settings screen states that no media is uploaded for it. Without the models installed, categories do not appear.
+
+## Browse categories
+
+1. Open **Library**. The **Categories** section shows a row of cards with a match count each.
+2. Tap a category to open its grid, which behaves like any album view.
+3. An empty section means either no models are installed or no scan has matched anything yet.
+
+## Create a category
+
+1. In the Categories section, tap **Add category**.
+2. Give it a **name**, for example "Receipts" or "Dog".
+3. Under **Describe what to include**, write a plain sentence describing the photos it should contain, such as "photos of my dog at the beach". Or tap a **Quick start** suggestion to fill this in.
+4. Set the **Sensitivity**: **Broad** includes loosely related photos, **Balanced** is the default mix, **Strict** keeps only strong matches, and **Exact** keeps near-perfect matches only. A **Fine-tune** slider adjusts within the choice, trading more results against more accuracy; it is a matching preference, not a confidence guarantee.
+5. Optionally add **Reference photos**: tap **Add photos** and pick examples so the category can match visually similar ones.
+6. The **Preview** shows the best matches; tap **See all matches** for the full list before committing.
+7. Tap **Create**. The category is saved and classification starts; its photos fill in as the scan runs.
+
+## Edit or delete a category
+
+- Open the category and tap **Edit category** to change the name, description, sensitivity, or reference photos, then **Save**. Saving re-runs classification for the category.
+- **Delete category** removes the grouping and asks for confirmation that the action cannot be undone. Deleting the group leaves the photos themselves in the library.
+
+## Categories settings
+
+<PreviewCollection feature="categories" section="categories-settings" />
+
+Under **Categories Settings**:
+
+- **Scan for new categories**: runs a scan over the library, showing "Scanning media…" while it works.
+- **Stop scan**: ends the current scan while keeping completed results.
+- **Exclude videos**: restricts matching to photos. Turning it on asks whether to remove video matches that already exist.
+- **Reset categories**: deletes all categories and reinitializes the defaults. This is destructive to custom categories; it does not touch photos.
+
+If the models are missing, the page says so and points at **Settings › Smart Features** to download them.
+
+## Example: a receipts category for tax season
+
+1. **Library › Categories › Add category**, name it **Receipts**.
+2. Describe it as "photos of receipts, invoices, and order confirmations".
+3. Add two or three real receipts as **Reference photos**.
+4. Set sensitivity to **Balanced**, check the preview, and tap **Create**.
+5. New receipts you photograph get classified into it on the next scan.
+
+## If matches look wrong
+
+- Too much noise: raise the sensitivity toward **Strict** or add more reference photos.
+- Too few matches: drop toward **Broad**, or loosen the description.
+- A scan that produced nothing at all does not prove the models are missing; it can also mean no match above the sensitivity bar or a scan still in progress. Check model and scan status under **Settings › Smart Features**.

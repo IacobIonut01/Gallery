@@ -1,0 +1,56 @@
+---
+title: Private folder
+summary: A folder whose contents stay out of the regular browse views, behind an optional lock.
+area: organize-secure
+path:
+  - Settings
+  - Security
+  - Private folder
+related: [vault, security, hidden-content]
+scenes: [settings-private-folder, private-folder-security]
+order: 8
+---
+
+The private folder is a directory you designate that ReFra manages separately: its contents leave the normal timeline, albums, and search results, and appear only inside the private view. Files are not encrypted; they stay ordinary files on storage, kept out of other apps' media listings. For encryption, use a [vault](/ReFra/features/vault) instead.
+
+## Set it up
+
+<PreviewCollection feature="private-folder" section="set-it-up" />
+
+1. Open **Settings › Security › Private folder**.
+2. Tap **Pick folder** and choose a folder in Android's picker. Internal storage, SD card, or USB locations are all possible depending on what Android lets you select.
+3. Under **Private folder security**, choose how the private view opens: **None**, **Device security** (your screen lock or biometrics), or **Custom password** (a separate PIN of at least six digits, a pattern of at least four dots, or a password of at least four characters).
+
+Once configured, a **Private folder** entry appears in your album list, and the settings row shows **Folder configured**.
+
+## Use it
+
+- Open the private folder entry to browse, view, and manage its contents with the same viewer as the rest of the gallery. If security is set, opening asks for that authentication first.
+- Deleting inside the private folder is permanent: the action is **Delete permanently**, with no trash step.
+- Moving items in works through the selection action **Private folder**; see [manage media](/ReFra/features/manage-media).
+
+## Change or remove it
+
+<PreviewCollection feature="private-folder" section="change-or-remove-it" />
+
+1. Open **Settings › Security › Private folder**.
+2. **Change folder** picks a different directory; **Remove folder** unsets it and asks what should happen to the marker inside:
+   - **Keep files hidden**: the `.nomedia` marker stays, so the folder remains out of other apps' media scans and the files do not reappear in the gallery.
+   - **Make files visible**: the marker is deleted, Android scans the folder again, and the files appear in the media library and other gallery apps.
+
+Neither option deletes the files themselves.
+
+## Example: move documents into a locked private folder
+
+1. In a file manager, create a folder named `Documents` on internal storage (or use an existing one).
+2. Open **Settings › Security › Private folder**, tap **Pick folder**, and select `Documents` in Android's picker.
+3. Under **Private folder security**, choose **Device security**.
+4. In the timeline, select the document photos, open the selection menu, and choose **Private folder** to move them.
+5. Open the new **Private folder** album entry; it asks for your screen lock and shows the moved photos, gone from the timeline.
+6. To reverse it later, open the private folder, move the items back out with the selection actions, then in settings **Remove folder › Make files visible** so the folder returns to the media library.
+
+## If access breaks
+
+- If the device forgets the folder permission (after removing a card or drive, or a system change), reopen the settings row and pick the folder again.
+- Files that suddenly show up elsewhere mean the `.nomedia` marker was removed; reopen the private folder settings so the app recreates it.
+- Keep in mind this is hiding, not encryption: anything that reads storage directly (a PC over USB, a file manager with full access) can still see the files.

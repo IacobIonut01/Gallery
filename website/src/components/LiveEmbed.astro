@@ -1,0 +1,623 @@
+---
+/**
+ * LiveEmbed — mounts a docs-showcase scene.
+ *
+ * Contract (DOCS_SITE_PLAN.md §6, implemented by docs-showcase LiveSceneHost):
+ *   iframe URL : <base>live/index.html?scene=&theme=&device=&state=&seed=
+ *   parent->app: postMessage {"type":"docs:set","scene","theme","device","state","seed"}
+ *   app->parent: "docs:ready" {scene} · "docs:scenes" {scenes[]} · "docs:error"
+ *
+ * Fidelity ladder per §7: live wasm first; when the browser lacks WasmGC or the
+ * scene has no live bundle, fall back to the capture assets that
+ * docs-manifest.json declares; when neither exists, show a "pending" card.
+ *
+ * Every status change is also dispatched as a bubbling `refra:preview-status`
+ * CustomEvent ({fidelity, status, states, state}) so a wrapping DeviceStage can
+ * reflect the same state in its own chrome.
+ */
+import { DEVICE_PRESETS, type DeviceId, type ThemeId } from '@lib/constants';
+
+interface Props {
+  /** Scene id from the docs-showcase registry. */
+  scene?: string;
+  device?: DeviceId;
+  /** 'site' follows the page theme; an explicit theme pins the embed. */
+  theme?: ThemeId | 'site';
+  state?: string;
+  seed?: string;
+  title?: string;
+  /** Frame height in px when rendered standalone (DeviceStage sizes itself). */
+  height?: number;
+  /** Show the preset picker strip under the frame. */
+  showStatePicker?: boolean;
+  /** Render the status bar; false gives a bare stage for DeviceStage. */
+  chrome?: boolean;
+  /**
+   * Defer the wasm bundle until the reader clicks "Load live preview" — the
+   * capture/poster renders immediately either way. Default keeps existing
+   * behavior (auto-mount).
+   */
+  lazy?: boolean;
+  /**
+   * Reserve the requested logical safe area at the top of the live scene for
+   * the decorative status bar a PhoneFrame overlay draws. Opt-in — default
+   * embeds unchanged.
+   */
+  statusBar?: boolean;
+}
+
+const {
+  scene = '',
+  device = 'phone',
+  theme = 'site',
+  state = '',
+  seed = '',
+  title = 'Live preview',
+  height = 640,
+  showStatePicker = false,
+  chrome = true,
+  lazy = false,
+  statusBar = false,
+} = Astro.props;
+
+const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
+const preset = DEVICE_PRESETS[device];
+---
+
+<live-embed
+  class:list={['embed', { 'embed-fill': !chrome }]}
+  data-scene={scene}
+  data-device={device}
+  data-theme={theme}
+  data-state={state}
+  data-seed={seed}
+  data-base={base}
+  data-show-states={showStatePicker ? 'true' : 'false'}
+  data-lazy={lazy ? 'true' : 'false'}
+  data-status-bar={statusBar ? 'true' : 'false'}
+  style={`--embed-h: ${height}px; --frame-w: ${preset.width}px; --frame-h: ${preset.height}px`}
+  role="region"
+  aria-label={title}
+>
+  <div class="embed-shell glass">
+    <div class="embed-stage">
+      <div class="embed-loading skeleton" aria-hidden="true"></div>
+    </div>
+    {
+      chrome && (
+        <div class="embed-bar">
+          <span class="embed-status" aria-live="polite">Loading preview…</span>
+          <span class="embed-fidelity chip" hidden />
+        </div>
+      )
+    }
+  </div>
+</live-embed>
+
+<script>
+  import { DEVICE_PRESETS, PHONE_STATUS_BAR_HEIGHT } from '../lib/constants.ts';
+
+  const WASMGC_BYTES = new Uint8Array([
+    0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, 0x01, 0x05, 0x01, 0x5f, 0x01, 0x78, 0x00,
+  ]);
+
+  function wasmGcSupported() {
+    try {
+      return (
+        typeof WebAssembly === 'object' &&
+        typeof WebAssembly.validate === 'function' &&
+        WebAssembly.validate(WASMGC_BYTES)
+      );
+    } catch {
+      return false;
+    }
+  }
+
+  // docs-manifest.json is the live/capture contract (plan §7). One shared fetch
+  // per page; a missing manifest means no scenes are published yet.
+  function getManifest(base) {
+    const w = window;
+    if (!w.__refraDocsManifest) {
+      w.__refraDocsManifest = fetch(`${base}/docs-manifest.json`)
+        .then((r) => (r.ok ? r.json() : { scenes: {} }))
+        .catch(() => ({ scenes: {} }));
+    }
+    return w.__refraDocsManifest;
+  }
+
+  function siteTheme() {
+    const t = document.documentElement.dataset.theme;
+    if (t === 'auto' || !t) {
+      return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    return t;
+  }
+
+  class LiveEmbed extends HTMLElement {
+    iframe = null;
+    ready = false;
+    readyTimer = 0;
+    sceneMeta = null;
+    fidelity = 'pending';
+    mountToken = 0;
+    activated = false;
+    resizeObserver = null;
+
+    connectedCallback() {
+      this.stage = this.querySelector('.embed-stage');
+      this.status = this.querySelector('.embed-status');
+      this.badge = this.querySelector('.embed-fidelity');
+      this.resizeObserver = new ResizeObserver(() => this.fitFrame());
+      this.resizeObserver.observe(this.stage);
+      this.mount();
+      window.addEventListener('refra:theme', this.onTheme);
+      window.addEventListener('message', this.onMessage);
+    }
+
+    disconnectedCallback() {
+      window.removeEventListener('refra:theme', this.onTheme);
+      window.removeEventListener('message', this.onMessage);
+      this.resizeObserver?.disconnect();
+      this.mountToken += 1;
+      this.clearReadyTimer();
+    }
+
+    clearReadyTimer() {
+      if (this.readyTimer) {
+        clearTimeout(this.readyTimer);
+        this.readyTimer = 0;
+      }
+    }
+
+    get config() {
+      return {
+        scene: this.dataset.scene || null,
+        device: this.dataset.device || 'phone',
+        state: this.dataset.state || null,
+        seed: this.dataset.seed || null,
+        theme: this.dataset.theme === 'site' ? siteTheme() : this.dataset.theme,
+        statusBar: this.dataset.statusBar === 'true',
+      };
+    }
+
+    liveUrl() {
+      const c = this.config;
+      const q = new URLSearchParams();
+      if (c.scene) q.set('scene', c.scene);
+      q.set('device', c.device);
+      q.set('theme', c.theme);
+      if (c.state) q.set('state', c.state);
+      if (c.seed) q.set('seed', c.seed);
+      if (c.statusBar) {
+        q.set('statusBar', 'true');
+        q.set('statusBarHeight', String(PHONE_STATUS_BAR_HEIGHT));
+      }
+      return `${this.dataset.base}/live/index.html?${q}`;
+    }
+
+    /** Resolve the capture asset for the current device+state, if any. */
+    resolveAsset() {
+      const c = this.config;
+      const assets = this.sceneMeta?.assets || this.sceneMeta?.captures;
+      const perDevice = assets?.[c.device];
+      if (!perDevice) return null;
+      const wanted = c.state || 'default';
+      return perDevice[wanted] || (!c.state ? perDevice.default : null);
+    }
+
+    async mount() {
+      const token = ++this.mountToken;
+      const c = this.config;
+      this.sceneMeta = null;
+      this.ready = false;
+      this.iframe = null;
+      this.clearReadyTimer();
+      if (this.stage) this.stage.replaceChildren();
+      this.querySelectorAll('.embed-states').forEach((el) => el.remove());
+
+      if (!c.scene) {
+        this.showPending('No scene is declared for this preview yet.');
+        return;
+      }
+      const manifest = await getManifest(this.dataset.base);
+      if (token !== this.mountToken || !this.isConnected) return;
+      const meta = manifest.scenes?.[c.scene];
+      this.sceneMeta = meta || null;
+
+      if (!meta) {
+        this.showPending('A preview has not been published for this scene yet.');
+        return;
+      }
+      this.renderStatePicker(meta.states);
+
+      const canLive = meta.fidelity === 'live' && wasmGcSupported();
+      if (canLive && this.dataset.lazy !== 'true') {
+        this.fidelity = 'live';
+        this.showFrame();
+        return;
+      }
+      if (canLive && !this.activated) {
+        // Lazy mode: hold the wasm bundle behind an explicit click; keep the
+        // captured poster underneath when one exists.
+        const asset = this.resolveAsset();
+        if (asset) this.showCapture(asset);
+        this.showActivate();
+        return;
+      }
+      if (canLive) {
+        this.fidelity = 'live';
+        this.showFrame();
+        return;
+      }
+      const asset = this.resolveAsset();
+      if (asset) {
+        this.fidelity = meta.fidelity === 'stateful-capture' ? 'stateful-capture' : 'capture';
+        this.showCapture(asset);
+        return;
+      }
+      if (meta.fidelity === 'live' && !wasmGcSupported()) {
+        this.showPending(
+          'This browser cannot run the live preview. A captured preview will appear here once it is published.',
+        );
+        return;
+      }
+      this.showPending('A preview has not been published for this scene yet.');
+    }
+
+    showFrame() {
+      const frame = document.createElement('iframe');
+      frame.src = this.liveUrl();
+      frame.title = this.getAttribute('aria-label') || 'Live preview';
+      frame.loading = 'lazy';
+      frame.className = 'embed-media';
+      this.iframe = frame;
+      this.stage.replaceChildren(frame);
+      this.fitFrame();
+      this.setStatus('Connecting…');
+      this.setBadge('live');
+      // The ready timeout starts on `load`, so a lazy below-fold iframe does
+      // not begin ticking before it has even fetched.
+      frame.addEventListener('load', () => {
+        if (this.iframe !== frame || this.ready) return;
+        this.readyTimer = setTimeout(() => {
+          if (this.iframe === frame && !this.ready) this.showFallback();
+        }, 15000);
+      });
+      frame.addEventListener('error', () => {
+        if (this.iframe === frame && !this.ready) this.showFallback();
+      });
+    }
+
+    fitFrame() {
+      if (!this.iframe || !this.stage) return;
+      const preset = DEVICE_PRESETS[this.config.device] || DEVICE_PRESETS.phone;
+      const width = this.stage.clientWidth;
+      const height = this.stage.clientHeight;
+      if (width <= 0 || height <= 0) return;
+      const scale = Math.min(width / preset.width, height / preset.height);
+      Object.assign(this.iframe.style, {
+        position: 'absolute',
+        maxWidth: 'none',
+        width: `${preset.width}px`,
+        height: `${preset.height}px`,
+        left: `${(width - preset.width * scale) / 2}px`,
+        top: `${(height - preset.height * scale) / 2}px`,
+        transformOrigin: 'top left',
+        transform: `scale(${scale})`,
+      });
+    }
+
+    showFallback() {
+      const asset = this.resolveAsset();
+      if (asset) {
+        this.showCapture(asset);
+        this.setStatus('The live preview could not be loaded. Showing a captured frame instead.');
+      } else {
+        this.showPending('The live preview could not be loaded. You can still read the guide below.');
+      }
+    }
+
+    showCapture(asset) {
+      this.clearReadyTimer();
+      this.iframe = null;
+      this.ready = false;
+      this.fidelity =
+        this.sceneMeta?.fidelity === 'stateful-capture' ? 'stateful-capture' : 'capture';
+      const el = asset.type === 'video' ? document.createElement('video') : document.createElement('img');
+      el.src = `${this.dataset.base}/${asset.src.replace(/^\/+/, '')}`;
+      el.alt = this.getAttribute('aria-label') || 'Captured preview';
+      el.className = 'embed-media';
+      if (el.tagName === 'VIDEO') {
+        el.controls = true;
+        el.muted = true;
+        el.loop = true;
+        el.playsInline = true;
+      }
+      el.addEventListener(
+        'error',
+        () => {
+          if (this.stage?.contains(el)) {
+            this.showPending(
+              'The captured preview could not be loaded. You can still read the guide below.',
+            );
+          }
+        },
+        { once: true },
+      );
+      this.stage.replaceChildren(el);
+      this.setStatus('Captured on device.');
+      this.setBadge(this.fidelity === 'stateful-capture' ? 'stateful capture' : 'capture');
+    }
+
+    showActivate() {
+      const overlay = document.createElement('button');
+      overlay.type = 'button';
+      overlay.className = 'embed-activate';
+      overlay.textContent = 'Load live preview';
+      overlay.addEventListener('click', () => {
+        this.activated = true;
+        overlay.remove();
+        this.fidelity = 'live';
+        this.showFrame();
+      });
+      this.stage.appendChild(overlay);
+      this.setStatus('Live preview available.');
+      this.setBadge('live');
+    }
+
+    showPending(msg) {
+      this.clearReadyTimer();
+      this.iframe = null;
+      this.ready = false;
+      this.fidelity = 'pending';
+      const box = document.createElement('div');
+      box.className = 'embed-pending';
+      const icon = document.createElement('span');
+      icon.className = 'embed-pending-icon';
+      icon.setAttribute('aria-hidden', 'true');
+      icon.innerHTML =
+        '<svg viewBox="0 0 24 24" width="22" height="22"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="18" r="1.1" fill="currentColor"/></svg>';
+      const title = document.createElement('p');
+      title.className = 'embed-pending-title';
+      title.textContent = 'Preview unavailable';
+      const body = document.createElement('p');
+      body.className = 'embed-pending-body';
+      body.textContent = msg;
+      box.append(icon, title, body);
+      this.stage.replaceChildren(box);
+      this.setStatus(msg);
+      this.setBadge('pending');
+    }
+
+    renderStatePicker(states) {
+      if (this.dataset.showStates !== 'true' || !Array.isArray(states) || !states.length) return;
+      this.querySelectorAll('.embed-states').forEach((el) => el.remove());
+      const bar = document.createElement('div');
+      bar.className = 'embed-states';
+      bar.setAttribute('role', 'group');
+      bar.setAttribute('aria-label', 'Scene state');
+      for (const s of states) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'chip';
+        b.textContent = s.replaceAll('-', ' ');
+        b.dataset.state = s;
+        b.setAttribute('aria-pressed', String(s === (this.config.state || states[0])));
+        b.addEventListener('click', () => this.setState(s));
+        bar.appendChild(b);
+      }
+      this.querySelector('.embed-shell').appendChild(bar);
+    }
+
+    syncStateButtons() {
+      this.querySelectorAll('.embed-states button').forEach((b) =>
+        b.setAttribute('aria-pressed', String(b.dataset.state === this.config.state)),
+      );
+    }
+
+    setState(state) {
+      this.dataset.state = state;
+      this.syncStateButtons();
+      if (this.iframe) {
+        this.push({ state });
+      } else if (this.sceneMeta) {
+        // Capture tier: re-resolve the asset for the new state.
+        const asset = this.resolveAsset();
+        if (asset) {
+          this.fidelity =
+            this.sceneMeta.fidelity === 'stateful-capture' ? 'stateful-capture' : 'capture';
+          this.showCapture(asset);
+        } else {
+          this.showPending('No capture has been published for this state yet.');
+        }
+      }
+    }
+
+    setDevice(device) {
+      this.dataset.device = device;
+      if (this.iframe) {
+        this.push({ device });
+      } else if (this.sceneMeta) {
+        const asset = this.resolveAsset();
+        if (asset) {
+          this.showCapture(asset);
+        } else {
+          this.showPending('No capture has been published for this device yet.');
+        }
+      } else {
+        this.mount();
+      }
+    }
+
+    onTheme = () => {
+      if (this.dataset.theme === 'site') this.push({ theme: siteTheme() });
+    };
+
+    push(patch) {
+      if (!this.iframe?.contentWindow) return;
+      const msg = { type: 'docs:set', ...patch };
+      const target = this.iframe.contentWindow;
+      const sameOrigin = new URL(this.iframe.src, location.href).origin === location.origin;
+      target.postMessage(JSON.stringify(msg), sameOrigin ? location.origin : '*');
+    }
+
+    onMessage = (event) => {
+      if (!this.iframe || event.source !== this.iframe.contentWindow) return;
+      if (new URL(this.iframe.src, location.href).origin === location.origin &&
+          event.origin !== location.origin) {
+        return;
+      }
+      let msg = event.data;
+      if (typeof msg === 'string') {
+        try {
+          msg = JSON.parse(msg);
+        } catch {
+          return;
+        }
+      }
+      if (!msg || typeof msg !== 'object') return;
+      if (msg.type === 'docs:ready' && (!msg.scene || msg.scene === this.config.scene)) {
+        this.ready = true;
+        this.clearReadyTimer();
+        this.setStatus("Live — rendered by the app's own composables, not a screenshot.");
+      }
+      if (msg.type === 'docs:scenes' && !this.sceneMeta) {
+        const found = (msg.scenes || []).find((s) => s.id === this.config.scene);
+        if (found) {
+          this.sceneMeta = { fidelity: 'live', ...found };
+          this.renderStatePicker(found.states);
+        }
+      }
+      if (msg.type === 'docs:error') {
+        this.showFallback();
+      }
+    };
+
+    setStatus(text) {
+      if (this.status) this.status.textContent = text;
+      this.dispatchEvent(
+        new CustomEvent('refra:preview-status', {
+          bubbles: true,
+          detail: {
+            fidelity: this.fidelity,
+            status: text,
+            states: this.sceneMeta?.states || [],
+            state: this.config.state || this.sceneMeta?.states?.[0] || 'default',
+          },
+        }),
+      );
+    }
+
+    setBadge(text) {
+      if (!this.badge) return;
+      this.badge.hidden = false;
+      this.badge.textContent = text;
+    }
+  }
+
+  if (!customElements.get('live-embed')) {
+    customElements.define('live-embed', LiveEmbed);
+  }
+</script>
+
+<style>
+  .embed {
+    display: block;
+  }
+  .embed-fill,
+  .embed-fill .embed-shell {
+    height: 100%;
+  }
+  .embed-fill .embed-stage {
+    height: 100%;
+  }
+  .embed-shell {
+    border-radius: var(--radius-l);
+    overflow: hidden;
+  }
+  .embed-stage {
+    height: var(--embed-h);
+    position: relative;
+  }
+  .embed-loading {
+    position: absolute;
+    inset: 0;
+  }
+  .embed-stage :global(.embed-media) {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    object-fit: contain;
+    background: var(--md-surface-container-lowest);
+  }
+  .embed-stage :global(.embed-pending) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 100%;
+    padding: 24px;
+    text-align: center;
+    color: var(--md-on-surface-variant);
+    font-size: 0.92rem;
+  }
+  .embed-stage :global(.embed-activate) {
+    position: absolute;
+    inset: auto 16px 16px auto;
+    border: 0;
+    border-radius: 999px;
+    padding: 8px 16px;
+    min-height: 40px;
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--md-on-primary);
+    background: var(--md-primary);
+    box-shadow: 0 6px 18px color-mix(in srgb, var(--md-shadow) 22%, transparent);
+  }
+  .embed-stage :global(.embed-pending-icon) {
+    color: var(--md-outline);
+  }
+  .embed-stage :global(.embed-pending-title) {
+    margin: 4px 0 0;
+    font-weight: 600;
+    color: var(--md-on-surface);
+  }
+  .embed-stage :global(.embed-pending-body) {
+    margin: 0;
+    max-width: 40ch;
+  }
+  .embed-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 14px;
+    border-top: 1px solid var(--md-outline-variant);
+    font-size: 0.8rem;
+    color: var(--md-on-surface-variant);
+  }
+  .embed-shell :global(.embed-states) {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding: 8px 14px;
+    border-top: 1px solid var(--md-outline-variant);
+  }
+  .embed-shell :global(.embed-states .chip) {
+    cursor: pointer;
+    font-family: inherit;
+    min-height: 36px;
+  }
+  .embed-shell :global(.embed-states .chip:hover) {
+    background: var(--md-surface-container-high);
+    color: var(--md-on-surface);
+  }
+  .embed-shell :global(.embed-states .chip[aria-pressed='true']) {
+    background: var(--md-primary-container);
+    color: var(--md-on-primary-container);
+    border-color: transparent;
+  }
+</style>

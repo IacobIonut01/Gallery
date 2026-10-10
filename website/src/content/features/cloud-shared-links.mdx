@@ -1,0 +1,43 @@
+---
+title: Shared links
+summary: See, edit, and revoke the public links already created on your servers.
+area: cloud
+path:
+  - Library
+  - Shared Links
+related: [cloud-accounts, sharing, cloud-albums]
+scenes: [cloud-shared-links]
+order: 17
+---
+
+**Library › Shared Links** collects the share links that already exist on your connected accounts. Managing links requires the provider's share-management support, which currently means Immich accounts. The app lists and edits them but has no create-link screen; new links are made in the server's own interface and appear here afterward.
+
+## Browse the links
+
+1. Open **Library › Shared Links**; the app fetches existing links from share-capable accounts.
+2. Filter with **All**, **Albums**, or **Individual shares**; each entry shows which account it belongs to, whether it is a **Public album**, its expiry (**Expires N** or **No expiry**), and badges such as **Download** and **EXIF** for the permissions it carries.
+3. **Copy link** puts the URL on the clipboard (**Link copied to clipboard**); **Edit** opens the link's settings; **Delete** revokes it.
+
+<PreviewCollection feature="cloud-shared-links" section="browse" />
+
+## Edit a link
+
+The edit sheet offers these options where the provider exposes them to the app:
+
+- **Description**
+- **Password**: require a password to open the link.
+- **Expire after**: **Never**, **in 1 day**, **in 7 days**, **in 30 days**, **in 3 months**, or **in 1 year**.
+- **Show metadata**: whether viewers see photo details.
+- **Allow public user to download** and **Allow public user to upload**, where the provider exposes them.
+
+<PreviewCollection feature="cloud-shared-links" section="edit" />
+
+## Delete a link
+
+**Delete shared link** asks for confirmation and then revokes the URL; people who had it lose access. The photos themselves are untouched; deleting a link never deletes media.
+
+## Example: tighten an old holiday link
+
+1. Open **Library › Shared Links**, find the holiday album link under **Albums**.
+2. **Edit**, set a **Password**, set **Expire after** to **in 7 days**, and confirm.
+3. **Copy link** and send the new details to whoever should keep access.

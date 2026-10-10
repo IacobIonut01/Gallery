@@ -1,0 +1,35 @@
+---
+title: Open with and Use as wallpaper
+summary: Opening media from other apps into ReFra, and handing a photo to your wallpaper app.
+area: utilities
+path:
+  - Other apps
+  - Open with
+related: [media-viewer, media-picker, sharing]
+scenes: [photo-more-actions]
+order: 6
+---
+
+Two handoffs connect ReFra to the rest of the system: opening files other apps point at, and sending a photo to your wallpaper tool.
+
+## Open with ReFra
+
+From a file manager, browser download, or chat, use Android's **Open with** and choose ReFra. The file opens in the viewer even if it is not part of the indexed library. The grant is read-only by nature: actions like **Edit**, **Move**, **Rename**, and **Delete** can be missing on these items because the app was not given write access to the file. **Share** and viewing still work.
+
+## Use as wallpaper
+
+<PreviewCollection feature="open-with-wallpaper" section="use-as-wallpaper" />
+
+1. Open the photo, tap **More options › Use as**, and pick the wallpaper handler Android offers.
+2. The crop and set screen belongs to that handler; ReFra hands over the image and the wallpaper app finishes the job.
+3. If no handler is installed, the action reports that no app can do it; installing any wallpaper-capable app restores the path.
+
+## More editors
+
+The viewer's **Open with** and the editor's **More** tab both route to other installed apps; pick your favorite editor there when the built-in tools are not enough.
+
+## Example: a downloaded image as wallpaper
+
+1. In your file manager, open the downloaded PNG with ReFra.
+2. **More options › Use as** and choose the wallpaper option.
+3. Crop in the handler's screen and confirm; the file itself is unchanged.

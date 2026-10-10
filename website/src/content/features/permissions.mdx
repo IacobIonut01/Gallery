@@ -1,0 +1,43 @@
+---
+title: Permissions
+summary: What each Android permission unlocks, and what stops working when it is denied.
+area: utilities
+path:
+  - Settings
+related: [first-launch, troubleshooting, security]
+scenes: [setup-wizard]
+order: 11
+---
+
+ReFra asks for Android permissions at the moment a feature needs them. Everything can be changed later in Android's app settings (the exact screens vary by Android version), and changing a permission never deletes your files; it only stops the app from reaching them.
+
+## Media access
+
+<PreviewCollection feature="permissions" section="media-access" />
+
+- **Photos and videos (full or selected)**: the core permission. On Android 14+ you can pick **selected photos**; the app then sees only what you chose, so a too-narrow selection is one thing to check when media is missing.
+- **Access media location**: reads the GPS coordinates stored in photos so the [map](/ReFra/features/maps-location) and the viewer's location row work. Denying it hides locations read from your own files; a cloud item whose location is already known to the app can still display it. Photos display either way.
+
+## Notifications
+
+- **Notifications** (Android 13+): upload, sync, and backup progress plus failure alerts. Denying it leaves the work running silently; check the [backup dashboard](/ReFra/features/cloud-backup) manually.
+
+## Storage management
+
+- **Manage media** (Android 12+): lets the app modify and delete media without a system prompt each time.
+- **All files access**: requested only on builds and flows that need it; automatic [free up space](/ReFra/features/cloud-free-up-space) cleanup and some folder operations. Without it, affected cleanup falls back to a review notification instead of silent deletion. Ordinary photo browsing does not need it.
+
+## Network
+
+- **Internet**: declared for cloud providers, model downloads, map tiles, and casting; there is no runtime prompt. An offline build of ReFra never uses it; that says nothing about other apps, which have their own access.
+- **Local network access**: newer Android versions ask before an app reaches devices on your LAN; it appears the first time you add or reach a local server such as an SMB share. Denying it blocks LAN servers only; internet-hosted providers still work.
+
+## Denied by accident?
+
+Reopen Android's app settings and re-grant, or re-run the flow that asked (connecting a server, opening Locations) and grant when prompted. Nothing was deleted; return to the app and try the action again. The [first launch](/ReFra/features/first-launch) page walks through what each setup-time grant is for.
+
+## Example: widen the photo selection
+
+1. You granted "selected photos" at first launch and now a folder is missing.
+2. Open Android's **Settings › Apps › ReFra › Permissions › Photos and videos** (the labels vary by Android version) and choose **All**, or widen the **Selected** set if shown.
+3. Back in ReFra, pull down the grid to refresh; the newly granted photos appear.

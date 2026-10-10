@@ -1,0 +1,57 @@
+---
+title: Per-account cloud settings
+summary: Every option on a connected account's settings page, and the global Advanced switches.
+area: cloud
+path:
+  - Settings
+  - Cloud Accounts
+related: [cloud-accounts, cloud-sync, cloud-offline]
+scenes: [cloud-account-settings, cloud-notification-options, cloud-viewer-options, cloud-advanced-options]
+order: 19
+---
+
+Each connected account has its own **Cloud Settings** page, opened from the gear on its row in **Settings › Cloud Accounts**. It shows the account status (**Connected**, **Disconnected**, **Syncing…**, **Authenticating…**, **Error**), the **Server URL**, **Server Version**, and **Server Storage** where the server reports it, then the sections below.
+
+<PreviewCollection feature="cloud-settings" section="overview" />
+
+## Sync
+
+- **Sync now**, **Auto-sync**, **Sync interval**, **Wi-Fi only**: covered in [cloud sync](/ReFra/features/cloud-sync).
+- **Download remote media** and **Download videos**: covered in [cloud downloads](/ReFra/features/cloud-downloads).
+- **Backup albums**, **Select albums**, **Backup Options**: covered in [cloud backup](/ReFra/features/cloud-backup).
+
+## Connection
+
+- **Credentials**: reopen the sign-in step to change or update credentials; updating them invalidates the account's cache.
+- **Networking**: local/external URL switching; see [automatic URL switching](/ReFra/features/cloud-networking).
+- **Free Up Space**: remove backed-up local copies; see [free up space](/ReFra/features/cloud-free-up-space).
+- **Offline & Cache**: preview cache and pins; see [offline access](/ReFra/features/cloud-offline).
+
+## Preferences
+
+- **Notifications** (background backup): **Show total progress** for an overall backup notification, **Show detail progress** for per-file upload progress, **Notify on failures** when a backup fails.
+- **Viewer Settings**: **Loop videos** restarts videos when they reach the end.
+- **Remove downloaded copies**: delete the files the app downloaded; covered in [cloud downloads](/ReFra/features/cloud-downloads).
+- **Delete Cloud Provider**: remove the account entirely; see [managing accounts](/ReFra/features/cloud-accounts).
+
+<PreviewCollection feature="cloud-settings" section="preferences" />
+
+## Advanced
+
+- **Verbose logging**: write detailed logs for debugging; pair with [session logs](/ReFra/features/session-logs) when collecting a report.
+- **Read-only mode**: disable all write operations on cloud media: export, share, visual search, delete, and other mutating actions are withheld while it is on.
+- **Sync remote deletions**: when a file is removed on the server, delete the copies this app downloaded; see [cloud sync](/ReFra/features/cloud-sync).
+- **Clear image cache**: a **global** action under the Global section; it clears the automatic cloud image cache for *all* accounts plus shared local thumbnails and zoom scratch data. Pinned offline copies are kept. Your photos are untouched; the visible effect is that thumbnails and zoomed views may reload on next view.
+
+<PreviewCollection feature="cloud-settings" section="advanced" />
+
+## A note on encryption
+
+Traffic to an account uses whatever its URL scheme provides, HTTPS for hosted providers, or the SMB/NFS connection itself for shares. The app does not add a separate encryption layer over cloud traffic, so a server address that is plain HTTP or an untrusted network means the connection is only as private as the network.
+
+## Example: make a shared work account read-only
+
+1. Your workplace Nextcloud should be browse-only on your phone; you want no accidental deletes.
+2. Open the account's settings, **Advanced**, and turn on **Read-only mode**.
+3. Back in the account's photos, the share, export, and delete actions no longer appear on cloud items; browsing and downloading still work.
+4. Turn it back off only if you decide you do need to write to that account after all.

@@ -1,0 +1,436 @@
+@import './tokens.css';
+@import './brand.css';
+
+/*
+ * ReFra docs design language.
+ * Tokens come from tokens.css (generated from the app seed #247EE0), with the
+ * app's own static primary roles and brand artwork palette layered on top in
+ * brand.css.
+ * Breakpoints follow the plan: <720 compact, >=720 medium, >=1280 expanded.
+ */
+
+:root {
+  --font-sans: 'Google Sans', 'Google Sans Text', 'Roboto', 'Noto Sans', system-ui,
+    -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
+
+  --bp-medium: 720px;
+  --bp-expanded: 1280px;
+
+  --radius-s: 8px;
+  --radius-m: 14px;
+  --radius-l: 24px;
+  --radius-xl: 32px;
+
+  --glass-blur: 32px; /* matches the app's galleryGlass Haze radius */
+  --glass-surface-alpha: 0.72;
+  --glass-border-alpha: 0.35;
+
+  --content-max: 84rem;
+  --reading-max: 68ch;
+  --gutter: 24px;
+
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --dur-fast: 140ms;
+  --dur-med: 280ms;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--md-on-surface);
+  background: var(--md-surface);
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--md-surface);
+}
+
+img,
+svg,
+video,
+canvas,
+iframe {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: var(--md-primary);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+summary:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--md-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+::selection {
+  background: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+}
+
+[hidden] {
+  display: none !important;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  line-height: 1.22;
+  font-weight: 600;
+  color: var(--md-on-surface);
+  margin: 0 0 0.5em;
+  scroll-margin-top: 7rem;
+}
+h1 {
+  font-size: 2.25rem;
+  letter-spacing: -0.02em;
+}
+h2 {
+  font-size: 1.6rem;
+  margin-top: 2.2em;
+  letter-spacing: -0.01em;
+}
+h3 {
+  font-size: 1.125rem;
+  margin-top: 1.8em;
+}
+@media (min-width: 720px) {
+  h1 {
+    font-size: 2.75rem;
+    letter-spacing: -0.025em;
+  }
+}
+
+p {
+  margin: 0 0 1em;
+}
+
+code,
+kbd,
+pre {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+}
+code {
+  background: var(--md-surface-container-high);
+  border-radius: 6px;
+  padding: 0.1em 0.35em;
+}
+pre {
+  background: var(--md-surface-container-low);
+  border: 1px solid var(--md-outline-variant);
+  border-radius: var(--radius-m);
+  padding: 14px 16px;
+  overflow-x: auto;
+}
+pre code {
+  background: none;
+  padding: 0;
+}
+
+/* Shiki emits light tokens + --shiki-dark* variables; swap them in under the
+   dark themes (and under auto when the OS is dark). */
+:root:is([data-theme='dark'], [data-theme='amoled']) .astro-code,
+:root:is([data-theme='dark'], [data-theme='amoled']) .astro-code span {
+  color: var(--shiki-dark) !important;
+  background-color: var(--shiki-dark-bg) !important;
+}
+@media (prefers-color-scheme: dark) {
+  :root:is([data-theme='auto'], :not([data-theme])) .astro-code,
+  :root:is([data-theme='auto'], :not([data-theme])) .astro-code span {
+    color: var(--shiki-dark) !important;
+    background-color: var(--shiki-dark-bg) !important;
+  }
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--md-outline-variant);
+  margin: 2.5rem 0;
+}
+
+/* ---------- layout primitives ---------- */
+
+.container {
+  width: min(100% - calc(var(--gutter) * 2), var(--content-max));
+  margin-inline: auto;
+}
+@media (min-width: 720px) {
+  .container {
+    --gutter: 40px;
+  }
+}
+
+.reading {
+  max-width: var(--reading-max);
+}
+
+main {
+  min-height: 60dvh;
+}
+
+/* Grids hold wide media and tables — children must be allowed to shrink. */
+:is(.hero-grid, .docs-layout, .grid-cards, .features-body, .footer-grid, .picker-grid) > * {
+  min-width: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+  padding: 8px 16px;
+  border-radius: 0 0 var(--radius-s) 0;
+  z-index: 100;
+}
+.skip-link:focus {
+  left: 0;
+}
+
+/* ---------- glass chrome (refraction motif) ---------- */
+
+.glass {
+  background: color-mix(in srgb, var(--md-surface-container) 72%, transparent);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
+  border: 1px solid color-mix(in srgb, var(--md-outline-variant) 35%, transparent);
+}
+
+/* No blur support or reduced transparency: geometry-identical opaque fallback,
+   same contract as the app's galleryGlass. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass {
+    background: var(--md-surface-container);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .glass {
+    background: var(--md-surface-container);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* ---------- skeleton shimmer (live embed loading) ---------- */
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--md-surface-container-low);
+}
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--md-on-surface) 6%, transparent),
+    transparent
+  );
+  animation: shimmer 1.6s var(--ease-standard) infinite;
+}
+@keyframes shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* ---------- chips, buttons, cards ---------- */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--md-outline-variant);
+  background: var(--md-surface-container);
+  color: var(--md-on-surface-variant);
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 22px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border: 0;
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    background var(--dur-fast) var(--ease-standard),
+    transform var(--dur-fast) var(--ease-standard);
+}
+.btn:hover {
+  text-decoration: none;
+}
+.btn-primary {
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+}
+.btn-primary:hover {
+  background: color-mix(in srgb, var(--md-primary) 88%, var(--md-on-primary));
+}
+.btn-tonal {
+  background: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
+}
+.btn-outline {
+  background: transparent;
+  color: var(--md-primary);
+  border: 1px solid var(--md-outline);
+}
+
+.card {
+  background: var(--md-surface-container-low);
+  border: 1px solid var(--md-outline-variant);
+  border-radius: 16px;
+  padding: 20px 22px;
+}
+
+/* ---------- docs prose ---------- */
+
+.prose {
+  max-width: var(--reading-max);
+}
+.prose ul,
+.prose ol {
+  padding-left: 1.4em;
+}
+.prose li {
+  margin: 0.3em 0;
+}
+.prose table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1.2em 0;
+  font-size: 0.92rem;
+  display: block;
+  overflow-x: auto;
+}
+.prose th,
+.prose td {
+  border: 1px solid var(--md-outline-variant);
+  padding: 8px 12px;
+  text-align: left;
+}
+.prose th {
+  background: var(--md-surface-container);
+  font-weight: 600;
+}
+.prose blockquote {
+  margin: 1.2em 0;
+  padding: 4px 18px;
+  border-left: 1px solid var(--md-primary);
+  color: var(--md-on-surface-variant);
+  background: var(--md-surface-container-low);
+  border-radius: 0 var(--radius-s) var(--radius-s) 0;
+}
+.prose img {
+  border-radius: var(--radius-m);
+}
+
+.note {
+  border: 1px solid var(--md-outline-variant);
+  border-left: 1px solid var(--md-primary);
+  border-radius: var(--radius-s);
+  background: var(--md-surface-container-low);
+  padding: 12px 16px;
+  margin: 1.2em 0;
+}
+.note > p:last-child {
+  margin-bottom: 0;
+}
+
+/* ---------- page scaffolding ---------- */
+
+.page-head {
+  padding: 3rem 0 1.5rem;
+}
+.page-head .summary {
+  color: var(--md-on-surface-variant);
+  font-size: 1.08rem;
+  max-width: 60ch;
+}
+
+.section {
+  padding: 1.5rem 0;
+}
+
+.grid-cards {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 720px) {
+  .grid-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 1280px) {
+  .grid-cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .skeleton::after {
+    animation: none;
+    display: none;
+  }
+}

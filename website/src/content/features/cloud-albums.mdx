@@ -1,0 +1,33 @@
+---
+title: Cloud albums
+summary: Browse remote albums, and rename, delete, or manage membership where your access allows it.
+area: cloud
+path:
+  - Albums
+related: [cloud-accounts, cloud-transfer, cloud-overview]
+scenes: [cloud-albums-browser]
+order: 16
+---
+
+Cloud albums appear in their own section on the **Albums** tab, headed by the provider and account name, with a shared badge on albums shared with you. Opening one shows the remote media like any album.
+
+<PreviewCollection feature="cloud-albums" section="browse-cloud-albums" />
+
+## The menu depends on your access
+
+Inside a cloud album, the three-dot menu offers only what your account can do:
+
+- **Rename album** and **Delete album** appear only on albums your account owns.
+- **Remove from album** appears for your selection when you own the album or have editor rights on a shared one.
+- A read-only shared album offers none of these; you can browse and copy from it but not change it.
+- If the account's own [read-only mode](/ReFra/features/cloud-settings) is on, actions like export and share are withheld from cloud items regardless of your server-side rights; that is a local safety switch, not the server refusing you.
+
+On **Immich** these actions talk to the server directly: renaming renames the remote album, removing takes the items out of that album, and deleting removes the album itself. None of those delete the photos: they remain in the Immich library. Deleting a *photo* is a different action and does remove the asset.
+
+Folder-style providers (WebDAV, SMB, NFS) let you browse, copy, and move files in and out of their folders where permissions allow, but do not present Immich-style album membership controls.
+
+## Example: tidy a shared Immich album
+
+1. A family member shared the "Holidays 2024" album with your Immich account and gave you editor rights.
+2. Open it from the cloud section on Albums, select the photos that do not belong, and use **Remove from album**; they stay in the owner's library, just out of this album.
+3. Rename is not on your menu; only the owner sees **Rename album** and **Delete album**. If you need it renamed, ask the owner.

@@ -1,0 +1,50 @@
+/*
+ * ReFra brand layer — imported after tokens.css.
+ *
+ * The --brand-* values are the app's artwork palette and exist for brand
+ * surfaces only (the mark, the refraction motif, community links). They are
+ * never small-text colors; text always uses paired --md-* roles.
+ *
+ * The --md-primary* overrides adopt the app's static default theme
+ * (app/core/ui/.../theme/Color.kt: light primary #005EB1 / dark #A7C8FF and
+ * their paired on/container roles) instead of the generated tonal-spot
+ * primary. Neutral and supporting roles stay as generated from the #247EE0
+ * seed in tokens.css.
+ */
+
+:root {
+  --brand-blue: #488de9;
+  --brand-orange: #fe9921;
+  --brand-sky: #b2cff7;
+  --brand-apricot: #ffd4a2;
+  --brand-icon-background: #e5e5e8;
+  --brand-seed: #247ee0;
+  --brand-ink: #001c3b;
+
+  --md-primary: #005eb1;
+  --md-on-primary: #ffffff;
+  --md-primary-container: #d5e3ff;
+  --md-on-primary-container: #001c3b;
+  --md-surface-tint: #005eb1;
+}
+
+:root[data-theme='dark'],
+:root[data-theme='amoled'] {
+  --md-primary: #a7c8ff;
+  --md-on-primary: #003060;
+  --md-primary-container: #004787;
+  --md-on-primary-container: #d5e3ff;
+  --md-surface-tint: #a7c8ff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']):not([data-theme='dark']):not(
+      [data-theme='amoled']
+    ) {
+    --md-primary: #a7c8ff;
+    --md-on-primary: #003060;
+    --md-primary-container: #004787;
+    --md-on-primary-container: #d5e3ff;
+    --md-surface-tint: #a7c8ff;
+  }
+}

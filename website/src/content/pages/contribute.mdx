@@ -1,0 +1,35 @@
+---
+title: Contribute
+summary: How to contribute code, translations, documentation, and reports to ReFra.
+---
+
+## Code
+
+The repository is [github.com/IacobIonut01/ReFra](https://github.com/IacobIonut01/ReFra). Fork it, branch from `main`, and open a pull request.
+
+Before you write code, read `AGENTS.md` at the repository root. It pins the conventions the codebase follows: Compose screens are content composables driven by state and callbacks, Koin provides dependency injection in the ported modules, one top-level type lives per file, and logging goes through the project's `printError`/`printWarn` helpers so entries reach the in-app session log screen.
+
+Verification helpers live in `testing/test-lab.sh` (device checks, module builds, the docs showcase) and `scripts/check-structure.sh` enforces the module layout rules.
+
+## Documentation
+
+This site builds from `website/` in the same repository:
+
+- `npm run dev` starts a local preview
+- `npm run check` runs the style gate and the registry check
+- `npm run build` produces the static site
+
+Docs pages live under `website/src/content/`. The copy contract is the one in `website/style.config.json`: straight quotes, sentence-case headings, no invented claims; every feature, flag, and path you document must trace back to the repository. Previews are scenes from the docs registry; `npm run check:registry` fails the build when a page names a scene that does not exist.
+
+## Translations
+
+Strings are translated on [Crowdin](https://crowdin.com/project/gallery-compose). Translations land in the app and these docs follow the same terms.
+
+## Bug reports
+
+File them on [GitHub Issues](https://github.com/IacobIonut01/ReFra/issues). Attach the app version, Android version, reproduction steps, and anything relevant from **Settings › Developer › Session logs**.
+
+## Where to go next
+
+- [Build from source](/ReFra/build) to get a working checkout
+- Read the [support](/ReFra/support) page for where to ask questions first

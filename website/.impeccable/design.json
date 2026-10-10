@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-07T00:00:00.000Z",
+  "title": "Design System: ReFra docs",
+  "extensions": {
+    "colorMeta": {
+      "brand-blue": { "role": "primary", "displayName": "Refraction Blue", "canonical": "#488DE9" },
+      "brand-orange": { "role": "accent", "displayName": "Refraction Orange", "canonical": "#FE9921" },
+      "brand-sky": { "role": "accent", "displayName": "Refraction Sky", "canonical": "#B2CFF7" },
+      "brand-apricot": { "role": "accent", "displayName": "Refraction Apricot", "canonical": "#FFD4A2" },
+      "primary": { "role": "primary", "displayName": "App Primary (light)", "canonical": "#005EB1" },
+      "surface": { "role": "neutral", "displayName": "Surface", "canonical": "#F9F9FF" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Hero wordmark ('ReFra') only." },
+      "headline": { "displayName": "Headline", "purpose": "Section headings." }
+    },
+    "shadows": [
+      { "name": "panel", "value": "0 16px 40px color-mix(in srgb, var(--md-shadow) 24%, transparent)", "purpose": "Overlays such as the mobile nav panel." }
+    ],
+    "motion": [
+      { "name": "dur-fast", "value": "140ms", "purpose": "Hover and state transitions." },
+      { "name": "ease-standard", "value": "cubic-bezier(0.2, 0, 0, 1)", "purpose": "Default easing for state transitions." }
+    ],
+    "breakpoints": [
+      { "name": "medium", "value": "720px" },
+      { "name": "expanded", "value": "1280px" }
+    ],
+    "brandMotifs": [
+      { "name": "brand-glow", "value": "three radial-gradient bulbs (#488DE9, #FE9921, #B2CFF7), blur 52-70px, transform-only drift keyframes", "purpose": "The banner palette read as ambient light: floating blurred bulbs behind the hero, a small clipped wash on community links." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Pill CTA on the app's static primary (#005EB1 light / #A7C8FF dark).",
+      "html": "<a class=\"ds-btn-primary\" href=\"#\">Download</a>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 10px 22px; border-radius: 999px; background: var(--md-primary, #005eb1); color: var(--md-on-primary, #ffffff); font-weight: 600; font-size: 0.95rem; text-decoration: none; } .ds-btn-primary:hover { background: color-mix(in srgb, var(--md-primary, #005eb1) 88%, var(--md-on-primary, #ffffff)); } .ds-btn-primary:focus-visible { outline: 2px solid var(--md-primary, #005eb1); outline-offset: 2px; }"
+    },
+    {
+      "name": "Brand Mark",
+      "kind": "custom",
+      "refersTo": "brand-mark",
+      "description": "Canonical blue/orange refraction logo from the app launcher foreground; decorative by default.",
+      "html": "<img class=\"ds-brand-mark\" src=\"/ReFra/brand/refra-mark.svg\" width=\"32\" height=\"32\" alt=\"\">",
+      "css": ".ds-brand-mark { display: block; flex: none; object-fit: contain; }"
+    },
+    {
+      "name": "Community Link",
+      "kind": "nav",
+      "refersTo": "community-link",
+      "description": "Quiet link card: container-low ground with a blurred brand wash at the trailing edge.",
+      "html": "<a class=\"ds-community-link\" href=\"#\"><span class=\"ds-community-body\"><span class=\"ds-community-text\"><span class=\"ds-community-title\">Join the community</span><span class=\"ds-community-subtitle\">Telegram</span></span></span><span class=\"ds-community-art\"></span></a>",
+      "css": ".ds-community-link { position: relative; display: flex; min-height: 112px; border: 1px solid var(--md-outline-variant, #c4c6cf); border-radius: 16px; overflow: hidden; background: var(--md-surface-container-low, #f3f3fa); color: var(--md-on-surface, #191c20); text-decoration: none; } .ds-community-body { position: relative; z-index: 1; flex: 1; display: flex; align-items: center; padding: 20px 22px; } .ds-community-text { display: flex; flex-direction: column; gap: 2px; } .ds-community-title { font-weight: 700; font-size: 1.05rem; } .ds-community-subtitle { font-size: 0.85rem; font-weight: 500; color: var(--md-on-surface-variant, #43474e); } .ds-community-art { position: absolute; top: -30%; right: -6%; width: 42%; height: 160%; background: radial-gradient(45% 34% at 38% 30%, #488de9, transparent 72%), radial-gradient(52% 40% at 62% 70%, #fe9921, transparent 74%); filter: blur(20px); opacity: 0.4; pointer-events: none; } .ds-community-link:focus-visible { outline: 2px solid var(--md-primary, #005eb1); outline-offset: 2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The app's own identity, worn plainly",
+    "overview": "The docs site applies ReFra's canonical brand — the launcher mark, the banner palette expressed as floating blurred light, the app's static primary roles, and Google Sans — over generated neutral tones from the #247EE0 seed. Chrome stays quiet; brand color is earned by the mark, the ambient glow, and primary actions.",
+    "keyCharacteristics": ["Repo-derived artwork only, never redrawn", "Semantic paired roles for all text and controls", "Banner colors as ambient blurred light, not literal diagonal bands", "User-pinned atmosphere: blur, smooth motion, subtle gradients, restrained brand color"],
+    "rules": [
+      { "name": "Artwork vs UI", "body": "--brand-* colors are for artwork surfaces; text and controls always use paired --md-* roles.", "section": "colors" },
+      { "name": "Motion and atmosphere", "body": "Blur, smooth animation, subtle gradients and restrained brand colors are preferred. Decorative floating motion only in the hero; controls respond with short transitions; reduced motion parks the glow, reduced transparency removes it.", "section": "elevation" }
+    ],
+    "dos": ["Do derive assets from the launcher/banner sources in the repo.", "Do use ink #001C3B on pale brand grounds."],
+    "donts": ["Don't recolor the mark or use the mono/gallery launcher variants.", "Don't spread the brand gradient over page backgrounds or small text."]
+  }
+}

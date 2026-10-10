@@ -1,0 +1,70 @@
+---
+title: Copy, move, and rename
+summary: Duplicate or relocate media between folders and cloud albums, and rename files in place.
+area: organize-secure
+path:
+  - Timeline
+  - Select
+related: [manage-media, sharing, trash, albums]
+scenes: [media-quick-actions, transfer-progress, photo-more-actions, album-transfer]
+order: 4
+---
+
+Copy and move change where the actual files live. Copy leaves the original and drops a duplicate in the destination; move relocates it. Both run through the same destination picker.
+
+## Pick a destination
+
+<PreviewCollection feature="copy-move-rename" section="pick-a-destination" />
+
+Choosing **Copy** or **Move** on a selection (or **Copy to album / Move to album** from a photo's menu) opens the album picker sheet:
+
+- **Search**: the field at the top filters albums by name as you type.
+- **New album**: the first tile creates a fresh folder. Type a name like **Receipts**, then check the **Location** line before tapping **Confirm**; the locations offered depend on the storage access Android has granted the app.
+- **Groups**: album groups appear as folders inside the picker. Tap one to browse its albums and use the header to go back.
+- **Sections**: destinations are listed under **On this device** and under each connected cloud account. Albums a provider cannot write to sit under **Unavailable cloud albums**, dimmed.
+- **Locked albums**: picking one asks for your fingerprint or PIN before the transfer.
+
+## Copy to another album
+
+<PreviewCollection feature="copy-move-rename" section="copy-to-another-album" />
+
+1. Select the photos (or open one).
+2. Tap **Copy** in the action sheet.
+3. Pick the destination album, or tap **New album** to create one.
+4. A progress sheet shows the transfer. When it finishes you see **Copy complete** with the count and destination, and a button to open it.
+
+Copying makes a real second file: it uses extra storage, and the original stays put. When copying to a cloud album that already holds a file with that name, the copy is saved under a numbered name such as `photo (1).jpg` instead of overwriting. If a copy fails midway, the sheet says so and your originals are unchanged.
+
+## Move to another album
+
+Same flow, one difference: the original leaves its folder.
+
+1. Select the items and tap **Move**.
+2. Pick the destination album.
+3. Wait for the transfer; **Move complete** confirms it.
+
+Files keep their place in the timeline because ordering follows the date inside the photo, not the folder.
+
+Media that lives in another app's restricted folder (files WhatsApp saved under `Android/media`, for example) cannot be renamed directly. For those, ReFra copies and verifies each file first, then asks Android for permission to remove the originals. If you decline that prompt, ReFra cancels the move and removes the temporary copies when you dismiss the confirmation. Check the transfer result if it reports an error.
+
+## Rename a file
+
+<PreviewCollection feature="copy-move-rename" section="rename-a-file" />
+
+1. Open the photo or video in the viewer.
+2. Tap **Rename** (the pencil-over-a-line icon) in the bottom bar.
+3. A sheet opens with the current name filled in; edit it and confirm.
+4. The new name applies everywhere the file appears. Android may ask for write permission the first time.
+
+## Example: gather scattered screenshots
+
+1. In **Albums**, open **Downloads** and select the screenshots mixed in there.
+2. Tap **Move** and pick the **Screenshots** album.
+3. Open one, tap **Rename**, and rename it `boarding-pass.png`.
+4. Downloads is now clean, Screenshots holds the moved files in their original timeline position, and the new name shows in the details panel.
+
+## If a destination is missing or refused
+
+- A dimmed cloud album means that provider or album does not accept uploads. Pick another destination.
+- Declining Android's removal prompt during a restricted-folder move cancels the move and removes the temporary copies. Check the transfer result if it reported an error.
+- Moving onto a cloud account uploads real data, so large batches take time on a slow connection.

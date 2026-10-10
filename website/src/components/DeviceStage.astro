@@ -1,0 +1,388 @@
+---
+/**
+ * DeviceStage — device preset picker (phone / tablet / foldable) plus a scaled
+ * stage frame that hosts a LiveEmbed. Preset sizes are the shared px contract
+ * from DOCS_SITE_PLAN.md §6: phone 412x915, tablet 840x1180, foldable 768x932.
+ * The embed keeps rendering at the preset's logical size; the stage scales it
+ * to fit the column, so aspect and density stay honest.
+ *
+ * Status, fidelity and available states are learned from the embed's bubbling
+ * `refra:preview-status` events (LiveEmbed.astro) — the stage never guesses.
+ */
+import { DEVICE_PRESETS, type DeviceId, type ThemeId } from '@lib/constants';
+import LiveEmbed from './LiveEmbed.astro';
+
+interface Props {
+  scene?: string;
+  device?: DeviceId;
+  theme?: ThemeId | 'site';
+  state?: string;
+  seed?: string;
+  title?: string;
+  /** Max rendered height in px before the stage scales down. */
+  maxHeight?: number;
+  /** Max rendered height below 720px viewport width. */
+  compactMaxHeight?: number;
+}
+
+const {
+  scene = '',
+  device = 'phone',
+  theme = 'site',
+  state = '',
+  seed = '',
+  title = 'Device preview',
+  maxHeight = 480,
+  compactMaxHeight = 460,
+} = Astro.props;
+---
+
+<device-stage
+  class="stage"
+  data-max-height={maxHeight}
+  data-compact-height={compactMaxHeight}
+>
+  <div class="stage-panel">
+    <div class="stage-toolbar">
+      <span class="stage-title">Preview</span>
+      <div class="stage-controls" role="group" aria-label="Device preset">
+        {
+          (Object.keys(DEVICE_PRESETS) as DeviceId[]).map((id) => (
+            <button
+              type="button"
+              class:list={['stage-preset', { active: id === device }]}
+              data-device={id}
+              aria-pressed={id === device ? 'true' : 'false'}
+              title={DEVICE_PRESETS[id].label}
+            >
+              {id === 'phone' && (
+                <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+                  <rect x="7" y="3" width="10" height="18" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.7" />
+                  <circle cx="12" cy="17.5" r="0.9" fill="currentColor" />
+                </svg>
+              )}
+              {id === 'tablet' && (
+                <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+                  <rect x="4.5" y="3" width="15" height="18" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.7" />
+                  <circle cx="12" cy="17.5" r="0.9" fill="currentColor" />
+                </svg>
+              )}
+              {id === 'foldable' && (
+                <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+                  <rect x="4" y="4" width="7" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.7" />
+                  <rect x="13" y="4" width="7" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.7" />
+                </svg>
+              )}
+              {DEVICE_PRESETS[id].label}
+            </button>
+          ))
+        }
+      </div>
+      <label class="stage-state-wrap" hidden>
+        <span class="visually-hidden">Preview state</span>
+        <select class="stage-state" aria-label="Preview state"></select>
+      </label>
+    </div>
+    <div class="stage-viewport">
+      <div class="stage-frame" data-frame>
+        <LiveEmbed
+          scene={scene}
+          device={device}
+          theme={theme}
+          state={state}
+          seed={seed}
+          title={title}
+          chrome={false}
+        />
+      </div>
+    </div>
+    <div class="stage-empty" hidden>
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+        <rect x="6.5" y="2.5" width="11" height="19" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.6" />
+        <circle cx="12" cy="18" r="1.1" fill="currentColor" />
+      </svg>
+      <p class="stage-empty-title">Preview unavailable</p>
+      <p class="stage-empty-body">
+        A preview is not available yet. The guide covers the same feature.
+      </p>
+    </div>
+    <div class="stage-status-row">
+      <span class="stage-status" aria-live="polite">Loading preview…</span>
+      <span class="stage-guidance"></span>
+    </div>
+  </div>
+</device-stage>
+
+<script>
+  import { DEVICE_PRESETS } from '../lib/constants.ts';
+
+  const STATUS_LABEL = {
+    live: 'Live preview',
+    capture: 'Captured preview',
+    'stateful-capture': 'Captured preview',
+    pending: 'Preview unavailable',
+  };
+  const GUIDANCE = {
+    live: "Rendered by the app's own composables.",
+    capture: 'Captured on a real device, the same UI the app ships.',
+    'stateful-capture': 'Captured on a real device. Switch states above.',
+    pending: 'Read the guide below for the same detail.',
+  };
+
+  const humanize = (s) => String(s).replaceAll('-', ' ');
+
+  class DeviceStage extends HTMLElement {
+    scale = 1;
+
+    connectedCallback() {
+      this.viewport = this.querySelector('.stage-viewport');
+      this.frame = this.querySelector('[data-frame]');
+      this.embed = this.querySelector('live-embed');
+      this.buttons = [...this.querySelectorAll('.stage-preset')];
+      this.stateWrap = this.querySelector('.stage-state-wrap');
+      this.stateSelect = this.querySelector('.stage-state');
+      this.statusEl = this.querySelector('.stage-status');
+      this.guidanceEl = this.querySelector('.stage-guidance');
+      this.emptyEl = this.querySelector('.stage-empty');
+      this.device = this.embed?.dataset.device || 'phone';
+      this.buttons.forEach((b) =>
+        b.addEventListener('click', () => this.setDevice(b.dataset.device)),
+      );
+      this.stateSelect.addEventListener('change', () => {
+        if (this.embed?.setState) this.embed.setState(this.stateSelect.value);
+        else if (this.embed) this.embed.dataset.state = this.stateSelect.value;
+      });
+      // The embed reports fidelity/states after its manifest resolves.
+      this.addEventListener('refra:preview-status', (e) => this.sync(e.detail));
+      this.ro = new ResizeObserver(() => this.layout());
+      this.ro.observe(this.viewport);
+      this.layout();
+      // Custom-element ordering: if the embed already resolved before this
+      // listener was attached, read its published fields directly.
+      queueMicrotask(() => {
+        if (this.embed?.sceneMeta || this.embed?.fidelity !== 'pending') {
+          this.sync({
+            fidelity: this.embed.fidelity,
+            states: this.embed.sceneMeta?.states || [],
+            state: this.embed.dataset.state || this.embed.sceneMeta?.states?.[0] || 'default',
+          });
+        }
+      });
+    }
+
+    disconnectedCallback() {
+      this.ro?.disconnect();
+    }
+
+    sync(detail) {
+      const fidelity = detail?.fidelity || 'pending';
+      const label = STATUS_LABEL[fidelity] || 'Preview unavailable';
+      if (this.statusEl) this.statusEl.textContent = label;
+      if (this.guidanceEl) this.guidanceEl.textContent = GUIDANCE[fidelity] || '';
+
+      const states = Array.isArray(detail?.states) ? detail.states : [];
+      if (states.length > 1) {
+        this.stateWrap.hidden = false;
+        const current = detail.state || states[0];
+        this.stateSelect.replaceChildren(
+          ...states.map((s) => {
+            const o = document.createElement('option');
+            o.value = s;
+            o.textContent = humanize(s);
+            return o;
+          }),
+        );
+        this.stateSelect.value = current;
+      } else {
+        this.stateWrap.hidden = true;
+        this.stateSelect.replaceChildren();
+      }
+
+      const unavailable = fidelity === 'pending';
+      // A scene with no assets at all collapses to one compact notice; a
+      // missing device or state inside an otherwise available scene keeps
+      // the controls so the reader can recover.
+      const hasAssets = Object.values(this.embed?.sceneMeta?.assets || {}).some(
+        (deviceStates) => Object.keys(deviceStates).length > 0,
+      );
+      const canRecover = hasAssets || this.embed?.sceneMeta?.fidelity === 'live';
+      this.querySelector('.stage-toolbar').hidden = unavailable && !canRecover;
+      this.querySelector('.stage-status-row').hidden = unavailable;
+      this.querySelector('.stage-empty-body').textContent =
+        detail?.status || 'A preview is not available yet. The guide covers the same feature.';
+      this.classList.toggle('is-unavailable', unavailable);
+      this.emptyEl.hidden = !unavailable;
+      this.viewport.hidden = unavailable;
+      if (!unavailable) this.layout();
+    }
+
+    setDevice(id) {
+      if (!DEVICE_PRESETS[id]) return;
+      this.device = id;
+      this.buttons.forEach((b) => {
+        const on = b.dataset.device === id;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-pressed', String(on));
+      });
+      if (this.embed?.setDevice) this.embed.setDevice(id);
+      else if (this.embed) this.embed.dataset.device = id;
+      this.layout();
+    }
+
+    layout() {
+      const preset = DEVICE_PRESETS[this.device];
+      if (!preset || !this.frame || !this.viewport) return;
+      const style = getComputedStyle(this.viewport);
+      const inlinePadding = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+      const blockPadding = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+      const available = this.viewport.clientWidth - inlinePadding;
+      if (available <= 0) return;
+      const maxH =
+        (matchMedia('(max-width: 719px)').matches &&
+          Number(this.dataset.compactHeight)) ||
+        Number(this.dataset.maxHeight) ||
+        480;
+      this.scale = Math.min(available / preset.width, maxH / preset.height, 1);
+      this.frame.style.width = `${preset.width}px`;
+      this.frame.style.height = `${preset.height}px`;
+      this.frame.style.borderRadius = `${preset.corner}px`;
+      this.frame.style.transform = `scale(${this.scale})`;
+      this.viewport.style.height = `${preset.height * this.scale + blockPadding}px`;
+    }
+  }
+
+  if (!customElements.get('device-stage')) {
+    customElements.define('device-stage', DeviceStage);
+  }
+</script>
+
+<style>
+  .stage {
+    display: block;
+    margin: 1.5rem 0;
+  }
+  .stage-panel {
+    background: var(--md-surface-container-low);
+    border: 1px solid var(--md-outline-variant);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .stage-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--md-outline-variant);
+  }
+  .stage-title {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--md-on-surface-variant);
+    margin-right: auto;
+  }
+  .stage-controls {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 999px;
+    border: 1px solid var(--md-outline-variant);
+    background: var(--md-surface-container);
+  }
+  .stage-preset {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 0;
+    background: transparent;
+    color: var(--md-on-surface-variant);
+    border-radius: 999px;
+    min-height: 44px;
+    padding: 5px 12px;
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.82rem;
+    transition:
+      background var(--dur-fast) var(--ease-standard),
+      color var(--dur-fast) var(--ease-standard);
+  }
+  .stage-preset:hover {
+    color: var(--md-on-surface);
+  }
+  .stage-preset.active {
+    background: var(--md-primary-container);
+    color: var(--md-on-primary-container);
+  }
+  .stage-state-wrap {
+    display: inline-flex;
+  }
+  .stage-state {
+    font: inherit;
+    font-size: 0.82rem;
+    color: var(--md-on-surface);
+    background: var(--md-surface-container);
+    border: 1px solid var(--md-outline-variant);
+    border-radius: 999px;
+    min-height: 44px;
+    padding: 0 10px;
+  }
+  .stage-viewport {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    padding: 20px 12px;
+  }
+  .stage-frame {
+    flex: none;
+    transform-origin: top center;
+    overflow: hidden;
+    border: 1px solid var(--md-outline-variant);
+    background: var(--md-surface-container-lowest);
+    box-shadow: 0 12px 32px color-mix(in srgb, var(--md-shadow) 16%, transparent);
+  }
+  .stage-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 28px 24px;
+    text-align: center;
+    color: var(--md-on-surface-variant);
+  }
+  .stage-empty svg {
+    color: var(--md-outline);
+    margin-bottom: 4px;
+  }
+  .stage-empty-title {
+    margin: 0;
+    font-weight: 600;
+    color: var(--md-on-surface);
+  }
+  .stage-empty-body {
+    margin: 0;
+    font-size: 0.85rem;
+    max-width: 44ch;
+  }
+  .stage-status-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 10px 14px;
+    border-top: 1px solid var(--md-outline-variant);
+    font-size: 0.8rem;
+  }
+  .stage-status {
+    font-weight: 600;
+    color: var(--md-on-surface);
+  }
+  .stage-guidance {
+    color: var(--md-on-surface-variant);
+  }
+  @media (max-width: 719px) {
+    .stage-viewport {
+      padding: 14px 8px;
+    }
+  }
+</style>

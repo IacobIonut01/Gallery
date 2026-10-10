@@ -1,0 +1,370 @@
+---
+import Base from '@layouts/Base.astro';
+import PhoneFrame from '@components/PhoneFrame.astro';
+import LiveEmbed from '@components/LiveEmbed.astro';
+import FeatureCard from '@components/FeatureCard.astro';
+import BrandMark from '@components/BrandMark.astro';
+import BrandGlow from '@components/BrandGlow.astro';
+import CommunityLinks from '@components/CommunityLinks.astro';
+import { getCollection } from 'astro:content';
+import { withBase } from '@lib/paths';
+
+const features = await getCollection('features');
+const featured = ['timeline', 'media-viewer', 'subject-cutout', 'cloud-overview', 'appearance', 'search']
+  .map((id) => features.find((f) => f.id === id))
+  .filter((f) => f !== undefined);
+
+const quickLinks = [
+  {
+    title: 'Find a feature',
+    note: 'Browse the guides by what you want to do in ReFra.',
+    href: withBase('/features/'),
+  },
+  {
+    title: 'Choose a download',
+    note: 'GitHub Releases, F-Droid, Google Play, or Obtainium.',
+    href: withBase('/download'),
+  },
+  {
+    title: 'Make it yours',
+    note: 'Palettes, dark and AMOLED modes, and blur.',
+    href: withBase('/features/appearance'),
+  },
+];
+---
+
+<Base title="ReFra" description="The ReFra user guide — browse, edit, organize, and protect your photos and videos.">
+  <section class="hero">
+    <BrandGlow />
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <div class="hero-brand-title">
+          <BrandMark size={76} />
+          <h1>ReFra</h1>
+        </div>
+        <p class="hero-tagline">
+          View, organize, search and edit{' '}
+          <br class="wide-break" />your photos and videos.
+        </p>
+        <p class="hero-lede">
+          Explore the features and settings of your open-source Android
+          gallery.
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href={withBase('/features/')}>
+            Explore the features
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+              <path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+          </a>
+          <a class="btn btn-outline" href={withBase('/download')}>Get ReFra</a>
+        </div>
+        <div class="hero-start">
+          <a href={withBase('/overview')}>
+            New to ReFra? Start here
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+              <path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+          </a>
+        </div>
+      </div>
+      <figure class="hero-preview">
+        <PhoneFrame width={272}>
+          <LiveEmbed scene="browse-timeline" device="phone" title="ReFra timeline preview" chrome={false} statusBar={true} />
+        </PhoneFrame>
+        <figcaption>
+          <span>Your timeline, in ReFra</span>
+          <a href={withBase('/features/timeline')}>
+            Explore the timeline
+            <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+              <path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+          </a>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="container quicklinks" aria-label="Shortcuts">
+    {
+      quickLinks.map((q) => (
+        <a class="quick" href={q.href}>
+          <span class="quick-title">{q.title}</span>
+          <span class="quick-note">{q.note}</span>
+        </a>
+      ))
+    }
+  </section>
+
+  <section class="container section featured">
+    <div class="section-head">
+      <h2>Explore the features</h2>
+      <a class="view-all" href={withBase('/features/')}>
+        View all
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+          <path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+      </a>
+    </div>
+    <div class="featured-rows">
+      {
+        featured.map((f) => (
+          <FeatureCard
+            id={f.id}
+            title={f.data.title}
+            summary={f.data.summary}
+            area={f.data.area}
+            scenes={f.data.scenes}
+          />
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="container section community" aria-label="Community">
+    <CommunityLinks />
+  </section>
+
+  <section class="search-band">
+    <div class="container search-band-inner">
+      <h2>Looking for a particular setting?</h2>
+      <p>
+        Search the docs, or ask the community on the{' '}
+        <a href={withBase('/support')}>support page</a>.
+      </p>
+      <a class="btn btn-primary" href={withBase('/search')}>
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"></circle>
+          <path d="m16 16 4.5 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+        </svg>
+        Search the docs
+      </a>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .hero {
+    position: relative;
+    isolation: isolate;
+    overflow: clip;
+    padding: 48px 0 48px;
+  }
+  .hero-grid {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: 48px;
+    align-items: center;
+  }
+  .hero-brand-title {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 0.35em;
+  }
+  .hero-brand-title :global(.brand-mark) {
+    width: 56px;
+    height: 56px;
+  }
+  .hero-copy h1 {
+    font-size: 3.8rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    margin: 0;
+  }
+  .hero-tagline {
+    font-size: 1.25rem;
+    font-weight: 500;
+    max-width: 30ch;
+    margin: 0 0 1rem;
+  }
+  .wide-break {
+    display: none;
+  }
+  .hero-lede {
+    font-size: 1.125rem;
+    color: var(--md-on-surface-variant);
+    max-width: 43ch;
+    margin: 0 0 1.8rem;
+  }
+  .hero-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .hero-actions .btn svg {
+    display: block;
+  }
+  .hero-start {
+    margin-top: 22px;
+  }
+  .hero-start a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.95rem;
+  }
+  .hero-preview {
+    position: relative;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+  .hero-preview figcaption {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    font-size: 0.85rem;
+    color: var(--md-on-surface-variant);
+  }
+  .hero-preview figcaption a {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: 600;
+  }
+  @media (min-width: 720px) {
+    .hero {
+      padding: 72px 0 64px;
+    }
+    .hero-grid {
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 64px;
+    }
+    .hero-brand-title :global(.brand-mark) {
+      width: 76px;
+      height: 76px;
+    }
+    .hero-copy h1 {
+      font-size: 6rem;
+    }
+    .hero-tagline {
+      font-size: 1.625rem;
+    }
+    .wide-break {
+      display: inline;
+    }
+  }
+  @media (max-width: 719px) {
+    .hero-preview :global(.phone) {
+      max-width: 260px;
+    }
+  }
+
+  /* quick links — a ruled strip, not cards */
+  .quicklinks {
+    display: grid;
+    grid-template-columns: 1fr;
+    border-top: 1px solid var(--md-outline-variant);
+    border-bottom: 1px solid var(--md-outline-variant);
+  }
+  .quick {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 18px 0;
+    color: var(--md-on-surface);
+  }
+  .quick + .quick {
+    border-top: 1px solid var(--md-outline-variant);
+  }
+  .quick:hover {
+    text-decoration: none;
+  }
+  .quick:hover .quick-title {
+    color: var(--md-primary);
+  }
+  .quick-title {
+    font-weight: 600;
+    font-size: 1rem;
+  }
+  .quick-note {
+    color: var(--md-on-surface-variant);
+    font-size: 0.88rem;
+  }
+  @media (min-width: 720px) {
+    .quicklinks {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .quick {
+      padding: 22px 24px;
+    }
+    .quick:first-child {
+      padding-left: 0;
+    }
+    .quick:last-child {
+      padding-right: 0;
+    }
+    .quick + .quick {
+      border-top: 0;
+      border-left: 1px solid var(--md-outline-variant);
+    }
+  }
+
+  .featured {
+    padding-top: 3rem;
+  }
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 8px;
+  }
+  .section-head h2 {
+    margin-top: 0;
+  }
+  .view-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .featured-rows {
+    display: grid;
+    grid-template-columns: 1fr;
+    column-gap: 48px;
+  }
+  .featured-rows :global(.feature-row:last-child) {
+    border-bottom: 0;
+  }
+  @media (min-width: 720px) {
+    .featured-rows {
+      grid-template-columns: 1fr 1fr;
+    }
+    .featured-rows :global(.feature-row:nth-last-child(2)) {
+      border-bottom: 0;
+    }
+  }
+
+  .community {
+    margin-top: 3.5rem;
+  }
+
+  .search-band {
+    margin-top: 4rem;
+    background: var(--md-surface-container-low);
+    border-block: 1px solid var(--md-outline-variant);
+    padding: 3.5rem 0;
+  }
+  .search-band-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .search-band h2 {
+    margin: 0;
+  }
+  .search-band p {
+    color: var(--md-on-surface-variant);
+    margin: 0 0 14px;
+    max-width: 56ch;
+  }
+</style>

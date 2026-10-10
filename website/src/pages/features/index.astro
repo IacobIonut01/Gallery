@@ -1,0 +1,239 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '@layouts/Base.astro';
+import FeatureCard from '@components/FeatureCard.astro';
+import { AREA_LABELS } from '@lib/constants';
+
+const features = await getCollection('features');
+const areas = Object.keys(AREA_LABELS)
+  .map((area) => ({
+    area,
+    label: AREA_LABELS[area],
+    items: features
+      .filter((f) => f.data.area === area)
+      .sort((a, b) => a.data.order - b.data.order || a.data.title.localeCompare(b.data.title)),
+  }))
+  .filter((g) => g.items.length > 0);
+---
+
+<Base title="Features" description="Browse the ReFra feature guides by what you want to do.">
+  <div class="container">
+    <div class="page-head">
+      <h1>Explore the features</h1>
+      <p class="summary">Browse the guides by what you want to do in ReFra.</p>
+    </div>
+
+    <div class="features-body">
+      <nav class="area-nav" aria-label="Feature areas" data-pagefind-ignore>
+        {
+          areas.map((g) => (
+            <a href={`#${g.area}`} class="area-link">
+              {g.label}
+              <span class="area-count">{g.items.length}</span>
+            </a>
+          ))
+        }
+      </nav>
+
+      <div class="features-main">
+        <div class="filter-row">
+          <label class="filter-label" for="feature-filter">Filter features</label>
+          <input
+            type="search"
+            id="feature-filter"
+            class="filter-input"
+            placeholder="Try: theme, albums, backup"
+            autocomplete="off"
+          />
+          <p class="filter-status" role="status" aria-live="polite"></p>
+        </div>
+        {
+          areas.map((g) => (
+            <section class="area-section" id={g.area} data-area={g.area}>
+              <h2>{g.label}</h2>
+              <div class="area-rows">
+                {g.items.map((f) => (
+                  <FeatureCard
+                    id={f.id}
+                    title={f.data.title}
+                    summary={f.data.summary}
+                    area={f.data.area}
+                    scenes={f.data.scenes}
+                  />
+                ))}
+              </div>
+            </section>
+          ))
+        }
+        <div class="filter-empty" hidden>
+          <p>No features match your filter.</p>
+          <button type="button" class="btn btn-outline filter-clear">Clear the filter</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</Base>
+
+<script>
+  // Client-side filter over the complete static feature list.
+  const input = document.querySelector('#feature-filter');
+  const sections = [...document.querySelectorAll('.area-section')];
+  const status = document.querySelector('.filter-status');
+  const empty = document.querySelector('.filter-empty');
+  const clearBtn = document.querySelector('.filter-clear');
+  const total = document.querySelectorAll('.feature-row').length;
+
+  function applyFilter() {
+    const q = input.value.trim().toLowerCase();
+    let shown = 0;
+    for (const section of sections) {
+      const rows = [...section.querySelectorAll('.feature-row')];
+      let visible = 0;
+      for (const row of rows) {
+        const hay = `${row.textContent} ${row.dataset.area || ''}`.toLowerCase();
+        const match = !q || hay.includes(q);
+        row.hidden = !match;
+        if (match) visible += 1;
+      }
+      section.hidden = visible === 0;
+      shown += visible;
+    }
+    status.textContent = q ? `${shown} of ${total} features` : '';
+    empty.hidden = shown !== 0;
+  }
+
+  input?.addEventListener('input', applyFilter);
+  clearBtn?.addEventListener('click', () => {
+    input.value = '';
+    applyFilter();
+    input.focus();
+  });
+</script>
+
+<style>
+  .features-body {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .area-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-content: start;
+  }
+  .area-link {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--md-outline-variant);
+    color: var(--md-on-surface);
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+  .area-link:hover {
+    text-decoration: none;
+    border-color: var(--md-primary);
+    color: var(--md-primary);
+  }
+  .area-count {
+    font-size: 0.75rem;
+    color: var(--md-on-surface-variant);
+    font-variant-numeric: tabular-nums;
+  }
+  .filter-row {
+    margin-bottom: 8px;
+  }
+  .filter-label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--md-on-surface-variant);
+    margin-bottom: 6px;
+  }
+  .filter-input {
+    font: inherit;
+    width: 100%;
+    max-width: 26rem;
+    min-height: 44px;
+    padding: 0 14px;
+    color: var(--md-on-surface);
+    background: var(--md-surface-container-low);
+    border: 1px solid var(--md-outline-variant);
+    border-radius: 12px;
+  }
+  .filter-input::placeholder {
+    color: var(--md-on-surface-variant);
+  }
+  .filter-status {
+    margin: 8px 0 0;
+    font-size: 0.82rem;
+    color: var(--md-on-surface-variant);
+  }
+  .area-section {
+    scroll-margin-top: 7rem;
+  }
+  .area-section h2 {
+    margin-top: 1.6em;
+  }
+  .area-rows {
+    display: grid;
+    grid-template-columns: 1fr;
+    column-gap: 48px;
+    border-top: 1px solid var(--md-outline-variant);
+  }
+  .area-rows :global(.feature-row:last-child) {
+    border-bottom: 0;
+  }
+  @media (min-width: 720px) {
+    .area-rows {
+      grid-template-columns: 1fr 1fr;
+    }
+    .area-rows :global(.feature-row:nth-last-child(2)) {
+      border-bottom: 0;
+    }
+  }
+  .filter-empty {
+    margin: 2rem 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    color: var(--md-on-surface-variant);
+  }
+  .filter-empty p {
+    margin: 0;
+  }
+  @media (min-width: 1280px) {
+    .features-body {
+      grid-template-columns: 216px minmax(0, 1fr);
+      gap: 32px;
+    }
+    .area-nav {
+      position: sticky;
+      top: 104px;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 2px;
+      max-height: calc(100dvh - 128px);
+      overflow-y: auto;
+    }
+    .area-link {
+      border: 0;
+      border-radius: 8px;
+      padding: 8px 12px;
+      min-height: 36px;
+      align-items: center;
+      color: var(--md-on-surface-variant);
+    }
+    .area-link:hover {
+      background: var(--md-surface-container-high);
+      color: var(--md-on-surface);
+    }
+    .area-count {
+      margin-left: auto;
+    }
+  }
+</style>

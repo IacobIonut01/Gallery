@@ -59,6 +59,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -155,6 +156,8 @@ fun LibraryContent(
     animatedContentScope: AnimatedContentScope,
     searchBar: @Composable (statusBarInsets: WindowInsets, menuItems: @Composable RowScope.() -> Unit) -> Unit,
     mapContent: (@Composable BoxScope.(latitude: Double, longitude: Double) -> Unit)? = null,
+    /** Docs/test seam: opens the shortcut edit UI directly. */
+    initialEditMode: Boolean = false,
 ) {
     val snapshot = state.snapshot
     val modelStatus = state.modelStatus
@@ -335,7 +338,7 @@ fun LibraryContent(
     val totalLocationsCount = snapshot.locationCount
 
     // In-place shortcut editing (Quick-Settings style)
-    var shortcutsEditMode by remember { mutableStateOf(false) }
+    var shortcutsEditMode by remember { mutableStateOf(initialEditMode) }
     BackHandler(enabled = shortcutsEditMode) { shortcutsEditMode = false }
     // Long-press on any Library section — not only the shortcut tiles — enters
     // the edit UI, matching how the tiles behave (#1262).

@@ -1,0 +1,42 @@
+---
+title: Connect Nextcloud
+summary: Add a Nextcloud server with browser sign-in or a manually entered app password.
+area: cloud
+path:
+  - Settings
+  - Cloud Accounts
+related: [cloud-overview, cloud-accounts, cloud-networking]
+scenes: [cloud-setup-nextcloud]
+order: 2
+---
+
+Nextcloud accounts let you browse files and folders and upload backups. The wizard steps are **Server**, **Credentials**, **Networking**, **Sync**, and **Review**.
+
+## Add a Nextcloud server
+
+1. Open **Settings › Cloud Accounts › Add Nextcloud**.
+2. **Server**: enter the base address in **Server URL**, including `https://`. If the server is installed under a path prefix, include it, for example `https://cloud.example.com/nextcloud`, not just `https://cloud.example.com`.
+3. **Credentials**: the default is **Sign in with Nextcloud**. The app opens a browser sign-in where you complete your normal login, including two-factor steps, and grant access. You can leave the app while it waits for approval; when you return it shows **Nextcloud account verified** and **Signed in as** your account name. Set a **Display name** here if you like, then continue with **Next**.
+4. If the server cannot do browser sign-in, or you prefer it, choose **Use an app password manually** and enter your **Username** and an **App password** (a credential the server issues in its own security settings), then **Test connection**.
+5. **Networking** is the optional local-URL step and **Sync** is where you pick **Back up local folders**; see [automatic URL switching](/ReFra/features/cloud-networking) and [cloud backup](/ReFra/features/cloud-backup).
+6. **Review** the details and **Save**. The account shows **Connected** once the first check completes.
+
+<PreviewCollection feature="cloud-nextcloud" section="wizard" />
+
+## Sign-in states and what they mean
+
+- **Starting secure sign-in / Waiting for browser approval**: normal; finish the flow in the browser.
+- **Verifying Nextcloud account / Nextcloud account verified**: approval came back and is being confirmed.
+- **Cancelled**: the browser flow was closed or declined; start it again.
+- **Expired**: the request sat too long; start a new sign-in.
+- **Does not support browser sign-in**: the server lacks the flow; use the manual app-password option; this is the supported fallback, not a workaround for a broken certificate.
+- **Rate limited / server error / could not be reached / invalid response**: wait, recheck the server address, and try again.
+- **Secure connection could not be verified**: the server's certificate is untrusted. Do not bypass it; fix the address or the server's certificate.
+
+## Example: browser sign-in to a hosted Nextcloud
+
+1. Your provider hosts Nextcloud at `https://cloud.example.com/nextcloud` for user `alex`.
+2. **Settings › Cloud Accounts › Add Nextcloud**, enter that full URL including `/nextcloud`.
+3. Tap **Sign in with Nextcloud**, complete the browser login and grant access.
+4. Back in the app, **Nextcloud account verified** and **Signed in as alex** appear; set the display name `Work Nextcloud` and tap **Next**.
+5. Continue through **Networking** without changes, select no folders on the **Sync** step, then review and **Save**.

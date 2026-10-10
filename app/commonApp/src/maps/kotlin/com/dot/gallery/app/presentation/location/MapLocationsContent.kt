@@ -138,11 +138,17 @@ private const val PHOTO_MARKER_LAYER = "photo-marker-layer"
     FlowPreview::class,
 )
 @Composable
-internal fun MapLocationsContent(
+fun MapLocationsContent(
     metadataState: State<MediaMetadataState>,
     locations: List<LocationMedia> = emptyList(),
     geoMedia: List<GeoMedia> = emptyList(),
     initialMediaId: Long = -1L,
+    /**
+     * Fires once MapLibre reports a fully-rendered frame (style + viewport
+     * tiles fetched and drawn). Stronger than [GalleryMapState.isStyleLoaded],
+     * which only tracks the style JSON.
+     */
+    onMapFullyRendered: () -> Unit = {},
 ) {
     val sheetHazeState = LocalHazeState.current
     val allowBlur by rememberAllowBlur()
@@ -267,7 +273,9 @@ internal fun MapLocationsContent(
                 }
                 visibleClusters = MapPhotoClusterer.visible(
                     clusters = clusters,
-                    bounds = mapState.visibleBounds(),
+                    // Native MapLibre calls require Android Main even under a
+                    // Compose test dispatcher.
+                    bounds = withContext(Dispatchers.Main) { mapState.visibleBounds() },
                     limit = 160,
                     centerLatitude = position.latitude,
                     centerLongitude = position.longitude,
@@ -579,8 +587,12 @@ internal fun MapLocationsContent(
                             )
                         }
                     } ?: return@launch
-                    if (mapState.isStyleLoaded && visibleClusters.any { it.renderId == cluster.renderId }) {
-                        mapState.setImage(cluster.renderId, bitmap)
+                    // Native MapLibre calls require Android Main even under a
+                    // Compose test dispatcher.
+                    withContext(Dispatchers.Main) {
+                        if (mapState.isStyleLoaded && visibleClusters.any { it.renderId == cluster.renderId }) {
+                            mapState.setImage(cluster.renderId, bitmap)
+                        }
                     }
                 }
             }
@@ -638,6 +650,7 @@ internal fun MapLocationsContent(
                 styleUri = styleUri,
                 isLogoEnabled = false,
                 isAttributionEnabled = false,
+                onFullyRendered = onMapFullyRendered,
                 onMapClick = { latLng ->
                     val renderId = mapState.renderedMarkerId(latLng.latitude, latLng.longitude, PHOTO_MARKER_LAYER)
                     val cluster = visibleClusters.firstOrNull { it.renderId == renderId }

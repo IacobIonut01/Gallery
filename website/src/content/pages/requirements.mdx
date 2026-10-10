@@ -1,0 +1,40 @@
+---
+title: Requirements
+summary: The Android version, build type, and permissions that decide what ReFra can do on your phone.
+---
+
+## Android version
+
+ReFra runs on **Android 10** and later. A few features need newer Android releases because the underlying support only exists there:
+
+- **Favorites and the trash** need Android 11 or later.
+- **Fancy blur** effects in the interface need Android 12 or later.
+
+## Build types
+
+Which smart features you get depends on the build you installed:
+
+| Build | What it means |
+| --- | --- |
+| **Standard** | Downloads AI model packs on demand from Settings › Smart Features. |
+| **Offline with models** | No network at all; the AI packs come bundled inside the app. |
+| **Offline** | No network and no bundled models. On-device AI features are unavailable; other Smart Features settings may still appear. |
+
+Cloud providers (Immich, Nextcloud, ownCloud, WebDAV, SMB, NFS) only exist on builds that ship them; an offline build has no Cloud Accounts section at all.
+
+## Permissions worth knowing
+
+- **Photos and videos**: required for the on-device library to appear. On newer Android versions you can grant only selected photos; the rest stays invisible to the app until you widen it. Opening a file sent from another app, or browsing a cloud account, can still work without it.
+- **Media location**: optional; without it the map and photo locations stay hidden.
+- **Notifications**: optional; without them background work like backups runs silently.
+
+The full list, and what each denial changes, is on the [permissions](/ReFra/features/permissions) page.
+
+## A note on versions
+
+These guides describe the current app. If your version does not show an option, check its release notes; the [changelog](/ReFra/changelog) page explains where they live.
+
+## Where to go next
+
+- [Download](/ReFra/download) the build that matches your device
+- [First launch](/ReFra/features/first-launch) walks through the setup steps

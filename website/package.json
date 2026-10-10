@@ -1,0 +1,34 @@
+{
+  "name": "refra-docs-site",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "ReFra Gallery documentation site (Astro, static, GitHub Pages)",
+  "scripts": {
+    "dev": "astro dev",
+    "predev": "node scripts/merge-manifest.mjs",
+    "prebuild": "node scripts/merge-manifest.mjs",
+    "build": "astro build",
+    "postbuild": "pagefind --site dist || echo 'pagefind failed (offline?) — search index skipped'",
+    "preview": "astro preview",
+    "check": "node check-style.js && node scripts/check-registry.mjs",
+    "check:style": "node check-style.js",
+    "check:registry": "node scripts/check-registry.mjs",
+    "test": "node --test scripts/lib/*.test.mjs",
+    "manifest": "node scripts/merge-manifest.mjs",
+    "previews:live": "node scripts/publish-live.mjs",
+    "releases:sync": "node scripts/sync-releases.mjs",
+    "theme": "node scripts/gen-theme.mjs"
+  },
+  "dependencies": {
+    "@astrojs/mdx": "^8.0.3",
+    "@astrojs/sitemap": "^3.7.4",
+    "astro": "^7.3.6",
+    "pagefind": "^1.5.2"
+  },
+  "devDependencies": {
+    "@material/material-color-utilities": "^0.4.0",
+    "@playwright/test": "1.56.1",
+    "pngjs": "^7.0.0"
+  }
+}

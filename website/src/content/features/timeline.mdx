@@ -1,0 +1,60 @@
+---
+title: Timeline
+summary: The unified photo and video grid with date groups, fast scrolling, pinch zoom, and selection.
+area: browse
+path:
+  - Timeline
+related: [timeline-filters, albums, media-viewer, memories, manage-media]
+scenes: [timeline-date-headers, loading-media, empty-media, browse-timeline, timeline-filters]
+order: 2
+---
+
+The Timeline is the screen ReFra opens to unless you chose a different launch screen in Navigation settings. It shows the photos and videos the app can access on your device together with the media of connected cloud accounts, newest first, grouped under date headers.
+
+## Browse the grid
+
+<PreviewCollection feature="timeline" section="browse-the-grid" />
+
+- **Scroll**: swipe up and down to move through time. A scrollbar on the right edge lets you drag to jump months at a time.
+- **Date headers**: each day, month, or year starts with a labeled header that stays pinned at the top while you scroll its section. Today and yesterday get their own labels.
+- **Pull down**: pulling down at the top refreshes the library.
+- **Pinch**: spread two fingers apart for larger thumbnails, pinch together to fit more on screen. In the current layout the uniform grid runs from one to nine columns and the mosaic layout from three to six, and the timeline remembers your size separately from albums.
+- **Story cards**: when memories or highlights exist, a row of cards appears above the grid. See [memories](/ReFra/features/memories).
+
+## Reading a thumbnail
+
+Small markers sit on the thumbnails:
+
+- **Video badge**: the item is a video; GIFs and animated formats can animate right in the grid (Settings › Timeline & Albums).
+- **Heart**: the item is a favorite; its corner is configurable.
+- **Cloud icon**: the item lives on a connected cloud account, not on the device. A separate badge marks device items that are already backed up to a cloud account.
+- **Stack icon**: several related items are grouped as one cell: RAW+JPEG pairs, edited copies, or burst shots, depending on which grouping options are on. Tap to open the group and see its members.
+
+## Open, select, act
+
+<PreviewCollection feature="timeline" section="open-select-act" />
+
+1. **Tap** a thumbnail to open it in the full-screen viewer; swipe left and right to move through items without going back.
+2. **Touch and hold** a thumbnail to start selecting; a checkmark appears.
+3. Tap more items to add them, or keep your finger down after the long press and drag across rows to sweep-select.
+4. To select a whole date group, tap the **check circle** on its date header; tap again to release the group.
+5. The action sheet at the bottom offers share, copy, move, delete, and more. The full list is on [manage media](/ReFra/features/manage-media).
+
+## Sorting and filtering
+
+<PreviewCollection feature="timeline" section="sorting-and-filtering" />
+
+Tap the **slider icon** at the right of the search bar to open the Timeline controls sheet. You can order by capture time or modified time, newest or oldest first, and filter by type, favorites, year, or album. The details, including why copied files keep their real moment, are on [timeline filters](/ReFra/features/timeline-filters).
+
+## Example: select one day and favorite it
+
+1. Scroll to the day, say a birthday on June 14.
+2. Tap the check circle on the **June 14** date header. Every item under that header is selected.
+3. Tap **Favorite** (the heart) in the action sheet.
+4. The heart badge appears on each thumbnail, and the set is now under **Library › Favorites**.
+
+## If the timeline looks wrong
+
+- **Photos from a folder are missing.** That folder may be covered by an ignore rule scoped to the timeline; check **Library › Ignored** and adjust or delete the rule. See [ignored albums](/ReFra/features/ignored-albums).
+- **Copied files jump to today.** Switch the order to **Capture time** in the filter sheet. ReFra reads the date inside each file, so copied photos keep their original position.
+- **The grid looks different than described.** Under **Settings › Timeline & Albums** the layout can switch between Grid and Mosaic, grouping can be daily, monthly, or yearly, and date separators can be turned off per screen. See [timeline and albums settings](/ReFra/features/timeline-albums).

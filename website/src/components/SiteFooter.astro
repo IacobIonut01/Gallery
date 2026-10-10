@@ -1,0 +1,93 @@
+---
+import { withBase } from '@lib/paths';
+import { REPO, CROWDIN_URL, TELEGRAM_URL } from '@lib/constants';
+import BrandMark from './BrandMark.astro';
+---
+
+<footer class="site-footer" data-pagefind-ignore>
+  <div class="container footer-grid">
+    <div>
+      <a class="footer-brand" href={withBase('/')} aria-label="ReFra home">
+        <BrandMark size={36} />
+        <span>ReFra</span>
+      </a>
+      <p class="foot-note">
+        Open-source Android gallery, licensed Apache-2.0. Guides to browsing,
+        editing, and organizing your photos and videos.
+      </p>
+    </div>
+    <nav aria-label="Docs">
+      <p class="foot-head">Docs</p>
+      <a href={withBase('/features/')}>Features</a>
+      <a href={withBase('/build')}>Build from source</a>
+      <a href={withBase('/requirements')}>Requirements</a>
+      <a href={withBase('/changelog')}>Changelog</a>
+    </nav>
+    <nav aria-label="Project">
+      <p class="foot-head">Project</p>
+      <a href={REPO} rel="noopener">GitHub</a>
+      <a href={CROWDIN_URL} rel="noopener">Translate on Crowdin</a>
+      <a href={TELEGRAM_URL} rel="noopener">Telegram community</a>
+      <a href={withBase('/nightly/')}>Nightly channel</a>
+    </nav>
+  </div>
+  <div class="container foot-legal">
+    <span>Documentation generated from the same repository as the app.</span>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    margin-top: 4rem;
+    border-top: 1px solid var(--md-outline-variant);
+    background: var(--md-surface-container-low);
+    padding: 2.5rem 0 1.5rem;
+  }
+  .footer-grid {
+    display: grid;
+    gap: 28px;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 720px) {
+    .footer-grid {
+      grid-template-columns: 2fr 1fr 1fr;
+    }
+  }
+  .footer-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--md-on-surface);
+    margin-bottom: 6px;
+    width: fit-content;
+  }
+  .footer-brand:hover {
+    text-decoration: none;
+  }
+  .foot-note {
+    color: var(--md-on-surface-variant);
+    font-size: 0.88rem;
+    max-width: 42ch;
+  }
+  .foot-head {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--md-on-surface-variant);
+    margin-bottom: 10px;
+  }
+  nav a {
+    display: block;
+    padding: 3px 0;
+    color: var(--md-on-surface);
+    font-size: 0.92rem;
+  }
+  .foot-legal {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--md-outline-variant);
+    font-size: 0.8rem;
+    color: var(--md-on-surface-variant);
+  }
+</style>

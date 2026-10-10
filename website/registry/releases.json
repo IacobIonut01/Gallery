@@ -1,0 +1,261 @@
+{
+  "checkedAt": "2026-10-07T20:32:44.185Z",
+  "stable": {
+    "tag": "5.2.2",
+    "name": "5.2.2-52201 Release",
+    "publishedAt": "2026-10-04T16:54:56Z",
+    "url": "https://github.com/IacobIonut01/ReFra/releases/tag/5.2.2",
+    "prerelease": false,
+    "assets": [
+      {
+        "name": "ReFra-5.2.2-522010-NoML-universal-release.apk",
+        "url": "https://github.com/IacobIonut01/ReFra/releases/download/5.2.2/ReFra-5.2.2-522010-NoML-universal-release.apk",
+        "size": 393738443,
+        "variant": "standard",
+        "abi": "universal",
+        "sha256": "6ad7dc5eee7a4a02b4de34b7cafcf73e55f79e17e7d1f9a412b1e1c839d6228c"
+      },
+      {
+        "name": "ReFra-5.2.2-522010-offline-NoML-universal-release.apk",
+        "url": "https://github.com/IacobIonut01/ReFra/releases/download/5.2.2/ReFra-5.2.2-522010-offline-NoML-universal-release.apk",
+        "size": 342228205,
+        "variant": "offline",
+        "abi": "universal",
+        "sha256": "7f910bf08224ba003a898864e8cfc891fb7500db9dc8796559114a700991e8f4"
+      },
+      {
+        "name": "ReFra-5.2.2-522010-offline-WithML-universal-release.apk",
+        "url": "https://github.com/IacobIonut01/ReFra/releases/download/5.2.2/ReFra-5.2.2-522010-offline-WithML-universal-release.apk",
+        "size": 610829125,
+        "variant": "offline-ml",
+        "abi": "universal",
+        "sha256": "fb814bf69907c811cdbad8a8e654f6cff66bcae8a31433a69c4eb8f46ce9209b"
+      },
+      {
+        "name": "ReFra-5.2.2-522011-NoML-x86-release.apk",
+        "url": "https://github.com/IacobIonut01/ReFra/releases/download/5.2.2/ReFra-5.2.2-522011-NoML-x86-release.apk",
+        "size": 135245524,
+        "variant": "standard",
+        "abi": "x86",
+        "sha256": "53cf5a475280e18efc28e09c564f660b65afdf12dabf9cd6856d606043fdefff"
+      },
+      {
+        "name": "ReFra-5.2.2-522011-offline-NoML-x86-release.apk",
+        "url": "https://github.com/IacobIonut01/ReFra/releases/download/5.2.2/ReFra-5.2.2-522011-offline-NoML-x86-release.apk",
+        "size": 119419859,
+        "variant": "offline",
+        "abi": "x86",
+        "sha256": "3d1e49eab77e4e8607ad75c846494c4d0c031c31ab23eb747dd4ba1fcc4fbf34"
+      },
+      {
+        "name": "ReFra-5.2.2-522011-offline-WithML-x86-release.apk",
+        "url": "https://github.com/IacobIonut01/ReFra/releases/download/5.2.2/ReFra-5.2.2-522011-offline-WithML-x86-release.apk",
+        "size": 388020779,
+        "variant": "offline-ml",
+        "abi": "x86",
+        "sha256": "acd0b9c449f3ed8ac44143cb10472f818652863e0f24d7c158317f0cc66d9dd0"
+      },
+      {
+        "name": "ReFra-5.2.2-522012-NoML-x86_64-release.apk",
+        "url": "https://github.com/IacobIonut01/ReFra/releases/download/5.2.2/ReFra-5.2.2-522012-NoML-x86_64-release.apk",
+        "size": 136618349,
+        "variant": "standard",
+        "abi": "x86_64",
+        "sha256": "062e48833935044be5a799337229bb5e2c692b9642d14a3d0fb1d9099b0c24c9"
+      },
+      {
+        "name": "ReFra-5.2.2-522012-offline-NoML-x86_64-release.apk",
+        "url": "https://github.com/IacobIonut01/ReFra/releases/download/5.2.2/ReFra-5.2.2-522012-offline-NoML-x86_64-release.apk",
+        "size": 120596073,
+        "variant": "offline",
+        "abi": "x86_64",
+        "sha256": "7374ef40cd9fb7953c55e4bf4bd871d6606fbc63a3b325f2904309dcab26e918"
+      },
+      {
+        "name": "ReFra-5.2.2-522012-offline-WithML-x86_64-release.apk",
+        "url": "https://github.com/IacobIonut01/ReFra/releases/download/5.2.2/ReFra-5.2.2-522012-offline-WithML-x86_64-release.apk",
+        "size": 389196993,
+        "variant": "offline-ml",
+        "abi": "x86_64",
+        "sha256": "35c9a57bd2878443e1fe498f48ac0108911272c4ac8064479a065c56c4ca59ca"
+      },
+      {
+        "name": "ReFra-5.2.2-522013-NoML-armeabi-v7a-release.apk",
+        "url": "https://github.com/IacobIonut01/ReFra/releases/download/5.2.2/ReFra-5.2.2-522013-NoML-armeabi-v7a-release.apk",
+        "size": 99075796,
+        "variant": "standard",
+        "abi": "armeabi-v7a",
+        "sha256": "bb65a708a630d21326c712e1f1ddaf33aa6fd5afa273d1531ae722b539fd0c09"
+      },
+      {
+        "name": "ReFra-5.2.2-522013-offline-NoML-armeabi-v7a-release.apk",
+        "url": "https://github.com/IacobIonut01/ReFra/releases/download/5.2.2/ReFra-5.2.2-522013-offline-NoML-armeabi-v7a-release.apk",
+        "size": 86969291,
+        "variant": "offline",
+        "abi": "armeabi-v7a",
+        "sha256": "0df50b516eb34ab74f606972a9e3c06039f1c90cd7481e37e3e9548108e0dcfc"
+      },
+      {
+        "name": "ReFra-5.2.2-522013-offline-WithML-armeabi-v7a-release.apk",
+        "url": "https://github.com/IacobIonut01/ReFra/releases/download/5.2.2/ReFra-5.2.2-522013-offline-WithML-armeabi-v7a-release.apk",
+        "size": 355570211,
+        "variant": "offline-ml",
+        "abi": "armeabi-v7a",
+        "sha256": "9be5de335ed805514c9929ab93a1a45a25e0cc4e2be00b07437dc0bdcb8b1375"
+      },
+      {
+        "name": "ReFra-5.2.2-522014-NoML-arm64-v8a-release.apk",
+        "url": "https://github.com/IacobIonut01/ReFra/releases/download/5.2.2/ReFra-5.2.2-522014-NoML-arm64-v8a-release.apk",
+        "size": 118443422,
+        "variant": "standard",
+        "abi": "arm64-v8a",
+        "sha256": "af82ae6dd61201a10a3377d06e8437d22a3d4016af0e47fee3a72a7d7e615904"
+      },
+      {
+        "name": "ReFra-5.2.2-522014-offline-NoML-arm64-v8a-release.apk",
+        "url": "https://github.com/IacobIonut01/ReFra/releases/download/5.2.2/ReFra-5.2.2-522014-offline-NoML-arm64-v8a-release.apk",
+        "size": 102978199,
+        "variant": "offline",
+        "abi": "arm64-v8a",
+        "sha256": "a006dcc9885ad05fcc3dee7be0b7a54bb111350ea4074a12116b6ca5168ea42a"
+      },
+      {
+        "name": "ReFra-5.2.2-522014-offline-WithML-arm64-v8a-release.apk",
+        "url": "https://github.com/IacobIonut01/ReFra/releases/download/5.2.2/ReFra-5.2.2-522014-offline-WithML-arm64-v8a-release.apk",
+        "size": 371579119,
+        "variant": "offline-ml",
+        "abi": "arm64-v8a",
+        "sha256": "b6e6f26fef0eb8991f96d34a809841ce1f40a622821d536d2e41253780486465"
+      }
+    ]
+  },
+  "nightly": {
+    "tag": "5.1.1-51102-nightly",
+    "name": "5.1.1-51102 Nightly Release",
+    "publishedAt": "2026-07-26T15:57:27Z",
+    "url": "https://github.com/IacobIonut01/ReFra/releases/tag/5.1.1-51102-nightly",
+    "prerelease": true,
+    "assets": [
+      {
+        "name": "ReFra-5.1.1-511020-NoML-universal-release.apk",
+        "url": "https://github.com/IacobIonut01/ReFra/releases/download/5.1.1-51102-nightly/ReFra-5.1.1-511020-NoML-universal-release.apk",
+        "size": 370820686,
+        "variant": "standard",
+        "abi": "universal",
+        "sha256": "d33d25648e45aa88ee5ecc84d18be141f2ceb632dd2886d61fcf2d2044662af4"
+      },
+      {
+        "name": "ReFra-5.1.1-511020-offline-NoML-universal-release.apk",
+        "url": "https://github.com/IacobIonut01/ReFra/releases/download/5.1.1-51102-nightly/ReFra-5.1.1-511020-offline-NoML-universal-release.apk",
+        "size": 320830413,
+        "variant": "offline",
+        "abi": "universal",
+        "sha256": "4ec8286746adafa3e14897f81e62260c88b521a5e99265e4ee3e8c6efe7f2eaa"
+      },
+      {
+        "name": "ReFra-5.1.1-511020-offline-WithML-universal-release.apk",
+        "url": "https://github.com/IacobIonut01/ReFra/releases/download/5.1.1-51102-nightly/ReFra-5.1.1-511020-offline-WithML-universal-release.apk",
+        "size": 589451701,
+        "variant": "offline-ml",
+        "abi": "universal",
+        "sha256": "93edddee6bcce673f0cdd93240d5a0aab2d96badfa58b4c2479690bf11f93199"
+      },
+      {
+        "name": "ReFra-5.1.1-511021-NoML-x86-release.apk",
+        "url": "https://github.com/IacobIonut01/ReFra/releases/download/5.1.1-51102-nightly/ReFra-5.1.1-511021-NoML-x86-release.apk",
+        "size": 124763465,
+        "variant": "standard",
+        "abi": "x86",
+        "sha256": "eb9ccee7e306b790ce950d8057b4ae8d96451a1ad9b35a541cf4fede847b53be"
+      },
+      {
+        "name": "ReFra-5.1.1-511021-offline-NoML-x86-release.apk",
+        "url": "https://github.com/IacobIonut01/ReFra/releases/download/5.1.1-51102-nightly/ReFra-5.1.1-511021-offline-NoML-x86-release.apk",
+        "size": 109474725,
+        "variant": "offline",
+        "abi": "x86",
+        "sha256": "9675906073001d489827b94fe3b7ec78fc06fa2d3b71fc862efad10e9356abb6"
+      },
+      {
+        "name": "ReFra-5.1.1-511021-offline-WithML-x86-release.apk",
+        "url": "https://github.com/IacobIonut01/ReFra/releases/download/5.1.1-51102-nightly/ReFra-5.1.1-511021-offline-WithML-x86-release.apk",
+        "size": 378096013,
+        "variant": "offline-ml",
+        "abi": "x86",
+        "sha256": "dfa19bfc61ddb50539fe7184e1fab106c874a7418eb71fca47df7a6c4b7acc45"
+      },
+      {
+        "name": "ReFra-5.1.1-511022-NoML-x86_64-release.apk",
+        "url": "https://github.com/IacobIonut01/ReFra/releases/download/5.1.1-51102-nightly/ReFra-5.1.1-511022-NoML-x86_64-release.apk",
+        "size": 126185439,
+        "variant": "standard",
+        "abi": "x86_64",
+        "sha256": "229a31211323b0067fb54ab8449c8224ca31cba7f2f2bfb64f70a2d72629bb9e"
+      },
+      {
+        "name": "ReFra-5.1.1-511022-offline-NoML-x86_64-release.apk",
+        "url": "https://github.com/IacobIonut01/ReFra/releases/download/5.1.1-51102-nightly/ReFra-5.1.1-511022-offline-NoML-x86_64-release.apk",
+        "size": 110667320,
+        "variant": "offline",
+        "abi": "x86_64",
+        "sha256": "c8c7f708e136baadf571db2d73bfd6eb637ff9b1f9cecf8b9213097065195d44"
+      },
+      {
+        "name": "ReFra-5.1.1-511022-offline-WithML-x86_64-release.apk",
+        "url": "https://github.com/IacobIonut01/ReFra/releases/download/5.1.1-51102-nightly/ReFra-5.1.1-511022-offline-WithML-x86_64-release.apk",
+        "size": 379288608,
+        "variant": "offline-ml",
+        "abi": "x86_64",
+        "sha256": "b94d842f04c8883b00ae8a575db584ac5f2d40c07112403f28d028699f507046"
+      },
+      {
+        "name": "ReFra-5.1.1-511023-NoML-armeabi-v7a-release.apk",
+        "url": "https://github.com/IacobIonut01/ReFra/releases/download/5.1.1-51102-nightly/ReFra-5.1.1-511023-NoML-armeabi-v7a-release.apk",
+        "size": 90527041,
+        "variant": "standard",
+        "abi": "armeabi-v7a",
+        "sha256": "a9fd2908c6df8b618e847ae833e7a33124274ccc9d65771e42ae33f9fdb4ba1e"
+      },
+      {
+        "name": "ReFra-5.1.1-511023-offline-NoML-armeabi-v7a-release.apk",
+        "url": "https://github.com/IacobIonut01/ReFra/releases/download/5.1.1-51102-nightly/ReFra-5.1.1-511023-offline-NoML-armeabi-v7a-release.apk",
+        "size": 78842773,
+        "variant": "offline",
+        "abi": "armeabi-v7a",
+        "sha256": "f761a9a047d43cf2116110bee083eb03be58d0fa35c54684d13ea255706ecfc8"
+      },
+      {
+        "name": "ReFra-5.1.1-511023-offline-WithML-armeabi-v7a-release.apk",
+        "url": "https://github.com/IacobIonut01/ReFra/releases/download/5.1.1-51102-nightly/ReFra-5.1.1-511023-offline-WithML-armeabi-v7a-release.apk",
+        "size": 347464061,
+        "variant": "offline-ml",
+        "abi": "armeabi-v7a",
+        "sha256": "e3877ff48a67f76541e5cc92f2c2590faddc52a009f6b54e6ad9787ca4a13cc6"
+      },
+      {
+        "name": "ReFra-5.1.1-511024-NoML-arm64-v8a-release.apk",
+        "url": "https://github.com/IacobIonut01/ReFra/releases/download/5.1.1-51102-nightly/ReFra-5.1.1-511024-NoML-arm64-v8a-release.apk",
+        "size": 108436493,
+        "variant": "standard",
+        "abi": "arm64-v8a",
+        "sha256": "0aa6472ccb5364b6f3d33c943f2d701579b6f221397d79602908f221cba6218a"
+      },
+      {
+        "name": "ReFra-5.1.1-511024-offline-NoML-arm64-v8a-release.apk",
+        "url": "https://github.com/IacobIonut01/ReFra/releases/download/5.1.1-51102-nightly/ReFra-5.1.1-511024-offline-NoML-arm64-v8a-release.apk",
+        "size": 93409891,
+        "variant": "offline",
+        "abi": "arm64-v8a",
+        "sha256": "c3363c4d626ebe90aadec074b2d58f34cf046481f380829e2c29d6f8648a756c"
+      },
+      {
+        "name": "ReFra-5.1.1-511024-offline-WithML-arm64-v8a-release.apk",
+        "url": "https://github.com/IacobIonut01/ReFra/releases/download/5.1.1-51102-nightly/ReFra-5.1.1-511024-offline-WithML-arm64-v8a-release.apk",
+        "size": 362031179,
+        "variant": "offline-ml",
+        "abi": "arm64-v8a",
+        "sha256": "29c7c5944110bb463afca59eae5c2d2e03c952e351d18cb12971adaff859f0b7"
+      }
+    ]
+  }
+}

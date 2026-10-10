@@ -22,28 +22,28 @@ import com.dot.gallery.domain.util.volume
 class FCastViewModel @Inject constructor(
     private val appContext: Context,
     private val session: FCastSession
-) : ViewModel() {
+) : ViewModel(), MediaViewerCastController {
 
-    val state: StateFlow<CastSessionState> = session.state
+    override val state: StateFlow<CastSessionState> = session.state
 
     val isConnected: Boolean get() = session.isConnected
     val isCasting: Boolean get() = session.isCasting
 
-    fun isCastAvailable(): Boolean = session.isCastAvailable()
-    fun checkPermissions(): List<CastPermission> = session.checkPermissions()
-    fun hasAllPermissions(): Boolean = session.hasAllPermissions()
+    override fun isCastAvailable(): Boolean = session.isCastAvailable()
+    override fun checkPermissions(): List<CastPermission> = session.checkPermissions()
+    override fun hasAllPermissions(): Boolean = session.hasAllPermissions()
 
-    fun startDiscovery() = session.startDiscovery()
-    fun stopDiscovery() = session.stopDiscovery()
+    override fun startDiscovery() = session.startDiscovery()
+    override fun stopDiscovery() = session.stopDiscovery()
 
-    fun connect(device: FCastDevice) {
+    override fun connect(device: FCastDevice) {
         session.stopDiscovery()
         session.connect(device)
     }
 
-    fun disconnect() = session.disconnect()
+    override fun disconnect() = session.disconnect()
 
-    fun <T : Media> castMedia(media: T) {
+    override fun <T : Media> castMedia(media: T) {
         if (media.isEncrypted) {
             castEncryptedMedia(media)
         } else {
@@ -76,10 +76,10 @@ class FCastViewModel @Inject constructor(
     }
 
     fun togglePlayPause() = session.togglePlayPause()
-    fun pause() = session.pause()
-    fun resume() = session.resume()
-    fun seek(timeSeconds: Double) = session.seek(timeSeconds)
-    fun setVolume(volume: Double) = session.setVolume(volume)
-    fun setSpeed(speed: Double) = session.setSpeed(speed)
-    fun stopCasting() = session.stop()
+    override fun pause() = session.pause()
+    override fun resume() = session.resume()
+    override fun seek(timeSeconds: Double) = session.seek(timeSeconds)
+    override fun setVolume(volume: Double) = session.setVolume(volume)
+    override fun setSpeed(speed: Double) = session.setSpeed(speed)
+    override fun stopCasting() = session.stop()
 }

@@ -1,0 +1,51 @@
+---
+title: Security settings
+summary: Sandboxed decoding, metadata isolation, storage encryption status, and the private folder entry.
+area: organize-secure
+path:
+  - Settings
+  - Security
+related: [private-folder, vault, hidden-content]
+scenes: [settings-security]
+order: 11
+---
+
+**Settings › Security** controls how defensively ReFra handles the files it reads and how it stores its own data. These options trade speed for isolation; the defaults are sensible for most people.
+
+## Sandbox
+
+<PreviewCollection feature="security" section="sandbox" />
+
+- **Sandboxed image decoding**: decodes complex formats (HEIF, AVIF, JPEG XL) in a separate restricted process, so a decoder crash stays contained instead of taking down the viewer. It adds a small overhead to the first load of an image; thumbnails already in cache are unaffected.
+
+## Data protection
+
+<PreviewCollection feature="security" section="data-protection" />
+
+- **Metadata isolation mode**: metadata is always read in a separate restricted process; this setting chooses how often that process is recycled.
+  - **Shared process** (default): one reused restricted process for everything. Fastest for scanning a library; a crashed parser restarts itself.
+  - **Hybrid**: files you open in the viewer get a fresh process while background indexing shares one. A middle ground when you sometimes open files from untrusted sources.
+  - **Per-file**: every file gets its own process, discarded after reading. The strongest separation, but noticeably slower and heavier on battery for large libraries.
+
+When the device has **Android Advanced Protection** enabled, Android may enforce a strict mode here; the row shows **Enforced by Advanced Protection** and unlocks when that system feature is turned off.
+
+- **Encryption**: a status row reporting whether the app's settings and database are stored encrypted. If it reports a plaintext fallback, the shown part of the app's data is not being stored encrypted.
+
+## Private folder
+
+- **Private folder**: opens the private-folder setup, showing the configured folder or **Not configured**. See [private folder](/ReFra/features/private-folder).
+
+## What this page is not
+
+Hiding and locking media (ignored albums, locked albums, the private folder, vaults) are covered under [hidden content](/ReFra/features/hidden-content) and the linked pages; the Security section is about process isolation and storage protection, not visibility.
+
+## Example: check your protection level
+
+1. You occasionally open photo attachments from sources you do not fully trust.
+2. Open **Settings › Security** and set **Metadata isolation mode** to **Hybrid**, so files you actually open get their own reader process.
+3. Look at the **Encryption** row and confirm it reports that settings and database are encrypted rather than a plaintext fallback.
+
+## If a row is locked or reports a fallback
+
+- **Enforced by Advanced Protection** means Android itself set the level; the app restores your preference when the system feature turns off.
+- If **Encryption** reports a plaintext fallback, do not assume that part of the app's data is encrypted. Keep your app backups current and, if the message persists, report the status it shows through the support channels on the [support page](/ReFra/support).

@@ -1,0 +1,34 @@
+---
+title: Connect NFS
+summary: Add a Unix-style NFSv3 export by host, path, and an optional user ID.
+area: cloud
+path:
+  - Settings
+  - Cloud Accounts
+related: [cloud-overview, cloud-accounts, cloud-networking]
+scenes: [cloud-setup-nfs]
+order: 6
+---
+
+**NFS** connects to exports from Unix-style servers and NAS boxes. Only **NFSv3 with AUTH_SYS** is supported; NFSv2 and NFSv4 are not. There is no password field: NFS trusts the user identity you present, so access is controlled by the export's rules on the server.
+
+## Add an NFS export
+
+1. Open **Settings › Cloud Accounts › Add NFS**.
+2. **Server**: enter the address in **Server URL** as `nfs://host/export/path`, for example `nfs://192.168.1.20/export/photos`. Everything after the host is the exported path.
+3. **Credentials**: optionally set the **User ID** as **uid:gid**, for example `1000:1000` — this is the numeric identity the export sees; ask the server's owner which uid:gid your account should present; a wrong one just means the export refuses or limits what you can touch. You can also set a **Display name** for the account here.
+4. Tap **Test connection**; **Next** unlocks once it succeeds.
+5. **Networking**, **Sync** (back up local folders), and **Review** work as on the other provider pages. Save to finish.
+
+<PreviewCollection feature="cloud-nfs" section="wizard" />
+
+## Requirements
+
+- The export must allow connections from the phone's IP address and offer an NFSv3 mount. Both are server-side settings; the app cannot change them, so ask the server's administrator if the test fails.
+- The phone needs a local-network or VPN route to the server, and Android may prompt for **direct local network access**; grant it to proceed.
+
+## Example: a NAS export
+
+1. Your NAS exports `/export/photos` to your home network and your account there is `1000:1000`.
+2. **Add NFS**, enter `nfs://192.168.1.20/export/photos`.
+3. Set **User ID** to `1000:1000` and the display name `MyNAS NFS`, tap **Test connection**, then complete the wizard.

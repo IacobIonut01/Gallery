@@ -1,0 +1,64 @@
+---
+title: Search
+summary: Find media by name or description, search with an example image, and browse suggestions.
+area: discover
+path:
+  - Timeline
+  - Search
+related: [smart-features, timeline, timeline-filters, people]
+scenes: [search-library]
+order: 1
+---
+
+The search bar at the top of the Timeline (and Library) opens the search screen. It handles two kinds of query: plain text matching file names and descriptions, and descriptive AI search like "sunset at the beach" once the AI models are installed.
+
+## Search by text
+
+<PreviewCollection feature="search" section="search-by-text" />
+
+1. Tap the search bar.
+2. Type part of a file name or description, or a plain-language description of what the photo shows.
+3. Results appear as you type. Tap one to open it.
+4. Results sort by **Most accurate** or **Date**; pick the order at the top of the results.
+
+Descriptive matching needs the **Search & Categories** models; see [AI models](/ReFra/features/ai-models). While the index is still being built the screen shows "Updating Smart Search" with progress and a time estimate; results improve as it completes.
+
+## Search by image
+
+1. Tap **Search by image**.
+2. Pick an example photo from the **Timeline** or **Albums** picker.
+3. A chip shows the image preview on the search bar; tap it for **Pick another** or **Remove image**.
+4. Results are the photos that look most like your example, again sortable by accuracy or date.
+
+## Before you type
+
+<PreviewCollection feature="search" section="before-you-type" />
+
+The empty search screen offers starting points:
+
+- **Suggestions**: quick picks such as **Screenshots**, **Videos**, and **Selfies**.
+- Sections for browsing: **Browse categories**, **Locations**, **Media Types**, **Camera Models**, **Special Modes**, and **Media Groupings**, each opening the matching view of your library.
+- **Search history**: recent searches appear as suggestions when you tap the bar, so a tap re-runs them. Swipe a history row sideways to remove that entry; it also clears the current query.
+- Help and tips can appear among the results too, not only photos.
+
+## Back behavior
+
+Pressing back while a query is active clears the query first and keeps you in search; pressing it again exits to where you came from.
+
+## Examples
+
+- **Find the beach photos**: type "beach" with the AI models installed and descriptive results appear alongside any file names that match. Without models, "beach" only finds files named or described that way.
+- **Find the rest of a photo session with one example**:
+  1. Tap the search bar, then **Search by image**.
+  2. In the picker, open the **Timeline** or an album and tap the best portrait from that session.
+  3. The photo appears as a chip on the search bar and results fill in below: photos that look most like it.
+  4. Switch the sort to **Most accurate** to bring the closest matches first, or tap the chip and **Remove image** to start over.
+- **Find a receipt**: type part of its file name, like "IMG_2041", or a category like "receipts" if you made one.
+
+## If search finds nothing
+
+<PreviewCollection feature="search" section="if-search-finds-nothing" />
+
+- **No results found** does not prove the models are missing: there may simply be no match, the index may still be building ("Updating Smart Search" shows on screen), or the media may sit somewhere the scan skips, like an ungranted folder or a rule-excluded album. Check **Settings › Smart Features** for model and scan status before assuming a feature is absent.
+- Text search only matches file names and stored descriptions, not image content, until the models exist.
+- Items hidden by [ignored rules](/ReFra/features/ignored-albums) follow the **Include ignored albums** switch under Smart Features. Private-folder and locked content is not controlled by that switch.

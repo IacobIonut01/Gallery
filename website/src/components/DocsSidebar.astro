@@ -1,0 +1,269 @@
+---
+/**
+ * DocsSidebar — the docs navigation tree. Guide pages sit on top, feature
+ * pages group under their area labels. One navigation DOM: below 720px it
+ * renders as a "Browse documentation" disclosure, at wider widths the same
+ * tree is pinned beside the article (opened by script + CSS fallback).
+ *
+ * Every section is its own <details> so the 80+ link tree stays scannable —
+ * only the section holding the current page opens by default.
+ */
+import { getCollection } from 'astro:content';
+import { AREA_LABELS } from '@lib/constants';
+import { withBase } from '@lib/paths';
+
+interface Props {
+  /** Collection `pages` entry id currently being read. */
+  currentId?: string;
+  /** Collection `features` entry id currently being read. */
+  featureId?: string;
+}
+const { currentId, featureId } = Astro.props;
+
+const gettingStarted = [
+  { id: 'overview', href: '/overview', label: 'Start here' },
+  { id: 'first-launch', href: '/features/first-launch', label: 'First launch', feature: true },
+  { id: 'main-navigation', href: '/features/main-navigation', label: 'Main navigation', feature: true },
+];
+
+// These feature pages are pinned under "Getting started" — keep them out of
+// the feature groups so each appears exactly once.
+const pinnedFeatureIds = new Set(gettingStarted.filter((g) => g.feature).map((g) => g.id));
+
+const features = await getCollection('features');
+const groups = Object.keys(AREA_LABELS)
+  .map((area) => ({
+    area,
+    label: AREA_LABELS[area],
+    items: features
+      .filter((f) => f.data.area === area && !pinnedFeatureIds.has(f.id))
+      .sort((a, b) => a.data.order - b.data.order || a.data.title.localeCompare(b.data.title)),
+  }))
+  .filter((g) => g.items.length > 0);
+
+const guides = [
+  { id: 'download', href: '/download', label: 'Download' },
+  { id: 'requirements', href: '/requirements', label: 'Requirements' },
+  { id: 'settings', href: '/settings', label: 'Settings' },
+  { id: 'support', href: '/support', label: 'Support' },
+];
+
+const developer = [
+  { id: 'build', href: '/build', label: 'Build from source' },
+  { id: 'contribute', href: '/contribute', label: 'Contribute' },
+];
+
+const sections = [
+  {
+    id: 'getting-started',
+    label: 'Getting started',
+    items: gettingStarted.map((g) => ({
+      href: g.href,
+      label: g.label,
+      current: g.feature ? featureId === g.id : currentId === g.id,
+    })),
+  },
+  {
+    id: 'guides',
+    label: 'Guides',
+    items: guides.map((g) => ({ href: g.href, label: g.label, current: currentId === g.id })),
+  },
+  ...groups.map((g) => ({
+    id: g.area,
+    label: g.label,
+    items: g.items.map((f) => ({
+      href: `/features/${f.id}`,
+      label: f.data.title,
+      current: featureId === f.id,
+    })),
+  })),
+  {
+    id: 'developer',
+    label: 'Developer',
+    items: developer.map((g) => ({ href: g.href, label: g.label, current: currentId === g.id })),
+  },
+];
+---
+
+<details class="docs-browse" data-docs-nav>
+  <summary class="docs-browse-summary">Browse documentation</summary>
+  <nav class="docs-nav" aria-label="Documentation">
+    {
+      sections.map((s) => (
+        <details
+          class="nav-group"
+          data-nav-group={s.id}
+          open={s.items.some((i) => i.current) || undefined}
+        >
+          <summary class="nav-group-summary">
+            <strong class="nav-group-label">{s.label}</strong>
+            <span class="nav-group-count">{s.items.length}</span>
+            <svg
+              class="nav-group-chevron"
+              viewBox="0 0 24 24"
+              width="16"
+              height="16"
+              aria-hidden="true"
+            >
+              <path
+                d="m8 10 4 4 4-4"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </summary>
+          <ul class="nav-list">
+            {s.items.map((i) => (
+              <li>
+                <a
+                  href={withBase(i.href)}
+                  class:list={['nav-item', { current: i.current }]}
+                  aria-current={i.current ? 'page' : undefined}
+                >
+                  {i.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </details>
+      ))
+    }
+  </nav>
+</details>
+
+<noscript>
+  <style>
+    /* Without JS the details stays closed; keep the disclosure reachable on
+       every viewport so the navigation is still usable. */
+    .docs-browse-summary {
+      display: flex !important;
+      cursor: pointer !important;
+    }
+  </style>
+</noscript>
+
+<style>
+  .docs-browse {
+    font-size: 0.875rem;
+  }
+  .docs-browse-summary {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 14px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--md-on-surface);
+    cursor: pointer;
+    list-style: none;
+    border: 1px solid var(--md-outline-variant);
+    border-radius: 12px;
+    background: var(--md-surface-container-low);
+  }
+  .docs-browse-summary::-webkit-details-marker {
+    display: none;
+  }
+  .docs-browse-summary::after {
+    content: '';
+    margin-left: auto;
+    width: 8px;
+    height: 8px;
+    border-right: 1.8px solid var(--md-on-surface-variant);
+    border-bottom: 1.8px solid var(--md-on-surface-variant);
+    transform: rotate(45deg) translateY(-2px);
+  }
+  .docs-browse[open] .docs-browse-summary::after {
+    transform: rotate(225deg) translateY(-2px);
+  }
+  .docs-nav {
+    padding: 12px 0 8px;
+  }
+  .nav-group + .nav-group {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--md-outline-variant);
+  }
+  .nav-group-summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--md-on-surface);
+    cursor: pointer;
+    list-style: none;
+  }
+  .nav-group-summary::-webkit-details-marker {
+    display: none;
+  }
+  .nav-group-summary:hover,
+  .nav-group[open] > .nav-group-summary {
+    background: var(--md-surface-container-low);
+  }
+  .nav-group-label {
+    font-weight: 600;
+    white-space: normal;
+  }
+  .nav-group:has(.nav-item.current) > .nav-group-summary {
+    color: var(--md-primary);
+  }
+  .nav-group-count {
+    flex: none;
+    margin-left: auto;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--md-on-surface-variant);
+  }
+  .nav-group-chevron {
+    flex: none;
+    color: var(--md-on-surface-variant);
+    transition: transform var(--dur-fast, 150ms) var(--ease-standard, ease);
+  }
+  .nav-group[open] > .nav-group-summary .nav-group-chevron {
+    transform: rotate(180deg);
+  }
+  .nav-group > .nav-list {
+    padding-left: 8px;
+  }
+  .nav-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 12px;
+    border-radius: 8px;
+    color: var(--md-on-surface-variant);
+    text-decoration: none;
+  }
+  .nav-item:hover {
+    color: var(--md-on-surface);
+    background: var(--md-surface-container-high);
+    text-decoration: none;
+  }
+  .nav-item.current {
+    color: var(--md-on-primary-container);
+    background: var(--md-primary-container);
+    font-weight: 600;
+  }
+  @media (min-width: 720px) {
+    /* On wide viewports the script pins the details open; the summary itself
+       is hidden so it cannot be clicked shut. The noscript override above
+       keeps the disclosure reachable when no script runs. */
+    .docs-browse-summary {
+      display: none;
+    }
+    .nav-item {
+      min-height: 36px;
+    }
+  }
+</style>

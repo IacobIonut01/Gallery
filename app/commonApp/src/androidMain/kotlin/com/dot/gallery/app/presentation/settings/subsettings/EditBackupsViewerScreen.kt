@@ -155,13 +155,32 @@ import com.dot.gallery.generated.resources.edit_backups_viewing_edited
 import com.dot.gallery.generated.resources.edit_backups_viewing_original
 
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditBackupsViewerScreen(
     paddingValues: PaddingValues = PaddingValues(0.dp)
 ) {
     val viewModel = injectViewModel<EditBackupsViewModel> {editBackupsViewModel}
     val state by viewModel.state.collectAsStateWithLifecycle()
+    EditBackupsViewerContent(
+        state = state,
+        paddingValues = paddingValues,
+        onAutoCleanup = viewModel::autoCleanup,
+        onDeleteAll = viewModel::deleteAll,
+        onDeleteSelected = viewModel::deleteSelected,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EditBackupsViewerContent(
+    state: EditBackupsViewModel.State,
+    paddingValues: PaddingValues = PaddingValues(0.dp),
+    onAutoCleanup: ((Int) -> Unit) -> Unit,
+    onDeleteAll: (() -> Unit) -> Unit,
+    onDeleteSelected: (List<Long>, () -> Unit) -> Unit,
+    initialShowingOriginal: Boolean = false,
+    initialActionMenu: Boolean = false,
+) {
     val eventHandler = LocalEventHandler.current
     val context = LocalContext.current
     val activity = LocalActivity.current
@@ -205,7 +224,12 @@ fun EditBackupsViewerScreen(
     var selectedIds by rememberSaveable { mutableStateOf(emptySet<Long>()) }
 
     // Original vs Edited toggle state (keyed by mediaId)
-    var showingOriginalIds by rememberSaveable { mutableStateOf(emptySet<Long>()) }
+    var showingOriginalIds by rememberSaveable {
+        mutableStateOf(
+            if (initialShowingOriginal) state.mediaList.mapTo(HashSet()) { it.id }
+            else emptySet()
+        )
+    }
     val backupsByMediaId = remember(backups) {
         backups.associateBy { it.mediaId }
     }
@@ -214,7 +238,7 @@ fun EditBackupsViewerScreen(
     var showDeleteDialog by rememberSaveable { mutableStateOf(false) }
 
     // Action menu
-    var showActionMenu by rememberSaveable { mutableStateOf(false) }
+    var showActionMenu by rememberSaveable { mutableStateOf(initialActionMenu) }
 
     // Storage percentage
     val usable = state.totalSize + state.freeSpace
@@ -705,7 +729,7 @@ fun EditBackupsViewerScreen(
                     IconButton(
                         enabled = selectionMode && selectedIds.isNotEmpty(),
                         onClick = {
-                            viewModel.deleteSelected(selectedIds.toList()) {
+                            onDeleteSelected(selectedIds.toList()) {
                                 selectedIds = emptySet()
                                 selectionMode = false
                             }
@@ -815,7 +839,7 @@ fun EditBackupsViewerScreen(
                 summary = autoCleanupSummary,
                 onClick = {
                     scope.launch { actionSheetState.hide() }
-                    viewModel.autoCleanup { }
+                    onAutoCleanup { }
                 }
             ),
             OptionItem(
@@ -855,7 +879,7 @@ fun EditBackupsViewerScreen(
                 TextButton(
                     onClick = {
                         showDeleteDialog = false
-                        viewModel.deleteAll {
+                        onDeleteAll {
                             runCatching {
                                 (activity as ComponentActivity).onBackPressedDispatcher.onBackPressed()
                             }.getOrElse { eventHandler.navigateUpAction() }

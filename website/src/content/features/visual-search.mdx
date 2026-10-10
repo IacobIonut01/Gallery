@@ -1,0 +1,62 @@
+---
+title: Visual search
+summary: Send the image or video frame you are viewing to another app such as Google Lens.
+area: discover
+path:
+  - Settings
+  - Media Viewer
+  - Visual search
+related: [search, viewer-settings, media-viewer]
+scenes: [visual-search-options]
+order: 8
+---
+
+Visual search is a handoff, not an in-app feature: it sends the image you are viewing (or the current frame of a video) to another app that can analyze it, the way Google Lens works inside other galleries. This is separate from ReFra's own [search](/ReFra/features/search), where local matching runs on-device and connected servers may answer searches for cloud media. Visual search specifically sends this image or frame to the app you choose.
+
+The image leaves this device through the provider you choose. That matters for privacy, so read the options before enabling it.
+
+## Turn it on
+
+<PreviewCollection feature="visual-search" section="turn-it-on" />
+
+1. Open **Settings › Media Viewer › Visual search**.
+2. Enable it; a button appears in the media viewer.
+3. Under **Button position**, choose **Top bar** (next to the back button) or **Quick actions bar** (with the bottom actions).
+
+If no compatible app is installed, the row tells you to install one such as Google Lens; any installed app that accepts image sharing can act as the provider.
+
+## Choose the provider
+
+Under **Provider**, pick which installed app receives the image. **Automatic** prefers well-known providers such as Google Lens; picking a specific app always sends to that one. The button label shows the choice, for example "Search with Lens".
+
+## Vault items
+
+**Allow on vault items** controls whether the button appears while viewing vault media. Enabling it decrypts a temporary copy for the provider to read; turning it off hides the button there entirely.
+
+## Unsupported formats
+
+Some formats (RAW, TIFF, PSD, JXL) may not be readable by the provider. Under **Unsupported formats** choose the behavior:
+
+- **Ask every time**: a sheet offers **Convert and share** or **Share original** each time, with a **Remember my choice** box to make it permanent.
+- **Always convert**: converts automatically to the format below.
+- **Never convert (send original)**: sends the file as-is; the provider may not be able to read it.
+
+Under **Convert to**, pick **JPEG** (most compatible, smallest files), **PNG** (lossless, larger), or **WebP** (a balance of size and quality).
+
+## Use it
+
+1. Open a photo, or pause a video on the frame you want.
+2. Tap the visual search button. For cloud-only media ReFra downloads the file first; the sheet shows progress such as "Downloading" or "Preparing".
+3. The provider app opens with the image.
+
+## Example: identify a sign
+
+1. Open the photo of the sign.
+2. Tap the visual search button (top bar or quick actions, wherever you placed it).
+3. Google Lens, or whichever provider you chose, opens with the image and does the actual recognition.
+
+## If the button does nothing
+
+- No provider installed: install an app that accepts image sharing, then pick it under **Provider**.
+- The file may be an unreadable format; check **Unsupported formats** and allow conversion.
+- Vault items hide the button unless **Allow on vault items** is on.

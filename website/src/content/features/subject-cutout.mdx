@@ -1,0 +1,38 @@
+---
+title: Subject cutout
+summary: Lift a subject off its photo with a long press or the editor's Smart tools.
+area: edit
+path:
+  - Media viewer
+  - Long press
+related: [media-viewer, editor, ai-models]
+scenes: [subject-cutout, cutout-tools]
+order: 7
+---
+
+Subject cutout isolates the thing you point at from its background, producing a transparent cutout you can copy, share, or save. It needs the **Subject Cutout** model group installed. See [AI models](/ReFra/features/ai-models).
+
+## Two ways in
+
+- **Viewer**: turn on **Long press to cut out** in [media viewer settings](/ReFra/features/viewer-settings), then touch and hold the subject in the open photo. Note the trade-off first: without this setting, a long press on the image rotates it, so enabling cutout moves rotate to the on-screen button.
+- **Editor**: the **Smart** tab offers cutout as an interactive tool and **Background Removal** as an automatic one-shot removal; the Smart tool lets you refine the mask; background removal does it in one pass.
+
+## Refine the cutout
+
+<PreviewCollection feature="subject-cutout" section="refine" />
+
+1. After the first detection, tap **Include** and point at parts that were missed, or **Exclude** and point at parts to drop. Each point refines the mask.
+2. **Undo**, **Redo**, and **Reset** step through or restart the refinement.
+3. While it works, **Preparing** or **Refining cutout…** shows; **No object detected under long-press** means the point landed somewhere the model found nothing; aim at the subject and try again.
+
+## Use the result
+
+<PreviewCollection feature="subject-cutout" section="use-the-result" />
+
+The transparent selection offers **Copy** (clipboard), **Share**, and **Save**; saving writes a PNG so the transparency survives. **Close cutout** exits the mode. In the editor the result applies to the working image; in the viewer the controls float over the photo and the original file is untouched.
+
+## Example: a sticker of the cat
+
+1. Enable **Long press to cut out**, open the cat photo, and hold on the cat.
+2. Tap **Include** and touch the ear tip the mask missed.
+3. **Save** to write the PNG, then share it anywhere a transparent image works.

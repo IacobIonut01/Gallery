@@ -1,0 +1,50 @@
+---
+title: Selection actions
+summary: Choose which buttons appear when you select media, where they sit, and in what order.
+area: customize
+path:
+  - Settings
+  - Navigation
+  - Selection Actions
+related: [navigation, manage-media]
+scenes: [settings-selection-actions, selection-controls]
+order: 7
+---
+
+When you touch and hold photos or videos, the selection sheet appears with actions arranged in three zones: a top row, a middle area, and a bottom action bar. **Settings › Navigation › Selection Actions** decides which actions live in each zone and in what order.
+
+## Reorder, add, remove
+
+<PreviewCollection feature="selection-actions" section="reorder-add-remove" />
+
+1. Open **Settings › Navigation › Selection Actions**.
+2. **Drag** any action by its handle to move it within its zone.
+3. Use an action's menu for **Move up** / **Move down** instead of dragging, or **Delete** to remove it.
+4. Tap **Add action** at the bottom of a zone to bring back an action you removed; the list only offers actions that belong to that zone.
+5. Tap **Reset to defaults** to restore the original arrangement.
+
+Two limits apply: the **Close** action in the top zone cannot be removed ("This action cannot be removed"), and a zone must keep at least one action ("At least one action is required").
+
+## Options
+
+- **Right-align top actions**: pulls the top-row buttons toward the right edge, easier to reach on tall phones.
+- **Fill action bar**: shrinks the bottom actions to fit on screen instead of letting the row scroll sideways. Turn it off if you prefer full-size buttons you scroll through.
+
+## The actions and their zones
+
+<PreviewCollection feature="selection-actions" section="the-actions-and-their-zones" />
+
+**Top row**: **Close** (ends selection), **Select all** (selects everything visible), and **Media details** (opens the details panel; only available with a single item selected).
+
+**Middle area**: **Add to collection**, which flips to **Remove from collection** inside an open collection.
+
+**Action bar**: **Share**, **Favorite**, **Copy**, **Move**, **Trash**, **Hide** (adds encrypted copies to a vault), **Private folder** (when one is configured), **Edit** (single item), **Rotate**, **Download** (cloud-only items), and **Use as album cover** (single item).
+
+Availability rules still apply no matter how you arrange them: single-item actions hide with several items selected, and cloud or permission limits remove what a source cannot do. What each action actually does is covered in [manage media](/ReFra/features/manage-media).
+
+## Example: a minimal sheet
+
+1. Open **Settings › Navigation › Selection Actions**.
+2. Delete every action-bar entry except **Share**, **Favorite**, and **Move**.
+3. Turn on **Fill action bar** so the three fill the width.
+4. Select photos on the timeline; the sheet now shows just the actions you kept.

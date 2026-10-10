@@ -5,153 +5,274 @@
 
 package com.dot.gallery.docs.capture
 
+import android.content.Context
 import android.graphics.Bitmap
-import android.os.Build
 import android.util.Log
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.graphics.asAndroidBitmap
-import androidx.compose.ui.test.DeviceConfigurationOverride
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.ForcedSize
-import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.captureToImage
-import androidx.compose.ui.test.onFirst
-import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
-import androidx.compose.ui.unit.DpSize
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import com.dot.gallery.docs.DOCS_SCENE_ROOT_TAG
 import com.dot.gallery.docs.DocsScene
 import java.io.File
 import java.io.FileOutputStream
+import kotlin.math.abs
+import kotlin.math.roundToInt
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * Capture tier runner (DOCS_SITE_PLAN.md §7). Iterates the shared docs scene
- * registry, renders each scene/state under the [CapturePreset] device overrides
- * and writes WebP frames plus a `docs-manifest.json` fragment set into the test
- * app's `files/docs-out` — pulled by `testing/test-lab.sh docs-capture`.
+ * Drives the shared scene registry through deterministic captures for the docs
+ * site. Usage:
  *
- * Instrumentation args (all optional, `-e name value`):
- *  - `scene`  comma-separated scene ids (default: every registered scene)
- *  - `device` comma-separated presets: phone, tablet, foldable (default: all)
- *  - `state`  single named state (default: every declared state)
- *  - `theme`  light | dark | amoled | system (default: light — deterministic)
+ *   adb shell am instrument -w \
+ *     -e scene settings-list[,other-id] \
+ *     -e device phone[,tablet] \
+ *     -e state default \
+ *     -e theme light[,dark,amoled] \
+ *     -e class com.dot.gallery.docs.capture.DocsCaptureTest \
+ *     com.dot.gallery.docs.capture.test/androidx.test.runner.AndroidJUnitRunner
  *
- * Note: `ForcedSize` simulates preset viewports inside the host window; on
- * displays smaller than a preset the frame is clipped by the window. Run on a
- * large-display emulator (or accept clipping) until the CI job owns a device
- * pool per preset.
+ * Renders each (scene, device preset, state, theme) in the shared
+ * [com.dot.gallery.docs.DocsSceneHost], captures the `docs-scene-root` node at
+ * the scene's logical size, writes WebP (quality 90) under
+ * `<external-files>/docs-out/` and records it in `docs-manifest.json`
+ * fragments merged by (theme, device, state).
  */
-@OptIn(ExperimentalTestApi::class)
 @RunWith(AndroidJUnit4::class)
 class DocsCaptureTest {
 
     @get:Rule
-    val composeRule = createAndroidComposeRule<DocsCaptureActivity>()
+    val activityRule = createAndroidComposeRule<DocsCaptureActivity>()
+
+    private data class Job(
+        val scene: DocsScene,
+        val preset: CapturePreset,
+        val state: String?,
+        val theme: String,
+    )
 
     @Test
-    fun captureScenes() {
+    fun capture() {
         val args = InstrumentationRegistry.getArguments()
-        val scenes = DocsSceneRegistry.select(args.getString("scene"))
-        val presets = CapturePreset.parse(args.getString("device"))
-        val stateFilter = args.getString("state")
-        val theme = args.getString("theme") ?: "light"
+        check(args.getString("jobs") == null) {
+            "Use scene, device, state, theme filters"
+        }
+        val sceneFilter = args.getString("scene")
+        val deviceFilter = args.getString("device")
+        val stateFilter = args.getString("state")?.takeIf { it.isNotBlank() }
+        val themes = args.getString("theme")?.split(',')?.map { it.trim() }
+            ?.filter { it.isNotEmpty() } ?: listOf("light")
 
-        val base = composeRule.activity.getExternalFilesDir(null) ?: composeRule.activity.filesDir
-        val outDir = File(base, "docs-out").apply { mkdirs() }
-        val writer = DocsManifestWriter(outDir)
-
-        val jobs = mutableListOf<Triple<DocsScene, CapturePreset, String?>>()
-        for (scene in scenes) {
+        val jobs = mutableListOf<Job>()
+        for (scene in DocsSceneRegistry.select(sceneFilter)) {
+            val presets = when {
+                scene.presentation == "component" -> listOf(CapturePreset.PHONE)
+                else -> CapturePreset.parse(deviceFilter)
+            }
             for (preset in presets) {
                 for (state in DocsSceneRegistry.statesOf(scene, stateFilter)) {
-                    jobs += Triple(scene, preset, state)
+                    for (theme in themes) {
+                        jobs += Job(scene, preset, state, theme)
+                    }
                 }
             }
         }
-        Log.i(TAG, "docs-capture: ${jobs.size} capture(s) over ${scenes.size} scene(s) x ${presets.size} preset(s)")
-
-        // setContent is single-shot per activity — host a mutable frame slot and
-        // recompose per job instead of calling setContent in the loop.
-        val frame = mutableStateOf<Triple<DocsScene, CapturePreset, String?>?>(null)
-        composeRule.setContent {
-            frame.value?.let { (scene, preset, state) ->
-                DeviceConfigurationOverride(
-                    DeviceConfigurationOverride.ForcedSize(
-                        DpSize(preset.widthDp.dp, preset.heightDp.dp)
-                    )
-                ) {
-                    DocsSceneHost(theme = theme, scene = scene, state = state)
-                }
-            }
+        check(jobs.isNotEmpty()) {
+            "DocsCaptureTest matched no jobs (scene=$sceneFilter device=$deviceFilter theme=$themes)"
         }
 
-        jobs.forEachIndexed { i, (scene, preset, state) ->
-            Log.i(
-                TAG,
-                "docs-capture [${i + 1}/${jobs.size}] scene=${scene.id} device=${preset.id} state=${state ?: "default"}"
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val outDir = File(context.getExternalFilesDir(null), "docs-out")
+        val writer = DocsManifestWriter(outDir)
+
+        jobs.forEach { job -> runJob(job, outDir, writer) }
+        writer.write()
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    private fun runJob(job: Job, outDir: File, writer: DocsManifestWriter) {
+        val scene = job.scene
+        val component = scene.presentation == "component"
+        val widthDp = if (component) scene.widthDp else job.preset.widthDp
+        val heightDp = if (component) scene.heightDp else job.preset.heightDp
+        val state = job.state
+        val theme = job.theme
+        val relFile =
+            "${scene.id}/$theme/${job.preset.id}-${state ?: "default"}.webp"
+        Log.i(TAG, "capture ${scene.id} state=$state theme=$theme preset=${job.preset.id}")
+
+        activityRule.activityRule.scenario.onActivity {
+            it.renderScene(
+                widthDp = widthDp,
+                heightDp = heightDp,
+                theme = theme,
+                scene = scene,
+                state = state,
             )
-            val relative = captureFrame(scene, preset, state, frame, outDir)
-            writer.record(scene, preset.id, state, relative)
         }
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
 
-        val manifest = writer.write()
-        Log.i(TAG, "docs-capture: wrote ${jobs.size} capture(s); manifest at ${manifest.absolutePath}")
-    }
-
-    private fun captureFrame(
-        scene: DocsScene,
-        preset: CapturePreset,
-        state: String?,
-        frame: androidx.compose.runtime.MutableState<Triple<DocsScene, CapturePreset, String?>?>,
-        outDir: File,
-    ): String {
-        composeRule.runOnUiThread { frame.value = Triple(scene, preset, state) }
-        composeRule.waitForIdle()
-
-        val root = composeRule.onRoot().fetchSemanticsNode()
-        Log.i(
-            TAG,
-            "docs-capture frame root bounds=${root.boundsInRoot} children=${root.children.size}"
+        // The frame tag carries this job's (scene, state, theme) identity, so a
+        // stale node left over from a previous same-size job can never match.
+        val frameKey = "docs-frame:${scene.id}:${state ?: "default"}:${theme}"
+        val node = activityRule.onNode(
+            hasTestTag(DOCS_SCENE_ROOT_TAG) and hasAnyAncestor(hasTestTag(frameKey)),
+            useUnmergedTree = true,
         )
-
-        // Window-level captures (PixelCopy / view.draw) come back blank in this
-        // harness. captureToImage records the node's own draw commands — scope
-        // it to the first content child so the decorview title bar is excluded.
-        val bitmap = captureSceneBitmap()
-        val relative = buildString {
-            append(scene.id).append('/').append(preset.id)
-            state?.let { append('-').append(it) }
-            append(".webp")
+        // A frozen clock never drives the first layout of a freshly set
+        // composition — let it advance until THIS job's tagged root exists and
+        // has been measured at the job's logical size, then run one more
+        // settled frame before freezing so infinite demo animations cannot
+        // stall the run.
+        val expectedW = (widthDp * activityRule.density.density).roundToInt()
+        val expectedH = (heightDp * activityRule.density.density).roundToInt()
+        activityRule.mainClock.autoAdvance = true
+        activityRule.waitUntil(timeoutMillis = SIZE_TIMEOUT_MS) {
+            runCatching {
+                val bounds = node.fetchSemanticsNode().boundsInRoot
+                abs(bounds.width - expectedW) <= SIZE_TOLERANCE_PX &&
+                    abs(bounds.height - expectedH) <= SIZE_TOLERANCE_PX
+            }.getOrDefault(false)
         }
-        val file = File(outDir, relative).apply { parentFile?.mkdirs() }
-        FileOutputStream(file).use { stream ->
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                bitmap.compress(Bitmap.CompressFormat.WEBP_LOSSY, WEBP_QUALITY, stream)
-            } else {
-                @Suppress("DEPRECATION")
-                bitmap.compress(Bitmap.CompressFormat.WEBP, WEBP_QUALITY, stream)
+        node.assertIsDisplayed()
+        scene.requiredReadyTag?.let { tag ->
+            // Scenes like the map declare real-readiness through a tagged node
+            // that appears only after an external signal (fully-rendered map
+            // frame). autoAdvance is still on, so the clock keeps pumping.
+            activityRule.waitUntil(timeoutMillis = READY_TAG_TIMEOUT_MS) {
+                activityRule.onAllNodesWithTag(tag, useUnmergedTree = true)
+                    .fetchSemanticsNodes().isNotEmpty()
             }
         }
-        return relative
+        if (scene.settleMillis > 0L) {
+            // Async decoders (Sketch full-res load, ExoPlayer first frame, GL
+            // surface warm-up) are not composition-bound — waitForIdle would
+            // return before they land. Let the real clock drive them for the
+            // scene's settle budget, then freeze as usual.
+            Thread.sleep(scene.settleMillis)
+            activityRule.waitForIdle()
+        }
+        activityRule.mainClock.autoAdvance = false
+        activityRule.mainClock.advanceTimeByFrame()
+        activityRule.waitForIdle()
+        val bounds = node.fetchSemanticsNode().boundsInRoot
+        Log.i(TAG, "node bounds $relFile -> ${bounds.width}x${bounds.height}px")
+        val bitmap = if (scene.captureWindow) {
+            captureWindowBitmap(node, relFile)
+        } else {
+            node.captureToImage().asAndroidBitmap()
+        }
+
+        assertNotBlank(bitmap, relFile)
+        assertAspect(widthDp, heightDp, bitmap, relFile)
+
+        val file = File(outDir, relFile)
+        file.parentFile?.mkdirs()
+        val format = if (android.os.Build.VERSION.SDK_INT >= 30) {
+            Bitmap.CompressFormat.WEBP_LOSSY
+        } else {
+            @Suppress("DEPRECATION")
+            Bitmap.CompressFormat.WEBP
+        }
+        FileOutputStream(file).use { stream ->
+            bitmap.compress(format, 90, stream)
+        }
+        writer.record(
+            scene,
+            job.preset.id,
+            state,
+            theme,
+            relFile,
+            bitmap.width,
+            bitmap.height,
+            widthDp,
+            heightDp,
+        )
     }
 
-    private fun captureSceneBitmap(): Bitmap {
-        val root = composeRule.onRoot().fetchSemanticsNode()
-        val target = root.children.firstOrNull() ?: root
-        val matcher = SemanticsMatcher(
-            "docs-scene-root(${target.id})"
-        ) { it.id == target.id }
-        val node = composeRule.onAllNodes(matcher, useUnmergedTree = true).onFirst()
-        return node.captureToImage().asAndroidBitmap()
+    /**
+     * Modal scenes (ModalBottomSheet/Dialog) live in a separate window, so a
+     * node-scoped `captureToImage` would photograph an empty host. Instead take
+     * the full physical screenshot via UiAutomation and crop it to the tagged
+     * root's on-screen rect: `boundsInWindow` (relative to the host window)
+     * offset by the decor view's `locationOnScreen`.
+     */
+    private fun captureWindowBitmap(
+        node: androidx.compose.ui.test.SemanticsNodeInteraction,
+        relFile: String,
+    ): Bitmap {
+        val instr = InstrumentationRegistry.getInstrumentation()
+        instr.waitForIdleSync()
+        val winBounds = node.fetchSemanticsNode().boundsInWindow
+        val loc = IntArray(2)
+        activityRule.activityRule.scenario.onActivity { activity ->
+            activity.window.decorView.getLocationOnScreen(loc)
+        }
+        val left = (loc[0] + winBounds.left).roundToInt()
+        val top = (loc[1] + winBounds.top).roundToInt()
+        val right = (loc[0] + winBounds.right).roundToInt()
+        val bottom = (loc[1] + winBounds.bottom).roundToInt()
+        val full = instr.uiAutomation.takeScreenshot()
+            ?: error("UiAutomation.takeScreenshot() returned null for $relFile")
+        check(left >= 0 && top >= 0 && right <= full.width && bottom <= full.height) {
+            "scene root rect $left,$top-$right,$bottom is outside the physical " +
+                "screenshot ${full.width}x${full.height} for $relFile"
+        }
+        // createBitmap aliases the source when the crop covers it entirely
+        // (scene rect == physical frame) — recycling `full` would then recycle
+        // the returned bitmap and the blank-check would hit a dead buffer.
+        val cropped = Bitmap.createBitmap(full, left, top, right - left, bottom - top)
+        if (cropped !== full) full.recycle()
+        return cropped
     }
 
-    private companion object {
-        const val TAG = "DocsCapture"
-        const val WEBP_QUALITY = 85
+    private fun assertNotBlank(bitmap: Bitmap, relFile: String) {
+        // Uniformity gate, mirroring the live publisher's PNG lattice: sample
+        // a ~64x64 grid and require at least one pixel to differ from the first.
+        val w = bitmap.width
+        val h = bitmap.height
+        val first = bitmap.getPixel(0, 0)
+        val stepX = maxOf(1, w / 64)
+        val stepY = maxOf(1, h / 64)
+        var y = 0
+        var different = false
+        while (y < h && !different) {
+            var x = 0
+            while (x < w) {
+                if (bitmap.getPixel(x, y) != first) {
+                    different = true
+                    break
+                }
+                x += stepX
+            }
+            y += stepY
+        }
+        check(different) {
+            "captured frame $relFile is uniform — refusing to ship a blank image"
+        }
+    }
+
+    private fun assertAspect(widthDp: Int, heightDp: Int, bitmap: Bitmap, relFile: String) {
+        val expectedWidth = (bitmap.height.toDouble() * widthDp / heightDp).roundToInt()
+        check(abs(bitmap.width - expectedWidth) <= 2) {
+            "captured frame $relFile is ${bitmap.width}x${bitmap.height}, " +
+                "expected aspect ${widthDp}x$heightDp (~${expectedWidth}px wide)"
+        }
+    }
+
+    companion object {
+        private const val TAG = "DocsCapture"
+        private const val SIZE_TIMEOUT_MS = 10_000L
+        private const val READY_TAG_TIMEOUT_MS = 20_000L
+        private const val SIZE_TOLERANCE_PX = 2f
     }
 }

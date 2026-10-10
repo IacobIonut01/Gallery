@@ -1,0 +1,48 @@
+---
+title: Offline access and cache
+summary: Keep preview copies of cloud media for offline browsing, and manage the shared cache.
+area: cloud
+path:
+  - Settings
+  - Cloud Accounts
+  - Offline & Cache
+related: [cloud-downloads, cloud-sync, cloud-settings]
+scenes: [cloud-offline-cache]
+order: 13
+---
+
+**Offline & Cache** is a single screen for all cloud accounts; the link inside an account's settings opens the same global page. Everything here is about **cached thumbnails and previews, not originals**. For full-quality files, use [cloud downloads](/ReFra/features/cloud-downloads).
+
+## Offline mode and the automatic cache
+
+- **Force offline mode**: serve only cached media; the network is not used. With no network the screen notes you are already offline.
+- **Cache while browsing**: keep recently viewed cloud media so it still opens offline later.
+- **Cache on Wi-Fi only**: do not write to the cache on metered connections.
+- **Cache size limit**: opens a dialog with fixed choices (**256 MB**, **512 MB**, **1 GB**, **2 GB**, or **5 GB**), then **Done**. The oldest cached items are removed past the limit. The bar shows **Auto**, **Pinned**, and **Free** portions.
+
+All of these apply across every connected account.
+
+<PreviewCollection feature="cloud-offline" section="modes" />
+
+## Available offline (previews only)
+
+The **Available offline** section keeps preview copies for accounts you pin:
+
+- Pinning works at the whole-account level; **Download pinned now** starts fetching queued previews for the pinned accounts.
+- Statuses report exactly where things stand: **Keep thumbnails and previews offline** when unpinned, **Pinned; waiting for indexed previews**, **Download queued**, **Downloading previews…**, **Partially downloaded (N / M)**, **Downloaded previews (N / M)**, or **Download failed (N / M saved); tap Download pinned now to retry**.
+- **Stop keeping X offline?** asks whether to **Remove downloads** or **Keep cached copies**; either way, note that original files were never downloaded by this feature.
+
+## Cached data by account
+
+The **Cached data by account** section lists each account with its cached size. Tapping one opens a sheet where you can see the cache **By album** and use **Clear all cache for this account**; it manages and clears cache, it does not pin albums. **Clear cached data** offers **Clear all** or **Auto cache only**; the confirmation notes that accounts and the timeline are unaffected.
+
+<PreviewCollection feature="cloud-offline" section="cache" />
+
+## Example: previews for a flight
+
+1. Before a flight, open **Offline & Cache** from your NAS account's settings.
+2. Pin the `MyNAS` account under **Available offline** and tap **Download pinned now**; watch it reach **Downloaded previews**.
+3. On the flight, turn on **Force offline mode** and browse the account's `Holidays` album previews.
+4. Back home, unpin the account and choose **Remove downloads** or **Keep cached copies** if you will revisit soon.
+
+If you need the photos at full quality offline (to edit or share them), pinned previews will not do that; run [Download remote media](/ReFra/features/cloud-downloads) for the account, or download the single item instead.

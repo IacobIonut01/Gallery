@@ -1,0 +1,150 @@
+---
+/**
+ * SceneIndex — renders the generated scene registry (registry/scenes.json,
+ * produced by scripts/merge-manifest.mjs) as a grouped index. Used by the
+ * settings reference landing page; rows show the declared in-app path, the
+ * named states a scene can render, and its published fidelity.
+ */
+import PathTrace from './PathTrace.astro';
+import registry from '../../registry/scenes.json';
+
+interface SceneEntry {
+  id: string;
+  title: string;
+  path: string[];
+  states: string[];
+  fidelity: string;
+  assets: Record<string, Record<string, { src: string; type: string }>>;
+}
+
+interface Props {
+  /** Restrict to scene ids starting with this prefix (e.g. "settings-"). */
+  prefix?: string;
+}
+const { prefix = '' } = Astro.props;
+
+const scenes = Object.values(registry.scenes as Record<string, SceneEntry>).filter(
+  (s) => !prefix || s.id.startsWith(prefix),
+);
+
+const groups = new Map<string, SceneEntry[]>();
+for (const scene of scenes) {
+  const key = scene.path[0] ?? 'Other';
+  const list = groups.get(key) ?? [];
+  list.push(scene);
+  groups.set(key, list);
+}
+const ordered = [...groups.entries()].sort(([a], [b]) => a.localeCompare(b));
+const devicesOf = (s: SceneEntry) => Object.keys(s.assets).sort();
+---
+
+<div class="scene-index">
+  {
+    ordered.map(([group, items]) => (
+      <section class="scene-group">
+        <h3 class="scene-group-title">{group}</h3>
+        <ul class="scene-list">
+          {items
+            .sort((a, b) => a.path.join('/').localeCompare(b.path.join('/')) || a.id.localeCompare(b.id))
+            .map((s) => (
+              <li class="scene-row card">
+                <div class="scene-main">
+                  <span class="scene-title">{s.title}</span>
+                  <code class="scene-id">{s.id}</code>
+                  <PathTrace path={s.path} label="Path" />
+                </div>
+                <div class="scene-meta">
+                  <span class:list={['chip', 'fidelity', `fidelity-${s.fidelity}`]}>{s.fidelity}</span>
+                  {s.states.length > 0 && (
+                    <span class="scene-states">{s.states.length} states: {s.states.join(', ')}</span>
+                  )}
+                  {devicesOf(s).length > 0 && (
+                    <span class="scene-devices">{devicesOf(s).join(' · ')}</span>
+                  )}
+                </div>
+              </li>
+            ))}
+        </ul>
+      </section>
+    ))
+  }
+</div>
+
+<style>
+  .scene-index {
+    margin: 1.5rem 0;
+  }
+  .scene-group-title {
+    margin-top: 1.8em;
+  }
+  .scene-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 10px;
+  }
+  .scene-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 24px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+  }
+  .scene-main {
+    min-width: 0;
+  }
+  .scene-title {
+    font-weight: 600;
+  }
+  .scene-id {
+    margin-left: 8px;
+    font-size: 0.78rem;
+    color: var(--md-on-surface-variant);
+  }
+  .scene-row :global(.path-trace) {
+    margin: 6px 0 0;
+  }
+  .scene-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    font-size: 0.8rem;
+    color: var(--md-on-surface-variant);
+    text-align: right;
+  }
+  .fidelity {
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+  }
+  .fidelity-live {
+    color: var(--md-primary);
+    border-color: var(--md-primary);
+  }
+  .fidelity-capture {
+    color: var(--md-tertiary);
+  }
+  .fidelity-pending {
+    opacity: 0.75;
+  }
+  .scene-states {
+    max-width: 40ch;
+  }
+  @media (max-width: 720px) {
+    .scene-row {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .scene-meta {
+      align-items: flex-start;
+      text-align: left;
+    }
+    .scene-states {
+      max-width: none;
+    }
+  }
+</style>

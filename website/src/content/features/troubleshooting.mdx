@@ -1,0 +1,57 @@
+---
+title: Troubleshooting
+summary: Symptom-by-symptom checks for the common things that look broken.
+area: utilities
+path:
+  - Settings
+  - Help & tips
+related: [permissions, in-app-help, session-logs]
+scenes: [ignored-rules]
+order: 10
+---
+
+Most surprises have a specific check rather than a fix-all. Work down the list for your symptom; each step tells you what to look at, not what to assume.
+
+## Photos are missing
+
+<PreviewCollection feature="troubleshooting" section="photos-are-missing" />
+
+- **Check the permission scope**: if Android granted "selected photos only", everything outside the selection is invisible. See [permissions](/ReFra/features/permissions).
+- **Check ignore rules and locks**: [Library › Ignored](/ReFra/features/ignored-albums) rules and locked albums hide on purpose; a rule scoped to Timeline only still leaves the album visible.
+- **Cloud items**: check the account status under [cloud accounts](/ReFra/features/cloud-accounts); on a disconnected or erroring account, new items and full originals can be unavailable even though cached previews may still show.
+
+## Dates or order look wrong
+
+- An item's position follows the **Order by** setting; under capture-time ordering an edited capture date moves the item. **Recheck capture dates** lives under [timeline and albums settings](/ReFra/features/timeline-albums); per-item date edits live under [details](/ReFra/features/metadata). Ordering can shift as those reads update.
+
+## Cloud problems
+
+- Re-run **Test connection** in the account's credentials, check the address, and whether the server is reachable from the current network. See [connect your provider](/ReFra/features/cloud-overview).
+- If [read-only mode](/ReFra/features/cloud-settings) is on, share/export/delete actions are withheld by design.
+
+## Transfers and copies
+
+- A failed copy or move shows its result in the transfer sheet; retry the failed items and keep the originals until the destination is verified. See [copy, move, rename](/ReFra/features/copy-move-rename) and [cloud transfer](/ReFra/features/cloud-transfer).
+
+## Video issues
+
+- A black video with working audio can be the decoder rather than the file: try the **Fix black video** option in [viewer settings](/ReFra/features/viewer-settings). If that does not help, the codec may simply be unsupported on this device; use **Open with** and a compatible player. On an HDR-capable device the **HDR playback** toggle is worth checking, but it is not a general remedy.
+
+## Smart features produce nothing
+
+- Check models installed under [AI models](/ReFra/features/ai-models) and scan state under [Smart Features data](/ReFra/features/smart-scan); a partial scan yields partial results, and no result does not prove the models are missing.
+
+## Space and storage
+
+- Distinguish the three stores: backups you uploaded, originals on the device, and cache the app can rebuild. See [cloud backup](/ReFra/features/cloud-backup), [free up space](/ReFra/features/cloud-free-up-space), and [offline cache](/ReFra/features/cloud-offline).
+
+## Crashes and reports
+
+- [Session logs](/ReFra/features/session-logs) exist only once Developer mode is unlocked and collecting; a crash before that has nothing to browse. Report from the Developer screen or via the [support page](/ReFra/support).
+
+## Example: an album missing from the timeline
+
+1. `Screenshots` shows nothing in the timeline.
+2. Check **Library › Ignored**: a path rule like `.*Screenshots.*` scoped to **Both** would hide it from both views, which explains what you see.
+3. Deleting the rule brings the album back in Timeline and Albums. Changing the scope to **Albums** would keep it visible in the timeline but hide its album, so deleting is the right choice here.
+4. No files were moved or deleted at any point.

@@ -1,0 +1,51 @@
+---
+title: Favorites
+summary: Mark photos and videos with a heart and find them all under Library › Favorites.
+area: organize-secure
+path:
+  - Library
+  - Favorites
+related: [timeline, library, timeline-filters]
+scenes: [media-quick-actions, browse-favorites]
+order: 5
+---
+
+Favorites mark your best or most-needed shots with a heart. Because ReFra writes the flag through Android's media store, favorites survive switching gallery apps. The feature needs Android 11 or later; on older versions the heart simply is not offered.
+
+## Mark a favorite
+
+<PreviewCollection feature="favorites" section="mark-a-favorite" />
+
+Three ways, whichever is closest:
+
+1. **In the viewer**: open the photo or video and tap the **heart icon**. Tap it again to unmark.
+2. **From the grid**: touch and hold an item, tap more if needed, then tap **Favorite** in the action sheet. Works on a whole selection at once.
+3. **From a story**: while a story plays, the heart marks the current item.
+
+Marked thumbnails carry a small heart badge in the grids; its corner, or hiding it, is set under **Settings › Timeline & Albums › Favorite icon position**.
+
+## Browse favorites
+
+<PreviewCollection feature="favorites" section="browse-favorites" />
+
+1. Open **Library**.
+2. Tap **Favorites**.
+3. The screen shows every favorited item in a date-grouped grid with the same gestures as the timeline: pinch to resize, touch and hold to select, tap to open.
+
+To see favorites mixed into the timeline instead, open the [timeline filter](/ReFra/features/timeline-filters) and choose **Favorites** under Status.
+
+## Local and cloud
+
+For device files the heart uses Android's own favorites flag. Whether another gallery app shows that flag is up to that app, not every app supports it. For items that live on a cloud account, ReFra writes the flag back to the provider when that provider supports favorites. An Immich favorite is a real Immich favorite; an account without favorite support simply does not offer the heart.
+
+## Example: a best-of set without copies
+
+1. Open **Albums › Camera**.
+2. Touch and hold the first keeper, then tap or drag across the rest.
+3. Tap **Favorite**. All are marked at once.
+4. Open **Library › Favorites**. The set is there, with no copies made and no files moved.
+
+## If the heart is missing
+
+- The device runs older than Android 11; favorites rely on a system feature that does not exist there.
+- The item may come from a cloud source that cannot store favorites. The heart is only offered where the write can succeed.

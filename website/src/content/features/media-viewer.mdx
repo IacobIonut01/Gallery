@@ -1,0 +1,49 @@
+---
+title: Media viewer
+summary: Open, swipe, zoom, and act on a single photo or video.
+area: view-play
+path:
+  - Timeline
+  - Open a photo
+related: [video-playback, editor, metadata, slideshow, subject-cutout]
+scenes: [viewer-photo, group-members]
+order: 1
+---
+
+Tapping a photo or video in the timeline, an album, or search results opens it full screen in the viewer. Swiping left or right pages through the surrounding items, so you never go back to the grid to see the next one.
+
+## Moving around
+
+<PreviewCollection feature="media-viewer" section="moving-around" />
+
+- **Swipe left**: next item; **swipe right**: previous item.
+- **Swipe down**: close the viewer and return to where you came from. While zoomed in, or while the image is locked (below), the swipe pans instead until you zoom back out or unlock.
+- **Pinch** zooms, **drag** pans a zoomed image, and **double-tap** zooms in or back out.
+- **Tap the center**: show or hide the controls.
+- **Tap the left or right edge**: optional if **Settings › Media Viewer › Tap sides to navigate** is on, edge taps jump to the previous or next item. The app can prompt you to **Enable** it or **Keep off** the first time the gesture would conflict with side taps.
+- Videos add their own controls; see [video playback](/ReFra/features/video-playback).
+
+## The date header and locking the view
+
+The date header at the top shows when the item was taken. **Touch and hold** it to lock the viewer on this item: swiping stops paging so you can zoom and pan freely, and a **Locked** indicator appears. Hold it again to unlock. An ordinary tap on the header does nothing; the gesture exists only when the **Show media date header** option is enabled in [media viewer settings](/ReFra/features/viewer-settings).
+
+## Long-press and rotate
+
+A long press on the image itself performs **Rotate** when rotation is allowed. If you enable **Long press to cut out** in viewer settings, the same gesture instead starts the [subject cutout](/ReFra/features/subject-cutout); rotation then stays available as the on-screen rotate action.
+
+## Groups and the action drawer
+
+<PreviewCollection feature="media-viewer" section="groups-and-the-action-drawer" />
+
+- When the item belongs to a group (a burst, a stacked edit, or a RAW pair), a **strip of group members** appears below; tapping another member switches to it, and the selection bar lets you select one or **Select all** to act on the group at once.
+- **More options** opens the action drawer. Depending on the item it offers **Share**, **Copy to clipboard**, **Hide**, **Restore** (in trash or vault views), **Open with**, **Use as**, **Use as album cover**, **Copy**, **Move**, **Edit**, **Add to collection**, **Download** (cloud items), **Save as video** (motion photos), and **Extract frames** (videos and motion photos).
+- **Media Info** opens the details panel (see [metadata](/ReFra/features/metadata)). The pencil icon there renames the file, while **Edit** opens the [editor](/ReFra/features/editor).
+
+Not every action appears on every item: cloud items in a read-only account, files opened through another app's read-only grant, and vault or private-folder items each hide what does not apply.
+
+## Example: check a burst and share the best frame
+
+1. In the timeline, tap the burst to open the viewer, then swipe through or tap members in the group strip.
+2. Long-press the date header to lock the view, pinch to zoom in, and compare frames.
+3. Hold the date header again to unlock, then tap the best member in the strip.
+4. **More options › Share** sends just that frame. To rename it first, open **Media Info** and use the pencil for the file name; the **Label** field in **Edit Metadata** is the description-style label instead.

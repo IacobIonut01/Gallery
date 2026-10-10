@@ -1,0 +1,28 @@
+---
+import Base from '@layouts/Base.astro';
+import { REPO } from '@lib/constants';
+---
+
+<Base title="Nightly channel" description="Docs and builds from the main branch.">
+  <div class="container">
+    <div class="page-head">
+      <h1>Nightly channel</h1>
+      <p class="summary">
+        The site ships in two channels. Stable follows tagged releases; nightly
+        tracks the main branch and ships the newest docs and scenes first.
+      </p>
+    </div>
+    <div class="prose">
+      <p>
+        Nightly APKs are built by the repository's nightly workflow and published
+        as pre-releases on <a href={`${REPO}/releases`} rel="noopener">GitHub Releases</a>.
+      </p>
+      <p>
+        When the nightly docs channel goes live, this directory serves the docs
+        build generated from the main branch, with its own live bundle and
+        manifest under <code>/nightly/</code>. Until then this page marks where
+        the mirror lands.
+      </p>
+    </div>
+  </div>
+</Base>

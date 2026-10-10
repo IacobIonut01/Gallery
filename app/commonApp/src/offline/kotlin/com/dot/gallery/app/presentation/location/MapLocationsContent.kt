@@ -14,11 +14,12 @@ import com.dot.gallery.data.model.MediaMetadataState
 
 @Suppress("UNUSED_PARAMETER")
 @Composable
-internal fun MapLocationsContent(
+fun MapLocationsContent(
     metadataState: State<MediaMetadataState>,
     locations: List<LocationMedia> = emptyList(),
     geoMedia: List<GeoMedia> = emptyList(),
     initialMediaId: Long = -1L,
+    onMapFullyRendered: () -> Unit = {},
 ) {
     ListLocationsContent(metadataState = metadataState, locations = locations)
 }

@@ -1,0 +1,71 @@
+---
+title: Smart Features data
+summary: Refresh and repair the on-device data behind search, categories, and people.
+area: discover
+path:
+  - Settings
+  - Smart Features
+  - Smart Features data
+related: [smart-features, ai-models, categories, people]
+scenes: [settings-smart-scan]
+order: 7
+---
+
+**Settings › Smart Features › Smart Features data** manages the indexes Smart Features rely on: file metadata, search data, category matches, and people groups. Refreshes are incremental: they keep valid results and continue past files that cannot be processed.
+
+## Refresh data
+
+Each row re-processes one kind of data:
+
+- **Refresh Metadata**: re-reads local and cached cloud metadata without rebuilding unrelated Smart Features.
+- **Refresh search embeddings**: repairs missing or stale local and cloud search data. Marked unavailable until the AI models are installed.
+- **Refresh categories**: repairs embeddings first, then updates automatic category matches.
+- **Refresh persons**: scans local photos and available cloud previews for faces; requires the face detection and recognition models.
+- **Refresh all Smart Features**: runs metadata, search, categories, and persons one after another.
+
+## Rebuild data
+
+- **Full refresh**: reprocesses every item even where its data is already complete. Slower, but the way to force a clean rebuild after changing models or fixing a bad scan.
+
+## Scan controls
+
+- **Cancel Smart Features scan**: stops the current scan while preserving completed results.
+- **Retry failed Smart Features items**: retries the items the latest incomplete scan could not finish.
+
+## Reading the status
+
+<PreviewCollection feature="smart-scan" section="reading-the-status" />
+
+A running scan shows its stage (such as `Stage 2 of 4`), counts of processed, failed, and skipped items, and an estimated remaining time. Stages pass through phases like syncing the library, reading metadata, indexing Smart Search, updating categories, and grouping people.
+
+The latest scan reports a status and its counts:
+
+| Status | Meaning |
+| --- | --- |
+| **Waiting** | Queued behind earlier stages |
+| **In progress** | Running now |
+| **Complete** | Finished cleanly |
+| **Completed with issues** | Finished, but some items failed or were skipped |
+| **Needs attention** | Blocked on something, such as missing models |
+| **Paused** | Interrupted and can be resumed |
+| **Failed** | The scan itself did not complete |
+| **Cancelled** | Stopped by you |
+
+Progress counts describe how much was processed, not a guarantee that every file was indexable; items that fail are exactly what **Retry failed Smart Features items** is for.
+
+## Cloud providers
+
+For connected cloud libraries, indexing is chosen per provider type under **Smart Features › Cloud libraries**; turning it on for Immich covers every Immich account. A server-side smart search switch lets servers with their own AI answer searches; enabling on-device indexing for a provider downloads a thumbnail per item so it joins local results.
+
+## Example: refresh after installing face models
+
+1. Install **Face Detection** and **Face Recognition** in the [AI Models Manager](/ReFra/features/ai-models).
+2. Open **Settings › Smart Features › Smart Features data**.
+3. Tap **Refresh persons** and let it finish; the stage counter shows progress through your library.
+4. If it ends as **Completed with issues**, tap **Retry failed Smart Features items** once for the stragglers.
+
+## If scans stall
+
+- A scan marked **Needs attention** is usually missing a model; check the AI Models Manager.
+- Cancelling keeps completed work, so a large first scan can be split across sessions safely.
+- On-device indexing of a cloud library costs a thumbnail download per remote item; on a large library, prefer running it on Wi-Fi.

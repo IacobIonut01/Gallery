@@ -1,0 +1,84 @@
+---
+title: Vault
+summary: Encrypted vaults for media you want behind a password, PIN, pattern, or your device credential.
+area: organize-secure
+path:
+  - Library
+  - Vault
+related: [private-folder, security, backup-restore, hidden-content]
+scenes: [vault-gate, vault-list, vault-setup]
+order: 7
+---
+
+A vault stores photos and videos encrypted, so they are only readable while the vault is unlocked. Viewing an item decrypts it for display, and some actions (sharing to another app, visual search, or including the vault in a backup) create readable copies by design. Choosing **Encrypt & Keep** when adding media leaves the ordinary originals in place outside the vault. Unlike the [private folder](/ReFra/features/private-folder), which only hides files from media scans, vault contents are actually encrypted at rest.
+
+The vault requires a device screen lock (PIN, pattern, password, or biometrics) before it can be created; without one, setup stops and tells you.
+
+## Create a vault
+
+<PreviewCollection feature="vault" section="create-a-vault" />
+
+1. Open **Library** and tap **Vault**, then **Create new vault**.
+2. Give it a **Vault Name**.
+3. Choose the unlock method: **Use device security** (your screen lock and biometrics) or **Set password** for a custom one: a PIN of at least six digits, a pattern connecting at least four dots, or a password of at least four characters.
+4. Tap through the confirmation. The vault opens.
+
+You can create several vaults. The selector screen (**Select a vault**) lists them, and a locked one shows a lock until you open it.
+
+## Protect the vault list itself
+
+<PreviewCollection feature="vault" section="protect-the-vault-list-itself" />
+
+From the selector's **Manage security**:
+
+- Pick **None**, **Device security**, or **Custom password** to gate the list of vaults itself.
+- **One lock for all vaults**: after unlocking once, every vault opens without its own password. This applies when a lock method is set.
+
+## Add media to a vault
+
+1. Select photos or videos on the Timeline or in an album (or open one).
+2. Tap **Hide**. Pick the target vault if you have several.
+3. The sheet asks **What should happen to the originals?**:
+   - **Encrypt & Keep**: encrypted copies go into the vault; the originals stay in place.
+   - **Encrypt & Delete**: encrypted copies go in; the originals are deleted.
+   - **Remember my choice**: makes the answer permanent; it maps to **Vault encrypt behavior** under **Settings › General**.
+4. An "Encrypting media" progress appears; you can cancel it mid-way.
+
+Inside an open vault, **Add Media to Vault** runs the same flow from a picker.
+
+## Open and manage a vault
+
+<PreviewCollection feature="vault" section="open-and-manage-a-vault" />
+
+1. **Library › Vault**, pick the vault, and unlock it with your device credential or its custom password.
+2. Wrong attempts show "Incorrect password" with the remaining attempts; too many produce a temporary lockout that tells you how many seconds to wait.
+3. Inside, media behaves like a normal grid: view photos, play videos, and open details.
+
+The overflow menu (**Vault actions**) offers:
+
+- **Decrypt Vault**: decrypts everything back into the gallery after confirmation.
+- **Use custom password** / **Change custom password** / **Remove custom password**: manage a per-vault credential; removing it reverts the vault to device security.
+- **Delete Vault**: permanently deletes the vault and everything still inside it. This cannot be undone; restore what you want to keep first.
+
+## Take items out
+
+- **Restore** on a vault item or selection decrypts it back to the gallery and removes it from the vault. The confirmation spells this out.
+- Restored items reappear in the timeline in their original position.
+
+## Backups and limits
+
+- Vaults can be included in an [app backup](/ReFra/features/backup-restore); the archive holds them **decrypted**, so the backup password is what protects them in the file.
+- Sharing a vault item or sending it to visual search may produce a temporary decrypted copy for the receiving app.
+- Keep your vault credential safe and keep backups current; losing access is not something the app can silently undo for you.
+
+## Example: hide financial photos safely
+
+1. Create a vault named **Documents** with your device security.
+2. Select the card photos in **Albums › Camera**, tap **Hide**, choose **Encrypt & Keep**.
+3. Open the vault, confirm the copies decrypt and open correctly.
+4. Make sure the trash is enabled (**Settings › General › Use trash can**) before deleting the originals in Camera; without trash, deletion is permanent.
+
+## If the vault will not open
+
+- Too many wrong attempts impose a timed lockout; wait for the seconds the message shows.
+- A vault left over after reinstalling or clearing app data cannot be assumed recoverable; keep current backups if the contents matter.

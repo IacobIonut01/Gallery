@@ -1,0 +1,49 @@
+---
+title: Media viewer settings
+summary: Brightness, gestures, saving quality, and video playback options for the full-screen viewer.
+area: customize
+path:
+  - Settings
+  - Media Viewer
+related: [media-viewer, slideshow, visual-search]
+scenes: [settings-media-viewer]
+order: 6
+---
+
+**Settings › Media Viewer** holds every option for the full-screen photo and video view: what it looks like, what taps do, and how edited files are saved.
+
+## Media view
+
+<PreviewCollection feature="viewer-settings" section="media-view" />
+
+- **Full Brightness when viewing**: raises the screen to maximum brightness while a photo or video is open. Your normal brightness is restored when you leave the viewer.
+- **Show Media Date Header**: puts the current item's date and time in the viewer's top bar.
+- **Tap sides to navigate**: tapping the left or right edge of an unzoomed item jumps to the previous or next one; tapping the center shows or hides the controls. Side taps take priority over video seeking. Zoomed images, panoramas, slideshows, and locked or standalone viewers keep their usual gestures.
+- **Favorite button in viewer**: shows a heart in the viewer toolbar for quick favoriting.
+- **Default image editor**: picks which app the edit button opens: the **Built-in editor** or any compatible external editor installed on the device.
+- **Disable smoothing**: draws images with crisp pixels when zoomed instead of a smoothed blur. Turn it on for pixel art and screenshots; leave it off for photos.
+- **Dark viewer background**: keeps the viewer background black even in the light theme.
+- **Long-press to cut out**: when on, long-pressing an image starts an on-device subject cutout and the rotate action moves to an on-screen button. When off (the default), long-pressing rotates the image. The editor's Cutout tool is available either way.
+- **Save quality**: how edited and rotated images are re-encoded. **Auto** saves lossless where the format supports it (JXL) and high quality otherwise. **Manual** exposes **Lossy quality** (1 to 100) and **JXL effort** (1 to 9) sliders.
+- **Slideshow**: opens the slideshow options; see [slideshow](/ReFra/features/slideshow).
+
+## Video playback
+
+- **Hide UI on Video Play**: the top and bottom bars hide themselves a couple of seconds after a video starts; tap the screen to bring them back.
+- **Video Auto-Play**: videos begin playing as soon as you swipe to them. Off means a manual tap to play.
+- **Fix black video on hide**: re-binds the video surface when controls hide or show, for devices where the picture otherwise goes black while audio continues. It is already enabled on devices where the issue is known.
+- **HDR video playback**: switches the screen into HDR mode for Dolby Vision, HDR10, and HLG videos. It only works on an HDR-capable display and does nothing otherwise.
+- **Visual search**: opens the handoff options for searching the current image with another app; see [visual search](/ReFra/features/visual-search).
+
+## Example: crisp screenshots and quiet video
+
+1. Open **Settings › Media Viewer**.
+2. Turn on **Disable smoothing** so zoomed screenshots and pixel art stay sharp.
+3. Turn off **Video Auto-Play** so videos wait for a tap.
+4. Leave **Dark viewer background** on for a consistent black frame around media.
+
+## If a control seems absent
+
+- **Save quality**'s sliders only appear in **Manual** mode.
+- **HDR video playback** has no visible effect on a display that cannot do HDR.
+- A prompt about side tapping that appears the first time the viewer opens is the same setting; **Enable** and **Keep off** map to it, and you can change it here later.

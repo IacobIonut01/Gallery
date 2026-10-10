@@ -1,0 +1,68 @@
+---
+import Base from '@layouts/Base.astro';
+import { withBase } from '@lib/paths';
+const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
+---
+
+<Base title="Search" description="Search the ReFra documentation." indexed={false}>
+  <link slot="head" rel="stylesheet" href={withBase('/pagefind/pagefind-ui.css')} />
+  <div class="container">
+    <div class="page-head">
+      <h1>Search</h1>
+      <p class="summary">Search across every documentation page.</p>
+    </div>
+    <div id="search" class="search-mount" data-base={base}></div>
+    <noscript>
+      <p>Search needs JavaScript. Browse the <a href={withBase('/features/')}>feature index</a> instead.</p>
+    </noscript>
+  </div>
+</Base>
+
+<script>
+  const mount = document.querySelector('.search-mount');
+  const base = mount?.dataset.base || '';
+  const ui = `${base}/pagefind/pagefind-ui.js`;
+
+  // pagefind-ui.js is a UMD bundle: it attaches window.PagefindUI and has no
+  // ESM exports, so instantiate it off window after the script loads.
+  import(/* @vite-ignore */ ui)
+    .then(() => {
+      new window.PagefindUI({
+        element: '#search',
+        showSubResults: true,
+        showImages: false,
+        baseUrl: `${base}/`,
+        bundlePath: `${base}/pagefind/`,
+      });
+    })
+    .catch(() => {
+      if (!mount) return;
+      const note = document.createElement('p');
+      note.className = 'card';
+      note.append('Search is unavailable right now. Browse the ');
+      const link = document.createElement('a');
+      link.href = `${base}/features/`;
+      link.textContent = 'feature index';
+      note.append(link, ' instead.');
+      mount.replaceChildren(note);
+    });
+</script>
+
+<style>
+  .search-mount {
+    min-height: 200px;
+    --pagefind-ui-scale: 0.9;
+    --pagefind-ui-primary: var(--md-primary);
+    --pagefind-ui-text: var(--md-on-surface);
+    --pagefind-ui-background: var(--md-surface);
+    --pagefind-ui-border: var(--md-outline-variant);
+    --pagefind-ui-tag: var(--md-surface-container);
+    --pagefind-ui-border-width: 1px;
+    --pagefind-ui-border-radius: 12px;
+    --pagefind-ui-image-border-radius: 12px;
+    --pagefind-ui-font: inherit;
+  }
+  .search-mount :global(.pagefind-ui__form) {
+    min-height: 44px;
+  }
+</style>

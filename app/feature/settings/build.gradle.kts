@@ -34,6 +34,7 @@ kotlin {
             implementation(libs.cmp.ui)
             implementation(libs.cmp.components.resources)
             implementation(libs.cmp.components.ui.tooling.preview)
+            implementation(compose.preview)
             implementation(libs.cmp.material.icons.extended)
             implementation(libs.cmp.ui.backhandler)
             implementation(libs.haze)

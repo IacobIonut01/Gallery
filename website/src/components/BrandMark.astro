@@ -1,0 +1,29 @@
+---
+import { withBase } from '@lib/paths';
+
+interface Props {
+  size?: number;
+  decorative?: boolean;
+  class?: string;
+}
+
+const { size = 32, decorative = true, class: className } = Astro.props;
+---
+
+<img
+  class:list={['brand-mark', className]}
+  src={withBase('/brand/refra-mark.svg')}
+  width={size}
+  height={size}
+  alt={decorative ? '' : 'ReFra'}
+  aria-hidden={decorative ? 'true' : undefined}
+  decoding="async"
+/>
+
+<style>
+  .brand-mark {
+    display: block;
+    flex: none;
+    object-fit: contain;
+  }
+</style>

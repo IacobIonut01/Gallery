@@ -1,0 +1,48 @@
+---
+import { getCollection, render } from 'astro:content';
+import Docs from '@layouts/Docs.astro';
+import DeviceStage from '@components/DeviceStage.astro';
+import LiveEmbed from '@components/LiveEmbed.astro';
+import PathTrace from '@components/PathTrace.astro';
+import PreviewCollection from '@components/PreviewCollection.astro';
+import SceneIndex from '@components/SceneIndex.astro';
+import VariantPicker from '@components/VariantPicker.astro';
+import { REPO_BLOB } from '@lib/constants';
+
+export async function getStaticPaths() {
+  const pages = await getCollection('pages');
+  return pages.map((entry) => ({
+    params: { id: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content, headings } = await render(entry);
+const editUrl = `${REPO_BLOB}/website/src/content/pages/${entry.id}.mdx`;
+---
+
+<Docs
+  title={entry.data.title}
+  description={entry.data.summary}
+  currentId={entry.id}
+  headings={headings}
+>
+  <div class="page-head">
+    <h1>{entry.data.title}</h1>
+    <p class="summary">{entry.data.summary}</p>
+  </div>
+  <div class="prose">
+    <Content components={{ DeviceStage, LiveEmbed, PathTrace, PreviewCollection, SceneIndex, VariantPicker }} />
+  </div>
+  <p class="edit-link">
+    <a href={editUrl} rel="noopener">Edit this page on GitHub</a>
+  </p>
+</Docs>
+
+<style>
+  .edit-link {
+    margin: 3rem 0 0;
+    font-size: 0.88rem;
+  }
+</style>

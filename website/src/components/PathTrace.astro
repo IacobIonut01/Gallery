@@ -1,0 +1,67 @@
+---
+/**
+ * PathTrace — renders the in-app navigation path as breadcrumb chips,
+ * e.g. path=["Settings","Appearance","Theme"].
+ */
+interface Props {
+  path: string[];
+  label?: string;
+}
+const { path = [], label = 'In the app' } = Astro.props;
+---
+
+{
+  path.length > 0 && (
+    <nav class="path-trace" aria-label="In-app location">
+      <span class="path-label">{label}:</span>
+      <ol>
+        {path.map((step, i) => (
+          <li>
+            <span class="chip">{step}</span>
+            {i < path.length - 1 && (
+              <span class="path-sep" aria-hidden="true">
+                ›
+              </span>
+            )}
+          </li>
+        ))}
+      </ol>
+    </nav>
+  )
+}
+
+<style>
+  .path-trace {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 1rem 0;
+  }
+  .path-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--md-on-surface-variant);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  ol {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  li {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+  }
+  .path-sep {
+    color: var(--md-on-surface-variant);
+    opacity: 0.6;
+  }
+</style>

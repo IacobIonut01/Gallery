@@ -1,0 +1,76 @@
+---
+title: Date formats
+summary: Customize the date and time patterns used in headers, the viewer, and media info.
+area: customize
+path:
+  - Settings
+  - Timeline & Albums
+  - Date Formats
+related: [timeline-albums, timeline, media-viewer]
+scenes: [settings-date-formats]
+order: 8
+---
+
+ReFra prints dates in several places: the date line in the media viewer, the details panel, and the grid's date headers. Each of them has its own field, so a compact grid can coexist with a fully spelled-out viewer date.
+
+## Open the date format settings
+
+1. Open **Settings › Timeline & Albums**.
+2. Tap **Date Formats**.
+3. Tap the field for the context you want to change and type a pattern.
+
+Leaving a field empty makes it follow your device's own date and time format. Tap **Reset** on a field to return it to the default.
+
+## The fields
+
+<PreviewCollection feature="date-formats" section="the-fields" />
+
+| Field | Where it appears |
+| --- | --- |
+| **Date Header** | The date shown in the media viewer |
+| **Extended Date Header** | The fuller date variant in the media viewer |
+| **Exif Date** | The capture date in the Media Info details |
+| **Weekly Date** | A compact date in the media grid |
+| **Classic Date** | The standard date layout in the media grid |
+| **Extended Date** | The longest form in the media grid |
+
+## Pattern letters
+
+Tap **Format help** on a field to see the same table in the app. Combine letters to build a pattern.
+
+| Pattern | Produces | Example |
+| --- | --- | --- |
+| `H:mm` | 24-hour time | `14:05` |
+| `HH:mm` | 24-hour time, padded hour | `14:05` |
+| `h:mm a` | 12-hour time | `2:05 PM` |
+| `hh:mm a` | 12-hour time, padded hour | `02:05 PM` |
+| `mm` | Minutes | `05` |
+| `ss` | Seconds | `09` |
+| `a` | AM/PM marker | `PM` |
+| `yyyy` | Four-digit year | `2026` |
+| `yy` | Two-digit year | `26` |
+| `MMMM` | Full month name | `June` |
+| `MMM` | Short month name | `Jun` |
+| `MM` | Two-digit month | `06` |
+| `M` | Month number | `6` |
+| `dd` | Two-digit day of month | `05` |
+| `d` | Day of month | `5` |
+| `EEEE` | Full weekday name | `Monday` |
+| `EEE` | Short weekday name | `Mon` |
+| `D` | Day of year | `166` |
+| `w` | Week of year | depends on your device's locale and week rules |
+| `G` | Era | `AD` |
+
+The one pair that bites: uppercase `M` is the month, lowercase `m` is minutes. `MM-dd` prints `06-15` while `mm-dd` prints `05-15`.
+
+## Example: a readable viewer date and a numeric details date
+
+1. Open **Settings › Timeline & Albums › Date Formats**.
+2. Set **Date Header** to `EEEE, d MMMM yyyy`; the media viewer reads `Monday, 15 June 2026`.
+3. Set **Exif Date** to `yyyy-MM-dd, HH:mm`; the details panel reads `2026-06-15, 14:05`.
+4. Leave **Weekly Date** empty so the grid keeps your device format.
+
+## If a field misbehaves
+
+- An invalid pattern is not saved: the field highlights it and keeps the previously saved pattern. Fix the pattern, or clear the field (or tap **Reset**) to return to your device format.
+- Punctuation you type between letters is kept literally, so `yyyy/MM/dd` shows slashes and `d. MMM` shows a dot.

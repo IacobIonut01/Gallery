@@ -14,6 +14,7 @@ import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -58,6 +59,11 @@ fun CloudArchiveScreen(
     clearSelection: () -> Unit,
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
+    /** Optional override for the selection overlay; null keeps the default SelectionSheet. */
+    selectionContent: (@Composable BoxScope.(
+        allMedia: MediaState<UriMedia>,
+        selectedMediaList: androidx.compose.runtime.snapshots.SnapshotStateList<UriMedia>,
+    ) -> Unit)? = null,
 ) {
     val cloudArchiveGroupByDate by rememberCloudArchiveGroupByDate()
     val cloudArchiveGroupMethod by rememberCloudArchiveGroupMethod()
@@ -73,7 +79,7 @@ fun CloudArchiveScreen(
         groupMethod = if (cloudArchiveGroupByDate) cloudArchiveGroupMethod else Settings.Misc.GROUP_NORMAL,
         mediaViewerRoute = Screen.MediaViewScreen.route,
         navActionsContent = { },
-        selectionSheetContent = { allMedia, selectedMediaList ->
+        selectionSheetContent = selectionContent ?: { allMedia, selectedMediaList ->
             SelectionSheet(
                 modifier = Modifier.align(Alignment.BottomEnd),
                 allMedia = allMedia,

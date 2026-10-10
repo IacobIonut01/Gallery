@@ -1,0 +1,218 @@
+---
+/*
+ * BrandGlow — the banner's refraction colors read as ambient light instead of
+ * a literal diagonal panel. Three blurred bulbs drift slowly behind the hero
+ * (concentrated near the phone); decorative only. Transform-only keyframes,
+ * constant blur, no per-frame JS. Reduced motion parks the bulbs; reduced
+ * transparency removes the layer.
+ */
+---
+
+<div class="brand-glow" aria-hidden="true">
+  <span class="bulb bulb-blue"></span>
+  <span class="bulb bulb-orange"></span>
+  <span class="bulb bulb-sky"></span>
+</div>
+
+<style>
+  .brand-glow {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent,
+      black 10%,
+      black 82%,
+      transparent
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      transparent,
+      black 10%,
+      black 82%,
+      transparent
+    );
+  }
+  .bulb {
+    position: absolute;
+    display: block;
+    transform: translate3d(0, 0, 0);
+  }
+  .bulb-blue {
+    width: 480px;
+    height: 480px;
+    left: 48%;
+    top: 4%;
+    border-radius: 48% 52% 63% 37% / 54% 39% 61% 46%;
+    background: radial-gradient(
+      ellipse at 45% 45%,
+      var(--brand-blue) 0%,
+      color-mix(in srgb, var(--brand-blue) 75%, transparent) 38%,
+      transparent 72%
+    );
+    filter: blur(52px);
+    opacity: 0.58;
+    animation: float-blue 20s ease-in-out infinite alternate;
+  }
+  .bulb-orange {
+    width: 440px;
+    height: 500px;
+    right: -2%;
+    top: 26%;
+    border-radius: 58% 42% 36% 64% / 40% 58% 42% 60%;
+    background: radial-gradient(
+      ellipse at center,
+      var(--brand-orange) 0%,
+      color-mix(in srgb, var(--brand-apricot) 85%, transparent) 42%,
+      transparent 74%
+    );
+    filter: blur(62px);
+    opacity: 0.64;
+    animation: float-orange 24s ease-in-out infinite alternate;
+    animation-delay: -9s;
+  }
+  .bulb-sky {
+    width: 340px;
+    height: 300px;
+    left: 28%;
+    bottom: -5%;
+    border-radius: 50%;
+    background: radial-gradient(
+      ellipse at center,
+      var(--brand-sky) 0%,
+      var(--brand-apricot) 25%,
+      transparent 70%
+    );
+    filter: blur(70px);
+    opacity: 0.44;
+    animation: float-sky 18s ease-in-out infinite alternate;
+    animation-delay: -5s;
+  }
+
+  @keyframes float-blue {
+    from {
+      transform: translate(-6%, -3%) rotate(-8deg) scale(0.96);
+    }
+    to {
+      transform: translate(8%, 10%) rotate(8deg) scale(1.08);
+    }
+  }
+  @keyframes float-orange {
+    from {
+      transform: translate(3%, 6%) rotate(5deg);
+    }
+    to {
+      transform: translate(-12%, -8%) rotate(-6deg);
+    }
+  }
+  @keyframes float-sky {
+    from {
+      transform: translate(-5%, 0) scale(0.94);
+    }
+    to {
+      transform: translate(10%, -9%) scale(1.06);
+    }
+  }
+
+  /* Dark + AMOLED: dimmer light so the glows read as light, not haze. */
+  :global(:root[data-theme='dark']) .bulb-blue,
+  :global(:root[data-theme='amoled']) .bulb-blue {
+    opacity: 0.4;
+  }
+  :global(:root[data-theme='dark']) .bulb-orange,
+  :global(:root[data-theme='amoled']) .bulb-orange {
+    opacity: 0.35;
+  }
+  :global(:root[data-theme='dark']) .bulb-sky,
+  :global(:root[data-theme='amoled']) .bulb-sky {
+    opacity: 0.22;
+  }
+  @media (prefers-color-scheme: dark) {
+    :global(
+        :root:not([data-theme='light']):not([data-theme='dark']):not(
+            [data-theme='amoled']
+          )
+      )
+      .bulb-blue {
+      opacity: 0.4;
+    }
+    :global(
+        :root:not([data-theme='light']):not([data-theme='dark']):not(
+            [data-theme='amoled']
+          )
+      )
+      .bulb-orange {
+      opacity: 0.35;
+    }
+    :global(
+        :root:not([data-theme='light']):not([data-theme='dark']):not(
+            [data-theme='amoled']
+          )
+      )
+      .bulb-sky {
+      opacity: 0.22;
+    }
+  }
+
+  @media (max-width: 719px) {
+    .bulb-blue {
+      width: 320px;
+      height: 340px;
+      left: -25%;
+      top: 35%;
+      filter: blur(40px);
+      opacity: 0.48;
+    }
+    .bulb-orange {
+      width: 320px;
+      height: 380px;
+      right: -30%;
+      top: 58%;
+      filter: blur(48px);
+      opacity: 0.5;
+    }
+    .bulb-sky {
+      display: none;
+    }
+    :global(:root[data-theme='dark']) .bulb-blue,
+    :global(:root[data-theme='amoled']) .bulb-blue {
+      opacity: 0.32;
+    }
+    :global(:root[data-theme='dark']) .bulb-orange,
+    :global(:root[data-theme='amoled']) .bulb-orange {
+      opacity: 0.28;
+    }
+    @media (prefers-color-scheme: dark) {
+      :global(
+          :root:not([data-theme='light']):not([data-theme='dark']):not(
+              [data-theme='amoled']
+            )
+        )
+        .bulb-blue {
+        opacity: 0.32;
+      }
+      :global(
+          :root:not([data-theme='light']):not([data-theme='dark']):not(
+              [data-theme='amoled']
+            )
+        )
+        .bulb-orange {
+        opacity: 0.28;
+      }
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bulb {
+      animation: none;
+    }
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    .brand-glow {
+      display: none;
+    }
+  }
+</style>

@@ -1,0 +1,47 @@
+---
+title: Cloud sync
+summary: Keep each account's listing of remote media and albums fresh, on demand or on a schedule.
+area: cloud
+path:
+  - Settings
+  - Cloud Accounts
+related: [cloud-accounts, cloud-backup, cloud-downloads]
+scenes: [cloud-account-settings, cloud-account-dialog, cloud-sync-status]
+order: 9
+---
+
+**Sync** means fetching the server's current list of media and albums so the timeline and album views show what is actually there. It is about *listings and metadata*, not file contents; a synced item can still be remote-only. Uploading local photos is [backup](/ReFra/features/cloud-backup); fetching originals is [downloads](/ReFra/features/cloud-downloads).
+
+## Sync controls
+
+Per account, under its settings:
+
+- **Sync now**: fetch the latest media and album listing immediately; shows **Syncing…** while running. It works on whatever network is currently available; it is not blocked off Wi-Fi.
+- **Auto-sync**: periodically sync media and albums. The **Sync interval** choices are **Every 15 minutes**, **Every 30 minutes**, **Every hour**, **Every 6 hours**, **Every 12 hours**, or **Every 24 hours**; the interval is approximate since Android schedules background work around battery and other apps.
+- **Wi-Fi only**: restricts the automatic syncs to Wi-Fi connections; it does not stop a manual **Sync now**.
+- On the **Backup & Sync** dashboard (**Library › Backup & Sync**), **Sync when app opens** checks for new device photos and remote changes every time the app starts.
+
+<PreviewCollection feature="cloud-sync" section="controls" />
+
+## Sync Status
+
+The **Sync Status** card counts what the account currently knows:
+
+- **Total cached**: items whose listing the app holds.
+- **Synced**: items fully synced.
+- **Remote only**: items not downloaded to this device.
+- **Pending upload**: local items still waiting to be backed up.
+
+These counts describe the index, not the files: a large **Synced** number does not mean originals sit on the phone. To pull originals, use **Download all remote media** on the same screen; it targets every remote-only item of the account, so check [cloud downloads](/ReFra/features/cloud-downloads) before running it.
+
+<PreviewCollection feature="cloud-sync" section="status" />
+
+## Remote deletions
+
+Under **Advanced**, **Sync remote deletions** is an opt-in: when a file disappears on the server, the app deletes the copies it downloaded. It does not touch arbitrary photos on the phone, only files the app itself fetched.
+
+## Example: keep a home server fresh
+
+1. Your Immich account at home adds photos from other devices through the day.
+2. In its settings, enable **Auto-sync** at **Every hour** with **Wi-Fi only** on.
+3. The timeline picks up the new server photos as listings; you see them without downloading any originals.

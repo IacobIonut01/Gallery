@@ -309,7 +309,8 @@ fun <T : Media> ZoomablePagerImage(
     uiVisible: Boolean = true,
     // When false (e.g. during a slideshow) both the long-press cut-out gesture and the
     // background subject-suggestion detection are disabled.
-    cutoutEnabled: Boolean = true
+    cutoutEnabled: Boolean = true,
+    cutoutState: CutoutState = rememberCutoutState(),
 ) {
     val feedbackManager = rememberFeedbackManager()
     // Keyed by id (not the whole media object) so a same-id reload after an in-place overwrite
@@ -731,7 +732,6 @@ fun <T : Media> ZoomablePagerImage(
 
     // --- Subject cutout (on-device MobileSAM) ---
     val modelManager = remember { viewerRuntime.modelManager }
-    val cutoutState = rememberCutoutState()
     // When true, long-press starts a cutout session and Rotate is offered as an on-screen pill.
     // When false (default), long-press rotates the image.
     val longPressStartsCutout by Settings.Misc.rememberLongPressCutout()

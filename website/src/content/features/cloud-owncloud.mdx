@@ -1,0 +1,36 @@
+---
+title: Connect ownCloud
+summary: Add an ownCloud server with your username and password or a server-issued app password.
+area: cloud
+path:
+  - Settings
+  - Cloud Accounts
+related: [cloud-overview, cloud-accounts, cloud-networking]
+scenes: [cloud-setup-owncloud]
+order: 3
+---
+
+ownCloud connects over WebDAV, so it offers file browsing and upload; which extras appear depends on the server. Unlike Nextcloud there is no browser sign-in flow; credentials are entered directly.
+
+## Add an ownCloud server
+
+1. Open **Settings › Cloud Accounts › Add ownCloud**.
+2. **Server**: enter the base address in **Server URL**, including `https://`, for example `https://cloud.example.com/owncloud` if the server lives under a path prefix.
+3. **Credentials**: enter the account **Username** and **Password**. If the account has two-factor authentication, use the app password the server issues in its own settings instead of the normal password. Optionally set a **Display name** such as `MyNAS ownCloud`. Tap **Test connection**; **Next** unlocks once it succeeds.
+4. **Networking**: optionally add a local URL for home Wi-Fi; see [automatic URL switching](/ReFra/features/cloud-networking).
+5. **Sync**: choose folders to upload under **Back up local folders**, or none; you can change this later under [cloud backup](/ReFra/features/cloud-backup).
+6. **Review** and **Save**; the account reports **Connected**.
+
+<PreviewCollection feature="cloud-owncloud" section="wizard" />
+
+## Example: ownCloud on a home server
+
+1. Your server answers at `https://cloud.example.com/owncloud` for user `alex`.
+2. In **Add ownCloud**, enter that URL.
+3. Enter username `alex`, the app password supplied by your server (two-factor is enabled on the account), and the display name `MyNAS`.
+4. **Test connection**, then finish the remaining steps and save.
+
+## If it fails
+
+- Recheck the full URL including any path prefix, and whether the account needs an app password rather than its login password.
+- A failed test tells you the server did not accept the address or credentials at that moment; it says nothing about whether uploads will be permitted later.

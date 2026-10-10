@@ -37,6 +37,17 @@ kotlin {
             implementation(project(":app:core:domain"))
             implementation(project(":app:core:data"))
             implementation(project(":app:feature:settings"))
+            implementation(project(":app:feature:timeline"))
+            implementation(project(":app:feature:albums"))
+            implementation(project(":app:feature:library"))
+            implementation(project(":app:feature:classifier"))
+            implementation(project(":app:feature:setup"))
+            implementation(project(":app:feature:vault"))
+            implementation(project(":app:feature:ignored"))
+            implementation(project(":app:feature:picker"))
+            implementation(project(":app:feature:help"))
+            implementation(project(":app:feature:exif"))
+            implementation(project(":app:feature:viewer"))
             implementation(libs.cmp.runtime)
             implementation(libs.cmp.foundation)
             implementation(libs.cmp.material3)
@@ -44,6 +55,15 @@ kotlin {
             implementation(libs.cmp.components.resources)
             implementation(libs.cmp.material.icons.extended)
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.datetime)
+            implementation(libs.haze)
+            implementation(libs.haze.blur)
+            implementation(libs.haze.blur.materials)
+        }
+        // Android-only scenes (editor, frame picker, widgets) render real
+        // commonApp components — capture-only, never part of the wasm bundle.
+        androidMain.dependencies {
+            implementation(project(":app:commonApp"))
         }
         wasmJsMain.dependencies {
             implementation(libs.kotlinx.browser)
@@ -51,3 +71,27 @@ kotlin {
         }
     }
 }
+
+compose.resources {
+    packageOfResClass = "com.dot.gallery.docs.showcase.generated.resources"
+}
+
+// Same asset-packaging workaround as core/ui: under com.android.kotlin.multiplatform.library
+// CMP never gets an assets output dir, so copy prepared composeResources onto the androidMain
+// classpath ourselves (the resource reader falls back to classLoader.getResourceAsStream).
+val packageAndroidComposeResources by tasks.registering(Copy::class) {
+    dependsOn(
+        "prepareComposeResourcesTaskForCommonMain",
+        "prepareComposeResourcesTaskForAndroidMain"
+    )
+    from(layout.buildDirectory.dir("generated/compose/resourceGenerator/preparedResources/commonMain/composeResources"))
+    from(layout.buildDirectory.dir("generated/compose/resourceGenerator/preparedResources/androidMain/composeResources"))
+    into(
+        layout.buildDirectory.dir(
+            "generated/composeResAssets/composeResources/com.dot.gallery.docs.showcase.generated.resources"
+        )
+    )
+}
+kotlin.sourceSets.getByName("androidMain").resources.srcDir(
+    packageAndroidComposeResources.map { it.destinationDir.parentFile.parentFile }
+)

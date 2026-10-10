@@ -162,6 +162,21 @@ internal fun shouldShowSourceSubsampling(
     usesProxyPreview: Boolean,
 ): Boolean = !hasAppliedAdjustments && !usesProxyPreview
 
+/** Maps an [EditorDestination] to its tab for the initial selectedTab seed. */
+private fun initialEditorTab(destination: EditorDestination?): EditorItems? = when (destination) {
+    null -> null
+    is EditorDestination.Develop ->
+        EditorItems.entries.firstOrNull { it.developCategory == destination.category }
+    EditorDestination.Lighting -> EditorItems.Lighting
+    EditorDestination.Filters -> EditorItems.Filters
+    EditorDestination.Markup -> EditorItems.Markup
+    EditorDestination.Colour -> EditorItems.Colour
+    EditorDestination.Effects -> EditorItems.Effects
+    EditorDestination.Smart -> EditorItems.Smart
+    EditorDestination.More -> EditorItems.More
+    else -> null
+}
+
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun EditScreen2(
@@ -244,6 +259,10 @@ fun EditScreen2(
     onCutoutCancel: () -> Unit = {},
     onCutoutCopy: () -> Unit = {},
     onCutoutShare: () -> Unit = {},
+    // Preview/capture seam: open a specific tool tab and/or the save menu on
+    // first composition. Null/false keeps every runtime default.
+    initialDestination: EditorDestination? = null,
+    initialMenuExpanded: Boolean = false,
 ) = GalleryTheme(darkTheme = true, ignoreUserPreference = true) {
     val context = LocalContext.current
     val navigator = rememberSupportingPaneScaffoldNavigator(
@@ -299,7 +318,7 @@ fun EditScreen2(
     // Track which tab is currently selected for the tab bar highlight
     var selectedTab by remember(isRawEdit, cutoutAvailable) {
         mutableStateOf<EditorItems?>(
-            when {
+            initialEditorTab(initialDestination) ?: when {
                 isRawEdit -> EditorItems.WhiteBalance
                 cutoutAvailable -> EditorItems.Smart
                 else -> EditorItems.Lighting
@@ -313,7 +332,7 @@ fun EditScreen2(
     // RAW loads asynchronously: the NavHost may have already started on Lighting before isRawEdit
     // flipped true. Once it does, jump to the first develop tab so content matches the selected tab.
     LaunchedEffect(isRawEdit) {
-        if (isRawEdit && navBackStackEntry?.destination?.hasRoute<EditorDestination.Develop>() != true) {
+        if (isRawEdit && initialDestination == null && navBackStackEntry?.destination?.hasRoute<EditorDestination.Develop>() != true) {
             selectedTab = EditorItems.WhiteBalance
             runCatching {
                 navController.navigate(EditorDestination.Develop(DevelopCategory.WhiteBalance)) {
@@ -375,7 +394,7 @@ fun EditScreen2(
     )
 
     // 3-dot menu state
-    var showMenu by remember { mutableStateOf(false) }
+    var showMenu by remember { mutableStateOf(initialMenuExpanded) }
 
     // Aspect ratio state for crop
     var selectedAspectRatio by remember { mutableStateOf(AspectRatio.Original) }
@@ -927,7 +946,8 @@ fun EditScreen2(
                                 onDetectFaces = onDetectFaces,
                                 faceDetectAvailable = faceDetectAvailable,
                                 isDetectingFaces = isDetectingFaces,
-                                startDestination = if (isRawEdit) EditorDestination.Develop(DevelopCategory.WhiteBalance) else if (cutoutAvailable) EditorDestination.Smart else EditorDestination.Lighting,
+                                startDestination = initialDestination
+                                    ?: if (isRawEdit) EditorDestination.Develop(DevelopCategory.WhiteBalance) else if (cutoutAvailable) EditorDestination.Smart else EditorDestination.Lighting,
                                 rawDevelopParams = if (isRawEdit) rawDevelopParams else null,
                                 onRawDevelopChange = onRawDevelopChange,
                                 rawThumbnailProvider = rawThumbnailProvider,
@@ -993,7 +1013,8 @@ fun EditScreen2(
                         onDetectFaces = onDetectFaces,
                         faceDetectAvailable = faceDetectAvailable,
                         isDetectingFaces = isDetectingFaces,
-                        startDestination = if (isRawEdit) EditorDestination.Develop(DevelopCategory.WhiteBalance) else if (cutoutAvailable) EditorDestination.Smart else EditorDestination.Lighting,
+                        startDestination = initialDestination
+                            ?: if (isRawEdit) EditorDestination.Develop(DevelopCategory.WhiteBalance) else if (cutoutAvailable) EditorDestination.Smart else EditorDestination.Lighting,
                         rawDevelopParams = if (isRawEdit) rawDevelopParams else null,
                         onRawDevelopChange = onRawDevelopChange,
                         rawThumbnailProvider = rawThumbnailProvider,

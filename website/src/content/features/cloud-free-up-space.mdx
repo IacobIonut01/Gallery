@@ -1,0 +1,43 @@
+---
+title: Free up space
+summary: Remove local copies of photos and videos that are already backed up to the cloud.
+area: cloud
+path:
+  - Settings
+  - Cloud Accounts
+  - Free Up Space
+related: [cloud-backup, cloud-downloads, trash]
+scenes: [cloud-free-space]
+order: 14
+---
+
+**Free Up Space** (per account, under its cloud settings) deletes *local originals* whose backup to that server is verified; the server copy is retained, and the app only offers items it has confirmed are backed up. This is the counterpart of [cloud downloads](/ReFra/features/cloud-downloads), which removes app-made copies; here it is your original files that go.
+
+## Review and remove
+
+1. Open the account's settings and tap **Free Up Space**.
+2. Choose rules first:
+   - **Keep favorites**: favorited items are not removed.
+   - **Remove items older than**: **Never** (the default), **30 days**, **60 days**, **90 days**, **6 months**, or **1 year**.
+3. Tap **Scan for backed-up items**; while it runs the row shows **Scanning…**.
+4. The screen lists the verified candidates and offers **Remove N local copies**. Removing deletes those local files; the backed-up copies stay on the server.
+
+<PreviewCollection feature="cloud-free-up-space" section="review" />
+
+## Automatic cleanup
+
+**Run automatically** periodically verifies backed-up items and removes their local copies in the background, at a **Frequency** of **Every day**, **Every 3 days**, or **Every week**. Without All Files Access the app cannot delete silently; you get a notification to review instead.
+
+<PreviewCollection feature="cloud-free-up-space" section="automatic" />
+
+## Before you rely on it
+
+- Check the backups on the server itself before letting local copies go, and keep an independent backup of anything irreplaceable; a cloud account is a second copy, not a guarantee of eternal recovery.
+- Removed items that were favorited are skipped when **Keep favorites** is on; everything else matching the age rule is offered.
+
+## Example: reclaim space after a year of photos
+
+1. Open the NAS account's **Free Up Space**.
+2. Turn on **Keep favorites** and set **Remove items older than** to **90 days**.
+3. **Scan for backed-up items**, review the listed candidates, and tap **Remove N local copies**.
+4. Spot-check the server afterward; the removed photos remain browsable there as remote items.

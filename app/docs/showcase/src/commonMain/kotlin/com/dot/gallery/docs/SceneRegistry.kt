@@ -44,10 +44,11 @@ import com.dot.gallery.core.logging.AreaGroup
 import com.dot.gallery.core.logging.LogLevel
 import com.dot.gallery.core.logging.LogStats
 import com.dot.gallery.core.logging.LogEntry
+import com.dot.gallery.docs.scenes.DateFormatScene
 import com.dot.gallery.docs.scenes.SettingsItemScene
+import com.dot.gallery.docs.scenes.DocsVisualSearchOptionsScene
 import com.dot.gallery.data.entity.SmartScanStatus
 import com.dot.gallery.docs.scenes.TimelineDateHeaderScene
-import kotlin.time.Clock
 import com.dot.gallery.cloud.core.ProviderType
 import com.dot.gallery.data.fixture.DemoFixtures
 import com.dot.gallery.feature.settings.ui.CategoriesSettingsContent
@@ -64,6 +65,7 @@ import com.dot.gallery.feature.settings.ui.SmartScanDetailState
 import com.dot.gallery.feature.settings.ui.SettingsSecurityState
 import com.dot.gallery.feature.settings.ui.SmartFeaturesScreenContent
 import com.dot.gallery.feature.settings.ui.SmartFeaturesScreenState
+import com.dot.gallery.feature.settings.ui.SettingsRoute
 import com.dot.gallery.feature.settings.ui.SettingsScreenActions
 import com.dot.gallery.feature.settings.ui.SettingsScreenContent
 import com.dot.gallery.feature.settings.ui.SettingsScreenState
@@ -118,6 +120,9 @@ val sceneRegistry: List<DocsScene> = listOf(
         title = "Settings item",
         pathTrace = listOf("Settings", "Any section row"),
         states = listOf("default", "disabled", "horizontal"),
+        presentation = "component",
+        widthDp = 412,
+        heightDp = 220,
     ) { state -> SettingsItemScene(state) },
     DocsScene(
         id = "settings-list",
@@ -156,6 +161,7 @@ val sceneRegistry: List<DocsScene> = listOf(
         pathTrace = listOf("Settings"),
         states = listOf("banner", "banner-dismissed", "developer"),
     ) { state ->
+        val docsNav = LocalDocsNavigator.current
         SettingsScreenContent(
             state = SettingsScreenState(
                 developerMode = state == "developer",
@@ -163,7 +169,9 @@ val sceneRegistry: List<DocsScene> = listOf(
                 hasCloudProviders = true,
             ),
             actions = SettingsScreenActions(
-                onNavigate = {},
+                onNavigate = { route ->
+                    settingsRouteSceneId(route)?.let { docsNav?.navigateTo(it) }
+                },
                 onDismissBanner = {},
                 onRestoreBanner = {},
                 onShowSupport = {},
@@ -254,7 +262,7 @@ val sceneRegistry: List<DocsScene> = listOf(
         pathTrace = listOf("Settings", "Smart Features", "Categories"),
         states = listOf("idle", "scanning"),
     ) { state ->
-        val nowSec = Clock.System.now().epochSeconds
+        val nowSec = DOCS_DEMO_EPOCH_SECONDS
         CategoriesSettingsContent(
             state = CategoriesSettingsState(
                 categoryScan = if (state == "scanning") DemoFixtures.smartScanRun(nowSec) else null,
@@ -270,7 +278,7 @@ val sceneRegistry: List<DocsScene> = listOf(
         pathTrace = listOf("Settings", "Smart Features", "Smart Features data"),
         states = listOf("idle", "running"),
     ) { state ->
-        val nowSec = Clock.System.now().epochSeconds
+        val nowSec = DOCS_DEMO_EPOCH_SECONDS
         SmartScanDetailContent(
             state = SmartScanDetailState(
                 activeScan = if (state == "running") DemoFixtures.smartScanRun(nowSec) else null,
@@ -287,7 +295,7 @@ val sceneRegistry: List<DocsScene> = listOf(
         pathTrace = listOf("Settings", "Developer", "Session logs"),
         states = listOf("recent", "by-area", "empty"),
     ) { state ->
-        val nowMs = Clock.System.now().toEpochMilliseconds()
+        val nowMs = DOCS_DEMO_EPOCH_SECONDS * 1_000L
         val entries = listOf(
             LogEntry(
                 ts = nowMs - 4_000,
@@ -438,6 +446,12 @@ val sceneRegistry: List<DocsScene> = listOf(
         )
     },
     DocsScene(
+        id = "visual-search-options",
+        title = "Visual search options",
+        pathTrace = listOf("Settings", "Media viewer", "Visual search"),
+        states = listOf("default", "off"),
+    ) { state -> DocsVisualSearchOptionsScene(state) },
+    DocsScene(
         id = "settings-backup-wizard",
         title = "Backup import (select)",
         pathTrace = listOf("Settings", "Backup & restore", "Import"),
@@ -512,7 +526,7 @@ val sceneRegistry: List<DocsScene> = listOf(
         pathTrace = listOf("Settings", "Developer"),
         states = listOf("default", "crash-banner"),
     ) { state ->
-        val nowMs = Clock.System.now().toEpochMilliseconds()
+        val nowMs = DOCS_DEMO_EPOCH_SECONDS * 1_000L
         val errors = listOf(
             LogEntry(
                 ts = nowMs - 4_000,
@@ -560,6 +574,9 @@ val sceneRegistry: List<DocsScene> = listOf(
         id = "settings-app-header",
         title = "Settings app header",
         pathTrace = listOf("Settings"),
+        presentation = "component",
+        widthDp = 412,
+        heightDp = 160,
     ) {
         Column(Modifier.fillMaxWidth()) {
             SettingsAppHeader()
@@ -603,6 +620,28 @@ val sceneRegistry: List<DocsScene> = listOf(
         title = "Timeline date headers",
         pathTrace = listOf("Library", "Timeline"),
     ) { state -> TimelineDateHeaderScene(state) },
-)
+    DocsScene(
+        id = "settings-date-formats",
+        title = "Date formats",
+        pathTrace = listOf("Settings", "Timeline", "Date formats"),
+    ) { state -> DateFormatScene(state) },
+) + browseScenes + setupScenes + organizeScenes + platformScenes()
 
-fun findScene(id: String?): DocsScene = sceneRegistry.find { it.id == id } ?: sceneRegistry.first()
+fun findScene(id: String?): DocsScene =
+    requireNotNull(findSceneOrNull(id)) { "Unknown docs scene: $id" }
+
+fun findSceneOrNull(id: String?): DocsScene? = sceneRegistry.find { it.id == id }
+
+/** Settings hub route → registry scene id; routes without a scene return null. */
+fun settingsRouteSceneId(route: SettingsRoute): String? = when (route) {
+    SettingsRoute.APPEARANCE -> "settings-appearance"
+    SettingsRoute.TIMELINE_ALBUMS -> "settings-timeline-albums"
+    SettingsRoute.MEDIA_VIEWER -> "settings-media-viewer"
+    SettingsRoute.NAVIGATION -> "settings-navigation"
+    SettingsRoute.GENERAL -> "settings-general"
+    SettingsRoute.SECURITY -> "settings-security"
+    SettingsRoute.BACKUP -> "settings-backup"
+    SettingsRoute.SMART_FEATURES -> "settings-smart-features"
+    SettingsRoute.DEVELOPER -> "settings-developer"
+    SettingsRoute.CLOUD_ACCOUNTS, SettingsRoute.HELP -> null
+}

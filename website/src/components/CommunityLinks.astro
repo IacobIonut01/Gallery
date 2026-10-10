@@ -1,0 +1,174 @@
+---
+import { CROWDIN_URL, TELEGRAM_URL } from '@lib/constants';
+import ServiceIcon from './ServiceIcon.astro';
+
+/*
+ * Community links, after the repo banners
+ * (screenshots/items/community_banner.png, support_banner.png). The banner's
+ * refraction colors appear only as a small blurred wash at the trailing edge;
+ * the surface and text use normal md roles so both stay legible in every
+ * theme. No animation — the hero owns the one authored moment.
+ */
+const links = [
+  {
+    title: 'Join the community',
+    subtitle: 'Telegram',
+    href: TELEGRAM_URL,
+    service: 'telegram',
+  },
+  {
+    title: 'Translate the project',
+    subtitle: 'Crowdin',
+    href: CROWDIN_URL,
+    service: 'crowdin',
+  },
+] as const;
+---
+
+<div class="community-links">
+  {
+    links.map((l) => (
+      <a class="community-link" href={l.href} rel="noopener">
+        <span class="community-body">
+          <ServiceIcon name={l.service} size={32} />
+          <span class="community-text">
+            <span class="community-title">{l.title}</span>
+            <span class="community-subtitle">{l.subtitle}</span>
+          </span>
+          <svg
+            class="community-arrow"
+            viewBox="0 0 24 24"
+            width="20"
+            height="20"
+            aria-hidden="true"
+          >
+            <path
+              d="M5 12h13M13 6l6 6-6 6"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </span>
+        <span class="community-art" aria-hidden="true" />
+      </a>
+    ))
+  }
+</div>
+
+<style>
+  .community-links {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .community-link {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    min-height: 112px;
+    border: 1px solid var(--md-outline-variant);
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--md-surface-container-low);
+    color: var(--md-on-surface);
+    text-decoration: none;
+  }
+  .community-link:hover {
+    text-decoration: none;
+    background: var(--md-surface-container);
+  }
+  .community-body {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex: 1;
+    min-width: 0;
+    padding: 20px 22px;
+  }
+  .community-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+  }
+  .community-title {
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: -0.01em;
+  }
+  .community-subtitle {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--md-on-surface-variant);
+  }
+  .community-body svg {
+    flex: none;
+  }
+  /* The service glyph is monochrome and tints with the surrounding text. */
+  .community-body :global(.service-icon) {
+    color: var(--md-on-surface-variant);
+    transition: color 200ms var(--ease-standard);
+  }
+  .community-link:hover .community-body :global(.service-icon) {
+    color: var(--md-primary);
+  }
+  .community-arrow {
+    color: var(--md-on-surface-variant);
+    transition:
+      translate var(--dur-fast) var(--ease-standard),
+      color 200ms var(--ease-standard);
+  }
+  .community-link:hover .community-arrow {
+    translate: 3px 0;
+    color: var(--md-primary);
+  }
+  /* Two small brand bulbs, clipped inside the card, as a soft trailing wash. */
+  .community-art {
+    position: absolute;
+    top: -30%;
+    right: -6%;
+    width: 42%;
+    height: 160%;
+    background:
+      radial-gradient(45% 34% at 38% 30%, var(--brand-blue), transparent 72%),
+      radial-gradient(52% 40% at 62% 70%, var(--brand-orange), transparent 74%);
+    filter: blur(20px);
+    opacity: 0.4;
+    pointer-events: none;
+  }
+  :global(:root[data-theme='dark']) .community-art,
+  :global(:root[data-theme='amoled']) .community-art {
+    opacity: 0.24;
+  }
+  @media (prefers-color-scheme: dark) {
+    :global(
+        :root:not([data-theme='light']):not([data-theme='dark']):not(
+            [data-theme='amoled']
+          )
+      )
+      .community-art {
+      opacity: 0.24;
+    }
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    .community-art {
+      display: none;
+    }
+  }
+  .community-link:focus-visible {
+    outline: 2px solid var(--md-primary);
+    outline-offset: 2px;
+  }
+  @media (min-width: 720px) {
+    .community-links {
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+  }
+</style>

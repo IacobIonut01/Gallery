@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
@@ -101,6 +103,7 @@ fun CopyMediaSheetContent(
     onDone: () -> Unit,
     onOpen: () -> Unit,
     providerIcon: ProviderIconSlot? = null,
+    destinationGridState: LazyGridState = rememberLazyGridState(),
 ) {
     val scope = rememberCoroutineScope()
     val newAlbumSheetState = rememberAppBottomSheetState()
@@ -295,7 +298,8 @@ fun CopyMediaSheetContent(
                         destinationStatus = destinationStatus,
                         onAlbumClick = onDestinationSelected,
                         onNewAlbumClick = { scope.launch { newAlbumSheetState.show() } },
-                        providerIcon = providerIcon
+                        providerIcon = providerIcon,
+                        gridState = destinationGridState
                     )
                 }
             }

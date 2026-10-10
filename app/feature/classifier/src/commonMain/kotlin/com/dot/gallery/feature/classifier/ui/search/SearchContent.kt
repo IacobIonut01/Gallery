@@ -415,6 +415,11 @@ fun SearchContent(
                             optionList = historyItems,
                             slimLayout = true,
                             swipeToDismiss = true,
+                            itemKey = { index, item -> when {
+                                item is SettingsEntity.Header -> "search-history-header-$index"
+                                item.tag is Long -> "search-history-image-${item.tag}"
+                                else -> "search-history-text-${item.title}"
+                            } },
                             onDismiss = { item ->
                                 val mediaId = item.tag as? Long
                                 if (mediaId != null) {
@@ -427,7 +432,8 @@ fun SearchContent(
                         )
                         SettingsOptionLayout(
                             optionList = suggestionItems,
-                            slimLayout = true
+                            slimLayout = true,
+                            itemKey = { index, _ -> "search-suggestion-$index" }
                         )
 
                         // Category Carousel
@@ -435,7 +441,8 @@ fun SearchContent(
                             SettingsOptionLayout(
                                 modifier = Modifier.padding(top = 12.dp),
                                 optionList = listOf(SettingsEntity.Header(browseCategoriesTitle)),
-                                slimLayout = true
+                                slimLayout = true,
+                                itemKey = { _, _ -> "search-section-categories" }
                             )
                             item {
                                 CategoryCarousel(
@@ -453,7 +460,8 @@ fun SearchContent(
                             SettingsOptionLayout(
                                 modifier = Modifier.padding(top = 12.dp),
                                 optionList = listOf(SettingsEntity.Header(locationsTitle)),
-                                slimLayout = true
+                                slimLayout = true,
+                                itemKey = { _, _ -> "search-section-locations" }
                             )
                             item {
                                 LocationCarousel(
@@ -486,7 +494,8 @@ fun SearchContent(
                             SettingsOptionLayout(
                                 modifier = Modifier.padding(top = 12.dp),
                                 optionList = listOf(SettingsEntity.Header(mediaTypesTitle)),
-                                slimLayout = true
+                                slimLayout = true,
+                                itemKey = { _, _ -> "search-section-media-types" }
                             )
                             item {
                                 SearchCarousel(
@@ -503,7 +512,8 @@ fun SearchContent(
                             SettingsOptionLayout(
                                 modifier = Modifier.padding(top = 12.dp),
                                 optionList = listOf(SettingsEntity.Header(cameraModelsTitle)),
-                                slimLayout = true
+                                slimLayout = true,
+                                itemKey = { _, _ -> "search-section-camera-models" }
                             )
                             item {
                                 SearchCarousel(
@@ -520,7 +530,8 @@ fun SearchContent(
                             SettingsOptionLayout(
                                 modifier = Modifier.padding(top = 12.dp),
                                 optionList = listOf(SettingsEntity.Header(specialModesTitle)),
-                                slimLayout = true
+                                slimLayout = true,
+                                itemKey = { _, _ -> "search-section-special-modes" }
                             )
                             item {
                                 SearchCarousel(
@@ -537,7 +548,8 @@ fun SearchContent(
                             SettingsOptionLayout(
                                 modifier = Modifier.padding(top = 12.dp),
                                 optionList = listOf(SettingsEntity.Header(mediaGroupingsTitle)),
-                                slimLayout = true
+                                slimLayout = true,
+                                itemKey = { _, _ -> "search-section-media-groupings" }
                             )
                             item {
                                 SearchCarousel(

@@ -1,0 +1,30 @@
+---
+title: SD cards and USB storage
+summary: Browse and copy media on removable storage once Android has mounted it.
+area: utilities
+path:
+  - Albums
+related: [copy-move-rename, albums, permissions]
+scenes: [settings-private-folder]
+order: 5
+---
+
+ReFra works with SD cards and USB drives after Android itself has mounted them; insert or connect the storage first, using whatever adaptor your device needs, and grant the permission if the system asks. The app cannot format or repair a drive; that belongs to Android.
+
+## How removable media shows up
+
+- Photos and videos on mounted storage join the library once Android indexes them. Each volume keeps its own identity; albums with the same name on different volumes merge in the Albums view only when **Merge albums by name** is enabled (see [timeline and albums settings](/ReFra/features/timeline-albums)). The merge is a display grouping, not a file move.
+- [Copy and move](/ReFra/features/copy-move-rename) can target removable storage where Android grants the write. Album names can repeat across volumes, so confirm where an album lives from its [Media Info](/ReFra/features/metadata) path before copying, or read the **Location** line where the picker offers one.
+- If a transfer was running, let it finish before unplugging. When a card disappears and returns, the library refreshes as Android re-indexes it; a folder that still does not appear is usually one the media scanner skips, covered below.
+
+## Files Android does not index
+
+<PreviewCollection feature="external-storage" section="files-android-does-not-index" />
+
+Media inside folders the media scanner skips never appears in the timeline. Open them directly from a file manager with **Open with › ReFra** (see [open with](/ReFra/features/open-with-wallpaper)), or point the [private folder](/ReFra/features/private-folder) at a directory you manage yourself.
+
+## Example: pull photos off a camera card
+
+1. Mount the SD card, open **Albums**, and find the card's Camera album; check its location so you know you are looking at the card.
+2. Select the photos, choose **Copy**, and pick an internal album; check that the Location line says internal storage.
+3. Confirm the copies open, then unplug the card.

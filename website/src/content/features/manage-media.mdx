@@ -1,0 +1,62 @@
+---
+title: Manage media
+summary: Select photos and videos, then share, copy, move, favorite, hide, or delete them from one action sheet.
+area: organize-secure
+path:
+  - Timeline
+  - Select
+related: [sharing, copy-move-rename, favorites, trash, collections]
+scenes: [browse-timeline, selection-controls]
+order: 2
+---
+
+Selecting items turns the bottom of the screen into an action sheet with everything you can do to the selection. The same sheet appears on the Timeline, inside albums, and inside collections.
+
+## Select items
+
+<PreviewCollection feature="manage-media" section="select-items" />
+
+1. **Touch and hold** any thumbnail. A checkmark appears and selection mode starts.
+2. **Tap** other thumbnails to add them, or **keep your finger down and drag** to sweep across a run of items; the grid scrolls on its own when you reach the edge.
+3. Tap the **check circle on a date header** to select or release that whole date group.
+4. Tap **Select all** at the top of the sheet to take everything visible, or **X** / the back gesture to leave selection mode.
+5. When items are grouped as stacks (RAW+JPEG pairs, bursts, edited copies), selecting the stack selects every member; the count in the sheet reflects that.
+
+## The action sheet
+
+The sheet is arranged in three zones:
+
+- **Top row**: **X** to close, **Select all**, and **Media details** (only with a single item selected) which opens the details panel.
+- **Middle**: **Add to collection**, which flips to **Remove from collection** when you are selecting inside a collection.
+- **Bottom actions**: the full-width buttons: **Share**, **Favorite**, **Copy**, **Move**, **Delete** (to Trash), **Hide** (to the Vault), **Private folder** (when one is configured), **Edit** (single item), **Rotate**, **Download** (for cloud-only items), and **Use as album cover** (single item).
+
+Not every action shows for every selection. Single-item actions hide when several items are selected, Download only appears for items that exist only in the cloud, and read-only cloud sources drop the actions they cannot perform. Which actions appear at all, and in which order, is your choice under **Settings › Navigation › Selection actions**.
+
+## What each action does
+
+| Action | Result |
+| --- | --- |
+| Share | Opens the Android share sheet to send the files through another app. See [sharing](/ReFra/features/sharing). |
+| Favorite | Marks or unmarks the items as favorites. See [favorites](/ReFra/features/favorites). |
+| Copy | Places a duplicate in the album you pick; originals stay. See [copy, move, rename](/ReFra/features/copy-move-rename). |
+| Move | Moves the files to another album. Restricted folders are handled safely; see the same page. |
+| Delete | Sends the items to Trash, or deletes permanently if trash is off. See [trash](/ReFra/features/trash). |
+| Hide | Adds encrypted copies of the items to a vault; you choose what happens to the originals. See [vault](/ReFra/features/vault). |
+| Private folder | Moves the items into the private folder you configured. See [private folder](/ReFra/features/private-folder). |
+| Edit | Opens a single item in the editor. See [image editor](/ReFra/features/editor). |
+| Rotate | Rotates each selected image in place. |
+| Download | Downloads cloud-only items to the device. |
+| Use as album cover | Makes a single selected item the cover of its album. See [album organization](/ReFra/features/album-organization). |
+
+## Example: clean up a trip folder
+
+1. Open **Albums › Holiday 2026**.
+2. Touch and hold the first blurry shot, then drag across the rest of the rejects.
+3. Tap **Delete**. With the trash enabled (**Settings › General › Use trash can**), the batch goes to Trash and can be restored; with it off, deletion is permanent after confirmation.
+4. Now select the five keepers, tap **Favorite**, then **Add to collection › Holiday 2026**.
+
+## If an action is missing
+
+- **Edit and Media details need exactly one item.** Narrow the selection to a single photo.
+- **Cloud items may be read-only.** A provider that does not allow writes removes delete and move; items that cannot be trashed are flagged before deletion is permanent.
+- **The action list looks different.** Someone customized it. Restore order and visibility under **Settings › Navigation › Selection actions**.

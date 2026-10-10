@@ -1,0 +1,30 @@
+ReFra documentation preview media credits
+==========================================
+
+The photographs shown inside the in-app preview scenes are example data,
+bundled with the documentation. They are derived from these sources:
+
+docs_lake.jpg
+  Moraine Lake — Public domain
+  https://commons.wikimedia.org/wiki/File:Moraine_Lake_17092005.jpg
+
+docs_earth.jpg
+  The Earth seen from Apollo 17 — NASA, Public domain
+  https://commons.wikimedia.org/wiki/File:The_Earth_seen_from_Apollo_17.jpg
+
+docs_flower.jpg, docs_flower_detail.jpg
+  flower.mp4 — MDN shared-assets, CC0
+  https://mdn.github.io/shared-assets/videos/flower.mp4
+
+All previews run entirely on example data bundled with the docs; no personal
+photos or accounts are used.
+
+docs_venice_panorama.jpg
+  Venice Sunset HDRI — Poly Haven, CC0
+  https://polyhaven.com/a/venice_sunset (license: https://polyhaven.com/license)
+  Tone-mapped from the 1k HDR to a 2:1 JPEG for the panorama preview.
+
+docs_motion_photo.jpg (Android-only previews)
+  Golden Gate Bridge as seen from Battery East — Diliff, CC BY-SA 4.0
+  https://commons.wikimedia.org/wiki/File:Golden_Gate_Bridge_as_seen_from_Battery_East.jpg
+  Generated fixture: JPEG + MicroVideo XMP + appended 2s flower.mp4 clip (CC0).

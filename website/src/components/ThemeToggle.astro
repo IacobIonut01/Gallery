@@ -1,0 +1,268 @@
+---
+/**
+ * ThemeToggle — icon-trigger menu over the app's theme vocabulary
+ * (System / Light / Dark / AMOLED — the same four values the live embed
+ * host accepts). Persists to localStorage and broadcasts refra:theme so
+ * every LiveEmbed on the page re-themes through the docs:set channel.
+ */
+import { THEMES } from '@lib/constants';
+
+const LABELS: Record<string, string> = {
+  auto: 'System',
+  light: 'Light',
+  dark: 'Dark',
+  amoled: 'AMOLED',
+};
+---
+
+<theme-toggle class="theme-toggle">
+  <details class="theme-menu">
+    <summary
+      class="theme-trigger"
+      title="Color theme"
+      aria-label="Color theme"
+      aria-haspopup="menu"
+      aria-expanded="false"
+      aria-controls="theme-panel"
+    >
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+        <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.8" />
+        <path d="M12 4a8 8 0 0 1 0 16Z" fill="currentColor" />
+      </svg>
+    </summary>
+    <div class="theme-panel" id="theme-panel" role="menu" aria-label="Color theme">
+      {
+        THEMES.map((t) => (
+          <button
+            type="button"
+            class="theme-option"
+            role="menuitemradio"
+            data-theme-choice={t}
+            aria-checked="false"
+          >
+            <span class="theme-option-check" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="16" height="16">
+                <path
+                  d="M9.55 17.3 4.8 12.55l1.4-1.4 3.35 3.35 8.25-8.25 1.4 1.4z"
+                  fill="currentColor"
+                />
+              </svg>
+            </span>
+            {LABELS[t]}
+          </button>
+        ))
+      }
+    </div>
+  </details>
+</theme-toggle>
+
+<script>
+  import { THEMES } from '../lib/constants';
+
+  class ThemeToggle extends HTMLElement {
+    connectedCallback() {
+      this.details = this.querySelector('details');
+      this.summary = this.querySelector('.theme-trigger');
+      this.options = [...this.querySelectorAll('[data-theme-choice]')];
+
+      this.onToggle = () => {
+        const open = this.details.open;
+        this.summary.setAttribute('aria-expanded', String(open));
+        this.syncChecked();
+        if (open) this.options.find((o) => o.getAttribute('aria-checked') === 'true')?.focus();
+      };
+      this.details.addEventListener('toggle', this.onToggle);
+
+      this.onKeydown = (event) => {
+        const items = this.options;
+        const index = items.indexOf(document.activeElement);
+        if (event.key === 'Escape' && this.details.open) {
+          event.preventDefault();
+          this.close(true);
+          return;
+        }
+        if (event.key === 'Tab' && this.details.open) {
+          // Close and re-anchor focus on the trigger, then let the browser
+          // resolve the next/previous control in native order — no trap.
+          this.details.open = false;
+          this.summary.focus();
+          return;
+        }
+        if (!this.details.open || index === -1) return;
+        const move = (target) => {
+          event.preventDefault();
+          items.forEach((o) => o.setAttribute('tabindex', o === target ? '0' : '-1'));
+          target.focus();
+        };
+        if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+          const next = event.key === 'ArrowDown' ? index + 1 : index - 1;
+          move(items[(next + items.length) % items.length]);
+        } else if (event.key === 'Home') {
+          move(items[0]);
+        } else if (event.key === 'End') {
+          move(items[items.length - 1]);
+        }
+      };
+      this.details.addEventListener('keydown', this.onKeydown);
+
+      this.onOutsidePointer = (event) => {
+        if (this.details.open && !this.details.contains(event.target)) {
+          this.details.open = false;
+        }
+      };
+      document.addEventListener('pointerdown', this.onOutsidePointer);
+
+      this.onOptionClick = (event) => {
+        const option = event.target.closest('[data-theme-choice]');
+        if (!option || !this.details.contains(option)) return;
+        this.apply(option.dataset.themeChoice);
+        this.close(true);
+      };
+      this.details.addEventListener('click', this.onOptionClick);
+
+      this.media = matchMedia('(prefers-color-scheme: dark)');
+      this.onMedia = () => {
+        if (this.current() === 'auto') this.broadcast();
+      };
+      this.media.addEventListener('change', this.onMedia);
+      this.syncChecked();
+    }
+
+    disconnectedCallback() {
+      this.details?.removeEventListener('toggle', this.onToggle);
+      this.details?.removeEventListener('keydown', this.onKeydown);
+      this.details?.removeEventListener('click', this.onOptionClick);
+      document.removeEventListener('pointerdown', this.onOutsidePointer);
+      this.media?.removeEventListener('change', this.onMedia);
+    }
+
+    close(refocus) {
+      this.details.open = false;
+      if (refocus) this.summary.focus();
+    }
+
+    syncChecked() {
+      const current = this.current();
+      this.options.forEach((o) => {
+        const selected = o.dataset.themeChoice === current;
+        o.setAttribute('aria-checked', String(selected));
+        o.setAttribute('tabindex', selected ? '0' : '-1');
+      });
+    }
+
+    // The applied theme lives on <html data-theme> — read it rather than
+    // storage so storage-denied clients still broadcast what they chose.
+    current() {
+      const applied = document.documentElement.dataset.theme;
+      return THEMES.includes(applied) ? applied : 'auto';
+    }
+
+    apply(choice) {
+      if (!THEMES.includes(choice)) return;
+      try {
+        localStorage.setItem('refra-theme', choice);
+      } catch {
+        /* storage may be unavailable */
+      }
+      document.documentElement.dataset.theme = choice;
+      this.syncChecked();
+      this.broadcast();
+    }
+
+    broadcast() {
+      window.dispatchEvent(new CustomEvent('refra:theme', { detail: { theme: this.current() } }));
+    }
+  }
+
+  if (!customElements.get('theme-toggle')) {
+    customElements.define('theme-toggle', ThemeToggle);
+  }
+</script>
+
+<style>
+  .theme-toggle {
+    display: inline-flex;
+  }
+  .theme-menu {
+    position: relative;
+  }
+  .theme-trigger {
+    display: inline-grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    color: var(--md-on-surface-variant);
+    cursor: pointer;
+    list-style: none;
+  }
+  .theme-trigger::-webkit-details-marker {
+    display: none;
+  }
+  .theme-trigger:hover,
+  .theme-menu[open] .theme-trigger {
+    color: var(--md-on-surface);
+    background: var(--md-surface-container-high);
+  }
+  .theme-panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 60;
+    width: 184px;
+    max-width: calc(100vw - 32px);
+    padding: 6px;
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--md-surface-container-high) 92%, transparent);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--md-shadow) 28%, transparent);
+  }
+  @supports not (backdrop-filter: blur(1px)) {
+    .theme-panel {
+      background: var(--md-surface-container-high);
+    }
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    .theme-panel {
+      background: var(--md-surface-container-high);
+      backdrop-filter: none;
+    }
+  }
+  .theme-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 44px;
+    padding: 0 12px 0 8px;
+    border: 0;
+    border-radius: 8px;
+    font: inherit;
+    font-size: 0.875rem;
+    text-align: left;
+    color: var(--md-on-surface);
+    background: transparent;
+    cursor: pointer;
+  }
+  .theme-option:hover {
+    background: var(--md-surface-container);
+  }
+  .theme-option:focus-visible {
+    background: var(--md-surface-container);
+    outline: 2px solid var(--md-primary);
+    outline-offset: -2px;
+  }
+  .theme-option[aria-checked='true'] {
+    font-weight: 600;
+  }
+  .theme-option-check {
+    display: inline-flex;
+    width: 16px;
+    flex: none;
+    color: var(--md-primary);
+    visibility: hidden;
+  }
+  .theme-option[aria-checked='true'] .theme-option-check {
+    visibility: visible;
+  }
+</style>

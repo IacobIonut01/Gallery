@@ -1,0 +1,32 @@
+---
+title: Smart search for cloud libraries
+summary: Choose whether searches are answered on the server and which providers get indexed on this device.
+area: cloud
+path:
+  - Settings
+  - Smart Features
+  - Cloud libraries
+related: [smart-features, cloud-overview, search, people]
+scenes: [settings-cloud-indexing]
+order: 20
+---
+
+Under **Settings › Smart Features › Cloud libraries**, two kinds of switches control how remote media joins [search](/ReFra/features/search) and [people](/ReFra/features/people). They govern AI indexing only; offline pinning is a separate feature under [offline access](/ReFra/features/cloud-offline).
+
+- **Server-side smart search**: a single global switch, shown regardless of provider. It applies to connected servers that have their own AI, currently Immich. With it on, queries are sent to that server and answered by its index, so results include what the server knows even before local indexing finishes. The query text leaves the device while the option is enabled; offline, the server simply does not answer.
+- **Index [provider] on this device**: one switch per *provider type*, not per account; turning on **Index Immich** affects every Immich account you have connected. The app fetches a thumbnail per item and analyzes it with the on-device models, so even a provider with no AI of its own (a NAS share, for example) can appear in descriptive search and people grouping on this device.
+
+## What it takes
+
+<PreviewCollection feature="cloud-search" section="what-it-takes" />
+
+- **Index on this device** needs the models installed under [AI Models](/ReFra/features/ai-models) and scan time under [Smart Features data](/ReFra/features/smart-scan); until the scan finishes, results are partial.
+- **Server-side smart search** needs the account connected.
+- Local indexing also feeds cross-library results: a cloud photo can match a text search alongside local ones without any server AI.
+
+## Example: searching a NAS
+
+1. Add the NAS as an SMB account; it has no AI of its own.
+2. Install the **Search & Categories** models under **AI Models**.
+3. In **Cloud libraries**, turn on **Index SMB on this device**.
+4. Let the scan run; NAS photos then surface in descriptive searches next to local media.
