@@ -1064,7 +1064,7 @@
     <string name="visual_search_convert_always_summary">Convert automatically to the format chosen below</string>
     <string name="visual_search_convert_never">Never convert (send original)</string>
     <string name="visual_search_convert_never_summary">Send the file as-is — the provider may not read it</string>
-    <string name="visual_search_convert_format_header">Convert to</string>
+    <string name="visual_search_convert_format_header">Convertir a</string>
     <string name="visual_search_convert_format_summary">JPEG is the most compatible, PNG keeps full quality, WebP balances size and quality</string>
     <string name="visual_search_format_jpeg_summary">Most compatible, smallest files</string>
     <string name="visual_search_format_png_summary">Lossless quality, larger files</string>
