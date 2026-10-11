@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- GET STARTED: BASICS -->
-    <string name="help_tip_basics_timeline_title">Navega por tu cronología</string>
+    <string name="help_tip_basics_timeline_title">Navega por tu línea del tiempo</string>
     <string name="help_tip_basics_timeline_subtitle">Ver todas tus fotos y vídeos organizados por fecha</string>
     <string name="help_tip_basics_timeline_p1_title">Tus fotos, organizadas por tiempo</string>
-    <string name="help_tip_basics_timeline_p1_desc">La línea de tiempo es tu pantalla de inicio: muestra todas las fotos y vídeos de tu dispositivo, ordenados de más recientes a más antiguos. Los encabezados de fecha separan los contenidos por meses, lo que facilita el desplazamiento a un periodo de tiempo específico. Si tienes miles de fotos, no te preocupes: Gallery las carga de forma eficiente para que el desplazamiento sea fluido.</string>
+    <string name="help_tip_basics_timeline_p1_desc">La línea de tiempo es tu pantalla de inicio: muestra todas las fotos y vídeos de tu dispositivo, ordenados de más recientes a más antiguos. Los encabezados de fecha separan los contenidos por meses, lo que facilita el desplazamiento a un periodo de tiempo específico. Si tienes miles de fotos, no te preocupes: la galeria las carga de forma eficiente para que el desplazamiento sea fluido.</string>
     <string name="help_tip_basics_timeline_p2_title">Desplazar y explorar</string>
     <string name="help_tip_basics_timeline_p2_desc">Desplázate por tu línea de tiempo para navegar por los medios. Utiliza la barra de desplazamiento del borde derecho para saltar rápidamente a cualquier mes. También puedes pellizcar para ampliar la cuadrícula: separa dos dedos para ver miniaturas más grandes o júntalos para que quepan más fotos en la pantalla.</string>
     <string name="help_tip_basics_timeline_p2_s1">Abre la galería para ver tu línea de tiempo</string>
     <string name="help_tip_basics_timeline_p2_s2">Desplazarse hacia arriba y abajo para navegar</string>
     <string name="help_tip_basics_timeline_p2_s3">Usa la barra derecha de desplazamiento para ir aun mes en concreto</string>
-    <string name="help_tip_basics_timeline_p2_s4">Pincha para cambiar el tamaño de la miniatura</string>
+    <string name="help_tip_basics_timeline_p2_s4">Pellizca para cambiar el tamaño de la miniatura</string>
     <string name="help_tip_basics_timeline_p2_s5">Toca cualquier foto pata verla en pantalla completa</string>
     <string name="help_tip_basics_view_media_title">Ver fotos y videos</string>
     <string name="help_tip_basics_view_media_subtitle">Toca para abrir, desliza para navegar o pincha para hacer acercar</string>
@@ -33,7 +33,7 @@
     <string name="help_tip_basics_share_title">Compartir fotos y vídeos</string>
     <string name="help_tip_basics_share_subtitle">Compartir archivos multimedia con otras aplicaciones y personas</string>
     <string name="help_tip_basics_share_p1_title">Comparte tus archivos multimedia</string>
-    <string name="help_tip_basics_share_p1_desc">Open a photo or video, then tap the share button in the bottom bar to send it via any app on your device — messaging apps, email, social media, cloud storage, and more. You can also share multiple photos at once by selecting them first in the grid. The share sheet shows your most-used apps at the top for quick access.</string>
+    <string name="help_tip_basics_share_p1_desc">Abre una foto o un vídeo y, a continuación, pulsa el botón «Compartir» de la barra inferior para enviarlo a través de cualquier aplicación de tu dispositivo: aplicaciones de mensajería, correo electrónico, redes sociales, almacenamiento en la nube y mucho más. También puedes compartir varias fotos a la vez seleccionándolas primero en la cuadrícula. La hoja de compartir muestra tus aplicaciones más utilizadas en la parte superior para que puedas acceder a ellas rápidamente.</string>
     <string name="help_tip_basics_share_p1_s1">Abre una foto o video</string>
     <string name="help_tip_basics_share_p1_s2">Pulsa el icono de compartir en la barra inferior</string>
     <string name="help_tip_basics_share_p1_s3">Elige una aplicación con la que compartir</string>
@@ -52,7 +52,7 @@
     <string name="help_tip_nav_bottom_bar_p1_title">La barra de navegación</string>
     <string name="help_tip_nav_bottom_bar_p1_desc">La barra de navegación inferior es la forma principal de moverte por la Galería. Siempre está visible en la parte inferior de la pantalla, salvo que actives la opción de ocultarla automáticamente en los ajustes. Cada sección recuerda dónde la dejaste, así que puedes cambiar de una a otra sin perder la posición en la que estabas.</string>
     <string name="help_tip_nav_bottom_bar_p2_title">Tres secciones principales</string>
-    <string name="help_tip_nav_bottom_bar_p2_desc">Timeline shows all your media sorted by date — great for finding recent photos. Albums organizes photos by the folder they\'re stored in (Camera, Screenshots, Downloads, etc.) — perfect for browsing by source. Library is your hub for Favorites, Trash, Vault, Locations, and AI Categories — quick access to everything special.</string>
+    <string name="help_tip_nav_bottom_bar_p2_desc">La línea de tiempo muestra todos tus archivos multimedia ordenados por fecha, lo que resulta ideal para encontrar fotos recientes. La sección «Álbumes» organiza las fotos según la carpeta en la que estén guardadas (Cámara, Capturas de pantalla, Descargas, etc.), lo que resulta perfecto para explorarlas por origen. La «Biblioteca» es tu centro de control para «Favoritos», «Papelera», «Caja fuerte», «Ubicaciones» y «Categorías de IA»: acceso rápido a todo lo especial.</string>
     <string name="help_tip_nav_albums_title">Explorar por álbumes</string>
     <string name="help_tip_nav_albums_subtitle">Ver las fotos organizadas por carpetas</string>
     <string name="help_tip_nav_albums_p1_title">Vista de álbum</string>
@@ -67,8 +67,8 @@
     <string name="help_tip_nav_search_subtitle">Busca tus fotos por nombre o con IA</string>
     <string name="help_tip_nav_search_p1_title">Busca en tus archivos multimedia</string>
     <string name="help_tip_nav_search_p1_desc">Tap the search bar at the top of the timeline to find photos. Basic search matches filenames using fuzzy matching, so you don\'t need to remember exact names. Your recent searches are saved for quick access. Results update as you type. The keyboard opens automatically once the search screen settles — turn this off with \'Open keyboard on search\' in Settings &gt; Navigation if you prefer to browse suggestions first.</string>
-    <string name="help_tip_nav_search_p2_title">AI vision search</string>
-    <string name="help_tip_nav_search_p2_desc">With AI models installed, search becomes much more powerful — describe what you\'re looking for in plain language like \"sunset at the beach\", \"birthday cake\", or \"dog playing in snow\". Gallery uses on-device CLIP models to understand image content, so your photos never leave your device. To enable this, go to Settings &gt; Smart features and install the AI models.</string>
+    <string name="help_tip_nav_search_p2_title">Búsqueda por visión de inteligencia artificial</string>
+    <string name="help_tip_nav_search_p2_desc">Con los modelos de IA instalados, la búsqueda se vuelve mucho más potente: describe lo que buscas en lenguaje sencillo, como «puesta de sol en la playa», «tarta de cumpleaños» o «perro jugando en la nieve». La Galería utiliza modelos CLIP integrados en el dispositivo para comprender el contenido de las imágenes, por lo que tus fotos nunca salen de tu dispositivo. Para activar esta función, ve a Ajustes  > Funciones inteligentes y Administrador de modelos IA.</string>
     <string name="help_tip_nav_old_navbar_title">Barra de navegación clásica</string>
     <string name="help_tip_nav_old_navbar_subtitle">Cambiar entre estilos de navegación modernos y clásicos</string>
     <string name="help_tip_nav_old_navbar_p1_title">Estilos de la barra de navegación</string>
@@ -78,11 +78,11 @@
     <string name="help_tip_nav_library_title">Utiliza la biblioteca</string>
     <string name="help_tip_nav_library_subtitle">Acceso rápido a favoritos, papelera, almacén y mucho más</string>
     <string name="help_tip_nav_library_p1_title">La biblioteca</string>
-    <string name="help_tip_nav_library_p1_desc">The Library is your hub for everything beyond the main timeline and albums. From here you can access: Favorites (your starred photos), Trash (recently deleted items, recoverable for 30 days), Vault (encrypted private photos), Locations (photos organized by where they were taken), and Categories (AI-sorted photo groups). Think of it as your gallery\'s control center.</string>
+    <string name="help_tip_nav_library_p1_desc">La Biblioteca es tu centro de control para todo lo que va más allá de la línea de tiempo principal y los álbumes. Desde aquí puedes acceder a: Favoritos (tus fotos marcadas con una estrella), Papelera (elementos eliminados recientemente, recuperables durante 30 días), Cofre (fotos privadas cifradas), Ubicaciones (fotos organizadas por el lugar donde se tomaron) y Categorías (grupos de fotos clasificados por IA). Piensa en ella como el centro de control de tu galería.</string>
     <string name="help_tip_nav_launch_screen_title">Configura tu pantalla de inicio predeterminada</string>
     <string name="help_tip_nav_launch_screen_subtitle">Elige qué pantalla aparece al abrir la Galería</string>
     <string name="help_tip_nav_launch_screen_p1_title">Pantalla de inicio predeterminada</string>
-    <string name="help_tip_nav_launch_screen_p1_desc">Choose which screen greets you when you open Gallery. Timeline is great if you mostly browse recent photos. Albums works well if you organize by folder. Library is ideal if you primarily use favorites or categories. There\'s also an Auto option that remembers the last screen you used.</string>
+    <string name="help_tip_nav_launch_screen_p1_desc">Elige qué pantalla quieres que aparezca al abrir la Galería. La «Línea de tiempo» es ideal si sueles ver sobre todo fotos recientes. La opción «Álbumes» funciona bien si organizas tus fotos por carpetas. La «Biblioteca» es perfecta si utilizas principalmente favoritos o categorías. También hay una opción «Automático» que recuerda la última pantalla que has utilizado.</string>
     <string name="help_tip_nav_launch_screen_p1_s1">Go to Settings &gt; Navigation</string>
     <string name="help_tip_nav_launch_screen_p1_s2">Tap \'Default launch screen\'</string>
     <string name="help_tip_nav_launch_screen_p1_s3">Choose Auto, Timeline, Albums, or Library</string>
@@ -367,13 +367,13 @@
     <string name="help_tip_viewer_date_header_p1_s1">Go to Settings &gt; Media viewer</string>
     <string name="help_tip_viewer_date_header_p1_s2">Toggle \'Show date header\'</string>
     <string name="help_tip_viewer_date_header_p1_s3">The date header also doubles as the Lock Image target</string>
-    <string name="help_tip_viewer_fav_button_title">Show favorite button</string>
-    <string name="help_tip_viewer_fav_button_subtitle">Toggle the favorite button in the viewer</string>
-    <string name="help_tip_viewer_fav_button_p1_title">Favorite button</string>
+    <string name="help_tip_viewer_fav_button_title">Mostrar el botón de favoritos</string>
+    <string name="help_tip_viewer_fav_button_subtitle">Activa/desactiva el botón de «Favoritos» en el visor</string>
+    <string name="help_tip_viewer_fav_button_p1_title">Botón de Favoritos</string>
     <string name="help_tip_viewer_fav_button_p1_desc">The heart button in the viewer toolbar lets you quickly mark or unmark a photo as a favorite with a single tap. If you rarely use favorites, hiding this button declutters the toolbar. You can still favorite photos from the info sheet (swipe up) or the selection action sheet.</string>
     <string name="help_tip_viewer_fav_button_p1_s1">Go to Settings &gt; Media viewer</string>
-    <string name="help_tip_viewer_fav_button_p1_s2">Toggle \'Show favorite button\'</string>
-    <string name="help_tip_viewer_fav_button_p1_s3">You can still favorite via the info sheet even if hidden</string>
+    <string name="help_tip_viewer_fav_button_p1_s2">Activar/desactivar «Mostrar botón de favoritos»</string>
+    <string name="help_tip_viewer_fav_button_p1_s3">Aún puedes usar la hoja de información incluso si la ocultas</string>
     <!-- EDITING -->
     <string name="help_tip_edit_crop_title">Crop and resize</string>
     <string name="help_tip_edit_crop_subtitle">Crop, rotate, and adjust aspect ratio</string>
