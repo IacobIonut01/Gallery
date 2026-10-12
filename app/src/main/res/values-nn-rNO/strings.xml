@@ -136,7 +136,7 @@
     <string name="toggle_view_type">Byt visingstype</string>
     <string name="action_add">Legg til</string>
     <string name="action_add_count">Legg til (%1$d)</string>
-    <string name="no_results_found">Ingen resultat funne</string>
+    <string name="no_results_found">Fann ingen treff</string>
     <string name="select_new_thumbnail">Vel eit nytt miniatyrbilete</string>
     <string name="change_to_default">Byt til standard</string>
     <string name="support_crypto">Kryptovaluta</string>
@@ -298,7 +298,7 @@
     <string name="overwrite_unavailable_summary">Dette biletformatet kan ikkje omkodes på eininga di, så originalen kan ikkje overskrivast. Ein ny PNG-kopi vil bli oppretta i staden.</string>
     <string name="overwrite_unavailable_create_copy">Lag kopi</string>
     <string name="reencode_quality_title">Lagre kvalitet</string>
-    <string name="reencode_quality_summary">Korleis redigerte og roterte bilete omkodes når dei blir lagra</string>
+    <string name="reencode_quality_summary">Korleis redigerte og roterte bilete konverterast når dei vert lagra</string>
     <string name="reencode_quality_mode_auto">Automatisk</string>
     <string name="reencode_quality_mode_auto_summary">Lossless der støtta (JXL), elles høg kvalitet</string>
     <string name="reencode_quality_mode_manual">Manuell</string>
@@ -1026,7 +1026,7 @@
     <string name="search">Søk</string>
     <string name="search_media">Search media</string>
     <string name="search_albums">Search albums</string>
-    <string name="rotate">Rotate</string>
+    <string name="rotate">Roter</string>
     <string name="rotate_stage_decoding">Førebur …</string>
     <string name="rotate_stage_rotating">Roterer …</string>
     <string name="rotate_stage_saving">Lagrar …</string>
@@ -1097,8 +1097,8 @@
     <string name="media_types">Type medium</string>
     <string name="camera_models">Kameramodellar</string>
     <string name="special_modes">Spesialmodusar</string>
-    <string name="night_mode">Night Mode</string>
-    <string name="panoramas">Panoramas</string>
+    <string name="night_mode">Nattmodus</string>
+    <string name="panoramas">Panorama</string>
     <string name="photospheres">Photospheres</string>
     <string name="long_exposures">Long Exposures</string>
     <string name="motion_photos">Motion Photos</string>
@@ -1309,7 +1309,7 @@
     <string name="section_actions">Section actions</string>
     <!-- Visual / Image-to-Image search -->
     <string name="visual_search">Visual search</string>
-    <string name="search_by_image">Search by image</string>
+    <string name="search_by_image">Søk ved hjelp av bilete</string>
     <string name="pick_another">Pick another</string>
     <string name="remove_image">Remove image</string>
     <string name="find_similar">Find similar</string>
@@ -1546,7 +1546,7 @@
     <string name="show_searchbar_favorite_button_summary">Show favorite button next to search bar</string>
     <string name="show_searchbar_favorite_button_description">Shows a heart button next to the search bar on the timeline screen. Tap it to quickly open your favorites collection.</string>
     <string name="trash_restore_all">Restore all</string>
-    <string name="trash_delete_all">Delete all</string>
+    <string name="trash_delete_all">Slett alle permanent</string>
     <string name="favorites_info_title">Your Favorites</string>
     <string name="favorites_info_summary">Long press on any photo or video to select it, then tap the heart icon to add it to your favorites. Items added here are a shortcut and won\'t be removed from their original album.</string>
     <string name="favorites_group_by_date">Group by date</string>
@@ -2379,19 +2379,19 @@
     <string name="slideshow_interval">Intervall</string>
     <string name="slideshow_interval_value">Intervall: %1$d s</string>
     <string name="slideshow_seconds_suffix">s</string>
-    <string name="slideshow_random">Bland</string>
-    <string name="slideshow_reverse">Omvend rekkjefølgje</string>
-    <string name="slideshow_include_gifs">Inkluder Gif-ar</string>
+    <string name="slideshow_random">Stokk om</string>
+    <string name="slideshow_reverse">I motsett rekkjefølgje</string>
+    <string name="slideshow_include_gifs">Inkluder GIF-ar</string>
     <string name="slideshow_include_videos">Inkluder videoar</string>
-    <string name="slideshow_loop">Gjenta</string>
+    <string name="slideshow_loop">Repeter</string>
     <string name="slideshow_ken_burns">Ken Burns-effekt</string>
     <string name="slideshow_ken_burns_summary">Zoom sakte bilete medan dei blir viste</string>
     <string name="slideshow_transition">Overgang</string>
-    <string name="slideshow_transition_fade">Fada</string>
+    <string name="slideshow_transition_fade">Ton ut/inn</string>
     <string name="slideshow_transition_slide">Skyv</string>
     <string name="slideshow_transition_ken_burns">Ken Burns</string>
     <string name="slideshow_content_header">Innhald</string>
-    <string name="slideshow_settings_summary">Intervall, overgangar, shuffle og meir</string>
+    <string name="slideshow_settings_summary">Intervall, overgangar, omstokking og meir</string>
     <string name="slideshow_play">Spel av</string>
     <string name="slideshow_pause">Pause</string>
     <string name="slideshow_next">Neste</string>
