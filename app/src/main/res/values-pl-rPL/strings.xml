@@ -999,8 +999,8 @@
     <string name="action_desc_share">Share selected items with other apps</string>
     <string name="action_desc_favorite">Toggle favorite status for selected items</string>
     <string name="action_desc_collection">Add or remove selected items to/from a collection</string>
-    <string name="action_desc_copy">Copy selected items to another album</string>
-    <string name="action_desc_move">Move selected items to another album</string>
+    <string name="action_desc_copy">Skopiuj wybrane elementy do innego albumu</string>
+    <string name="action_desc_move">Przenieś wybrane elementy do innego albumu</string>
     <string name="action_desc_trash">Move selected items to the trash</string>
     <string name="action_desc_hide">Encrypt and hide selected items in the vault</string>
     <string name="action_desc_move_to_private_folder">Przenieś wybrane elementy do prywatnego folderu</string>
@@ -1183,8 +1183,8 @@
     <string name="widget_style_bw">Black &amp; white</string>
     <string name="widget_style_icon">Icon or emoji</string>
     <string name="widget_style_add">Dodaj widżet</string>
-    <string name="widget_icon_section">Widget icon</string>
-    <string name="widget_icon_label">Icon or emoji</string>
+    <string name="widget_icon_section">Ikona widżetu</string>
+    <string name="widget_icon_label">Ikona lub emoji</string>
     <string name="widget_icon_description">Shown instead of the photo — tapping the widget still opens it</string>
     <!-- Editor tabs -->
     <string name="editor_develop">Wywołaj</string>
