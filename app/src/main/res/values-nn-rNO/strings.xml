@@ -2235,11 +2235,11 @@
     <string name="setup_grant_permissions">Gi løyve</string>
     <string name="setup_open_app_settings">Opne appinnstillingane</string>
     <!-- Welcome page -->
-    <string name="setup_welcome_subtitle">Det private galleriet ditt på eininga</string>
+    <string name="setup_welcome_subtitle">Ditt private, lokale galleri</string>
     <!-- Permissions page -->
     <string name="setup_permissions_title">Løyve</string>
-    <string name="setup_permissions_subtitle">ReFra bruker berre det ho treng for å visa og administrera media dine. Trykk på eit løyve for å finna ut kvifor.</string>
-    <string name="setup_permission_used_for">Blir brukt til:</string>
+    <string name="setup_permissions_subtitle">ReFra brukar berre det som er nødvendig for å visa og handsama medium. Trykk på eit løyve for å lesa meir.</string>
+    <string name="setup_permission_used_for">Brukast til:</string>
     <string name="setup_media_access_full">Full tilgang til medium</string>
     <string name="setup_media_access_limited">Valde bilete og videoar</string>
     <string name="setup_permission_not_granted">Ikkje gjeve</string>
@@ -2250,8 +2250,8 @@
     <string name="local_network_permission_dialog_message">Denne serveren blir løyst til ei eining på det noverande lokalet ditt nettverk. Android krev løyve før ReFra kan kopla til den direkte.</string>
     <string name="local_network_permission_not_now">Ikkje no</string>
     <!-- Permission reasons (where/why) -->
-    <string name="setup_reason_read_images"><![CDATA[Viser bileta dine i tidslinja, albuma og visninga. Utan dette held fram med å vere galleriet tomt.]]></string>
-    <string name="setup_reason_read_videos"><![CDATA[Viser og speler av videoane dine på tidslinja, album og visning.]]></string>
+    <string name="setup_reason_read_images"><![CDATA[Vising av bilete i tidslinja, albuma og mediumvisaren. Utan dette løyvet er galleriet tomt.]]></string>
+    <string name="setup_reason_read_videos"><![CDATA[Vising og avspeling av videoar i tidslinja, albuma og mediumvisaren.]]></string>
     <string name="setup_reason_media_location"><![CDATA[Lese GPS-data innebygd i bileta og videoane dine for å driva kartet og posisjonsdetaljar.]]></string>
     <string name="setup_reason_media_location_optional"><![CDATA[Valfritt. Lèt ReFra lese GPS-data som er bygde inn i bilete og videoar, for Kartet og posisjonsdetaljar. Galleriet fungerer framleis om du hoppar over dette.]]></string>
     <string name="setup_reason_internet"><![CDATA[Lasta ned kartfliser for førehandsvisning av plassering, casta media til einingar i nærleiken, lasta ned valfrie AI-modellar og synkronisera med skyserverar. Media forlèt aldri eininga di med mindre du konfigurerer skysynkronisering.]]></string>
@@ -2287,19 +2287,19 @@
     <string name="setup_cap_archive">Arkiv</string>
     <string name="setup_cap_memories">Minner</string>
     <!-- AI models page -->
-    <string name="setup_ai_title">AI-modellar</string>
-    <string name="setup_ai_subtitle">Aktiver smartsøk på eininga og automatiske kategoriar. Modellar køyrer utelukkande på eininga di.</string>
-    <string name="setup_ai_ready">AI-modellar er installerte og klare.</string>
-    <string name="setup_ai_download">Last ned AI-modellar</string>
-    <string name="setup_ai_download_size">Eingongsnedlasting · fungerer offline etterpå</string>
-    <string name="setup_ai_no_internet">Eit internettsamband trengst for å lasta ned AI-modellane.</string>
-    <string name="setup_ai_features_title">Kva du får</string>
-    <string name="setup_ai_feature_categories_title">Smarte kategoriar</string>
-    <string name="setup_ai_feature_categories_desc">Bileta blir automatisk sorterte i grupper som natur, menneske og mat.</string>
-    <string name="setup_ai_feature_search_title">Søk etter beskriving</string>
-    <string name="setup_ai_feature_search_desc">Finn bilete med naturleg språk – ingen manuelle taggar eller album nødvendig.</string>
-    <string name="setup_ai_feature_private_title">Privat og på eininga</string>
-    <string name="setup_ai_feature_private_desc">Alt går lokalt. Bileta dine forlèt aldri eininga di.</string>
+    <string name="setup_ai_title">KI-modellar</string>
+    <string name="setup_ai_subtitle">Slå på smartsøk og automatisk kategorisering. Modellar køyrer berre lokalt på eininga.</string>
+    <string name="setup_ai_ready">KI-modellar er installerte og klare.</string>
+    <string name="setup_ai_download">Last ned KI-modellar</string>
+    <string name="setup_ai_download_size">Eingongsnedlasting. Etter nedlasting trengst ikkje nettilkopling</string>
+    <string name="setup_ai_no_internet">Ei nettilkopling krevst for å lasta ned KI-modellane.</string>
+    <string name="setup_ai_features_title">Dette får du</string>
+    <string name="setup_ai_feature_categories_title">Smartkategoriar</string>
+    <string name="setup_ai_feature_categories_desc">Bilete vert automatisk sorterte i grupper, for eksempel natur, menneske og mat.</string>
+    <string name="setup_ai_feature_search_title">Søk ved å skildra</string>
+    <string name="setup_ai_feature_search_desc">Finn bilete ved å bruka naturleg språk – utan å måtte bruka sjølvoppretta etikettar eller album.</string>
+    <string name="setup_ai_feature_private_title">Privat og lokalt på eininga</string>
+    <string name="setup_ai_feature_private_desc">Alt skjer lokalt. Bileta dine forlet aldri eininga.</string>
     <string name="setup_ai_extra_title">Ekstrautstyr</string>
     <string name="setup_ai_extra_cutout_title">Emneutskjering</string>
     <string name="setup_ai_extra_cutout_desc">Trykk for å isolera eit emne og kopiera, dela eller lagra det – driven av MobileSam.</string>
@@ -2347,31 +2347,31 @@
     <!-- Subject Cutout -->
     <string name="cutout_no_object">Ingen gjenstand oppdaga under lang trykk</string>
     <string name="cutout_init_failed">Kunne ikkje initialisera utkoplingsmotoren</string>
-    <string name="cutout_copy_failed">Kunne ikkje kopiera utklippsobjektet</string>
-    <string name="cutout_share_failed">Kunne ikkje dela utklippsobjektet</string>
-    <string name="cutout_save_failed">Kunne ikkje lagra utklippsobjektet</string>
-    <string name="cutout_saved">Lagra utklipp til Bilder/utklipp</string>
+    <string name="cutout_copy_failed">Feil ved kopiering av utskjeringsobjektet</string>
+    <string name="cutout_share_failed">Feil ved deling av utskjeringsobjektet</string>
+    <string name="cutout_save_failed">Feil ved lagring av utskjeringsobjektet</string>
+    <string name="cutout_saved">Lagra utskjering til Bilete/Utskjeringar</string>
     <string name="cutout_refining">Finjusterer utskjeringa …</string>
-    <string name="cutout_action">Klipp ut emna</string>
+    <string name="cutout_action">Skjer ut motiv</string>
     <string name="cutout_include">Inkluder</string>
     <string name="cutout_exclude">Ekskluder</string>
-    <string name="cutout_undo">Angrar</string>
+    <string name="cutout_undo">Angra</string>
     <string name="cutout_redo">Gjenta</string>
     <string name="cutout_reset">Tilbakestill</string>
     <string name="cutout_copy">Kopier</string>
     <string name="cutout_share">Del</string>
-    <string name="cutout_save">Lager</string>
+    <string name="cutout_save">Lagra</string>
     <string name="cutout_close">Lukk utskjeringa</string>
     <string name="cutout_tool">Utskjering</string>
     <string name="cutout_background_removal">Bakgrunnsfjerning</string>
     <string name="cutout_remove_background">Fjern bakgrunn</string>
-    <string name="cutout_save_choice_title">Lagre utklipp som</string>
-    <string name="cutout_save_transparent_png">Gjennomsiktig png</string>
+    <string name="cutout_save_choice_title">Lagra utskjering som</string>
+    <string name="cutout_save_transparent_png">Gjennomsiktig PNG</string>
     <string name="cutout_save_flatten_white">Flat ut på kvitt</string>
     <string name="cutout_save_flatten_black">Flat på svart</string>
-    <string name="long_press_cutout_title">Trykk lenge for å kutta ut</string>
-    <string name="long_press_cutout_summary">Langt trykk isolerer eit emne; rotera blir ein knapp</string>
-    <string name="long_press_cutout_description">Vel kva eit langt trykk på eit bilete gjer i framvisaren. Når den er aktivert, startar eit langt trykk ei motivutskjering på eininga, og rotasjonshandlinga blir flytta til ein skjermknapp. Når den er deaktivert (standard), blir biletet rotert lenge ved å trykkja. Du kan alltid klippa ut eit emne frå Cutout-verktøyet til den innebygde editoren.</string>
+    <string name="long_press_cutout_title">Trykk lenge for å skjera ut</string>
+    <string name="long_press_cutout_summary">Trykk lenge for å isolera eit motiv. Rotering vert gjort om til ein knapp</string>
+    <string name="long_press_cutout_description">Vel kva som skjer når du trykkjer lenge på eit bilete i framvisaren. Når dette er slått på, vil eit langt trykk starta ei motivutskjering lokalt på eininga, og funksjonen for rotering vert til ein knapp. Når dette er slått av (standardinnstillinga), vil eit langt trykk rotera biletet. Du kan alltids skjera ut eit motiv ved å bruka utskjeringsverktøyet.</string>
     <!-- Slideshow -->
     <string name="slideshow">Lysbiletframvising</string>
     <string name="slideshow_start">Start lysbiletframvising</string>
