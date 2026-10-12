@@ -38,7 +38,7 @@
     <string name="trash_restore">Gjenopprett</string>
     <string name="trash_empty">Tøm</string>
     <string name="trash_delete">Slett</string>
-    <string name="action_move_to_trash">Flyttar til papirkorga</string>
+    <string name="action_move_to_trash">Flytt til papirkorga</string>
     <string name="action_delete_permanently">Slett permanent</string>
     <string name="action_delete_all_permanently">Slett alle permanent</string>
     <string name="share">Del</string>
@@ -283,12 +283,12 @@
     <string name="ignored_albums">Ignored Albums</string>
     <string name="add_to_ignored">Add to ignored albums</string>
     <string name="override">Overwrite</string>
-    <string name="save_copy">Save Copy</string>
+    <string name="save_copy">Lagra kopi</string>
     <string name="edit_override_permission_denied">Løyve nekta. Gi full medietilgang for å overskriva originalen, eller lager ein kopi i staden.</string>
     <string name="edit_override_failed">Kunne ikkje overskriva originalen. Prøv å lagra ein kopi i staden.</string>
     <string name="edit_save_copy_failed">Kunne ikkje lagra den redigerte kopien.</string>
-    <string name="editor_unsaved_title">Forkaste redigeringane?</string>
-    <string name="editor_unsaved_message">Lagre ein kopi før du går ut, eller forkast redigeringane som ikkje er lagra.</string>
+    <string name="editor_unsaved_title">Forkasta endringane?</string>
+    <string name="editor_unsaved_message">Lagra ein kopi eller forkast ulagra endringar.</string>
     <string name="action_discard">Forkast</string>
     <string name="edit_load_failed">Kunne ikkje opna dette biletet i redigeringsprogrammet.</string>
     <string name="edit_load_failed_restore_title">Kunne ikkje opna biletet</string>
@@ -554,7 +554,7 @@
     <string name="metadata_mode_everything">Alt avtakbart</string>
     <string name="metadata_mode_everything_description">Fjernar alle valfrie metadata og beheld berre data som trengst for å gi att eller spela av media.</string>
     <string name="metadata_save_destination_title">Save result</string>
-    <string name="metadata_save_copy">Save a copy</string>
+    <string name="metadata_save_copy">Lagra ein kopi</string>
     <string name="metadata_save_copy_description">Creates a verified sanitized copy in the same folder and leaves the original unchanged.</string>
     <string name="metadata_replace_original">Replace original</string>
     <string name="metadata_replace_original_description">Creates and verifies the replacement first, then moves the original to system trash so it can still be recovered.</string>
@@ -1141,7 +1141,7 @@
     <string name="frame_picker_partial_success">Lagra %1$d rammar; %2$d mislykkast</string>
     <string name="frame_picker_success">Lagra %1$d rammar</string>
     <string name="frame_picker_metadata_warnings">Dato- eller stadsmetadata kunne ikkje skrivast for %1$d lagra rammer.</string>
-    <string name="keep_editing">hald fram med å redigera</string>
+    <string name="keep_editing">Hald fram med å redigera</string>
     <string name="media_groupings">Media Groupings</string>
     <string name="group_type_bursts">Bursts</string>
     <string name="group_type_raw_jpg">RAW + JPG</string>
@@ -1190,7 +1190,7 @@
     <string name="editor_rotate_90">Rotate 90 degrees</string>
     <string name="editor_aspect_ratio">Aspect ratio</string>
     <string name="editor_apply_crop">Apply crop</string>
-    <string name="editor_crop">Crop</string>
+    <string name="editor_crop">Skjer av</string>
     <string name="editor_cancel_markup">Cancel markup</string>
     <string name="editor_apply_markup">Apply markup</string>
     <string name="editor_undo">Undo</string>
@@ -1508,7 +1508,7 @@
     <string name="private_folder_move_confirm_title">Flytta til privat mappe?</string>
     <string name="private_folder_move_confirm_summary">Dei valde elementa vil bli kopierte til den private mappa di og originalane vil bli fjerna frå eininga. Filer i den private mappa er skjulte frå andre appar og mediebiblioteket.</string>
     <string name="private_folder_moving">Flyttar til privat mappe …</string>
-    <string name="private_folder_move_failed">Kunne ikkje flytta element til den private mappa</string>
+    <string name="private_folder_move_failed">Klarte ikkje flytta element til den private mappa</string>
     <string name="private_folder_move_out">Flyttar ut</string>
     <string name="private_folder_move_out_confirm_title">Vil du flytta ut av den private mappa?</string>
     <string name="private_folder_move_out_confirm_summary">Dei valde elementa vil bli gjenoppretta til galleriet ditt og fjerna frå den private mappa.</string>
