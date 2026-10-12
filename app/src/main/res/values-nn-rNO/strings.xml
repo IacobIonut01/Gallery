@@ -267,7 +267,7 @@
     <string name="transfer_complete_summary">%1$d items · %2$s</string>
     <string name="open_media">Open item</string>
     <string name="open_album">Open album</string>
-    <string name="done">Done</string>
+    <string name="done">Ferdig</string>
     <string name="cloud_copy_incomplete">Copy incomplete</string>
     <string name="cloud_copy_requires_local">Cloud destinations require local media</string>
     <string name="cloud_copy_source_unsupported">This source cannot be transferred</string>
@@ -282,7 +282,7 @@
     <string name="error_copying_to_clipboard">Klarte ikkje kopiera til utklippstavla</string>
     <string name="ignored_albums">Ignored Albums</string>
     <string name="add_to_ignored">Add to ignored albums</string>
-    <string name="override">Overwrite</string>
+    <string name="override">Skriv over</string>
     <string name="save_copy">Lagra kopi</string>
     <string name="edit_override_permission_denied">Løyve nekta. Gi full medietilgang for å overskriva originalen, eller lager ein kopi i staden.</string>
     <string name="edit_override_failed">Kunne ikkje overskriva originalen. Prøv å lagra ein kopi i staden.</string>
@@ -351,7 +351,7 @@
     <string name="raw_wb_tint">Farge</string>
     <string name="raw_tone_brightness">Lysstyrke</string>
     <string name="raw_tone_contrast">Kontrast</string>
-    <string name="raw_tone_shadows">Skyggjer</string>
+    <string name="raw_tone_shadows">Skuggar</string>
     <string name="raw_tone_highlights">Høgdepunkt</string>
     <string name="raw_detail_sharpen">Skjerp</string>
     <string name="raw_detail_noise_reduction">Støyreduksjon</string>
@@ -492,17 +492,17 @@
     <string name="filter_type_name">Namn</string>
     <string name="sort">Sort</string>
     <string name="sort_and_filter">Sort and filter</string>
-    <string name="timeline_controls">Timeline controls</string>
-    <string name="order_by">Order by</string>
-    <string name="capture_time">Capture time</string>
+    <string name="timeline_controls">Kontrollelement for tidslinje</string>
+    <string name="order_by">Sorter etter</string>
+    <string name="capture_time">Opptakstid</string>
     <string name="capture_time_summary">Embedded photo or video date, with modified time as a fallback</string>
-    <string name="modified_time_summary">When the file was last changed</string>
+    <string name="modified_time_summary">Tida då fila sist vart endra</string>
     <string name="capture_time_indexing">Checking capture dates: %1$d%%</string>
     <string name="sort_by_date_taken">Date taken</string>
-    <string name="sort_by_date_modified">Date modified</string>
+    <string name="sort_by_date_modified">Endringsdato</string>
     <string name="sort_by_file_name">File name</string>
-    <string name="sort_ascending">Ascending</string>
-    <string name="sort_descending">Descending</string>
+    <string name="sort_ascending">Eldste først</string>
+    <string name="sort_descending">Nyaste først</string>
     <string name="images_videos"><![CDATA[%1$s bilete og videoar]]></string>
     <string name="auto_hide_searchbar">Hide search bar on scroll</string>
     <string name="auto_hide_searchbar_summary">Automatically hide the search bar or the top bar of the screen while scrolling</string>
@@ -535,8 +535,8 @@
     <string name="tap_sides_to_navigate_previous">Previous</string>
     <string name="tap_sides_to_navigate_controls">Controls</string>
     <string name="tap_sides_to_navigate_next">Next</string>
-    <string name="disable_smoothing_title">Deaktiver utjamning</string>
-    <string name="disable_smoothing_summary">Vis skarpe, firkanta pikslar når du zoomar i staden for eit uskarpt, jamt bilete</string>
+    <string name="disable_smoothing_title">Slå av utjamning</string>
+    <string name="disable_smoothing_summary">Vis skarpe, kvadratiske pikslar ved zooming i staden for eit uskarpt og utjamna bilete</string>
     <string name="disable_smoothing_description">Når den er aktivert, blir bilete teikna med skalering av næraste nabo, slik at zooming inn i pikselsgrafikk held reine, skarpe pikslar i staden for å gjera dei uskarpe. La den vera av for jamn skalering av bilete.</string>
     <string name="auto_hide_on_video_play">Gøym grensesnittet ved avspeling av video</string>
     <string name="auto_hide_on_video_play_summary">Gøymer brukargrensesnittet etter to sekund ved avspeling av videoar</string>
@@ -545,7 +545,7 @@
     <string name="dark_media_viewer_description">When enabled, photos and videos are always shown on a black background — like most gallery apps — even when the app theme is light. Turn it off to let the viewer follow the light theme.</string>
     <string name="delete_location">Delete Location</string>
     <string name="delete_metadata">Slett metadata</string>
-    <string name="remove_metadata">Fjernt metadata</string>
+    <string name="remove_metadata">Fjern metadata</string>
     <string name="remove_metadata_warning">Den originale fila blir først erstatta etter at ein tapsfri desinfisert versjon er stadfesta. Viss erstatning mislykkast, gjenopprettar ReFra originalen.</string>
     <string name="metadata_mode_location">Berre plassering</string>
     <string name="metadata_mode_location_description">Fjernar koordinatar, høgd, stadnamn, vegbeskrivingar og GPS-tidsstempel.</string>
@@ -558,7 +558,7 @@
     <string name="metadata_save_copy_description">Creates a verified sanitized copy in the same folder and leaves the original unchanged.</string>
     <string name="metadata_replace_original">Replace original</string>
     <string name="metadata_replace_original_description">Creates and verifies the replacement first, then moves the original to system trash so it can still be recovered.</string>
-    <string name="metadata_save_copy_action">Save copy</string>
+    <string name="metadata_save_copy_action">Lagra kopi</string>
     <string name="metadata_replace_original_action">Replace</string>
     <string name="metadata_preserved_title">Det som er bevart</string>
     <string name="metadata_preserved_description">Koda pikslar, video og lyd held fram med å vera urørt. Orientering, animasjon, farge- og HDR-data, kodekkonfigurasjon, timing og nødvendig behaldarstruktur blir behalden.</string>
@@ -656,10 +656,10 @@
     </plurals>
     <string name="create">Create</string>
     <string name="save">Save</string>
-    <string name="browse_categories">Browse categories</string>
-    <string name="category_media_count">%1$d items</string>
+    <string name="browse_categories">Bla i kategoriar</string>
+    <string name="category_media_count">%1$d element</string>
     <!-- Category Editor (unified create/edit) -->
-    <string name="new_category">New category</string>
+    <string name="new_category">Ny kategori</string>
     <string name="describe_content">Describe what to include</string>
     <string name="describe_content_hint">Describe what photos this category should contain</string>
     <string name="describe_content_example">e.g., photos of my dog at the beach</string>
@@ -722,7 +722,7 @@
     <string name="type_stylus">Penn</string>
     <string name="type_highlighter">Merkjepenn</string>
     <string name="type_marker">Tusj</string>
-    <string name="type_blur">Uskarpleik</string>
+    <string name="type_blur">Sløring</string>
     <string name="type_mosaic">Mosaikk</string>
     <string name="type_text">Text</string>
     <string name="type_erase">Viskelêr</string>
@@ -1017,13 +1017,13 @@
     <string name="cloud_media_delete_failed">Couldn’t delete from the server. Check that this account can modify the remote folder.</string>
     <string name="extended_date_header_title">Extended Date Header</string>
     <string name="clear_selection">Remove All</string>
-    <string name="selfies">Selfies</string>
-    <string name="screenshots">Screenshots</string>
-    <string name="search_images_videos"><![CDATA[Search images & videos]]></string>
-    <string name="suggestions">Suggestions</string>
-    <string name="post_notifications">Notifications</string>
-    <string name="post_notifications_summary">Allows the app to display notifications</string>
-    <string name="search">Search</string>
+    <string name="selfies">Selfiar</string>
+    <string name="screenshots">Skjermbilete</string>
+    <string name="search_images_videos"><![CDATA[Søk etter bilete og videoar]]></string>
+    <string name="suggestions">Forslag</string>
+    <string name="post_notifications">Varslingar</string>
+    <string name="post_notifications_summary">Tillet appen å visa varslingar</string>
+    <string name="search">Søk</string>
     <string name="search_media">Search media</string>
     <string name="search_albums">Search albums</string>
     <string name="rotate">Rotate</string>
@@ -1090,13 +1090,13 @@
     <string name="categories_settings_subtitle">Manage scanning, categories and classification</string>
     <string name="locations_count">%1$d locations</string>
     <string name="no_locations_found">No locations found</string>
-    <string name="locations">Locations</string>
-    <string name="unknown_location">Unknown Location</string>
+    <string name="locations">Lokasjonar</string>
+    <string name="unknown_location">Ukjend lokasjon</string>
     <string name="no_categories_found">No categories found</string>
     <!-- Dynamic search carousels -->
-    <string name="media_types">Media Types</string>
-    <string name="camera_models">Camera Models</string>
-    <string name="special_modes">Special Modes</string>
+    <string name="media_types">Type medium</string>
+    <string name="camera_models">Kameramodellar</string>
+    <string name="special_modes">Spesialmodusar</string>
     <string name="night_mode">Night Mode</string>
     <string name="panoramas">Panoramas</string>
     <string name="photospheres">Photospheres</string>
@@ -1146,11 +1146,11 @@
     <string name="group_type_bursts">Bursts</string>
     <string name="group_type_raw_jpg">RAW + JPG</string>
     <string name="group_type_edits">Edits</string>
-    <string name="sort_most_accurate">Most accurate</string>
-    <string name="sort_by_date">Date</string>
+    <string name="sort_most_accurate">Mest nøyaktige</string>
+    <string name="sort_by_date">Dato</string>
     <plurals name="item_count">
-        <item quantity="one">%s item</item>
-        <item quantity="other">%s items</item>
+        <item quantity="one">%s element</item>
+        <item quantity="other">%s element</item>
     </plurals>
     <plurals name="cloud_copy_failed_count">
         <item quantity="one">%1$d of %2$d items could not be copied</item>
@@ -1158,7 +1158,7 @@
     </plurals>
     <plurals name="album_count">
         <item quantity="one">%d album</item>
-        <item quantity="other">%d albums</item>
+        <item quantity="other">%d album</item>
     </plurals>
     <!-- Widgets -->
     <string name="widget_single_label">Single Photo</string>
@@ -1178,14 +1178,14 @@
     <string name="widget_icon_description">Shown instead of the photo — tapping the widget still opens it</string>
     <!-- Editor tabs -->
     <string name="editor_develop">Utvikle</string>
-    <string name="editor_lighting">Lighting</string>
-    <string name="editor_colour">Colour</string>
-    <string name="editor_effects">Effects</string>
+    <string name="editor_lighting">Lyssetjing</string>
+    <string name="editor_colour">Farge</string>
+    <string name="editor_effects">Effektar</string>
     <string name="editor_smart">Smart</string>
-    <string name="editor_more">More</string>
-    <string name="editor_done">Done</string>
-    <string name="editor_save_subtitle">You can always undo these changes</string>
-    <string name="editor_save_copy_subtitle">Your original won\'t change</string>
+    <string name="editor_more">Meir</string>
+    <string name="editor_done">Ferdig</string>
+    <string name="editor_save_subtitle">Du kan alltid angra endringane seinare</string>
+    <string name="editor_save_copy_subtitle">Originalen endrast ikkje</string>
     <string name="editor_mirror">Mirror image</string>
     <string name="editor_rotate_90">Rotate 90 degrees</string>
     <string name="editor_aspect_ratio">Aspect ratio</string>
@@ -1198,36 +1198,36 @@
     <string name="editor_more_options">More options</string>
     <string name="editor_grid">Grid</string>
     <string name="editor_add_text">Add Text</string>
-    <string name="editor_pen">Pen</string>
-    <string name="editor_highlighter">Highlighter</string>
-    <string name="editor_text">Text</string>
-    <string name="editor_add_or_select_text">Add or select a text to change color</string>
+    <string name="editor_pen">Penn</string>
+    <string name="editor_highlighter">Merkjepenn</string>
+    <string name="editor_text">Tekst</string>
+    <string name="editor_add_or_select_text">Legg til eller vel ein tekst for å endra farge</string>
     <string name="editor_brush_size">Storleik</string>
     <string name="editor_brush_strength">Styrke</string>
     <string name="editor_blur_faces">Uskarpe ansikt</string>
-    <string name="editor_type_something">Type something</string>
-    <string name="editor_remove">Remove</string>
+    <string name="editor_type_something">Skriv noko</string>
+    <string name="editor_remove">Fjern</string>
     <!-- Lighting tools -->
-    <string name="tool_brightness">Brightness</string>
+    <string name="tool_brightness">Lysstyrke</string>
     <string name="tool_tone">Tone</string>
     <string name="tool_contrast">Contrast</string>
-    <string name="tool_black_point">Black point</string>
-    <string name="tool_white_point">White point</string>
-    <string name="tool_highlights">Highlights</string>
-    <string name="tool_shadows">Shadows</string>
-    <string name="tool_vignette">Vignette</string>
+    <string name="tool_black_point">Svartpunkt</string>
+    <string name="tool_white_point">Kvitpunkt</string>
+    <string name="tool_highlights">Høglys</string>
+    <string name="tool_shadows">Skuggar</string>
+    <string name="tool_vignette">Vignett</string>
     <!-- Colour tools -->
-    <string name="tool_saturation">Saturation</string>
-    <string name="tool_warmth">Warmth</string>
+    <string name="tool_saturation">Metting</string>
+    <string name="tool_warmth">Varme</string>
     <string name="tool_tint">Tint</string>
-    <string name="tool_skin_tone">Skin tone</string>
-    <string name="tool_blue_tone">Blue tone</string>
-    <string name="tool_hue">Hue</string>
-    <string name="tool_black_white">B&amp;W</string>
+    <string name="tool_skin_tone">Hudtone</string>
+    <string name="tool_blue_tone">Blåtone</string>
+    <string name="tool_hue">Kulør</string>
+    <string name="tool_black_white">Svart/kvitt</string>
     <!-- Effect tools -->
-    <string name="effect_posterize">Posterize</string>
-    <string name="effect_edges">Edges</string>
-    <string name="effect_borders">Borders</string>
+    <string name="effect_posterize">Plakateffekt</string>
+    <string name="effect_edges">Kantar</string>
+    <string name="effect_borders">Rammer</string>
     <!-- Actions tools -->
     <!-- Filter styles -->
     <string name="filter_style_vivid">Vivid</string>
@@ -1236,8 +1236,8 @@
     <string name="filter_style_ember">Ember</string>
     <string name="filter_style_airy">Airy</string>
     <!-- Aspect ratios -->
-    <string name="aspect_freeform">Freeform</string>
-    <string name="aspect_square">Square</string>
+    <string name="aspect_freeform">Friform</string>
+    <string name="aspect_square">Kvadrat</string>
     <!-- Auto presets -->
     <string name="preset_enhance">Enhance</string>
     <string name="preset_dynamic">Dynamic</string>
@@ -1322,8 +1322,8 @@
     <string name="collection_name">Namn på samling</string>
     <string name="collection_name_hint">Skriv inn namnet på samlinga</string>
     <string name="rename_collection">Gje nytt namn</string>
-    <string name="rename_media_description">Enter a new name for this file. The new name applies everywhere the file appears.</string>
-    <string name="rename_media_name_label">File name</string>
+    <string name="rename_media_description">Endra namn på fila. Det nye filnamnet vert gjeldande overalt.</string>
+    <string name="rename_media_name_label">Filnamn</string>
     <string name="delete_collection">Slett samling</string>
     <string name="delete_collection_confirm">Er du sikker på at du vil sletta samlinga? Medium som samlinga inneheld vert ikkje sletta.</string>
     <string name="add_to_collection">Legg til i samling</string>
@@ -1346,7 +1346,7 @@
     <string name="help_get_started">Get started</string>
     <string name="help_make_most">Make the most of Gallery</string>
     <string name="help_explore_tips">Explore more tips</string>
-    <string name="help_done">Done</string>
+    <string name="help_done">Ferdig</string>
     <string name="help_open_settings">Open settings</string>
     <string name="help_latest">Latest</string>
     <string name="help_not_found">This tip could not be found.</string>
@@ -1530,12 +1530,12 @@
     <string name="filter_type">Type</string>
     <string name="filter_all">All</string>
     <string name="filter_status">Status</string>
-    <string name="filter_time">Time</string>
-    <string name="filter_source">Source</string>
-    <string name="filter_reset">Reset</string>
-    <string name="filter_apply">Apply</string>
+    <string name="filter_time">Tid</string>
+    <string name="filter_source">Kjelde</string>
+    <string name="filter_reset">Tilbakestill</string>
+    <string name="filter_apply">Bruk</string>
     <string name="filter_active">Filter active</string>
-    <string name="show_filter_button">Filter button</string>
+    <string name="show_filter_button">Kontrollelement for tidslinje</string>
     <string name="show_filter_button_summary">Show filter button in search bar</string>
     <string name="show_filter_button_description">Shows a filter icon inside the search bar on the timeline screen. Tap it to open a sheet where you can narrow down your gallery by media type, favorites, year, or album.</string>
     <string name="timeline_order">Timeline order</string>
@@ -1973,7 +1973,7 @@
     <string name="cloud_sync_pending_count">%1$d items waiting</string>
     <string name="cloud_people">People</string>
     <string name="cloud_people_empty">No people found</string>
-    <string name="cloud_people_unknown">Unknown</string>
+    <string name="cloud_people_unknown">Ukjend</string>
     <string name="scan_for_people">Skann etter personar</string>
     <string name="cloud_person_detail_title">Person</string>
     <string name="cloud_person_edit_name">Edit name</string>
@@ -2358,7 +2358,7 @@
     <string name="cutout_undo">Angrar</string>
     <string name="cutout_redo">Gjenta</string>
     <string name="cutout_reset">Tilbakestill</string>
-    <string name="cutout_copy">Kopiar</string>
+    <string name="cutout_copy">Kopier</string>
     <string name="cutout_share">Del</string>
     <string name="cutout_save">Lager</string>
     <string name="cutout_close">Lukk utskjeringa</string>
@@ -2373,8 +2373,8 @@
     <string name="long_press_cutout_summary">Langt trykk isolerer eit emne; rotera blir ein knapp</string>
     <string name="long_press_cutout_description">Vel kva eit langt trykk på eit bilete gjer i framvisaren. Når den er aktivert, startar eit langt trykk ei motivutskjering på eininga, og rotasjonshandlinga blir flytta til ein skjermknapp. Når den er deaktivert (standard), blir biletet rotert lenge ved å trykkja. Du kan alltid klippa ut eit emne frå Cutout-verktøyet til den innebygde editoren.</string>
     <!-- Slideshow -->
-    <string name="slideshow">Lysbiletframvisning</string>
-    <string name="slideshow_start">Start lysbiletframvisning</string>
+    <string name="slideshow">Lysbiletframvising</string>
+    <string name="slideshow_start">Start lysbiletframvising</string>
     <string name="slideshow_more_settings">Fleire innstillingar</string>
     <string name="slideshow_interval">Intervall</string>
     <string name="slideshow_interval_value">Intervall: %1$d s</string>
@@ -2396,7 +2396,7 @@
     <string name="slideshow_pause">Pause</string>
     <string name="slideshow_next">Neste</string>
     <string name="slideshow_previous">Førre</string>
-    <string name="slideshow_exit">Avslutt lysbiletframvisning</string>
+    <string name="slideshow_exit">Avslutt lysbiletframvising</string>
     <!-- Developer menu -->
     <string name="dev_menu_title">Developer</string>
     <string name="dev_menu_summary">Logs, diagnostics and bug reporting</string>
