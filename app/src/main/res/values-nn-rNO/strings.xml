@@ -164,7 +164,7 @@
     <string name="use_system_font_title">Bruk systemskrifta</string>
     <string name="use_system_font_summary">Bruk systemskrifta til eininga i staden for den innebygde skrifta</string>
     <string name="use_system_font_description">When enabled, the app uses your device\'s system font instead of the built-in Google Sans font. This can improve readability if you use a custom system font.</string>
-    <string name="color_palette_preview_description">Icons, text, and more match colors in your wallpaper</string>
+    <string name="color_palette_preview_description">Ikon, tekst og meir samsvarar med fargar i bakgrunnsbiletet</string>
     <string name="color_palette_wallpaper_colors">Bakgrunnsfargar</string>
     <string name="color_palette_other_colors">Andre fargar</string>
     <string name="media_details">Detaljar</string>
@@ -405,7 +405,7 @@
     <string name="subtitle_external_label">External</string>
     <string name="remove_subtitle_track">Remove subtitle track</string>
     <string name="location_new_album">Location: Internal-Storage/%1$s</string>
-    <string name="permission_manage_files_title">Manage All Files</string>
+    <string name="permission_manage_files_title">Handsame alle filer</string>
     <string name="permission_manage_files_summary">"Allows the app to create, modify, and delete files and albums that were previously restricted by the system. (Includes albums outside Pictures and DCIM folders and the ones from the SD Card)"</string>
     <string name="vault">Kvelv</string>
     <string name="cloud">Sky</string>
@@ -837,7 +837,7 @@
     <string name="settings_general_summary">Various general settings</string>
     <string name="ai_category_summary">Control what Smart Features you want to use</string>
     <!-- Settings Overhaul: New Section Names & Summaries -->
-    <string name="settings_appearance">Appearance</string>
+    <string name="settings_appearance">Utsjånad</string>
     <string name="settings_appearance_summary">Theme, colors, dark mode, visual effects</string>
     <string name="settings_visual_effects_header">Visuelle effektar</string>
     <string name="settings_font_header">Skrift</string>
@@ -924,7 +924,7 @@
     <string name="smart_features_cloud_indexing_summary">Server-side search and on-device indexing for connected libraries</string>
     <string name="smart_features_cloud_indexing_description">Connected libraries with their own AI can answer searches on the server. On-device indexing downloads a thumbnail per item and runs local AI, which also covers offline and cross-library results.</string>
     <string name="smart_features_index_on_device_section">Index on this device</string>
-    <string name="smart_scan_stage_number">Trinn %1$d av %2$d</string>
+    <string name="smart_scan_stage_number">Steg %1$d av %2$d</string>
     <string name="smart_scan_stage_items">%1$d av %2$d element · %3$d mislykkast · %4$d hoppet over</string>
     <string name="smart_scan_preparing_stage">Førebur dette stadiet...</string>
     <string name="smart_scan_eta_under_minute">Mindre enn eitt minutt igjen</string>
@@ -2232,20 +2232,20 @@
     <string name="setup_step_progress">Trinn %1$d av %2$d</string>
     <string name="setup_continue">Hald fram</string>
     <string name="setup_finish">Fullfør</string>
-    <string name="setup_grant_permissions">Gi løyve</string>
-    <string name="setup_open_app_settings">Opne appinnstillingane</string>
+    <string name="setup_grant_permissions">Gje løyve</string>
+    <string name="setup_open_app_settings">Opna appinnstillingane</string>
     <!-- Welcome page -->
     <string name="setup_welcome_subtitle">Ditt private, lokale galleri</string>
     <!-- Permissions page -->
     <string name="setup_permissions_title">Løyve</string>
     <string name="setup_permissions_subtitle">ReFra brukar berre det som er nødvendig for å visa og handsama medium. Trykk på eit løyve for å lesa meir.</string>
-    <string name="setup_permission_used_for">Brukast til:</string>
+    <string name="setup_permission_used_for">Vert brukt til:</string>
     <string name="setup_media_access_full">Full tilgang til medium</string>
     <string name="setup_media_access_limited">Valde bilete og videoar</string>
     <string name="setup_permission_not_granted">Ikkje gjeve</string>
     <string name="setup_permission_optional_not_granted">Valfritt · Ikkje gjeve</string>
     <string name="permission_local_network_title">Direkte lokal nettverkstilgang</string>
-    <string name="setup_reason_local_network">Valfritt. Gi dette berre når ReFra blir kopla direkte til ein server på det noverande nettverket ditt.</string>
+    <string name="setup_reason_local_network">Valfritt. Gje løyve berre dersom ReFra koplar direkte til ein tenar på det noverande nettverket ditt.</string>
     <string name="local_network_permission_dialog_title">Vil du tillata direkte tilgang til lokalt nettverk?</string>
     <string name="local_network_permission_dialog_message">Denne serveren blir løyst til ei eining på det noverande lokalet ditt nettverk. Android krev løyve før ReFra kan kopla til den direkte.</string>
     <string name="local_network_permission_not_now">Ikkje no</string>
@@ -2253,19 +2253,19 @@
     <string name="setup_reason_read_images"><![CDATA[Vising av bilete i tidslinja, albuma og mediumvisaren. Utan dette løyvet er galleriet tomt.]]></string>
     <string name="setup_reason_read_videos"><![CDATA[Vising og avspeling av videoar i tidslinja, albuma og mediumvisaren.]]></string>
     <string name="setup_reason_media_location"><![CDATA[Lese GPS-data innebygd i bileta og videoane dine for å driva kartet og posisjonsdetaljar.]]></string>
-    <string name="setup_reason_media_location_optional"><![CDATA[Valfritt. Lèt ReFra lese GPS-data som er bygde inn i bilete og videoar, for Kartet og posisjonsdetaljar. Galleriet fungerer framleis om du hoppar over dette.]]></string>
-    <string name="setup_reason_internet"><![CDATA[Lasta ned kartfliser for førehandsvisning av plassering, casta media til einingar i nærleiken, lasta ned valfrie AI-modellar og synkronisera med skyserverar. Media forlèt aldri eininga di med mindre du konfigurerer skysynkronisering.]]></string>
-    <string name="setup_reason_notifications"><![CDATA[Viser framdrift for bakgrunnsoppgåver som tryggleikskopiering, kryptering og nedlastingar.]]></string>
-    <string name="setup_reason_manage_media"><![CDATA[Hopp over den ekstra systemstadfestingsdialogen når du favorittar, kastar eller redigerer fleire element samtidig.]]></string>
-    <string name="setup_reason_manage_files"><![CDATA[Opprette album utanfor standard bilete- og DCIM-mappene, administrera filer kvar som helst på lagringsplassen din og vise ekstra biletformat som systemet ikkje kjenner igjen (som JPEG XL-, JPEG 2000- og Photoshop-filer).]]></string>
+    <string name="setup_reason_media_location_optional"><![CDATA[Valfritt. Let ReFra lesa innebygde GPS-data frå bilete og videoar, til bruk i kart og posisjonsdetaljar. Viss du hoppar over dette, vil galleriet likevel fungera.]]></string>
+    <string name="setup_reason_internet"><![CDATA[Nedlasting av kartfliser for å kunna førehandsvisa lokasjon, skjermdela medium med einingar i nærleiken, lasta ned valfrie KI-modellar og synkronisera med skytenarar. Medium forlatar aldri eininga med mindre du set opp skysynkronisering.]]></string>
+    <string name="setup_reason_notifications"><![CDATA[Framdriftsvising av oppgåver i bakgrunnen, som reservekopiering, kryptering og nedlastingar.]]></string>
+    <string name="setup_reason_manage_media"><![CDATA[Hoppar over ein ekstra stadfestingsdialog når du legg til i favorittar, flyttar til papirkorga eller redigerer fleire element samtidig.]]></string>
+    <string name="setup_reason_manage_files"><![CDATA[Oppretting av album utanfor standardmappene Bilete og DCIM, handsaming av filer kvar som helst i filsystemet og vising av fotoformat som systemet ikkje kjenner att (for eksempel JPEG XL-, JPEG 2000- og Photoshop-filer).]]></string>
     <!-- Looks & Feel page -->
-    <string name="setup_looks_title">Utsjånad og kjensle</string>
-    <string name="setup_looks_subtitle">Få appen til å kjennast som din.</string>
+    <string name="setup_looks_title">Utsjånad</string>
+    <string name="setup_looks_subtitle">Gjer appen til din eigen.</string>
     <string name="setup_section_app_name">Appnamn</string>
     <string name="setup_section_app_logo">Applogo</string>
-    <string name="setup_looks_restart_note">Appen startar på nytt når du er ferdig med oppsettet for å bruka det valde namnet og ikonet.</string>
+    <string name="setup_looks_restart_note">For å bruka det valde namnet og ikonet, vert appen starta på nytt når du er ferdig med oppsettet.</string>
     <string name="setup_section_appearance">Utsjånad</string>
-    <string name="setup_appearance_summary">Lys eller mørk modus, aksentfargar og meir.</string>
+    <string name="setup_appearance_summary">Lys eller mørk modus, kontrastfargar og meir.</string>
     <string name="setup_open_appearance">Tilpass utsjånaden</string>
     <!-- Cloud sync page -->
     <string name="setup_cloud_title">Skysynkronisering</string>
