@@ -2350,7 +2350,7 @@
     <string name="cutout_copy_failed">Feil ved kopiering av utskjeringsobjektet</string>
     <string name="cutout_share_failed">Feil ved deling av utskjeringsobjektet</string>
     <string name="cutout_save_failed">Feil ved lagring av utskjeringsobjektet</string>
-    <string name="cutout_saved">Lagra utskjering til Bilete/Utskjeringar</string>
+    <string name="cutout_saved">Utskjeringa er lagra i Bilete/Utskjeringar</string>
     <string name="cutout_refining">Finjusterer utskjeringa …</string>
     <string name="cutout_action">Skjer ut motiv</string>
     <string name="cutout_include">Inkluder</string>
