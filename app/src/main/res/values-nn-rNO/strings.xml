@@ -3,7 +3,7 @@
     <string name="app_name">ReFra</string>
     <string name="app_name_gallery">Gallery</string>
     <string name="smart_scan_notification_channel">Smart skanning</string>
-    <string name="smart_scan_notification_title">Skannar media</string>
+    <string name="smart_scan_notification_title">Skannar medium</string>
     <string name="smart_scan_notification_stage_progress">%1$s · %2$d av %3$d · %4$d%% totalt</string>
     <string name="smart_scan_notification_stage_progress_eta">%1$s · %2$d av %3$d · %4$d%% totalt · %5$s</string>
     <string name="smart_scan_notification_stage_preparing">%1$s · Forbereder</string>
