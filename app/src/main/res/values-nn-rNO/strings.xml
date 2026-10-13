@@ -577,12 +577,12 @@
     <string name="ai_category">Smarte funksjonar</string>
     <!-- AI Model Management -->
     <string name="ai_models_not_installed">AI models are not installed. Download them from Settings &gt; Smart Features.</string>
-    <string name="ai_models_manager">AI Models Manager</string>
-    <string name="ai_models_download">Download AI Models</string>
+    <string name="ai_models_manager">Handsaming av KI-modellar</string>
+    <string name="ai_models_download">Last ned KI-modellar</string>
     <string name="ai_models_download_summary">Download AI models for image search and classification (~147 MB)</string>
-    <string name="ai_models_downloading">Downloading AI Models…</string>
+    <string name="ai_models_downloading">Lastar ned KI-modellar …</string>
     <string name="ai_models_cancel_download">Cancel AI Model Download</string>
-    <string name="ai_models_preparing">Preparing AI Models…</string>
+    <string name="ai_models_preparing">Klargjer KI-modellar …</string>
     <string name="ai_models_preparing_summary">Bundled models are being prepared for use</string>
     <string name="ai_models_installed">AI Models Installed</string>
     <string name="ai_models_offline_installed_summary">Bundled models cannot be deleted from this offline build</string>
@@ -590,9 +590,9 @@
     <string name="ai_models_offline_unavailable_summary">This offline build cannot download missing models.</string>
     <string name="ai_models_ready_summary">AI-powered search and classification are available</string>
     <string name="ai_models_error">AI Model Error</string>
-    <string name="ai_models_install">Install AI Models</string>
+    <string name="ai_models_install">Installer KI-modellar</string>
     <string name="ai_models_install_summary">Restore the models bundled with the app — no download needed</string>
-    <string name="ai_models_delete">Delete AI Models</string>
+    <string name="ai_models_delete">Slett KI-modellar</string>
     <string name="ai_models_delete_confirm">Are you sure you want to delete the AI models? You will need to download them again to use AI features.</string>
     <string name="ai_models_delete_confirm_bundled">Are you sure you want to delete the AI models? They are bundled with the app and can be restored at any time.</string>
     <string name="ai_models_size">Model size: %s</string>
@@ -1005,7 +1005,7 @@
     <string name="action_desc_rotate">Rotate selected items 90° clockwise</string>
     <string name="action_desc_download">Download cloud media to your device</string>
     <string name="download">Download</string>
-    <string name="downloading">Downloading…</string>
+    <string name="downloading">Lastar ned …</string>
     <string name="download_complete">Download complete</string>
     <string name="download_failed">Download failed</string>
     <string name="cloud_delete">Slett</string>
@@ -1049,7 +1049,7 @@
     <string name="visual_search_position_bottom_summary">Inside the quick actions bar at the bottom</string>
     <string name="visual_search_with">Search with %1$s</string>
     <string name="visual_search_generic_cd">Visual search</string>
-    <string name="visual_search_stage_downloading">Downloading…</string>
+    <string name="visual_search_stage_downloading">Lastar ned …</string>
     <string name="visual_search_stage_decrypting">Decrypting…</string>
     <string name="visual_search_stage_preparing">Preparing…</string>
     <string name="visual_search_stage_extracting">Extracting frame…</string>
@@ -1653,12 +1653,12 @@
     <string name="cloud_cap_memories">Minner</string>
     <string name="cloud_setup_help">Korleis kopla til</string>
     <string name="cloud_wizard_step">Trinn %1$d av %2$d</string>
-    <string name="cloud_step_server">Servar</string>
+    <string name="cloud_step_server">Tenar</string>
     <string name="cloud_step_credentials">Legitimasjon</string>
     <string name="cloud_step_networking">Nettverk</string>
     <string name="cloud_step_sync">Synkroniser</string>
     <string name="cloud_step_review">Gå gjennom</string>
-    <string name="cloud_step_server_desc">Kvar er serveren din?</string>
+    <string name="cloud_step_server_desc">Plasseringa til tenaren</string>
     <string name="cloud_step_credentials_desc">Logg på slik at me kan kopla til.</string>
     <string name="cloud_step_networking_desc">Bruk eventuelt ein raskare URL på heimenettverket.</string>
     <string name="cloud_step_sync_desc">Vel kva du vil sikringskopiera og kva du skal ta med.</string>
@@ -1689,9 +1689,9 @@
     <string name="cloud_net_active_url">Aktiv URL akkurat no</string>
     <string name="cloud_net_local_active">På lokalt nettverk - ved å bruka lokal URL</string>
     <string name="cloud_net_external_active">Utanfor lokalt nettverk — ved hjelp av ekstern URL</string>
-    <string name="cloud_help_immich">Skriv inn din Immich-server-urL (inkluder http:// eller https://). Logg på med e-post og passord, eller lim inn ein API-nøkkel frå Kontoinnstillinger → API-nøklar.</string>
-    <string name="cloud_help_owncloud">Skriv inn nettadressen til din eigen Cloud-server (t.d. https://cloud.example.com). Bruk brukarnamnet og passordet for kontoen din, eller eit app-passord om du har tofaktorautentisering aktivert.</string>
-    <string name="cloud_help_nextcloud">Skriv inn URL-adressa til Nextcloud-serveren din (t.d. https://cloud.example.com). Logg på sikkert i nettlesaren din, inkludert tofaktorautentisering, eller bruk brukarnamn og app-passord manuelt.</string>
+    <string name="cloud_help_immich">Skriv inn nettadressa til Immich-tenaren (ta med http:// eller https://). Logg på med e-postadresse og passord, eller lim inn ein API-nøkkel frå Kontoinnstilingar → API-nøklar.</string>
+    <string name="cloud_help_owncloud">Skriv inn nettadressa til ownCloud-tenaren (for eksempel https://cloud.example.com). Bruk brukarnamnet og passordet til kontoen, eller eit app-passord dersom du har slått på tofaktorautentisering.</string>
+    <string name="cloud_help_nextcloud">Skriv inn nettadressa til Nextcloud-tenaren (for eksempel https://cloud.example.com). Logg på trygt i nettlesaren med tofaktorautentisering, eller oppgje brukarnamn og app-passord.</string>
     <string name="cloud_nextcloud_sign_in">Logg på med Nextcloud</string>
     <string name="cloud_nextcloud_starting">Startar sikker pålogging …</string>
     <string name="cloud_nextcloud_waiting">Ventar på nettlesargodkjenning …</string>
@@ -1712,7 +1712,7 @@
     <string name="cloud_nextcloud_network_error">Nextcloud-serveren kunne ikkje nåast.</string>
     <string name="cloud_nextcloud_tls_error">Den sikre tilkoplinga til Nextcloud kunne ikkje stadfestast.</string>
     <string name="cloud_nextcloud_invalid_response">Nextcloud returnerte eit ugyldig påloggingssvar.</string>
-    <string name="cloud_help_webdav">Skriv inn den fullstendige WebDAV-endepunkt-URLen frå verten din, og deretter Webdav-brukarnamnet og passordet ditt.</string>
+    <string name="cloud_help_webdav">Skriv inn heile adressa til WebDAV-endepunktet, og deretter brukarnamnet og passordet til WebDAV-tenaren.</string>
     <string name="cloud_help_smb">Bruk smb://host/share/foldar. La brukarnamnet stå tomt for gjestetilgang, eller skriv inn brukar / DOMENE\\\\bruker og passordet ditt. Delinga må vera på same lokale nettverk som denne eininga. SMB2/3 er påkravde (eldre SMB1 blir ikkje støtta).</string>
     <string name="cloud_help_nfs">Bruk nfs://host/export/path, der alt etter verten er den eksporterte banen. Berre #NFSv3 (med AUTH_blir SYDD) blir støtta — NFSv2 og #NFSv4 er ikkje det. Angi eventuelt ein uid:gjev som eksporten gir tilgang til. Eksporten må tillata denne einingas IP, tilby ein NFSv3-montering og vera på same lokale nettverk.</string>
     <string name="cloud_smb_url_hint">smb://host/share/mappe</string>
@@ -1721,7 +1721,7 @@
     <string name="cloud_nfs_uid_gid">Brukar-ID (uid:gjev)</string>
     <string name="cloud_nfs_uid_gid_hint">t.d. 1000:1000 (valfritt, AUTH_blir SYDD)</string>
     <string name="cloud_server_url">Server URL</string>
-    <string name="cloud_server_url_hint">https://your-server.com</string>
+    <string name="cloud_server_url_hint">https://tenaren-din.com</string>
     <string name="cloud_api_key">API Key</string>
     <string name="cloud_api_key_hint">Enter your API key</string>
     <string name="cloud_username">Username</string>
@@ -2164,7 +2164,7 @@
     <string name="cloud_add_provider">Add %1$s</string>
     <!-- Cloud Provider Settings Screen -->
     <string name="cloud_provider_settings">Cloud Settings</string>
-    <string name="cloud_server_url_label">Server URL</string>
+    <string name="cloud_server_url_label">Nettadressa til tenaren</string>
     <string name="cloud_server_version_label">Server Version</string>
     <string name="cloud_sync_now_summary">Fetch latest media and albums</string>
     <string name="cloud_auto_sync">Auto-sync</string>
@@ -2208,7 +2208,7 @@
     <!-- Networking editing -->
     <string name="cloud_net_current_server">Current server address</string>
     <string name="cloud_net_edit_wifi">Edit Wi-Fi name</string>
-    <string name="cloud_net_edit_local_url">Edit local server URL</string>
+    <string name="cloud_net_edit_local_url">Endra nettadresse til lokal tenar</string>
     <string name="cloud_net_use_current">Use current connection</string>
     <string name="cloud_net_add_external">Add external URL</string>
     <string name="cloud_net_external_hint">https://immich.example.com</string>
@@ -2291,7 +2291,7 @@
     <string name="setup_ai_subtitle">Slå på smartsøk og automatisk kategorisering. Modellar køyrer berre lokalt på eininga.</string>
     <string name="setup_ai_ready">KI-modellar er installerte og klare.</string>
     <string name="setup_ai_download">Last ned KI-modellar</string>
-    <string name="setup_ai_download_size">Eingongsnedlasting. Etter nedlasting trengst ikkje nettilkopling</string>
+    <string name="setup_ai_download_size">Eingongsnedlasting – fungerer utan nettilkopling etterpå</string>
     <string name="setup_ai_no_internet">Ei nettilkopling krevst for å lasta ned KI-modellane.</string>
     <string name="setup_ai_features_title">Dette får du</string>
     <string name="setup_ai_feature_categories_title">Smartkategoriar</string>
