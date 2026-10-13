@@ -83,10 +83,10 @@
     <string name="no_map_app">No app available to show the location</string>
     <string name="map_appearance_header">Kart</string>
     <string name="map_appearance_title">Kartutsjånad</string>
-    <string name="map_appearance_description">Vel om kart følgjer ReFras utsjånad eller alltid bruka lyse eller mørke kartfargar.</string>
+    <string name="map_appearance_description">Vel om kart skal følgja ReFra sin utsjånad eller om dei skal bruka lyse eller mørke kartfargar.</string>
     <string name="map_appearance_system">Følg utsjånaden til appen</string>
     <string name="map_appearance_light">Lys</string>
-    <string name="map_appearance_dark">Mørkt</string>
+    <string name="map_appearance_dark">Mørk</string>
     <string name="map_appearance_action">Endre utsjånaden til kartet</string>
     <string name="map_load_failed">Couldn’t load the map</string>
     <string name="carto_basemap_key_title">CARTO basemap API key</string>
@@ -163,7 +163,7 @@
     <string name="amoled_mode_requires_dark">Berre tilgjengeleg når appen brukar mørk modus</string>
     <string name="use_system_font_title">Bruk systemskrifta</string>
     <string name="use_system_font_summary">Bruk systemskrifta til eininga i staden for den innebygde skrifta</string>
-    <string name="use_system_font_description">When enabled, the app uses your device\'s system font instead of the built-in Google Sans font. This can improve readability if you use a custom system font.</string>
+    <string name="use_system_font_description">Når denne er slått på, brukar appen eininga si systemskrift i staden for den innebygde Google Sans-skrifttypen. Dette kan gjera tekst lettare å lesa dersom du brukar ei sjølvvald systemskrift.</string>
     <string name="color_palette_preview_description">Ikon, tekst og meir samsvarar med fargar i bakgrunnsbiletet</string>
     <string name="color_palette_wallpaper_colors">Bakgrunnsfargar</string>
     <string name="color_palette_other_colors">Andre fargar</string>
@@ -605,7 +605,7 @@
     <string name="ai_models_feature_search">Search by Description</string>
     <string name="ai_models_feature_categories">Automatic Categories</string>
     <string name="ai_models_feature_cutout">Emneutskjering</string>
-    <string name="ai_models_feature_faces">Ansikt og menneske</string>
+    <string name="ai_models_feature_faces">Ansikt og personar</string>
     <!-- Per-feature model groups -->
     <string name="ai_models_group_search_title">Søk og kategoriar</string>
     <string name="ai_models_group_search_desc">CLIP-modellar som driv smart søk og automatiske kategoriar.</string>
@@ -620,7 +620,7 @@
     <string name="ai_models_group_face_detect_download_summary">Last ned Ultraface-detektoren (~1,3 MB)</string>
     <string name="ai_models_group_face_detect_ready_summary">Automatisk ansiktsuskarpleik er tilgjengeleg i biletredigeringsprogrammet</string>
     <string name="ai_models_source_face_detect_url">github.com/onnx/models · UltraFace</string>
-    <string name="ai_models_group_face_recognition_title">Ansiktsgjenkjenning (menneske)</string>
+    <string name="ai_models_group_face_recognition_title">Ansiktsgjenkjenning (personar)</string>
     <string name="ai_models_group_face_recognition_desc">ArcFace ansikt-innbyggingsmodell som grupperer den same personen på tvers av bileta dine, heilt på eininga. Krev ansiktsgjenkjenning.</string>
     <string name="ai_models_group_face_recognition_download_summary">Last ned Arcface-modellen (~130 MB)</string>
     <string name="ai_models_group_face_recognition_ready_summary">Persongruppering på eininga er tilgjengeleg i biblioteket</string>
@@ -2269,16 +2269,16 @@
     <string name="setup_open_appearance">Tilpass utsjånaden</string>
     <!-- Cloud sync page -->
     <string name="setup_cloud_title">Skysynkronisering</string>
-    <string name="setup_cloud_subtitle">Kople eventuelt til ein server for å sikringskopiera og synkronisera media dine. Alt held fram med å vera valfritt og under din kontroll.</string>
-    <string name="setup_cloud_enable">Konfigurer skysynkronisering</string>
+    <string name="setup_cloud_subtitle">Du kan kopla til ein tenar for å reservekopiera og synkronisera medium. Dette er valfritt, og du held på kontrollen.</string>
+    <string name="setup_cloud_enable">Set opp skysynkronisering</string>
     <string name="setup_cloud_choose_provider">Vel ein leverandør</string>
     <string name="setup_cloud_configured">Tilkopla · %1$s</string>
-    <string name="setup_cloud_none">Du har ingen skykonto tilkopla. Du kan alltid setja opp dette seinare frå Innstillinger.</string>
+    <string name="setup_cloud_none">Ingen skykontoar er kopla til. Du kan alltids setja dette opp seinare i innstillingane.</string>
     <string name="setup_cap_remote_assets">Bla gjennom eksterne medium</string>
     <string name="setup_cap_remote_albums">Eksterne album</string>
     <string name="setup_cap_sync">Tryggleikskopiering og synkronisering</string>
-    <string name="setup_cap_people">Menneske og ansikt</string>
-    <string name="setup_cap_map">Kart og stader</string>
+    <string name="setup_cap_people">Personar og ansikt</string>
+    <string name="setup_cap_map">Kart og stadar</string>
     <string name="setup_cap_smart_search">Smart søk</string>
     <string name="setup_cap_text_search">Tekstsøk</string>
     <string name="setup_cap_share_link">Delte lenkjer</string>
