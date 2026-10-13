@@ -102,6 +102,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.PointerEventPass
@@ -243,6 +244,7 @@ import com.github.panpf.sketch.cache.CachePolicy
 import com.github.panpf.sketch.request.ImageRequest
 import com.github.panpf.sketch.sketch
 import dev.chrisbanes.haze.blur.materials.HazeMaterials
+import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
@@ -749,6 +751,10 @@ fun <T : Media> MediaViewScreen(
     resetMetadataSanitization: () -> Unit = {},
     motionPhotoStateFactory: @Composable (Media?) -> MotionPhotoState = { remember { MotionPhotoState() } },
 ) = CompositionLocalProvider(
+    // Viewer-owned backdrop. The activity haze state also carries gallery sources for as
+    // long as the overlay is up; remembering this state here (not on chrome or page keys)
+    // keeps media sources and every viewer consumer on one backdrop across hide/show.
+    LocalHazeState provides rememberHazeState(),
     LocalMediaViewerVisualPolicy provides MediaViewerVisualPolicy(
         allowBlur = allowBlur,
         forceDarkBackground = rememberDarkMediaViewer().value,
@@ -2902,6 +2908,11 @@ fun <T : Media> MediaViewScreen(
                         modifier = Modifier
                             .graphicsLayer {
                                 alpha = bottomSheetAlpha * dismissAlpha
+                                // Auto compositing promotes alpha < 1 into an offscreen buffer.
+                                // Haze keeps that buffer's clipped capture after the fade returns
+                                // to 1, which chops the quick-action capsule. Modulate the alpha
+                                // instead so the sampling layer is never flattened mid-transition.
+                                compositingStrategy = CompositingStrategy.ModulateAlpha
                             }
                             .then(
                                 if (viewerInteractive) Modifier
@@ -2950,6 +2961,7 @@ fun <T : Media> MediaViewScreen(
                                             alpha = 1f - progress
                                             translationY =
                                                 bottomBarHeightDefault.toPx() * progress
+                                            compositingStrategy = CompositingStrategy.ModulateAlpha
                                         }
                                         .padding(
                                             bottom = bottomPadding + extraPaddingWithNavButtons + 16.dp
@@ -2957,64 +2969,74 @@ fun <T : Media> MediaViewScreen(
                                         .fillMaxWidth(),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Row(
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(100))
-                                            .then(backgroundModifier)
-                                            .hazeEffectScaled(
-                                                state = LocalHazeState.current,
-                                                style = HazeMaterials.ultraThin(
-                                                    containerColor = surfaceContainer
+                                    // The capsule's haze layer is a sibling of the padded actions
+                                    // and is measured to their full bounds. Clip sits on that
+                                    // final boundary so the blur sampling rect cannot shrink to
+                                    // the glyphs when the sheet alpha animates.
+                                    val capsuleShape = RoundedCornerShape(100)
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Box(
+                                            modifier = Modifier
+                                                .matchParentSize()
+                                                .clip(capsuleShape)
+                                                .then(backgroundModifier)
+                                                .hazeEffectScaled(
+                                                    state = LocalHazeState.current,
+                                                    style = HazeMaterials.ultraThin(
+                                                        containerColor = surfaceContainer
+                                                    )
                                                 )
-                                            )
-                                            .padding(horizontal = 8.dp, vertical = 8.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                    ) {
-                                        MediaViewQuickBottomBar(
-                                            currentMedia = currentMedia,
-                                            showDeleteButton = !isReadOnly,
-                                            // Only interactive while the action bar is actually visible
-                                            // (collapsed sheet). When the info panel is expanded the bar is
-                                            // faded out (alpha = 0) but would otherwise still be tappable,
-                                            // letting taps near the drag handle trigger hidden buttons.
-                                            enabled = viewerInteractive && showViewerChrome &&
-                                                    sheetState.currentDetent == imageOnlyDetent,
-                                            deleteMedia = deleteMedia,
-                                            restoreMedia = restoreMedia,
-                                            currentVault = currentVault,
-                                            isImageDark = isBottomDark,
-                                            autoContrast = autoContrast,
-                                            visualSearchTarget = if (
-                                                visualSearchAvailable &&
-                                                visualSearchPosition == Settings.Misc.VISUAL_SEARCH_POSITION_BOTTOM
-                                            ) visualSearchTarget else null,
-                                            visualSearchTitle = visualSearchTitle,
-                                            onVisualSearch = onVisualSearch,
-                                            onTrashConfirmed = {
-                                                val removedMedia = currentMedia
-                                                val trashedId = removedMedia?.id
-                                                if (trashedId != null) {
-                                                    val newPending = pendingTrashIds + trashedId
-                                                    pendingTrashIds = newPending
-                                                    // If all items are now filtered out, navigate up
-                                                    val state = mediaState.value
-                                                    val allItems =
-                                                        state.pagerMedia.ifEmpty { state.media }
-                                                    val remaining =
-                                                        allItems.count { it.id !in newPending }
-                                                    if (remaining <= 0 && !isStandalone) {
-                                                        windowInsetsController.toggleSystemBars(show = true)
-                                                        dismissViewer()
-                                                    } else {
-                                                        // The fly-away reveal is skipped entirely
-                                                        // when media animations are disabled.
-                                                        exitingMedia =
-                                                            removedMedia.takeIf { sharedElementsEnabled }
+                                        )
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                        ) {
+                                            MediaViewQuickBottomBar(
+                                                currentMedia = currentMedia,
+                                                showDeleteButton = !isReadOnly,
+                                                // Only interactive while the action bar is actually visible
+                                                // (collapsed sheet). When the info panel is expanded the bar is
+                                                // faded out (alpha = 0) but would otherwise still be tappable,
+                                                // letting taps near the drag handle trigger hidden buttons.
+                                                enabled = viewerInteractive && showViewerChrome &&
+                                                        sheetState.currentDetent == imageOnlyDetent,
+                                                deleteMedia = deleteMedia,
+                                                restoreMedia = restoreMedia,
+                                                currentVault = currentVault,
+                                                isImageDark = isBottomDark,
+                                                autoContrast = autoContrast,
+                                                visualSearchTarget = if (
+                                                    visualSearchAvailable &&
+                                                    visualSearchPosition == Settings.Misc.VISUAL_SEARCH_POSITION_BOTTOM
+                                                ) visualSearchTarget else null,
+                                                visualSearchTitle = visualSearchTitle,
+                                                onVisualSearch = onVisualSearch,
+                                                onTrashConfirmed = {
+                                                    val removedMedia = currentMedia
+                                                    val trashedId = removedMedia?.id
+                                                    if (trashedId != null) {
+                                                        val newPending = pendingTrashIds + trashedId
+                                                        pendingTrashIds = newPending
+                                                        // If all items are now filtered out, navigate up
+                                                        val state = mediaState.value
+                                                        val allItems =
+                                                            state.pagerMedia.ifEmpty { state.media }
+                                                        val remaining =
+                                                            allItems.count { it.id !in newPending }
+                                                        if (remaining <= 0 && !isStandalone) {
+                                                            windowInsetsController.toggleSystemBars(show = true)
+                                                            dismissViewer()
+                                                        } else {
+                                                            // The fly-away reveal is skipped entirely
+                                                            // when media animations are disabled.
+                                                            exitingMedia =
+                                                                removedMedia.takeIf { sharedElementsEnabled }
+                                                        }
                                                     }
                                                 }
-                                            }
-                                        )
+                                            )
+                                        }
                                     }
                                 }
                             }
