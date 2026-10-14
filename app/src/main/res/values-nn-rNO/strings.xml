@@ -9,16 +9,16 @@
     <string name="smart_scan_notification_stage_preparing">%1$s · Forbereder</string>
     <string name="change_app_name">Appnamn</string>
     <string name="change_app_name_summary">Endra appnamnet som visast i applista</string>
-    <string name="favorite_icon_on_thumbnails">Favorittikon for miniatyrbilete</string>
+    <string name="favorite_icon_on_thumbnails">Favorittikon i miniatyrbilete</string>
     <string name="fav_position_disabled">Gøymt</string>
     <string name="fav_position_bottom_end">Nede til høgre</string>
     <string name="fav_position_bottom_start">Nede til venstre</string>
     <string name="fav_position_top_end">Oppe til høgre</string>
     <string name="fav_position_top_start">Oppe til venstre</string>
-    <string name="show_favorite_button">Favorite button in viewer</string>
-    <string name="show_favorite_button_summary">Show the favorite toggle button in the media viewer</string>
-    <string name="default_image_editor">Default image editor</string>
-    <string name="default_image_editor_builtin">Built-in editor</string>
+    <string name="show_favorite_button">Favorittknapp i mediumvisaren</string>
+    <string name="show_favorite_button_summary">Vis knappen for å leggja til og fjerna favorittar i mediumvisaren</string>
+    <string name="default_image_editor">Standardapp for biletredigering</string>
+    <string name="default_image_editor_builtin">Innebygd redigeringsprogram</string>
     <string name="nav_albums">Album</string>
     <string name="header_today">I dag</string>
     <string name="header_yesterday">I går</string>
@@ -896,7 +896,7 @@
     <string name="amoled_mode_description">Uses a pure black background instead of dark grey, providing higher contrast and saving battery on AMOLED screens.</string>
     <string name="amoled_mode_requires_dark_description">AMOLED-modus brukar reint svart i staden for mørke flater, så han er berre tilgjengeleg når appen brukar mørk modus.</string>
     <string name="timeline_layout_description">Choose how photos are arranged in the timeline grid. The uniform grid shows equal-sized thumbnails, while the mosaic layout varies sizes for a more dynamic look.</string>
-    <string name="favorite_icon_description">Choose where the favorite heart icon appears on thumbnails in the grid, or hide it entirely.</string>
+    <string name="favorite_icon_description">Vel kor favoritt-ikonet skal plasserast hen i rutenettet sine miniatyrbilete, eller gøym ikonet heilt.</string>
     <string name="default_editor_description">Choose which app opens when you tap the edit button. You can use the built-in editor or any compatible external photo editor installed on your device.</string>
     <string name="launch_screen_description">Choose which screen appears when you open the app. You can pick a specific screen or let the app remember the last one you used.</string>
     <string name="app_name_description">Change the name and icon displayed on your home screen launcher. The app will restart to apply the change.</string>
@@ -2371,7 +2371,7 @@
     <string name="cutout_save_flatten_black">Flat på svart</string>
     <string name="long_press_cutout_title">Trykk lenge for å skjera ut</string>
     <string name="long_press_cutout_summary">Trykk lenge for å isolera eit motiv. Rotering vert gjort om til ein knapp</string>
-    <string name="long_press_cutout_description">Vel kva som skjer når du trykkjer lenge på eit bilete i framvisaren. Når dette er slått på, vil eit langt trykk starta ei motivutskjering lokalt på eininga, og funksjonen for rotering vert til ein knapp. Når dette er slått av (standardinnstillinga), vil eit langt trykk rotera biletet. Du kan alltids skjera ut eit motiv ved å bruka utskjeringsverktøyet.</string>
+    <string name="long_press_cutout_description">Vel kva som skjer når du trykkjer lenge på eit bilete i mediumvisaren. Når dette er slått på, vil eit langt trykk starta ei motivutskjering lokalt på eininga, og funksjonen for rotering vert til ein knapp. Når dette er slått av (standardinnstillinga), vil eit langt trykk rotera biletet. Du kan alltids skjera ut eit motiv ved å bruka utskjeringsverktøyet.</string>
     <!-- Slideshow -->
     <string name="slideshow">Lysbiletframvising</string>
     <string name="slideshow_start">Start lysbiletframvising</string>
