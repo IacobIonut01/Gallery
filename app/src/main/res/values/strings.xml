@@ -543,6 +543,11 @@
     <string name="tap_sides_to_navigate_previous">Previous</string>
     <string name="tap_sides_to_navigate_controls">Controls</string>
     <string name="tap_sides_to_navigate_next">Next</string>
+    <string name="swipe_up_to_trash_title">Swipe up to trash</string>
+    <string name="swipe_up_to_trash_summary">Swipe a photo or video up in the viewer to move it to the trash</string>
+    <string name="swipe_up_to_trash_description">When enabled, drag the current photo or video upwards in the full-screen viewer to move it to the trash. A trash icon grows as you drag and fills once you pass the threshold; releasing past it moves the item to the trash and shows an Undo action. The gesture is ignored while zoomed, during a subject cutout, in slideshows, on trashed items, and whenever the item has no recoverable trash (for example a cloud account without a bin) — nothing is ever deleted permanently by this gesture.</string>
+    <string name="swipe_up_to_trash_message">Moved to trash</string>
+    <string name="action_undo">Undo</string>
     <string name="disable_smoothing_title">Disable smoothing</string>
     <string name="disable_smoothing_summary">Show crisp, square pixels when zooming instead of a blurry, smoothed image</string>
     <string name="disable_smoothing_description">When enabled, images are drawn with nearest-neighbor scaling so zooming into pixel art keeps clean, sharp pixels rather than blurring them. Leave it off for smooth scaling of photos.</string>

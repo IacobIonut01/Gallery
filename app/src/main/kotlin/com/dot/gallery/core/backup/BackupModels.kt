@@ -191,6 +191,7 @@ internal object PortableBackupSettings {
         "auto_hide_navigationbar",
         "full_brightness_view",
         "tap_sides_to_navigate",
+        "swipe_up_to_trash",
         "auto_hide_on_video_play",
         "no_classification",
         "categories_exclude_videos",

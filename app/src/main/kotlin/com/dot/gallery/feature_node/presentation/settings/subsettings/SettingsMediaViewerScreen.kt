@@ -107,6 +107,7 @@ import com.dot.gallery.core.Settings.Misc.rememberFullBrightnessView
 import com.dot.gallery.core.Settings.Misc.rememberShowFavoriteButton
 import com.dot.gallery.core.Settings.Misc.rememberShowMediaViewDateHeader
 import com.dot.gallery.core.Settings.Misc.rememberTapSidesToNavigate
+import com.dot.gallery.core.Settings.Misc.rememberSwipeUpToTrash
 import com.dot.gallery.core.Settings.Misc.rememberVideoAutoplay
 import com.dot.gallery.core.Settings.Misc.rememberVideoHdrPlayback
 import com.dot.gallery.core.Settings.Misc.rememberVideoSurfaceRebind
@@ -149,6 +150,7 @@ import kotlinx.coroutines.launch
 private const val DETAIL_BRIGHTNESS = "brightness"
 private const val DETAIL_DATE_HEADER = "date_header"
 private const val DETAIL_TAP_NAVIGATION = "tap_navigation"
+private const val DETAIL_SWIPE_UP_TO_TRASH = "swipe_up_to_trash"
 private const val DETAIL_FAV_BUTTON = "fav_button"
 private const val DETAIL_EDITOR = "editor"
 private const val DETAIL_AUTO_HIDE_VIDEO = "auto_hide_video"
@@ -170,6 +172,7 @@ fun SettingsMediaViewerScreen() {
     var fullBrightnessView by rememberFullBrightnessView()
     var showMediaDateHeader by rememberShowMediaViewDateHeader()
     var tapSidesToNavigate by rememberTapSidesToNavigate()
+    var swipeUpToTrash by rememberSwipeUpToTrash()
     var showFavoriteButton by rememberShowFavoriteButton()
     var defaultEditor by rememberDefaultImageEditor()
     var autoHideOnVideoPlay by rememberAutoHideOnVideoPlay()
@@ -231,6 +234,15 @@ fun SettingsMediaViewerScreen() {
                 preview = { checked -> TapNavigationPreview(enabled = checked) },
                 useColumnLayout = true,
                 previewBelowSwitch = true,
+            )
+        }
+        DETAIL_SWIPE_UP_TO_TRASH -> {
+            BackHandler { detailKey = null }
+            SwitchPreferenceDetailScreen(
+                title = stringResource(R.string.swipe_up_to_trash_title),
+                isChecked = swipeUpToTrash,
+                onCheckedChange = { swipeUpToTrash = it },
+                description = stringResource(R.string.swipe_up_to_trash_description),
             )
         }
         DETAIL_FAV_BUTTON -> {
@@ -373,6 +385,8 @@ fun SettingsMediaViewerScreen() {
                 onDateHeaderChange = { showMediaDateHeader = it },
                 tapSidesToNavigate = tapSidesToNavigate,
                 onTapNavigationChange = onTapNavigationChange,
+                swipeUpToTrash = swipeUpToTrash,
+                onSwipeUpToTrashChange = { swipeUpToTrash = it },
                 showFavoriteButton = showFavoriteButton,
                 onFavButtonChange = { showFavoriteButton = it },
                 defaultEditor = defaultEditor,
@@ -423,6 +437,8 @@ private fun MediaViewerListScreen(
     onDateHeaderChange: (Boolean) -> Unit,
     tapSidesToNavigate: Boolean,
     onTapNavigationChange: (Boolean) -> Unit,
+    swipeUpToTrash: Boolean,
+    onSwipeUpToTrashChange: (Boolean) -> Unit,
     showFavoriteButton: Boolean,
     onFavButtonChange: (Boolean) -> Unit,
     defaultEditor: String,
@@ -491,6 +507,16 @@ private fun MediaViewerListScreen(
             isChecked = tapSidesToNavigate,
             onCheck = onTapNavigationChange,
             onClick = { onDetailClick(DETAIL_TAP_NAVIGATION) },
+            screenPosition = Position.Middle,
+        )
+
+        val swipeUpToTrashPref = rememberSwitchPreference(
+            swipeUpToTrash,
+            title = stringResource(R.string.swipe_up_to_trash_title),
+            summary = stringResource(R.string.swipe_up_to_trash_summary),
+            isChecked = swipeUpToTrash,
+            onCheck = onSwipeUpToTrashChange,
+            onClick = { onDetailClick(DETAIL_SWIPE_UP_TO_TRASH) },
             screenPosition = Position.Middle,
         )
 
@@ -664,6 +690,7 @@ private fun MediaViewerListScreen(
 
         return remember(
             viewingHeader, fullBrightnessViewPref, showMediaDateHeaderPref, tapNavigationPref,
+            swipeUpToTrashPref,
             showFavoriteButtonPref, defaultEditorPref, disableSmoothingPref, darkMediaViewerPref,
             longPressCutoutPref,
             visualSearchPref, slideshowPref,
@@ -676,6 +703,7 @@ private fun MediaViewerListScreen(
                 add(fullBrightnessViewPref)
                 add(showMediaDateHeaderPref)
                 add(tapNavigationPref)
+                add(swipeUpToTrashPref)
                 if (SdkCompat.supportsFavorites) {
                     add(showFavoriteButtonPref)
                 }

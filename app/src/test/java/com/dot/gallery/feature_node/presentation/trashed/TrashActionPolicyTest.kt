@@ -5,6 +5,7 @@ import com.dot.gallery.cloud.core.remoteTrashPermitted
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.presentation.trashed.components.RemovalClass
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialogAction
+import com.dot.gallery.feature_node.presentation.trashed.components.canMoveToTrashRecoverably
 import com.dot.gallery.feature_node.presentation.trashed.components.planRemoval
 import com.dot.gallery.feature_node.presentation.trashed.components.removalClass
 import com.dot.gallery.feature_node.presentation.trashed.components.resolveTrashDialogAction
@@ -66,6 +67,38 @@ class TrashActionPolicyTest {
                 trashEnabled = true,
                 trashSupported = true
             )
+        )
+    }
+
+    // === canMoveToTrashRecoverably (swipe-up-to-trash gesture gate) ===
+
+    @Test
+    fun itemWithRecoverableTrashMayBeTrashed() {
+        assertTrue(
+            media(1).canMoveToTrashRecoverably(trashEnabled = true, trashSupported = true)
+        )
+    }
+
+    @Test
+    fun itemWithoutPlatformTrashIsNeverTrashed() {
+        // No bin means a "trash" call would be a permanent delete: the gesture must stay inert.
+        assertFalse(
+            media(1).canMoveToTrashRecoverably(trashEnabled = true, trashSupported = false)
+        )
+    }
+
+    @Test
+    fun itemWithTrashDisabledIsNeverTrashed() {
+        assertFalse(
+            media(1).canMoveToTrashRecoverably(trashEnabled = false, trashSupported = true)
+        )
+    }
+
+    @Test
+    fun alreadyTrashedItemIsNotTrashedAgain() {
+        assertFalse(
+            media(1).copy(trashed = 1)
+                .canMoveToTrashRecoverably(trashEnabled = true, trashSupported = true)
         )
     }
 
