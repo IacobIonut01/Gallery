@@ -9,12 +9,12 @@
     <string name="smart_scan_notification_stage_preparing">%1$s · Forbereder</string>
     <string name="change_app_name">Appnamn</string>
     <string name="change_app_name_summary">Endra appnamnet som visast i applista</string>
-    <string name="favorite_icon_on_thumbnails">Favorite icon on thumbnails</string>
-    <string name="fav_position_disabled">Hidden</string>
-    <string name="fav_position_bottom_end">Bottom right</string>
-    <string name="fav_position_bottom_start">Bottom left</string>
-    <string name="fav_position_top_end">Top right</string>
-    <string name="fav_position_top_start">Top left</string>
+    <string name="favorite_icon_on_thumbnails">Favorittikon for miniatyrbilete</string>
+    <string name="fav_position_disabled">Gøymt</string>
+    <string name="fav_position_bottom_end">Nede til høgre</string>
+    <string name="fav_position_bottom_start">Nede til venstre</string>
+    <string name="fav_position_top_end">Oppe til høgre</string>
+    <string name="fav_position_top_start">Oppe til venstre</string>
     <string name="show_favorite_button">Favorite button in viewer</string>
     <string name="show_favorite_button_summary">Show the favorite toggle button in the media viewer</string>
     <string name="default_image_editor">Default image editor</string>
@@ -421,7 +421,7 @@
     <string name="toggle_password_visibility_cd">Toggle password visibility</string>
     <string name="backspace_cd">Delete last digit</string>
     <string name="switch_vault_cd">Switch vault</string>
-    <string name="granted">Granted</string>
+    <string name="granted">Gjeve</string>
     <string name="new_vault">Nytt kvelv</string>
     <string name="delete_vault">Slett kvelv</string>
     <string name="unknown_vault">Ukjent kvelv</string>
