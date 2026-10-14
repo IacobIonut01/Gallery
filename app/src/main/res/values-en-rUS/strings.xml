@@ -377,7 +377,7 @@
     <string name="edit_backups_delete_all">Delete All Backups</string>
     <string name="edit_backups_delete_all_summary">Permanently delete all original image backups</string>
     <string name="edit_backups_delete_all_confirmation">This will permanently delete all original image backups. You will no longer be able to revert any edited photos to their originals.</string>
-    <string name="edit_backups_delete_selected">Delete Selected</string>
+    <string name="edit_backups_delete_selected">No editable backups</string>
     <string name="edit_backups_free_space">Free Space</string>
     <string name="edit_backups_section_actions">Actions</string>
     <string name="edit_backups_used_percent">Used %1$s%%</string>
