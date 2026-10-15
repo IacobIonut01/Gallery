@@ -1257,7 +1257,7 @@
     <string name="other_albums">Other albums</string>
     <string name="albums_merged_title">Albums merged</string>
     <string name="albums_merged_description">%1$d albums with the same name have been merged.</string>
-    <string name="subfolders_merged_title">Undermapper slått saman</string>
+    <string name="subfolders_merged_title">Fletta undermapper</string>
     <string name="subfolders_merged_description">Medium frå %1$d undermapper blir viste saman.</string>
     <string name="folders_combined_description">Medium frå %1$d mapper blir viste saman etter namn og mappestruktur.</string>
     <string name="merge_albums_by_name">Merge albums by name</string>
@@ -1266,7 +1266,7 @@
     <string name="update_modified_date_summary">Move copied, renamed, edited and rotated media to the top when sorting by modified date</string>
     <string name="merge_subfolders">Merge subfolders</string>
     <string name="unmerge_subfolders">Unmerge subfolders</string>
-    <string name="merge_parent_subfolders">Slå saman undermapper til overordna mappe</string>
+    <string name="merge_parent_subfolders">Flett undermapper</string>
     <string name="browse_subfolders">Bla gjennom undermapper</string>
     <string name="show_combined_timeline">Vis kombinert tidslinje</string>
     <string name="dismiss">Dismiss</string>
@@ -1980,7 +1980,7 @@
     <string name="cloud_person_add_name">Add a name</string>
     <string name="cloud_person_name_hint">Name</string>
     <string name="cloud_person_hide">Skjul</string>
-    <string name="cloud_person_merge">Slå saman</string>
+    <string name="cloud_person_merge">Flett</string>
     <string name="cloud_person_set_cover">Set deksel</string>
     <string name="cloud_person_blur_everywhere">Uskarpleik overalt</string>
     <string name="cloud_person_blur_everywhere_summary">Skjul ansiktet til denne personen i kvart bilete dei blir viste på, og lagre resultata som nye kopiar.</string>
