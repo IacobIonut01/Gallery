@@ -477,6 +477,9 @@
     <string name="tap_sides_to_navigate_description">When enabled, tap the left or right side of an unzoomed photo or video to move through the viewer instantly. Tap the center to show or hide controls. Side taps take priority over video seeking; panoramas, slideshows, and locked or standalone viewers keep their existing gestures.</string>
     <string name="tap_sides_to_navigate_summary">Tap either side of a photo or video to open the previous or next item</string>
     <string name="tap_sides_to_navigate_title">Tap sides to navigate</string>
+    <string name="swipe_up_to_trash_title">Swipe up to trash</string>
+    <string name="swipe_up_to_trash_summary">Swipe a photo or video up in the viewer to move it to the trash</string>
+    <string name="swipe_up_to_trash_description">When enabled, drag the current photo or video upwards in the full-screen viewer to move it to the trash. A trash icon grows as you drag and fills once you pass the threshold; releasing past it moves the item to the trash and shows an Undo action. The gesture is ignored while zoomed, during a subject cutout, in slideshows, on trashed items, and whenever the item has no recoverable trash (for example a cloud account without a bin) — nothing is ever deleted permanently by this gesture.</string>
     <string name="video_playback">Video Playback</string>
     <string name="video_surface_rebind">Fix black video on hide</string>
     <string name="video_surface_rebind_description">On some devices the video can turn black when you hide or show the playback controls, even though the audio keeps playing. This re-binds the video surface on each change to keep it visible. Enabled by default on devices where the issue is known to occur.</string>
