@@ -6,6 +6,8 @@ package com.dot.gallery.scrollbar
 
 import androidx.compose.foundation.lazy.grid.LazyGridItemInfo
 import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableFloatState
 import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.MutableState
@@ -17,7 +19,8 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import kotlin.math.ceil
+import androidx.compose.runtime.snapshotFlow
+import kotlin.math.abs
 import kotlin.math.floor
 
 /**
@@ -29,12 +32,157 @@ import kotlin.math.floor
 @Stable
 internal data class GridScrollTarget(val index: Int, val scrollOffset: Int)
 
+/** One visible grid item, reduced to what the scroll geometry needs. */
+@Stable
+internal data class GridScrollItem(val index: Int, val offsetY: Int, val height: Int)
+
+/** One layout pass of the grid, reduced to what the scroll geometry needs. */
+@Stable
+internal data class GridScrollFrame(
+    val totalItems: Int,
+    val viewportPixels: Int,
+    val firstVisibleIndex: Int,
+    val firstVisibleOffset: Int,
+    val items: List<GridScrollItem>,
+)
+
+/**
+ * Distance the content has scrolled, in pixels, measured from where it was last anchored.
+ *
+ * A lazy grid exposes no absolute pixel scroll offset, and an item index cannot stand in for one:
+ * a mosaic lays two to four items in a single row, so the index jumps by that many while the
+ * content moves exactly one row — which is why a thumb derived from it skipped and stuttered.
+ * The items' own viewport offsets are pixel-accurate, and the difference of one item's offset
+ * between two layout passes is exactly how far the content moved.
+ */
+internal class GridScrollPixelTracker {
+    private var previous = emptyList<GridScrollItem>()
+
+    /** Content pixels scrolled since the last anchor. */
+    var pixels = 0f
+        private set
+
+    /**
+     * True when the last update carried its position over from an item instead of re-anchoring.
+     * A re-anchor seeds the distance from an estimate, so an interval containing one says nothing
+     * about how far the content really moved.
+     */
+    var carriedOver = false
+        private set
+
+    /**
+     * Folds one layout pass in and returns the updated distance.
+     *
+     * An item that is visible now and was visible in the previous pass carries the position:
+     * every item that scrolls moves by the same amount, so the handover between items is lossless
+     * and needs no estimate. When nothing carried over — the first pass, or passes a fast fling
+     * skipped entirely — the distance advances by [indexIncrementPixels], the items that went by
+     * at the measured distance per item, and only the very first pass is seeded absolutely from
+     * [seedPixels]. Advancing rather than re-seeding keeps a skipped pass from moving the thumb.
+     *
+     * The carried item is taken from the middle of the viewport on purpose: a sticky header is
+     * pinned to the top edge and does not move with the content at all, so anchoring on whatever
+     * happens to come first would under-count the distance by the header's share of the scroll.
+     */
+    fun update(
+        items: List<GridScrollItem>,
+        viewportPixels: Int,
+        seedPixels: Float,
+        indexIncrementPixels: Float,
+    ): Float {
+        val viewportMiddle = viewportPixels / 2
+        val carried = items
+            .filter { item -> previous.any { it.index == item.index } }
+            .minByOrNull { item -> abs(item.offsetY - viewportMiddle) }
+        carriedOver = carried != null
+        if (carried != null) {
+            val before = previous.first { it.index == carried.index }
+            pixels += (before.offsetY - carried.offsetY).toFloat()
+        } else if (previous.isEmpty()) {
+            pixels = seedPixels
+        } else {
+            pixels += indexIncrementPixels
+        }
+        previous = items
+        return pixels
+    }
+
+    /** Anchors the distance at a known absolute position (the top of the list reads 0). */
+    fun resetTo(pixels: Float): Float {
+        this.pixels = pixels
+        return pixels
+    }
+}
+
+/**
+ * The item under the viewport's top edge, as a scroll position: the index of the first visible
+ * item plus [fractionIntoItem], how much of it has been scrolled past (0f..1f).
+ */
+internal fun scrollbarItemsAbove(firstVisibleItemIndex: Int, fractionIntoItem: Float): Float =
+    firstVisibleItemIndex + fractionIntoItem.coerceIn(0f, 1f)
+
+/**
+ * Height of the whole content in pixels: [pixelsPerItem], the distance the content moves per item
+ * passed, over every item.
+ *
+ * Deliberately *not* the average tile height: a grid lays several items in one row, so an item
+ * occupies a fraction of a row and the content is far shorter than the items stacked. The
+ * distance per passed item has no such factor in it, and it is measured rather than inferred.
+ */
+internal fun scrollbarContentPixels(pixelsPerItem: Float, totalItems: Int): Float =
+    if (pixelsPerItem <= 0f || totalItems <= 0) 0f else pixelsPerItem * totalItems
+
+/** Share of the content the viewport shows (0f..1f), which sizes the thumb. */
+internal fun scrollbarVisibleShare(visiblePixels: Float, contentPixels: Float): Float =
+    if (contentPixels <= 0f) 0f else (visiblePixels / contentPixels).coerceIn(0f, 1f)
+
+/**
+ * How far through the scrollable range the viewport is (0f..1f): the content scrolled over the
+ * distance the content *can* scroll (its height minus one viewport). Measured in pixels, so the
+ * thumb advances at the speed of the content instead of at the speed of an item index.
+ */
+internal fun scrollbarProgress(
+    scrollPixels: Float,
+    contentPixels: Float,
+    visiblePixels: Float,
+): Float {
+    val scrollable = contentPixels - visiblePixels
+    if (scrollable <= 0f) return if (scrollPixels > 0f) 1f else 0f
+    return (scrollPixels / scrollable).coerceIn(0f, 1f)
+}
+
+/**
+ * Where the thumb's top edge goes on the track: the content's progress mapped onto the distance
+ * the thumb itself can travel. No correction term is needed — with the share measured in the
+ * same pixels as the position, progress 1f lands the thumb's bottom edge exactly at the end.
+ */
+internal fun scrollbarThumbTop(progress: Float, displayedShare: Float): Float =
+    progress.coerceIn(0f, 1f) * (1f - displayedShare.coerceIn(0f, 1f))
+
+/** Content pixels a thumb position points at — the inverse of [scrollbarThumbTop]. */
+internal fun scrollbarPixelsAtThumbTop(
+    thumbTop: Float,
+    displayedShare: Float,
+    scrollablePixels: Float,
+): Float {
+    val travel = 1f - displayedShare.coerceIn(0f, 1f)
+    if (travel <= 0f) return 0f
+    return (thumbTop / travel).coerceIn(0f, 1f) * scrollablePixels
+}
+
+/**
+ * Fraction of the remaining difference the geometry's content height covers per layout pass. The
+ * estimate is corrected whenever the end of the list is reached and it refines itself while the
+ * list is scrolled; easing every step keeps a correction from moving the thumb in a single frame.
+ */
+private const val CONTENT_HEIGHT_EASING = 0.06f
+
 /**
  * Remembers a [GridScrollbarController] bound to [state].
  *
  * Vertical-grid only by design: this is the exact path the Gallery timeline uses.
  */
-@androidx.compose.runtime.Composable
+@Composable
 internal fun rememberGridScrollbarController(
     state: LazyGridState,
     thumbMinLength: Float,
@@ -66,49 +214,143 @@ internal fun rememberGridScrollbarController(
         }
     }
 
-    // LazyGridState doesn't expose the column count, so infer it from the first row.
-    val nElementsMainAxis = remember {
+    // Scroll position in content pixels, and the distance the content moves per item passed,
+    // which turns an item count into a content height and back into an item index for a drag.
+    val scrollPixels = remember { mutableFloatStateOf(0f) }
+    val pixelsPerItem = remember { mutableFloatStateOf(0f) }
+    // Content height measured at an end of the list, where it can be solved exactly; 0 while the
+    // estimate stands. Cleared when the list itself changes.
+    val calibratedContentPixels = remember { mutableFloatStateOf(0f) }
+    val calibratedTotalItems = remember { mutableIntStateOf(0) }
+    val contentPixelsTarget = remember {
         derivedStateOf {
-            var count = 0
-            for (item in state.layoutInfo.visibleItemsInfo) {
-                val index = item.column
-                if (index == -1) break
-                if (count == index) count += 1 else break
+            calibratedContentPixels.floatValue.takeIf { it > 0f }
+                ?: scrollbarContentPixels(
+                    pixelsPerItem = pixelsPerItem.floatValue,
+                    totalItems = state.layoutInfo.totalItemsCount,
+                )
+        }
+    }
+    // The height the geometry actually uses: it eases towards the target instead of stepping to it,
+    // so a correction — the end of the list being reached, the first measurement replacing the
+    // initial guess — glides the thumb along instead of jumping it in one frame.
+    val smoothedContentPixels = remember { mutableFloatStateOf(0f) }
+    LaunchedEffect(state) {
+        val tracker = GridScrollPixelTracker()
+        // Accumulated distance and items passed, from which the scale is measured.
+        var measuredPixels = 0f
+        var measuredItems = 0f
+        var baselinePixels = 0f
+        var baselineIndex = -1
+        var intervalIsClean = true
+        var lastSeenIndex = -1
+        snapshotFlow {
+            state.layoutInfo.let { info ->
+                GridScrollFrame(
+                    totalItems = info.totalItemsCount,
+                    viewportPixels = info.viewportEndOffset - info.viewportStartOffset,
+                    firstVisibleIndex = state.firstVisibleItemIndex,
+                    firstVisibleOffset = state.firstVisibleItemScrollOffset,
+                    items = info.visibleItemsInfo.map {
+                        GridScrollItem(it.index, it.offset.y, it.size.height)
+                    },
+                )
             }
-            count.coerceAtLeast(1)
+        }.collect { frame ->
+            if (frame.totalItems == 0 || frame.items.isEmpty()) return@collect
+            if (calibratedTotalItems.intValue != frame.totalItems) {
+                calibratedTotalItems.intValue = frame.totalItems
+                calibratedContentPixels.floatValue = 0f
+            }
+            val firstItem = frame.items.firstOrNull { it.index == frame.firstVisibleIndex }
+                ?: frame.items.first()
+            val fractionIntoItem = if (firstItem.height == 0) {
+                0f
+            } else {
+                (frame.firstVisibleOffset / firstItem.height.toFloat()).coerceIn(0f, 1f)
+            }
+            if (measuredItems == 0f) {
+                // Nothing passed yet, so nothing measured: spread the viewport over the items on
+                // screen, which in a grid is the distance per item (one row of items covers one
+                // row height) and close enough that the first measurement only refines it.
+                pixelsPerItem.floatValue = frame.viewportPixels.toFloat() / frame.items.size
+            }
+            val seedPixels = scrollbarItemsAbove(
+                firstVisibleItemIndex = firstItem.index,
+                fractionIntoItem = fractionIntoItem,
+            ) * pixelsPerItem.floatValue
+            val indexIncrement = if (lastSeenIndex < 0) {
+                0f
+            } else {
+                (frame.firstVisibleIndex - lastSeenIndex) * pixelsPerItem.floatValue
+            }
+            lastSeenIndex = frame.firstVisibleIndex
+            // The top of the list is an absolute reference the integration can be pinned to: a
+            // first pass seeded from an estimate, or a jump into the middle, cannot know where it
+            // is, so use the ends to correct the scale whenever they are reached.
+            if (!state.canScrollBackward) {
+                scrollPixels.floatValue = tracker.resetTo(0f)
+            } else {
+                scrollPixels.floatValue = tracker.update(
+                    items = frame.items,
+                    viewportPixels = frame.viewportPixels,
+                    seedPixels = seedPixels,
+                    indexIncrementPixels = indexIncrement,
+                )
+            }
+            // Distance the content moves per item passed, measured between two item advances: it
+            // is what turns an item count into a content height, and it is the only scale a grid
+            // makes observable — the tile heights say nothing about how many items share a row.
+            // Measured, so it converges as the list is scrolled instead of being inferred from
+            // whichever tiles happen to be on screen.
+            if (baselineIndex < 0) {
+                baselineIndex = frame.firstVisibleIndex
+                baselinePixels = scrollPixels.floatValue
+                intervalIsClean = true
+            } else if (frame.firstVisibleIndex != baselineIndex) {
+                val passedItems = (frame.firstVisibleIndex - baselineIndex).toFloat()
+                val passedPixels = scrollPixels.floatValue - baselinePixels
+                // Matching signs mean the distance belongs to those items, and a clean interval
+                // means no re-anchor seeded part of it from an estimate; a jump (a month snap, a
+                // reload) leaves the two unrelated.
+                if (intervalIsClean && passedItems * passedPixels > 0f) {
+                    measuredPixels += passedPixels
+                    measuredItems += passedItems
+                    pixelsPerItem.floatValue = measuredPixels / measuredItems
+                }
+                baselineIndex = frame.firstVisibleIndex
+                baselinePixels = scrollPixels.floatValue
+                intervalIsClean = tracker.carriedOver
+            } else if (!tracker.carriedOver) {
+                intervalIsClean = false
+            }
+            if (!state.canScrollForward && state.canScrollBackward) {
+                calibratedContentPixels.floatValue = scrollPixels.floatValue + frame.viewportPixels
+            }
+            // Ease the height the geometry uses towards the target: every correction the estimate
+            // makes — the list end being reached, the first measurement replacing the guess —
+            // moves the thumb along instead of jumping it.
+            val contentTarget = contentPixelsTarget.value
+            val contentNow = smoothedContentPixels.floatValue
+            smoothedContentPixels.floatValue = if (contentNow <= 0f) {
+                contentTarget
+            } else {
+                contentNow + (contentTarget - contentNow) * CONTENT_HEIGHT_EASING
+            }
         }
     }
 
-    val isStickyHeaderInAction = remember {
-        derivedStateOf {
-            val realIndex = realFirstVisibleItem.value?.index ?: return@derivedStateOf false
-            val firstVisibleIndex = state.layoutInfo.visibleItemsInfo.firstOrNull()?.index
-                ?: return@derivedStateOf false
-            realIndex != firstVisibleIndex
-        }
-    }
-
-    // NOTE: upstream divided by size.width for the vertical axis (a latent bug that
-    // only worked for square cells). We correctly use the height here.
-    fun LazyGridItemInfo.fractionHiddenTop(firstItemOffset: Int): Float =
-        if (size.height == 0) 0f else firstItemOffset / size.height.toFloat()
-
-    fun LazyGridItemInfo.fractionVisibleBottom(viewportEndOffset: Int): Float =
-        if (size.height == 0) 0f else (viewportEndOffset - offset.y).toFloat() / size.height.toFloat()
-
-    val thumbSizeNormalizedReal = remember {
+    val viewportPixels = remember {
         derivedStateOf {
             state.layoutInfo.let {
-                if (it.totalItemsCount == 0) return@let 0f
-                val firstItem = realFirstVisibleItem.value ?: return@let 0f
-                val firstPartial = firstItem.fractionHiddenTop(state.firstVisibleItemScrollOffset)
-                val lastPartial =
-                    1f - it.visibleItemsInfo.last().fractionVisibleBottom(it.viewportEndOffset)
-                val rows = ceil(it.visibleItemsInfo.size.toFloat() / nElementsMainAxis.value) -
-                        if (isStickyHeaderInAction.value) 1f else 0f
-                val realVisibleSize = rows - firstPartial - lastPartial
-                realVisibleSize / ceil(it.totalItemsCount.toFloat() / nElementsMainAxis.value)
+                (it.viewportEndOffset - it.viewportStartOffset).toFloat()
             }
+        }
+    }
+    val contentPixels: State<Float> = remember { derivedStateOf { smoothedContentPixels.floatValue } }
+    val thumbSizeNormalizedReal = remember {
+        derivedStateOf {
+            scrollbarVisibleShare(viewportPixels.value, contentPixels.value)
         }
     }
 
@@ -121,30 +363,21 @@ internal fun rememberGridScrollbarController(
         }
     }
 
-    fun offsetCorrection(top: Float): Float {
-        val topRealMax = (1f - thumbSizeNormalizedReal.value).coerceIn(0f, 1f)
-        if (thumbSizeNormalizedReal.value >= thumbMinLengthUpdated.value) {
-            return if (reverseLayout.value) topRealMax - top else top
-        }
-        val topMax = 1f - thumbMinLengthUpdated.value
-        return if (reverseLayout.value) {
-            (topRealMax - top) * topMax / topRealMax
-        } else {
-            top * topMax / topRealMax
+    val thumbProgress = remember {
+        derivedStateOf {
+            scrollbarProgress(
+                scrollPixels = scrollPixels.floatValue,
+                contentPixels = contentPixels.value,
+                visiblePixels = viewportPixels.value,
+            )
         }
     }
 
     val layoutThumbOffsetNormalized = remember {
         derivedStateOf {
-            state.layoutInfo.let {
-                if (it.totalItemsCount == 0 || it.visibleItemsInfo.isEmpty()) return@let 0f
-                val firstItem = realFirstVisibleItem.value ?: return@let 0f
-                val top = firstItem.run {
-                    ceil(index.toFloat() / nElementsMainAxis.value) +
-                            fractionHiddenTop(state.firstVisibleItemScrollOffset)
-                } / ceil(it.totalItemsCount.toFloat() / nElementsMainAxis.value)
-                offsetCorrection(top)
-            }
+            val displayed = thumbSizeNormalized.value
+            val top = scrollbarThumbTop(thumbProgress.value, displayed)
+            if (reverseLayout.value) (1f - displayed - top).coerceIn(0f, 1f) else top
         }
     }
 
@@ -173,7 +406,6 @@ internal fun rememberGridScrollbarController(
     return remember {
         GridScrollbarController(
             thumbSizeNormalized = thumbSizeNormalized,
-            thumbSizeNormalizedReal = thumbSizeNormalizedReal,
             thumbOffsetNormalized = thumbOffsetNormalized,
             thumbIsInAction = thumbIsInAction,
             isSelected = isSelected,
@@ -181,9 +413,10 @@ internal fun rememberGridScrollbarController(
             dragTargetIndex = dragTargetIndex,
             selectionMode = selectionModeUpdated,
             realFirstVisibleItem = realFirstVisibleItem,
-            thumbMinLength = thumbMinLengthUpdated,
             reverseLayout = reverseLayout,
-            nElementsMainAxis = nElementsMainAxis,
+            contentPixels = contentPixels,
+            viewportPixels = viewportPixels,
+            pixelsPerItem = pixelsPerItem,
             snapIndices = snapIndicesUpdated,
             snapScrollOffset = snapScrollOffsetUpdated,
             onSnap = onSnapUpdated,
@@ -198,14 +431,14 @@ internal class GridScrollbarController(
     val thumbOffsetNormalized: State<Float>,
     val thumbIsInAction: State<Boolean>,
     val isSelected: MutableState<Boolean>,
-    private val thumbSizeNormalizedReal: State<Float>,
     private val dragOffset: MutableFloatState,
     private val dragTargetIndex: MutableIntState,
     private val selectionMode: State<ScrollbarSelectionMode>,
     private val realFirstVisibleItem: State<LazyGridItemInfo?>,
-    private val thumbMinLength: State<Float>,
     private val reverseLayout: State<Boolean>,
-    private val nElementsMainAxis: State<Int>,
+    private val contentPixels: State<Float>,
+    private val viewportPixels: State<Float>,
+    private val pixelsPerItem: State<Float>,
     private val snapIndices: State<IntArray>,
     private val snapScrollOffset: State<Int>,
     private val onSnap: State<() -> Unit>,
@@ -284,11 +517,16 @@ internal class GridScrollbarController(
     private fun setScrollOffset(newOffset: Float) {
         // Keep the thumb tracking the finger 1:1 regardless of snapping.
         setDragOffset(newOffset)
-        val columns = nElementsMainAxis.value
         val totalItems = state.layoutInfo.totalItemsCount
-        val totalRows = ceil(totalItems.toFloat() / columns)
-        val exactIndex = offsetCorrectionInverse(totalRows * dragOffset.floatValue)
-        val continuousIndex = (floor(exactIndex).toInt() * columns)
+        val scrollablePixels = (contentPixels.value - viewportPixels.value).coerceAtLeast(0f)
+        val targetPixels = scrollbarPixelsAtThumbTop(
+            thumbTop = newOffset,
+            displayedShare = thumbSizeNormalized.value,
+            scrollablePixels = scrollablePixels,
+        )
+        val perItem = pixelsPerItem.value
+        val itemsAbove = if (perItem > 0f) targetPixels / perItem else 0f
+        val continuousIndex = floor(itemsAbove).toInt()
             .coerceIn(0, (totalItems - 1).coerceAtLeast(0))
 
         // Month-snapping mode: jump the grid to the start of the month under the thumb and
@@ -304,9 +542,9 @@ internal class GridScrollbarController(
             return
         }
 
-        val remainder = exactIndex - floor(exactIndex)
-        val rowHeight = realFirstVisibleItem.value?.size?.height ?: 0
-        val scrollOffset = (rowHeight * remainder).toInt()
+        val remainder = itemsAbove - floor(itemsAbove)
+        val itemHeight = realFirstVisibleItem.value?.size?.height ?: 0
+        val scrollOffset = (itemHeight * remainder).toInt()
 
         dragTargetIndex.intValue = continuousIndex
         scrollTarget.value = GridScrollTarget(index = continuousIndex, scrollOffset = scrollOffset)
@@ -334,12 +572,5 @@ internal class GridScrollbarController(
     private fun setDragOffset(value: Float) {
         val maxValue = (1f - thumbSizeNormalized.value).coerceAtLeast(0f)
         dragOffset.floatValue = value.coerceIn(0f, maxValue)
-    }
-
-    private fun offsetCorrectionInverse(top: Float): Float {
-        if (thumbSizeNormalizedReal.value >= thumbMinLength.value) return top
-        val topRealMax = 1f - thumbSizeNormalizedReal.value
-        val topMax = 1f - thumbMinLength.value
-        return top * topRealMax / topMax
     }
 }
