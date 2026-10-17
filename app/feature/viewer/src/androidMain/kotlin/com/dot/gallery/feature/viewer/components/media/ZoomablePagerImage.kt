@@ -289,6 +289,18 @@ fun <T : Media> BlurredMediaBackground(
     }
 }
 
+// JXL is exempt from the "animated stays smooth" rule: unlike the frame-animated rasters
+// (GIF/APNG/animated WebP, which BitmapRegionDecoder genuinely cannot tile), JXL still
+// subsamples through JxlRegionDecoder — which self-rejects animated codestreams — and an
+// animated painter animates under the canvas-drawn pixel-perfect path just like under
+// ZoomImage, because the painter owns its frames, not the renderer (#1311).
+fun resolveUsePixelPerfect(
+    disableSmoothing: Boolean,
+    isJxl: Boolean,
+    isAnimated: Boolean,
+    isAnimatedRaster: Boolean,
+): Boolean = disableSmoothing && !isAnimatedRaster && (isJxl || !isAnimated)
+
 @Stable
 @Composable
 fun <T : Media> ZoomablePagerImage(
@@ -395,9 +407,15 @@ fun <T : Media> ZoomablePagerImage(
     // with FilterQuality.None so zooming shows crisp square pixels instead of a bilinear-smoothed
     // blur. ZoomImage scales via a GPU graphicsLayer (always linearly filtered), so the setting is
     // honored through a dedicated canvas-transform draw path (see PixelPerfectZoomImage) rather than
-    // ZoomImage. Animated images keep the default smooth path.
+    // ZoomImage. Animated images keep the default smooth path — except JXL (see
+    // resolveUsePixelPerfect), whose blanket "animated" flag used to hide it forever (#1311).
     val disableSmoothing by Settings.Misc.rememberDisableSmoothing()
-    val usePixelPerfect = disableSmoothing && !isAnimated && !isAnimatedRaster
+    val usePixelPerfect = resolveUsePixelPerfect(
+        disableSmoothing = disableSmoothing,
+        isJxl = isJxl,
+        isAnimated = isAnimated,
+        isAnimatedRaster = isAnimatedRaster,
+    )
     val filterQuality = if (disableSmoothing) FilterQuality.None else DrawScope.DefaultFilterQuality
     // #1054: MediaStore sometimes mislabels a standard JPEG/PNG/WebP/GIF/BMP as RAW/TIFF/PSD/JP2,
     // so media.isRaw/isTiff/… are true and a custom region decoder would be attached that can't
