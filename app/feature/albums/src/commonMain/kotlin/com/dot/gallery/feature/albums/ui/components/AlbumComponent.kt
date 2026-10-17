@@ -708,6 +708,13 @@ fun AlbumOptionSheet(
         }
     }
 
+    LaunchedEffect(appBottomSheetState.isVisible) {
+        isSelectingThumbnail = nextAlbumCoverPickerState(
+            currentlySelecting = isSelectingThumbnail,
+            sheetVisible = appBottomSheetState.isVisible
+        )
+    }
+
     val options = remember(isSelectingThumbnail, optionList) {
         (if (isSelectingThumbnail) {
             changeThumbnailOptions

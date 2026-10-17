@@ -121,6 +121,9 @@ import com.dot.gallery.feature.settings.generated.resources.show_favorite_button
 import com.dot.gallery.feature.settings.generated.resources.show_favorite_button_summary
 import com.dot.gallery.feature.settings.generated.resources.slideshow
 import com.dot.gallery.feature.settings.generated.resources.slideshow_settings_summary
+import com.dot.gallery.feature.settings.generated.resources.swipe_up_to_trash_description
+import com.dot.gallery.feature.settings.generated.resources.swipe_up_to_trash_summary
+import com.dot.gallery.feature.settings.generated.resources.swipe_up_to_trash_title
 import com.dot.gallery.feature.settings.generated.resources.tap_sides_to_navigate_description
 import com.dot.gallery.feature.settings.generated.resources.tap_sides_to_navigate_summary
 import com.dot.gallery.feature.settings.generated.resources.tap_sides_to_navigate_title
@@ -163,6 +166,7 @@ import com.dot.gallery.feature.settings.generated.resources.visual_search_with
 private const val DETAIL_BRIGHTNESS = "brightness"
 private const val DETAIL_DATE_HEADER = "date_header"
 private const val DETAIL_TAP_NAVIGATION = "tap_navigation"
+private const val DETAIL_SWIPE_UP_TO_TRASH = "swipe_up_to_trash"
 private const val DETAIL_FAV_BUTTON = "fav_button"
 private const val DETAIL_EDITOR = "editor"
 private const val DETAIL_AUTO_HIDE_VIDEO = "auto_hide_video"
@@ -187,6 +191,7 @@ fun SettingsMediaViewerContent(
     var fullBrightnessView by rememberPreference(SettingsKeys.fullBrightnessView)
     var showMediaDateHeader by rememberPreference(SettingsKeys.mediaViewDateHeader)
     var tapSidesToNavigate by rememberPreference(SettingsKeys.tapSidesToNavigate)
+    var swipeUpToTrash by rememberPreference(SettingsKeys.swipeUpToTrash)
     var showFavoriteButton by rememberPreference(SettingsKeys.showFavoriteButton)
     var defaultEditor by rememberPreference(SettingsKeys.defaultImageEditor)
     var autoHideOnVideoPlay by rememberPreference(SettingsKeys.autoHideOnVideoPlay)
@@ -244,6 +249,15 @@ fun SettingsMediaViewerContent(
                 preview = { checked -> previews.tapNavigation(checked) },
                 useColumnLayout = true,
                 previewBelowSwitch = true,
+            )
+        }
+        DETAIL_SWIPE_UP_TO_TRASH -> {
+            BackHandler { detailKey = null }
+            SwitchPreferenceDetailScreen(
+                title = stringResource(Res.string.swipe_up_to_trash_title),
+                isChecked = swipeUpToTrash,
+                onCheckedChange = { swipeUpToTrash = it },
+                description = stringResource(Res.string.swipe_up_to_trash_description),
             )
         }
         DETAIL_FAV_BUTTON -> {
@@ -386,6 +400,8 @@ fun SettingsMediaViewerContent(
                 onDateHeaderChange = { showMediaDateHeader = it },
                 tapSidesToNavigate = tapSidesToNavigate,
                 onTapNavigationChange = onTapNavigationChange,
+                swipeUpToTrash = swipeUpToTrash,
+                onSwipeUpToTrashChange = { swipeUpToTrash = it },
                 showFavoriteButton = showFavoriteButton,
                 onFavButtonChange = { showFavoriteButton = it },
                 defaultEditor = defaultEditor,
@@ -438,6 +454,8 @@ private fun MediaViewerListContent(
     onDateHeaderChange: (Boolean) -> Unit,
     tapSidesToNavigate: Boolean,
     onTapNavigationChange: (Boolean) -> Unit,
+    swipeUpToTrash: Boolean,
+    onSwipeUpToTrashChange: (Boolean) -> Unit,
     showFavoriteButton: Boolean,
     onFavButtonChange: (Boolean) -> Unit,
     defaultEditor: String,
@@ -504,6 +522,16 @@ private fun MediaViewerListContent(
             isChecked = tapSidesToNavigate,
             onCheck = onTapNavigationChange,
             onClick = { onDetailClick(DETAIL_TAP_NAVIGATION) },
+            screenPosition = Position.Middle,
+        )
+
+        val swipeUpToTrashPref = rememberSwitchPreference(
+            swipeUpToTrash,
+            title = stringResource(Res.string.swipe_up_to_trash_title),
+            summary = stringResource(Res.string.swipe_up_to_trash_summary),
+            isChecked = swipeUpToTrash,
+            onCheck = onSwipeUpToTrashChange,
+            onClick = { onDetailClick(DETAIL_SWIPE_UP_TO_TRASH) },
             screenPosition = Position.Middle,
         )
 
@@ -676,6 +704,7 @@ private fun MediaViewerListContent(
 
         return remember(
             viewingHeader, fullBrightnessViewPref, showMediaDateHeaderPref, tapNavigationPref,
+            swipeUpToTrashPref,
             showFavoriteButtonPref, defaultEditorPref, disableSmoothingPref, darkMediaViewerPref,
             longPressCutoutPref,
             visualSearchPref, slideshowPref,
@@ -688,6 +717,7 @@ private fun MediaViewerListContent(
                 add(fullBrightnessViewPref)
                 add(showMediaDateHeaderPref)
                 add(tapNavigationPref)
+                add(swipeUpToTrashPref)
                 if (state.supportsFavorites) {
                     add(showFavoriteButtonPref)
                 }

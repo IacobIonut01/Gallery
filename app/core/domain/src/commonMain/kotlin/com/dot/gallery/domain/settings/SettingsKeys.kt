@@ -75,6 +75,8 @@ object SettingsKeys {
     val mediaViewDateHeader = PrefKey.bool("media_view_date_header", default = true)
     val tapSidesToNavigate = PrefKey.bool("tap_sides_to_navigate", default = false)
     val tapSidesPromptShown = PrefKey.bool("tap_sides_to_navigate_prompt_shown", default = false)
+    /** Off by default: it is a destructive gesture, so it stays opt-in. */
+    val swipeUpToTrash = PrefKey.bool("swipe_up_to_trash", default = false)
     val showFavoriteButton = PrefKey.bool("show_favorite_button", default = true)
     val defaultImageEditor = PrefKey.string("default_image_editor", default = EDITOR_BUILTIN)
     val darkMediaViewer = PrefKey.bool("dark_media_viewer", default = true)

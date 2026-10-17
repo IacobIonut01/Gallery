@@ -849,6 +849,14 @@ object Settings {
             context.activeDataStore.edit { it[TAP_SIDES_TO_NAVIGATE_PROMPT_SHOWN] = true }
         }
 
+        /**
+         * Swipe a photo or video upwards in the full-screen viewer to move it to the trash.
+         * Off by default: it is a destructive gesture, so it stays opt-in.
+         */
+        @Composable
+        fun rememberSwipeUpToTrash() =
+            rememberPreference(SettingsKeys.swipeUpToTrash)
+
         @Composable
         fun rememberAutoHideOnVideoPlay() =
             rememberPreference(SettingsKeys.autoHideOnVideoPlay)
