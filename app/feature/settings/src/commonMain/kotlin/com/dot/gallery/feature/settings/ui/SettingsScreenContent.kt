@@ -67,7 +67,7 @@ fun SettingsScreenContent(
     actions: SettingsScreenActions,
 ) {
     @Composable
-    fun rememberDashboardSettings(developerMode: Boolean): SnapshotStateList<SettingsEntity> {
+    fun rememberDashboardSettings(): SnapshotStateList<SettingsEntity> {
         val appearancePref = rememberPreference(
             icon = Icons.Outlined.Palette,
             title = stringResource(Res.string.settings_appearance),
@@ -136,15 +136,15 @@ fun SettingsScreenContent(
             title = stringResource(Res.string.help_title),
             summary = stringResource(Res.string.help_summary),
             onClick = { actions.onNavigate(SettingsRoute.HELP) },
-            screenPosition = if (developerMode) Position.Middle else Position.Bottom
+            screenPosition = Position.Middle
         )
-        val developerPref = if (developerMode) rememberPreference(
+        val developerPref = rememberPreference(
             icon = Icons.Outlined.BugReport,
             title = stringResource(Res.string.dev_menu_title),
             summary = stringResource(Res.string.dev_menu_summary),
             onClick = { actions.onNavigate(SettingsRoute.DEVELOPER) },
             screenPosition = Position.Bottom
-        ) else null
+        )
         return remember(
             appearancePref, timelineAlbumsPref, mediaViewerPref,
             navigationPref, generalPref, securityPref, backupPref, cloudPref, smartPref, helpPref,
@@ -155,8 +155,7 @@ fun SettingsScreenContent(
                 navigationPref, generalPref, securityPref, backupPref,
             ).apply {
                 if (cloudPref != null) add(cloudPref)
-                addAll(listOf(smartPref, helpPref))
-                if (developerPref != null) add(developerPref)
+                addAll(listOf(smartPref, helpPref, developerPref))
             }
         }
     }
@@ -222,7 +221,7 @@ fun SettingsScreenContent(
                 )
             }
         } else null,
-        settingsList = rememberDashboardSettings(state.developerMode),
+        settingsList = rememberDashboardSettings(),
         settingsBuilder = { setting, index, modifier ->
             SettingsItem(
                 item = setting,

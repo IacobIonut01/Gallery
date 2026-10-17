@@ -76,8 +76,6 @@ class DeveloperViewModel @Inject constructor(
             _uiState.update {
                 it.copy(
                     loading = false,
-                    stats = AppLog.stats(),
-                    latestErrors = entries.filter(LogEntry::isError).take(LATEST_ERRORS_COUNT),
                     unreportedCrashEntry = crashEntry,
                     minLevel = AppLog.minLevel,
                     breadcrumbsEnabled = AppLog.breadcrumbsEnabled,
@@ -221,6 +219,10 @@ class DeveloperViewModel @Inject constructor(
                 entries = filtered,
                 groups = AppLog.groupedByArea(filtered),
                 totalCount = allEntries.value.size,
+                latestErrors = allEntries.value
+                    .filter(LogEntry::isError)
+                    .take(LATEST_ERRORS_COUNT),
+                stats = AppLog.stats(),
             )
         }
     }

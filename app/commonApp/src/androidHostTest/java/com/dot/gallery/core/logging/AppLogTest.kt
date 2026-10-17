@@ -51,6 +51,17 @@ class AppLogTest {
     }
 
     @Test
+    fun `re-enabling an already enabled store does not duplicate the session marker`() {
+        // The developer screen and the preference collector can both enable
+        // collection for the same gesture — only one session-start event may land.
+        AppLog.setEnabled(true)
+        AppLog.setEnabled(true)
+        awaitFileWritten { AppLog.readEntries().isNotEmpty() }
+        val markers = AppLog.readEntries().count { it.tag == "session" }
+        assertEquals(1, markers)
+    }
+
+    @Test
     fun `entries are dropped while developer mode is off`() {
         AppLog.setEnabled(false)
         AppLog.log(LogLevel.ERROR, "test", "should not persist")

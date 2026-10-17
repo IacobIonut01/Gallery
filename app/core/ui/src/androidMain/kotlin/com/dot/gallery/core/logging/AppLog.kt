@@ -135,11 +135,17 @@ object AppLog {
         startWriter()
     }
 
-    /** Set by whoever owns the developer-mode preference flow (GalleryApp). */
+    /**
+     * Set by whoever owns the developer-mode preference flow (GalleryApp) and
+     * by the developer screen itself on entry. The enable block only runs on a
+     * false→true transition, so enabling twice cannot duplicate the
+     * session-start marker or re-flush the pre-init buffer.
+     */
     fun setEnabled(value: Boolean) {
+        val wasEnabled = enabled
         enabled = value
         flagResolved = true
-        if (value && initialized) {
+        if (value && !wasEnabled && initialized) {
             startWriter()
             sessionStart()
             synchronized(preInitLock) {

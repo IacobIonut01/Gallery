@@ -8,6 +8,7 @@ package com.dot.gallery.app.presentation.settings.subsettings
 import android.content.Intent
 import android.widget.Toast
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -20,6 +21,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.core.LocalEventHandler
 import com.dot.gallery.core.Settings
+import com.dot.gallery.core.logging.AppLog
 import com.dot.gallery.core.logging.LogEntry
 import com.dot.gallery.core.logging.LogExporter
 import com.dot.gallery.core.logging.LogLevel
@@ -61,6 +63,17 @@ fun DeveloperScreen(
     var developerMode by Settings.Misc.rememberDeveloperMode()
     var breadcrumbsPref by Settings.Misc.rememberDevLogBreadcrumbs()
     var minLevelPref by Settings.Misc.rememberDevLogMinLevel()
+
+    // Opening this screen is the opt-in gesture: the menu is reachable from
+    // Settings and the Help deep-link without the version easter egg, so
+    // arriving here turns collection on. The pref write persists the choice;
+    // setEnabled makes it effective immediately for the test-error action.
+    LaunchedEffect(Unit) {
+        if (!developerMode) {
+            developerMode = true
+            AppLog.setEnabled(true)
+        }
+    }
 
     val copiedToast = stringResource(Res.string.dev_copied_toast)
     val logsCopiedToast = stringResource(Res.string.dev_logs_copied)
