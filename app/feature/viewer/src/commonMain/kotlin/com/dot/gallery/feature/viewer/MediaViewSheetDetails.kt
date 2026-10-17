@@ -522,7 +522,8 @@ fun <T : Media> MediaViewSheetDetails(
                         canReplaceOriginal = canReplaceOriginal,
                         onConfirm = { mode, saveMode ->
                             sanitizeMetadata(currentMedia, mode, saveMode)
-                        }
+                        },
+                        onDismissed = onResetSanitization
                     )
                 }
 

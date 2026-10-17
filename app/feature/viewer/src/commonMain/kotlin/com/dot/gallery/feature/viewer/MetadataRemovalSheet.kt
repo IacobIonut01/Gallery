@@ -69,7 +69,8 @@ fun MetadataRemovalSheet(
     capability: SanitizationCapability?,
     isBusy: Boolean,
     canReplaceOriginal: Boolean,
-    onConfirm: (MetadataRemovalMode, MetadataSaveMode) -> Unit
+    onConfirm: (MetadataRemovalMode, MetadataSaveMode) -> Unit,
+    onDismissed: () -> Unit = {}
 ) {
     val scope = rememberCoroutineScope()
     var selectedMode by remember { mutableStateOf(MetadataRemovalMode.LOCATION) }
@@ -86,7 +87,12 @@ fun MetadataRemovalSheet(
     ModalBottomSheet(
         sheetState = state.sheetState,
         onDismissRequest = {
-            if (!isBusy) scope.launch { state.hide() }
+            if (!isBusy) {
+                scope.launch { state.hide() }
+                // The probe result outlives this sheet in the ViewModel — without a reset
+                // the phase stays Ready and the sheet re-opens on every view of the media.
+                onDismissed()
+            }
         },
         containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
         tonalElevation = 0.dp,

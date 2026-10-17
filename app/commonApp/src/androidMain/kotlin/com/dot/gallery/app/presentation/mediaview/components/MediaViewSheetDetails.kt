@@ -89,6 +89,7 @@ import com.dot.gallery.domain.util.readUriOnly
 import com.dot.gallery.core.ui.util.rememberAppBottomSheetState
 import com.dot.gallery.feature.viewer.rememberMediaInfoIconBackgroundModifier
 import com.dot.gallery.core.logging.printDebug
+import com.dot.gallery.core.logging.printError
 import com.dot.gallery.core.presentation.util.effectiveCartoBasemapKey
 import com.dot.gallery.app.presentation.util.launchMap
 import com.dot.gallery.core.rememberMediaViewerNavigate
@@ -344,8 +345,14 @@ fun <T : Media> MediaViewSheetDetails(
                 iconBackgroundModifier = iconModifier,
                 onGranted = {
                     scope.launch {
-                        currentMedia?.let { handler.collectMetadataFor(it) }
-                        workScheduler().enqueueRedactedLocationRepair()
+                        runCatching { currentMedia?.let { handler.collectMetadataFor(it) } }
+                            .onFailure {
+                                printError("ui.mediaview", "post-grant metadata re-parse failed", it)
+                            }
+                        runCatching { workScheduler().enqueueRedactedLocationRepair() }
+                            .onFailure {
+                                printError("ui.mediaview", "redacted location repair enqueue failed", it)
+                            }
                     }
                 }
             )

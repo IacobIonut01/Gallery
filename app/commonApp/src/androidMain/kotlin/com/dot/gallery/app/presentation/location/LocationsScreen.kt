@@ -39,18 +39,21 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.core.work.workScheduler
+import com.dot.gallery.core.logging.printError
 import kotlinx.coroutines.launch
 import com.github.panpf.sketch.AsyncImage
 import com.github.panpf.sketch.request.ComposableImageRequest
@@ -111,14 +114,23 @@ fun LocationsScreen(
         // EXIF, so nothing can resolve to a location — surface that instead of
         // silently showing an empty screen.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            val context = LocalContext.current
             val scope = rememberCoroutineScope()
             val locationPermission = rememberPermissionState(
                 Manifest.permission.ACCESS_MEDIA_LOCATION
-            ) { granted ->
-                // Rows parsed under redaction carry a 0,0 signature — re-parse them now.
-                if (granted) {
-                    scope.launch { workScheduler().enqueueRedactedLocationRepair() }
+            )
+            // Rows parsed under redaction carry a 0,0 signature — re-parse them once the
+            // permission lands. Fires on the status transition rather than the launcher
+            // result so a grant made via app-details settings repairs the rows too.
+            var repairEnqueued by remember { mutableStateOf(locationPermission.status.isGranted) }
+            LaunchedEffect(locationPermission.status) {
+                if (!repairEnqueued && locationPermission.status.isGranted) {
+                    repairEnqueued = true
+                    scope.launch {
+                        runCatching { workScheduler().enqueueRedactedLocationRepair() }
+                            .onFailure {
+                                printError("ui.locations", "redacted location repair enqueue failed", it)
+                            }
+                    }
                 }
             }
             if (!locationPermission.status.isGranted) {
