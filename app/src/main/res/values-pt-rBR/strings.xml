@@ -253,7 +253,7 @@
     <string name="copy">Cópia</string>
     <string name="copying_to_album">Copying to %1$s</string>
     <string name="cloud_move_progress">Moving to %1$s</string>
-    <string name="cloud_move_removing_originals">Removing originals…</string>
+    <string name="cloud_move_removing_originals">Removendo originais...</string>
     <string name="cloud_move_incomplete">Move incomplete</string>
     <string name="cloud_move_mixed_unsupported">Move local and cloud items separately</string>
     <string name="transfer_on_device">On this device</string>
@@ -541,7 +541,7 @@
     <string name="auto_hide_on_video_play">Ocultar UI ao reproduzir vídeo</string>
     <string name="auto_hide_on_video_play_summary">Oculta a UI após 2 segundos reproduzindo vídeos</string>
     <string name="dark_media_viewer_title">Dark viewer background</string>
-    <string name="dark_media_viewer_summary">Keep the media viewer background black in Light Theme</string>
+    <string name="dark_media_viewer_summary">Mantenha o fundo do visualizador de mídia preto no Tema Claro</string>
     <string name="dark_media_viewer_description">When enabled, photos and videos are always shown on a black background — like most gallery apps — even when the app theme is light. Turn it off to let the viewer follow the light theme.</string>
     <string name="delete_location">Excluir Localização</string>
     <string name="delete_metadata">Excluir Metadados</string>
@@ -581,11 +581,11 @@
     <string name="ai_models_download">Baixar modelos de inteligência artificial</string>
     <string name="ai_models_download_summary">Baixar modelos de inteligência artificial para busca e classificação de imagens (~ 147 MB)</string>
     <string name="ai_models_downloading">Baixando modelos de inteligência artificial...</string>
-    <string name="ai_models_cancel_download">Cancel AI Model Download</string>
+    <string name="ai_models_cancel_download">Cancelar download do modelo IA</string>
     <string name="ai_models_preparing">Preparing AI Models…</string>
     <string name="ai_models_preparing_summary">Bundled models are being prepared for use</string>
     <string name="ai_models_installed">AI Models Installed</string>
-    <string name="ai_models_offline_installed_summary">Bundled models cannot be deleted from this offline build</string>
+    <string name="ai_models_offline_installed_summary">Os modelos agrupados não podem ser excluídos desta compilação offline</string>
     <string name="ai_models_offline_unavailable">AI Models Unavailable</string>
     <string name="ai_models_offline_unavailable_summary">This offline build cannot download missing models.</string>
     <string name="ai_models_ready_summary">Estão disponíveis recursos de busca e classificação com tecnologia de inteligência artificial</string>
