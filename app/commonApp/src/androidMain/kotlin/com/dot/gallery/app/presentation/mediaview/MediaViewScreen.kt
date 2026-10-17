@@ -97,6 +97,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -629,6 +630,32 @@ internal fun isViewerSurrogateVisible(
         (!contentReady || transitionRunning || dismissActive)
 
 /**
+ * Whether the viewer's navigation chrome (top bar, quick actions, info sheet) may draw.
+ *
+ * The chrome is withheld for the whole entry transition, so the media arrives on a bare backdrop
+ * and the bars fade in once behind it. [transitionSettled] is the latch that keeps it withheld
+ * until that transition has run: the entry registers its animations only *after* the viewer has
+ * composed, so on the viewer's first frame `isRunning` still reads false while the entry is
+ * already on its way. Gating on [transitionRunning] alone renders the chrome fully visible for
+ * that frame, and the starting transition then drives it through a complete exit before
+ * re-entering it — the chrome fades out and fades back in on every open.
+ */
+internal fun isViewerNavigationChromeVisible(
+    transitionSettled: Boolean,
+    transitionRunning: Boolean,
+): Boolean = transitionSettled && !transitionRunning
+
+/**
+ * Frames spent watching for an entry transition that has not registered its animations yet.
+ * Covers the first composed frame of a viewer, where `isRunning` is still false (see
+ * [isViewerNavigationChromeVisible]); reaching the end means no transition is coming.
+ */
+private const val ENTRY_TRANSITION_START_GRACE_FRAMES = 4
+
+/** Upper bound for the reveal wait, so a transition that never settles cannot hide the chrome. */
+private const val ENTRY_TRANSITION_SETTLE_FRAMES = 180
+
+/**
  * True when a pointer down at [downUptime] lands inside the double-tap window after a tap
  * released at [lastTapUpUptime]. That second press belongs to the image's one-finger zoom
  * (double-tap-hold and drag), so the viewer's swipe-to-dismiss must not arm on it.
@@ -1094,8 +1121,6 @@ fun <T : Media> MediaViewScreen(
         // the scrim/chrome fade — so the reveal behind the dropped card is the timeline, not a
         // lingering blur veil.
         val backdropAlpha = if (overlayMode) viewerDismissState.backdropAlpha else 1f
-        val navigationChromeVisible = !animatedContentScope.transition.isRunning
-        val showViewerChrome = showUI && navigationChromeVisible
 
         // Deterministic enter flight (overlay mode): the framework's shared-element bounds morph
         // snaps under the deferred transition — its bounds DeferredAnimation is recreated once the
@@ -1104,6 +1129,33 @@ fun <T : Media> MediaViewScreen(
         // morphs cell→fullscreen instead, with both entries suppressed so no framework morph draws
         // on top; suppression holds until the container's enter transition settles.
         val sharedElementsEnabled by Settings.Misc.rememberSharedElements()
+        // Chrome is withheld until the entry transition has settled (see
+        // [isViewerNavigationChromeVisible]): the media flies in on a bare backdrop and the bars
+        // fade in once behind it, instead of being torn down and rebuilt mid-flight.
+        var navigationTransitionSettled by remember(viewerSessionKey) { mutableStateOf(false) }
+        LaunchedEffect(viewerSessionKey, sharedElementsEnabled) {
+            if (!sharedElementsEnabled) {
+                // Media animations off: nothing flies, the viewer and its chrome appear at once.
+                navigationTransitionSettled = true
+                return@LaunchedEffect
+            }
+            val transition = animatedContentScope.transition
+            var started = false
+            for (frame in 0 until ENTRY_TRANSITION_SETTLE_FRAMES) {
+                val running = transition.isRunning
+                started = started || running
+                if (started && !running) break
+                // Nothing has started yet — watch a few frames, then conclude none is coming.
+                if (!started && frame >= ENTRY_TRANSITION_START_GRACE_FRAMES) break
+                withFrameNanos { }
+            }
+            navigationTransitionSettled = true
+        }
+        val navigationChromeVisible = isViewerNavigationChromeVisible(
+            transitionSettled = navigationTransitionSettled,
+            transitionRunning = animatedContentScope.transition.isRunning,
+        )
+        val showViewerChrome = showUI && navigationChromeVisible
         // With animations off the dismiss gesture still tracks the finger but commits,
         // cancels and predictive back all resolve instantly — no flights or springs.
         viewerDismissState.animationsEnabled = sharedElementsEnabled

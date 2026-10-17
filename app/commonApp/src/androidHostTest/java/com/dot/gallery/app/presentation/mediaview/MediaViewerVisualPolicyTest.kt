@@ -395,6 +395,35 @@ class MediaViewerVisualPolicyTest {
     }
 
     @Test
+    fun chromeIsWithheldOnTheFirstFrameBeforeTheEntryTransitionRegisters() {
+        // The entry registers its animations only after the viewer has composed, so the first
+        // frame reads "not running" while the entry is already on its way. Rendering the chrome
+        // there makes it fade out and fade back in on every open.
+        assertFalse(
+            isViewerNavigationChromeVisible(
+                transitionSettled = false,
+                transitionRunning = false,
+            )
+        )
+    }
+
+    @Test
+    fun chromeFollowsTheTransitionOnceOneHasSettled() {
+        assertTrue(
+            isViewerNavigationChromeVisible(
+                transitionSettled = true,
+                transitionRunning = false,
+            )
+        )
+        assertFalse(
+            isViewerNavigationChromeVisible(
+                transitionSettled = true,
+                transitionRunning = true,
+            )
+        )
+    }
+
+    @Test
     fun secondPressInsideTheDoubleTapWindowIsDetected() {
         assertTrue(
             isSecondTapPress(
