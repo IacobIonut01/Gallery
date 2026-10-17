@@ -75,7 +75,9 @@ import com.dot.gallery.domain.trash.TrashDialogAction.TRASH
 import com.dot.gallery.domain.util.getUri
 import com.dot.gallery.domain.util.isCloud
 import com.dot.gallery.ui.theme.Shapes
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import com.dot.gallery.core.presentation.components.SetupButton
@@ -153,8 +155,16 @@ fun <T : Media> TrashDialog(
     val confirmItems: suspend (List<Media>) -> Unit = { items ->
         resolvedItemCount = items.size
         confirmed = true
-        onConfirm.invoke(items)
-        appBottomSheetState.hide()
+        try {
+            onConfirm.invoke(items)
+        } finally {
+            // The sheet must always leave, even when the confirm throws or the
+            // invoking coroutine is cancelled mid-request — a wedged isVisible
+            // with no sheet rendered dead-ends every later attempt (#1321).
+            withContext(NonCancellable) {
+                appBottomSheetState.hide()
+            }
+        }
     }
 
     val requireConfirmation by rememberPreference(SettingsKeys.trashConfirmationEnabled)
@@ -162,10 +172,18 @@ fun <T : Media> TrashDialog(
         // `!confirmed` matters: saving a scope default flips askScope mid-flight,
         // which relaunches this effect while the hide animation still reports
         // the sheet visible — without the guard the confirm would fire twice.
-        if (appBottomSheetState.isVisible && !requireConfirmation &&
-            action == TRASH && !askScope && !confirmed
-        ) {
-            confirmItems(resolvedItems())
+        if (appBottomSheetState.isVisible) {
+            if (!requireConfirmation && action == TRASH && !askScope && !confirmed) {
+                confirmItems(resolvedItems())
+            }
+        } else {
+            // The no-confirmation path renders no sheet, so the reset inside the
+            // UI branch below never runs for it and `confirmed` stays latched —
+            // every later delete then silently does nothing (#1321). Per-show
+            // state clears when the sheet leaves, whichever path used it.
+            confirmed = false
+            resolvedItemCount = 0
+            setScopeAsDefault = false
         }
     }
     BackHandler(
