@@ -24,10 +24,12 @@ import com.dot.gallery.data.InternalDatabase
 import com.dot.gallery.data.repository.MediaRepositoryImpl
 import com.dot.gallery.domain.model.Media
 import com.dot.gallery.data.repository.MediaMutationResult
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeFalse
@@ -207,6 +209,30 @@ class MediaStoreRequestRoutingTest {
         // request that MediaStore cannot serve.
         assertEquals(MediaMutationResult.FAILED, result)
         assertTrue(launcher.requests.isEmpty())
+    }
+
+    @Test
+    fun externalAliasUriResolvesToCanonicalVolumeUri() = runBlocking<Unit> {
+        // Issue #1314: external editors (e.g. the system screenshot "Edit" action)
+        // hand the app an `external` alias URI. The resolved media carries the real
+        // volume (`external_primary`), so write-access requests must target the
+        // resolved URI — framework URI grants only cover the exact URI string they
+        // were issued for.
+        val insertedUri = insertTestImage("route_alias.jpg")
+        val aliasUri = ContentUris.withAppendedId(
+            MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL),
+            ContentUris.parseId(insertedUri)
+        )
+        assertEquals("content://media/external/images/media", aliasUri.toString().substringBeforeLast("/"))
+        assumeTrue("test requires distinct alias volume", aliasUri != insertedUri)
+
+        val resolved = repository.getMediaListByUris(
+            listOf(aliasUri), reviewMode = false, onlyMatching = true
+        ).firstOrNull()?.data
+
+        assertEquals(1, resolved?.size)
+        assertEquals(insertedUri, resolved!!.first().uri)
+        assertNotEquals(aliasUri, resolved.first().uri)
     }
 
     private class CapturingLauncher : ActivityResultLauncher<IntentSenderRequest>() {

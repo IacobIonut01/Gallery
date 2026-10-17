@@ -70,8 +70,12 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -401,6 +405,16 @@ class EditViewModel @Inject constructor(
     val appliedAdjustments = _appliedAdjustments.asStateFlow()
 
     private val activeMedia = MutableStateFlow<UriMedia?>(null)
+
+    /**
+     * Canonical MediaStore URI of the resolved source. When the editor is opened through an
+     * external intent (e.g. the screenshot "Edit" action), the incoming [uri] may be an alias
+     * like `content://media/external/...` while the row's real URI carries its actual volume
+     * (`external_primary`). Framework URI grants only cover the exact URI they were issued
+     * for and every save/revert writes to this one, so write-access requests must target it.
+     */
+    val mediaUri: StateFlow<Uri?> = activeMedia.map { it?.uri }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
     private val sourceInitializationMutex = Mutex()
     private var initializedSource: Uri? = null
     private val saveGuard = EditorSaveGuard()

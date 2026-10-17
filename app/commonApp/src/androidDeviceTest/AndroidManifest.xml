@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- The test APK self-instruments, so media permissions must be declared here for
+         uiAutomation.grantRuntimePermission / pm grant to take effect — grants cannot
+         apply to permissions the package never requested. Without them every test gated
+         on Context.hasMediaAccess() silently skips. -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+</manifest>

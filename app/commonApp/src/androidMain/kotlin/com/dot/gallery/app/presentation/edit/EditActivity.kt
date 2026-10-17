@@ -135,6 +135,7 @@ this@EditActivity,
                     val currentImage by viewModel.currentBitmap.collectAsStateWithLifecycle()
                     val targetImage by viewModel.targetBitmap.collectAsStateWithLifecycle()
                     val uri by viewModel.uri.collectAsStateWithLifecycle()
+                    val mediaUri by viewModel.mediaUri.collectAsStateWithLifecycle()
                     val canOverride by viewModel.canOverride.collectAsStateWithLifecycle()
                     val hasOriginalBackup by viewModel.hasOriginalBackup.collectAsStateWithLifecycle()
                     val isReverting by viewModel.isReverting.collectAsStateWithLifecycle()
@@ -416,7 +417,9 @@ this@EditActivity,
                                     showRestorePrompt = false
                                     viewModel.clearLoadFailure()
                                     scope.launch {
-                                        uri?.let { u ->
+                                        // The write grant must target the canonical media URI
+                                        // actually written to, not the (possibly alias) intent URI.
+                                        (mediaUri ?: uri)?.let { u ->
                                             restoreRequest.launchWriteRequest(
                                                 u.writeRequest(contentResolver),
                                                 doRestoreAndReload
@@ -466,7 +469,7 @@ this@EditActivity,
                         onClose = requestEditorClose,
                         onOverride = {
                             scope.launch {
-                                uri?.let { uri ->
+                                (mediaUri ?: uri)?.let { uri ->
                                     overrideRequest.launchWriteRequest(
                                         uri.writeRequest(contentResolver),
                                         doOverride
@@ -501,7 +504,7 @@ this@EditActivity,
                         clearDrawing = viewModel::clearDrawingBoard,
                         onRevertToOriginal = {
                             scope.launch {
-                                uri?.let { uri ->
+                                (mediaUri ?: uri)?.let { uri ->
                                     revertRequest.launchWriteRequest(
                                         uri.writeRequest(contentResolver),
                                         doRevert
