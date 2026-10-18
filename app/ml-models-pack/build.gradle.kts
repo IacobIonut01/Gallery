@@ -201,9 +201,34 @@ tasks.register("splitLargeModels") {
     }
 }
 
+// ---------------------------------------------------------------------------
+// Legacy-hosted models.
+//
+// Released app versions (5.x) download these from a hardcoded raw.githubusercontent
+// URL on `main`: <repo>/refs/heads/main/ml-models/src/main/assets/<file> (see
+// ModelManager.BASE_DOWNLOAD_URL). raw.githubusercontent serves neither redirects nor
+// symlink targets, so the files are committed at that root path and staged into this
+// pack's asset dir at build time — AGP's asset-pack plugin only packages
+// `<module>/src/main/assets`. The staged copies are gitignored; never move the
+// committed originals or every shipped build loses its model downloads.
+// ---------------------------------------------------------------------------
+val mlLegacyHostedDir = File(mlRootDir, "ml-models/src/main/assets")
+val stageLegacyHostedModels = tasks.register("stageLegacyHostedModels") {
+    group = "ml-models"
+    description = "Copy models committed at the legacy download path into this pack's assets."
+    val sources = mlLegacyHostedDir.listFiles { f -> f.isFile }?.sortedBy { it.name } ?: emptyList()
+    val targets = sources.map { it to File(mlProjectDir, "src/main/assets/${it.name}") }
+    inputs.files(sources)
+    outputs.files(targets.map { it.second })
+    doLast {
+        targets.forEach { (src, dst) -> src.copyTo(dst, overwrite = true) }
+    }
+}
+
 val assembleModels = tasks.register("assembleModels") {
     group = "ml-models"
     description = "Reassemble split model assets from committed parts (runs before packaging)."
+    dependsOn(stageLegacyHostedModels)
     val partsRoot = mlPartsRoot
     val manifestFile = mlManifestFile
     val models = MlSplit.readManifest(manifestFile)

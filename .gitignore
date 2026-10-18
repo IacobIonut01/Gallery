@@ -30,6 +30,11 @@ skills-lock.json
 yolo_vs_sam/
 
 app/ml-models-pack/segment/
+# Staged from ml-models/src/main/assets (legacy download path) by :app:ml-models-pack:stageLegacyHostedModels
+app/ml-models-pack/src/main/assets/visual_quant.onnx
+app/ml-models-pack/src/main/assets/textual_quant.onnx
+app/ml-models-pack/src/main/assets/vocab.json
+app/ml-models-pack/src/main/assets/merges.txt
 
 # >>> ml-models split (managed) — reassembled at build time, do not commit
 app/ml-models-pack/src/main/assets/arcface.onnx

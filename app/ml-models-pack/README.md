@@ -8,6 +8,8 @@ This module contains the on-device machine learning models used by the ReFra app
 
 Used for semantic search queries and automatic image classification.
 
+> **Do not move these files.** They are committed at the repo-root `ml-models/src/main/assets/` because every released build downloads them from that exact raw.githubusercontent URL on `main` (raw.githubusercontent follows neither redirects nor symlinks). `stageLegacyHostedModels` copies them into this module's `src/main/assets/` before packaging; the staged copies are git-ignored.
+
 *   **Tokenizer Vocab (`vocab.json`):**
     *   **Source:** OpenAI CLIP / Hugging Face `openai/clip-vit-base-patch32`
     *   **URL:** `https://raw.githubusercontent.com/IacobIonut01/ReFra/refs/heads/main/ml-models/src/main/assets/vocab.json`
