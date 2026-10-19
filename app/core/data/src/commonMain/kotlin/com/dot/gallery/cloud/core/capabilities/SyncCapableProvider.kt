@@ -66,4 +66,11 @@ interface SyncCapableProvider : MediaCapabilityProvider {
      * the default `false` and rely on [bulkUploadCheck].
      */
     suspend fun remoteExists(localMedia: Media, targetPath: String? = null): Boolean = false
+
+    /**
+     * Optional hook after a backup worker finishes uploading one or more assets
+     * to this provider in a single run. PhotoPrism uses this to trigger import/
+     * indexing of the staged upload folder. Default is a no-op.
+     */
+    suspend fun afterUploadBatch(): Result<Unit> = Result.success(Unit)
 }

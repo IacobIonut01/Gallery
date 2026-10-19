@@ -6,6 +6,7 @@
 package com.dot.gallery.cloud.photoprism
 
 import android.content.Context
+import androidx.core.net.toUri
 import com.dot.gallery.cloud.core.CloudAlbum
 import com.dot.gallery.cloud.core.CloudAuthToken
 import com.dot.gallery.cloud.core.CloudServerConfig
@@ -17,6 +18,11 @@ import com.dot.gallery.cloud.core.ProviderCapability
 import com.dot.gallery.cloud.core.ProviderType
 import com.dot.gallery.cloud.core.ThumbnailSize
 import com.dot.gallery.cloud.core.capabilities.RemoteMediaProvider
+import com.dot.gallery.cloud.core.capabilities.SyncCapableProvider
+import com.dot.gallery.cloud.core.capabilities.SyncDelta
+import com.dot.gallery.cloud.image.CloudFetcherRegistryHolder
+import com.dot.gallery.cloud.sync.PhotoPrismTrashClient
+import com.dot.gallery.cloud.sync.PhotoPrismUploadTarget
 import com.dot.gallery.data.dao.CloudMediaDao
 import com.dot.gallery.data.entity.CloudMediaEntity
 import com.dot.gallery.cloud.network.LanBindingSocketFactory
@@ -27,6 +33,8 @@ import com.dot.gallery.cloud.photoprism.data.api.PhotoPrismAuthenticator
 import com.dot.gallery.cloud.photoprism.data.dto.PhotoPrismPhotoDto
 import com.dot.gallery.core.Resource
 import com.dot.gallery.core.logging.printDebug
+import com.dot.gallery.domain.model.Media
+import com.dot.gallery.domain.uri.Uri
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -34,11 +42,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flow
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
+import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.logging.HttpLoggingInterceptor
 import org.json.JSONObject
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -50,7 +60,7 @@ class PhotoPrismProvider @Inject constructor(
     private val context: Context,
     private val authInterceptor: PhotoPrismAuthInterceptor,
     private val cloudMediaDao: CloudMediaDao
-) : RemoteMediaProvider, Disconnectable {
+) : RemoteMediaProvider, SyncCapableProvider, Disconnectable {
 
     override val providerType = ProviderType.PHOTOPRISM
     override val displayName = "PhotoPrism"
@@ -72,7 +82,25 @@ class PhotoPrismProvider @Inject constructor(
         ProviderCapability.REMOTE_ASSETS,
         ProviderCapability.REMOTE_ALBUMS,
         ProviderCapability.FAVORITE,
-        ProviderCapability.TEXT_SEARCH
+        ProviderCapability.TEXT_SEARCH,
+        ProviderCapability.SYNC,
+        ProviderCapability.TRASH,
+        ProviderCapability.ARCHIVE
+    )
+
+    private val uploadTarget = PhotoPrismUploadTarget(
+        context = context,
+        cloudMediaDao = cloudMediaDao,
+        api = { requireApi() },
+        configId = { currentConfig?.id ?: 0L }
+    )
+
+    private val trashClient = PhotoPrismTrashClient(
+        cloudMediaDao = cloudMediaDao,
+        api = { requireApi() },
+        configId = { currentConfig?.id ?: 0L },
+        captureTokens = { captureTokensFromHeaders(it) },
+        mapPhotos = { mapPhotos(it) }
     )
 
     override fun disconnect() {
@@ -82,6 +110,7 @@ class PhotoPrismProvider @Inject constructor(
         authInterceptor.clear()
         hashByRemoteId.clear()
         baseUrl = ""
+        uploadTarget.clear()
     }
 
     override fun configure(config: CloudServerConfig) {
@@ -217,12 +246,21 @@ class PhotoPrismProvider @Inject constructor(
             authInterceptor.username = config.username
             authInterceptor.password = config.password
             applyConfigTokens(auth.previewToken, auth.downloadToken)
+            uploadTarget.userUid = auth.userId?.takeIf { it.isNotBlank() }
 
             // Ensure preview/download tokens exist (static token path may only get them from /config).
             if (authInterceptor.previewToken.isNullOrBlank() || authInterceptor.downloadToken.isNullOrBlank()) {
                 val cfg = requireApi().getConfig()
                 if (cfg.isSuccessful) {
                     applyConfigTokens(cfg.body()?.previewToken, cfg.body()?.downloadToken)
+                }
+            }
+
+            // Upload API needs the user UID; static app passwords often omit it on /config.
+            if (uploadTarget.userUid.isNullOrBlank()) {
+                val session = requireApi().getSession()
+                if (session.isSuccessful) {
+                    uploadTarget.userUid = session.body()?.user?.uid?.takeIf { it.isNotBlank() }
                 }
             }
 
@@ -242,7 +280,7 @@ class PhotoPrismProvider @Inject constructor(
             Result.success(
                 CloudAuthToken(
                     accessToken = auth.accessToken,
-                    userId = auth.userId,
+                    userId = uploadTarget.userUid ?: auth.userId,
                     userEmail = auth.userEmail,
                     isAdmin = auth.isAdmin
                 )
@@ -408,13 +446,11 @@ class PhotoPrismProvider @Inject constructor(
         }
     }
 
-    override fun getRemoteTrashed(): Flow<Resource<List<CloudMediaEntity>>> = flow {
-        emit(Resource.Success(emptyList()))
-    }
+    override fun getRemoteTrashed(): Flow<Resource<List<CloudMediaEntity>>> =
+        trashClient.remoteTrashed()
 
-    override fun getRemoteArchived(): Flow<Resource<List<CloudMediaEntity>>> = flow {
-        emit(Resource.Success(emptyList()))
-    }
+    override fun getRemoteArchived(): Flow<Resource<List<CloudMediaEntity>>> =
+        trashClient.remoteArchived()
 
     // === Albums ===
 
@@ -520,22 +556,23 @@ class PhotoPrismProvider @Inject constructor(
     }
 
     override suspend fun toggleArchive(remoteId: String, archived: Boolean): Result<Unit> =
-        Result.failure(UnsupportedOperationException("PhotoPrism archive/private is not in MVP"))
+        trashClient.toggleArchive(remoteId, archived)
 
     override suspend fun trashAsset(remoteId: String): Result<Unit> =
-        Result.failure(UnsupportedOperationException("PhotoPrism trash is not in MVP"))
+        trashClient.trashAsset(remoteId)
 
     override suspend fun restoreAsset(remoteId: String): Result<Unit> =
-        Result.failure(UnsupportedOperationException("PhotoPrism trash is not in MVP"))
+        trashClient.restoreAsset(remoteId)
 
+    // Hard delete / empty trash intentionally unsupported for PhotoPrism.
     override suspend fun deleteAsset(remoteId: String): Result<Unit> =
-        Result.failure(UnsupportedOperationException("PhotoPrism delete is not in MVP"))
+        Result.failure(UnsupportedOperationException("PhotoPrism permanent delete is not supported"))
 
     override suspend fun emptyTrash(): Result<Unit> =
-        Result.failure(UnsupportedOperationException("PhotoPrism trash is not in MVP"))
+        Result.failure(UnsupportedOperationException("PhotoPrism empty trash is not supported"))
 
     override suspend fun restoreAllTrash(): Result<Unit> =
-        Result.failure(UnsupportedOperationException("PhotoPrism trash is not in MVP"))
+        Result.failure(UnsupportedOperationException("PhotoPrism restore-all trash is not supported"))
 
     override suspend fun search(query: String): Result<List<CloudMediaEntity>> {
         return try {
@@ -596,4 +633,78 @@ class PhotoPrismProvider @Inject constructor(
 
     override suspend fun getStorageInfo(): Result<CloudStorageInfo> =
         Result.failure(UnsupportedOperationException("PhotoPrism does not expose storage quota via this API"))
+
+    // === Sync / Upload ===
+
+    override suspend fun uploadAsset(localMedia: Media, targetPath: String?): Result<CloudMediaEntity> =
+        uploadTarget.uploadAsset(localMedia, contentHash = null)
+
+    override suspend fun uploadAsset(
+        localMedia: Media,
+        targetPath: String?,
+        checksum: String
+    ): Result<CloudMediaEntity> = uploadTarget.uploadAsset(localMedia, contentHash = checksum)
+
+    override suspend fun downloadAsset(remoteId: String): Result<Uri> {
+        return try {
+            val url = getOriginalUrl(remoteId)
+            if (url.isBlank()) {
+                return Result.failure(Exception("No download URL for $remoteId"))
+            }
+            val requestBuilder = Request.Builder().url(url).get()
+            getAuthHeaders().forEach { (k, v) -> requestBuilder.addHeader(k, v) }
+            val client = CloudFetcherRegistryHolder.okHttpClient
+                ?: return Result.failure(Exception("OkHttpClient not initialized"))
+            client.newCall(requestBuilder.build()).execute().use { response ->
+                if (!response.isSuccessful) {
+                    return@use Result.failure(Exception("Download failed: ${response.code}"))
+                }
+                val body = response.body
+                val ext = when {
+                    body.contentType()?.subtype?.contains("jpeg") == true -> ".jpg"
+                    body.contentType()?.subtype?.contains("png") == true -> ".png"
+                    body.contentType()?.subtype?.contains("mp4") == true -> ".mp4"
+                    else -> ""
+                }
+                val cacheFile = File(context.cacheDir, "pp_download_${remoteId.take(12)}$ext")
+                body.byteStream().use { input ->
+                    cacheFile.outputStream().use { output -> input.copyTo(output) }
+                }
+                Result.success(cacheFile.toUri())
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getSyncDelta(timestamp: Long, reconcileIndex: Boolean): Result<SyncDelta> {
+        // PhotoPrism has no updatedAfter filter and no deletion channel. A newest page
+        // is a partial view, so reconcileIndex must not produce a complete remote index.
+        printDebug("PhotoPrismProvider: sync delta since $timestamp reconcile=$reconcileIndex")
+        return try {
+            val response = requireApi().getPhotos(count = 1000, offset = 0, order = "newest")
+            if (response.isSuccessful) {
+                captureTokensFromHeaders(response.headers())
+                val entities = mapPhotos(response.body().orEmpty())
+                    .filter { timestamp <= 0L || it.timestamp >= timestamp }
+                Result.success(SyncDelta(items = entities))
+            } else {
+                Result.failure(Exception("Failed to fetch changes: ${response.code()}"))
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun bulkUploadCheck(hashes: List<String>): Result<Map<String, Boolean>> =
+        uploadTarget.bulkUploadCheck(hashes)
+
+    override suspend fun remoteExists(localMedia: Media, targetPath: String?): Boolean =
+        uploadTarget.remoteExists(localMedia)
+
+    override suspend fun afterUploadBatch(): Result<Unit> = uploadTarget.finalizeBatch()
 }

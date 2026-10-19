@@ -47,6 +47,18 @@ data class PhotoPrismOAuthTokenDto(
     @SerializedName("expires_in") val expiresIn: Long? = null
 )
 
+/** Body for PUT /api/v1/users/{uid}/upload/{token}. */
+data class PhotoPrismUploadOptionsDto(
+    val albums: List<String> = emptyList()
+)
+
+/** Body for POST /api/v1/import/. */
+data class PhotoPrismImportOptionsDto(
+    val path: String = "",
+    val move: Boolean = true,
+    val albums: List<String> = emptyList()
+)
+
 data class PhotoPrismAlbumDto(
     @SerializedName("UID") val uid: String = "",
     @SerializedName("Title") val title: String = "",
