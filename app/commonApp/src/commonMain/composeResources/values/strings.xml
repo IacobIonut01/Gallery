@@ -1346,9 +1346,10 @@
     <string name="cancel">Cancel</string>
     <string name="cast_connect">Cast</string>
     <string name="cast_disconnect">Disconnect</string>
-    <string name="cast_select_device">Select a device</string>
+    <string name="cast_select_device">Select an FCast device</string>
     <string name="cast_connected_to">Connected to %1$s</string>
-    <string name="cast_searching">Searching for devices…</string>
+    <string name="cast_searching">Searching for FCast devices…</string>
+    <string name="cast_fcast_hint">Needs an FCast-compatible receiver on the same Wi-Fi (mDNS _fcast._tcp., default port 46899). Not Chromecast, PhotoPrism, or Immich. Or enter an IP below.</string>
     <string name="cast_casting_to">Casting to %1$s</string>
     <string name="cast_stop">Stop casting</string>
     <string name="cast_manual_connect">Connect manually</string>

@@ -797,9 +797,10 @@
     <string name="cancel">Abbrechen</string>
     <string name="cast_connect">Übertragen</string>
     <string name="cast_disconnect">Trennen</string>
-    <string name="cast_select_device">Gerät auswählen</string>
+    <string name="cast_select_device">FCast-Gerät auswählen</string>
     <string name="cast_connected_to">Verbunden mit %1$s</string>
-    <string name="cast_searching">Geräte werden gesucht…</string>
+    <string name="cast_searching">Suche nach FCast-Geräten…</string>
+    <string name="cast_fcast_hint">Benötigt einen FCast-kompatiblen Empfänger im selben WLAN (mDNS _fcast._tcp., Standardport 46899). Nicht Chromecast, PhotoPrism oder Immich. Oder IP unten eingeben.</string>
     <string name="cast_casting_to">Übertragung zu %1$s</string>
     <string name="cast_stop">Übertragung beenden</string>
     <string name="cast_manual_connect">Manuell verbinden</string>
@@ -1016,7 +1017,7 @@
     <string name="cloud_last_connected">Zuletzt verbunden: %s</string>
     <string name="cloud_media">Cloud</string>
     <string name="cloud_sync_header">Synchronisation</string>
-    <string name="cloud_sync_now">Jetzt synchronisieren</string>
+    <string name="cloud_sync_now">Synchronisieren</string>
     <string name="cloud_sync_now_syncing">Synchronisieren…</string>
     <string name="cloud_sync_fetching_media">Medien werden abgerufen…</string>
     <string name="cloud_sync_synced_media">%d Medienelemente synchronisiert…</string>

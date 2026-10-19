@@ -827,16 +827,16 @@
     <!-- ACTION LABELS -->
     <string name="help_action_open_settings">Open settings</string>
     <!-- VIEWER ACTIONS: Cast -->
-    <string name="help_tip_viewer_cast_title">Cast videos to your TV</string>
-    <string name="help_tip_viewer_cast_subtitle">Stream media to FCast-compatible devices on your network</string>
-    <string name="help_tip_viewer_cast_p1_title">Cast to a device</string>
-    <string name="help_tip_viewer_cast_p1_desc">Übertragen Sie Videos und Bilder auf jedes FCast-kompatible Gerät in Ihrem lokalen Netzwerk. Gallery erkennt Geräte automatisch über mDNS, richtet einen lokalen Streaming-Server ein und spielt Ihre Medien auf dem großen Bildschirm ab – ganz ohne Cloud-Dienste. Verschlüsselte Medien aus dem Tresor können ebenfalls durch vorübergehende Entschlüsselung sicher übertragen werden.</string>
-    <string name="help_tip_viewer_cast_p2_title">Control playback</string>
-    <string name="help_tip_viewer_cast_p2_desc">While casting, a mini controller appears in the viewer showing cast status. Use the remote controls to play, pause, seek, adjust volume, and change playback speed — all from your phone. Tap the cast button again to stop casting or switch devices.</string>
-    <string name="help_tip_viewer_cast_p2_s1">Open a video in the viewer</string>
-    <string name="help_tip_viewer_cast_p2_s2">Tap the cast button in the top bar</string>
-    <string name="help_tip_viewer_cast_p2_s3">Select a device from the picker</string>
-    <string name="help_tip_viewer_cast_p2_s4">Use on-screen controls to manage playback</string>
+    <string name="help_tip_viewer_cast_title">Mit FCast übertragen</string>
+    <string name="help_tip_viewer_cast_subtitle">Medien an FCast-Empfänger im lokalen WLAN streamen — nicht Chromecast</string>
+    <string name="help_tip_viewer_cast_p1_title">Nur FCast-Empfänger</string>
+    <string name="help_tip_viewer_cast_p1_desc">Die Übertragung funktioniert mit FCast-kompatiblen Geräten im selben WLAN — nicht mit Chromecast, PhotoPrism oder Immich. Geräte werden per mDNS (_fcast._tcp.) gefunden; der Standardport ist 46899. Wenn die Erkennung nichts findet, verbinden Sie sich manuell über die IP des Empfängers. Verschlüsselte Tresor-Medien können ebenfalls sicher per vorübergehender Entschlüsselung übertragen werden.</string>
+    <string name="help_tip_viewer_cast_p2_title">Wiedergabe steuern</string>
+    <string name="help_tip_viewer_cast_p2_desc">Während der Übertragung erscheint im Viewer ein Mini-Controller mit Cast-Status. Mit den Fernbedienungs-Steuerungen können Sie Wiedergabe, Pause, Suche, Lautstärke und Geschwindigkeit vom Telefon aus steuern. Tippen Sie erneut auf die Cast-Schaltfläche, um zu beenden oder das Gerät zu wechseln.</string>
+    <string name="help_tip_viewer_cast_p2_s1">Öffnen Sie ein Video im Viewer</string>
+    <string name="help_tip_viewer_cast_p2_s2">Tippen Sie oben auf die Cast-Schaltfläche</string>
+    <string name="help_tip_viewer_cast_p2_s3">Wählen Sie ein FCast-Gerät im Auswahldialog</string>
+    <string name="help_tip_viewer_cast_p2_s4">Steuern Sie die Wiedergabe auf dem Bildschirm</string>
     <!-- VIEWER SETTINGS: Auto-Contrast -->
     <string name="help_tip_viewer_auto_contrast_title">Auto-contrast (Beta)</string>
     <string name="help_tip_viewer_auto_contrast_subtitle">Automatically enhance display contrast based on image brightness</string>

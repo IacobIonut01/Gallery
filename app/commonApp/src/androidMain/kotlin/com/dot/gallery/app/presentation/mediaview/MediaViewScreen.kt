@@ -972,6 +972,9 @@ fun <T : Media> MediaViewScreen(
         // Use only primitive ids/sizes as saveable keys (avoid passing full media list object)
         val initialPage = entrySelection.pageIndex
         var currentPage by rememberSaveable(initialPage) { mutableIntStateOf(initialPage) }
+        // Stable identity of the open photo. Cloud sync can insert/reorder pagerItems under the
+        // current index; we re-seek by this id so the viewer doesn't spontaneously switch media.
+        var anchoredMediaId by rememberSaveable(mediaId) { mutableLongStateOf(mediaId) }
         var isVideoZoomed by rememberSaveable { mutableStateOf(false) }
         var isImageZoomed by rememberSaveable { mutableStateOf(false) }
 
@@ -1651,6 +1654,42 @@ fun <T : Media> MediaViewScreen(
                 }
                 if (!mediaState.value.isLoading) {
                     currentPage = page
+                }
+            }
+        }
+
+        // Pin identity to the settled page (same rationale as rotation key / #962): cancelled
+        // swipes must not re-anchor to a neighbour that was only briefly currentPage.
+        // Wait until the entry page is applied so the pager's initial index cannot replace the
+        // opened Media.id. Read the latest list only when settledPage changes, so a sync that
+        // keeps the same index does not retarget the anchor before the re-seek below runs.
+        val latestPagerItems by rememberUpdatedState(pagerItems)
+        val viewerPageReady by rememberUpdatedState(initialPageSetup)
+        LaunchedEffect(pagerState) {
+            snapshotFlow { pagerState.settledPage }.collectLatest { page ->
+                if (!viewerPageReady) return@collectLatest
+                latestPagerItems.getOrNull(page)?.id?.let { anchoredMediaId = it }
+            }
+        }
+
+        // When sync/merge reshuffles the list, keep showing the same Media.id.
+        // Slideshow reorders pagerItems on purpose, so it is left alone.
+        LaunchedEffect(pagerItems, slideshowActive, initialPageSetup) {
+            if (!initialPageSetup || slideshowActive || pagerItems.isEmpty()) return@LaunchedEffect
+            if (pagerState.isScrollInProgress) return@LaunchedEffect
+            val target = pagerItems.indexOfFirst { it.id == anchoredMediaId }
+            when {
+                target >= 0 && target != pagerState.currentPage -> {
+                    pagerState.scrollToPage(target)
+                    currentPage = target
+                }
+                target < 0 -> {
+                    val clamped = pagerState.currentPage.coerceIn(0, pagerItems.lastIndex)
+                    if (clamped != pagerState.currentPage) {
+                        pagerState.scrollToPage(clamped)
+                    }
+                    currentPage = clamped
+                    anchoredMediaId = pagerItems[clamped].id
                 }
             }
         }
