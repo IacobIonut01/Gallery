@@ -182,13 +182,9 @@ object ProviderUiDescriptors {
                 urlRegex = httpRegex,
                 urlHintRes = Res.string.cloud_server_url_hint,
                 setupHintRes = Res.string.cloud_help_photoprism,
+                // Username/password first so password managers fill the right pair; app
+                // password/token last (secret, but not a login password).
                 credentialFields = listOf(
-                    CredentialField(
-                        kind = CredentialFieldKind.API_KEY,
-                        labelRes = Res.string.cloud_photoprism_token,
-                        hintRes = Res.string.cloud_photoprism_token_hint,
-                        isSecret = true
-                    ),
                     CredentialField(
                         kind = CredentialFieldKind.USERNAME,
                         labelRes = Res.string.cloud_photoprism_username,
@@ -201,6 +197,12 @@ object ProviderUiDescriptors {
                         isSecret = true,
                         keyboardType = KeyboardType.Password,
                         visibleWhen = { it.apiKey.isBlank() }
+                    ),
+                    CredentialField(
+                        kind = CredentialFieldKind.API_KEY,
+                        labelRes = Res.string.cloud_photoprism_token,
+                        hintRes = Res.string.cloud_photoprism_token_hint,
+                        isSecret = true
                     )
                 ),
                 credentialsSatisfied = {

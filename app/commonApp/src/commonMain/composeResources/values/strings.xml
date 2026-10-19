@@ -1656,11 +1656,16 @@
     <string name="cloud_net_local_active">On local network — using local URL</string>
     <string name="cloud_net_external_active">Off local network — using external URL</string>
     <string name="cloud_help_immich">Enter your Immich server URL (include http:// or https://). Sign in with your email and password, or paste an API key from Account Settings → API Keys.</string>
-    <string name="cloud_help_photoprism">Enter your PhotoPrism server URL (include http:// or https://). Prefer an app password from Settings → Account → Apps and Devices. You can also sign in with username and password (session is refreshed automatically), or use OAuth2 client_id and client_secret in the username/password fields. Do not use short-lived access tokens that cannot be renewed.</string>
+    <string name="cloud_help_photoprism">Enter your PhotoPrism server URL (include http:// or https://). Prefer Sign in with browser for Authentik/OIDC (no password stored — the session token is captured after login). Or paste an app password from Settings → Account → Apps and Devices, sign in with username/password, or use OAuth2 client_id and client_secret in the username/password fields.</string>
     <string name="cloud_photoprism_token">App password / access token</string>
     <string name="cloud_photoprism_token_hint">Long-lived app password or access token</string>
     <string name="cloud_photoprism_username">Username or OAuth client ID</string>
     <string name="cloud_photoprism_username_hint">Account username, or OAuth2 client_id</string>
+    <string name="cloud_photoprism_browser_sign_in">Sign in with browser</string>
+    <string name="cloud_photoprism_browser_title">PhotoPrism sign-in</string>
+    <string name="cloud_photoprism_browser_hint">Sign in on your PhotoPrism server (Authentik / OIDC or local account). When login finishes, Gallery captures the session token automatically — your password is not stored.</string>
+    <string name="cloud_photoprism_browser_confirm">I\'m signed in — capture session</string>
+    <string name="cloud_photoprism_browser_success">Signed in via browser</string>
     <string name="cloud_help_owncloud">Enter your ownCloud server URL (e.g. https://cloud.example.com). Use your account username and password, or an app password if you have two-factor authentication enabled.</string>
     <string name="cloud_help_nextcloud">Enter your Nextcloud server URL (e.g. https://cloud.example.com). Sign in securely in your browser, including two-factor authentication, or use a username and app password manually.</string>
     <string name="cloud_nextcloud_sign_in">Sign in with Nextcloud</string>
@@ -1692,7 +1697,7 @@
     <string name="cloud_nfs_uid_gid">User ID (uid:gid)</string>
     <string name="cloud_nfs_uid_gid_hint">e.g. 1000:1000 (optional, AUTH_SYS)</string>
     <string name="cloud_server_url">Server URL</string>
-    <string name="cloud_server_url_hint">https://your-server.com</string>
+    <string name="cloud_server_url_hint">your-server.com</string>
     <string name="cloud_api_key">API Key</string>
     <string name="cloud_api_key_hint">Enter your API key</string>
     <string name="cloud_username">Username</string>
