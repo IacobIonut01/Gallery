@@ -441,10 +441,13 @@ fun <T : Media> MediaViewSheetDetails(
                                     onClick = it.onClick
                                 )
                             }
-                            // Only offer "view all metadata" when there is metadata to show.
-                            // metadata is null when nothing could be parsed for this item, so
-                            // hiding the row avoids opening an empty metadata screen.
-                            if (!currentMedia.isEncrypted && metadata != null) {
+                            // Local: only offer "view all metadata" when MediaMetadata exists
+                            // (otherwise the ContentResolver path would show an empty screen).
+                            // Cloud: Room (CloudMediaEntity / MediaMetadata) backs the screen, so
+                            // allow entry even if the in-memory metadata map has not caught up yet.
+                            if (!currentMedia.isEncrypted &&
+                                (metadata != null || currentMedia.isCloud)
+                            ) {
                                 MediaInfoRow(
                                     modifier = Modifier
                                         .fillMaxWidth()

@@ -23,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.core.LocalMediaSelector
@@ -36,6 +37,7 @@ import com.dot.gallery.core.Constants.Animation.exitAnimation
 fun MediaItemHeader(
     modifier: Modifier = Modifier,
     date: String,
+    location: String? = null,
     showAsBig: Boolean = false,
     bigHeaderOnly: Boolean = false,
     isChecked: MutableState<Boolean>,
@@ -70,23 +72,41 @@ fun MediaItemHeader(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = date,
-            style = headerTextStyle,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.then(
-                if (!showAsBig) Modifier.combinedClickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onLongClick = {
-                        onChecked?.invoke()
-                    },
-                    onClick = {
-                        if (isCheckVisible) onChecked?.invoke()
-                    }
-                ) else Modifier
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .then(
+                    if (!showAsBig) Modifier.combinedClickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onLongClick = {
+                            onChecked?.invoke()
+                        },
+                        onClick = {
+                            if (isCheckVisible) onChecked?.invoke()
+                        }
+                    ) else Modifier
+                ),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = date,
+                style = headerTextStyle,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
-        )
+            if (!location.isNullOrBlank()) {
+                Text(
+                    text = location,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
         AnimatedVisibility(
             visible = isCheckVisible && !showAsBig && onChecked != null,
             enter = enterAnimation,

@@ -44,5 +44,6 @@ class DocsViewerRuntime(context: Context) : ViewerRuntime {
         providerType: ProviderType,
         remoteId: String,
         configId: Long,
+        fileId: String?,
     ): ImageSource = error("cloud image sources are unsupported in docs scenes")
 }

@@ -244,7 +244,8 @@ abstract class AppComponent(
         providerType: ProviderType,
         remoteId: String,
         configId: Long,
-    ): ImageSource = CloudImageSource.create(application, providerType, remoteId, configId)
+        fileId: String?,
+    ): ImageSource = CloudImageSource.create(application, providerType, remoteId, configId, fileId)
 
     @Provides
     fun provideApplicationContext(): Context = application
