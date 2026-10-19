@@ -10,6 +10,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 enum class ProviderType(val displayName: String, val isRemote: Boolean) {
     IMMICH("Immich", isRemote = true),
+    PHOTOPRISM("PhotoPrism", isRemote = true),
     OWNCLOUD("ownCloud", isRemote = true),
     NEXTCLOUD("Nextcloud", isRemote = true),
     WEBDAV("WebDAV", isRemote = true),
