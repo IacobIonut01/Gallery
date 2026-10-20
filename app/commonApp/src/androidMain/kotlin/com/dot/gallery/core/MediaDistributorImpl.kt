@@ -46,6 +46,8 @@ import com.dot.gallery.cloud.core.ConnectionState
 import com.dot.gallery.cloud.core.ProviderType
 import com.dot.gallery.cloud.core.SyncState
 import com.dot.gallery.cloud.core.cloudAlbumId
+import com.dot.gallery.data.dao.CloudAlbumMemberDao
+import com.dot.gallery.data.entity.CloudAlbumMemberEntity
 import com.dot.gallery.data.entity.CloudMediaEntity
 import com.dot.gallery.data.entity.CloudMediaSnapshotMapper
 import com.dot.gallery.cloud.data.repository.CloudRepository
@@ -203,6 +205,7 @@ class MediaDistributorImpl @Inject constructor(
     private val context: Context,
     private val repository: MediaRepository,
     private val cloudRepository: CloudRepository,
+    private val cloudAlbumMemberDao: CloudAlbumMemberDao,
     private val eventHandler: EventHandler,
     private val scannedMediaDao: ScannedMediaDao,
     private val smartScanDao: SmartScanDao,
@@ -537,9 +540,22 @@ class MediaDistributorImpl @Inject constructor(
      */
     private val _cloudAlbumMembers =
         MutableStateFlow<Map<CloudAlbumMemberId, Set<CloudAlbumMemberId>>>(emptyMap())
+    /**
+     * Persisted PhotoPrism junction membership, unioned with the live refresh so
+     * unsorted albums stay correct across restarts before the next network pass.
+     */
+    private val persistedCloudAlbumMemberIds: StateFlow<Set<CloudAlbumMemberId>> =
+        cloudAlbumMemberDao.observeAll()
+            .map { rows -> rows.mapTo(HashSet()) { it.toMemberId() } }
+            .distinctUntilChanged()
+            .stateIn(appScope, SharingStarted.Eagerly, emptySet())
     private val _cloudAlbumMemberIds: StateFlow<Set<CloudAlbumMemberId>> =
-        _cloudAlbumMembers.map { it.values.flatten().toSet() }
-            .stateIn(appScope, sharingMethod, emptySet())
+        combine(_cloudAlbumMembers, persistedCloudAlbumMemberIds) { live, persisted ->
+            buildSet {
+                addAll(persisted)
+                live.values.forEach(::addAll)
+            }
+        }.stateIn(appScope, sharingMethod, emptySet())
     private val cloudRefreshMutex = Mutex()
 
     /**
@@ -1136,6 +1152,15 @@ class MediaDistributorImpl @Inject constructor(
                         // cache never holds. Other providers stay cache-filtered.
                         val media = if (usesLiveCloudAlbumMembership(cloudAlbum.providerType)) {
                             entities.excludingTrashedAlbumMembers().map { it.toUriMedia() }
+                        } else if (cloudAlbum.providerType == ProviderType.PHOTOPRISM) {
+                            // Album API is the membership source. Prefer timeline-cache rows
+                            // (richer EXIF / favorite) without dropping photos that are not
+                            // in the timeline cache yet.
+                            val cachedById = cachedNonTrashed.associateBy { it.id }
+                            entities.excludingTrashedAlbumMembers().map { entity ->
+                                val albumItem = entity.toUriMedia()
+                                cachedById[albumItem.id] ?: albumItem
+                            }
                         } else {
                             val allMedia = entities.map { it.toUriMedia() }
                             val cachedIds = cachedNonTrashed.mapTo(HashSet()) { it.id }
@@ -1745,3 +1770,9 @@ class MediaDistributorImpl @Inject constructor(
     }
 
 }
+
+private fun CloudAlbumMemberEntity.toMemberId() = CloudAlbumMemberId(
+    providerType = providerType,
+    serverConfigId = serverConfigId,
+    remoteId = remoteId
+)

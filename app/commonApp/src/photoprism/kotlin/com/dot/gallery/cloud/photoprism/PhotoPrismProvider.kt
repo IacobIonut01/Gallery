@@ -17,7 +17,9 @@ import com.dot.gallery.cloud.core.ProviderCapability
 import com.dot.gallery.cloud.core.ProviderType
 import com.dot.gallery.cloud.core.ThumbnailSize
 import com.dot.gallery.cloud.core.capabilities.RemoteMediaProvider
+import com.dot.gallery.data.dao.CloudAlbumMemberDao
 import com.dot.gallery.data.dao.CloudMediaDao
+import com.dot.gallery.data.entity.CloudAlbumMemberEntity
 import com.dot.gallery.data.entity.CloudMediaEntity
 import com.dot.gallery.cloud.network.LanBindingSocketFactory
 import com.dot.gallery.cloud.photoprism.data.api.PhotoPrismApiService
@@ -49,7 +51,8 @@ import kotlin.coroutines.cancellation.CancellationException
 class PhotoPrismProvider @Inject constructor(
     private val context: Context,
     private val authInterceptor: PhotoPrismAuthInterceptor,
-    private val cloudMediaDao: CloudMediaDao
+    private val cloudMediaDao: CloudMediaDao,
+    private val cloudAlbumMemberDao: CloudAlbumMemberDao
 ) : RemoteMediaProvider, Disconnectable {
 
     override val providerType = ProviderType.PHOTOPRISM
@@ -62,6 +65,7 @@ class PhotoPrismProvider @Inject constructor(
     private var baseUrl: String = ""
     private var apiService: PhotoPrismApiService? = null
     private val hashByRemoteId = ConcurrentHashMap<String, String>()
+    private val favorites = PhotoPrismFavorites(cloudMediaDao)
 
     private val lanSocketFactory = LanBindingSocketFactory(context)
 
@@ -168,6 +172,42 @@ class PhotoPrismProvider @Inject constructor(
         }
         rememberHashes(entities)
         return entities
+    }
+
+    /**
+     * Seed cache with album members that are not yet stored, without REPLACE-clobbering
+     * favorites / EXIF / local copies on existing rows. Prefer Room rows when returning.
+     */
+    private suspend fun mergeAlbumMedia(fromApi: List<CloudMediaEntity>): List<CloudMediaEntity> {
+        if (fromApi.isEmpty()) return emptyList()
+        cloudMediaDao.insertAllIgnore(fromApi)
+        val configId = fromApi.first().serverConfigId
+        val existing = fromApi.map { it.remoteId }.chunked(500).flatMap { chunk ->
+            cloudMediaDao.getByRemoteIds(
+                remoteIds = chunk,
+                providerType = ProviderType.PHOTOPRISM,
+                serverConfigId = configId
+            )
+        }.associateBy { it.remoteId }
+        return fromApi.map { api -> existing[api.remoteId] ?: api }
+    }
+
+    private suspend fun persistAlbumMembership(albumId: String, media: List<CloudMediaEntity>) {
+        val configId = currentConfig?.id ?: 0L
+        if (media.isEmpty()) {
+            cloudAlbumMemberDao.deleteAlbum(albumId, ProviderType.PHOTOPRISM, configId)
+            return
+        }
+        cloudAlbumMemberDao.replaceAlbumMembers(
+            media.map {
+                CloudAlbumMemberEntity(
+                    albumId = albumId,
+                    remoteId = it.remoteId,
+                    providerType = ProviderType.PHOTOPRISM,
+                    serverConfigId = configId
+                )
+            }
+        )
     }
 
     private fun captureTokensFromHeaders(headers: okhttp3.Headers) {
@@ -397,7 +437,8 @@ class PhotoPrismProvider @Inject constructor(
             )
             if (response.isSuccessful) {
                 captureTokensFromHeaders(response.headers())
-                emit(Resource.Success(mapPhotos(response.body().orEmpty())))
+                val synced = favorites.sync(mapPhotos(response.body().orEmpty()))
+                emit(Resource.Success(synced))
             } else {
                 emit(Resource.Error("Failed to fetch favorites: ${response.code()}"))
             }
@@ -420,25 +461,37 @@ class PhotoPrismProvider @Inject constructor(
 
     override fun getRemoteAlbums(): Flow<Resource<List<CloudAlbum>>> = flow {
         try {
-            val configId = currentConfig?.id ?: 0L
-            val response = requireApi().getAlbums()
-            if (response.isSuccessful) {
-                val albums = response.body()?.map { dto ->
-                    CloudAlbum(
-                        remoteId = dto.uid,
-                        providerType = ProviderType.PHOTOPRISM,
-                        serverConfigId = configId,
-                        name = dto.title,
-                        assetCount = dto.photoCount,
-                        isShared = dto.linkCount > 0,
-                        createdAt = PhotoPrismPhotoDto.parseIsoTimestamp(dto.createdAt ?: ""),
-                        updatedAt = PhotoPrismPhotoDto.parseIsoTimestamp(dto.updatedAt ?: "")
-                    )
-                } ?: emptyList()
-                emit(Resource.Success(albums))
-            } else {
-                emit(Resource.Error("Failed to fetch albums: ${response.code()}"))
+            val config = currentConfig
+            val configId = config?.id ?: 0L
+            val api = requireApi()
+            val albumResponse = api.getAlbums(type = "album")
+            if (!albumResponse.isSuccessful) {
+                emit(Resource.Error("Failed to fetch albums: ${albumResponse.code()}"))
+                return@flow
             }
+            val dtos = albumResponse.body().orEmpty().toMutableList()
+            if (config?.includeMonthAlbums == true) {
+                val monthResponse = api.getAlbums(type = "month")
+                if (monthResponse.isSuccessful) {
+                    dtos += monthResponse.body().orEmpty()
+                } else {
+                    emit(Resource.Error("Failed to fetch month albums: ${monthResponse.code()}"))
+                    return@flow
+                }
+            }
+            val albums = dtos.map { dto ->
+                CloudAlbum(
+                    remoteId = dto.uid,
+                    providerType = ProviderType.PHOTOPRISM,
+                    serverConfigId = configId,
+                    name = dto.title,
+                    assetCount = dto.photoCount,
+                    isShared = dto.linkCount > 0,
+                    createdAt = PhotoPrismPhotoDto.parseIsoTimestamp(dto.createdAt ?: ""),
+                    updatedAt = PhotoPrismPhotoDto.parseIsoTimestamp(dto.updatedAt ?: "")
+                )
+            }
+            emit(Resource.Success(albums))
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -455,9 +508,10 @@ class PhotoPrismProvider @Inject constructor(
             )
             if (response.isSuccessful) {
                 captureTokensFromHeaders(response.headers())
-                val entities = mapPhotos(response.body().orEmpty())
-                cloudMediaDao.insertAll(entities)
-                emit(Resource.Success(entities))
+                val fromApi = mapPhotos(response.body().orEmpty())
+                val merged = mergeAlbumMedia(fromApi)
+                persistAlbumMembership(albumId, merged)
+                emit(Resource.Success(merged))
             } else {
                 emit(Resource.Error("Failed to fetch album media: ${response.code()}"))
             }
@@ -509,7 +563,7 @@ class PhotoPrismProvider @Inject constructor(
                 requireApi().unlikePhoto(remoteId)
             }
             if (response.isSuccessful) {
-                cloudMediaDao.updateFavorite(remoteId, ProviderType.PHOTOPRISM, currentConfig?.id ?: 0L, favorite)
+                favorites.persist(remoteId, currentConfig?.id ?: 0L, favorite)
                 Result.success(Unit)
             } else {
                 Result.failure(Exception("Failed to toggle favorite: ${response.code()}"))

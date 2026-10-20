@@ -28,16 +28,20 @@ val LocalMediaHandler = compositionLocalOf<MediaHandler> {
 
 interface MediaHandler {
 
+    /**
+     * @return `true` when every cloud favorite toggle succeeded (local MediaStore
+     * toggles always return `true` after the system request is launched).
+     */
     suspend fun <T: Media> toggleFavorite(
         result: ActivityResultLauncher<IntentSenderRequest>,
         mediaList: List<T>,
         favorite: Boolean
-    )
+    ): Boolean
 
     suspend fun <T: Media> toggleFavorite(
         result: ActivityResultLauncher<IntentSenderRequest>,
         mediaList: List<T>
-    )
+    ): Boolean
 
     suspend fun <T: Media> trashMedia(
         result: ActivityResultLauncher<IntentSenderRequest>,

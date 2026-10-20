@@ -1112,7 +1112,8 @@ class ConfigBackupManagerImpl @Inject constructor(
         downloadRemoteEnabled = downloadRemoteEnabled,
         downloadVideos = downloadVideos,
         uploadBasePath = uploadBasePath,
-        uploadVideosPath = uploadVideosPath
+        uploadVideosPath = uploadVideosPath,
+        includeMonthAlbums = includeMonthAlbums
     )
 
     private fun CloudConfigEntry.toEntity(
@@ -1156,7 +1157,8 @@ class ConfigBackupManagerImpl @Inject constructor(
         downloadRemoteEnabled = downloadRemoteEnabled,
         downloadVideos = downloadVideos,
         uploadBasePath = uploadBasePath,
-        uploadVideosPath = uploadVideosPath
+        uploadVideosPath = uploadVideosPath,
+        includeMonthAlbums = includeMonthAlbums
     )
 
     private fun EncryptedMedia2.toEntry(fileName: String) = VaultMediaEntry(

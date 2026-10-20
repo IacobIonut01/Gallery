@@ -10,6 +10,7 @@ data class OfflineModeContentActions(
     val setForceOffline: (Boolean) -> Unit = {},
     val setCacheOnView: (Boolean) -> Unit = {},
     val setCacheWifiOnly: (Boolean) -> Unit = {},
+    val setDownloadFavoritesFullRes: (Boolean) -> Unit = {},
     val setBudgetMb: (Int) -> Unit = {},
     val pinAccount: (Long, String) -> Unit = { _, _ -> },
     val unpinAccount: (Long, Boolean) -> Unit = { _, _ -> },

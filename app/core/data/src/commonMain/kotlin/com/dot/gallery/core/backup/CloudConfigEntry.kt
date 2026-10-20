@@ -51,5 +51,6 @@ data class CloudConfigEntry(
     val downloadRemoteEnabled: Boolean = false,
     val downloadVideos: Boolean = true,
     val uploadBasePath: String = "",
-    val uploadVideosPath: String = ""
+    val uploadVideosPath: String = "",
+    val includeMonthAlbums: Boolean = false
 )

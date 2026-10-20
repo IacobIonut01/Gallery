@@ -1661,6 +1661,9 @@
     <string name="cloud_photoprism_token_hint">Long-lived app password or access token</string>
     <string name="cloud_photoprism_username">Username or OAuth client ID</string>
     <string name="cloud_photoprism_username_hint">Account username, or OAuth2 client_id</string>
+    <string name="cloud_photoprism_albums_header">Albums</string>
+    <string name="cloud_photoprism_include_month_albums">Show month albums</string>
+    <string name="cloud_photoprism_include_month_albums_summary">Include PhotoPrism automatic calendar month albums in the albums list</string>
     <string name="cloud_help_owncloud">Enter your ownCloud server URL (e.g. https://cloud.example.com). Use your account username and password, or an app password if you have two-factor authentication enabled.</string>
     <string name="cloud_help_nextcloud">Enter your Nextcloud server URL (e.g. https://cloud.example.com). Sign in securely in your browser, including two-factor authentication, or use a username and app password manually.</string>
     <string name="cloud_nextcloud_sign_in">Sign in with Nextcloud</string>
@@ -1859,6 +1862,8 @@
     <string name="cloud_offline_cache_browsing_summary">Keep recently viewed cloud media for offline use</string>
     <string name="cloud_offline_wifi_only">Cache on Wi-Fi only</string>
     <string name="cloud_offline_wifi_only_summary">Don\'t write to the cache on metered connections</string>
+    <string name="cloud_offline_download_favorites">Download favorites offline</string>
+    <string name="cloud_offline_download_favorites_summary">Keep full-resolution copies of cloud favorites for offline viewing</string>
     <string name="cloud_offline_cache_limit">Cache size limit</string>
     <string name="cloud_offline_cache_limit_summary">Oldest cached items are removed past this limit</string>
     <string name="cloud_offline_megabytes" translatable="false">%1$d MB</string>

@@ -55,7 +55,8 @@ interface PhotoPrismApiService {
     @GET("api/v1/albums")
     suspend fun getAlbums(
         @Query("count") count: Int = 1000,
-        @Query("offset") offset: Int = 0
+        @Query("offset") offset: Int = 0,
+        @Query("type") type: String = "album"
     ): Response<List<PhotoPrismAlbumDto>>
 
     @POST("api/v1/albums")

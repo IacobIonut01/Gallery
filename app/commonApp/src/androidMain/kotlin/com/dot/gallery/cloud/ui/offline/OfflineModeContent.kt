@@ -113,6 +113,8 @@ import com.dot.gallery.generated.resources.cloud_offline_status_queued
 import com.dot.gallery.generated.resources.cloud_offline_title
 import com.dot.gallery.generated.resources.cloud_offline_unpin_message
 import com.dot.gallery.generated.resources.cloud_offline_unpin_title
+import com.dot.gallery.generated.resources.cloud_offline_download_favorites
+import com.dot.gallery.generated.resources.cloud_offline_download_favorites_summary
 import com.dot.gallery.generated.resources.cloud_offline_wifi_only
 import com.dot.gallery.generated.resources.cloud_offline_wifi_only_summary
 import com.dot.gallery.generated.resources.gb
@@ -140,6 +142,8 @@ fun OfflineModeContent(
     val cacheBrowsingSummary = stringResource(Res.string.cloud_offline_cache_browsing_summary)
     val wifiOnlyTitle = stringResource(Res.string.cloud_offline_wifi_only)
     val wifiOnlySummary = stringResource(Res.string.cloud_offline_wifi_only_summary)
+    val downloadFavoritesTitle = stringResource(Res.string.cloud_offline_download_favorites)
+    val downloadFavoritesSummary = stringResource(Res.string.cloud_offline_download_favorites_summary)
     val cacheLimitTitle = stringResource(Res.string.cloud_offline_cache_limit)
     val cacheLimitSummary = stringResource(Res.string.cloud_offline_cache_limit_summary)
     val availableOfflineHeader = stringResource(Res.string.cloud_offline_available_header)
@@ -193,6 +197,8 @@ fun OfflineModeContent(
         cacheBrowsingSummary,
         wifiOnlyTitle,
         wifiOnlySummary,
+        downloadFavoritesTitle,
+        downloadFavoritesSummary,
         cacheLimitTitle,
         cacheLimitSummary,
         availableOfflineHeader,
@@ -235,6 +241,16 @@ fun OfflineModeContent(
                     summary = wifiOnlySummary,
                     isChecked = state.cacheWifiOnly,
                     onCheck = { actions.setCacheWifiOnly(it) },
+                    screenPosition = Position.Middle
+                )
+            )
+            add(
+                SettingsEntity.SwitchPreference(
+                    icon = Icons.Outlined.CloudDownload,
+                    title = downloadFavoritesTitle,
+                    summary = downloadFavoritesSummary,
+                    isChecked = state.downloadFavoritesFullRes,
+                    onCheck = { actions.setDownloadFavoritesFullRes(it) },
                     screenPosition = Position.Middle
                 )
             )

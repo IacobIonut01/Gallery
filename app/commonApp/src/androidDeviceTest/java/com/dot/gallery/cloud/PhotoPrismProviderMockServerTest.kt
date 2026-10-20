@@ -12,6 +12,8 @@ import com.dot.gallery.cloud.core.CloudServerConfig
 import com.dot.gallery.cloud.core.ConnectionState
 import com.dot.gallery.cloud.core.ProviderType
 import com.dot.gallery.cloud.core.ThumbnailSize
+import com.dot.gallery.data.dao.CloudAlbumMemberDao
+import com.dot.gallery.data.dao.CloudAlbumMemberDao
 import com.dot.gallery.data.dao.CloudMediaDao
 import com.dot.gallery.cloud.photoprism.PhotoPrismProvider
 import com.dot.gallery.cloud.photoprism.data.api.PhotoPrismAuthInterceptor
@@ -70,7 +72,8 @@ class PhotoPrismProviderMockServerTest {
             .allowMainThreadQueries()
             .build()
         dao = db.getCloudMediaDao()
-        provider = PhotoPrismProvider(context, PhotoPrismAuthInterceptor(), dao)
+        val albumMembers: CloudAlbumMemberDao = db.getCloudAlbumMemberDao()
+        provider = PhotoPrismProvider(context, PhotoPrismAuthInterceptor(), dao, albumMembers)
     }
 
     @After

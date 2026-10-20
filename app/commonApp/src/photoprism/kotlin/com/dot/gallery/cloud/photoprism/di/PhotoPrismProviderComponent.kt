@@ -12,6 +12,7 @@ import com.dot.gallery.cloud.core.ProviderType
 import com.dot.gallery.cloud.photoprism.PhotoPrismProvider
 import com.dot.gallery.cloud.photoprism.data.api.PhotoPrismAuthInterceptor
 import com.dot.gallery.core.injection.Singleton
+import com.dot.gallery.data.dao.CloudAlbumMemberDao
 import com.dot.gallery.data.dao.CloudMediaDao
 import me.tatarka.inject.annotations.IntoSet
 import me.tatarka.inject.annotations.Provides
@@ -27,10 +28,11 @@ interface PhotoPrismProviderComponent {
     @Provides
     fun providePhotoPrismProviderFactory(
         context: Context,
-        cloudMediaDao: CloudMediaDao
+        cloudMediaDao: CloudMediaDao,
+        cloudAlbumMemberDao: CloudAlbumMemberDao
     ): ProviderInstanceFactory = object : ProviderInstanceFactory {
         override val providerType = ProviderType.PHOTOPRISM
         override fun create(): MediaCapabilityProvider =
-            PhotoPrismProvider(context, PhotoPrismAuthInterceptor(), cloudMediaDao)
+            PhotoPrismProvider(context, PhotoPrismAuthInterceptor(), cloudMediaDao, cloudAlbumMemberDao)
     }
 }

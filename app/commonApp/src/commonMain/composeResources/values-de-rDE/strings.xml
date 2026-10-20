@@ -1322,6 +1322,8 @@
     <string name="cloud_offline_cache_browsing_summary">Kürzlich angesehene Cloud-Medien zur Offline-Nutzung aufbewahren</string>
     <string name="cloud_offline_wifi_only">Nur über WLAN zwischenspeichern</string>
     <string name="cloud_offline_wifi_only_summary">Bei getakteten Verbindungen nicht in den Cache schreiben</string>
+    <string name="cloud_offline_download_favorites">Favoriten offline herunterladen</string>
+    <string name="cloud_offline_download_favorites_summary">Vollauflösende Kopien der Cloud-Favoriten für die Offline-Ansicht behalten</string>
     <string name="cloud_offline_cache_limit">Cache-Größenlimit</string>
     <string name="cloud_offline_cache_limit_summary">Die ältesten zwischengespeicherten Elemente werden nach Überschreiten dieses Limits entfernt</string>
     <string name="cloud_offline_available_header">Offline verfügbar (nur Vorschauen)</string>
@@ -1708,6 +1710,9 @@
     <string name="cloud_photoprism_token_hint">Langlebiges App-Passwort oder Zugriffstoken</string>
     <string name="cloud_photoprism_username">Benutzername oder OAuth-Client-ID</string>
     <string name="cloud_photoprism_username_hint">Kontobenutzername oder OAuth2-client_id</string>
+    <string name="cloud_photoprism_albums_header">Alben</string>
+    <string name="cloud_photoprism_include_month_albums">Monatsalben anzeigen</string>
+    <string name="cloud_photoprism_include_month_albums_summary">Automatische Kalender-Monatsalben von PhotoPrism in der Albenliste anzeigen</string>
     <string name="cloud_help_owncloud">Geben Sie die URL Ihres ownCloud-Servers ein (z. B. https://cloud.example.com). Verwenden Sie Ihren Kontobenutzernamen und Ihr Passwort oder ein App-Passwort, wenn die Zwei-Faktor-Authentifizierung aktiviert ist.</string>
     <string name="cloud_help_nextcloud">Geben Sie die URL Ihres Nextcloud-Servers ein (z. B. https://cloud.example.com). Melden Sie sich sicher in Ihrem Browser an, einschließlich Zwei-Faktor-Authentifizierung, oder verwenden Sie manuell einen Benutzernamen und ein App-Passwort.</string>
     <string name="cloud_nextcloud_sign_in">Mit Nextcloud anmelden</string>

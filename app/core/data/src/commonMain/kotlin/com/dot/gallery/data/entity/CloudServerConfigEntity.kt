@@ -62,7 +62,9 @@ data class CloudServerConfigEntity(
     @ColumnInfo(defaultValue = "1") val downloadVideos: Boolean = true,
     // Upload destination (local -> remote). Blank = provider default folder.
     @ColumnInfo(defaultValue = "") val uploadBasePath: String = "",
-    @ColumnInfo(defaultValue = "") val uploadVideosPath: String = ""
+    @ColumnInfo(defaultValue = "") val uploadVideosPath: String = "",
+    /** PhotoPrism: include automatic calendar month albums. Default off. */
+    @ColumnInfo(defaultValue = "0") val includeMonthAlbums: Boolean = false
 ) {
     fun toCloudServerConfig(): CloudServerConfig = CloudServerConfig(
         id = id,
@@ -100,7 +102,8 @@ data class CloudServerConfigEntity(
         downloadRemoteEnabled = downloadRemoteEnabled,
         downloadVideos = downloadVideos,
         uploadBasePath = uploadBasePath,
-        uploadVideosPath = uploadVideosPath
+        uploadVideosPath = uploadVideosPath,
+        includeMonthAlbums = includeMonthAlbums
     )
 
     companion object {
@@ -141,7 +144,8 @@ data class CloudServerConfigEntity(
                 downloadRemoteEnabled = config.downloadRemoteEnabled,
                 downloadVideos = config.downloadVideos,
                 uploadBasePath = config.uploadBasePath,
-                uploadVideosPath = config.uploadVideosPath
+                uploadVideosPath = config.uploadVideosPath,
+                includeMonthAlbums = config.includeMonthAlbums
             )
     }
 }

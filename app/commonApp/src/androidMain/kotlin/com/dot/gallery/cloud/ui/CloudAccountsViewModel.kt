@@ -22,6 +22,7 @@ import com.dot.gallery.cloud.core.auth.InteractiveAuthErrorKind
 import com.dot.gallery.cloud.core.auth.InteractiveAuthException
 import com.dot.gallery.cloud.core.auth.InteractiveAuthPollResult
 import com.dot.gallery.cloud.core.capabilities.RemoteMediaProvider
+import com.dot.gallery.data.dao.CloudAlbumMemberDao
 import com.dot.gallery.data.dao.CloudAlbumSyncDao
 import com.dot.gallery.data.dao.CloudMediaDao
 import com.dot.gallery.data.dao.CloudOfflinePinDao
@@ -169,6 +170,7 @@ class CloudAccountsViewModel @Inject constructor(
     private val urlResolver: ServerUrlResolver,
     private val uploadPrefDao: CloudUploadPrefDao,
     private val albumSyncDao: CloudAlbumSyncDao,
+    private val albumMemberDao: CloudAlbumMemberDao,
     private val mediaRepository: MediaRepository,
     private val cloudRepository: CloudRepository,
     private val syncScheduler: CloudSyncScheduler,
@@ -501,6 +503,7 @@ class CloudAccountsViewModel @Inject constructor(
                         cloudTagDao.deleteForAccount(id)
                         uploadPrefDao.deleteByConfig(id)
                         albumSyncDao.deleteByServer(id)
+                        albumMemberDao.deleteByServer(id)
                         configDao.deleteById(id)
                         CloudRuntimeSettings.remove(id)
                     } else {
@@ -548,6 +551,7 @@ class CloudAccountsViewModel @Inject constructor(
             cloudTagDao.deleteForAccount(configId)
             uploadPrefDao.deleteByConfig(configId)
             albumSyncDao.deleteByServer(configId)
+            albumMemberDao.deleteByServer(configId)
             configDao.deleteById(configId)
             CloudRuntimeSettings.remove(configId)
             val provider = registry.getByConfigId(configId)
@@ -590,6 +594,16 @@ class CloudAccountsViewModel @Inject constructor(
             val updated = entity.transform()
             configDao.update(updated)
             if (cloudSyncScheduleChanged(entity, updated)) syncScheduler.reconcile()
+            if (entity.includeMonthAlbums != updated.includeMonthAlbums) {
+                val provider = registry.getByConfigId(configId) as? RemoteMediaProvider ?: return@launch
+                val config = updated.toCloudServerConfig().let { cfg ->
+                    cfg.copy(
+                        apiKey = cfg.apiKey?.let { credentialEncryptor.decrypt(it) },
+                        password = cfg.password?.let { credentialEncryptor.decrypt(it) }
+                    )
+                }
+                provider.configure(urlResolver.resolve(config))
+            }
         }
     }
 
