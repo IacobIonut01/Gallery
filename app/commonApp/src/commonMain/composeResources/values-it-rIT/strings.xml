@@ -664,7 +664,7 @@
     <string name="category_updated">Category updated — reclassifying…</string>
     <string name="category_deleted">Category deleted</string>
     <!-- Reference images (image-to-image search) -->
-    <string name="reference_images">Reference photos</string>
+    <string name="reference_images">Foto di riferimento</string>
     <string name="reference_images_hint">Add photos to find visually similar ones</string>
     <string name="add_reference_photos">Add photos</string>
     <string name="reference_images_count">%1$d selected</string>
@@ -714,7 +714,7 @@
     <string name="restore_vault_title">Confirm Decryption?</string>
     <string name="yes">Yes</string>
     <string name="vault_deletion_title">Confirm Deletion?</string>
-    <string name="vault_deletion_summary">The current vault and its content will be deleted permanently.\nThis action cannot be undone.</string>
+    <string name="vault_deletion_summary">L\'archivio attuale e il suo contenuto verranno eliminati definitivamente.\nQuesta operazione non può essere annullata.</string>
     <string name="create_new_vault_title">Create new vault?</string>
     <string name="create_new_vault_summary">A new vault will be created, protected by your device lock screen (PIN, password, or biometrics).\n\nYour files will be encrypted using AES-256 and can only be accessed after authenticating.</string>
     <string name="select_a_vault">Select a vault</string>
@@ -868,7 +868,7 @@
     <string name="favorite_icon_description">Choose where the favorite heart icon appears on thumbnails in the grid, or hide it entirely.</string>
     <string name="default_editor_description">Choose which app opens when you tap the edit button. You can use the built-in editor or any compatible external photo editor installed on your device.</string>
     <string name="launch_screen_description">Choose which screen appears when you open the app. You can pick a specific screen or let the app remember the last one you used.</string>
-    <string name="app_name_description">Change the name and icon displayed on your home screen launcher. The app will restart to apply the change.</string>
+    <string name="app_name_description">Modifica il nome e l\'icona visualizzati sul launcher della schermata iniziale. L\'app si riavvierà per applicare la modifica.</string>
     <!-- Settings Overhaul: Metadata worker feedback -->
     <string name="metadata_collecting">Collecting metadata…</string>
     <string name="metadata_collecting_progress">Collecting metadata… %1$d%%</string>
