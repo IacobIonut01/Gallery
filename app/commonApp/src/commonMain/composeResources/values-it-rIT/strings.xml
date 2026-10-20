@@ -921,7 +921,7 @@
     <string name="smart_search_index_preparing">Preparing the search index · Stage %1$d of %2$d</string>
     <string name="smart_search_index_waiting">Waiting for earlier stages · Stage %1$d of %2$d</string>
     <string name="smart_scan_last_result">Last scan: %1$s · %2$d processed · %3$d failed · %4$d skipped</string>
-    <string name="smart_scan_cancel">Cancel Smart Features scan</string>
+    <string name="smart_scan_cancel">Annulla la scansione delle funzioni intelligenti</string>
     <string name="smart_scan_retry">Retry failed Smart Features items</string>
     <string name="smart_scan_manager_title">Smart Features data</string>
     <string name="smart_scan_manager_summary">Refresh and repair metadata, search, categories, and persons</string>
@@ -1021,7 +1021,7 @@
     <string name="visual_search_stage_decrypting">Decrypting…</string>
     <string name="visual_search_stage_preparing">Preparing…</string>
     <string name="visual_search_stage_extracting">Extracting frame…</string>
-    <string name="visual_search_stage_converting">Converting image…</string>
+    <string name="visual_search_stage_converting">Conversione dell\'immagine…</string>
     <string name="visual_search_vault_title">Allow on vault items</string>
     <string name="visual_search_vault_summary">Decrypts a temporary copy to send. Turn off to hide the button on vault items.</string>
     <string name="visual_search_convert_header">Unsupported formats</string>
