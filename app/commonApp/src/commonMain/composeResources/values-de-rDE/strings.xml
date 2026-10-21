@@ -981,14 +981,15 @@
     <string name="navigate_back">Rückwärts navigieren</string>
     <!-- Cloud Accounts Settings -->
     <string name="settings_cloud_accounts">Cloud-Konten</string>
-    <string name="settings_cloud_accounts_summary">Immich, ownCloud-Synchronisierung &amp; Remote-Medien</string>
+    <string name="settings_cloud_accounts_summary">Immich, PhotoPrism, ownCloud-Synchronisierung &amp; Remote-Medien</string>
     <string name="cloud_no_accounts">Es sind keine Cloud-Konten konfiguriert</string>
     <string name="cloud_no_accounts_description">Füge einen Cloud-Medienserver hinzu, um deine Fotos und Videos von einem entfernten Speicherort zu synchronisieren und anzusehen.</string>
     <string name="cloud_add_server">Server hinzufügen</string>
     <string name="cloud_add_immich">Immich-Server hinzufügen</string>
+    <string name="cloud_add_photoprism">PhotoPrism-Server hinzufügen</string>
     <string name="cloud_add_owncloud">ownCloud-Server hinzufügen</string>
     <string name="cloud_server_url">Server-URL</string>
-    <string name="cloud_server_url_hint">https://dein-server.de</string>
+    <string name="cloud_server_url_hint">dein-server.de</string>
     <string name="cloud_api_key">API-Schlüssel</string>
     <string name="cloud_api_key_hint">Gib deinen API-Schlüssel ein</string>
     <string name="cloud_username">Benutzername</string>
@@ -1702,6 +1703,16 @@
     <string name="cloud_net_local_active">Im lokalen Netzwerk — lokale URL verwenden</string>
     <string name="cloud_net_external_active">Außerhalb des lokalen Netzwerks — externe URL verwenden</string>
     <string name="cloud_help_immich">Geben Sie die URL Ihres Immich-Servers ein (http:// oder https:// einschließen). Melden Sie sich mit Ihrer E-Mail und Ihrem Passwort an oder fügen Sie einen API-Schlüssel aus Kontoeinstellungen → API-Schlüssel ein.</string>
+    <string name="cloud_help_photoprism">Geben Sie die URL Ihres PhotoPrism-Servers ein (http:// oder https:// einschließen). Bevorzugen Sie „Im Browser anmelden“ für Authentik/OIDC (kein Passwort wird gespeichert — das Sitzungstoken wird nach der Anmeldung übernommen). Oder fügen Sie ein App-Passwort aus Einstellungen → Konto → Apps und Geräte ein, melden Sie sich mit Benutzername und Passwort an oder verwenden Sie OAuth2-client_id und client_secret in den Feldern Benutzername und Passwort.</string>
+    <string name="cloud_photoprism_token">App-Passwort / Zugriffstoken</string>
+    <string name="cloud_photoprism_token_hint">Langlebiges App-Passwort oder Zugriffstoken</string>
+    <string name="cloud_photoprism_browser_sign_in">Im Browser anmelden</string>
+    <string name="cloud_photoprism_browser_title">PhotoPrism-Anmeldung</string>
+    <string name="cloud_photoprism_browser_hint">Melden Sie sich auf Ihrem PhotoPrism-Server an (Authentik / OIDC oder lokales Konto). Nach der Anmeldung übernimmt Gallery das Sitzungstoken automatisch — Ihr Passwort wird nicht gespeichert.</string>
+    <string name="cloud_photoprism_browser_confirm">Ich bin angemeldet — Sitzung übernehmen</string>
+    <string name="cloud_photoprism_browser_success">Über den Browser angemeldet</string>
+    <string name="cloud_photoprism_username">Benutzername oder OAuth-Client-ID</string>
+    <string name="cloud_photoprism_username_hint">Kontobenutzername oder OAuth2-client_id</string>
     <string name="cloud_help_owncloud">Geben Sie die URL Ihres ownCloud-Servers ein (z. B. https://cloud.example.com). Verwenden Sie Ihren Kontobenutzernamen und Ihr Passwort oder ein App-Passwort, wenn die Zwei-Faktor-Authentifizierung aktiviert ist.</string>
     <string name="cloud_help_nextcloud">Geben Sie die URL Ihres Nextcloud-Servers ein (z. B. https://cloud.example.com). Melden Sie sich sicher in Ihrem Browser an, einschließlich Zwei-Faktor-Authentifizierung, oder verwenden Sie manuell einen Benutzernamen und ein App-Passwort.</string>
     <string name="cloud_nextcloud_sign_in">Mit Nextcloud anmelden</string>

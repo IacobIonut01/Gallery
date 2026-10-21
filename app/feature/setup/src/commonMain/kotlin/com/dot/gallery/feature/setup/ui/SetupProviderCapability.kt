@@ -49,6 +49,11 @@ fun defaultSetupCapabilities(type: ProviderType): Set<SetupProviderCapability> =
         SetupProviderCapability.ARCHIVE,
         SetupProviderCapability.MEMORIES
     )
+    ProviderType.PHOTOPRISM -> setOf(
+        SetupProviderCapability.REMOTE_ASSETS,
+        SetupProviderCapability.REMOTE_ALBUMS,
+        SetupProviderCapability.TEXT_SEARCH
+    )
     ProviderType.OWNCLOUD, ProviderType.NEXTCLOUD, ProviderType.WEBDAV -> setOf(
         SetupProviderCapability.REMOTE_ASSETS,
         SetupProviderCapability.REMOTE_ALBUMS,

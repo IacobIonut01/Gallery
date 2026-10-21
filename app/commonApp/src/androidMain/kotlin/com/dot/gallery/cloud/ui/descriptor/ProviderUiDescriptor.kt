@@ -35,7 +35,13 @@ import com.dot.gallery.generated.resources.cloud_smb_url_hint
 import com.dot.gallery.generated.resources.cloud_smb_username_hint
 import com.dot.gallery.generated.resources.cloud_username
 import com.dot.gallery.generated.resources.ic_provider_azure
+import com.dot.gallery.generated.resources.cloud_help_photoprism
+import com.dot.gallery.generated.resources.cloud_photoprism_token
+import com.dot.gallery.generated.resources.cloud_photoprism_token_hint
+import com.dot.gallery.generated.resources.cloud_photoprism_username
+import com.dot.gallery.generated.resources.cloud_photoprism_username_hint
 import com.dot.gallery.generated.resources.ic_provider_immich
+import com.dot.gallery.generated.resources.ic_provider_photoprism
 import com.dot.gallery.generated.resources.ic_provider_nextcloud
 import com.dot.gallery.generated.resources.ic_provider_owncloud
 import org.jetbrains.compose.resources.DrawableResource
@@ -158,6 +164,45 @@ object ProviderUiDescriptors {
                         isSecret = true,
                         keyboardType = KeyboardType.Password,
                         visibleWhen = { it.apiKey.isBlank() }
+                    )
+                ),
+                credentialsSatisfied = {
+                    it.apiKey.isNotBlank() || (it.username.isNotBlank() && it.password.isNotBlank())
+                }
+            )
+        )
+
+        put(
+            ProviderType.PHOTOPRISM,
+            ProviderUiDescriptor(
+                providerType = ProviderType.PHOTOPRISM,
+                category = ProviderCategory.STANDALONE,
+                icon = Icons.Outlined.Cloud,
+                iconRes = Res.drawable.ic_provider_photoprism,
+                urlRegex = httpRegex,
+                urlHintRes = Res.string.cloud_server_url_hint,
+                setupHintRes = Res.string.cloud_help_photoprism,
+                // Username/password first so password managers fill the right pair; app
+                // password/token last (secret, but not a login password).
+                credentialFields = listOf(
+                    CredentialField(
+                        kind = CredentialFieldKind.USERNAME,
+                        labelRes = Res.string.cloud_photoprism_username,
+                        hintRes = Res.string.cloud_photoprism_username_hint,
+                        visibleWhen = { it.apiKey.isBlank() }
+                    ),
+                    CredentialField(
+                        kind = CredentialFieldKind.PASSWORD,
+                        labelRes = Res.string.cloud_password,
+                        isSecret = true,
+                        keyboardType = KeyboardType.Password,
+                        visibleWhen = { it.apiKey.isBlank() }
+                    ),
+                    CredentialField(
+                        kind = CredentialFieldKind.API_KEY,
+                        labelRes = Res.string.cloud_photoprism_token,
+                        hintRes = Res.string.cloud_photoprism_token_hint,
+                        isSecret = true
                     )
                 ),
                 credentialsSatisfied = {

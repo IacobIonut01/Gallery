@@ -64,6 +64,7 @@ fun CloudAddServerScreen(
             updateServerUrl = viewModel::updateServerUrl,
             updateDisplayName = viewModel::updateDisplayName,
             updateApiKey = viewModel::updateApiKey,
+            applyBrowserSessionToken = viewModel::applyBrowserSessionToken,
             updateUsername = viewModel::updateUsername,
             updatePassword = viewModel::updatePassword,
             updateAutoUrlSwitch = viewModel::updateAutoUrlSwitch,

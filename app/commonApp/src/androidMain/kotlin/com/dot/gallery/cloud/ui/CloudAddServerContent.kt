@@ -6,11 +6,13 @@
 package com.dot.gallery.cloud.ui
 
 import android.Manifest
+import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
@@ -64,10 +66,15 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.ContentDataType
+import androidx.compose.ui.autofill.ContentType
+import androidx.compose.ui.autofill.contentType
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.contentDataType
+import androidx.compose.ui.semantics.semantics
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -76,7 +83,9 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import com.dot.gallery.cloud.core.ProviderType
 import com.dot.gallery.cloud.core.auth.InteractiveAuthErrorKind
+import com.dot.gallery.cloud.photoprism.ui.PhotoPrismBrowserLoginActivity
 import com.dot.gallery.cloud.ui.descriptor.CredentialField
 import com.dot.gallery.cloud.ui.descriptor.CredentialFieldKind
 import com.dot.gallery.cloud.ui.descriptor.CredentialValues
@@ -112,6 +121,9 @@ import com.dot.gallery.generated.resources.cloud_net_wifi_blank_summary
 import com.dot.gallery.generated.resources.cloud_net_wifi_name
 import com.dot.gallery.generated.resources.cloud_network_share_lan_note
 import com.dot.gallery.generated.resources.cloud_next
+import com.dot.gallery.generated.resources.cloud_photoprism_browser_hint
+import com.dot.gallery.generated.resources.cloud_photoprism_browser_sign_in
+import com.dot.gallery.generated.resources.cloud_photoprism_browser_success
 import com.dot.gallery.generated.resources.cloud_nextcloud_auth_failed
 import com.dot.gallery.generated.resources.cloud_nextcloud_cancelled
 import com.dot.gallery.generated.resources.cloud_nextcloud_connected
@@ -164,6 +176,7 @@ data class CloudAddServerActions(
     val updateServerUrl: (String) -> Unit = {},
     val updateDisplayName: (String) -> Unit = {},
     val updateApiKey: (String) -> Unit = {},
+    val applyBrowserSessionToken: (String) -> Unit = {},
     val updateUsername: (String) -> Unit = {},
     val updatePassword: (String) -> Unit = {},
     val updateAutoUrlSwitch: (Boolean) -> Unit = {},
@@ -194,7 +207,9 @@ fun CloudAddServerContent(
 ) {
     val descriptor = remember(state.providerType) { ProviderUiDescriptors.forType(state.providerType) }
     val credentialValues = CredentialValues(state.apiKey, state.username, state.password)
-    val isUrlValid = state.serverUrl.isBlank() || descriptor.urlRegex.matches(state.serverUrl)
+    // Allow typing without a scheme (e.g. photos.example.com); https:// is filled in on advance/save.
+    val normalizedServerUrl = remember(state.serverUrl) { normalizeCloudServerUrl(state.serverUrl) }
+    val isUrlValid = state.serverUrl.isBlank() || descriptor.urlRegex.matches(normalizedServerUrl)
     val hasRequiredCredentials = descriptor.credentialsSatisfied(credentialValues)
     val canSave = state.serverUrl.isNotBlank() && isUrlValid && hasRequiredCredentials && !state.isSaving
 
@@ -223,21 +238,33 @@ fun CloudAddServerContent(
         if (isEditMode || safeIndex == 0) onNavigateUp()
         else stepIndex = (safeIndex - 1).coerceAtLeast(0)
     }
+    // System/gesture back must step the wizard (like SetupScreen), not pop the whole screen.
+    BackHandler { goBack() }
 
     // Warn once before proceeding with an unencrypted HTTP server URL. HTTP is allowed
     // (self-hosted servers over trusted tunnels often use it) but the user must confirm (#990).
-    val serverUrlTrimmed = state.serverUrl.trim()
+    val serverUrlTrimmed = normalizedServerUrl
     val isInsecureHttp = serverUrlTrimmed.startsWith("http://", ignoreCase = true)
     var httpAckUrl by rememberSaveable { mutableStateOf<String?>(null) }
     var showHttpWarning by remember { mutableStateOf(false) }
     var pendingProceed by remember { mutableStateOf<(() -> Unit)?>(null) }
 
+    /** Persist scheme-normalized URL into state, then run [proceed]. */
+    val withNormalizedUrl: (() -> Unit) -> Unit = { proceed ->
+        if (state.serverUrl.trim() != normalizedServerUrl) {
+            actions.updateServerUrl(normalizedServerUrl)
+        }
+        proceed()
+    }
+
     val guardHttp: (() -> Unit) -> Unit = { proceed ->
-        if (isInsecureHttp && httpAckUrl != serverUrlTrimmed) {
-            pendingProceed = proceed
-            showHttpWarning = true
-        } else {
-            proceed()
+        withNormalizedUrl {
+            if (isInsecureHttp && httpAckUrl != serverUrlTrimmed) {
+                pendingProceed = proceed
+                showHttpWarning = true
+            } else {
+                proceed()
+            }
         }
     }
 
@@ -453,6 +480,8 @@ private fun CredentialsStep(
         if (granted) action?.invoke()
     }
     val testConnection: () -> Unit = {
+        val url = normalizeCloudServerUrl(state.serverUrl)
+        if (state.serverUrl.trim() != url) actions.updateServerUrl(url)
         val action = actions.testConnection
         if (Build.VERSION.SDK_INT < 37 || ContextCompat.checkSelfPermission(
                 context, Manifest.permission.ACCESS_LOCAL_NETWORK
@@ -461,7 +490,7 @@ private fun CredentialsStep(
             action()
         } else {
             scope.launch {
-                if (isDirectLocalResource(context, state.serverUrl)) {
+                if (isDirectLocalResource(context, url)) {
                     pendingConnectionTest = action
                     showLocalNetworkRationale = true
                 } else {
@@ -500,15 +529,60 @@ private fun CredentialsStep(
         )
     }
 
-    AppTextField(
-        value = state.displayName,
-        onValueChange = actions.updateDisplayName,
-        label = { Text(stringResource(Res.string.cloud_display_name)) },
-        placeholder = { Text(stringResource(Res.string.cloud_display_name_hint)) },
-        modifier = frostedFieldModifier(),
-        containerColor = Color.Transparent,
-        singleLine = true
-    )
+    val browserLoginLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode != Activity.RESULT_OK) return@rememberLauncherForActivityResult
+        val token = result.data
+            ?.getStringExtra(PhotoPrismBrowserLoginActivity.EXTRA_ACCESS_TOKEN)
+            ?.trim()
+            .orEmpty()
+        if (token.isNotBlank()) {
+            actions.applyBrowserSessionToken(token)
+            testConnection()
+        }
+    }
+
+    if (state.providerType == ProviderType.PHOTOPRISM) {
+        SetupButton(
+            text = stringResource(Res.string.cloud_photoprism_browser_sign_in),
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            enabled = state.serverUrl.isNotBlank() && !state.isTesting && !state.isSaving,
+            applyHorizontalPadding = false,
+            applyBottomPadding = false,
+            applyInsets = false,
+            onClick = {
+                val url = normalizeCloudServerUrl(state.serverUrl)
+                if (state.serverUrl.trim() != url) actions.updateServerUrl(url)
+                browserLoginLauncher.launch(
+                    PhotoPrismBrowserLoginActivity.createIntent(context, url)
+                )
+            }
+        )
+        if (state.apiKey.isNotBlank() && state.username.isBlank() && state.password.isBlank()) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    Icons.Default.Check,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    stringResource(Res.string.cloud_photoprism_browser_success),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+        Text(
+            stringResource(Res.string.cloud_photoprism_browser_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
 
     val authState = state.authenticationState
     var showManual by rememberSaveable(state.providerType) {
@@ -626,6 +700,19 @@ private fun CredentialsStep(
         }
     }
 
+    // After credential fields so password managers don't treat the label as a username.
+    AppTextField(
+        value = state.displayName,
+        onValueChange = actions.updateDisplayName,
+        label = { Text(stringResource(Res.string.cloud_display_name)) },
+        placeholder = { Text(stringResource(Res.string.cloud_display_name_hint)) },
+        modifier = frostedFieldModifier().semantics {
+            contentDataType = ContentDataType.None
+        },
+        containerColor = Color.Transparent,
+        singleLine = true
+    )
+
     if (!supportsInteractiveAuth) {
         state.testResult?.let {
             AuthResultRow(success = state.testSuccess, text = it)
@@ -686,12 +773,19 @@ private fun CredentialTextField(
     onValueChange: (String) -> Unit
 ) {
     var revealed by remember { mutableStateOf(false) }
+    val autofillModifier = when (field.kind) {
+        CredentialFieldKind.USERNAME -> Modifier.contentType(ContentType.Username)
+        CredentialFieldKind.PASSWORD -> Modifier.contentType(ContentType.Password)
+        CredentialFieldKind.API_KEY -> Modifier.semantics {
+            contentDataType = ContentDataType.None
+        }
+    }
     AppTextField(
         value = value,
         onValueChange = onValueChange,
         label = { Text(stringResource(field.labelRes)) },
         placeholder = field.hintRes?.let { { Text(stringResource(it)) } },
-        modifier = frostedFieldModifier(),
+        modifier = frostedFieldModifier().then(autofillModifier),
         containerColor = Color.Transparent,
         singleLine = true,
         visualTransformation = if (field.isSecret && !revealed) PasswordVisualTransformation()
@@ -980,4 +1074,12 @@ private fun SetupHelpCard(hintText: String) {
             )
         }
     }
+}
+
+/** Adds https:// when the user omitted a scheme. Values that already contain :// are unchanged. */
+internal fun normalizeCloudServerUrl(raw: String): String {
+    val trimmed = raw.trim().trimEnd('/')
+    if (trimmed.isBlank()) return trimmed
+    if (trimmed.contains("://")) return trimmed
+    return "https://$trimmed"
 }

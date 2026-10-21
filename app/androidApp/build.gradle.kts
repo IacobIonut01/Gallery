@@ -206,6 +206,7 @@ android {
             buildConfigField("Boolean", "OFFLINE_MODE", "$isOffline")
             buildConfigField("Boolean", "MAPS_ENABLED", "$includeMaps")
             buildConfigField("Boolean", "IMMICH_ENABLED", "$includeImmich")
+            buildConfigField("Boolean", "PHOTOPRISM_ENABLED", "$includePhotoprism")
             buildConfigField("Boolean", "OWNCLOUD_ENABLED", "$includeOwncloud")
             buildConfigField("Boolean", "NEXTCLOUD_ENABLED", "$includeNextcloud")
             buildConfigField("Boolean", "WEBDAV_ENABLED", "$includeWebdav")
@@ -236,6 +237,7 @@ android {
             buildConfigField("Boolean", "OFFLINE_MODE", "$isOffline")
             buildConfigField("Boolean", "MAPS_ENABLED", "$includeMaps")
             buildConfigField("Boolean", "IMMICH_ENABLED", "$includeImmich")
+            buildConfigField("Boolean", "PHOTOPRISM_ENABLED", "$includePhotoprism")
             buildConfigField("Boolean", "OWNCLOUD_ENABLED", "$includeOwncloud")
             buildConfigField("Boolean", "NEXTCLOUD_ENABLED", "$includeNextcloud")
             buildConfigField("Boolean", "WEBDAV_ENABLED", "$includeWebdav")
@@ -263,6 +265,7 @@ android {
             buildConfigField("Boolean", "OFFLINE_MODE", "$isOffline")
             buildConfigField("Boolean", "MAPS_ENABLED", "$includeMaps")
             buildConfigField("Boolean", "IMMICH_ENABLED", "$includeImmich")
+            buildConfigField("Boolean", "PHOTOPRISM_ENABLED", "$includePhotoprism")
             buildConfigField("Boolean", "OWNCLOUD_ENABLED", "$includeOwncloud")
             buildConfigField("Boolean", "NEXTCLOUD_ENABLED", "$includeNextcloud")
             buildConfigField("Boolean", "WEBDAV_ENABLED", "$includeWebdav")
@@ -280,6 +283,7 @@ android {
             buildConfigField("Boolean", "OFFLINE_MODE", "$isOffline")
             buildConfigField("Boolean", "MAPS_ENABLED", "$includeMaps")
             buildConfigField("Boolean", "IMMICH_ENABLED", "$includeImmich")
+            buildConfigField("Boolean", "PHOTOPRISM_ENABLED", "$includePhotoprism")
             buildConfigField("Boolean", "OWNCLOUD_ENABLED", "$includeOwncloud")
             buildConfigField("Boolean", "NEXTCLOUD_ENABLED", "$includeNextcloud")
             buildConfigField("Boolean", "WEBDAV_ENABLED", "$includeWebdav")
@@ -445,6 +449,19 @@ val includeImmich: Boolean
             val properties = Properties()
             properties.load(FileInputStream(fl))
             properties.getProperty("INCLUDE_IMMICH", "false").toBoolean()
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+val includePhotoprism: Boolean
+    get() {
+        if (isOffline) return false
+        val fl = rootProject.file("app.properties")
+        return try {
+            val properties = Properties()
+            properties.load(FileInputStream(fl))
+            properties.getProperty("INCLUDE_PHOTOPRISM", "false").toBoolean()
         } catch (_: Exception) {
             false
         }

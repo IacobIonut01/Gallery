@@ -364,6 +364,30 @@ class CloudAccountsViewModel @Inject constructor(
         _addServerState.value = _addServerState.value.copy(apiKey = key)
     }
 
+    /**
+     * Applies a PhotoPrism session / access token captured from browser (OIDC) login.
+     * Clears username/password so nothing password-based is persisted for this account.
+     * The token is stored in [AddServerUiState.apiKey] (encrypted on save); there is no
+     * separate access-token column.
+     */
+    fun applyBrowserSessionToken(token: String) {
+        val trimmed = token.trim()
+        if (trimmed.isBlank()) return
+        interactiveAuthJob?.cancel()
+        interactiveAuthJob = null
+        verifiedFingerprint = null
+        _addServerState.value = _addServerState.value.copy(
+            apiKey = trimmed,
+            username = "",
+            password = "",
+            testResult = null,
+            testSuccess = false,
+            error = null,
+            authenticationState = CloudAuthenticationState.Idle,
+            browserLaunchEvent = null
+        )
+    }
+
     fun updateUsername(username: String) {
         invalidateVerification()
         _addServerState.value = _addServerState.value.copy(username = username)
@@ -824,8 +848,25 @@ internal fun mergeCloudServerConfig(
     state: AddServerUiState,
     encrypt: (String) -> String
 ): CloudServerConfigEntity {
-    val apiKey = state.apiKey.ifBlank { null }?.let(encrypt)
-    val password = state.password.ifBlank { null }?.let(encrypt)
+    // PhotoPrism browser/OIDC tokens live in apiKey. An edit that does not re-enter the
+    // token (and has no password to mint a new session) must keep the stored ciphertext —
+    // rebuilding the row from the form would otherwise drop token-only reconnect.
+    val keepStoredPhotoPrismToken = state.providerType == ProviderType.PHOTOPRISM &&
+        state.apiKey.isBlank() &&
+        state.password.isBlank() &&
+        !oldEntity?.apiKey.isNullOrBlank()
+    val apiKey = when {
+        state.apiKey.isNotBlank() -> encrypt(state.apiKey)
+        keepStoredPhotoPrismToken -> oldEntity.apiKey
+        else -> null
+    }
+    // Token / app-password auth: never persist a user password alongside a PhotoPrism apiKey.
+    val password = when {
+        state.providerType == ProviderType.PHOTOPRISM &&
+            (state.apiKey.isNotBlank() || keepStoredPhotoPrismToken) -> null
+        state.password.isBlank() -> null
+        else -> encrypt(state.password)
+    }
     val syncEnabled = state.syncEnabled || state.selectedLocalAlbumIds.isNotEmpty()
     val displayName = state.displayName.ifBlank { "${state.providerType.displayName} Server" }
     val serverUrl = state.serverUrl.trimEnd('/')
