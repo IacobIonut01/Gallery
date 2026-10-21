@@ -65,6 +65,14 @@ interface RemoteMediaProvider : MediaCapabilityProvider {
         getThumbnailUrl(remoteId, size)
 
     fun getOriginalUrl(remoteId: String): String
+
+    /**
+     * Original URL variant that can use a stored file hash / server file id when the
+     * in-memory map is cold (e.g. PhotoPrism `Hash` threaded as URI `fileId`). Providers
+     * that don't need a [fileId] inherit the default and ignore it.
+     */
+    fun getOriginalUrl(remoteId: String, fileId: String?): String = getOriginalUrl(remoteId)
+
     fun getAuthHeaders(): Map<String, String>
 
     /**

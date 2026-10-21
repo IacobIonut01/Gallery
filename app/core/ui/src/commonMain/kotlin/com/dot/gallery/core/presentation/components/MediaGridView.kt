@@ -12,19 +12,14 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBarDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisallowComposableCalls
 import androidx.compose.runtime.LaunchedEffect
@@ -37,12 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
-import com.dot.gallery.ui.theme.isDarkTheme
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -183,35 +173,18 @@ fun <T : Media> GridPinchZoomScope.MediaGridView(
                     enter = enterAnimation,
                     exit = exitAnimation
                 ) {
-                    val text by rememberedDerivedState(stickyHeaderItem) { stickyHeaderItem ?: "" }
-                    val darkTheme = isDarkTheme()
-                    Text(
-                        text = text,
-                        style = MaterialTheme.typography.titleMedium.let { style ->
-                            if (!darkTheme) style.copy(
-                                shadow = Shadow(
-                                    color = Color.White,
-                                    offset = Offset.Zero,
-                                    blurRadius = 10f
-                                )
-                            ) else style
-                        },
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier
-                            .background(
-                                Brush.verticalGradient(
-                                    listOf(
-                                        // 3.dp is the elevation the LargeTopAppBar use
-                                        MaterialTheme.colorScheme.surfaceColorAtElevation(
-                                            3.dp
-                                        ),
-                                        Color.Transparent
-                                    )
-                                )
-                            )
-                            .padding(horizontal = 16.dp)
-                            .padding(top = 24.dp + searchBarPadding, bottom = 24.dp)
-                            .fillMaxWidth()
+                    val text by rememberedDerivedState(stickyHeaderItem) {
+                        stickyHeaderItem?.text.orEmpty()
+                    }
+                    val location by rememberedDerivedState(stickyHeaderItem, metadataState.value) {
+                        stickyHeaderItem?.mediaIds?.let { ids ->
+                            dominantCityForMediaIds(ids, metadataState.value.metadataMap)
+                        }
+                    }
+                    StickyDateHeader(
+                        date = text,
+                        location = location,
+                        topPadding = searchBarPadding,
                     )
                 }
             }

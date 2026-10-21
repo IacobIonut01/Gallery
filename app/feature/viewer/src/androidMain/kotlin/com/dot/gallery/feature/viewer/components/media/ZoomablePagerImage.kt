@@ -618,7 +618,8 @@ fun <T : Media> ZoomablePagerImage(
                 val cloudSource = viewerRuntime.cloudImageSource(
                     parsed.providerType,
                     remoteId,
-                    configId
+                    configId,
+                    parsed.fileId
                 )
                 zoomState.setSubsamplingImage(SubsamplingImage(imageSource = cloudSource))
             } catch (e: CancellationException) {

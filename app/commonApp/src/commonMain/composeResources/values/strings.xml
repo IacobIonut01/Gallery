@@ -1588,12 +1588,13 @@
 
     <!-- Cloud Accounts Settings -->
     <string name="settings_cloud_accounts">Cloud Accounts</string>
-    <string name="settings_cloud_accounts_summary">Immich, ownCloud, Nextcloud sync &amp; remote media</string>
+    <string name="settings_cloud_accounts_summary">Immich, PhotoPrism, ownCloud, Nextcloud sync &amp; remote media</string>
     <string name="cloud_no_accounts">No cloud accounts configured</string>
     <string name="cloud_no_accounts_description">Add a cloud media server to sync and browse your remote photos and videos.</string>
     <string name="cloud_add_server">Add server</string>
     <string name="cloud_add_another_account">Add another account</string>
     <string name="cloud_add_immich">Add Immich server</string>
+    <string name="cloud_add_photoprism">Add PhotoPrism server</string>
     <string name="cloud_add_owncloud">Add ownCloud server</string>
     <string name="cloud_add_nextcloud">Add Nextcloud server</string>
     <string name="cloud_add_webdav">Add WebDAV server</string>
@@ -1655,6 +1656,11 @@
     <string name="cloud_net_local_active">On local network — using local URL</string>
     <string name="cloud_net_external_active">Off local network — using external URL</string>
     <string name="cloud_help_immich">Enter your Immich server URL (include http:// or https://). Sign in with your email and password, or paste an API key from Account Settings → API Keys.</string>
+    <string name="cloud_help_photoprism">Enter your PhotoPrism server URL (include http:// or https://). Prefer an app password from Settings → Account → Apps and Devices. You can also sign in with username and password (session is refreshed automatically), or use OAuth2 client_id and client_secret in the username/password fields. Do not use short-lived access tokens that cannot be renewed.</string>
+    <string name="cloud_photoprism_token">App password / access token</string>
+    <string name="cloud_photoprism_token_hint">Long-lived app password or access token</string>
+    <string name="cloud_photoprism_username">Username or OAuth client ID</string>
+    <string name="cloud_photoprism_username_hint">Account username, or OAuth2 client_id</string>
     <string name="cloud_help_owncloud">Enter your ownCloud server URL (e.g. https://cloud.example.com). Use your account username and password, or an app password if you have two-factor authentication enabled.</string>
     <string name="cloud_help_nextcloud">Enter your Nextcloud server URL (e.g. https://cloud.example.com). Sign in securely in your browser, including two-factor authentication, or use a username and app password manually.</string>
     <string name="cloud_nextcloud_sign_in">Sign in with Nextcloud</string>

@@ -172,6 +172,13 @@ interface CloudMediaDao {
         serverConfigId: Long
     ): CloudMediaEntity?
 
+    /** Blocking lookup for sync URL builders (PhotoPrism original hash when the warm map is cold). */
+    @Query(
+        "SELECT fileId FROM cloud_media WHERE remoteId = :remoteId AND providerType = :providerType " +
+            "AND serverConfigId = :serverConfigId AND fileId != '' LIMIT 1"
+    )
+    fun getFileIdBlocking(remoteId: String, providerType: ProviderType, serverConfigId: Long): String?
+
     @Query("SELECT * FROM cloud_media WHERE contentHash = :hash AND serverConfigId = :serverConfigId LIMIT 1")
     suspend fun getByContentHash(hash: String, serverConfigId: Long): CloudMediaEntity?
 

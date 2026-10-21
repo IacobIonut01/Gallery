@@ -41,6 +41,7 @@ interface ViewerRuntime {
         providerType: ProviderType,
         remoteId: String,
         configId: Long,
+        fileId: String? = null,
     ): ImageSource
 }
 

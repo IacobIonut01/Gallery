@@ -434,6 +434,9 @@ private fun <T : Media> GridPinchZoomScope.MediaGridContentWithHeaders(
                                 .replace("Today", stringToday)
                                 .replace("Yesterday", stringYesterday)
                         },
+                        location = remember(it.data, metadataState.value) {
+                            dominantCityForMediaIds(it.data, metadataState.value.metadataMap)
+                        },
                         showAsBig = remember(it, bigHeaders) { it.key.isBigHeaderKey || bigHeaders },
                         bigHeaderOnly = bigHeaders,
                         isChecked = isChecked

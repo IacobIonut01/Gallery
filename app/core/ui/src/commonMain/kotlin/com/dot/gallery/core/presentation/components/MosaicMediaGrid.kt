@@ -505,6 +505,9 @@ fun <T : Media> MosaicMediaGrid(
                                     .replace("Today", stringToday)
                                     .replace("Yesterday", stringYesterday)
                             },
+                            location = remember(header.data, metadataState.value) {
+                                dominantCityForMediaIds(header.data, metadataState.value.metadataMap)
+                            },
                             showAsBig = remember(header, bigHeaders) { header.key.isBigHeaderKey || bigHeaders },
                             bigHeaderOnly = bigHeaders,
                             isChecked = isChecked

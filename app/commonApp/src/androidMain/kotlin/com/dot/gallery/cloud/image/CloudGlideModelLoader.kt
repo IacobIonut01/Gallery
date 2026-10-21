@@ -106,7 +106,7 @@ private fun createCloudDataFetcher(
         else -> when (effectiveSize) {
             "thumbnail" -> provider.getThumbnailUrl(parsed.remoteId, ThumbnailSize.THUMBNAIL, parsed.fileId)
             "preview" -> provider.getThumbnailUrl(parsed.remoteId, ThumbnailSize.PREVIEW, parsed.fileId)
-            "original" -> provider.getOriginalUrl(parsed.remoteId)
+            "original" -> provider.getOriginalUrl(parsed.remoteId, parsed.fileId)
             else -> provider.getThumbnailUrl(parsed.remoteId, ThumbnailSize.PREVIEW, parsed.fileId)
         }
     }
