@@ -981,11 +981,12 @@
     <string name="navigate_back">Rückwärts navigieren</string>
     <!-- Cloud Accounts Settings -->
     <string name="settings_cloud_accounts">Cloud-Konten</string>
-    <string name="settings_cloud_accounts_summary">Immich, ownCloud-Synchronisierung &amp; Remote-Medien</string>
+    <string name="settings_cloud_accounts_summary">Immich, PhotoPrism, ownCloud-Synchronisierung &amp; Remote-Medien</string>
     <string name="cloud_no_accounts">Es sind keine Cloud-Konten konfiguriert</string>
     <string name="cloud_no_accounts_description">Füge einen Cloud-Medienserver hinzu, um deine Fotos und Videos von einem entfernten Speicherort zu synchronisieren und anzusehen.</string>
     <string name="cloud_add_server">Server hinzufügen</string>
     <string name="cloud_add_immich">Immich-Server hinzufügen</string>
+    <string name="cloud_add_photoprism">PhotoPrism-Server hinzufügen</string>
     <string name="cloud_add_owncloud">ownCloud-Server hinzufügen</string>
     <string name="cloud_server_url">Server-URL</string>
     <string name="cloud_server_url_hint">https://dein-server.de</string>
@@ -1321,6 +1322,8 @@
     <string name="cloud_offline_cache_browsing_summary">Kürzlich angesehene Cloud-Medien zur Offline-Nutzung aufbewahren</string>
     <string name="cloud_offline_wifi_only">Nur über WLAN zwischenspeichern</string>
     <string name="cloud_offline_wifi_only_summary">Bei getakteten Verbindungen nicht in den Cache schreiben</string>
+    <string name="cloud_offline_download_favorites">Favoriten offline herunterladen</string>
+    <string name="cloud_offline_download_favorites_summary">Vollauflösende Kopien der Cloud-Favoriten für die Offline-Ansicht behalten</string>
     <string name="cloud_offline_cache_limit">Cache-Größenlimit</string>
     <string name="cloud_offline_cache_limit_summary">Die ältesten zwischengespeicherten Elemente werden nach Überschreiten dieses Limits entfernt</string>
     <string name="cloud_offline_available_header">Offline verfügbar (nur Vorschauen)</string>
@@ -1702,6 +1705,14 @@
     <string name="cloud_net_local_active">Im lokalen Netzwerk — lokale URL verwenden</string>
     <string name="cloud_net_external_active">Außerhalb des lokalen Netzwerks — externe URL verwenden</string>
     <string name="cloud_help_immich">Geben Sie die URL Ihres Immich-Servers ein (http:// oder https:// einschließen). Melden Sie sich mit Ihrer E-Mail und Ihrem Passwort an oder fügen Sie einen API-Schlüssel aus Kontoeinstellungen → API-Schlüssel ein.</string>
+    <string name="cloud_help_photoprism">Geben Sie die URL Ihres PhotoPrism-Servers ein (http:// oder https:// einschließen). Verwenden Sie vorzugsweise ein App-Passwort aus Einstellungen → Konto → Apps und Geräte. Sie können sich auch mit Benutzername und Passwort anmelden (die Sitzung wird automatisch erneuert) oder OAuth2-client_id und client_secret in den Feldern Benutzername und Passwort verwenden. Verwenden Sie keine kurzlebigen Zugriffstoken, die nicht erneuert werden können.</string>
+    <string name="cloud_photoprism_token">App-Passwort / Zugriffstoken</string>
+    <string name="cloud_photoprism_token_hint">Langlebiges App-Passwort oder Zugriffstoken</string>
+    <string name="cloud_photoprism_username">Benutzername oder OAuth-Client-ID</string>
+    <string name="cloud_photoprism_username_hint">Kontobenutzername oder OAuth2-client_id</string>
+    <string name="cloud_photoprism_albums_header">Alben</string>
+    <string name="cloud_photoprism_include_month_albums">Monatsalben anzeigen</string>
+    <string name="cloud_photoprism_include_month_albums_summary">Automatische Kalender-Monatsalben von PhotoPrism in der Albenliste anzeigen</string>
     <string name="cloud_help_owncloud">Geben Sie die URL Ihres ownCloud-Servers ein (z. B. https://cloud.example.com). Verwenden Sie Ihren Kontobenutzernamen und Ihr Passwort oder ein App-Passwort, wenn die Zwei-Faktor-Authentifizierung aktiviert ist.</string>
     <string name="cloud_help_nextcloud">Geben Sie die URL Ihres Nextcloud-Servers ein (z. B. https://cloud.example.com). Melden Sie sich sicher in Ihrem Browser an, einschließlich Zwei-Faktor-Authentifizierung, oder verwenden Sie manuell einen Benutzernamen und ein App-Passwort.</string>
     <string name="cloud_nextcloud_sign_in">Mit Nextcloud anmelden</string>

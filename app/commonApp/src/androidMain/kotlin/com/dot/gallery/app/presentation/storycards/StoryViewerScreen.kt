@@ -906,11 +906,12 @@ private fun StoryCardViewer(
                         onToggleFavorite = { media, target ->
                             storyScope.launch {
                                 storyDistributor.setFavoriteOverride(media.id, target)
-                                storyHandler.toggleFavorite(
+                                val ok = storyHandler.toggleFavorite(
                                     result = storyFavoriteRequest,
                                     mediaList = arrayListOf(media),
                                     favorite = target
                                 )
+                                if (!ok) storyDistributor.clearFavoriteOverride(media.id)
                             }
                         }
                     )

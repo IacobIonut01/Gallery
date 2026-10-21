@@ -54,6 +54,7 @@ import androidx.compose.ui.unit.dp
 import android.text.format.Formatter
 import com.dot.gallery.cloud.core.CloudStorageInfo
 import com.dot.gallery.cloud.core.ConnectionState
+import com.dot.gallery.cloud.core.ProviderType
 import com.dot.gallery.data.dao.PendingDownloadInfo
 import com.dot.gallery.data.entity.CloudServerConfigEntity
 import com.dot.gallery.core.LocalEventHandler
@@ -103,6 +104,9 @@ import com.dot.gallery.generated.resources.cloud_notif_background_backup
 import com.dot.gallery.generated.resources.cloud_notifications
 import com.dot.gallery.generated.resources.cloud_offline_summary
 import com.dot.gallery.generated.resources.cloud_offline_title
+import com.dot.gallery.generated.resources.cloud_photoprism_albums_header
+import com.dot.gallery.generated.resources.cloud_photoprism_include_month_albums
+import com.dot.gallery.generated.resources.cloud_photoprism_include_month_albums_summary
 import com.dot.gallery.generated.resources.cloud_profile_storage
 import com.dot.gallery.generated.resources.cloud_provider_settings
 import com.dot.gallery.generated.resources.cloud_remove_downloaded_copies
@@ -242,6 +246,9 @@ fun CloudProviderSettingsContent(
     val freeSpaceTitle = stringResource(Res.string.cloud_free_space)
     val freeSpaceSummary = stringResource(Res.string.cloud_free_space_description)
     val moreHeader = stringResource(Res.string.cloud_settings_more_header)
+    val albumsHeader = stringResource(Res.string.cloud_photoprism_albums_header)
+    val includeMonthAlbumsTitle = stringResource(Res.string.cloud_photoprism_include_month_albums)
+    val includeMonthAlbumsSummary = stringResource(Res.string.cloud_photoprism_include_month_albums_summary)
     val notificationsTitle = stringResource(Res.string.cloud_notifications)
     val notificationsSummary = stringResource(Res.string.cloud_notif_background_backup)
     val viewerTitle = stringResource(Res.string.cloud_viewer)
@@ -291,6 +298,9 @@ fun CloudProviderSettingsContent(
         freeSpaceTitle,
         freeSpaceSummary,
         moreHeader,
+        albumsHeader,
+        includeMonthAlbumsTitle,
+        includeMonthAlbumsSummary,
         notificationsTitle,
         notificationsSummary,
         viewerTitle,
@@ -456,6 +466,21 @@ fun CloudProviderSettingsContent(
                 screenPosition = Position.Alone
             )
         )
+
+        if (config.providerType == ProviderType.PHOTOPRISM) {
+            items.add(SettingsEntity.Header(title = albumsHeader))
+            items.add(
+                SettingsEntity.SwitchPreference(
+                    title = includeMonthAlbumsTitle,
+                    summary = includeMonthAlbumsSummary,
+                    isChecked = config.includeMonthAlbums,
+                    onCheck = { checked ->
+                        actions.updateConfig { copy(includeMonthAlbums = checked) }
+                    },
+                    screenPosition = Position.Alone
+                )
+            )
+        }
 
         // Settings section
         items.add(SettingsEntity.Header(title = moreHeader))

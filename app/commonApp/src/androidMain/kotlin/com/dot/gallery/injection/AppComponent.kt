@@ -53,6 +53,7 @@ import com.dot.gallery.core.smart.SmartScanSchedulerImpl
 import com.dot.gallery.core.startup.StartupMediaCache
 import com.dot.gallery.core.startup.StartupWorkGate
 import com.dot.gallery.data.InternalDatabase
+import com.dot.gallery.data.dao.CloudAlbumMemberDao
 import com.dot.gallery.data.dao.CloudAlbumSyncDao
 import com.dot.gallery.data.dao.CloudDeleteLocalPrefDao
 import com.dot.gallery.data.dao.CloudMediaDao
@@ -79,6 +80,7 @@ import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
 import com.dot.gallery.cloud.sync.CloudAlbumCopyWorker
 import com.dot.gallery.cloud.sync.CloudDownloadWorker
+import com.dot.gallery.cloud.sync.CloudFavoriteOfflineWorker
 import com.dot.gallery.cloud.sync.CloudOfflineDownloadWorker
 import com.dot.gallery.cloud.sync.CloudSyncWorker
 import com.dot.gallery.cloud.sync.CloudUploadWorker
@@ -173,6 +175,7 @@ import com.dot.gallery.feature.vault.VaultViewModel
 import com.dot.gallery.core.injection.Singleton
 import com.dot.gallery.cloud.genericwebdav.di.WebDavProviderComponent
 import com.dot.gallery.cloud.immich.di.ImmichProviderComponent
+import com.dot.gallery.cloud.photoprism.di.PhotoPrismProviderComponent
 import com.dot.gallery.cloud.nextcloud.di.NextcloudProviderComponent
 import com.dot.gallery.cloud.nfs.di.NfsProviderComponent
 import com.dot.gallery.cloud.owncloud.di.OwnCloudProviderComponent
@@ -223,6 +226,7 @@ import com.dot.gallery.data.getBundledDatabase
 abstract class AppComponent(
     @get:Provides val application: Application
 ) : ImmichProviderComponent,
+    PhotoPrismProviderComponent,
     OwnCloudProviderComponent,
     NextcloudProviderComponent,
     WebDavProviderComponent,
@@ -330,6 +334,7 @@ abstract class AppComponent(
             application,
             repository,
             cloudRepository,
+            database.getCloudAlbumMemberDao(),
             eventHandler,
             database.getScannedMediaDao(),
             database.getSmartScanDao(),
@@ -350,10 +355,11 @@ abstract class AppComponent(
         providerRegistry: ProviderRegistry,
         cloudMediaDao: CloudMediaDao,
         cloudServerConfigDao: CloudServerConfigDao,
+        offlineModeManager: OfflineModeManager,
     ): MediaHandler = StartupTracer.trace("AppComponent.provideMediaHandler") {
         MediaHandlerImpl(
             mediaRepository, application, scheduler, providerRegistry, cloudMediaDao,
-            cloudServerConfigDao
+            cloudServerConfigDao, offlineModeManager
         )
     }
 
@@ -498,6 +504,11 @@ abstract class AppComponent(
     @Singleton
     fun provideCloudAlbumSyncDao(database: InternalDatabase): CloudAlbumSyncDao =
         database.getCloudAlbumSyncDao()
+
+    @Provides
+    @Singleton
+    fun provideCloudAlbumMemberDao(database: InternalDatabase): CloudAlbumMemberDao =
+        database.getCloudAlbumMemberDao()
 
     @Provides
     @Singleton
@@ -690,6 +701,7 @@ abstract class AppComponent(
 
     abstract val cloudAlbumCopyWorker: CloudAlbumCopyWorker
     abstract val cloudDownloadWorker: CloudDownloadWorker
+    abstract val cloudFavoriteOfflineWorker: CloudFavoriteOfflineWorker
     abstract val cloudOfflineDownloadWorker: CloudOfflineDownloadWorker
     abstract val cloudSyncWorker: CloudSyncWorker
     abstract val cloudUploadWorker: CloudUploadWorker

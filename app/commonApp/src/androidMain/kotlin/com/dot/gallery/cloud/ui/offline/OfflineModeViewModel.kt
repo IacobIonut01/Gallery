@@ -34,6 +34,7 @@ import com.dot.gallery.core.ml.DownloadInfo
 import com.dot.gallery.cloud.core.ProviderRegistry
 import com.dot.gallery.cloud.offline.CloudMediaCache
 import com.dot.gallery.cloud.offline.OfflineModeManager
+import com.dot.gallery.cloud.sync.CloudFavoriteOfflineWorker
 import com.dot.gallery.cloud.sync.CloudOfflineDownloadWorker
 import com.dot.gallery.core.logging.printWarn
 
@@ -104,6 +105,7 @@ data class OfflineModeUiState(
     val connected: Boolean = true,
     val cacheOnView: Boolean = true,
     val cacheWifiOnly: Boolean = false,
+    val downloadFavoritesFullRes: Boolean = false,
     val budgetMb: Int = OfflineModeManager.DEFAULT_BUDGET_MB,
     val autoCacheBytes: Long = 0L,
     val pinnedBytes: Long = 0L,
@@ -136,14 +138,18 @@ class OfflineModeViewModel @Inject constructor(
             manager.forceOffline,
             manager.connected,
             manager.cacheOnView,
-            manager.cacheWifiOnly,
+            combine(manager.cacheWifiOnly, manager.downloadFavoritesFullRes) { wifiOnly, favFullRes ->
+                wifiOnly to favFullRes
+            },
             manager.budgetMbFlow
-        ) { force, connected, onView, wifiOnly, budget ->
+        ) { force, connected, onView, wifiAndFavorites, budget ->
+            val (wifiOnly, favFullRes) = wifiAndFavorites
             OfflineModeUiState(
                 forceOffline = force,
                 connected = connected,
                 cacheOnView = onView,
                 cacheWifiOnly = wifiOnly,
+                downloadFavoritesFullRes = favFullRes,
                 budgetMb = budget
             )
         },
@@ -229,6 +235,12 @@ class OfflineModeViewModel @Inject constructor(
     fun setForceOffline(enabled: Boolean) = viewModelScope.launch { manager.setForceOffline(enabled) }
     fun setCacheOnView(enabled: Boolean) = viewModelScope.launch { manager.setCacheOnView(enabled) }
     fun setCacheWifiOnly(enabled: Boolean) = viewModelScope.launch { manager.setCacheWifiOnly(enabled) }
+    fun setDownloadFavoritesFullRes(enabled: Boolean) = viewModelScope.launch {
+        manager.setDownloadFavoritesFullRes(enabled)
+        if (enabled) {
+            CloudFavoriteOfflineWorker.triggerNow(scheduler, manager.cacheWifiOnlyNow)
+        }
+    }
     fun setBudgetMb(mb: Int) = viewModelScope.launch {
         manager.setBudgetMb(mb)
         withContext(Dispatchers.IO) { cache.trimAuto(mb.toLong() * 1024L * 1024L) }

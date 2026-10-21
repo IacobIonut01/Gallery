@@ -180,11 +180,12 @@ fun <T : Media> MediaViewQuickBottomBar(
         onToggleFavorite = { media, target ->
             scope.launch {
                 distributor.setFavoriteOverride(media.id, target)
-                handler.toggleFavorite(
+                val ok = handler.toggleFavorite(
                     result = favoriteRequest,
                     mediaList = arrayListOf(media),
                     favorite = target
                 )
+                if (!ok) distributor.clearFavoriteOverride(media.id)
             }
         },
         onShare = { media ->

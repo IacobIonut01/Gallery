@@ -62,6 +62,9 @@ class OfflineModeManager @Inject constructor(
     private val _cacheWifiOnly = MutableStateFlow(false)
     val cacheWifiOnly: StateFlow<Boolean> = _cacheWifiOnly.asStateFlow()
 
+    private val _downloadFavoritesFullRes = MutableStateFlow(false)
+    val downloadFavoritesFullRes: StateFlow<Boolean> = _downloadFavoritesFullRes.asStateFlow()
+
     private val _budgetBytes = MutableStateFlow(DEFAULT_BUDGET_MB.toLong() * 1024L * 1024L)
     val budgetBytes: StateFlow<Long> = _budgetBytes.asStateFlow()
 
@@ -77,6 +80,7 @@ class OfflineModeManager @Inject constructor(
     @Volatile var effectiveOfflineNow: Boolean = false; private set
     @Volatile var cacheOnViewNow: Boolean = true; private set
     @Volatile var cacheWifiOnlyNow: Boolean = false; private set
+    @Volatile var downloadFavoritesFullResNow: Boolean = false; private set
     @Volatile var unmeteredNow: Boolean = true; private set
     @Volatile var budgetBytesNow: Long = DEFAULT_BUDGET_MB.toLong() * 1024L * 1024L; private set
 
@@ -128,6 +132,7 @@ class OfflineModeManager @Inject constructor(
                 _forceOffline.value = prefs[KEY_FORCE_OFFLINE] ?: false
                 _cacheOnView.value = prefs[KEY_CACHE_ON_VIEW] ?: true
                 _cacheWifiOnly.value = prefs[KEY_CACHE_WIFI_ONLY] ?: false
+                _downloadFavoritesFullRes.value = prefs[KEY_DOWNLOAD_FAVORITES_FULL_RES] ?: false
                 _budgetBytes.value = (prefs[KEY_BUDGET_MB] ?: DEFAULT_BUDGET_MB).toLong() * 1024L * 1024L
                 recomputeSnapshots()
             }
@@ -138,6 +143,7 @@ class OfflineModeManager @Inject constructor(
         effectiveOfflineNow = _forceOffline.value || !_connected.value
         cacheOnViewNow = _cacheOnView.value
         cacheWifiOnlyNow = _cacheWifiOnly.value
+        downloadFavoritesFullResNow = _downloadFavoritesFullRes.value
         unmeteredNow = _unmetered.value
         budgetBytesNow = _budgetBytes.value
     }
@@ -150,6 +156,8 @@ class OfflineModeManager @Inject constructor(
     suspend fun setForceOffline(enabled: Boolean) = edit { it[KEY_FORCE_OFFLINE] = enabled }
     suspend fun setCacheOnView(enabled: Boolean) = edit { it[KEY_CACHE_ON_VIEW] = enabled }
     suspend fun setCacheWifiOnly(enabled: Boolean) = edit { it[KEY_CACHE_WIFI_ONLY] = enabled }
+    suspend fun setDownloadFavoritesFullRes(enabled: Boolean) =
+        edit { it[KEY_DOWNLOAD_FAVORITES_FULL_RES] = enabled }
     suspend fun setBudgetMb(mb: Int) = edit { it[KEY_BUDGET_MB] = mb.coerceIn(64, 32768) }
 
     val budgetMbFlow = context.activeDataStore.data.map { it[KEY_BUDGET_MB] ?: DEFAULT_BUDGET_MB }
@@ -164,6 +172,8 @@ class OfflineModeManager @Inject constructor(
         private val KEY_FORCE_OFFLINE = booleanPreferencesKey("cloud_offline_force")
         private val KEY_CACHE_ON_VIEW = booleanPreferencesKey("cloud_offline_cache_on_view")
         private val KEY_CACHE_WIFI_ONLY = booleanPreferencesKey("cloud_offline_cache_wifi_only")
+        private val KEY_DOWNLOAD_FAVORITES_FULL_RES =
+            booleanPreferencesKey("cloud_offline_download_favorites_full_res")
         private val KEY_BUDGET_MB = intPreferencesKey("cloud_offline_budget_mb")
     }
 }

@@ -14,6 +14,7 @@ import androidx.room3.RoomDatabaseConstructor
 import androidx.room3.ColumnTypeConverters
 import androidx.room3.migration.AutoMigrationSpec
 import com.dot.gallery.data.CloudConverters
+import com.dot.gallery.data.dao.CloudAlbumMemberDao
 import com.dot.gallery.data.dao.CloudAlbumSyncDao
 import com.dot.gallery.data.dao.CloudDeleteLocalPrefDao
 import com.dot.gallery.data.dao.CloudMediaDao
@@ -24,6 +25,7 @@ import com.dot.gallery.data.dao.CloudTagDao
 import com.dot.gallery.data.dao.CloudUploadPrefDao
 import com.dot.gallery.data.dao.PersonDao
 import com.dot.gallery.data.dao.SyncStateDao
+import com.dot.gallery.data.entity.CloudAlbumMemberEntity
 import com.dot.gallery.data.entity.CloudAlbumSyncEntity
 import com.dot.gallery.data.entity.CloudBackupRevisionEntity
 import com.dot.gallery.data.entity.CloudMediaEntity
@@ -131,6 +133,7 @@ import com.dot.gallery.data.Converters
         OcrResultEntity::class,
         SyncStateEntity::class,
         CloudAlbumSyncEntity::class,
+        CloudAlbumMemberEntity::class,
         CloudUploadPrefEntity::class,
         CloudDeleteLocalPrefEntity::class,
         CloudOfflinePinEntity::class,
@@ -143,7 +146,7 @@ import com.dot.gallery.data.Converters
         CloudTagEntity::class,
         CloudMediaTagEntity::class
     ],
-    version = 53,
+    version = 54,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
@@ -201,6 +204,7 @@ import com.dot.gallery.data.Converters
         AutoMigration(from = 50, to = 51), // face_links (face-scoped include/exclude assertions)
         AutoMigration(from = 51, to = 52), // face_suppressions (deleted-person face bans, #1262)
         AutoMigration(from = 52, to = 53), // people.birthDate (on-device person birthday)
+        AutoMigration(from = 53, to = 54), // includeMonthAlbums + cloud_album_members
     ]
 )
 @ColumnTypeConverters(Converters::class, CloudConverters::class, SmartScanConverters::class)
@@ -254,6 +258,8 @@ abstract class InternalDatabase : RoomDatabase() {
     abstract fun getSyncStateDao(): SyncStateDao
 
     abstract fun getCloudAlbumSyncDao(): CloudAlbumSyncDao
+
+    abstract fun getCloudAlbumMemberDao(): CloudAlbumMemberDao
 
     abstract fun getCloudUploadPrefDao(): CloudUploadPrefDao
 

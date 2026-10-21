@@ -18,6 +18,8 @@ import com.dot.gallery.cloud.core.capabilities.RemoteMediaProvider
 import com.dot.gallery.cloud.core.capabilities.SyncCapableProvider
 import com.dot.gallery.data.dao.CloudMediaDao
 import com.dot.gallery.data.dao.CloudServerConfigDao
+import com.dot.gallery.cloud.offline.OfflineModeManager
+import com.dot.gallery.cloud.sync.CloudFavoriteOfflineWorker
 import com.dot.gallery.cloud.sync.CloudMediaStoreWriter
 import com.dot.gallery.core.decoder.format.ImageReencoder
 import com.dot.gallery.core.metadata.MetadataRemovalMode
@@ -56,7 +58,8 @@ class MediaHandlerImpl @Inject constructor(
     private val scheduler: BackgroundTaskScheduler,
     private val providerRegistry: ProviderRegistry,
     private val cloudMediaDao: CloudMediaDao,
-    private val cloudServerConfigDao: CloudServerConfigDao
+    private val cloudServerConfigDao: CloudServerConfigDao,
+    private val offlineModeManager: OfflineModeManager
 ) : MediaHandler {
 
     private fun <T : Media> extractCloudInfo(media: T): Triple<String, String, Long>? {
@@ -76,18 +79,41 @@ class MediaHandlerImpl @Inject constructor(
         result: ActivityResultLauncher<IntentSenderRequest>,
         mediaList: List<T>,
         favorite: Boolean
-    ) = withLogScope("media-ops") {
+    ): Boolean = withLogScope("media-ops") {
         val (cloudMedia, localMedia) = mediaList.partition { it.isCloud }
         if (localMedia.isNotEmpty()) {
             repository.toggleFavorite(result, localMedia, favorite)
         }
-        if (cloudMedia.isNotEmpty()) {
-            withContext(Dispatchers.IO) {
-                cloudMedia.forEach { media ->
-                    val (providerName, remoteId, configId) = extractCloudInfo(media) ?: return@forEach
-                    val providerType = try { ProviderType.valueOf(providerName) } catch (_: Exception) { return@forEach }
-                    val provider = getCloudProvider(providerName, configId) ?: return@forEach
-                    provider.toggleFavorite(remoteId, favorite).onFailure { e ->
+        if (cloudMedia.isEmpty()) return@withLogScope true
+
+        var allSucceeded = true
+        var enqueuedOffline = false
+        withContext(Dispatchers.IO) {
+            for (media in cloudMedia) {
+                val (providerName, remoteId, configId) = extractCloudInfo(media) ?: run {
+                    allSucceeded = false
+                    continue
+                }
+                val providerType = try {
+                    ProviderType.valueOf(providerName)
+                } catch (_: Exception) {
+                    allSucceeded = false
+                    continue
+                }
+                val provider = getCloudProvider(providerName, configId) ?: run {
+                    allSucceeded = false
+                    continue
+                }
+                val toggleResult = provider.toggleFavorite(remoteId, favorite)
+                if (toggleResult.isSuccess) {
+                    cloudMediaDao.updateFavorite(remoteId, providerType, configId, favorite)
+                    if (favorite && offlineModeManager.downloadFavoritesFullResNow && !enqueuedOffline) {
+                        CloudFavoriteOfflineWorker.triggerNow(scheduler, offlineModeManager.cacheWifiOnlyNow)
+                        enqueuedOffline = true
+                    }
+                } else {
+                    allSucceeded = false
+                    toggleResult.onFailure { e ->
                         printError(
                             tag = "MediaHandler",
                             message = "Cloud favorite failed",
@@ -95,24 +121,26 @@ class MediaHandlerImpl @Inject constructor(
                             ctx = mapOf("provider" to providerName),
                         )
                     }
-                    cloudMediaDao.updateFavorite(remoteId, providerType, configId, favorite)
                 }
             }
         }
+        allSucceeded
     }
 
     override suspend fun <T : Media> toggleFavorite(
         result: ActivityResultLauncher<IntentSenderRequest>,
         mediaList: List<T>
-    ) {
+    ): Boolean {
         val turnToFavorite = mediaList.filter { it.favorite == 0 }
         val turnToNotFavorite = mediaList.filter { it.favorite == 1 }
+        var ok = true
         if (turnToFavorite.isNotEmpty()) {
-            toggleFavorite(result, turnToFavorite, true)
+            ok = toggleFavorite(result, turnToFavorite, true) && ok
         }
         if (turnToNotFavorite.isNotEmpty()) {
-            toggleFavorite(result, turnToNotFavorite, false)
+            ok = toggleFavorite(result, turnToNotFavorite, false) && ok
         }
+        return ok
     }
 
     override suspend fun <T : Media> trashMedia(

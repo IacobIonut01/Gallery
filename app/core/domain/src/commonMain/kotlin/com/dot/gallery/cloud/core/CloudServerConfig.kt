@@ -51,7 +51,9 @@ data class CloudServerConfig(
     val downloadVideos: Boolean = true,
     // Upload destination (local -> remote). Blank = provider default folder.
     val uploadBasePath: String = "",
-    val uploadVideosPath: String = ""
+    val uploadVideosPath: String = "",
+    /** PhotoPrism: include automatic calendar month albums in the albums list. Default off. */
+    val includeMonthAlbums: Boolean = false
 )
 
 /** Sentinel serverConfigId for the on-device "local" people provider. */

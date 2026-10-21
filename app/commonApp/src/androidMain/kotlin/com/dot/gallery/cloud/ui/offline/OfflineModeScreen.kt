@@ -24,6 +24,7 @@ fun OfflineModeScreen(
             setForceOffline = viewModel::setForceOffline,
             setCacheOnView = viewModel::setCacheOnView,
             setCacheWifiOnly = viewModel::setCacheWifiOnly,
+            setDownloadFavoritesFullRes = viewModel::setDownloadFavoritesFullRes,
             setBudgetMb = viewModel::setBudgetMb,
             pinAccount = viewModel::pinAccount,
             unpinAccount = viewModel::unpinAccount,
