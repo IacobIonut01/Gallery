@@ -34,6 +34,7 @@ object BuildConfig {
     val OFFLINE_MODE: Boolean = BuildKonfig.OFFLINE_MODE
     val MAPS_ENABLED: Boolean = BuildKonfig.MAPS_ENABLED
     val IMMICH_ENABLED: Boolean = BuildKonfig.IMMICH_ENABLED
+    val PHOTOPRISM_ENABLED: Boolean = BuildKonfig.PHOTOPRISM_ENABLED
     val OWNCLOUD_ENABLED: Boolean = BuildKonfig.OWNCLOUD_ENABLED
     val NEXTCLOUD_ENABLED: Boolean = BuildKonfig.NEXTCLOUD_ENABLED
     val WEBDAV_ENABLED: Boolean = BuildKonfig.WEBDAV_ENABLED

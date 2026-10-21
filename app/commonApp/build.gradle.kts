@@ -171,10 +171,10 @@ kotlin {
             }
 
             api(libs.okhttp)
-            if (includeImmich || includeOwncloud || includeNextcloud || includeWebdav) {
+            if (includeImmich || includePhotoprism || includeOwncloud || includeNextcloud || includeWebdav) {
                 api(libs.okhttp.logging)
             }
-            if (includeImmich) {
+            if (includeImmich || includePhotoprism) {
                 api(libs.retrofit)
                 api(libs.retrofit.kotlinx.serialization)
                 api(libs.retrofit.converter.gson)
@@ -229,6 +229,7 @@ kotlin.sourceSets.getByName("androidMain").kotlin.apply {
         srcDir("src/nocloud/kotlin")
     }
     if (includeImmich) srcDir("src/immich/kotlin") else srcDir("src/noimmich/kotlin")
+    if (includePhotoprism) srcDir("src/photoprism/kotlin") else srcDir("src/nophotoprism/kotlin")
     if (includeOwncloud) srcDir("src/owncloud/kotlin") else srcDir("src/noowncloud/kotlin")
     if (includeNextcloud) srcDir("src/nextcloud/kotlin") else srcDir("src/nonextcloud/kotlin")
     if (includeOwncloud || includeNextcloud || includeWebdav) srcDir("src/webdav/kotlin")
@@ -309,6 +310,7 @@ buildkonfig {
         buildConfigField(FieldSpec.Type.BOOLEAN, "OFFLINE_MODE", isOffline.toString())
         buildConfigField(FieldSpec.Type.BOOLEAN, "MAPS_ENABLED", includeMaps.toString())
         buildConfigField(FieldSpec.Type.BOOLEAN, "IMMICH_ENABLED", includeImmich.toString())
+        buildConfigField(FieldSpec.Type.BOOLEAN, "PHOTOPRISM_ENABLED", includePhotoprism.toString())
         buildConfigField(FieldSpec.Type.BOOLEAN, "OWNCLOUD_ENABLED", includeOwncloud.toString())
         buildConfigField(FieldSpec.Type.BOOLEAN, "NEXTCLOUD_ENABLED", includeNextcloud.toString())
         buildConfigField(FieldSpec.Type.BOOLEAN, "WEBDAV_ENABLED", includeWebdav.toString())
@@ -345,6 +347,19 @@ val includeImmich: Boolean
             val properties = Properties()
             properties.load(FileInputStream(fl))
             properties.getProperty("INCLUDE_IMMICH", "false").toBoolean()
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+val includePhotoprism: Boolean
+    get() {
+        if (isOffline) return false
+        val fl = rootProject.file("app.properties")
+        return try {
+            val properties = Properties()
+            properties.load(FileInputStream(fl))
+            properties.getProperty("INCLUDE_PHOTOPRISM", "false").toBoolean()
         } catch (_: Exception) {
             false
         }

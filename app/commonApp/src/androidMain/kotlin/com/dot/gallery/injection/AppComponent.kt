@@ -173,6 +173,7 @@ import com.dot.gallery.feature.vault.VaultViewModel
 import com.dot.gallery.core.injection.Singleton
 import com.dot.gallery.cloud.genericwebdav.di.WebDavProviderComponent
 import com.dot.gallery.cloud.immich.di.ImmichProviderComponent
+import com.dot.gallery.cloud.photoprism.di.PhotoPrismProviderComponent
 import com.dot.gallery.cloud.nextcloud.di.NextcloudProviderComponent
 import com.dot.gallery.cloud.nfs.di.NfsProviderComponent
 import com.dot.gallery.cloud.owncloud.di.OwnCloudProviderComponent
@@ -223,6 +224,7 @@ import com.dot.gallery.data.getBundledDatabase
 abstract class AppComponent(
     @get:Provides val application: Application
 ) : ImmichProviderComponent,
+    PhotoPrismProviderComponent,
     OwnCloudProviderComponent,
     NextcloudProviderComponent,
     WebDavProviderComponent,

@@ -11,6 +11,7 @@ import com.dot.gallery.BuildConfig
 val ProviderType.isIncludedInBuild: Boolean
     get() = when (this) {
         ProviderType.IMMICH -> BuildConfig.IMMICH_ENABLED
+        ProviderType.PHOTOPRISM -> BuildConfig.PHOTOPRISM_ENABLED
         ProviderType.OWNCLOUD -> BuildConfig.OWNCLOUD_ENABLED
         ProviderType.NEXTCLOUD -> BuildConfig.NEXTCLOUD_ENABLED
         ProviderType.WEBDAV -> BuildConfig.WEBDAV_ENABLED
