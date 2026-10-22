@@ -49,6 +49,7 @@ import com.dot.gallery.domain.model.AlbumThumbnail
 import com.dot.gallery.domain.model.Category
 import com.dot.gallery.domain.model.Collection
 import com.dot.gallery.domain.model.CollectionAlbum
+import com.dot.gallery.domain.model.CollectionExcludedMedia
 import com.dot.gallery.domain.model.CollectionMedia
 import com.dot.gallery.domain.model.EditedMedia
 import com.dot.gallery.domain.model.IgnoredAlbum
@@ -118,6 +119,7 @@ import com.dot.gallery.data.Converters
         Collection::class,
         CollectionMedia::class,
         CollectionAlbum::class,
+        CollectionExcludedMedia::class,
         ScannedMedia::class,
         CloudMediaEntity::class,
         CloudBackupRevisionEntity::class,
@@ -143,7 +145,7 @@ import com.dot.gallery.data.Converters
         CloudTagEntity::class,
         CloudMediaTagEntity::class
     ],
-    version = 53,
+    version = 54,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
@@ -201,6 +203,7 @@ import com.dot.gallery.data.Converters
         AutoMigration(from = 50, to = 51), // face_links (face-scoped include/exclude assertions)
         AutoMigration(from = 51, to = 52), // face_suppressions (deleted-person face bans, #1262)
         AutoMigration(from = 52, to = 53), // people.birthDate (on-device person birthday)
+        AutoMigration(from = 53, to = 54), // collection_excluded_media
     ]
 )
 @ColumnTypeConverters(Converters::class, CloudConverters::class, SmartScanConverters::class)
