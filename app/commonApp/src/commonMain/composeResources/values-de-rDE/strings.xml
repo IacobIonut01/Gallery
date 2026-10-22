@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">ReFra</string>
-    <string name="app_name_gallery">Gallery</string>
+    <string name="app_name_gallery">Galerie</string>
     <string name="smart_scan_notification_channel">Smart Scan</string>
     <string name="smart_scan_notification_title">Scanning media</string>
     <string name="smart_scan_notification_stage_progress">%1$s · %2$d of %3$d · %4$d%% overall</string>
