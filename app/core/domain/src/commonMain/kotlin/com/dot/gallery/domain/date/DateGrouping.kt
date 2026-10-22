@@ -25,6 +25,26 @@ fun Long.getDate(
     )
 }
 
+/** Which label a calendar-day distance from the media's date to today takes. */
+enum class DateHeaderKind {
+    TODAY,
+    YESTERDAY,
+    WEEKDAY,
+    DATE,
+}
+
+/**
+ * `daysFromMediaToToday` is negative when the media's calendar day is still ahead.
+ * That day keeps its own date. Only the current day is Today.
+ */
+fun dateHeaderKind(daysFromMediaToToday: Int): DateHeaderKind = when {
+    daysFromMediaToToday < 0 -> DateHeaderKind.DATE
+    daysFromMediaToToday == 0 -> DateHeaderKind.TODAY
+    daysFromMediaToToday == 1 -> DateHeaderKind.YESTERDAY
+    daysFromMediaToToday in 2..6 -> DateHeaderKind.WEEKDAY
+    else -> DateHeaderKind.DATE
+}
+
 private fun Long.dateBucket(
     mediaDate: LocalDate,
     today: LocalDate,
@@ -34,12 +54,12 @@ private fun Long.dateBucket(
     extendedFormat: String,
     stringToday: String,
     stringYesterday: String,
-): String = when {
-    daysDifference <= 0 -> stringToday
-    daysDifference == 1 -> stringYesterday
-    daysDifference in 2..6 -> formatEpochSec(weeklyFormat)
-    else -> {
-        if (today.year > mediaDate.year) formatEpochSec(extendedFormat)
+): String = when (dateHeaderKind(daysDifference)) {
+    DateHeaderKind.TODAY -> stringToday
+    DateHeaderKind.YESTERDAY -> stringYesterday
+    DateHeaderKind.WEEKDAY -> formatEpochSec(weeklyFormat)
+    DateHeaderKind.DATE -> {
+        if (today.year != mediaDate.year) formatEpochSec(extendedFormat)
         else formatEpochSec(format)
     }
 }
